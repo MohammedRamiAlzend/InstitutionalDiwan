@@ -18,9 +18,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\InstitutionalDiwan.Application\InstitutionalDiwan.Application.csproj" />
     <ProjectReference Include="..\institutionaldiwan.client\institutionaldiwan.client.esproj">
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
+    <ProjectReference Include="..\InstitutionalDiwan.Infrastructure\InstitutionalDiwan.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

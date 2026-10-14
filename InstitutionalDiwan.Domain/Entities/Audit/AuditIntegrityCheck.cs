@@ -1,0 +1,68 @@
+using System;
+using InstitutionalDiwan.Domain.Common;
+using InstitutionalDiwan.Domain.Errors;
+
+namespace InstitutionalDiwan.Domain.Entities.Audit;
+
+public sealed class AuditIntegrityCheck : Entity<Guid>
+{
+    public Guid CheckId
+    {
+        get => Id;
+        private set => Id = value;
+    }
+
+    public long StartAuditLogId { get; private set; }
+    public long EndAuditLogId { get; private set; }
+    public bool IsValid { get; private set; }
+    public long? FirstCorruptedLogId { get; private set; }
+    public string? FailureDetails { get; private set; }
+    public Guid ExecutedByUserId { get; private set; }
+    public DateTime ExecutedAtUtc { get; private set; }
+
+    private AuditIntegrityCheck()
+    {
+    }
+
+    public static Result<AuditIntegrityCheck> RecordPass(
+        long startAuditLogId,
+        long endAuditLogId,
+        Guid executedByUserId)
+    {
+        if (endAuditLogId < startAuditLogId)
+            return Result.Failure<AuditIntegrityCheck>(DomainErrors.Audit.InvalidCheckpointRange);
+
+        return Result.Success(new AuditIntegrityCheck
+        {
+            CheckId = Guid.NewGuid(),
+            StartAuditLogId = startAuditLogId,
+            EndAuditLogId = endAuditLogId,
+            IsValid = true,
+            ExecutedByUserId = executedByUserId,
+            ExecutedAtUtc = DateTime.UtcNow
+        });
+    }
+
+    public static Result<AuditIntegrityCheck> RecordFailure(
+        long startAuditLogId,
+        long endAuditLogId,
+        long firstCorruptedLogId,
+        string failureDetails,
+        Guid executedByUserId)
+    {
+        if (endAuditLogId < startAuditLogId)
+            return Result.Failure<AuditIntegrityCheck>(DomainErrors.Audit.InvalidCheckpointRange);
+
+        return Result.Success(new AuditIntegrityCheck
+        {
+            CheckId = Guid.NewGuid(),
+            StartAuditLogId = startAuditLogId,
+            EndAuditLogId = endAuditLogId,
+            IsValid = false,
+            FirstCorruptedLogId = firstCorruptedLogId,
+            FailureDetails = failureDetails,
+            ExecutedByUserId = executedByUserId,
+            ExecutedAtUtc = DateTime.UtcNow
+        });
+    }
+}

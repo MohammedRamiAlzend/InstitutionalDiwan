@@ -1,0 +1,81 @@
+using System;
+using InstitutionalDiwan.Domain.Common;
+using InstitutionalDiwan.Domain.Errors;
+using NewDiwan.Domain.Events;
+
+namespace InstitutionalDiwan.Domain.Entities.Identity;
+
+public sealed class DocumentAccessGrant : AggregateRoot<Guid>
+{
+    public Guid GrantId
+    {
+        get => Id;
+        private set => Id = value;
+    }
+
+    public Guid DocumentId { get; private set; }
+    public Guid UserId { get; private set; }
+    public string AccessLevel { get; private set; } = "VIEW";
+    public Guid GrantedByUserId { get; private set; }
+    public string? Reason { get; private set; }
+    public DateTime GrantedAt { get; private set; }
+    public DateTime? ExpiresAt { get; private set; }
+    public bool IsRevoked { get; private set; }
+    public DateTime? RevokedAt { get; private set; }
+    public Guid? RevokedByUserId { get; private set; }
+
+    private DocumentAccessGrant()
+    {
+    }
+
+    public static Result<DocumentAccessGrant> Grant(
+        Guid documentId,
+        Guid userId,
+        string? accessLevel,
+        Guid grantedByUserId,
+        string? reason = null,
+        DateTime? expiresAt = null)
+    {
+        if (string.IsNullOrWhiteSpace(accessLevel))
+            return Result.Failure<DocumentAccessGrant>(DomainErrors.Identity.AccessLevelInvalid);
+
+        var normalizedLevel = accessLevel.Trim().ToUpperInvariant();
+        if (normalizedLevel is not ("VIEW" or "DOWNLOAD" or "FORWARD" or "MANAGE"))
+            return Result.Failure<DocumentAccessGrant>(DomainErrors.Identity.AccessLevelInvalid);
+
+        if (expiresAt.HasValue && expiresAt.Value <= DateTime.UtcNow)
+            return Result.Failure<DocumentAccessGrant>(DomainErrors.Identity.InvalidDateRange);
+
+        var grant = new DocumentAccessGrant
+        {
+            GrantId = Guid.NewGuid(),
+            DocumentId = documentId,
+            UserId = userId,
+            AccessLevel = normalizedLevel,
+            GrantedByUserId = grantedByUserId,
+            Reason = reason,
+            GrantedAt = DateTime.UtcNow,
+            ExpiresAt = expiresAt,
+            IsRevoked = false
+        };
+
+        grant.RaiseDomainEvent(new DocumentAccessGrantedEvent(grant.GrantId, grant.DocumentId, grant.UserId, grant.AccessLevel));
+        return Result.Success(grant);
+    }
+
+    public Result Revoke(Guid revokedByUserId)
+    {
+        if (IsRevoked)
+            return Result.Failure(DomainErrors.Identity.GrantAlreadyRevoked);
+
+        IsRevoked = true;
+        RevokedAt = DateTime.UtcNow;
+        RevokedByUserId = revokedByUserId;
+
+        RaiseDomainEvent(new DocumentAccessRevokedEvent(GrantId, DocumentId, UserId));
+        return Result.Success();
+    }
+
+    public bool IsCurrentlyValid(DateTime utcNow) =>
+        !IsRevoked && (!ExpiresAt.HasValue || ExpiresAt.Value > utcNow);
+}
