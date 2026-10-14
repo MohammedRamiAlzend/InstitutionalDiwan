@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="institutionaldiwan.client/institutionaldiwan.client.esproj">
+    <Build />
+    <Deploy />
+  </Project>
+  <Project Path="InstitutionalDiwan.Server/InstitutionalDiwan.Server.csproj" />
+</Solution>
