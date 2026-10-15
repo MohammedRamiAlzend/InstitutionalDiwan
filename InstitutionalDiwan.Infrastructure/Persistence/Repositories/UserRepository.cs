@@ -16,6 +16,9 @@ internal sealed class UserRepository : IUserRepository
     public Task<User?> GetByUsernameAsync(string username, CancellationToken cancellationToken = default) =>
         Query().FirstOrDefaultAsync(user => user.Username == username, cancellationToken);
 
+    public async Task<IReadOnlyList<User>> ListAllAsync(CancellationToken cancellationToken = default) =>
+        await Query().OrderBy(user => user.Username).ToListAsync(cancellationToken);
+
     public void Add(User user) => _context.Users.Add(user);
 
     private IQueryable<User> Query() =>

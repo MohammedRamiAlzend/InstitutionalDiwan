@@ -1,5 +1,7 @@
+using System.Security.Claims;
 using InstitutionalDiwan.Application.Features.Identity.Login;
 using InstitutionalDiwan.Application.Features.Identity.Register;
+using InstitutionalDiwan.Infrastructure.Authentication;
 using InstitutionalDiwan.Server.Contracts.Identity;
 using InstitutionalDiwan.Server.Extensions;
 using MediatR;
@@ -11,6 +13,7 @@ namespace InstitutionalDiwan.Server.Controllers;
 [ApiController]
 [Route("api/auth")]
 [Produces("application/json")]
+[Authorize]
 public sealed class AuthController : ControllerBase
 {
     private readonly ISender _sender;
@@ -57,5 +60,23 @@ public sealed class AuthController : ControllerBase
             cancellationToken);
 
         return result.ToActionResult();
+    }
+
+    /// <summary>Returns the authenticated caller's identity, roles, and permissions from the token.</summary>
+    /// <response code="200">The caller's identity.</response>
+    /// <response code="401">The token is missing, expired, or invalid.</response>
+    [HttpGet("me")]
+    [Authorize]
+    [ProducesResponseType<MeResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
+    public IActionResult Me()
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        return Ok(new MeResponse(
+            Guid.TryParse(userIdClaim, out var userId) ? userId : Guid.Empty,
+            User.Identity?.Name ?? string.Empty,
+            User.FindAll(ClaimTypes.Role).Select(claim => claim.Value).Distinct().ToList(),
+            User.FindAll(JwtProvider.PermissionClaimType).Select(claim => claim.Value).Distinct().ToList()));
     }
 }

@@ -20,6 +20,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\InstitutionalDiwan.Infrastructure\InstitutionalDiwan.Infrastructure.csproj" />
+    <ProjectReference Include="..\InstitutionalDiwan.Server\InstitutionalDiwan.Server.csproj" />
   </ItemGroup>
 
 </Project>

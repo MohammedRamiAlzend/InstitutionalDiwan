@@ -1,3 +1,4 @@
+using InstitutionalDiwan.Domain.Common;
 using InstitutionalDiwan.Domain.Entities.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,15 +17,15 @@ public sealed class PermissionSeeder : ISeeder
 
     private static readonly (string Code, string NameAr, string NameEn, string Module, string Description)[] Catalog =
     {
-        ("DOCUMENT_VIEW", "عرض المستندات", "View documents", "CORRESPONDENCE", "View document details and content."),
-        ("DOCUMENT_CREATE", "إنشاء المستندات", "Create documents", "CORRESPONDENCE", "Create and register new documents."),
-        ("DOCUMENT_EDIT", "تعديل المستندات", "Edit documents", "CORRESPONDENCE", "Edit document metadata and content."),
-        ("DOCUMENT_DELETE", "حذف المستندات", "Delete documents", "CORRESPONDENCE", "Delete documents they own or manage."),
-        ("DOCUMENT_APPROVE", "اعتماد المستندات", "Approve documents", "CORRESPONDENCE", "Approve outgoing documents in the workflow."),
-        ("DEPARTMENT_MANAGE", "إدارة الأقسام", "Manage departments", "ORGANIZATION", "Create, rename and reorganize departments."),
-        ("ROLE_MANAGE", "إدارة الأدوار", "Manage roles", "IDENTITY", "Create roles and grant or revoke permissions."),
-        ("USER_MANAGE", "إدارة المستخدمين", "Manage users", "IDENTITY", "Create, deactivate and assign roles to users."),
-        ("REPORT_VIEW", "عرض التقارير", "View reports", "REPORTING", "View institutional reports and statistics."),
+        (Permissions.DocumentView, "عرض المستندات", "View documents", "CORRESPONDENCE", "View document details and content."),
+        (Permissions.DocumentCreate, "إنشاء المستندات", "Create documents", "CORRESPONDENCE", "Create and register new documents."),
+        (Permissions.DocumentEdit, "تعديل المستندات", "Edit documents", "CORRESPONDENCE", "Edit document metadata and content."),
+        (Permissions.DocumentDelete, "حذف المستندات", "Delete documents", "CORRESPONDENCE", "Delete documents they own or manage."),
+        (Permissions.DocumentApprove, "اعتماد المستندات", "Approve documents", "CORRESPONDENCE", "Approve outgoing documents in the workflow."),
+        (Permissions.DepartmentManage, "إدارة الأقسام", "Manage departments", "ORGANIZATION", "Create, rename and reorganize departments."),
+        (Permissions.RoleManage, "إدارة الأدوار", "Manage roles", "IDENTITY", "Create roles and grant or revoke permissions."),
+        (Permissions.UserManage, "إدارة المستخدمين", "Manage users", "IDENTITY", "Create, deactivate and assign roles to users."),
+        (Permissions.ReportView, "عرض التقارير", "View reports", "REPORTING", "View institutional reports and statistics."),
     };
 
     public async Task SeedAsync(SeederContext context, CancellationToken cancellationToken = default)

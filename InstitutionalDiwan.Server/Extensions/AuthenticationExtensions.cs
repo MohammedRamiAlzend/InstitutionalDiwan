@@ -1,6 +1,9 @@
 using System.Text;
+using InstitutionalDiwan.Domain.Common;
 using InstitutionalDiwan.Infrastructure.Authentication;
+using InstitutionalDiwan.Server.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 
 namespace InstitutionalDiwan.Server.Extensions;
@@ -31,7 +34,18 @@ public static class AuthenticationExtensions
                 };
             });
 
-        services.AddAuthorization();
+        // One policy per permission code: the policy name must equal the "permission" claim value
+        // so [Authorize(Policy = Permissions.X)] enforces the granted claim.
+        services.AddAuthorization(options =>
+        {
+            foreach (var permission in Permissions.All)
+            {
+                options.AddPolicy(permission, policy =>
+                    policy.AddRequirements(new PermissionRequirement(permission)));
+            }
+        });
+
+        services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
 
         return services;
     }

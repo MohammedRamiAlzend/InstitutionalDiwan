@@ -1,3 +1,4 @@
+using InstitutionalDiwan.Domain.Common;
 using InstitutionalDiwan.Domain.Entities.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,13 +17,15 @@ public sealed class RoleSeeder : ISeeder
 
     private static readonly string[] AdminPermissions =
     {
-        "DOCUMENT_VIEW", "DOCUMENT_CREATE", "DOCUMENT_EDIT", "DOCUMENT_DELETE", "DOCUMENT_APPROVE",
-        "DEPARTMENT_MANAGE", "ROLE_MANAGE", "USER_MANAGE", "REPORT_VIEW",
+        Permissions.DocumentView, Permissions.DocumentCreate, Permissions.DocumentEdit,
+        Permissions.DocumentDelete, Permissions.DocumentApprove,
+        Permissions.DepartmentManage, Permissions.RoleManage, Permissions.UserManage,
+        Permissions.ReportView,
     };
 
     private static readonly string[] UserPermissions =
     {
-        "DOCUMENT_VIEW", "DOCUMENT_CREATE", "DOCUMENT_EDIT",
+        Permissions.DocumentView, Permissions.DocumentCreate, Permissions.DocumentEdit,
     };
 
     public async Task SeedAsync(SeederContext context, CancellationToken cancellationToken = default)

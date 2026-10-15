@@ -14,6 +14,9 @@ internal sealed class FakeUserRepository : IUserRepository
     public Task<User?> GetByUsernameAsync(string username, CancellationToken cancellationToken = default)
         => Task.FromResult(Users.FirstOrDefault(user => user.Username == username));
 
+    public Task<IReadOnlyList<User>> ListAllAsync(CancellationToken cancellationToken = default)
+        => Task.FromResult<IReadOnlyList<User>>(Users.OrderBy(user => user.Username).ToList());
+
     public void Add(User user) => Users.Add(user);
 }
 
