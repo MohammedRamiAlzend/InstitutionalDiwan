@@ -7,4 +7,5 @@
   <Project Path="InstitutionalDiwan.Domain/InstitutionalDiwan.Domain.csproj" />
   <Project Path="InstitutionalDiwan.Infrastructure/InstitutionalDiwan.Infrastructure.csproj" />
   <Project Path="InstitutionalDiwan.Server/InstitutionalDiwan.Server.csproj" />
+  <Project Path="InstitutionalDiwan.Tests/InstitutionalDiwan.Tests.csproj" />
 </Solution>

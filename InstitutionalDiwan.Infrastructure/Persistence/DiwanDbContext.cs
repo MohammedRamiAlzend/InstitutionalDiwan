@@ -88,9 +88,14 @@ public sealed class DiwanDbContext : DbContext, IUnitOfWork
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        // Design-time fallback: the EF CLI resolves the provider from DI, which in development is
-        // InMemory from appsettings.Development.json. Override that so migrations target SQL Server.
-        optionsBuilder.UseSqlServer("Server=(localdb)\\MSSQLLocalDB;Database=InstitutionalDiwan;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True");
+        // Design-time fallback for EF CLI tools that construct the context without configured
+        // options, so migrations target SQL Server. Skipped when options are already configured
+        // (dependency injection at runtime, or alternative providers such as InMemory in tests).
+        if (!optionsBuilder.IsConfigured)
+        {
+            optionsBuilder.UseSqlServer("Server=(localdb)\\MSSQLLocalDB;Database=InstitutionalDiwan;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True");
+        }
+
         base.OnConfiguring(optionsBuilder);
     }
 

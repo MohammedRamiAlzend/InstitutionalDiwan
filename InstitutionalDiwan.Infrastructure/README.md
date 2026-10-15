@@ -16,7 +16,7 @@ Those references do not resolve today — see [Known issues](#known-issues--todo
 
 | Folder | Responsibility | Code status |
 | --- | --- | --- |
-| [`Persistence/`](Persistence/README.md) | `NewDiwanDbContext`, `Configurations/`, `Repositories/`, `Interceptors/`, `Migrations/`, `Seed/` | ⚠️ `DbContext` + 10 configurations + `User`/`Role` repositories + demo seeder |
+| [`Persistence/`](Persistence/README.md) | `NewDiwanDbContext`, `Configurations/`, `Repositories/`, `Interceptors/`, `Migrations/`, `Seed/` | ⚠️ `DbContext` + 10 configurations + `User`/`Role` repositories + ordered seeders |
 | [`Authentication/`](Authentication/README.md) | JWT token generation, password hashing, HTTP `UserContext` | ⚠️ `PasswordHasher` + `JwtProvider` implemented |
 | [`Authorization/`](Authorization/README.md) | Permission-based RBAC + organizational scope and document-access evaluators | ❌ Empty |
 | [`Storage/`](Storage/README.md) | Local/S3/MinIO binary file storage and SHA-256 stream verification | ❌ Empty |
@@ -63,7 +63,7 @@ Persistence/Configurations/
 | `NewDiwanDbContext` | ✅ Written and compiling |
 | Entity configurations | ✅ Written for all 40 entities |
 | Repositories | ⚠️ `UserRepository`, `RoleRepository` implemented; the rest pending |
-| Seed | ⚠️ Development demo-user seeder implemented |
+| Seed | ✅ Ordered, environment-aware seeders (`PermissionSeeder`, `RoleSeeder`, `UserSeeder`) |
 | Authentication | ⚠️ `PasswordHasher` (PBKDF2) + `JwtProvider` implemented; `UserContext` pending |
 | Interceptors / Migrations | ❌ Empty |
 | Authorization / Storage / Outbox / BackgroundJobs / Time | ❌ Empty |

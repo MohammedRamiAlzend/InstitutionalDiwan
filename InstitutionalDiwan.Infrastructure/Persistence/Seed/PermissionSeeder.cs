@@ -1,0 +1,57 @@
+using InstitutionalDiwan.Domain.Entities.Identity;
+using Microsoft.EntityFrameworkCore;
+
+namespace InstitutionalDiwan.Infrastructure.Persistence.Seed;
+
+/// <summary>
+/// Seeds the permission catalog referenced by role grants (Order 100, every environment) so that
+/// authorization always has data to resolve permission codes against, in Development and
+/// Production alike. Runs first so <see cref="RoleSeeder"/> grants against a complete catalog.
+/// </summary>
+public sealed class PermissionSeeder : ISeeder
+{
+    public int Order => 100;
+
+    public IReadOnlyCollection<string> Environments { get; } = new[] { SeedingEnvironments.All };
+
+    private static readonly (string Code, string NameAr, string NameEn, string Module, string Description)[] Catalog =
+    {
+        ("DOCUMENT_VIEW", "عرض المستندات", "View documents", "CORRESPONDENCE", "View document details and content."),
+        ("DOCUMENT_CREATE", "إنشاء المستندات", "Create documents", "CORRESPONDENCE", "Create and register new documents."),
+        ("DOCUMENT_EDIT", "تعديل المستندات", "Edit documents", "CORRESPONDENCE", "Edit document metadata and content."),
+        ("DOCUMENT_DELETE", "حذف المستندات", "Delete documents", "CORRESPONDENCE", "Delete documents they own or manage."),
+        ("DOCUMENT_APPROVE", "اعتماد المستندات", "Approve documents", "CORRESPONDENCE", "Approve outgoing documents in the workflow."),
+        ("DEPARTMENT_MANAGE", "إدارة الأقسام", "Manage departments", "ORGANIZATION", "Create, rename and reorganize departments."),
+        ("ROLE_MANAGE", "إدارة الأدوار", "Manage roles", "IDENTITY", "Create roles and grant or revoke permissions."),
+        ("USER_MANAGE", "إدارة المستخدمين", "Manage users", "IDENTITY", "Create, deactivate and assign roles to users."),
+        ("REPORT_VIEW", "عرض التقارير", "View reports", "REPORTING", "View institutional reports and statistics."),
+    };
+
+    public async Task SeedAsync(SeederContext context, CancellationToken cancellationToken = default)
+    {
+        var db = context.Db;
+
+        var existingCodes = (await db.Permissions
+                .Select(permission => permission.Code)
+                .ToListAsync(cancellationToken))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        var added = 0;
+        foreach (var (code, nameAr, nameEn, moduleName, description) in Catalog)
+        {
+            if (existingCodes.Contains(code))
+                continue;
+
+            var permissionResult = Permission.Create(code, nameAr, moduleName, nameEn, description);
+            if (permissionResult.IsFailure)
+                throw new InvalidOperationException(
+                    $"Invalid permission seed data '{code}': {permissionResult.Error.Code} - {permissionResult.Error.Description}");
+
+            db.Permissions.Add(permissionResult.Value);
+            added++;
+        }
+
+        if (added > 0)
+            await db.SaveChangesAsync(cancellationToken);
+    }
+}

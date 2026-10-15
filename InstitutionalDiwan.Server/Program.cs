@@ -23,12 +23,14 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
     app.MapScalarApiReference();
-    await app.InitializeDatabaseAsync();
 }
 else
 {
     app.UseHttpsRedirection();
 }
+
+// Ordered, environment-aware seeding — each seeder declares which environments it runs in.
+await app.InitializeDatabaseAsync();
 
 app.UseAuthentication();
 app.UseAuthorization();

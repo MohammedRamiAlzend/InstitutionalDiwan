@@ -22,9 +22,10 @@ Maps `Result` and `Result<T>` to `IActionResult` / `IResult` (RFC 7807 `ProblemD
 | `Conflict` | `409 Conflict` |
 | `Failure` | `500 Internal Server Error` |
 
-### `MigrationExtensions.cs`
-Applies pending EF Core migrations and runs the `NewDiwanDbContextSeeder` during development startup —
-a single call instead of manual `dotnet ef database update`.
+### `DatabaseExtensions.cs`
+Prepares the database at startup (creates the in-memory schema, applies migrations in Development)
+and executes the registered seeders through `SeederRunner` — ordered by each seeder's `Order` and
+filtered by the environments each seeder declares (Development, Production, etc.).
 
 ### `SwaggerExtensions.cs`
 Configures OpenAPI/Swagger (the host also maps **Scalar** today) with JWT Bearer authentication support

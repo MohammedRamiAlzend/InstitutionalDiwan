@@ -18,7 +18,7 @@ without knowing which provider is underneath.
 | `Repositories/` | ❌ Empty | Concrete implementations of `InstitutionalDiwan.Domain.Repositories`. |
 | `Interceptors/` | ❌ Empty | Domain-event dispatch + tamper-evident audit. |
 | `Migrations/` | ❌ Empty | EF Core migrations (incl. SQL Server hardening). |
-| `Seed/` | ❌ Missing | Reference data: department types, document types, permissions, roles, notification types. |
+| `Seed/` | ✅ Written | `ISeeder` + `SeederRunner` (ordering + environment gating); `PermissionSeeder` (100), `RoleSeeder` (200), `UserSeeder` (300). |
 
 ## `NewDiwanDbContext` design
 
@@ -52,7 +52,7 @@ without knowing which provider is underneath.
 | Repository implementations | ❌ None |
 | Interceptors | ❌ None |
 | Migrations | ❌ None |
-| Seed data | ❌ None |
+| Seed data | ✅ Permissions, system roles, demo users (`Seed/` — ordered + environment-gated) |
 
 ### Known issues / TODO
 

@@ -4,6 +4,7 @@ using InstitutionalDiwan.Domain.Repositories;
 using InstitutionalDiwan.Infrastructure.Authentication;
 using InstitutionalDiwan.Infrastructure.Persistence;
 using InstitutionalDiwan.Infrastructure.Persistence.Repositories;
+using InstitutionalDiwan.Infrastructure.Persistence.Seed;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -32,6 +33,11 @@ public static class DependencyInjection
 
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IRoleRepository, RoleRepository>();
+
+        // Ordered, environment-aware seeders — executed at startup by SeederRunner.
+        services.AddScoped<ISeeder, PermissionSeeder>();
+        services.AddScoped<ISeeder, RoleSeeder>();
+        services.AddScoped<ISeeder, UserSeeder>();
 
         services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
         services.AddSingleton<IPasswordHasher, PasswordHasher>();
