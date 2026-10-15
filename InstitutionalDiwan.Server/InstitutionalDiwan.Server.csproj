@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -7,6 +7,7 @@
     <SpaRoot>..\institutionaldiwan.client</SpaRoot>
     <SpaProxyLaunchCommand>npm run dev</SpaProxyLaunchCommand>
     <SpaProxyServerUrl>https://localhost:61325</SpaProxyServerUrl>
+    <UserSecretsId>58f8f568-ec12-4c6d-9371-fd09952c2250</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>

@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using InstitutionalDiwan.Application.Features.Identity.ChangePassword;
 using InstitutionalDiwan.Application.Features.Identity.Login;
 using InstitutionalDiwan.Application.Features.Identity.Register;
 using InstitutionalDiwan.Infrastructure.Authentication;
@@ -78,5 +79,30 @@ public sealed class AuthController : ControllerBase
             User.Identity?.Name ?? string.Empty,
             User.FindAll(ClaimTypes.Role).Select(claim => claim.Value).Distinct().ToList(),
             User.FindAll(JwtProvider.PermissionClaimType).Select(claim => claim.Value).Distinct().ToList()));
+    }
+
+    /// <summary>Changes the authenticated user's password and returns a fresh access token.</summary>
+    /// <response code="200">Password changed; a new access token is returned.</response>
+    /// <response code="400">Validation failed, the current password is incorrect, or the new password repeats the old one.</response>
+    /// <response code="401">The token is missing, expired, or invalid.</response>
+    /// <response code="404">The account no longer exists.</response>
+    [HttpPost("change-password")]
+    [Authorize]
+    [ProducesResponseType<LoginResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> ChangePassword(
+        [FromBody] ChangePasswordRequest request,
+        CancellationToken cancellationToken)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (!Guid.TryParse(userIdClaim, out var userId))
+            return Unauthorized();
+
+        var result = await _sender.Send(
+            new ChangePasswordCommand(userId, request.OldPassword, request.NewPassword),
+            cancellationToken);
+
+        return result.ToActionResult();
     }
 }

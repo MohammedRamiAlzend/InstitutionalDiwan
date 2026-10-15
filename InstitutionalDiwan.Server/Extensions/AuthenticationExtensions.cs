@@ -17,6 +17,17 @@ public static class AuthenticationExtensions
     {
         var jwt = configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>() ?? new JwtOptions();
 
+        // Fail fast when no signing key is configured (user-secrets in Development, the
+        // Jwt__SecretKey environment variable in production) instead of failing later while
+        // issuing or validating the first token.
+        if (string.IsNullOrWhiteSpace(jwt.SecretKey) || Encoding.UTF8.GetByteCount(jwt.SecretKey) < 32)
+        {
+            throw new InvalidOperationException(
+                "Jwt:SecretKey is missing or shorter than 32 bytes. Set it with " +
+                "'dotnet user-secrets set \"Jwt:SecretKey\" <value>' in Development or via the " +
+                "Jwt__SecretKey environment variable in production.");
+        }
+
         services
             .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>

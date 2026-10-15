@@ -28,6 +28,7 @@ public interface IRoleRepository
 public interface IDocumentRepository
 {
     Task<Document?> GetByIdAsync(Guid documentId, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<Document>> ListRecentAsync(int limit, CancellationToken cancellationToken = default);
     void Add(Document document);
 }
 

@@ -41,6 +41,8 @@ public static class DomainErrors
         public static readonly Error UserInactive = Error.Forbidden("Identity.UserInactive", "The user account is inactive.");
         public static readonly Error UsernameTaken = Error.Conflict("Identity.UsernameTaken", "The username is already taken.");
         public static readonly Error RoleNotFound = Error.NotFound("Identity.RoleNotFound", "The specified role was not found.");
+        public static readonly Error UserNotFound = Error.NotFound("Identity.UserNotFound", "The user account was not found.");
+        public static readonly Error CurrentPasswordIncorrect = Error.Validation("Identity.CurrentPasswordIncorrect", "The current password is incorrect.");
     }
 
     public static class Correspondence
@@ -58,6 +60,7 @@ public static class DomainErrors
         public static readonly Error AlreadyCanceled = Error.Conflict("Correspondence.AlreadyCanceled", "Document is already canceled.");
         public static readonly Error CannotCancelArchived = Error.Conflict("Correspondence.CannotCancelArchived", "Archived documents must be unarchived before cancellation.");
         public static readonly Error CancelReasonEmpty = Error.Validation("Correspondence.CancelReasonEmpty", "A cancellation reason is required.");
+        public static readonly Error DocumentNotFound = Error.NotFound("Correspondence.DocumentNotFound", "The document was not found.");
         public static readonly Error SingleExternalPartyLimit = Error.Conflict("Correspondence.SingleExternalPartyLimit", "A document can have at most one ExternalOrganization participant.");
         public static readonly Error ParticipantRoleEmpty = Error.Validation("Correspondence.ParticipantRoleEmpty", "Participant role code is required.");
         public static readonly Error ParticipantTargetInvalid = Error.Validation("Correspondence.ParticipantTargetInvalid", "Participant target must specify exactly one External organization, Internal department, or Person name.");

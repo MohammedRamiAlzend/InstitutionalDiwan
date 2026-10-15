@@ -42,33 +42,9 @@ internal sealed class LoginCommandHandler : ICommandHandler<LoginCommand, LoginR
         if (!user.IsActive)
             return Result.Failure<LoginResponse>(DomainErrors.Identity.UserInactive);
 
-        var roles = new List<Role>();
-        foreach (var userRole in user.UserRoles)
-        {
-            var role = await _roleRepository.GetByIdAsync(userRole.RoleId, cancellationToken);
-            if (role is not null)
-                roles.Add(role);
-        }
-
-        var roleCodes = roles.Select(role => role.Code).Distinct().ToList();
-        var permissions = roles
-            .SelectMany(role => role.RolePermissions)
-            .Select(permission => permission.PermissionCode)
-            .Distinct()
-            .ToList();
-
         user.RecordLogin();
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        var accessToken = _jwtProvider.GenerateAccessToken(user, roleCodes, permissions);
-
-        return new LoginResponse(
-            accessToken.Token,
-            accessToken.ExpiresAtUtc,
-            user.UserId,
-            user.Username,
-            user.MustChangePassword,
-            roleCodes,
-            permissions);
+        return await IdentityTokenIssuer.IssueAsync(user, _roleRepository, _jwtProvider, cancellationToken);
     }
 }
