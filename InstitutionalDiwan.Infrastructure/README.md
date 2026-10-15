@@ -59,7 +59,7 @@ Persistence/Configurations/
 
 | Area | State |
 | --- | --- |
-| EF Core provider packages (`SqlServer`, `InMemory`) | ✅ Referenced |
+| EF Core provider package (`SqlServer`) | ✅ Referenced |
 | `NewDiwanDbContext` | ✅ Written and compiling |
 | Entity configurations | ✅ Written for all 40 entities |
 | Repositories | ⚠️ `UserRepository`, `RoleRepository` implemented; the rest pending |

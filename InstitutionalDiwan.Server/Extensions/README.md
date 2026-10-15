@@ -23,8 +23,8 @@ Maps `Result` and `Result<T>` to `IActionResult` / `IResult` (RFC 7807 `ProblemD
 | `Failure` | `500 Internal Server Error` |
 
 ### `DatabaseExtensions.cs`
-Prepares the database at startup (creates the in-memory schema, applies migrations in Development)
-and executes the registered seeders through `SeederRunner` — ordered by each seeder's `Order` and
+Prepares the database at startup (applies pending migrations in Development; other environments
+only seed when the database is reachable) and executes the registered seeders through `SeederRunner` — ordered by each seeder's `Order` and
 filtered by the environments each seeder declares (Development, Production, etc.).
 
 ### `SwaggerExtensions.cs`

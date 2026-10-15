@@ -12,9 +12,9 @@ public static class DatabaseExtensions
     /// <see cref="SeederRunner"/>. Seeders are executed ordered by <c>Order</c> and each one
     /// decides via its own <c>Environments</c> whether it runs in Development, Production, etc.
     ///
-    /// Database preparation: in-memory providers get their schema created, Development gets
-    /// pending migrations applied, and other environments only seed when the database is
-    /// reachable (schema management there is left to deployment tooling).
+    /// Database preparation: Development gets pending migrations applied, while other
+    /// environments only seed when the database is reachable (schema management there is
+    /// left to deployment tooling).
     /// </summary>
     public static async Task InitializeDatabaseAsync(this WebApplication app)
     {
@@ -22,11 +22,7 @@ public static class DatabaseExtensions
         var context = scope.ServiceProvider.GetRequiredService<DiwanDbContext>();
         var environmentName = app.Environment.EnvironmentName;
 
-        if (context.Database.IsInMemory())
-        {
-            await context.Database.EnsureCreatedAsync();
-        }
-        else if (app.Environment.IsDevelopment())
+        if (app.Environment.IsDevelopment())
         {
             await context.Database.MigrateAsync();
         }

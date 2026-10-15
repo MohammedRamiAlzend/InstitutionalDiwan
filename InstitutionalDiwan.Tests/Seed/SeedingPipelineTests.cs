@@ -19,13 +19,13 @@ public sealed class SeedingPipelineTests
         => SeederRunner.RunAsync(AllSeeders, new SeederContext(db, new FakePasswordHasher(), environment));
 
     [Fact]
-    public void TestContext_UsesInMemoryProvider()
+    public void TestContext_UsesConfiguredProvider()
     {
         // Regression guard: DiwanDbContext.OnConfiguring must not override configured options
-        // with its design-time SQL Server fallback.
+        // with its design-time SQL Server fallback (tests configure SQLite themselves).
         using var db = TestContextFactory.Create();
 
-        Assert.Equal("Microsoft.EntityFrameworkCore.InMemory", db.Database.ProviderName);
+        Assert.Equal("Microsoft.EntityFrameworkCore.Sqlite", db.Database.ProviderName);
     }
 
     [Fact]

@@ -25,9 +25,6 @@ public static class DependencyInjection
                 configuration.GetConnectionString("DefaultConnection")
                 ?? "Server=(localdb)\\MSSQLLocalDB;Database=InstitutionalDiwan;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True");
         });
-        services.Configure<DatabaseOptions>(configuration.GetSection("Database"));
-        services.AddSingleton<IDatabaseProviderSelector, DatabaseProviderSelector>();
-
         services.AddScoped<IUnitOfWork>(serviceProvider =>
             serviceProvider.GetRequiredService<DiwanDbContext>());
 

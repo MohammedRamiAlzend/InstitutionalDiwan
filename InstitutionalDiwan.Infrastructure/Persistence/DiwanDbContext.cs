@@ -90,7 +90,7 @@ public sealed class DiwanDbContext : DbContext, IUnitOfWork
     {
         // Design-time fallback for EF CLI tools that construct the context without configured
         // options, so migrations target SQL Server. Skipped when options are already configured
-        // (dependency injection at runtime, or alternative providers such as InMemory in tests).
+        // (dependency injection at runtime, or alternative providers such as SQLite in tests).
         if (!optionsBuilder.IsConfigured)
         {
             optionsBuilder.UseSqlServer("Server=(localdb)\\MSSQLLocalDB;Database=InstitutionalDiwan;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True");
