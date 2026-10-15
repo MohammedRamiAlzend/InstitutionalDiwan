@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using InstitutionalDiwan.Domain.Common;
 using InstitutionalDiwan.Domain.Errors;
-using NewDiwan.Domain.Events;
+using InstitutionalDiwan.Domain.Events;
 
 namespace InstitutionalDiwan.Domain.Entities.Movements;
 

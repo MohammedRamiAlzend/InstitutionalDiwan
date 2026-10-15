@@ -37,6 +37,8 @@ public static class DomainErrors
         public static readonly Error InvalidDateRange = Error.Validation("Identity.InvalidDateRange", "End date cannot be earlier than start date.");
         public static readonly Error AccessLevelInvalid = Error.Validation("Identity.AccessLevelInvalid", "Access level must be VIEW, DOWNLOAD, FORWARD, or MANAGE.");
         public static readonly Error GrantAlreadyRevoked = Error.Conflict("Identity.GrantAlreadyRevoked", "Document access grant has already been revoked.");
+        public static readonly Error InvalidCredentials = Error.Unauthorized("Identity.InvalidCredentials", "Invalid username or password.");
+        public static readonly Error UserInactive = Error.Forbidden("Identity.UserInactive", "The user account is inactive.");
     }
 
     public static class Correspondence

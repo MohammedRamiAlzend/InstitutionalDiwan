@@ -1,0 +1,154 @@
+# InstitutionalDiwan.Domain — Pure Domain Layer
+
+> **Status:** Core implemented and compiling. See [Known issues](#known-issues--todo) for remaining TODOs.
+
+## Purpose
+
+The Domain layer is the heart of the InstitutionalDiwan system. It encapsulates all business
+invariants across the 10 modules using Domain-Driven Design (DDD) and the Result pattern, with
+**zero external NuGet package dependencies** (no EF Core, no DataAnnotations schema attributes).
+Everything here is plain C# so the domain can be unit-tested without a database or web host.
+
+The project name and namespaces are `InstitutionalDiwan.Domain.*`. Older design notes and the
+Infrastructure layer still refer to the system as `NewDiwan` — that drift is tracked under
+[Known issues](#known-issues--todo).
+
+## Design rules
+
+| Rule | Detail |
+| --- | --- |
+| Dependency direction | Domain depends on **nothing**. Application and Infrastructure depend on Domain. |
+| No infrastructure types | No `DbContext`, no attributes, no serialization concerns, no `IActionResult`. |
+| Mutation through behavior | All state changes happen through intention-revealing methods (`Rename`, `Archive`, `Send`, …), never public setters. |
+| Expected failures are values | Business-rule violations return `Result` / `Result<T>`; they do **not** throw. |
+| Invariants at construction | Factory methods (`Create`, `Issue`, `Grant`, …) validate and return `Result<T>`; private parameterless constructors exist only for persistence. |
+| Domain events | Aggregate roots raise immutable `IDomainEvent` records into a private collection exposed read-only. |
+
+## Folder contents
+
+```
+Common/        Base building blocks (Result, Error, Entity, AggregateRoot, ValueObject, IDomainEvent, DomainException, IUnitOfWork)
+ValueObjects/  Immutable value objects (DepartmentCode, DocumentTitle, OfficialNumberValue, ParticipantTarget)
+Errors/        Strongly-typed DomainErrors catalog organized by module
+Events/        All immutable IDomainEvent records raised by aggregate roots
+Repositories/  Pure repository contracts consumed by the Application layer
+Entities/      All encapsulated domain entities grouped across the 10 module folders
+GlobalUsing.cs Global usings for entities, common, and errors
+```
+
+### `Common/` — building blocks
+
+| Type | Responsibility |
+| --- | --- |
+| `Result` / `Result<TValue>` | Outcome of an operation. `Result` guards that success carries `Error.None` and failure carries a real error (throws `InvalidOperationException` otherwise). `Result<T>` exposes `Value` only on success. `Result.Create<T>` maps `null` to `Error.NullValue`. |
+| `Error` | Immutable `record(string Code, string Description, ErrorType Type = Failure)` with factory helpers `Validation`, `NotFound`, `Conflict`, `Failure`, `Unauthorized`, `Forbidden` and the sentinels `Error.None`, `Error.NullValue`. |
+| `ErrorType` | Enum: `None, Failure, Validation, NotFound, Conflict, Unauthorized, Forbidden`. Used by the API layer to map to HTTP status codes. |
+| `Entity<TId>` | Identity-based equality (type + `Id`), `==`/`!=` operators, `GetHashCode` from type + id. |
+| `AggregateRoot<TId>` | Adds the domain-event collection: `DomainEvents`, `RaiseDomainEvent` (protected), `ClearDomainEvents`. A non-generic `AggregateRoot` variant also exists for roots without a typed id. |
+| `ValueObject` | Structural equality via `GetEqualityComponents()`; combines components with `HashCode` for hashing. |
+| `IDomainEvent` | `Guid EventId`, `DateTime OccurredOnUtc`. `DomainEventBase` is an abstract record supplying both with defaults (`Guid.NewGuid()`, `DateTime.UtcNow`). |
+| `DomainException` | Sealed exception carrying an `Error.Code`; used for truly exceptional technical violations, not expected business failures. |
+| `IUnitOfWork` | `Task<int> SaveChangesAsync(CancellationToken)` — the single abstraction over the persistence transaction. |
+
+### `ValueObjects/`
+
+| Value object | Rule enforced |
+| --- | --- |
+| `DepartmentCode` | Non-empty, trimmed, upper-cased, max 50 chars. |
+| `DocumentTitle` | Non-empty, trimmed, max 500 chars. |
+| `OfficialNumberValue` | Non-empty, trimmed, max 100 chars. |
+| `ParticipantTarget` | Exactly one of `External(orgId)`, `Internal(departmentId)`, or `Person(name)` via `ParticipantTargetKind`. |
+
+### `Errors/DomainErrors.cs`
+
+A single static catalog nested by module (`DomainErrors.Department`, `.Identity`, `.Correspondence`,
+`.Numbering`, `.Movements`, `.Attachments`, `.Relations`, `.Archiving`, `.Audit`, `.Notifications`,
+`.InstitutionSetting`). Each entry is a strongly-typed `Error` with a stable code such as
+`Correspondence.OnlyDraftEditable` so the API can produce deterministic ProblemDetails.
+
+### `Events/DomainEvents.cs`
+
+34 immutable `record` domain events (the older notes claimed 22, which is out of date). Grouped by module:
+
+| Module | Events |
+| --- | --- |
+| Organization (3) | `DepartmentCreated`, `DepartmentMoved`, `DepartmentDeactivated` |
+| Identity (6) | `UserCreated`, `UserDeactivated`, `UserRoleAssigned`, `UserRoleRevoked`, `DocumentAccessGranted`, `DocumentAccessRevoked` |
+| Correspondence / Archiving (6) | `DocumentCreated`, `DocumentRegistered`, `DocumentArchived`, `DocumentUnarchived`, `DocumentCanceled`, `DocumentParticipantAdded` |
+| Numbering (3) | `OfficialNumberIssued`, `OfficialNumberCancelled`, `OfficialNumberReplaced` |
+| Movements (9) | `MovementCreated`, `MovementSent`, `MovementReceived`, `MovementCompleted`, `MovementRejected`, `MovementReturned`, `MovementRedirected`, `MovementClosed`, `MovementCancelled` |
+| Attachments (3) | `DocumentFileCreated`, `DocumentFileVersionUploaded`, `DocumentFileArchived` |
+| Relations (2) | `DocumentRelationCreated`, `DocumentRelationRemoved` |
+| Notifications (2) | `NotificationCreated`, `NotificationRead` |
+
+### `Repositories/IDomainRepositories.cs`
+
+11 pure repository contracts: `IDepartmentRepository`, `IUserRepository`, `IRoleRepository`,
+`IDocumentRepository`, `INumberingRegistryRepository`, `IDocumentNumberRepository`,
+`IDocumentMovementRepository`, `IDocumentFileRepository`, `IDocumentRelationRepository`,
+`IAuditLogRepository`, `INotificationRepository`. They expose `GetByIdAsync`, a few targeted
+lookups (`HasActiveChildrenAsync`, `GetActiveForScopeAsync`, `HasActiveMovementsAsync`,
+`GetLatestAsync` for audit hash chaining), and `Add`/`Remove` — no `SaveChanges` (that is `IUnitOfWork`).
+
+### `Entities/` — the 10 modules (40 entities)
+
+| # | Module | Entities | Notable aggregate roots |
+| --- | --- | --- | --- |
+| 01 | Organization | `Department`, `DepartmentType`, `InstitutionSetting` | `Department`, `InstitutionSetting` |
+| 02 | Identity & Access | `User`, `Role`, `Permission`, `UserRole`, `RolePermission`, `Employee`, `UserDepartmentAssignment`, `DocumentAccessGrant` | `User`, `Role`, `Employee`, `DocumentAccessGrant` |
+| 03 | Correspondence | `Document`, `DocumentParticipant`, `DocumentStatusHistory`, `DocumentType`, `DocumentStatusType`, `ExternalOrganization` | `Document`, `ExternalOrganization` |
+| 04 | Official Numbering | `DocumentNumber`, `NumberingRegistry`, `NumberingCounter`, `DocumentNumberHistory` | `DocumentNumber`, `NumberingRegistry` |
+| 05 | Movements & Routing | `DocumentMovement`, `DocumentMovementStep`, `DocumentMovementEvent` | `DocumentMovement` |
+| 06 | Attachments | `DocumentFile`, `DocumentFileVersion`, `DocumentFileType`, `FileStorageProvider` | `DocumentFile` |
+| 07 | Archiving | `DocumentArchiveEvent`, `SavedSearch` | `SavedSearch` |
+| 08 | Relations | `DocumentRelation`, `DocumentRelationType`, `DocumentRelationEvent` | `DocumentRelation` |
+| 09 | Audit & Integrity | `AuditLog`, `AuditCheckpoint`, `AuditIntegrityCheck` | (`AuditLog` is an `Entity<long>`) |
+| 10 | Notifications & Outbox | `Notification`, `NotificationRecipient`, `NotificationOutbox`, `NotificationType` | `Notification` |
+
+#### Selected invariants already encoded
+
+- **`Department`** — code/name/type required; no self-parent; no cyclic re-parenting
+  (`MoveToParent` receives descendant ids); inactive parent rejected; cannot deactivate with active children.
+- **`Document`** — status machine `DRAFT → REGISTERED → IN_MOVEMENT → {ARCHIVED, CANCELED}`;
+  only `DRAFT` is editable/registerable; archived cannot be canceled without unarchiving; cancel requires a reason;
+  at most one `ExternalOrganization` participant; archive/cancel blocked while active movements exist;
+  `RowVersion` exposed for optimistic concurrency.
+- **`User`** — username required and lower-cased; duplicate role assignment rejected; role revoke when absent returns NotFound;
+  department scope assignment validates the date range; password change clears `MustChangePassword`.
+- **`Role`** — code/name required; duplicate permission rejected; system roles are protected from deactivation.
+- **`DocumentAccessGrant`** — access level must be one of `VIEW|DOWNLOAD|FORWARD|MANAGE`; expiry must be in the future;
+  `IsCurrentlyValid(utcNow)` combines revoked + expiry.
+- **`DocumentMovement`** — explicit movement status machine; send/receive/complete/reject/return/redirect/close/cancel
+  all guard legal transitions (`InvalidStatusTransition`), require reasons where applicable, append an immutable
+  `DocumentMovementEvent`, and raise the matching domain event. Redirect creates the next numbered step.
+- **`DocumentNumber` / `NumberingRegistry`** — year in `[1900,2200]`, positive sequence, gap-free allocation via
+  `NumberingRegistry.AllocateNextSequence`; cancel/replace require reasons; registry must be active.
+- **`DocumentFile`** — version numbers strictly sequential; archived files reject new versions; superseded versions flagged.
+- **`AuditLog`** — tamper-evident SHA-256 hash chaining: `Record(...)` computes `EventHash` from the payload plus
+  `PreviousHash`; `VerifyIntegrity(expectedPreviousHash)` re-computes and detects a broken chain or hash mismatch.
+- **`Notification` / `NotificationOutbox`** — duplicate recipients rejected; outbox transitions
+  `PENDING → SENT` or `→ FAILED/DEAD_LETTER` with `RetryCount` and `NextRetryAt`.
+- **`DocumentRelation`** — no self-relations; inactive relation types rejected; optional cycle prevention and
+  symmetric endpoint normalization handled by `DocumentRelationType`.
+
+## Implementation status
+
+| Folder | State |
+| --- | --- |
+| `Common/` | ✅ Implemented (`Result`, `Error`, `Entity`, `AggregateRoot`, `ValueObject`, `IDomainEvent`, `DomainException`, `IUnitOfWork`) |
+| `ValueObjects/` | ✅ Implemented (4 value objects) |
+| `Errors/` | ✅ Implemented (`DomainErrors` catalog) |
+| `Events/` | ✅ Implemented (34 events) |
+| `Repositories/` | ✅ Implemented (11 interfaces) |
+| `Entities/` | ✅ Implemented (40 entities across 10 modules) |
+
+### Known issues / TODO
+
+1. ~~Build failure~~ **Resolved** — the entity usings now point at `InstitutionalDiwan.Domain.Events`
+   and the Domain project builds cleanly.
+2. **Naming drift.** Code namespaces are now consistently `InstitutionalDiwan.*`; only the DbContext
+   class keeps the legacy `NewDiwanDbContext` name. Rename it when convenient.
+3. **No test project yet.** The pure domain is the cheapest place to start a unit-test suite for the
+   invariants above.
+4. **Identity login errors added** — `DomainErrors.Identity.InvalidCredentials` (Unauthorized) and
+   `DomainErrors.Identity.UserInactive` (Forbidden) support the login use case.

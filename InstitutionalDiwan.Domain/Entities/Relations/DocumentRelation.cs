@@ -1,7 +1,7 @@
 using System;
 using InstitutionalDiwan.Domain.Common;
 using InstitutionalDiwan.Domain.Errors;
-using NewDiwan.Domain.Events;
+using InstitutionalDiwan.Domain.Events;
 
 namespace InstitutionalDiwan.Domain.Entities.Relations;
 

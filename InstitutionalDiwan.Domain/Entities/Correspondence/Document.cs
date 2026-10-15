@@ -4,7 +4,7 @@ using System.Linq;
 using InstitutionalDiwan.Domain.Common;
 using InstitutionalDiwan.Domain.Errors;
 using InstitutionalDiwan.Domain.ValueObjects;
-using NewDiwan.Domain.Events;
+using InstitutionalDiwan.Domain.Events;
 
 namespace InstitutionalDiwan.Domain.Entities.Correspondence;
 
