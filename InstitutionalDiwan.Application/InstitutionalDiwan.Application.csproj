@@ -17,4 +17,8 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.13" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="InstitutionalDiwan.Tests" />
+  </ItemGroup>
+
 </Project>

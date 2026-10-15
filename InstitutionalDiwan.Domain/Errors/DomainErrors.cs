@@ -39,6 +39,8 @@ public static class DomainErrors
         public static readonly Error GrantAlreadyRevoked = Error.Conflict("Identity.GrantAlreadyRevoked", "Document access grant has already been revoked.");
         public static readonly Error InvalidCredentials = Error.Unauthorized("Identity.InvalidCredentials", "Invalid username or password.");
         public static readonly Error UserInactive = Error.Forbidden("Identity.UserInactive", "The user account is inactive.");
+        public static readonly Error UsernameTaken = Error.Conflict("Identity.UsernameTaken", "The username is already taken.");
+        public static readonly Error RoleNotFound = Error.NotFound("Identity.RoleNotFound", "The specified role was not found.");
     }
 
     public static class Correspondence

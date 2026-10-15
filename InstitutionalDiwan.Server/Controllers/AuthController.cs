@@ -1,4 +1,5 @@
 using InstitutionalDiwan.Application.Features.Identity.Login;
+using InstitutionalDiwan.Application.Features.Identity.Register;
 using InstitutionalDiwan.Server.Contracts.Identity;
 using InstitutionalDiwan.Server.Extensions;
 using MediatR;
@@ -31,6 +32,28 @@ public sealed class AuthController : ControllerBase
     {
         var result = await _sender.Send(
             new LoginCommand(request.Username, request.Password),
+            cancellationToken);
+
+        return result.ToActionResult();
+    }
+
+    /// <summary>Creates a new user account and assigns the default USER role.</summary>
+    /// <response code="200">The account was created.</response>
+    /// <response code="400">The payload failed validation (username too short, password under 8 characters, ...).</response>
+    /// <response code="404">The default USER role has not been seeded yet.</response>
+    /// <response code="409">The username is already taken.</response>
+    [HttpPost("register")]
+    [AllowAnonymous]
+    [ProducesResponseType<RegisterResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> Register(
+        [FromBody] RegisterRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await _sender.Send(
+            new RegisterCommand(request.Username, request.Password),
             cancellationToken);
 
         return result.ToActionResult();

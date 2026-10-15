@@ -25,7 +25,7 @@ grouping by technical type, so a slice can be read top-to-bottom.
 - **Queries:** `GetDepartmentTreeQuery`, `GetDepartmentByIdQuery`, `GetInstitutionSettingsQuery`
 
 ### Identity (Module 02)
-- **Commands:** `LoginCommand`, `CreateUserCommand`, `AssignUserRoleCommand`, `RevokeUserRoleCommand`, `AssignUserDepartmentScopeCommand`, `GrantDocumentAccessCommand`, `RevokeDocumentAccessCommand`
+- **Commands:** `LoginCommand`, `RegisterCommand`, `CreateUserCommand`, `AssignUserRoleCommand`, `RevokeUserRoleCommand`, `AssignUserDepartmentScopeCommand`, `GrantDocumentAccessCommand`, `RevokeDocumentAccessCommand`
 - **Queries:** `GetUserProfileQuery`, `GetUserEffectivePermissionsQuery`, `GetRolesQuery`
 
 ### Correspondence (Module 03)
