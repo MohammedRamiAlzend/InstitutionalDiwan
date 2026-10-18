@@ -79,6 +79,7 @@ and `Scalar.AspNetCore`, and project-references Application, Infrastructure, and
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-18 | opencode | Completed `UsersController` (`GET` list/by-id, `POST` create, `PUT` update, `DELETE` deactivate, `POST /activate`, `POST`/`DELETE …/roles/{roleId}`), all protected by `USER_MANAGE`; added `CreateUserRequest`/`UpdateUserRequest`/`AssignUserRoleRequest` contracts. |
 | 2026-10-18 | opencode | Added `EmployeesController` (`GET` list/by-id, `POST` create, `PUT` update, `DELETE` deactivate, `POST /activate`) protected by `EMPLOYEE_MANAGE`, and `DocumentAccessGrantsController` (`GET`/`POST`/`DELETE` under `/api/documents/{documentId}/access-grants`) protected by `ACCESS_GRANT_MANAGE`; registered `IEmployeeRepository`/`IDocumentAccessGrantRepository`. |
 | 2026-10-18 | opencode | Added `RolesController` (`GET` list/by-id, `POST` create, `PUT` update, `DELETE` soft delete, `POST /activate`, `POST`/`DELETE …/permissions`) and `PermissionsController` (`GET` catalog), all protected by `ROLE_MANAGE`. |
 | 2026-10-18 | opencode | Added `PUT /api/departments/{id}/parent` to reparent a department; the handler validates the whole subtree so a move cannot create a hierarchy cycle (409 `Department.CyclicHierarchy`). |

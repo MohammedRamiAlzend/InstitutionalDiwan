@@ -1,6 +1,6 @@
 # Application / Features
 
-> **Status:** Partially implemented — Identity (`Login`, `Register`, `ChangePassword`, `ListUsers`,
+> **Status:** Partially implemented — Identity (`Login`, `Register`, `ChangePassword`, `Users`,
 > `Roles`, `Permissions`, `Employees`, `AccessGrants`), Correspondence/`Documents` (create, get by id,
 > list), and Organization/`Departments` (create, update, soft delete, activate, get by id, list, tree)
 > slices are live; the remaining modules are target design.
@@ -28,8 +28,8 @@ grouping by technical type, so a slice can be read top-to-bottom.
 - **Queries:** `GetDepartmentTreeQuery` ✅ (root nodes with nested children), `GetDepartmentByIdQuery` ✅, `ListDepartmentsQuery` ✅; `GetInstitutionSettingsQuery` planned
 
 ### Identity (Module 02)
-- **Commands:** `LoginCommand` ✅, `RegisterCommand` ✅, `ChangePasswordCommand` ✅, `CreateRoleCommand` ✅ (rejects duplicate codes with `Identity.RoleCodeAlreadyExists`), `UpdateRoleCommand` ✅ (names + description; the code is immutable), `DeleteRoleCommand` ✅ (soft delete via `Deactivate`, system roles rejected with `Identity.SystemRoleProtected`), `ActivateRoleCommand` ✅, `GrantRolePermissionCommand` ✅ (validates the code against the permission catalog, 409 `Identity.PermissionAlreadyGranted`), `RevokeRolePermissionCommand` ✅ (idempotent), `CreateEmployeeCommand` ✅, `UpdateEmployeeCommand` ✅, `DeactivateEmployeeCommand` ✅, `ActivateEmployeeCommand` ✅, `GrantDocumentAccessCommand` ✅, `RevokeDocumentAccessCommand` ✅; `CreateUserCommand`, `AssignUserRoleCommand`, `RevokeUserRoleCommand`, `AssignUserDepartmentScopeCommand` planned
-- **Queries:** `ListUsersQuery` ✅, `ListRolesQuery` ✅, `GetRoleByIdQuery` ✅, `ListPermissionsQuery` ✅ (permission catalog), `ListEmployeesQuery` ✅, `GetEmployeeByIdQuery` ✅, `ListDocumentAccessGrantsQuery` ✅; `GetUserProfileQuery`, `GetUserEffectivePermissionsQuery`, `GetRolesQuery` planned
+- **Commands:** `LoginCommand` ✅, `RegisterCommand` ✅, `ChangePasswordCommand` ✅, `CreateRoleCommand` ✅ (rejects duplicate codes with `Identity.RoleCodeAlreadyExists`), `UpdateRoleCommand` ✅ (names + description; the code is immutable), `DeleteRoleCommand` ✅ (soft delete via `Deactivate`, system roles rejected with `Identity.SystemRoleProtected`), `ActivateRoleCommand` ✅, `GrantRolePermissionCommand` ✅ (validates the code against the permission catalog, 409 `Identity.PermissionAlreadyGranted`), `RevokeRolePermissionCommand` ✅ (idempotent), `CreateEmployeeCommand` ✅, `UpdateEmployeeCommand` ✅, `DeactivateEmployeeCommand` ✅, `ActivateEmployeeCommand` ✅, `GrantDocumentAccessCommand` ✅, `RevokeDocumentAccessCommand` ✅, `CreateUserCommand` ✅ (hashes the raw password, rejects duplicate usernames with `Identity.UsernameTaken`, validates the primary department and optional employee), `UpdateUserCommand` ✅, `DeactivateUserCommand` ✅, `ActivateUserCommand` ✅, `AssignUserRoleCommand` ✅ (records the grantor; 409 `Identity.RoleAlreadyAssigned`), `RevokeUserRoleCommand` ✅; `AssignUserDepartmentScopeCommand` planned
+- **Queries:** `ListUsersQuery` ✅, `GetUserByIdQuery` ✅, `ListRolesQuery` ✅, `GetRoleByIdQuery` ✅, `ListPermissionsQuery` ✅ (permission catalog), `ListEmployeesQuery` ✅, `GetEmployeeByIdQuery` ✅, `ListDocumentAccessGrantsQuery` ✅; `GetUserProfileQuery`, `GetUserEffectivePermissionsQuery`, `GetRolesQuery` planned
 
 ### Correspondence (Module 03)
 - **Commands (planned):** `CreateDraftDocumentCommand` (✅ implemented as `Correspondence/Documents/CreateDocumentCommand` — validates the supplied official number + numbering year, rejects with `Numbering.OfficialNumberTaken` (409) when the pair is taken, otherwise issues a `DocumentNumber`, registers the document, and persists it as `REGISTERED`), `UpdateDraftMetadataCommand`, `AddDocumentParticipantCommand`, `RegisterDocumentCommand`, `CancelDocumentCommand`
@@ -76,7 +76,8 @@ persistence and authorization concerns; the invariants live in the domain.
 
 | Module slice | State |
 | --- | --- |
-| Identity (`Login`, `Register`, `ChangePassword`, `ListUsers`) | ✅ Implemented |
+| Identity (`Login`, `Register`, `ChangePassword`) | ✅ Implemented |
+| Identity/`Users` (list, get by id, create, update, deactivate/activate, assign/revoke role) | ✅ Implemented |
 | Identity/`Roles` (create, update, soft delete, activate, get by id, list, grant/revoke permission) + Identity/`Permissions` catalog | ✅ Implemented |
 | Identity/`Employees` (create, update, deactivate/activate, get by id, list) | ✅ Implemented |
 | Identity/`AccessGrants` (grant, revoke, list by document) | ✅ Implemented |
@@ -88,6 +89,7 @@ persistence and authorization concerns; the invariants live in the domain.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-18 | opencode | Completed the Identity/`Users` slice (`GetUserByIdQuery`, `CreateUserCommand`, `UpdateUserCommand`, `DeactivateUserCommand`, `ActivateUserCommand`, `AssignUserRoleCommand`, `RevokeUserRoleCommand`); moved `ListUsersQuery`/`UserResponse` into `Features/Identity/Users/` alongside a `UserResponseFactory` (resolves role codes, sorts them); added `User.UpdateProfile`/`Activate` and enriched `UserResponse` with employee, department, scope, and timestamp fields. |
 | 2026-10-18 | opencode | Added the Identity/`Employees` slice (`CreateEmployeeCommand`, `UpdateEmployeeCommand`, `DeactivateEmployeeCommand`, `ActivateEmployeeCommand`, `ListEmployeesQuery`, `GetEmployeeByIdQuery`) and the Identity/`AccessGrants` slice (`GrantDocumentAccessCommand`, `RevokeDocumentAccessCommand`, `ListDocumentAccessGrantsQuery`); added `Employee.Update`/`Activate`, the `IEmployeeRepository`/`IDocumentAccessGrantRepository` contracts, the `EMPLOYEE_MANAGE`/`ACCESS_GRANT_MANAGE` permissions, and the `Identity.EmployeeNotFound`/`Identity.AccessGrantNotFound` errors. |
 | 2026-10-18 | opencode | Added the Identity/`Roles` slice (`CreateRoleCommand`, `UpdateRoleCommand`, `DeleteRoleCommand`, `ActivateRoleCommand`, `GrantRolePermissionCommand`, `RevokeRolePermissionCommand`, `ListRolesQuery`, `GetRoleByIdQuery`) and the Identity/`Permissions` catalog (`ListPermissionsQuery`); added `Role.UpdateDetails`/`Activate` and the `Identity.RoleCodeAlreadyExists`/`Identity.PermissionNotFound` errors. |
 | 2026-10-18 | opencode | Added `MoveDepartmentCommand` (`PUT /api/departments/{id}/parent`) with full-subtree cycle validation, plus `MoveDepartmentRequest`. |

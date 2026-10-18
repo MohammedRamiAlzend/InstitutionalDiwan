@@ -2,7 +2,7 @@ using InstitutionalDiwan.Application.Abstractions.Messaging;
 using InstitutionalDiwan.Domain.Common;
 using InstitutionalDiwan.Domain.Repositories;
 
-namespace InstitutionalDiwan.Application.Features.Identity.ListUsers;
+namespace InstitutionalDiwan.Application.Features.Identity.Users;
 
 internal sealed class ListUsersQueryHandler : IQueryHandler<ListUsersQuery, IReadOnlyCollection<UserResponse>>
 {
@@ -23,23 +23,7 @@ internal sealed class ListUsersQueryHandler : IQueryHandler<ListUsersQuery, IRea
         var responses = new List<UserResponse>(users.Count);
 
         foreach (var user in users)
-        {
-            var roleCodes = new List<string>();
-            foreach (var userRole in user.UserRoles)
-            {
-                var role = await _roleRepository.GetByIdAsync(userRole.RoleId, cancellationToken);
-                if (role is not null)
-                    roleCodes.Add(role.Code);
-            }
-
-            responses.Add(new UserResponse(
-                user.UserId,
-                user.Username,
-                user.IsActive,
-                user.MustChangePassword,
-                user.LastLoginAt,
-                roleCodes));
-        }
+            responses.Add(await UserResponseFactory.CreateAsync(user, _roleRepository, cancellationToken));
 
         return Result.Success<IReadOnlyCollection<UserResponse>>(responses);
     }

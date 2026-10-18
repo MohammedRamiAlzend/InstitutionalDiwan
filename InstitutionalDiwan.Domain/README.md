@@ -116,7 +116,9 @@ A single static catalog nested by module (`DomainErrors.Department`, `.Identity`
   at most one `ExternalOrganization` participant; archive/cancel blocked while active movements exist;
   `RowVersion` exposed for optimistic concurrency.
 - **`User`** — username required and lower-cased; duplicate role assignment rejected; role revoke when absent returns NotFound;
-  department scope assignment validates the date range; password change clears `MustChangePassword`.
+  department scope assignment validates the date range; password change clears `MustChangePassword`;
+  `UpdateProfile` edits the primary department, employee link, scope, and password-change flag; `Activate`
+  reverses `Deactivate`.
 - **`Role`** — code/name required; duplicate permission rejected; system roles are protected from deactivation.
 - **`DocumentAccessGrant`** — access level must be one of `VIEW|DOWNLOAD|FORWARD|MANAGE`; expiry must be in the future;
   `IsCurrentlyValid(utcNow)` combines revoked + expiry.
@@ -253,6 +255,7 @@ row is rejected with a Conflict.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-18 | opencode | `User` gained `UpdateProfile` (primary department, employee link, scope, password-change flag) and `Activate` (reverses `Deactivate`). |
 | 2026-10-18 | opencode | Added `IEmployeeRepository` and `IDocumentAccessGrantRepository` plus the `Identity.EmployeeNotFound`/`Identity.AccessGrantNotFound` errors; `Employee` gained `Update` (full-field edit) and `Activate` alongside the existing `TransferDepartment`/`Deactivate`; refreshed the repository count to 16. |
 | 2026-10-18 | opencode | Converted the **remaining** reference "code" strings to seeded lookup tables and completed the lookup programme: Identity (`UserScopeType`, `AssignmentType`, `AccessLevel`), Correspondence (`ParticipantRole`, `ParticipantTargetType`, `OrganizationType`), Movements (`MovementType`, `MovementStatus`, `MovementStepStatus`, `MovementEventType`), Attachments (`StorageProviderType`; reshaped `DocumentFileType`, `FileStorageProvider`), Relations (`DocumentRelationType`, `RelationActionType`), Archiving (`ArchiveEventType`, `ArchiveLocation`), Audit (`AuditActionType`, `AuditEntityType`), Notifications (`NotificationType`, `NotificationPriority`, `NotificationChannel`, `NotificationOutboxStatus`), and Organization (`NumberingMode`). Every reference string is now an integer FK; only identity/business codes and multi-value/free-text fields remain strings. |
 | 2026-10-18 | opencode | Introduced `LookupEntity` and replaced reference "code" strings with seeded lookup tables: Organization (`DepartmentType`), Correspondence (`DocumentType`, `DocumentStatusType`, `DocumentDirection`, confidentiality/priority levels), and Numbering (`DocumentNumberStatus`, `DocumentNumberEventType`, `NumberingResetPolicy`). Documented the pattern and the planned generic lookup CRUD endpoints. |

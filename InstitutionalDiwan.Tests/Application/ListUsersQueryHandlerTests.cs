@@ -1,4 +1,4 @@
-using InstitutionalDiwan.Application.Features.Identity.ListUsers;
+using InstitutionalDiwan.Application.Features.Identity.Users;
 using InstitutionalDiwan.Domain.Entities.Identity;
 using InstitutionalDiwan.Tests.Support;
 

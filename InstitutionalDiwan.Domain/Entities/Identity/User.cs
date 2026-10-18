@@ -137,12 +137,34 @@ public sealed class User : AggregateRoot<Guid>
         return Result.Success();
     }
 
+    public Result UpdateProfile(
+        Guid primaryDepartmentId,
+        Guid? employeeId,
+        int scopeTypeId,
+        bool mustChangePassword = true)
+    {
+        PrimaryDepartmentId = primaryDepartmentId;
+        EmployeeId = employeeId;
+        ScopeTypeId = scopeTypeId > 0 ? scopeTypeId : UserScopeType.DepartmentId;
+        MustChangePassword = mustChangePassword;
+        UpdatedAt = DateTime.UtcNow;
+        return Result.Success();
+    }
+
     public Result Deactivate()
     {
         if (!IsActive) return Result.Success();
         IsActive = false;
         UpdatedAt = DateTime.UtcNow;
         RaiseDomainEvent(new UserDeactivatedEvent(UserId));
+        return Result.Success();
+    }
+
+    public Result Activate()
+    {
+        if (IsActive) return Result.Success();
+        IsActive = true;
+        UpdatedAt = DateTime.UtcNow;
         return Result.Success();
     }
 }
