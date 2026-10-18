@@ -13,7 +13,7 @@ commands/queries map between them and the domain.
 
 | Module | Types |
 | --- | --- |
-| Organization | `CreateDepartmentRequest` ✅, `UpdateDepartmentRequest` ✅, `MoveDepartmentRequest`, `DepartmentTreeResponse` |
+| Organization | `CreateDepartmentRequest` ✅, `UpdateDepartmentRequest` ✅, `MoveDepartmentRequest` ✅, `DepartmentTreeResponse` |
 | Identity | `LoginRequest`, `LoginResponse`, `CreateUserRequest`, `GrantDocumentAccessRequest` |
 | Correspondence | `CreateDocumentRequest` ✅ (title, type, direction, `OfficialNumberText`, `NumberingYear`, optional summary/levels), `AddParticipantRequest`, `RegisterDocumentRequest`, `DocumentDetailsResponse` |
 | Numbering | `CreateNumberingRegistryRequest`, `CancelOfficialNumberRequest`, `OfficialNumberResponse` |
@@ -37,12 +37,13 @@ commands/queries map between them and the domain.
 | Item | State |
 | --- | --- |
 | Correspondence `CreateDocumentRequest` | ✅ Implemented (incl. official number + numbering year) |
-| Organization `CreateDepartmentRequest`, `UpdateDepartmentRequest` | ✅ Implemented |
+| Organization `CreateDepartmentRequest`, `UpdateDepartmentRequest`, `MoveDepartmentRequest` | ✅ Implemented |
 | Other request/response records | ❌ Not implemented |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-18 | opencode | Added `MoveDepartmentRequest` for `PUT /api/departments/{id}/parent` (optional parent; `null` promotes to root; cycle moves rejected with 409). |
 | 2026-10-18 | opencode | Added `CreateDepartmentRequest` and `UpdateDepartmentRequest` for the department CRUD endpoints (parent is optional; update carries name, parent, and external-correspondence policy). |
 | 2026-10-18 | opencode | `CreateDocumentRequest` gained required `OfficialNumberText` + `NumberingYear`, which `POST /api/documents` forwards to `CreateDocumentCommand` (409 when the number+year pair is taken). |

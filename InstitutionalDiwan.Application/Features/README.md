@@ -23,7 +23,7 @@ grouping by technical type, so a slice can be read top-to-bottom.
 ## Planned use cases per module
 
 ### Organization (Module 01)
-- **Commands:** `CreateDepartmentCommand` ✅ (creates under an optional active parent; validates the department type exists and is active; rejects duplicate codes with `Department.CodeAlreadyExists`), `UpdateDepartmentCommand` ✅ (renames, moves parent with self/cycle/inactive guards, updates the external-correspondence policy), `DeleteDepartmentCommand` ✅ (soft delete via `Deactivate`, blocked by `Department.HasActiveChildren`), `ActivateDepartmentCommand` ✅; `UpdateInstitutionSettingsCommand` planned
+- **Commands:** `CreateDepartmentCommand` ✅ (creates under an optional active parent; validates the department type exists and is active; rejects duplicate codes with `Department.CodeAlreadyExists`), `UpdateDepartmentCommand` ✅ (renames, moves parent with self/cycle/inactive guards, updates the external-correspondence policy), `MoveDepartmentCommand` ✅ (dedicated reparent with full-subtree cycle validation → `Department.CyclicHierarchy`), `DeleteDepartmentCommand` ✅ (soft delete via `Deactivate`, blocked by `Department.HasActiveChildren`), `ActivateDepartmentCommand` ✅; `UpdateInstitutionSettingsCommand` planned
 - **Queries:** `GetDepartmentTreeQuery` ✅ (root nodes with nested children), `GetDepartmentByIdQuery` ✅, `ListDepartmentsQuery` ✅; `GetInstitutionSettingsQuery` planned
 
 ### Identity (Module 02)
@@ -84,5 +84,6 @@ persistence and authorization concerns; the invariants live in the domain.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-18 | opencode | Added `MoveDepartmentCommand` (`PUT /api/departments/{id}/parent`) with full-subtree cycle validation, plus `MoveDepartmentRequest`. |
 | 2026-10-18 | opencode | Added the Organization/`Departments` slice: `CreateDepartmentCommand`, `UpdateDepartmentCommand` (rename + move + external policy), `DeleteDepartmentCommand` (soft delete), `ActivateDepartmentCommand`, `GetDepartmentByIdQuery`, `ListDepartmentsQuery`, and `GetDepartmentTreeQuery`. |
 | 2026-10-18 | opencode | `CreateDocumentCommand` now carries `OfficialNumberText` + `NumberingYear`; the handler checks the pair for duplicates (Conflict → 409), resolves/auto-creates a numbering registry, issues a `DocumentNumber`, and saves the document as REGISTERED instead of DRAFT. |

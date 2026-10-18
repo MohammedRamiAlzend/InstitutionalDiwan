@@ -110,6 +110,32 @@ public sealed class DepartmentsController : ControllerBase
     }
 
     /// <summary>
+    /// Reparents a department. The move is rejected with 409 when the new parent is the department
+    /// itself, one of its own descendants (a hierarchy cycle), or an inactive department; a missing
+    /// new parent is reported as 400 and a missing department as 404. A <c>null</c> parent promotes
+    /// the department to a root.
+    /// </summary>
+    /// <response code="200">The moved department.</response>
+    /// <response code="400">The new parent department does not exist.</response>
+    /// <response code="404">No department with that id exists.</response>
+    /// <response code="409">The move would create a cycle, target the department itself, or target an inactive parent.</response>
+    [HttpPut("{departmentId:guid}/parent")]
+    [ProducesResponseType<DepartmentResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> MoveToParent(
+        Guid departmentId,
+        [FromBody] MoveDepartmentRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await _sender.Send(
+            new MoveDepartmentCommand(departmentId, request.ParentDepartmentId), cancellationToken);
+
+        return result.ToActionResult();
+    }
+
+    /// <summary>
     /// Soft-deletes a department by deactivating it. Fails with 409 when it still has active children.
     /// </summary>
     /// <response code="200">The department was deactivated.</response>
