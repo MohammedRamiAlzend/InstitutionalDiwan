@@ -132,6 +132,83 @@ A single static catalog nested by module (`DomainErrors.Department`, `.Identity`
 - **`DocumentRelation`** — no self-relations; inactive relation types rejected; optional cycle prevention and
   symmetric endpoint normalization handled by `DocumentRelationType`.
 
+## Reference (lookup) tables
+
+Free-form "code" strings (`departmentTypeCode`, `documentStatusTypeCode`, `direction`, …) have been
+replaced with dedicated **reference/lookup tables**. Each lookup is its own entity derived from
+`LookupEntity` and referenced by an integer FK from the table that used to hold the string.
+
+### Pattern
+
+`Domain/Common/LookupEntity.cs` supplies the shared shape:
+
+| Member | Purpose |
+| --- | --- |
+| `Id` (`int`) | Stable primary key. |
+| `Desc` / `DescAr` | English / Arabic labels (both required). |
+| `IsActive` | Soft on/off switch instead of deleting rows. |
+| `CreatedAt` | Audit timestamp. |
+| `Relabel(desc, descAr)` / `Deactivate()` / `Activate()` | Encapsulated mutations. |
+
+Conventions applied to every lookup:
+
+- **Deterministic integer ids** are declared as `public const int ...Id` on the entity (for example
+  `DepartmentType.SectionId`, `DocumentStatusType.RegisteredId`). They are persisted with
+  `ValueGeneratedNever()` rather than a database `IDENTITY`, so default-data seeding and the domain
+  status machines can reference them safely. *This is the one deviation from the original plan,
+  which proposed a database identity column — revisit if auto-generated ids are required.*
+- Domain-specific columns that already existed are kept as extra properties (for example
+  `DepartmentType.HierarchyLevelOrder`, `DocumentType.AllowedDirectionId`,
+  `DocumentStatusType.IsTerminal`, `NotificationType.TitleTemplateAr`).
+- Default rows are inserted by seeders deriving from `Seed/LookupSeederBase<TEntity>` (idempotent:
+  existing rows are never overwritten), registered in `Infrastructure/DependencyInjection`.
+- Business documents store only the integer id; clients resolve labels from the lookup endpoints.
+
+### Converted so far
+
+| Lookup table | Replaced string | Referenced by |
+| --- | --- | --- |
+| `DEPARTMENT_TYPES` | `Department.DepartmentTypeCode` | `DEPARTMENTS.DepartmentTypeId` |
+| `DOCUMENT_DIRECTIONS` | `Document.Direction`, `NumberingRegistry.Direction` | `DOCUMENTS.DirectionId`, `NUMBERING_REGISTRIES.DirectionId` |
+| `DOCUMENT_TYPES` | `Document.DocumentTypeCode`, `NumberingRegistry.DocumentTypeCode` | `DOCUMENTS.DocumentTypeId`, `NUMBERING_REGISTRIES.DocumentTypeId` |
+| `DOCUMENT_STATUS_TYPES` | `Document.CurrentStatusCode`, `Document.StatusBeforeArchiveCode`, `DocumentStatusHistory.From/ToStatusCode` | `DOCUMENTS.CurrentStatusId`, `DOCUMENT_STATUS_HISTORY.FromStatusId/ToStatusId` |
+| `DOCUMENT_CONFIDENTIALITY_LEVELS` | `Document.ConfidentialityLevel` | `DOCUMENTS.ConfidentialityLevelId` |
+| `DOCUMENT_PRIORITY_LEVELS` | `Document.PriorityLevel` | `DOCUMENTS.PriorityLevelId` |
+| `DOCUMENT_NUMBER_STATUSES` | `DocumentNumber.Status` | `DOCUMENT_NUMBERS.StatusId` |
+| `DOCUMENT_NUMBER_EVENT_TYPES` | `DocumentNumberHistory.EventType` | `DOCUMENT_NUMBER_HISTORY.EventTypeId` |
+| `NUMBERING_RESET_POLICIES` | `NumberingRegistry.ResetPolicy` | `NUMBERING_REGISTRIES.ResetPolicyId` |
+
+### Still to convert
+
+`DocumentParticipant.RoleCode`/`TargetType`, `ExternalOrganization.OrganizationType`,
+`InstitutionSetting.NumberingMode`/`NumberingResetPolicy`, `User.ScopeType`,
+`UserDepartmentAssignment.AssignmentType`, `DocumentAccessGrant.AccessLevel`,
+`DocumentFile.FileTypeCode`, `DocumentFileVersion.StorageProviderCode`,
+`FileStorageProvider.ProviderType`, `DocumentRelation.RelationTypeCode` &
+`DocumentRelationEvent.ActionType`, `Notification.NotificationTypeCode`/`Priority`,
+`NotificationRecipient` channels, `NotificationOutbox.Channel`/`Status`,
+`DocumentMovement.MovementType`/`StatusCode`, `DocumentMovementStep.StepStatus`,
+`DocumentMovementEvent.EventType`, `DocumentArchiveEvent.EventType`/`PreviousStatusCode`/
+`NewStatusCode`/`ArchiveLocationCode`, and `AuditLog.ActionType`/`EntityType`.
+
+### Planned lookup CRUD endpoints
+
+A single generic `LookupsController` will expose CRUD over every reference table, with the lookup
+selected by a route segment resolved through a registry of allowed lookups:
+
+| Method | Route | Behavior |
+| --- | --- | --- |
+| `GET` | `/api/lookups/{lookup}` | List entries (optionally `?includeInactive=true`). |
+| `GET` | `/api/lookups/{lookup}/{id}` | Fetch one entry. |
+| `POST` | `/api/lookups/{lookup}` | Create (`Desc`, `DescAr`, plus any domain extras). |
+| `PUT` | `/api/lookups/{lookup}/{id}` | Relabel an existing entry. |
+| `PATCH` | `/api/lookups/{lookup}/{id}/deactivate` | Deactivate. |
+| `PATCH` | `/api/lookups/{lookup}/{id}/activate` | Reactivate. |
+
+Reads are guarded by the relevant module `*_VIEW` permission; writes by a new `LOOKUP_MANAGE`
+permission. Ids are immutable, and deactivating a lookup that is still referenced by a live business
+row is rejected with a Conflict.
+
 ## Implementation status
 
 | Folder | State |
@@ -158,4 +235,5 @@ A single static catalog nested by module (`DomainErrors.Department`, `.Identity`
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-18 | opencode | Introduced `LookupEntity` and replaced reference "code" strings with seeded lookup tables: Organization (`DepartmentType`), Correspondence (`DocumentType`, `DocumentStatusType`, `DocumentDirection`, confidentiality/priority levels), and Numbering (`DocumentNumberStatus`, `DocumentNumberEventType`, `NumberingResetPolicy`). Documented the pattern and the planned generic lookup CRUD endpoints. |
 | 2026-10-18 | opencode | Added `DomainErrors.Numbering.OfficialNumberTaken` (Conflict) and `IDocumentNumberRepository.ExistsByNumberAndYearAsync` — the domain contract behind the official-number + year duplicate check performed when creating a document. |
