@@ -12,11 +12,15 @@ public sealed class AuditIntegrityCheck : Entity<Guid>
         private set => Id = value;
     }
 
+    // FK → AuditLog.AuditLogId (InstitutionalDiwan.Domain.Entities.Audit.AuditLog)
     public long StartAuditLogId { get; private set; }
+    // FK → AuditLog.AuditLogId (InstitutionalDiwan.Domain.Entities.Audit.AuditLog)
     public long EndAuditLogId { get; private set; }
     public bool IsValid { get; private set; }
+    // FK → AuditLog.AuditLogId (InstitutionalDiwan.Domain.Entities.Audit.AuditLog)
     public long? FirstCorruptedLogId { get; private set; }
     public string? FailureDetails { get; private set; }
+    // FK → User.UserId (InstitutionalDiwan.Domain.Entities.Identity.User)
     public Guid ExecutedByUserId { get; private set; }
     public DateTime ExecutedAtUtc { get; private set; }
 

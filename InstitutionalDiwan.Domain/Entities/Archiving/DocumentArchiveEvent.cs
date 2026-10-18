@@ -12,10 +12,14 @@ public sealed class DocumentArchiveEvent : Entity<Guid>
         private set => Id = value;
     }
 
+    // FK → Document.DocumentId (InstitutionalDiwan.Domain.Entities.Correspondence.Document)
     public Guid DocumentId { get; private set; }
     public string EventType { get; private set; } = null!;
+    // FK → DocumentStatusType.Code (InstitutionalDiwan.Domain.Entities.Correspondence.DocumentStatusType)
     public string PreviousStatusCode { get; private set; } = null!;
+    // FK → DocumentStatusType.Code (InstitutionalDiwan.Domain.Entities.Correspondence.DocumentStatusType)
     public string NewStatusCode { get; private set; } = null!;
+    // FK → User.UserId (InstitutionalDiwan.Domain.Entities.Identity.User)
     public Guid ActorUserId { get; private set; }
     public string? Reason { get; private set; }
     public string? ArchiveLocationCode { get; private set; }

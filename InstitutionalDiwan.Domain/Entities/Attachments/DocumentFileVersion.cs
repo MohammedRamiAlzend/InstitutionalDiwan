@@ -12,8 +12,10 @@ public sealed class DocumentFileVersion : Entity<Guid>
         private set => Id = value;
     }
 
+    // FK → DocumentFile.FileId (InstitutionalDiwan.Domain.Entities.Attachments.DocumentFile)
     public Guid FileId { get; private set; }
     public int VersionNumber { get; private set; }
+    // FK → FileStorageProvider.Code (InstitutionalDiwan.Domain.Entities.Attachments.FileStorageProvider)
     public string StorageProviderCode { get; private set; } = null!;
     public string RelativePath { get; private set; } = null!;
     public string OriginalFileName { get; private set; } = null!;
@@ -21,6 +23,7 @@ public sealed class DocumentFileVersion : Entity<Guid>
     public long FileSizeBytes { get; private set; }
     public string ChecksumSha256 { get; private set; } = null!;
     public bool IsCurrent { get; private set; }
+    // FK → User.UserId (InstitutionalDiwan.Domain.Entities.Identity.User)
     public Guid UploadedByUserId { get; private set; }
     public string? ChangeNotes { get; private set; }
     public DateTime UploadedAt { get; private set; }

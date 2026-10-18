@@ -13,10 +13,14 @@ public sealed class DocumentRelation : AggregateRoot<Guid>
         private set => Id = value;
     }
 
+    // FK → Document.DocumentId (InstitutionalDiwan.Domain.Entities.Correspondence.Document)
     public Guid SourceDocumentId { get; private set; }
+    // FK → Document.DocumentId (InstitutionalDiwan.Domain.Entities.Correspondence.Document)
     public Guid TargetDocumentId { get; private set; }
+    // FK → DocumentRelationType.Code (InstitutionalDiwan.Domain.Entities.Relations.DocumentRelationType)
     public string RelationTypeCode { get; private set; } = null!;
     public string? Notes { get; private set; }
+    // FK → User.UserId (InstitutionalDiwan.Domain.Entities.Identity.User)
     public Guid CreatedByUserId { get; private set; }
     public DateTime CreatedAt { get; private set; }
 

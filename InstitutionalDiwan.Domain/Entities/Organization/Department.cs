@@ -18,8 +18,11 @@ public sealed class Department : AggregateRoot<Guid>
     public string Code { get; private set; } = null!;
     public string NameAr { get; private set; } = null!;
     public string? NameEn { get; private set; }
+    // FK → DepartmentType.Code (InstitutionalDiwan.Domain.Entities.Organization.DepartmentType)
     public string DepartmentTypeCode { get; private set; } = null!;
+    // FK → Department.DepartmentId (self-reference, parent department)
     public Guid? ParentDepartmentId { get; private set; }
+    // FK → Employee.EmployeeId (InstitutionalDiwan.Domain.Entities.Identity.Employee)
     public Guid? ManagerEmployeeId { get; private set; }
     public bool IsActive { get; private set; }
     public bool CanSendExternal { get; private set; }

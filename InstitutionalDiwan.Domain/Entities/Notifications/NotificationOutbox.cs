@@ -12,6 +12,7 @@ public sealed class NotificationOutbox : Entity<Guid>
         private set => Id = value;
     }
 
+    // FK → Notification.NotificationId (InstitutionalDiwan.Domain.Entities.Notifications.Notification)
     public Guid NotificationId { get; private set; }
     public string Channel { get; private set; } = "IN_APP";
     public string PayloadJson { get; private set; } = null!;

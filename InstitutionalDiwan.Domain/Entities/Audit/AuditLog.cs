@@ -15,12 +15,16 @@ public sealed class AuditLog : Entity<long>
     }
 
     public DateTime OccurredAtUtc { get; private set; }
+    // FK → User.UserId (InstitutionalDiwan.Domain.Entities.Identity.User)
     public Guid? ActorUserId { get; private set; }
+    // FK → Department.DepartmentId (InstitutionalDiwan.Domain.Entities.Organization.Department)
     public Guid? ActorDepartmentId { get; private set; }
     public string ModuleName { get; private set; } = null!;
     public string ActionType { get; private set; } = null!;
     public string EntityType { get; private set; } = null!;
+    // Polymorphic reference: id of the entity identified by EntityType (no single FK)
     public string EntityId { get; private set; } = null!;
+    // FK → Document.DocumentId (InstitutionalDiwan.Domain.Entities.Correspondence.Document)
     public Guid? RelatedDocumentId { get; private set; }
     public string? OldValuesJson { get; private set; }
     public string? NewValuesJson { get; private set; }

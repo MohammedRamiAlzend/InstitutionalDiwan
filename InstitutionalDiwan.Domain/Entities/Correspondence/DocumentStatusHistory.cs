@@ -11,9 +11,13 @@ public sealed class DocumentStatusHistory : Entity<Guid>
         private set => Id = value;
     }
 
+    // FK → Document.DocumentId (InstitutionalDiwan.Domain.Entities.Correspondence.Document)
     public Guid DocumentId { get; private set; }
+    // FK → DocumentStatusType.Code (InstitutionalDiwan.Domain.Entities.Correspondence.DocumentStatusType)
     public string? FromStatusCode { get; private set; }
+    // FK → DocumentStatusType.Code (InstitutionalDiwan.Domain.Entities.Correspondence.DocumentStatusType)
     public string ToStatusCode { get; private set; } = null!;
+    // FK → User.UserId (InstitutionalDiwan.Domain.Entities.Identity.User)
     public Guid ChangedByUserId { get; private set; }
     public string? Reason { get; private set; }
     public DateTime ChangedAt { get; private set; }

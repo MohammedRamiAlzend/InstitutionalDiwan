@@ -11,16 +11,21 @@ public sealed class DocumentMovementStep : Entity<Guid>
         private set => Id = value;
     }
 
+    // FK → DocumentMovement.MovementId (InstitutionalDiwan.Domain.Entities.Movements.DocumentMovement)
     public Guid MovementId { get; private set; }
     public int StepNo { get; private set; }
+    // FK → Department.DepartmentId (InstitutionalDiwan.Domain.Entities.Organization.Department)
     public Guid FromDepartmentId { get; private set; }
+    // FK → Department.DepartmentId (InstitutionalDiwan.Domain.Entities.Organization.Department)
     public Guid ToDepartmentId { get; private set; }
+    // FK → User.UserId (InstitutionalDiwan.Domain.Entities.Identity.User)
     public Guid? AssignedToUserId { get; private set; }
     public string StepStatus { get; private set; } = "PENDING";
     public string? Instructions { get; private set; }
     public string? OutcomeNotes { get; private set; }
     public DateTime? SentAt { get; private set; }
     public DateTime? ReceivedAt { get; private set; }
+    // FK → User.UserId (InstitutionalDiwan.Domain.Entities.Identity.User)
     public Guid? ReceivedByUserId { get; private set; }
     public DateTime? CompletedAt { get; private set; }
     public DateTime? DueDate { get; private set; }

@@ -13,15 +13,19 @@ public sealed class DocumentAccessGrant : AggregateRoot<Guid>
         private set => Id = value;
     }
 
+    // FK → Document.DocumentId (InstitutionalDiwan.Domain.Entities.Correspondence.Document)
     public Guid DocumentId { get; private set; }
+    // FK → User.UserId (InstitutionalDiwan.Domain.Entities.Identity.User)
     public Guid UserId { get; private set; }
     public string AccessLevel { get; private set; } = "VIEW";
+    // FK → User.UserId (InstitutionalDiwan.Domain.Entities.Identity.User)
     public Guid GrantedByUserId { get; private set; }
     public string? Reason { get; private set; }
     public DateTime GrantedAt { get; private set; }
     public DateTime? ExpiresAt { get; private set; }
     public bool IsRevoked { get; private set; }
     public DateTime? RevokedAt { get; private set; }
+    // FK → User.UserId (InstitutionalDiwan.Domain.Entities.Identity.User)
     public Guid? RevokedByUserId { get; private set; }
 
     private DocumentAccessGrant()

@@ -6,7 +6,9 @@ namespace InstitutionalDiwan.Domain.Entities.Identity;
 
 public sealed class RolePermission
 {
+    // FK → Role.RoleId (InstitutionalDiwan.Domain.Entities.Identity.Role)
     public Guid RoleId { get; private set; }
+    // FK → Permission.Code (InstitutionalDiwan.Domain.Entities.Identity.Permission)
     public string PermissionCode { get; private set; } = null!;
     public DateTime GrantedAt { get; private set; }
 

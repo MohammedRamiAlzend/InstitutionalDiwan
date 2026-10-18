@@ -29,15 +29,20 @@ public sealed class DocumentMovement : AggregateRoot<Guid>
         private set => Id = value;
     }
 
+    // FK → Document.DocumentId (InstitutionalDiwan.Domain.Entities.Correspondence.Document)
     public Guid DocumentId { get; private set; }
     public string MovementType { get; private set; } = "REFERRAL";
+    // FK → Department.DepartmentId (InstitutionalDiwan.Domain.Entities.Organization.Department)
     public Guid SourceDepartmentId { get; private set; }
+    // FK → Department.DepartmentId (InstitutionalDiwan.Domain.Entities.Organization.Department)
     public Guid DestinationDepartmentId { get; private set; }
+    // FK → User.UserId (InstitutionalDiwan.Domain.Entities.Identity.User)
     public Guid? AssignedToUserId { get; private set; }
     public string StatusCode { get; private set; } = StatusDraft;
     public int CurrentStepNo { get; private set; }
     public string? Instructions { get; private set; }
     public DateTime? DueDate { get; private set; }
+    // FK → User.UserId (InstitutionalDiwan.Domain.Entities.Identity.User)
     public Guid CreatedByUserId { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public DateTime? ClosedAt { get; private set; }

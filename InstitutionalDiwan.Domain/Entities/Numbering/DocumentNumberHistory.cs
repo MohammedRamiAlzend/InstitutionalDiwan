@@ -11,8 +11,10 @@ public sealed class DocumentNumberHistory : Entity<Guid>
         private set => Id = value;
     }
 
+    // FK → DocumentNumber.DocumentNumberId (InstitutionalDiwan.Domain.Entities.Numbering.DocumentNumber)
     public Guid DocumentNumberId { get; private set; }
     public string EventType { get; private set; } = null!;
+    // FK → User.UserId (InstitutionalDiwan.Domain.Entities.Identity.User)
     public Guid ActorUserId { get; private set; }
     public string? Notes { get; private set; }
     public DateTime OccurredAt { get; private set; }

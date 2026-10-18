@@ -11,6 +11,7 @@ public sealed class NumberingCounter : Entity<Guid>
         private set => Id = value;
     }
 
+    // FK → NumberingRegistry.RegistryId (InstitutionalDiwan.Domain.Entities.Numbering.NumberingRegistry)
     public Guid RegistryId { get; private set; }
     public int NumberingYear { get; private set; }
     public long LastValue { get; private set; }

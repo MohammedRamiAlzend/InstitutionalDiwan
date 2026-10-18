@@ -20,7 +20,9 @@ public sealed class User : AggregateRoot<Guid>
 
     public string Username { get; private set; } = null!;
     public string PasswordHash { get; private set; } = null!;
+    // FK → Employee.EmployeeId (InstitutionalDiwan.Domain.Entities.Identity.Employee)
     public Guid? EmployeeId { get; private set; }
+    // FK → Department.DepartmentId (InstitutionalDiwan.Domain.Entities.Organization.Department)
     public Guid PrimaryDepartmentId { get; private set; }
     public string ScopeType { get; private set; } = "DEPARTMENT";
     public bool IsActive { get; private set; }

@@ -24,7 +24,6 @@ public sealed class Document : AggregateRoot<Guid>
         get => Id;
         private set => Id = value;
     }
-
     public string Title { get; private set; } = null!;
     public string? SubjectSummary { get; private set; }
     public string DocumentTypeCode { get; private set; } = null!;
@@ -33,8 +32,11 @@ public sealed class Document : AggregateRoot<Guid>
     public string PriorityLevel { get; private set; } = "NORMAL";
     public string CurrentStatusCode { get; private set; } = StatusDraft;
     public string? StatusBeforeArchiveCode { get; private set; }
+    // FK → Department.Id (InstitutionalDiwan.Domain.Entities.Organization.Department)
     public Guid OwningDepartmentId { get; private set; }
+    // FK → User.Id (InstitutionalDiwan.Domain.Entities.Identity.User)
     public Guid CreatedByUserId { get; private set; }
+    // FK → DocumentNumber.DocumentNumberId (InstitutionalDiwan.Domain.Entities.Numbering.DocumentNumber)
     public Guid? ActiveOfficialNumberId { get; private set; }
     public string? OfficialNumberText { get; private set; }
     public DateTime? DocumentDate { get; private set; }

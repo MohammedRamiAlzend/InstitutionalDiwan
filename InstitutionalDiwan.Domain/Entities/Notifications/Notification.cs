@@ -18,11 +18,14 @@ public sealed class Notification : AggregateRoot<Guid>
         private set => Id = value;
     }
 
+    // FK → NotificationType.Code (InstitutionalDiwan.Domain.Entities.Notifications.NotificationType)
     public string NotificationTypeCode { get; private set; } = null!;
     public string TitleAr { get; private set; } = null!;
     public string BodyAr { get; private set; } = null!;
     public string Priority { get; private set; } = "NORMAL";
+    // FK → Document.DocumentId (InstitutionalDiwan.Domain.Entities.Correspondence.Document)
     public Guid? RelatedDocumentId { get; private set; }
+    // FK → DocumentMovement.MovementId (InstitutionalDiwan.Domain.Entities.Movements.DocumentMovement)
     public Guid? RelatedMovementId { get; private set; }
     public string? ActionUrl { get; private set; }
     public DateTime CreatedAt { get; private set; }

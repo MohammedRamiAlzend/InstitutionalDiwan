@@ -17,14 +17,18 @@ public sealed class DocumentNumber : AggregateRoot<Guid>
         private set => Id = value;
     }
 
+    // FK → Document.DocumentId (InstitutionalDiwan.Domain.Entities.Correspondence.Document)
     public Guid DocumentId { get; private set; }
+    // FK → NumberingRegistry.RegistryId (InstitutionalDiwan.Domain.Entities.Numbering.NumberingRegistry)
     public Guid RegistryId { get; private set; }
     public int NumberingYear { get; private set; }
     public long SequenceValue { get; private set; }
     public string OfficialNumberText { get; private set; } = null!;
     public string Status { get; private set; } = "ACTIVE";
+    // FK → User.Id (InstitutionalDiwan.Domain.Entities.Identity.User)
     public Guid IssuedByUserId { get; private set; }
     public DateTime IssuedAt { get; private set; }
+    // FK → DocumentNumber.DocumentNumberId (self-reference, the replacement number)
     public Guid? ReplacedByNumberId { get; private set; }
     public string? CancellationReason { get; private set; }
 

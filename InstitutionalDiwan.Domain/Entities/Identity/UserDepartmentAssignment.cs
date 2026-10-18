@@ -12,7 +12,9 @@ public sealed class UserDepartmentAssignment : Entity<Guid>
         private set => Id = value;
     }
 
+    // FK → User.UserId (InstitutionalDiwan.Domain.Entities.Identity.User)
     public Guid UserId { get; private set; }
+    // FK → Department.DepartmentId (InstitutionalDiwan.Domain.Entities.Organization.Department)
     public Guid DepartmentId { get; private set; }
     public string AssignmentType { get; private set; } = "ADDITIONAL";
     public bool IncludeSubtree { get; private set; }

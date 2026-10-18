@@ -18,7 +18,9 @@ public sealed class NumberingRegistry : AggregateRoot<Guid>
 
     public string Code { get; private set; } = null!;
     public string NameAr { get; private set; } = null!;
+    // FK → Department.DepartmentId (InstitutionalDiwan.Domain.Entities.Organization.Department)
     public Guid? DepartmentId { get; private set; }
+    // FK → DocumentType.Code (InstitutionalDiwan.Domain.Entities.Correspondence.DocumentType)
     public string? DocumentTypeCode { get; private set; }
     public string? Direction { get; private set; }
     public string FormatPattern { get; private set; } = "{YEAR}/{SEQ:D6}";

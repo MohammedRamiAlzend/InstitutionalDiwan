@@ -13,10 +13,13 @@ public sealed class DocumentParticipant : Entity<Guid>
         private set => Id = value;
     }
 
+    // FK → Document.DocumentId (InstitutionalDiwan.Domain.Entities.Correspondence.Document)
     public Guid DocumentId { get; private set; }
     public string RoleCode { get; private set; } = null!;
     public string TargetType { get; private set; } = null!;
+    // FK → Department.DepartmentId (InstitutionalDiwan.Domain.Entities.Organization.Department)
     public Guid? InternalDepartmentId { get; private set; }
+    // FK → ExternalOrganization.ExternalOrganizationId (InstitutionalDiwan.Domain.Entities.Correspondence.ExternalOrganization)
     public Guid? ExternalOrganizationId { get; private set; }
     public string? PersonName { get; private set; }
     public bool IsPrimary { get; private set; }

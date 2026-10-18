@@ -12,6 +12,7 @@ public sealed class SavedSearch : AggregateRoot<Guid>
         private set => Id = value;
     }
 
+    // FK → User.UserId (InstitutionalDiwan.Domain.Entities.Identity.User)
     public Guid UserId { get; private set; }
     public string Name { get; private set; } = null!;
     public string CriteriaJson { get; private set; } = null!;

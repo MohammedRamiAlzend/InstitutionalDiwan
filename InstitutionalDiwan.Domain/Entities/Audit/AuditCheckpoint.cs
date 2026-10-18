@@ -12,10 +12,13 @@ public sealed class AuditCheckpoint : Entity<Guid>
         private set => Id = value;
     }
 
+    // FK → AuditLog.AuditLogId (InstitutionalDiwan.Domain.Entities.Audit.AuditLog)
     public long FromAuditLogId { get; private set; }
+    // FK → AuditLog.AuditLogId (InstitutionalDiwan.Domain.Entities.Audit.AuditLog)
     public long ToAuditLogId { get; private set; }
     public string TerminalHash { get; private set; } = null!;
     public long RecordCount { get; private set; }
+    // FK → User.UserId (InstitutionalDiwan.Domain.Entities.Identity.User)
     public Guid CreatedByUserId { get; private set; }
     public DateTime CreatedAtUtc { get; private set; }
 

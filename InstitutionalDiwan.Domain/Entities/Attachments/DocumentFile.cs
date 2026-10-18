@@ -17,12 +17,15 @@ public sealed class DocumentFile : AggregateRoot<Guid>
         private set => Id = value;
     }
 
+    // FK → Document.DocumentId (InstitutionalDiwan.Domain.Entities.Correspondence.Document)
     public Guid DocumentId { get; private set; }
+    // FK → DocumentFileType.Code (InstitutionalDiwan.Domain.Entities.Attachments.DocumentFileType)
     public string FileTypeCode { get; private set; } = null!;
     public string Title { get; private set; } = null!;
     public bool IsPrimaryScan { get; private set; }
     public int CurrentVersionNumber { get; private set; }
     public bool IsArchived { get; private set; }
+    // FK → User.UserId (InstitutionalDiwan.Domain.Entities.Identity.User)
     public Guid CreatedByUserId { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public DateTime? UpdatedAt { get; private set; }

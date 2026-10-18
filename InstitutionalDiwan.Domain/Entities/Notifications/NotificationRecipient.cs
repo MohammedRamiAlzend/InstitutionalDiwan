@@ -11,8 +11,11 @@ public sealed class NotificationRecipient : Entity<Guid>
         private set => Id = value;
     }
 
+    // FK → Notification.NotificationId (InstitutionalDiwan.Domain.Entities.Notifications.Notification)
     public Guid NotificationId { get; private set; }
+    // FK → User.UserId (InstitutionalDiwan.Domain.Entities.Identity.User)
     public Guid UserId { get; private set; }
+    // FK → Department.DepartmentId (InstitutionalDiwan.Domain.Entities.Organization.Department)
     public Guid? DepartmentId { get; private set; }
     public bool IsRead { get; private set; }
     public DateTime? ReadAt { get; private set; }

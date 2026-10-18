@@ -15,6 +15,7 @@ public sealed class Employee : AggregateRoot<Guid>
     public string? EmployeeNumber { get; private set; }
     public string FullNameAr { get; private set; } = null!;
     public string? FullNameEn { get; private set; }
+    // FK → Department.DepartmentId (InstitutionalDiwan.Domain.Entities.Organization.Department)
     public Guid DepartmentId { get; private set; }
     public string? JobTitleAr { get; private set; }
     public string? Email { get; private set; }

@@ -5,9 +5,12 @@ namespace InstitutionalDiwan.Domain.Entities.Identity;
 
 public sealed class UserRole
 {
+    // FK → User.UserId (InstitutionalDiwan.Domain.Entities.Identity.User)
     public Guid UserId { get; private set; }
+    // FK → Role.RoleId (InstitutionalDiwan.Domain.Entities.Identity.Role)
     public Guid RoleId { get; private set; }
     public DateTime AssignedAt { get; private set; }
+    // FK → User.UserId (InstitutionalDiwan.Domain.Entities.Identity.User)
     public Guid? AssignedByUserId { get; private set; }
 
     private UserRole()
