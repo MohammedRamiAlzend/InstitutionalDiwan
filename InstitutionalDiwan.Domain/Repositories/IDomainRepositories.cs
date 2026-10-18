@@ -35,6 +35,7 @@ public interface IDocumentRepository
 public interface INumberingRegistryRepository
 {
     Task<NumberingRegistry?> GetByIdAsync(Guid registryId, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<NumberingRegistry>> ListAllAsync(CancellationToken cancellationToken = default);
     Task<NumberingRegistry?> GetActiveForScopeAsync(Guid? departmentId, string? documentTypeCode, string? direction, CancellationToken cancellationToken = default);
     void Add(NumberingRegistry registry);
 }
@@ -43,6 +44,7 @@ public interface IDocumentNumberRepository
 {
     Task<DocumentNumber?> GetByIdAsync(Guid documentNumberId, CancellationToken cancellationToken = default);
     Task<DocumentNumber?> GetActiveByDocumentIdAsync(Guid documentId, CancellationToken cancellationToken = default);
+    Task<bool> ExistsByNumberAndYearAsync(string officialNumberText, int numberingYear, CancellationToken cancellationToken = default);
     void Add(DocumentNumber documentNumber);
 }
 

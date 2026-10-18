@@ -44,15 +44,21 @@ public sealed class DocumentsController : ControllerBase
         return result.ToActionResult();
     }
 
-    /// <summary>Creates a new DRAFT document in the caller's department.</summary>
+    /// <summary>Creates a new document in the caller's department with the supplied official number.</summary>
+    /// <remarks>
+    /// The document is persisted as REGISTERED when the official number + numbering year pair is free.
+    /// If the pair is already taken the endpoint responds with <c>409 Conflict</c>.
+    /// </remarks>
     /// <response code="200">The created document.</response>
     /// <response code="400">The payload failed validation.</response>
     /// <response code="403">The token lacks the DOCUMENT_CREATE permission.</response>
+    /// <response code="409">The official number is already taken for that numbering year.</response>
     [HttpPost]
     [Authorize(Policy = Permissions.DocumentCreate)]
     [ProducesResponseType<DocumentResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Create(
         [FromBody] CreateDocumentRequest request,
         CancellationToken cancellationToken)
@@ -66,6 +72,8 @@ public sealed class DocumentsController : ControllerBase
             request.Title,
             request.DocumentTypeCode,
             request.Direction,
+            request.OfficialNumberText,
+            request.NumberingYear,
             request.SubjectSummary,
             request.ConfidentialityLevel,
             request.PriorityLevel), cancellationToken);

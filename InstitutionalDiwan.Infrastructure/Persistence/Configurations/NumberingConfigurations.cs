@@ -29,7 +29,9 @@ public sealed class DocumentNumberConfiguration : IEntityTypeConfiguration<Docum
             .IsUnique()
             .HasDatabaseName("UX_DOC_NUMBERS_REG_YEAR_SEQ");
 
-        builder.HasIndex(x => x.OfficialNumberText).HasDatabaseName("IX_DOC_NUMBERS_TEXT");
+        builder.HasIndex(x => new { x.OfficialNumberText, x.NumberingYear })
+            .IsUnique()
+            .HasDatabaseName("UX_DOC_NUMBERS_TEXT_YEAR");
 
         builder.HasMany(x => x.History)
             .WithOne()

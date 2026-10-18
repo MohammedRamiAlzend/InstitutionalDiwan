@@ -1,6 +1,8 @@
 # Application / Features
 
-> **Status:** Target design — **no features implemented yet**.
+> **Status:** Partially implemented — Identity (`Login`, `Register`, `ChangePassword`, `ListUsers`)
+> and Correspondence/`Documents` (create, get by id, list) slices are live; the remaining modules are
+> target design.
 
 ## Purpose
 
@@ -29,8 +31,8 @@ grouping by technical type, so a slice can be read top-to-bottom.
 - **Queries:** `GetUserProfileQuery`, `GetUserEffectivePermissionsQuery`, `GetRolesQuery`
 
 ### Correspondence (Module 03)
-- **Commands:** `CreateDraftDocumentCommand`, `UpdateDraftMetadataCommand`, `AddDocumentParticipantCommand`, `RegisterDocumentCommand`, `CancelDocumentCommand`
-- **Queries:** `GetDocumentDetailsQuery`, `GetDocumentTimelineQuery`, `ListDepartmentDocumentsQuery`
+- **Commands (planned):** `CreateDraftDocumentCommand` (✅ implemented as `Correspondence/Documents/CreateDocumentCommand` — validates the supplied official number + numbering year, rejects with `Numbering.OfficialNumberTaken` (409) when the pair is taken, otherwise issues a `DocumentNumber`, registers the document, and persists it as `REGISTERED`), `UpdateDraftMetadataCommand`, `AddDocumentParticipantCommand`, `RegisterDocumentCommand`, `CancelDocumentCommand`
+- **Queries (partial):** `GetDocumentByIdQuery` ✅, `ListDocumentsQuery` ✅; `GetDocumentDetailsQuery`, `GetDocumentTimelineQuery`, `ListDepartmentDocumentsQuery` planned
 
 ### Numbering (Module 04)
 - **Commands:** `IssueOfficialNumberCommand`, `CancelOfficialNumberCommand`, `ReplaceOfficialNumberCommand`, `CreateNumberingRegistryCommand`
@@ -73,7 +75,12 @@ persistence and authorization concerns; the invariants live in the domain.
 
 | Module slice | State |
 | --- | --- |
-| Organization, Identity, Correspondence, Numbering, Movements, Attachments, Archiving, Relations, Audit, Notifications | ❌ None implemented |
+| Identity (`Login`, `Register`, `ChangePassword`, `ListUsers`) | ✅ Implemented |
+| Correspondence/`Documents` (create with official number, get by id, list) | ✅ Implemented |
+| Organization, Numbering, Movements, Attachments, Archiving, Relations, Audit, Notifications | ❌ Not implemented |
 
-This is the largest remaining piece of work in the backend. Nothing here can be wired up until the
-[`Abstractions/`](../Abstractions/README.md) contracts and [Behaviors](../Behaviors/README.md) exist.
+## Change Log
+
+| Date | Author | Change |
+| --- | --- | --- |
+| 2026-10-18 | opencode | `CreateDocumentCommand` now carries `OfficialNumberText` + `NumberingYear`; the handler checks the pair for duplicates (Conflict → 409), resolves/auto-creates a numbering registry, issues a `DocumentNumber`, and saves the document as REGISTERED instead of DRAFT. |

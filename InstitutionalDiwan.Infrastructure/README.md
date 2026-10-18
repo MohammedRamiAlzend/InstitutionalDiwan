@@ -1,6 +1,6 @@
 # InstitutionalDiwan.Infrastructure — Infrastructure & Persistence Layer
 
-> **Status:** Partially implemented — `Persistence/` (DbContext + EF configurations + two repositories + seeder) and parts of `Authentication/` (PBKDF2 hasher, JWT provider).
+> **Status:** Partially implemented — `Persistence/` (DbContext + EF configurations + five repositories (incl. numbering) + two migrations + seeder) and parts of `Authentication/` (PBKDF2 hasher, JWT provider).
 
 ## Purpose
 
@@ -16,7 +16,7 @@ Those references do not resolve today — see [Known issues](#known-issues--todo
 
 | Folder | Responsibility | Code status |
 | --- | --- | --- |
-| [`Persistence/`](Persistence/README.md) | `NewDiwanDbContext`, `Configurations/`, `Repositories/`, `Interceptors/`, `Migrations/`, `Seed/` | ⚠️ `DbContext` + 10 configurations + `User`/`Role` repositories + ordered seeders |
+| [`Persistence/`](Persistence/README.md) | `DiwanDbContext`, `Configurations/`, `Repositories/`, `Interceptors/`, `Migrations/`, `Seed/` | ⚠️ `DbContext` + 10 configurations + 5 repositories (incl. numbering) + 2 migrations + ordered seeders |
 | [`Authentication/`](Authentication/README.md) | JWT token generation, password hashing, HTTP `UserContext` | ⚠️ `PasswordHasher` + `JwtProvider` implemented |
 | [`Authorization/`](Authorization/README.md) | Permission-based RBAC + organizational scope and document-access evaluators | ❌ Empty |
 | [`Storage/`](Storage/README.md) | Local/S3/MinIO binary file storage and SHA-256 stream verification | ❌ Empty |
@@ -60,17 +60,22 @@ Persistence/Configurations/
 | Area | State |
 | --- | --- |
 | EF Core provider package (`SqlServer`) | ✅ Referenced |
-| `NewDiwanDbContext` | ✅ Written and compiling |
+| `DiwanDbContext` | ✅ Written and compiling |
 | Entity configurations | ✅ Written for all 40 entities |
-| Repositories | ⚠️ `UserRepository`, `RoleRepository` implemented; the rest pending |
+| Repositories | 🟡 `UserRepository`, `RoleRepository`, `DocumentRepository`, `NumberingRegistryRepository`, `DocumentNumberRepository` implemented; the rest pending |
 | Seed | ✅ Ordered, environment-aware seeders (`PermissionSeeder`, `RoleSeeder`, `UserSeeder`) |
-| Authentication | ⚠️ `PasswordHasher` (PBKDF2) + `JwtProvider` implemented; `UserContext` pending |
-| Interceptors / Migrations | ❌ Empty |
+| Authentication | 🟡 `PasswordHasher` (PBKDF2) + `JwtProvider` implemented; `UserContext` pending |
+| Migrations | ✅ 2 applied (`InitialCreate`, `AddUniqueOfficialNumber`) |
+| Interceptors | ❌ Empty |
 | Authorization / Storage / Outbox / BackgroundJobs / Time | ❌ Empty |
 
 ### Known issues / TODO
 
-1. **Naming drift.** The `DbContext` class is still named `NewDiwanDbContext` even though it now lives
-   in `InstitutionalDiwan.Infrastructure.Persistence`; rename it for consistency.
-2. **The remaining repositories, interceptors, migrations and jobs** are still to be implemented — see
+1. **The remaining repositories, interceptors and jobs** are still to be implemented — see
    each folder's README.
+
+## Change Log
+
+| Date | Author | Change |
+| --- | --- | --- |
+| 2026-10-18 | opencode | Registered `IDocumentNumberRepository` + `INumberingRegistryRepository` in `DependencyInjection.cs`; added unique official-number migration — supports number+year conflict check at document creation. |

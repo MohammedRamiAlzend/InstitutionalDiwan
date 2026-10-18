@@ -1,6 +1,7 @@
 # InstitutionalDiwan.Server — Web API / Presentation Layer
 
-> **Status:** Default web template. Only `Program.cs` exists; there are no controllers or middleware yet.
+> **Status:** Implemented — `Program.cs` wires DI, auth, MediatR, and the exception middleware;
+> `Auth`, `Documents`, and `Users` controllers serve the live endpoints.
 
 ## Purpose
 
@@ -16,10 +17,10 @@ The project is named `NewDiwan.Presentation` in the older design notes; the actu
 
 | Folder | Responsibility | Code status |
 | --- | --- | --- |
-| `Controllers/` | REST controllers, one per module | ❌ Folder **does not exist yet** |
-| [`Contracts/`](Contracts/README.md) | HTTP request/response DTO records grouped by module | ❌ Empty (docs only) |
-| [`Middleware/`](Middleware/README.md) | Global exception handling, correlation-id tracking, audit IP capture | ❌ Empty (docs only) |
-| [`Extensions/`](Extensions/README.md) | `Result` → HTTP mapping, DI registration, Swagger, auth setup | ❌ Empty (docs only) |
+| `Controllers/` | REST controllers, one per module | ✅ `AuthController`, `DocumentsController`, `UsersController` |
+| [`Contracts/`](Contracts/README.md) | HTTP request/response DTO records grouped by module | 🟡 `CreateDocumentRequest` + Identity/Users records live |
+| [`Middleware/`](Middleware/README.md) | Global exception handling, correlation-id tracking, audit IP capture | 🟡 `GlobalExceptionHandlingMiddleware` live (409 on unique-key violations) |
+| [`Extensions/`](Extensions/README.md) | `Result` → HTTP mapping, DI registration, Swagger, auth setup | ✅ `ResultExtensions` (ErrorType → status code incl. Conflict → 409), auth/Swagger setup |
 
 ## Current `Program.cs`
 
@@ -65,10 +66,16 @@ and `Scalar.AspNetCore`, and project-references Application, Infrastructure, and
 
 | Item | State |
 | --- | --- |
-| `Program.cs` | ⚠️ Template only |
-| Controllers | ❌ None |
-| Contracts / Middleware / Extensions | ❌ None (docs only) |
-| DI for Application/Infrastructure | ❌ Not wired |
-| Authentication / Authorization setup | ❌ Not wired |
+| `Program.cs` | ✅ Wired (DI, MediatR, FluentValidation, auth, exception middleware, SPA host) |
+| Controllers | ✅ `Auth`, `Documents` (incl. 409 on duplicate official number), `Users` |
+| Contracts / Middleware / Extensions | 🟡 Partially implemented |
+| DI for Application/Infrastructure | ✅ Wired |
+| Authentication / Authorization setup | ✅ JWT + permission policies |
 | SignalR | ❌ Not wired |
 | `InstitutionalDiwan.Server.http` | ⚠️ Still the sample `weatherforecast` request |
+
+## Change Log
+
+| Date | Author | Change |
+| --- | --- | --- |
+| 2026-10-18 | opencode | `POST /api/documents` now requires `OfficialNumberText` + `NumberingYear` (409 Conflict when the pair is taken); `GlobalExceptionHandlingMiddleware` maps SQL unique-key violations to 409; refreshed stale status tables. |

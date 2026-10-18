@@ -152,3 +152,9 @@ lookups (`HasActiveChildrenAsync`, `GetActiveForScopeAsync`, `HasActiveMovements
    invariants above.
 4. **Identity login errors added** — `DomainErrors.Identity.InvalidCredentials` (Unauthorized) and
    `DomainErrors.Identity.UserInactive` (Forbidden) support the login use case.
+
+## Change Log
+
+| Date | Author | Change |
+| --- | --- | --- |
+| 2026-10-18 | opencode | Added `DomainErrors.Numbering.OfficialNumberTaken` (Conflict) and `IDocumentNumberRepository.ExistsByNumberAndYearAsync` — the domain contract behind the official-number + year duplicate check performed when creating a document. |

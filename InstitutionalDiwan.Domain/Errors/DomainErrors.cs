@@ -78,6 +78,8 @@ public static class DomainErrors
         public static readonly Error ReplacementIdInvalid = Error.Validation("Numbering.ReplacementIdInvalid", "A distinct replacement number ID is required.");
         public static readonly Error RegistryCodeEmpty = Error.Validation("Numbering.RegistryCodeEmpty", "Numbering registry code is required.");
         public static readonly Error RegistryInactive = Error.Conflict("Numbering.RegistryInactive", "Cannot allocate numbers from an inactive numbering registry.");
+        public static readonly Error OfficialNumberTaken = Error.Conflict("Numbering.OfficialNumberTaken", "The official number is already taken for the specified numbering year.");
+        public static readonly Error RegistryNotFound = Error.NotFound("Numbering.RegistryNotFound", "The numbering registry was not found.");
     }
 
     public static class Movements

@@ -31,6 +31,8 @@ public static class DependencyInjection
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IRoleRepository, RoleRepository>();
         services.AddScoped<IDocumentRepository, DocumentRepository>();
+        services.AddScoped<IDocumentNumberRepository, DocumentNumberRepository>();
+        services.AddScoped<INumberingRegistryRepository, NumberingRegistryRepository>();
 
         // Ordered, environment-aware seeders — executed at startup by SeederRunner.
         services.AddScoped<ISeeder, PermissionSeeder>();

@@ -35,10 +35,11 @@ public sealed class RoleSeederTests
             .Select(rp => rp.PermissionCode)
             .ToListAsync();
 
-        Assert.Equal(9, adminGrants.Count);
+        Assert.Equal(10, adminGrants.Count);
         Assert.Equal(3, userGrants.Count);
         Assert.Contains("USER_MANAGE", adminGrants);
         Assert.Contains("DOCUMENT_APPROVE", adminGrants);
+        Assert.Contains("NUMBERING_VIEW", adminGrants);
         Assert.DoesNotContain("USER_MANAGE", userGrants);
         Assert.Equal(userGrants.OrderBy(c => c), new[] { "DOCUMENT_CREATE", "DOCUMENT_EDIT", "DOCUMENT_VIEW" }.OrderBy(c => c));
     }
@@ -55,7 +56,7 @@ public sealed class RoleSeederTests
         await seeder.SeedAsync(Context(db));
 
         Assert.Equal(2, await db.Roles.CountAsync());
-        Assert.Equal(12, await db.RolePermissions.CountAsync());
+        Assert.Equal(13, await db.RolePermissions.CountAsync());
         Assert.Equal(adminIdAfterFirstRun, (await db.Roles.SingleAsync(r => r.Code == "ADMIN")).RoleId);
     }
 
@@ -71,7 +72,7 @@ public sealed class RoleSeederTests
         await new RoleSeeder().SeedAsync(Context(db));
 
         var admin = await db.Roles.SingleAsync(r => r.Code == "ADMIN");
-        Assert.Equal(9, await db.RolePermissions.CountAsync(rp => rp.RoleId == admin.RoleId));
+        Assert.Equal(10, await db.RolePermissions.CountAsync(rp => rp.RoleId == admin.RoleId));
         Assert.Equal(2, await db.Roles.CountAsync());
     }
 }

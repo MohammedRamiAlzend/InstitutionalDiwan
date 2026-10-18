@@ -1,19 +1,24 @@
 # Presentation / Middleware
 
-> **Status:** Target design — **no code yet**.
+> **Status:** Partially implemented — `GlobalExceptionHandlingMiddleware` is implemented and
+> registered outermost in `Program.cs`; `RequestContextLoggingMiddleware` remains target design.
 
 ## Purpose
 
 ASP.NET Core HTTP pipeline middleware that applies request-wide concerns before controllers run.
 
-## Planned components
+## Components
 
 ### `GlobalExceptionHandlingMiddleware.cs`
-Catches any unhandled exception (such as the application `ConcurrencyException` or a database
-connectivity failure), logs it with the active `CorrelationId`, and returns a clean RFC 7807
-`ProblemDetails` JSON response **without leaking stack traces**. Pairs with the application exceptions in
-[`../../InstitutionalDiwan.Application/Exceptions/`](../../InstitutionalDiwan.Application/Exceptions/README.md):
-`ConcurrencyException → 409`, unhandled `DomainException → 400/500` depending on severity.
+Catches any unhandled exception (such as a database connectivity failure), logs it, and returns a
+clean RFC 7807 `ProblemDetails` JSON response **without leaking stack traces**. Two paths:
+
+- **`DbUpdateException` caused by a SQL Server unique-key violation (error 2601/2627)** → `409
+  Conflict` with a generic "conflicting record already exists" problem — the last line of defence
+  behind application-level duplicate checks such as the official number + year check in
+  `CreateDocumentCommandHandler`.
+- **Anything else** → `500 Internal Server Error`, logged at `Error` level (the conflict path is
+  logged at `Warning`).
 
 ### `RequestContextLoggingMiddleware.cs`
 Reads or generates the `X-Correlation-Id` header and pushes `CorrelationId`, `IpAddress`, and `UserId`
@@ -33,8 +38,11 @@ GlobalExceptionHandling → RequestContextLogging → Authentication → Authori
 
 | Middleware | State |
 | --- | --- |
-| `GlobalExceptionHandlingMiddleware` | ❌ Not implemented |
+| `GlobalExceptionHandlingMiddleware` | ✅ Implemented (500 fallback + 409 for unique-key violations) |
 | `RequestContextLoggingMiddleware` | ❌ Not implemented |
 
-Neither is registered in `Program.cs`, so an unhandled exception currently returns the framework default
-(and, in Development, would expose the developer exception page).
+## Change Log
+
+| Date | Author | Change |
+| --- | --- | --- |
+| 2026-10-18 | opencode | `GlobalExceptionHandlingMiddleware` now maps SQL Server unique-key violations (`DbUpdateException`, errors 2601/2627) to `409 Conflict` — concurrent duplicate official numbers return 409 instead of 500. |

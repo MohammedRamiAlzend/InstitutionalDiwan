@@ -19,6 +19,7 @@ public sealed class RoleSeeder : ISeeder
     {
         Permissions.DocumentView, Permissions.DocumentCreate, Permissions.DocumentEdit,
         Permissions.DocumentDelete, Permissions.DocumentApprove,
+        Permissions.NumberingView,
         Permissions.DepartmentManage, Permissions.RoleManage, Permissions.UserManage,
         Permissions.ReportView,
     };

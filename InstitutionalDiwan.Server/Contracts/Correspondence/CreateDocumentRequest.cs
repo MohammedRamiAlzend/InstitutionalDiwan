@@ -5,6 +5,8 @@ public sealed record CreateDocumentRequest(
     string Title,
     string DocumentTypeCode,
     string Direction,
+    string OfficialNumberText,
+    int NumberingYear,
     string? SubjectSummary = null,
     string? ConfidentialityLevel = null,
     string? PriorityLevel = null);

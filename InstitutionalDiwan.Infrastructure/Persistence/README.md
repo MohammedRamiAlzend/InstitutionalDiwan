@@ -1,7 +1,7 @@
 # Infrastructure / Persistence
 
-> **Status:** The only partially implemented area of the backend. `NewDiwanDbContext` and the ten
-> configuration files exist; repositories, interceptors, migrations, and seeding do not.
+> **Status:** Partially implemented. `DiwanDbContext` and the ten configuration files exist, plus
+> five repositories, two applied migrations, and the ordered seeders. Interceptors remain empty.
 
 ## Purpose
 
@@ -15,9 +15,9 @@ without knowing which provider is underneath.
 | --- | --- | --- |
 | `NewDiwanDbContext.cs` | ✅ Written | `DbContext, IUnitOfWork`; 40 `DbSet`s; applies configurations by assembly scan. |
 | `Configurations/` | ✅ Written (10 files) | `IEntityTypeConfiguration<T>` for all 40 entities. |
-| `Repositories/` | ❌ Empty | Concrete implementations of `InstitutionalDiwan.Domain.Repositories`. |
+| `Repositories/` | 🟡 Partial (5 files) | `UserRepository`, `RoleRepository`, `DocumentRepository`, `NumberingRegistryRepository`, `DocumentNumberRepository`. |
 | `Interceptors/` | ❌ Empty | Domain-event dispatch + tamper-evident audit. |
-| `Migrations/` | ❌ Empty | EF Core migrations (incl. SQL Server hardening). |
+| `Migrations/` | ✅ Written (2) | `InitialCreate` + `AddUniqueOfficialNumber` (unique official-number + year index). |
 | `Seed/` | ✅ Written | `ISeeder` + `SeederRunner` (ordering + environment gating); `PermissionSeeder` (100), `RoleSeeder` (200), `UserSeeder` (300). |
 
 ## `NewDiwanDbContext` design
@@ -47,12 +47,18 @@ without knowing which provider is underneath.
 
 | Item | State |
 | --- | --- |
-| `DbContext` | ✅ Written (does not compile) |
-| All 40 entity configurations | ✅ Written (do not compile) |
-| Repository implementations | ❌ None |
+| `DbContext` | ✅ Written |
+| All 40 entity configurations | ✅ Written |
+| Repository implementations | 🟡 5 of 11 (incl. numbering repositories) |
 | Interceptors | ❌ None |
-| Migrations | ❌ None |
+| Migrations | ✅ 2 applied (`InitialCreate`, `AddUniqueOfficialNumber`) |
 | Seed data | ✅ Permissions, system roles, demo users (`Seed/` — ordered + environment-gated) |
+
+## Change Log
+
+| Date | Author | Change |
+| --- | --- | --- |
+| 2026-10-18 | opencode | Added `DocumentNumberRepository` + `NumberingRegistryRepository`, the unique `UX_DOC_NUMBERS_TEXT_YEAR` index (`NumberingConfigurations.cs`), and the `AddUniqueOfficialNumber` migration — official numbers are now uniqueness-checked at document creation. |
 
 ### Known issues / TODO
 

@@ -1,6 +1,7 @@
 # Infrastructure / Persistence / Migrations
 
-> **Status:** Target design — **no migrations exist yet**.
+> **Status:** Implemented — `InitialCreate` (full schema) and `AddUniqueOfficialNumber` are generated
+> and applied at startup by `Server/Extensions/DatabaseExtensions.cs` (`Database.MigrateAsync`).
 
 ## Purpose
 
@@ -9,11 +10,19 @@ plus the hand-written steps that express database-level guarantees the ORM canno
 
 ## Generating a migration
 
-Once the EF Core packages are referenced and the namespaces are fixed:
-
 ```bash
-dotnet ef migrations add InitialCreate --project   InstitutionalDiwan.Infrastructure --startup-project InstitutionalDiwan.Server  --output-dir Persistence/Migrations
+dotnet ef migrations add <MigrationName> --project InstitutionalDiwan.Infrastructure --startup-project InstitutionalDiwan.Server --output-dir Persistence/Migrations
 ```
+
+Always build first (or omit `--no-build`): scaffolding from a stale assembly silently produces an
+empty migration when the model changed.
+
+## Existing migrations
+
+| Migration | What it does |
+| --- | --- |
+| `20261014200146_InitialCreate` | Creates the full schema (40+ tables, `UX_*`/`IX_*` indexes, FKs). |
+| `20261018071440_AddUniqueOfficialNumber` | Replaces the non-unique `IX_DOC_NUMBERS_TEXT` on `DOCUMENT_NUMBERS.OfficialNumberText` with the unique `UX_DOC_NUMBERS_TEXT_YEAR (OfficialNumberText, NumberingYear)` — the database-level backstop behind the official-number duplicate check. |
 
 ## Custom (hand-written) migration steps
 
@@ -28,10 +37,14 @@ dotnet ef migrations add InitialCreate --project   InstitutionalDiwan.Infrastruc
 
 | Item | State |
 | --- | --- |
-| Initial migration | ❌ Not created |
+| Initial migration | ✅ Created + applied |
+| Unique official-number index (`UX_DOC_NUMBERS_TEXT_YEAR`) | ✅ Created + applied (2026-10-18) |
 | Audit immutability trigger / DENY | ❌ Not created |
 | Closure table / indexed view | ❌ Not created |
 | Full-text catalog & indexes | ❌ Not created |
 
-Blocked on the [namespace fix and EF Core package reference](../README.md#known-issues--todo) — the
-model does not compile yet, so it cannot be scaffolded into a migration.
+## Change Log
+
+| Date | Author | Change |
+| --- | --- | --- |
+| 2026-10-18 | opencode | Added `AddUniqueOfficialNumber` — drops `IX_DOC_NUMBERS_TEXT`, creates unique `UX_DOC_NUMBERS_TEXT_YEAR (OfficialNumberText, NumberingYear)` so a duplicate official number + year can never be saved (409 backstop for `CreateDocumentCommand`). |

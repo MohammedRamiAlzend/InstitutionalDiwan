@@ -1,6 +1,7 @@
 # Presentation / Contracts
 
-> **Status:** Target design — **no DTOs implemented yet**.
+> **Status:** Partially implemented — Correspondence (`CreateDocumentRequest`) plus Identity and
+> Users requests/responses exist; the remaining modules are target design.
 
 ## Purpose
 
@@ -14,7 +15,7 @@ commands/queries map between them and the domain.
 | --- | --- |
 | Organization | `CreateDepartmentRequest`, `MoveDepartmentRequest`, `DepartmentTreeResponse` |
 | Identity | `LoginRequest`, `LoginResponse`, `CreateUserRequest`, `GrantDocumentAccessRequest` |
-| Correspondence | `CreateDraftDocumentRequest`, `AddParticipantRequest`, `RegisterDocumentRequest`, `DocumentDetailsResponse` |
+| Correspondence | `CreateDocumentRequest` ✅ (title, type, direction, `OfficialNumberText`, `NumberingYear`, optional summary/levels), `AddParticipantRequest`, `RegisterDocumentRequest`, `DocumentDetailsResponse` |
 | Numbering | `CreateNumberingRegistryRequest`, `CancelOfficialNumberRequest`, `OfficialNumberResponse` |
 | Movements | `CreateMovementRequest`, `RedirectMovementRequest`, `RejectMovementStepRequest`, `MovementTimelineResponse` |
 | Attachments | `UploadAttachmentVersionRequest`, `DocumentFileResponse` |
@@ -35,8 +36,11 @@ commands/queries map between them and the domain.
 
 | Item | State |
 | --- | --- |
-| All request/response records | ❌ Not implemented |
+| Correspondence `CreateDocumentRequest` | ✅ Implemented (incl. official number + numbering year) |
+| Other request/response records | ❌ Not implemented |
 
-No types exist yet, so controllers cannot be written against them. See
-[`../../InstitutionalDiwan.Application/Features/`](../../InstitutionalDiwan.Application/Features/README.md)
-for the use cases these contracts will serve.
+## Change Log
+
+| Date | Author | Change |
+| --- | --- | --- |
+| 2026-10-18 | opencode | `CreateDocumentRequest` gained required `OfficialNumberText` + `NumberingYear`, which `POST /api/documents` forwards to `CreateDocumentCommand` (409 when the number+year pair is taken). |

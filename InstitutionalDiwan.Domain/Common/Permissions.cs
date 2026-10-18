@@ -12,6 +12,7 @@ public static class Permissions
     public const string DocumentEdit = "DOCUMENT_EDIT";
     public const string DocumentDelete = "DOCUMENT_DELETE";
     public const string DocumentApprove = "DOCUMENT_APPROVE";
+    public const string NumberingView = "NUMBERING_VIEW";
     public const string DepartmentManage = "DEPARTMENT_MANAGE";
     public const string RoleManage = "ROLE_MANAGE";
     public const string UserManage = "USER_MANAGE";
@@ -21,6 +22,6 @@ public static class Permissions
     public static readonly IReadOnlyCollection<string> All = new[]
     {
         DocumentView, DocumentCreate, DocumentEdit, DocumentDelete, DocumentApprove,
-        DepartmentManage, RoleManage, UserManage, ReportView,
+        NumberingView, DepartmentManage, RoleManage, UserManage, ReportView,
     };
 }

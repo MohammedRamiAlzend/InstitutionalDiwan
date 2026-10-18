@@ -24,6 +24,13 @@ public sealed class CreateDocumentCommandValidator : AbstractValidator<CreateDoc
                                AllowedDirections.Contains(direction.Trim().ToUpperInvariant()))
             .WithErrorCode("Correspondence.DirectionInvalid");
 
+        RuleFor(command => command.OfficialNumberText)
+            .Must(number => !string.IsNullOrWhiteSpace(number)).WithErrorCode("Numbering.OfficialNumberEmpty")
+            .MaximumLength(100).WithErrorCode("Numbering.OfficialNumberEmpty");
+
+        RuleFor(command => command.NumberingYear)
+            .InclusiveBetween(1900, 2200).WithErrorCode("Numbering.YearInvalid");
+
         RuleFor(command => command.ConfidentialityLevel).MaximumLength(50);
         RuleFor(command => command.PriorityLevel).MaximumLength(50);
     }

@@ -15,7 +15,9 @@ public sealed record DocumentResponse(
     Guid OwningDepartmentId,
     Guid CreatedByUserId,
     DateTime DocumentDate,
-    DateTime CreatedAt)
+    DateTime CreatedAt,
+    string? OfficialNumberText = null,
+    DateTime? RegistrationDate = null)
 {
     public static DocumentResponse From(Document document) => new(
         document.DocumentId,
@@ -29,5 +31,7 @@ public sealed record DocumentResponse(
         document.OwningDepartmentId,
         document.CreatedByUserId,
         document.DocumentDate ?? document.CreatedAt,
-        document.CreatedAt);
+        document.CreatedAt,
+        document.OfficialNumberText,
+        document.RegistrationDate);
 }

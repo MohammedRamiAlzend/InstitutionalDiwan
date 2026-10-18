@@ -1633,8 +1633,9 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
 
                     b.HasKey("DocumentNumberId");
 
-                    b.HasIndex("OfficialNumberText")
-                        .HasDatabaseName("IX_DOC_NUMBERS_TEXT");
+                    b.HasIndex("OfficialNumberText", "NumberingYear")
+                        .IsUnique()
+                        .HasDatabaseName("UX_DOC_NUMBERS_TEXT_YEAR");
 
                     b.HasIndex("RegistryId", "NumberingYear", "SequenceValue")
                         .IsUnique()
