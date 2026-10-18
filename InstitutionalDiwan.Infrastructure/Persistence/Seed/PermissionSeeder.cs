@@ -26,6 +26,8 @@ public sealed class PermissionSeeder : ISeeder
         (Permissions.DepartmentManage, "إدارة الأقسام", "Manage departments", "ORGANIZATION", "Create, rename and reorganize departments."),
         (Permissions.RoleManage, "إدارة الأدوار", "Manage roles", "IDENTITY", "Create roles and grant or revoke permissions."),
         (Permissions.UserManage, "إدارة المستخدمين", "Manage users", "IDENTITY", "Create, deactivate and assign roles to users."),
+        (Permissions.EmployeeManage, "إدارة الموظفين", "Manage employees", "IDENTITY", "Create, update and deactivate employee records."),
+        (Permissions.AccessGrantManage, "إدارة صلاحيات الوصول", "Manage document access", "IDENTITY", "Grant and revoke per-document access for users."),
         (Permissions.ReportView, "عرض التقارير", "View reports", "REPORTING", "View institutional reports and statistics."),
     };
 

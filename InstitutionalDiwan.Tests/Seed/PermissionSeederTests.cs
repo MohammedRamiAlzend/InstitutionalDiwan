@@ -19,13 +19,15 @@ public sealed class PermissionSeederTests
         await new PermissionSeeder().SeedAsync(Context(db));
 
         var codes = await db.Permissions.Select(p => p.Code).ToListAsync();
-        Assert.Equal(10, codes.Count);
+        Assert.Equal(12, codes.Count);
         Assert.Contains("DOCUMENT_VIEW", codes);
         Assert.Contains("DOCUMENT_APPROVE", codes);
         Assert.Contains("NUMBERING_VIEW", codes);
         Assert.Contains("DEPARTMENT_MANAGE", codes);
         Assert.Contains("ROLE_MANAGE", codes);
         Assert.Contains("USER_MANAGE", codes);
+        Assert.Contains("EMPLOYEE_MANAGE", codes);
+        Assert.Contains("ACCESS_GRANT_MANAGE", codes);
         Assert.Contains("REPORT_VIEW", codes);
     }
 
@@ -38,7 +40,7 @@ public sealed class PermissionSeederTests
         await seeder.SeedAsync(Context(db));
         await seeder.SeedAsync(Context(db));
 
-        Assert.Equal(10, await db.Permissions.CountAsync());
+        Assert.Equal(12, await db.Permissions.CountAsync());
     }
 
     [Fact]
@@ -52,7 +54,7 @@ public sealed class PermissionSeederTests
 
         await new PermissionSeeder().SeedAsync(Context(db));
 
-        Assert.Equal(10, await db.Permissions.CountAsync());
+        Assert.Equal(12, await db.Permissions.CountAsync());
         Assert.Equal(1, await db.Permissions.CountAsync(p => p.Code == "DOCUMENT_VIEW"));
     }
 }

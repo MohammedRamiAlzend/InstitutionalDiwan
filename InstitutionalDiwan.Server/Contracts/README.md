@@ -1,7 +1,8 @@
 # Presentation / Contracts
 
 > **Status:** Partially implemented — Correspondence (`CreateDocumentRequest`), Organization, and
-> Identity/Users requests/responses exist; the remaining modules are target design.
+> Identity requests/responses (incl. employees and document access grants) exist; the remaining
+> modules are target design.
 
 ## Purpose
 
@@ -14,7 +15,7 @@ commands/queries map between them and the domain.
 | Module | Types |
 | --- | --- |
 | Organization | `CreateDepartmentRequest` ✅, `UpdateDepartmentRequest` ✅, `MoveDepartmentRequest` ✅, `DepartmentTreeResponse` |
-| Identity | `LoginRequest` ✅, `RegisterRequest` ✅, `ChangePasswordRequest` ✅, `CreateRoleRequest` ✅, `UpdateRoleRequest` ✅, `GrantPermissionRequest` ✅, `CreateUserRequest`, `GrantDocumentAccessRequest` |
+| Identity | `LoginRequest` ✅, `RegisterRequest` ✅, `ChangePasswordRequest` ✅, `CreateRoleRequest` ✅, `UpdateRoleRequest` ✅, `GrantPermissionRequest` ✅, `CreateEmployeeRequest` ✅, `UpdateEmployeeRequest` ✅, `GrantDocumentAccessRequest` ✅, `CreateUserRequest` |
 | Correspondence | `CreateDocumentRequest` ✅ (title, type, direction, `OfficialNumberText`, `NumberingYear`, optional summary/levels), `AddParticipantRequest`, `RegisterDocumentRequest`, `DocumentDetailsResponse` |
 | Numbering | `CreateNumberingRegistryRequest`, `CancelOfficialNumberRequest`, `OfficialNumberResponse` |
 | Movements | `CreateMovementRequest`, `RedirectMovementRequest`, `RejectMovementStepRequest`, `MovementTimelineResponse` |
@@ -39,12 +40,14 @@ commands/queries map between them and the domain.
 | Correspondence `CreateDocumentRequest` | ✅ Implemented (incl. official number + numbering year) |
 | Organization `CreateDepartmentRequest`, `UpdateDepartmentRequest`, `MoveDepartmentRequest` | ✅ Implemented |
 | Identity `CreateRoleRequest`, `UpdateRoleRequest`, `GrantPermissionRequest` | ✅ Implemented |
+| Identity `CreateEmployeeRequest`, `UpdateEmployeeRequest`, `GrantDocumentAccessRequest` | ✅ Implemented |
 | Other request/response records | ❌ Not implemented |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-18 | opencode | Added `CreateEmployeeRequest`, `UpdateEmployeeRequest` (for `/api/employees`) and `GrantDocumentAccessRequest` (for `/api/documents/{documentId}/access-grants`). |
 | 2026-10-18 | opencode | Added `CreateRoleRequest`, `UpdateRoleRequest`, and `GrantPermissionRequest` for the role-management endpoints. |
 | 2026-10-18 | opencode | Added `MoveDepartmentRequest` for `PUT /api/departments/{id}/parent` (optional parent; `null` promotes to root; cycle moves rejected with 409). |
 | 2026-10-18 | opencode | Added `CreateDepartmentRequest` and `UpdateDepartmentRequest` for the department CRUD endpoints (parent is optional; update carries name, parent, and external-correspondence policy). |

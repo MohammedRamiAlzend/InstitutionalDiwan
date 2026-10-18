@@ -53,6 +53,38 @@ internal sealed class FakePermissionRepository : IPermissionRepository
                 .ToList());
 }
 
+internal sealed class FakeEmployeeRepository : IEmployeeRepository
+{
+    public List<Employee> Employees { get; } = new();
+
+    public Task<Employee?> GetByIdAsync(Guid employeeId, CancellationToken cancellationToken = default)
+        => Task.FromResult(Employees.FirstOrDefault(employee => employee.EmployeeId == employeeId));
+
+    public Task<IReadOnlyList<Employee>> ListAllAsync(CancellationToken cancellationToken = default)
+        => Task.FromResult<IReadOnlyList<Employee>>(
+            Employees.OrderBy(employee => employee.FullNameAr).ToList());
+
+    public void Add(Employee employee) => Employees.Add(employee);
+}
+
+internal sealed class FakeDocumentAccessGrantRepository : IDocumentAccessGrantRepository
+{
+    public List<DocumentAccessGrant> Grants { get; } = new();
+
+    public Task<DocumentAccessGrant?> GetByIdAsync(Guid grantId, CancellationToken cancellationToken = default)
+        => Task.FromResult(Grants.FirstOrDefault(grant => grant.GrantId == grantId));
+
+    public Task<IReadOnlyList<DocumentAccessGrant>> ListByDocumentAsync(
+        Guid documentId,
+        CancellationToken cancellationToken = default)
+        => Task.FromResult<IReadOnlyList<DocumentAccessGrant>>(
+            Grants.Where(grant => grant.DocumentId == documentId)
+                .OrderByDescending(grant => grant.GrantedAt)
+                .ToList());
+
+    public void Add(DocumentAccessGrant grant) => Grants.Add(grant);
+}
+
 internal sealed class FakeUnitOfWork : IUnitOfWork
 {
     public int SaveChangesCallCount { get; private set; }

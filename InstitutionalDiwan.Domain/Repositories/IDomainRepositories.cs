@@ -35,6 +35,20 @@ public interface IRoleRepository
     void Add(Role role);
 }
 
+public interface IEmployeeRepository
+{
+    Task<Employee?> GetByIdAsync(Guid employeeId, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<Employee>> ListAllAsync(CancellationToken cancellationToken = default);
+    void Add(Employee employee);
+}
+
+public interface IDocumentAccessGrantRepository
+{
+    Task<DocumentAccessGrant?> GetByIdAsync(Guid grantId, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<DocumentAccessGrant>> ListByDocumentAsync(Guid documentId, CancellationToken cancellationToken = default);
+    void Add(DocumentAccessGrant grant);
+}
+
 public interface IPermissionRepository
 {
     Task<Permission?> GetByCodeAsync(string code, CancellationToken cancellationToken = default);

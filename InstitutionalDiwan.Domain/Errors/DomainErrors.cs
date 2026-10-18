@@ -56,6 +56,8 @@ public static class DomainErrors
         public static readonly Error PermissionNotFound = Error.Validation("Identity.PermissionNotFound", "The specified permission does not exist.");
         public static readonly Error UserNotFound = Error.NotFound("Identity.UserNotFound", "The user account was not found.");
         public static readonly Error CurrentPasswordIncorrect = Error.Validation("Identity.CurrentPasswordIncorrect", "The current password is incorrect.");
+        public static readonly Error EmployeeNotFound = Error.NotFound("Identity.EmployeeNotFound", "The employee record was not found.");
+        public static readonly Error AccessGrantNotFound = Error.NotFound("Identity.AccessGrantNotFound", "The document access grant was not found.");
     }
 
     public static class Correspondence

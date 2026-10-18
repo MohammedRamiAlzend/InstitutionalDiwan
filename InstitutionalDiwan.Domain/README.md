@@ -83,8 +83,9 @@ A single static catalog nested by module (`DomainErrors.Department`, `.Identity`
 
 ### `Repositories/IDomainRepositories.cs`
 
-12 pure repository contracts: `IDepartmentRepository`, `IUserRepository`, `IRoleRepository`,
-`IPermissionRepository`, `IDocumentRepository`, `INumberingRegistryRepository`,
+16 pure repository contracts: `IDepartmentRepository`, `IDepartmentTypeRepository`, `IUserRepository`,
+`IRoleRepository`, `IEmployeeRepository`, `IDocumentAccessGrantRepository`, `IPermissionRepository`,
+`IDocumentRepository`, `IDocumentTypeRepository`, `INumberingRegistryRepository`,
 `IDocumentNumberRepository`, `IDocumentMovementRepository`, `IDocumentFileRepository`,
 `IDocumentRelationRepository`, `IAuditLogRepository`, `INotificationRepository`. They expose
 `GetByIdAsync`, a few targeted lookups (`HasActiveChildrenAsync`, `GetActiveForScopeAsync`,
@@ -234,7 +235,7 @@ row is rejected with a Conflict.
 | `ValueObjects/` | ✅ Implemented (4 value objects) |
 | `Errors/` | ✅ Implemented (`DomainErrors` catalog) |
 | `Events/` | ✅ Implemented (34 events) |
-| `Repositories/` | ✅ Implemented (11 interfaces) |
+| `Repositories/` | ✅ Implemented (16 interfaces) |
 | `Entities/` | ✅ Implemented (64 entities across 10 modules, including reference/lookup tables) |
 
 ### Known issues / TODO
@@ -252,6 +253,7 @@ row is rejected with a Conflict.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-18 | opencode | Added `IEmployeeRepository` and `IDocumentAccessGrantRepository` plus the `Identity.EmployeeNotFound`/`Identity.AccessGrantNotFound` errors; `Employee` gained `Update` (full-field edit) and `Activate` alongside the existing `TransferDepartment`/`Deactivate`; refreshed the repository count to 16. |
 | 2026-10-18 | opencode | Converted the **remaining** reference "code" strings to seeded lookup tables and completed the lookup programme: Identity (`UserScopeType`, `AssignmentType`, `AccessLevel`), Correspondence (`ParticipantRole`, `ParticipantTargetType`, `OrganizationType`), Movements (`MovementType`, `MovementStatus`, `MovementStepStatus`, `MovementEventType`), Attachments (`StorageProviderType`; reshaped `DocumentFileType`, `FileStorageProvider`), Relations (`DocumentRelationType`, `RelationActionType`), Archiving (`ArchiveEventType`, `ArchiveLocation`), Audit (`AuditActionType`, `AuditEntityType`), Notifications (`NotificationType`, `NotificationPriority`, `NotificationChannel`, `NotificationOutboxStatus`), and Organization (`NumberingMode`). Every reference string is now an integer FK; only identity/business codes and multi-value/free-text fields remain strings. |
 | 2026-10-18 | opencode | Introduced `LookupEntity` and replaced reference "code" strings with seeded lookup tables: Organization (`DepartmentType`), Correspondence (`DocumentType`, `DocumentStatusType`, `DocumentDirection`, confidentiality/priority levels), and Numbering (`DocumentNumberStatus`, `DocumentNumberEventType`, `NumberingResetPolicy`). Documented the pattern and the planned generic lookup CRUD endpoints. |
 | 2026-10-18 | opencode | Added `DomainErrors.Numbering.OfficialNumberTaken` (Conflict) and `IDocumentNumberRepository.ExistsByNumberAndYearAsync` — the domain contract behind the official-number + year duplicate check performed when creating a document. |

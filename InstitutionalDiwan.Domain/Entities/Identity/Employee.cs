@@ -66,9 +66,41 @@ public sealed class Employee : AggregateRoot<Guid>
         return Result.Success();
     }
 
+    public Result Update(
+        string? fullNameAr,
+        Guid departmentId,
+        string? employeeNumber = null,
+        string? fullNameEn = null,
+        string? jobTitleAr = null,
+        string? email = null,
+        string? phone = null)
+    {
+        if (string.IsNullOrWhiteSpace(fullNameAr))
+            return Result.Failure(DomainErrors.Identity.EmployeeNameEmpty);
+
+        FullNameAr = fullNameAr.Trim();
+        FullNameEn = string.IsNullOrWhiteSpace(fullNameEn) ? null : fullNameEn.Trim();
+        DepartmentId = departmentId;
+        EmployeeNumber = string.IsNullOrWhiteSpace(employeeNumber) ? null : employeeNumber.Trim();
+        JobTitleAr = string.IsNullOrWhiteSpace(jobTitleAr) ? null : jobTitleAr.Trim();
+        Email = string.IsNullOrWhiteSpace(email) ? null : email.Trim();
+        Phone = string.IsNullOrWhiteSpace(phone) ? null : phone.Trim();
+        UpdatedAt = DateTime.UtcNow;
+        return Result.Success();
+    }
+
     public Result Deactivate()
     {
+        if (!IsActive) return Result.Success();
         IsActive = false;
+        UpdatedAt = DateTime.UtcNow;
+        return Result.Success();
+    }
+
+    public Result Activate()
+    {
+        if (IsActive) return Result.Success();
+        IsActive = true;
         UpdatedAt = DateTime.UtcNow;
         return Result.Success();
     }
