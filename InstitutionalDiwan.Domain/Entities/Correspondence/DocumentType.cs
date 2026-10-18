@@ -1,52 +1,52 @@
-using System;
 using InstitutionalDiwan.Domain.Common;
 using InstitutionalDiwan.Domain.Errors;
 
 namespace InstitutionalDiwan.Domain.Entities.Correspondence;
 
-public sealed class DocumentType : Entity<string>
+/// <summary>
+/// Reference table of document types (incoming letter, internal memo, ...). Replaces the former string
+/// <c>DocumentTypeCode</c>; documents and numbering registries reference it by id. Default rows are
+/// seeded by <c>DocumentTypeSeeder</c>.
+/// </summary>
+public sealed class DocumentType : LookupEntity
 {
-    public string Code
-    {
-        get => Id;
-        private set => Id = value;
-    }
+    public const int IncomingLetterId = 1;
+    public const int OutgoingLetterId = 2;
+    public const int InternalMemoId = 3;
+    public const int CircularId = 4;
+    public const int DecisionId = 5;
 
-    public string NameAr { get; private set; } = null!;
-    public string? NameEn { get; private set; }
-    public string AllowedDirectionScope { get; private set; } = "ALL";
+    /// <summary>FK → DocumentDirection.Id; the only direction this type may be used with (or ALL).</summary>
+    public int AllowedDirectionId { get; private set; } = DocumentDirection.AllId;
+
+    /// <summary>Whether documents of this type must be issued an official number.</summary>
     public bool RequiresOfficialNumber { get; private set; } = true;
-    public bool IsActive { get; private set; } = true;
-    public DateTime CreatedAt { get; private set; }
 
     private DocumentType()
     {
     }
 
-    public static Result<DocumentType> Create(
-        string? code,
-        string? nameAr,
-        string allowedDirectionScope = "ALL",
-        bool requiresOfficialNumber = true,
-        string? nameEn = null)
+    private DocumentType(
+        int id,
+        string desc,
+        string descAr,
+        int allowedDirectionId,
+        bool requiresOfficialNumber) : base(id, desc, descAr)
     {
-        if (string.IsNullOrWhiteSpace(code))
+        AllowedDirectionId = allowedDirectionId;
+        RequiresOfficialNumber = requiresOfficialNumber;
+    }
+
+    public static Result<DocumentType> Create(
+        int id,
+        string? desc,
+        string? descAr,
+        int allowedDirectionId = DocumentDirection.AllId,
+        bool requiresOfficialNumber = true)
+    {
+        if (id <= 0 || string.IsNullOrWhiteSpace(desc) || string.IsNullOrWhiteSpace(descAr))
             return Result.Failure<DocumentType>(DomainErrors.Correspondence.TypeCodeEmpty);
 
-        if (string.IsNullOrWhiteSpace(nameAr))
-            return Result.Failure<DocumentType>(DomainErrors.Correspondence.TitleEmpty);
-
-        var docType = new DocumentType
-        {
-            Code = code.Trim().ToUpperInvariant(),
-            NameAr = nameAr.Trim(),
-            NameEn = string.IsNullOrWhiteSpace(nameEn) ? null : nameEn.Trim(),
-            AllowedDirectionScope = string.IsNullOrWhiteSpace(allowedDirectionScope) ? "ALL" : allowedDirectionScope.Trim().ToUpperInvariant(),
-            RequiresOfficialNumber = requiresOfficialNumber,
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow
-        };
-
-        return Result.Success(docType);
+        return Result.Success(new DocumentType(id, desc, descAr, allowedDirectionId, requiresOfficialNumber));
     }
 }

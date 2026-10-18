@@ -7,14 +7,16 @@ namespace InstitutionalDiwan.Application.Features.Correspondence.Documents;
 /// <c>UserId</c> is derived from the token by the endpoint, never from the request body.
 /// The document is persisted as REGISTERED when the number+year pair is free, or rejected with a
 /// Conflict when it is already taken.
+/// <c>DocumentTypeId</c>, <c>DirectionId</c>, <c>ConfidentialityLevelId</c>, and
+/// <c>PriorityLevelId</c> reference the corresponding seeded lookup tables.
 /// </summary>
 public sealed record CreateDocumentCommand(
     Guid UserId,
     string Title,
-    string DocumentTypeCode,
-    string Direction,
+    int DocumentTypeId,
+    int DirectionId,
     string OfficialNumberText,
     int NumberingYear,
     string? SubjectSummary = null,
-    string? ConfidentialityLevel = null,
-    string? PriorityLevel = null) : ICommand<DocumentResponse>;
+    int? ConfidentialityLevelId = null,
+    int? PriorityLevelId = null) : ICommand<DocumentResponse>;

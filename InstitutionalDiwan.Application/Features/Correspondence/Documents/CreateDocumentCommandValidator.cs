@@ -1,11 +1,10 @@
 using FluentValidation;
+using InstitutionalDiwan.Domain.Entities.Correspondence;
 
 namespace InstitutionalDiwan.Application.Features.Correspondence.Documents;
 
 public sealed class CreateDocumentCommandValidator : AbstractValidator<CreateDocumentCommand>
 {
-    private static readonly string[] AllowedDirections = { "INTERNAL", "INCOMING", "OUTGOING" };
-
     public CreateDocumentCommandValidator()
     {
         RuleFor(command => command.UserId)
@@ -15,13 +14,13 @@ public sealed class CreateDocumentCommandValidator : AbstractValidator<CreateDoc
             .Must(title => !string.IsNullOrWhiteSpace(title)).WithErrorCode("Correspondence.TitleEmpty")
             .MaximumLength(500).WithErrorCode("Correspondence.TitleTooLong");
 
-        RuleFor(command => command.DocumentTypeCode)
-            .Must(code => !string.IsNullOrWhiteSpace(code)).WithErrorCode("Correspondence.TypeCodeEmpty")
-            .MaximumLength(50);
+        RuleFor(command => command.DocumentTypeId)
+            .GreaterThan(0).WithErrorCode("Correspondence.TypeCodeEmpty");
 
-        RuleFor(command => command.Direction)
-            .Must(direction => direction is not null &&
-                               AllowedDirections.Contains(direction.Trim().ToUpperInvariant()))
+        RuleFor(command => command.DirectionId)
+            .Must(directionId => directionId is DocumentDirection.InternalId
+                or DocumentDirection.IncomingId
+                or DocumentDirection.OutgoingId)
             .WithErrorCode("Correspondence.DirectionInvalid");
 
         RuleFor(command => command.OfficialNumberText)
@@ -31,7 +30,10 @@ public sealed class CreateDocumentCommandValidator : AbstractValidator<CreateDoc
         RuleFor(command => command.NumberingYear)
             .InclusiveBetween(1900, 2200).WithErrorCode("Numbering.YearInvalid");
 
-        RuleFor(command => command.ConfidentialityLevel).MaximumLength(50);
-        RuleFor(command => command.PriorityLevel).MaximumLength(50);
+        RuleFor(command => command.ConfidentialityLevelId)
+            .GreaterThan(0).When(command => command.ConfidentialityLevelId.HasValue);
+
+        RuleFor(command => command.PriorityLevelId)
+            .GreaterThan(0).When(command => command.PriorityLevelId.HasValue);
     }
 }

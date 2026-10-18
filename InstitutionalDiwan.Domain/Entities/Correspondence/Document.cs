@@ -10,11 +10,11 @@ namespace InstitutionalDiwan.Domain.Entities.Correspondence;
 
 public sealed class Document : AggregateRoot<Guid>
 {
-    public const string StatusDraft = "DRAFT";
-    public const string StatusRegistered = "REGISTERED";
-    public const string StatusInMovement = "IN_MOVEMENT";
-    public const string StatusArchived = "ARCHIVED";
-    public const string StatusCanceled = "CANCELED";
+    public const int StatusDraft = DocumentStatusType.DraftId;
+    public const int StatusRegistered = DocumentStatusType.RegisteredId;
+    public const int StatusInMovement = DocumentStatusType.InMovementId;
+    public const int StatusArchived = DocumentStatusType.ArchivedId;
+    public const int StatusCanceled = DocumentStatusType.CanceledId;
 
     private readonly List<DocumentParticipant> _participants = new();
     private readonly List<DocumentStatusHistory> _statusHistory = new();
@@ -26,12 +26,17 @@ public sealed class Document : AggregateRoot<Guid>
     }
     public string Title { get; private set; } = null!;
     public string? SubjectSummary { get; private set; }
-    public string DocumentTypeCode { get; private set; } = null!;
-    public string Direction { get; private set; } = null!;
-    public string ConfidentialityLevel { get; private set; } = "NORMAL";
-    public string PriorityLevel { get; private set; } = "NORMAL";
-    public string CurrentStatusCode { get; private set; } = StatusDraft;
-    public string? StatusBeforeArchiveCode { get; private set; }
+    // FK → DocumentType.Id (InstitutionalDiwan.Domain.Entities.Correspondence.DocumentType)
+    public int DocumentTypeId { get; private set; }
+    // FK → DocumentDirection.Id (InstitutionalDiwan.Domain.Entities.Correspondence.DocumentDirection)
+    public int DirectionId { get; private set; }
+    // FK → DocumentConfidentialityLevel.Id
+    public int ConfidentialityLevelId { get; private set; } = DocumentConfidentialityLevel.NormalId;
+    // FK → DocumentPriorityLevel.Id
+    public int PriorityLevelId { get; private set; } = DocumentPriorityLevel.NormalId;
+    // FK → DocumentStatusType.Id (InstitutionalDiwan.Domain.Entities.Correspondence.DocumentStatusType)
+    public int CurrentStatusId { get; private set; } = DocumentStatusType.DraftId;
+    public int? StatusBeforeArchiveId { get; private set; }
     // FK → Department.Id (InstitutionalDiwan.Domain.Entities.Organization.Department)
     public Guid OwningDepartmentId { get; private set; }
     // FK → User.Id (InstitutionalDiwan.Domain.Entities.Identity.User)
@@ -56,13 +61,13 @@ public sealed class Document : AggregateRoot<Guid>
 
     public static Result<Document> CreateDraft(
         string? title,
-        string? documentTypeCode,
-        string? direction,
+        int documentTypeId,
+        int directionId,
         Guid owningDepartmentId,
         Guid createdByUserId,
         string? subjectSummary = null,
-        string confidentialityLevel = "NORMAL",
-        string priorityLevel = "NORMAL",
+        int confidentialityLevelId = DocumentConfidentialityLevel.NormalId,
+        int priorityLevelId = DocumentPriorityLevel.NormalId,
         DateTime? documentDate = null,
         string? externalReferenceNumber = null,
         DateTime? externalDocumentDate = null)
@@ -71,14 +76,10 @@ public sealed class Document : AggregateRoot<Guid>
         if (titleResult.IsFailure)
             return Result.Failure<Document>(titleResult.Error);
 
-        if (string.IsNullOrWhiteSpace(documentTypeCode))
+        if (documentTypeId <= 0)
             return Result.Failure<Document>(DomainErrors.Correspondence.TypeCodeEmpty);
 
-        if (string.IsNullOrWhiteSpace(direction))
-            return Result.Failure<Document>(DomainErrors.Correspondence.DirectionInvalid);
-
-        var normalizedDirection = direction.Trim().ToUpperInvariant();
-        if (normalizedDirection is not ("INTERNAL" or "INCOMING" or "OUTGOING"))
+        if (directionId is not (DocumentDirection.InternalId or DocumentDirection.IncomingId or DocumentDirection.OutgoingId))
             return Result.Failure<Document>(DomainErrors.Correspondence.DirectionInvalid);
 
         var doc = new Document
@@ -86,11 +87,11 @@ public sealed class Document : AggregateRoot<Guid>
             DocumentId = Guid.NewGuid(),
             Title = titleResult.Value.Value,
             SubjectSummary = string.IsNullOrWhiteSpace(subjectSummary) ? null : subjectSummary.Trim(),
-            DocumentTypeCode = documentTypeCode.Trim().ToUpperInvariant(),
-            Direction = normalizedDirection,
-            ConfidentialityLevel = string.IsNullOrWhiteSpace(confidentialityLevel) ? "NORMAL" : confidentialityLevel.Trim().ToUpperInvariant(),
-            PriorityLevel = string.IsNullOrWhiteSpace(priorityLevel) ? "NORMAL" : priorityLevel.Trim().ToUpperInvariant(),
-            CurrentStatusCode = StatusDraft,
+            DocumentTypeId = documentTypeId,
+            DirectionId = directionId,
+            ConfidentialityLevelId = confidentialityLevelId <= 0 ? DocumentConfidentialityLevel.NormalId : confidentialityLevelId,
+            PriorityLevelId = priorityLevelId <= 0 ? DocumentPriorityLevel.NormalId : priorityLevelId,
+            CurrentStatusId = DocumentStatusType.DraftId,
             OwningDepartmentId = owningDepartmentId,
             CreatedByUserId = createdByUserId,
             DocumentDate = documentDate ?? DateTime.UtcNow,
@@ -99,8 +100,8 @@ public sealed class Document : AggregateRoot<Guid>
             CreatedAt = DateTime.UtcNow
         };
 
-        doc.AppendStatusHistory(null, StatusDraft, createdByUserId, "Initial draft created");
-        doc.RaiseDomainEvent(new DocumentCreatedEvent(doc.DocumentId, doc.DocumentTypeCode, doc.Direction, doc.OwningDepartmentId, doc.CreatedByUserId));
+        doc.AppendStatusHistory(null, DocumentStatusType.DraftId, createdByUserId, "Initial draft created");
+        doc.RaiseDomainEvent(new DocumentCreatedEvent(doc.DocumentId, doc.DocumentTypeId, doc.DirectionId, doc.OwningDepartmentId, doc.CreatedByUserId));
 
         return Result.Success(doc);
     }
@@ -108,10 +109,10 @@ public sealed class Document : AggregateRoot<Guid>
     public Result UpdateDraftMetadata(
         string? title,
         string? subjectSummary,
-        string? confidentialityLevel = null,
-        string? priorityLevel = null)
+        int? confidentialityLevelId = null,
+        int? priorityLevelId = null)
     {
-        if (CurrentStatusCode != StatusDraft)
+        if (CurrentStatusId != DocumentStatusType.DraftId)
             return Result.Failure(DomainErrors.Correspondence.OnlyDraftEditable);
 
         var titleResult = DocumentTitle.Create(title);
@@ -121,11 +122,11 @@ public sealed class Document : AggregateRoot<Guid>
         Title = titleResult.Value.Value;
         SubjectSummary = string.IsNullOrWhiteSpace(subjectSummary) ? null : subjectSummary.Trim();
 
-        if (!string.IsNullOrWhiteSpace(confidentialityLevel))
-            ConfidentialityLevel = confidentialityLevel.Trim().ToUpperInvariant();
+        if (confidentialityLevelId is { } confidentiality && confidentiality > 0)
+            ConfidentialityLevelId = confidentiality;
 
-        if (!string.IsNullOrWhiteSpace(priorityLevel))
-            PriorityLevel = priorityLevel.Trim().ToUpperInvariant();
+        if (priorityLevelId is { } priority && priority > 0)
+            PriorityLevelId = priority;
 
         UpdatedAt = DateTime.UtcNow;
         return Result.Success();
@@ -159,78 +160,78 @@ public sealed class Document : AggregateRoot<Guid>
         Guid actorUserId,
         string? notes = null)
     {
-        if (CurrentStatusCode != StatusDraft)
+        if (CurrentStatusId != DocumentStatusType.DraftId)
             return Result.Failure(DomainErrors.Correspondence.OnlyDraftRegisterable);
 
-        var previous = CurrentStatusCode;
+        var previous = CurrentStatusId;
         ActiveOfficialNumberId = officialNumberId;
         OfficialNumberText = officialNumberText.Value;
         RegistrationDate = DateTime.UtcNow;
-        CurrentStatusCode = StatusRegistered;
+        CurrentStatusId = DocumentStatusType.RegisteredId;
         UpdatedAt = DateTime.UtcNow;
 
-        AppendStatusHistory(previous, StatusRegistered, actorUserId, notes ?? $"Registered with number {officialNumberText.Value}");
+        AppendStatusHistory(previous, DocumentStatusType.RegisteredId, actorUserId, notes ?? $"Registered with number {officialNumberText.Value}");
         RaiseDomainEvent(new DocumentRegisteredEvent(DocumentId, officialNumberId, officialNumberText.Value, RegistrationDate.Value));
         return Result.Success();
     }
 
     public Result MarkInMovement(Guid actorUserId, string? notes = null)
     {
-        if (CurrentStatusCode is StatusArchived or StatusCanceled)
+        if (CurrentStatusId is DocumentStatusType.ArchivedId or DocumentStatusType.CanceledId)
             return Result.Failure(DomainErrors.Correspondence.AlreadyArchived);
 
-        if (CurrentStatusCode == StatusInMovement)
+        if (CurrentStatusId == DocumentStatusType.InMovementId)
             return Result.Success();
 
-        var previous = CurrentStatusCode;
-        CurrentStatusCode = StatusInMovement;
+        var previous = CurrentStatusId;
+        CurrentStatusId = DocumentStatusType.InMovementId;
         UpdatedAt = DateTime.UtcNow;
-        AppendStatusHistory(previous, StatusInMovement, actorUserId, notes);
+        AppendStatusHistory(previous, DocumentStatusType.InMovementId, actorUserId, notes);
         return Result.Success();
     }
 
     public Result Archive(Guid actorUserId, bool hasActiveMovements, string? reason = null)
     {
-        if (CurrentStatusCode == StatusArchived)
+        if (CurrentStatusId == DocumentStatusType.ArchivedId)
             return Result.Failure(DomainErrors.Correspondence.AlreadyArchived);
 
-        if (CurrentStatusCode == StatusCanceled)
+        if (CurrentStatusId == DocumentStatusType.CanceledId)
             return Result.Failure(DomainErrors.Correspondence.CannotArchiveCanceled);
 
         if (hasActiveMovements)
             return Result.Failure(DomainErrors.Correspondence.HasActiveMovements);
 
-        var previous = CurrentStatusCode;
-        StatusBeforeArchiveCode = previous;
-        CurrentStatusCode = StatusArchived;
+        var previous = CurrentStatusId;
+        StatusBeforeArchiveId = previous;
+        CurrentStatusId = DocumentStatusType.ArchivedId;
         UpdatedAt = DateTime.UtcNow;
 
-        AppendStatusHistory(previous, StatusArchived, actorUserId, reason);
+        AppendStatusHistory(previous, DocumentStatusType.ArchivedId, actorUserId, reason);
         RaiseDomainEvent(new DocumentArchivedEvent(DocumentId, previous, actorUserId, reason));
         return Result.Success();
     }
 
     public Result Unarchive(Guid actorUserId, string? reason = null)
     {
-        if (CurrentStatusCode != StatusArchived)
+        if (CurrentStatusId != DocumentStatusType.ArchivedId)
             return Result.Failure(DomainErrors.Correspondence.NotArchived);
 
-        var restored = string.IsNullOrWhiteSpace(StatusBeforeArchiveCode) ? StatusRegistered : StatusBeforeArchiveCode!;
-        StatusBeforeArchiveCode = null;
-        CurrentStatusCode = restored;
+        var restored = StatusBeforeArchiveId ?? DocumentStatusType.RegisteredId;
+        StatusBeforeArchiveId = null;
+        CurrentStatusId = restored;
         UpdatedAt = DateTime.UtcNow;
 
-        AppendStatusHistory(StatusArchived, restored, actorUserId, reason);
+        AppendStatusHistory(DocumentStatusType.ArchivedId, restored, actorUserId, reason);
         RaiseDomainEvent(new DocumentUnarchivedEvent(DocumentId, restored, actorUserId, reason));
         return Result.Success();
     }
 
     public Result Cancel(Guid actorUserId, bool hasActiveMovements, string? reason)
     {
-        if (CurrentStatusCode == StatusCanceled)
+        if (CurrentStatusId == DocumentStatusType.CanceledId)
             return Result.Failure(DomainErrors.Correspondence.AlreadyCanceled);
 
-        if (CurrentStatusCode == StatusArchived)
+        if (CurrentStatusId == DocumentStatusType.ArchivedId)
             return Result.Failure(DomainErrors.Correspondence.CannotCancelArchived);
 
         if (hasActiveMovements)
@@ -239,17 +240,17 @@ public sealed class Document : AggregateRoot<Guid>
         if (string.IsNullOrWhiteSpace(reason))
             return Result.Failure(DomainErrors.Correspondence.CancelReasonEmpty);
 
-        var previous = CurrentStatusCode;
-        CurrentStatusCode = StatusCanceled;
+        var previous = CurrentStatusId;
+        CurrentStatusId = DocumentStatusType.CanceledId;
         UpdatedAt = DateTime.UtcNow;
 
-        AppendStatusHistory(previous, StatusCanceled, actorUserId, reason.Trim());
+        AppendStatusHistory(previous, DocumentStatusType.CanceledId, actorUserId, reason.Trim());
         RaiseDomainEvent(new DocumentCanceledEvent(DocumentId, previous, actorUserId, reason.Trim()));
         return Result.Success();
     }
 
-    private void AppendStatusHistory(string? fromStatus, string toStatus, Guid changedByUserId, string? reason)
+    private void AppendStatusHistory(int? fromStatusId, int toStatusId, Guid changedByUserId, string? reason)
     {
-        _statusHistory.Add(DocumentStatusHistory.Create(DocumentId, fromStatus, toStatus, changedByUserId, reason));
+        _statusHistory.Add(DocumentStatusHistory.Create(DocumentId, fromStatusId, toStatusId, changedByUserId, reason));
     }
 }

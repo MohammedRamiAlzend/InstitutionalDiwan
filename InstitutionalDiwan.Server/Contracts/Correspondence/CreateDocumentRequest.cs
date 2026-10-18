@@ -1,12 +1,15 @@
 namespace InstitutionalDiwan.Server.Contracts.Correspondence;
 
-/// <summary>Payload submitted to <c>POST /api/documents</c>.</summary>
+/// <summary>
+/// Payload submitted to <c>POST /api/documents</c>. The type/direction/confidentiality/priority
+/// fields are ids into the corresponding seeded lookup tables.
+/// </summary>
 public sealed record CreateDocumentRequest(
     string Title,
-    string DocumentTypeCode,
-    string Direction,
+    int DocumentTypeId,
+    int DirectionId,
     string OfficialNumberText,
     int NumberingYear,
     string? SubjectSummary = null,
-    string? ConfidentialityLevel = null,
-    string? PriorityLevel = null);
+    int? ConfidentialityLevelId = null,
+    int? PriorityLevelId = null);

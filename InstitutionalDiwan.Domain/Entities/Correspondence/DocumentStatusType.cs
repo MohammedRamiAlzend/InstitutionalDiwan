@@ -1,50 +1,48 @@
-using System;
 using InstitutionalDiwan.Domain.Common;
 using InstitutionalDiwan.Domain.Errors;
 
 namespace InstitutionalDiwan.Domain.Entities.Correspondence;
 
-public sealed class DocumentStatusType : Entity<string>
+/// <summary>
+/// Reference table of document lifecycle statuses. Replaces the former string <c>StatusCode</c>;
+/// documents and their status history reference it by id. The stable ids below back the status
+/// transitions in <see cref="Document"/> and are seeded by <c>DocumentStatusTypeSeeder</c>.
+/// </summary>
+public sealed class DocumentStatusType : LookupEntity
 {
-    public string Code
-    {
-        get => Id;
-        private set => Id = value;
-    }
+    public const int DraftId = 1;
+    public const int RegisteredId = 2;
+    public const int InMovementId = 3;
+    public const int ArchivedId = 4;
+    public const int CanceledId = 5;
 
-    public string NameAr { get; private set; } = null!;
-    public string? NameEn { get; private set; }
+    /// <summary>Whether this status ends the document's lifecycle.</summary>
     public bool IsTerminal { get; private set; }
-    public bool IsSystemStatus { get; private set; }
-    public DateTime CreatedAt { get; private set; }
+
+    /// <summary>Whether the status is maintained by the system rather than configured by users.</summary>
+    public bool IsSystemStatus { get; private set; } = true;
 
     private DocumentStatusType()
     {
     }
 
-    public static Result<DocumentStatusType> Create(
-        string? code,
-        string? nameAr,
-        bool isTerminal = false,
-        bool isSystemStatus = true,
-        string? nameEn = null)
+    private DocumentStatusType(int id, string desc, string descAr, bool isTerminal, bool isSystemStatus)
+        : base(id, desc, descAr)
     {
-        if (string.IsNullOrWhiteSpace(code))
+        IsTerminal = isTerminal;
+        IsSystemStatus = isSystemStatus;
+    }
+
+    public static Result<DocumentStatusType> Create(
+        int id,
+        string? desc,
+        string? descAr,
+        bool isTerminal = false,
+        bool isSystemStatus = true)
+    {
+        if (id <= 0 || string.IsNullOrWhiteSpace(desc) || string.IsNullOrWhiteSpace(descAr))
             return Result.Failure<DocumentStatusType>(DomainErrors.Correspondence.TypeCodeEmpty);
 
-        if (string.IsNullOrWhiteSpace(nameAr))
-            return Result.Failure<DocumentStatusType>(DomainErrors.Correspondence.TitleEmpty);
-
-        var statusType = new DocumentStatusType
-        {
-            Code = code.Trim().ToUpperInvariant(),
-            NameAr = nameAr.Trim(),
-            NameEn = string.IsNullOrWhiteSpace(nameEn) ? null : nameEn.Trim(),
-            IsTerminal = isTerminal,
-            IsSystemStatus = isSystemStatus,
-            CreatedAt = DateTime.UtcNow
-        };
-
-        return Result.Success(statusType);
+        return Result.Success(new DocumentStatusType(id, desc, descAr, isTerminal, isSystemStatus));
     }
 }

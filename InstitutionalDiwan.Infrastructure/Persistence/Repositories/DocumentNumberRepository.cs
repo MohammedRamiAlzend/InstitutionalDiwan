@@ -19,7 +19,7 @@ internal sealed class DocumentNumberRepository : IDocumentNumberRepository
         _context.DocumentNumbers
             .Include(number => number.History)
             .FirstOrDefaultAsync(
-                number => number.DocumentId == documentId && number.Status == "ACTIVE",
+                number => number.DocumentId == documentId && number.StatusId == DocumentNumberStatus.ActiveId,
                 cancellationToken);
 
     public Task<bool> ExistsByNumberAndYearAsync(

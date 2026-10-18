@@ -39,6 +39,9 @@ public sealed class DiwanDbContext : DbContext, IUnitOfWork
     public DbSet<Document> Documents => Set<Document>();
     public DbSet<DocumentType> DocumentTypes => Set<DocumentType>();
     public DbSet<DocumentStatusType> DocumentStatusTypes => Set<DocumentStatusType>();
+    public DbSet<DocumentDirection> DocumentDirections => Set<DocumentDirection>();
+    public DbSet<DocumentConfidentialityLevel> DocumentConfidentialityLevels => Set<DocumentConfidentialityLevel>();
+    public DbSet<DocumentPriorityLevel> DocumentPriorityLevels => Set<DocumentPriorityLevel>();
     public DbSet<DocumentParticipant> DocumentParticipants => Set<DocumentParticipant>();
     public DbSet<DocumentStatusHistory> DocumentStatusHistories => Set<DocumentStatusHistory>();
     public DbSet<ExternalOrganization> ExternalOrganizations => Set<ExternalOrganization>();
@@ -48,6 +51,9 @@ public sealed class DiwanDbContext : DbContext, IUnitOfWork
     public DbSet<NumberingRegistry> NumberingRegistries => Set<NumberingRegistry>();
     public DbSet<NumberingCounter> NumberingCounters => Set<NumberingCounter>();
     public DbSet<DocumentNumberHistory> DocumentNumberHistories => Set<DocumentNumberHistory>();
+    public DbSet<DocumentNumberStatus> DocumentNumberStatuses => Set<DocumentNumberStatus>();
+    public DbSet<DocumentNumberEventType> DocumentNumberEventTypes => Set<DocumentNumberEventType>();
+    public DbSet<NumberingResetPolicy> NumberingResetPolicies => Set<NumberingResetPolicy>();
 
     // Module 05: Movements
     public DbSet<DocumentMovement> DocumentMovements => Set<DocumentMovement>();

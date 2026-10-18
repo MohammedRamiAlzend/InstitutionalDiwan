@@ -501,11 +501,9 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("ActiveOfficialNumberId");
 
-                    b.Property<string>("ConfidentialityLevel")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)")
-                        .HasColumnName("ConfidentialityLevel");
+                    b.Property<int>("ConfidentialityLevelId")
+                        .HasColumnType("int")
+                        .HasColumnName("ConfidentialityLevelId");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2(3)")
@@ -515,27 +513,21 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("CreatedByUserId");
 
-                    b.Property<string>("CurrentStatusCode")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)")
-                        .HasColumnName("CurrentStatusCode");
+                    b.Property<int>("CurrentStatusId")
+                        .HasColumnType("int")
+                        .HasColumnName("CurrentStatusId");
 
-                    b.Property<string>("Direction")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)")
-                        .HasColumnName("Direction");
+                    b.Property<int>("DirectionId")
+                        .HasColumnType("int")
+                        .HasColumnName("DirectionId");
 
                     b.Property<DateTime?>("DocumentDate")
                         .HasColumnType("datetime2(3)")
                         .HasColumnName("DocumentDate");
 
-                    b.Property<string>("DocumentTypeCode")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)")
-                        .HasColumnName("DocumentTypeCode");
+                    b.Property<int>("DocumentTypeId")
+                        .HasColumnType("int")
+                        .HasColumnName("DocumentTypeId");
 
                     b.Property<DateTime?>("ExternalDocumentDate")
                         .HasColumnType("datetime2(3)")
@@ -555,11 +547,9 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("OwningDepartmentId");
 
-                    b.Property<string>("PriorityLevel")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)")
-                        .HasColumnName("PriorityLevel");
+                    b.Property<int>("PriorityLevelId")
+                        .HasColumnType("int")
+                        .HasColumnName("PriorityLevelId");
 
                     b.Property<DateTime?>("RegistrationDate")
                         .HasColumnType("datetime2(3)")
@@ -571,10 +561,9 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                         .HasColumnType("rowversion")
                         .HasColumnName("RowVersion");
 
-                    b.Property<string>("StatusBeforeArchiveCode")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)")
-                        .HasColumnName("StatusBeforeArchiveCode");
+                    b.Property<int?>("StatusBeforeArchiveId")
+                        .HasColumnType("int")
+                        .HasColumnName("StatusBeforeArchiveId");
 
                     b.Property<string>("SubjectSummary")
                         .HasMaxLength(2000)
@@ -593,16 +582,88 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
 
                     b.HasKey("DocumentId");
 
+                    b.HasIndex("ConfidentialityLevelId");
+
+                    b.HasIndex("CurrentStatusId");
+
+                    b.HasIndex("DirectionId");
+
+                    b.HasIndex("DocumentTypeId");
+
                     b.HasIndex("OfficialNumberText")
                         .HasDatabaseName("IX_DOCUMENTS_OFFICIAL_NUMBER");
+
+                    b.HasIndex("PriorityLevelId");
 
                     b.HasIndex("RegistrationDate")
                         .HasDatabaseName("IX_DOCUMENTS_REG_DATE");
 
-                    b.HasIndex("OwningDepartmentId", "CurrentStatusCode")
+                    b.HasIndex("OwningDepartmentId", "CurrentStatusId")
                         .HasDatabaseName("IX_DOCUMENTS_DEPT_STATUS");
 
                     b.ToTable("DOCUMENTS", (string)null);
+                });
+
+            modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Correspondence.DocumentConfidentialityLevel", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("int")
+                        .HasColumnName("Id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2(3)")
+                        .HasColumnName("CreatedAt");
+
+                    b.Property<string>("Desc")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)")
+                        .HasColumnName("Desc");
+
+                    b.Property<string>("DescAr")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)")
+                        .HasColumnName("DescAr");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit")
+                        .HasColumnName("IsActive");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("DOCUMENT_CONFIDENTIALITY_LEVELS", (string)null);
+                });
+
+            modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Correspondence.DocumentDirection", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("int")
+                        .HasColumnName("Id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2(3)")
+                        .HasColumnName("CreatedAt");
+
+                    b.Property<string>("Desc")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)")
+                        .HasColumnName("Desc");
+
+                    b.Property<string>("DescAr")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)")
+                        .HasColumnName("DescAr");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit")
+                        .HasColumnName("IsActive");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("DOCUMENT_DIRECTIONS", (string)null);
                 });
 
             modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Correspondence.DocumentParticipant", b =>
@@ -661,6 +722,37 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                     b.ToTable("DOCUMENT_PARTICIPANTS", (string)null);
                 });
 
+            modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Correspondence.DocumentPriorityLevel", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("int")
+                        .HasColumnName("Id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2(3)")
+                        .HasColumnName("CreatedAt");
+
+                    b.Property<string>("Desc")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)")
+                        .HasColumnName("Desc");
+
+                    b.Property<string>("DescAr")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)")
+                        .HasColumnName("DescAr");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit")
+                        .HasColumnName("IsActive");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("DOCUMENT_PRIORITY_LEVELS", (string)null);
+                });
+
             modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Correspondence.DocumentStatusHistory", b =>
                 {
                     b.Property<Guid>("HistoryId")
@@ -679,23 +771,24 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("DocumentId");
 
-                    b.Property<string>("FromStatusCode")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)")
-                        .HasColumnName("FromStatusCode");
+                    b.Property<int?>("FromStatusId")
+                        .HasColumnType("int")
+                        .HasColumnName("FromStatusId");
 
                     b.Property<string>("Reason")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)")
                         .HasColumnName("Reason");
 
-                    b.Property<string>("ToStatusCode")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)")
-                        .HasColumnName("ToStatusCode");
+                    b.Property<int>("ToStatusId")
+                        .HasColumnType("int")
+                        .HasColumnName("ToStatusId");
 
                     b.HasKey("HistoryId");
+
+                    b.HasIndex("FromStatusId");
+
+                    b.HasIndex("ToStatusId");
 
                     b.HasIndex("DocumentId", "ChangedAt")
                         .HasDatabaseName("IX_DOC_STATUS_HISTORY_DOC_DATE");
@@ -705,14 +798,28 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Correspondence.DocumentStatusType", b =>
                 {
-                    b.Property<string>("Code")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)")
-                        .HasColumnName("Code");
+                    b.Property<int>("Id")
+                        .HasColumnType("int")
+                        .HasColumnName("Id");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2(3)")
                         .HasColumnName("CreatedAt");
+
+                    b.Property<string>("Desc")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)")
+                        .HasColumnName("Desc");
+
+                    b.Property<string>("DescAr")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)")
+                        .HasColumnName("DescAr");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
 
                     b.Property<bool>("IsSystemStatus")
                         .HasColumnType("bit")
@@ -722,59 +829,48 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                         .HasColumnType("bit")
                         .HasColumnName("IsTerminal");
 
-                    b.Property<string>("NameAr")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)")
-                        .HasColumnName("NameAr");
-
-                    b.Property<string>("NameEn")
-                        .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)")
-                        .HasColumnName("NameEn");
-
-                    b.HasKey("Code");
+                    b.HasKey("Id");
 
                     b.ToTable("DOCUMENT_STATUS_TYPES", (string)null);
                 });
 
             modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Correspondence.DocumentType", b =>
                 {
-                    b.Property<string>("Code")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)")
-                        .HasColumnName("Code");
+                    b.Property<int>("Id")
+                        .HasColumnType("int")
+                        .HasColumnName("Id");
 
-                    b.Property<string>("AllowedDirectionScope")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)")
-                        .HasColumnName("AllowedDirectionScope");
+                    b.Property<int>("AllowedDirectionId")
+                        .HasColumnType("int")
+                        .HasColumnName("AllowedDirectionId");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2(3)")
                         .HasColumnName("CreatedAt");
 
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit")
-                        .HasColumnName("IsActive");
-
-                    b.Property<string>("NameAr")
+                    b.Property<string>("Desc")
                         .IsRequired()
                         .HasMaxLength(150)
                         .HasColumnType("nvarchar(150)")
-                        .HasColumnName("NameAr");
+                        .HasColumnName("Desc");
 
-                    b.Property<string>("NameEn")
+                    b.Property<string>("DescAr")
+                        .IsRequired()
                         .HasMaxLength(150)
                         .HasColumnType("nvarchar(150)")
-                        .HasColumnName("NameEn");
+                        .HasColumnName("DescAr");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit")
+                        .HasColumnName("IsActive");
 
                     b.Property<bool>("RequiresOfficialNumber")
                         .HasColumnType("bit")
                         .HasColumnName("RequiresOfficialNumber");
 
-                    b.HasKey("Code");
+                    b.HasKey("Id");
+
+                    b.HasIndex("AllowedDirectionId");
 
                     b.ToTable("DOCUMENT_TYPES", (string)null);
                 });
@@ -1625,13 +1721,13 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                         .HasColumnType("bigint")
                         .HasColumnName("SequenceValue");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)")
-                        .HasColumnName("Status");
+                    b.Property<int>("StatusId")
+                        .HasColumnType("int")
+                        .HasColumnName("StatusId");
 
                     b.HasKey("DocumentNumberId");
+
+                    b.HasIndex("StatusId");
 
                     b.HasIndex("OfficialNumberText", "NumberingYear")
                         .IsUnique()
@@ -1642,6 +1738,37 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("UX_DOC_NUMBERS_REG_YEAR_SEQ");
 
                     b.ToTable("DOCUMENT_NUMBERS", (string)null);
+                });
+
+            modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Numbering.DocumentNumberEventType", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("int")
+                        .HasColumnName("Id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2(3)")
+                        .HasColumnName("CreatedAt");
+
+                    b.Property<string>("Desc")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)")
+                        .HasColumnName("Desc");
+
+                    b.Property<string>("DescAr")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)")
+                        .HasColumnName("DescAr");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit")
+                        .HasColumnName("IsActive");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("DOCUMENT_NUMBER_EVENT_TYPES", (string)null);
                 });
 
             modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Numbering.DocumentNumberHistory", b =>
@@ -1658,11 +1785,9 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("DocumentNumberId");
 
-                    b.Property<string>("EventType")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)")
-                        .HasColumnName("EventType");
+                    b.Property<int>("EventTypeId")
+                        .HasColumnType("int")
+                        .HasColumnName("EventTypeId");
 
                     b.Property<string>("Notes")
                         .HasMaxLength(500)
@@ -1677,7 +1802,40 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("DocumentNumberId");
 
+                    b.HasIndex("EventTypeId");
+
                     b.ToTable("DOCUMENT_NUMBER_HISTORY", (string)null);
+                });
+
+            modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Numbering.DocumentNumberStatus", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("int")
+                        .HasColumnName("Id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2(3)")
+                        .HasColumnName("CreatedAt");
+
+                    b.Property<string>("Desc")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)")
+                        .HasColumnName("Desc");
+
+                    b.Property<string>("DescAr")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)")
+                        .HasColumnName("DescAr");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit")
+                        .HasColumnName("IsActive");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("DOCUMENT_NUMBER_STATUSES", (string)null);
                 });
 
             modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Numbering.NumberingCounter", b =>
@@ -1737,15 +1895,13 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("DepartmentId");
 
-                    b.Property<string>("Direction")
-                        .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)")
-                        .HasColumnName("Direction");
+                    b.Property<int?>("DirectionId")
+                        .HasColumnType("int")
+                        .HasColumnName("DirectionId");
 
-                    b.Property<string>("DocumentTypeCode")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)")
-                        .HasColumnName("DocumentTypeCode");
+                    b.Property<int?>("DocumentTypeId")
+                        .HasColumnType("int")
+                        .HasColumnName("DocumentTypeId");
 
                     b.Property<string>("FormatPattern")
                         .IsRequired()
@@ -1763,11 +1919,9 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                         .HasColumnType("nvarchar(200)")
                         .HasColumnName("NameAr");
 
-                    b.Property<string>("ResetPolicy")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)")
-                        .HasColumnName("ResetPolicy");
+                    b.Property<int>("ResetPolicyId")
+                        .HasColumnType("int")
+                        .HasColumnName("ResetPolicyId");
 
                     b.HasKey("RegistryId");
 
@@ -1775,7 +1929,44 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                         .IsUnique()
                         .HasDatabaseName("UX_NUMBERING_REGISTRIES_CODE");
 
+                    b.HasIndex("DirectionId");
+
+                    b.HasIndex("DocumentTypeId");
+
+                    b.HasIndex("ResetPolicyId");
+
                     b.ToTable("NUMBERING_REGISTRIES", (string)null);
+                });
+
+            modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Numbering.NumberingResetPolicy", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("int")
+                        .HasColumnName("Id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2(3)")
+                        .HasColumnName("CreatedAt");
+
+                    b.Property<string>("Desc")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)")
+                        .HasColumnName("Desc");
+
+                    b.Property<string>("DescAr")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)")
+                        .HasColumnName("DescAr");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit")
+                        .HasColumnName("IsActive");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("NUMBERING_RESET_POLICIES", (string)null);
                 });
 
             modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Organization.Department", b =>
@@ -2075,6 +2266,39 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Correspondence.Document", b =>
+                {
+                    b.HasOne("InstitutionalDiwan.Domain.Entities.Correspondence.DocumentConfidentialityLevel", null)
+                        .WithMany()
+                        .HasForeignKey("ConfidentialityLevelId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("InstitutionalDiwan.Domain.Entities.Correspondence.DocumentStatusType", null)
+                        .WithMany()
+                        .HasForeignKey("CurrentStatusId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("InstitutionalDiwan.Domain.Entities.Correspondence.DocumentDirection", null)
+                        .WithMany()
+                        .HasForeignKey("DirectionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("InstitutionalDiwan.Domain.Entities.Correspondence.DocumentType", null)
+                        .WithMany()
+                        .HasForeignKey("DocumentTypeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("InstitutionalDiwan.Domain.Entities.Correspondence.DocumentPriorityLevel", null)
+                        .WithMany()
+                        .HasForeignKey("PriorityLevelId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Correspondence.DocumentParticipant", b =>
                 {
                     b.HasOne("InstitutionalDiwan.Domain.Entities.Correspondence.Document", null)
@@ -2090,6 +2314,26 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                         .WithMany("StatusHistory")
                         .HasForeignKey("DocumentId")
                         .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("InstitutionalDiwan.Domain.Entities.Correspondence.DocumentStatusType", null)
+                        .WithMany()
+                        .HasForeignKey("FromStatusId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("InstitutionalDiwan.Domain.Entities.Correspondence.DocumentStatusType", null)
+                        .WithMany()
+                        .HasForeignKey("ToStatusId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Correspondence.DocumentType", b =>
+                {
+                    b.HasOne("InstitutionalDiwan.Domain.Entities.Correspondence.DocumentDirection", null)
+                        .WithMany()
+                        .HasForeignKey("AllowedDirectionId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 
@@ -2156,12 +2400,27 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Numbering.DocumentNumber", b =>
+                {
+                    b.HasOne("InstitutionalDiwan.Domain.Entities.Numbering.DocumentNumberStatus", null)
+                        .WithMany()
+                        .HasForeignKey("StatusId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Numbering.DocumentNumberHistory", b =>
                 {
                     b.HasOne("InstitutionalDiwan.Domain.Entities.Numbering.DocumentNumber", null)
                         .WithMany("History")
                         .HasForeignKey("DocumentNumberId")
                         .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("InstitutionalDiwan.Domain.Entities.Numbering.DocumentNumberEventType", null)
+                        .WithMany()
+                        .HasForeignKey("EventTypeId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 
@@ -2171,6 +2430,25 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                         .WithMany("Counters")
                         .HasForeignKey("RegistryId")
                         .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Numbering.NumberingRegistry", b =>
+                {
+                    b.HasOne("InstitutionalDiwan.Domain.Entities.Correspondence.DocumentDirection", null)
+                        .WithMany()
+                        .HasForeignKey("DirectionId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("InstitutionalDiwan.Domain.Entities.Correspondence.DocumentType", null)
+                        .WithMany()
+                        .HasForeignKey("DocumentTypeId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("InstitutionalDiwan.Domain.Entities.Numbering.NumberingResetPolicy", null)
+                        .WithMany()
+                        .HasForeignKey("ResetPolicyId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 

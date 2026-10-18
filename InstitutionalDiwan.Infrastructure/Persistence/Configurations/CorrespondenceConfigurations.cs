@@ -16,12 +16,12 @@ public sealed class DocumentConfiguration : IEntityTypeConfiguration<Document>
         builder.Property(x => x.DocumentId).HasColumnName("DocumentId").ValueGeneratedNever();
         builder.Property(x => x.Title).HasColumnName("Title").HasMaxLength(500).IsRequired();
         builder.Property(x => x.SubjectSummary).HasColumnName("SubjectSummary").HasMaxLength(2000);
-        builder.Property(x => x.DocumentTypeCode).HasColumnName("DocumentTypeCode").HasMaxLength(50).IsRequired();
-        builder.Property(x => x.Direction).HasColumnName("Direction").HasMaxLength(30).IsRequired();
-        builder.Property(x => x.ConfidentialityLevel).HasColumnName("ConfidentialityLevel").HasMaxLength(30).IsRequired();
-        builder.Property(x => x.PriorityLevel).HasColumnName("PriorityLevel").HasMaxLength(30).IsRequired();
-        builder.Property(x => x.CurrentStatusCode).HasColumnName("CurrentStatusCode").HasMaxLength(50).IsRequired();
-        builder.Property(x => x.StatusBeforeArchiveCode).HasColumnName("StatusBeforeArchiveCode").HasMaxLength(50);
+        builder.Property(x => x.DocumentTypeId).HasColumnName("DocumentTypeId").IsRequired();
+        builder.Property(x => x.DirectionId).HasColumnName("DirectionId").IsRequired();
+        builder.Property(x => x.ConfidentialityLevelId).HasColumnName("ConfidentialityLevelId").IsRequired();
+        builder.Property(x => x.PriorityLevelId).HasColumnName("PriorityLevelId").IsRequired();
+        builder.Property(x => x.CurrentStatusId).HasColumnName("CurrentStatusId").IsRequired();
+        builder.Property(x => x.StatusBeforeArchiveId).HasColumnName("StatusBeforeArchiveId");
         builder.Property(x => x.OwningDepartmentId).HasColumnName("OwningDepartmentId").IsRequired();
         builder.Property(x => x.CreatedByUserId).HasColumnName("CreatedByUserId").IsRequired();
         builder.Property(x => x.ActiveOfficialNumberId).HasColumnName("ActiveOfficialNumberId");
@@ -34,9 +34,15 @@ public sealed class DocumentConfiguration : IEntityTypeConfiguration<Document>
         builder.Property(x => x.UpdatedAt).HasColumnName("UpdatedAt").HasColumnType("datetime2(3)");
         builder.Property(x => x.RowVersion).HasColumnName("RowVersion").IsRowVersion();
 
-        builder.HasIndex(x => new { x.OwningDepartmentId, x.CurrentStatusCode }).HasDatabaseName("IX_DOCUMENTS_DEPT_STATUS");
+        builder.HasIndex(x => new { x.OwningDepartmentId, x.CurrentStatusId }).HasDatabaseName("IX_DOCUMENTS_DEPT_STATUS");
         builder.HasIndex(x => x.OfficialNumberText).HasDatabaseName("IX_DOCUMENTS_OFFICIAL_NUMBER");
         builder.HasIndex(x => x.RegistrationDate).HasDatabaseName("IX_DOCUMENTS_REG_DATE");
+
+        builder.HasOne<DocumentType>().WithMany().HasForeignKey(x => x.DocumentTypeId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<DocumentDirection>().WithMany().HasForeignKey(x => x.DirectionId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<DocumentConfidentialityLevel>().WithMany().HasForeignKey(x => x.ConfidentialityLevelId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<DocumentPriorityLevel>().WithMany().HasForeignKey(x => x.PriorityLevelId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<DocumentStatusType>().WithMany().HasForeignKey(x => x.CurrentStatusId).OnDelete(DeleteBehavior.Restrict);
 
         builder.HasMany(x => x.Participants)
             .WithOne()
@@ -61,16 +67,17 @@ public sealed class DocumentTypeConfiguration : IEntityTypeConfiguration<Documen
     public void Configure(EntityTypeBuilder<DocumentType> builder)
     {
         builder.ToTable("DOCUMENT_TYPES");
-        builder.Ignore(x => x.Id);
 
-        builder.HasKey(x => x.Code);
-        builder.Property(x => x.Code).HasColumnName("Code").HasMaxLength(50).ValueGeneratedNever();
-        builder.Property(x => x.NameAr).HasColumnName("NameAr").HasMaxLength(150).IsRequired();
-        builder.Property(x => x.NameEn).HasColumnName("NameEn").HasMaxLength(150);
-        builder.Property(x => x.AllowedDirectionScope).HasColumnName("AllowedDirectionScope").HasMaxLength(30).IsRequired();
+        builder.HasKey(x => x.Id);
+        builder.Property(x => x.Id).HasColumnName("Id").ValueGeneratedNever();
+        builder.Property(x => x.Desc).HasColumnName("Desc").HasMaxLength(150).IsRequired();
+        builder.Property(x => x.DescAr).HasColumnName("DescAr").HasMaxLength(150).IsRequired();
+        builder.Property(x => x.AllowedDirectionId).HasColumnName("AllowedDirectionId").IsRequired();
         builder.Property(x => x.RequiresOfficialNumber).HasColumnName("RequiresOfficialNumber").IsRequired();
         builder.Property(x => x.IsActive).HasColumnName("IsActive").IsRequired();
         builder.Property(x => x.CreatedAt).HasColumnName("CreatedAt").HasColumnType("datetime2(3)").IsRequired();
+
+        builder.HasOne<DocumentDirection>().WithMany().HasForeignKey(x => x.AllowedDirectionId).OnDelete(DeleteBehavior.Restrict);
     }
 }
 
@@ -79,14 +86,58 @@ public sealed class DocumentStatusTypeConfiguration : IEntityTypeConfiguration<D
     public void Configure(EntityTypeBuilder<DocumentStatusType> builder)
     {
         builder.ToTable("DOCUMENT_STATUS_TYPES");
-        builder.Ignore(x => x.Id);
 
-        builder.HasKey(x => x.Code);
-        builder.Property(x => x.Code).HasColumnName("Code").HasMaxLength(50).ValueGeneratedNever();
-        builder.Property(x => x.NameAr).HasColumnName("NameAr").HasMaxLength(150).IsRequired();
-        builder.Property(x => x.NameEn).HasColumnName("NameEn").HasMaxLength(150);
+        builder.HasKey(x => x.Id);
+        builder.Property(x => x.Id).HasColumnName("Id").ValueGeneratedNever();
+        builder.Property(x => x.Desc).HasColumnName("Desc").HasMaxLength(150).IsRequired();
+        builder.Property(x => x.DescAr).HasColumnName("DescAr").HasMaxLength(150).IsRequired();
         builder.Property(x => x.IsTerminal).HasColumnName("IsTerminal").IsRequired();
         builder.Property(x => x.IsSystemStatus).HasColumnName("IsSystemStatus").IsRequired();
+        builder.Property(x => x.CreatedAt).HasColumnName("CreatedAt").HasColumnType("datetime2(3)").IsRequired();
+    }
+}
+
+public sealed class DocumentDirectionConfiguration : IEntityTypeConfiguration<DocumentDirection>
+{
+    public void Configure(EntityTypeBuilder<DocumentDirection> builder)
+    {
+        builder.ToTable("DOCUMENT_DIRECTIONS");
+
+        builder.HasKey(x => x.Id);
+        builder.Property(x => x.Id).HasColumnName("Id").ValueGeneratedNever();
+        builder.Property(x => x.Desc).HasColumnName("Desc").HasMaxLength(150).IsRequired();
+        builder.Property(x => x.DescAr).HasColumnName("DescAr").HasMaxLength(150).IsRequired();
+        builder.Property(x => x.IsActive).HasColumnName("IsActive").IsRequired();
+        builder.Property(x => x.CreatedAt).HasColumnName("CreatedAt").HasColumnType("datetime2(3)").IsRequired();
+    }
+}
+
+public sealed class DocumentConfidentialityLevelConfiguration : IEntityTypeConfiguration<DocumentConfidentialityLevel>
+{
+    public void Configure(EntityTypeBuilder<DocumentConfidentialityLevel> builder)
+    {
+        builder.ToTable("DOCUMENT_CONFIDENTIALITY_LEVELS");
+
+        builder.HasKey(x => x.Id);
+        builder.Property(x => x.Id).HasColumnName("Id").ValueGeneratedNever();
+        builder.Property(x => x.Desc).HasColumnName("Desc").HasMaxLength(150).IsRequired();
+        builder.Property(x => x.DescAr).HasColumnName("DescAr").HasMaxLength(150).IsRequired();
+        builder.Property(x => x.IsActive).HasColumnName("IsActive").IsRequired();
+        builder.Property(x => x.CreatedAt).HasColumnName("CreatedAt").HasColumnType("datetime2(3)").IsRequired();
+    }
+}
+
+public sealed class DocumentPriorityLevelConfiguration : IEntityTypeConfiguration<DocumentPriorityLevel>
+{
+    public void Configure(EntityTypeBuilder<DocumentPriorityLevel> builder)
+    {
+        builder.ToTable("DOCUMENT_PRIORITY_LEVELS");
+
+        builder.HasKey(x => x.Id);
+        builder.Property(x => x.Id).HasColumnName("Id").ValueGeneratedNever();
+        builder.Property(x => x.Desc).HasColumnName("Desc").HasMaxLength(150).IsRequired();
+        builder.Property(x => x.DescAr).HasColumnName("DescAr").HasMaxLength(150).IsRequired();
+        builder.Property(x => x.IsActive).HasColumnName("IsActive").IsRequired();
         builder.Property(x => x.CreatedAt).HasColumnName("CreatedAt").HasColumnType("datetime2(3)").IsRequired();
     }
 }
@@ -124,13 +175,16 @@ public sealed class DocumentStatusHistoryConfiguration : IEntityTypeConfiguratio
         builder.HasKey(x => x.HistoryId);
         builder.Property(x => x.HistoryId).HasColumnName("HistoryId").ValueGeneratedNever();
         builder.Property(x => x.DocumentId).HasColumnName("DocumentId").IsRequired();
-        builder.Property(x => x.FromStatusCode).HasColumnName("FromStatusCode").HasMaxLength(50);
-        builder.Property(x => x.ToStatusCode).HasColumnName("ToStatusCode").HasMaxLength(50).IsRequired();
+        builder.Property(x => x.FromStatusId).HasColumnName("FromStatusId");
+        builder.Property(x => x.ToStatusId).HasColumnName("ToStatusId").IsRequired();
         builder.Property(x => x.ChangedByUserId).HasColumnName("ChangedByUserId").IsRequired();
         builder.Property(x => x.Reason).HasColumnName("Reason").HasMaxLength(500);
         builder.Property(x => x.ChangedAt).HasColumnName("ChangedAt").HasColumnType("datetime2(3)").IsRequired();
 
         builder.HasIndex(x => new { x.DocumentId, x.ChangedAt }).HasDatabaseName("IX_DOC_STATUS_HISTORY_DOC_DATE");
+
+        builder.HasOne<DocumentStatusType>().WithMany().HasForeignKey(x => x.ToStatusId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<DocumentStatusType>().WithMany().HasForeignKey(x => x.FromStatusId).OnDelete(DeleteBehavior.Restrict);
     }
 }
 

@@ -11,7 +11,7 @@ public sealed class GetDocumentByIdQueryHandlerTests
     [Fact]
     public async Task Handle_WhenDocumentExists_ReturnsMappedResponse()
     {
-        var document = Document.CreateDraft("نبذة", "LETTER", "OUTGOING", Guid.NewGuid(), Guid.NewGuid());
+        var document = Document.CreateDraft("نبذة", DocumentType.OutgoingLetterId, DocumentDirection.OutgoingId, Guid.NewGuid(), Guid.NewGuid());
         Assert.True(document.IsSuccess);
         var documents = new FakeDocumentRepository();
         documents.Add(document.Value);
@@ -22,7 +22,7 @@ public sealed class GetDocumentByIdQueryHandlerTests
         Assert.True(result.IsSuccess);
         Assert.Equal(document.Value.DocumentId, result.Value.DocumentId);
         Assert.Equal("نبذة", result.Value.Title);
-        Assert.Equal(Document.StatusDraft, result.Value.Status);
+        Assert.Equal(Document.StatusDraft, result.Value.StatusId);
     }
 
     [Fact]

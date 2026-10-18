@@ -12,7 +12,7 @@ internal sealed class FakeDocumentNumberRepository : IDocumentNumberRepository
 
     public Task<DocumentNumber?> GetActiveByDocumentIdAsync(Guid documentId, CancellationToken cancellationToken = default)
         => Task.FromResult(DocumentNumbers.FirstOrDefault(
-            number => number.DocumentId == documentId && number.Status == "ACTIVE"));
+            number => number.DocumentId == documentId && number.StatusId == DocumentNumberStatus.ActiveId));
 
     public Task<bool> ExistsByNumberAndYearAsync(
         string officialNumberText,
@@ -40,22 +40,15 @@ internal sealed class FakeNumberingRegistryRepository : INumberingRegistryReposi
 
     public Task<NumberingRegistry?> GetActiveForScopeAsync(
         Guid? departmentId,
-        string? documentTypeCode,
-        string? direction,
+        int? documentTypeId,
+        int? directionId,
         CancellationToken cancellationToken = default)
     {
-        var normalizedDocumentType = string.IsNullOrWhiteSpace(documentTypeCode)
-            ? null
-            : documentTypeCode.Trim().ToUpperInvariant();
-        var normalizedDirection = string.IsNullOrWhiteSpace(direction)
-            ? null
-            : direction.Trim().ToUpperInvariant();
-
         var candidates = Registries
             .Where(registry => registry.IsActive &&
                                (registry.DepartmentId == null || registry.DepartmentId == departmentId) &&
-                               (registry.DocumentTypeCode == null || registry.DocumentTypeCode == normalizedDocumentType) &&
-                               (registry.Direction == null || registry.Direction == normalizedDirection))
+                               (registry.DocumentTypeId == null || registry.DocumentTypeId == documentTypeId) &&
+                               (registry.DirectionId == null || registry.DirectionId == directionId))
             .ToList();
 
         var selected = candidates
@@ -64,9 +57,9 @@ internal sealed class FakeNumberingRegistryRepository : INumberingRegistryReposi
                 var specificity = 0;
                 if (registry.DepartmentId is not null && registry.DepartmentId == departmentId)
                     specificity++;
-                if (registry.DocumentTypeCode is not null && registry.DocumentTypeCode == normalizedDocumentType)
+                if (registry.DocumentTypeId is not null && registry.DocumentTypeId == documentTypeId)
                     specificity++;
-                if (registry.Direction is not null && registry.Direction == normalizedDirection)
+                if (registry.DirectionId is not null && registry.DirectionId == directionId)
                     specificity++;
                 return specificity;
             })

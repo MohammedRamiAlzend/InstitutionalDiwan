@@ -23,27 +23,20 @@ internal sealed class NumberingRegistryRepository : INumberingRegistryRepository
 
     public async Task<NumberingRegistry?> GetActiveForScopeAsync(
         Guid? departmentId,
-        string? documentTypeCode,
-        string? direction,
+        int? documentTypeId,
+        int? directionId,
         CancellationToken cancellationToken = default)
     {
-        var normalizedDocumentType = string.IsNullOrWhiteSpace(documentTypeCode)
-            ? null
-            : documentTypeCode.Trim().ToUpperInvariant();
-        var normalizedDirection = string.IsNullOrWhiteSpace(direction)
-            ? null
-            : direction.Trim().ToUpperInvariant();
-
         var candidates = await _context.NumberingRegistries
             .Include(registry => registry.Counters)
             .Where(registry => registry.IsActive &&
                                (registry.DepartmentId == null || registry.DepartmentId == departmentId) &&
-                               (registry.DocumentTypeCode == null || registry.DocumentTypeCode == normalizedDocumentType) &&
-                               (registry.Direction == null || registry.Direction == normalizedDirection))
+                               (registry.DocumentTypeId == null || registry.DocumentTypeId == documentTypeId) &&
+                               (registry.DirectionId == null || registry.DirectionId == directionId))
             .ToListAsync(cancellationToken);
 
         return candidates
-            .OrderBy(registry => Specificity(registry, departmentId, normalizedDocumentType, normalizedDirection))
+            .OrderBy(registry => Specificity(registry, departmentId, documentTypeId, directionId))
             .ThenBy(registry => registry.CreatedAt)
             .FirstOrDefault();
     }
@@ -53,15 +46,15 @@ internal sealed class NumberingRegistryRepository : INumberingRegistryRepository
     private static int Specificity(
         NumberingRegistry registry,
         Guid? departmentId,
-        string? documentTypeCode,
-        string? direction)
+        int? documentTypeId,
+        int? directionId)
     {
         var specificity = 0;
         if (registry.DepartmentId is not null && registry.DepartmentId == departmentId)
             specificity++;
-        if (registry.DocumentTypeCode is not null && registry.DocumentTypeCode == documentTypeCode)
+        if (registry.DocumentTypeId is not null && registry.DocumentTypeId == documentTypeId)
             specificity++;
-        if (registry.Direction is not null && registry.Direction == direction)
+        if (registry.DirectionId is not null && registry.DirectionId == directionId)
             specificity++;
         return specificity;
     }

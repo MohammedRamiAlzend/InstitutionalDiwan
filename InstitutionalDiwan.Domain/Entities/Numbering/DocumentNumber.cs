@@ -24,7 +24,8 @@ public sealed class DocumentNumber : AggregateRoot<Guid>
     public int NumberingYear { get; private set; }
     public long SequenceValue { get; private set; }
     public string OfficialNumberText { get; private set; } = null!;
-    public string Status { get; private set; } = "ACTIVE";
+    // FK → DocumentNumberStatus.Id (InstitutionalDiwan.Domain.Entities.Numbering.DocumentNumberStatus)
+    public int StatusId { get; private set; } = DocumentNumberStatus.ActiveId;
     // FK → User.Id (InstitutionalDiwan.Domain.Entities.Identity.User)
     public Guid IssuedByUserId { get; private set; }
     public DateTime IssuedAt { get; private set; }
@@ -65,12 +66,12 @@ public sealed class DocumentNumber : AggregateRoot<Guid>
             NumberingYear = numberingYear,
             SequenceValue = sequenceValue,
             OfficialNumberText = numberValResult.Value.Value,
-            Status = "ACTIVE",
+            StatusId = DocumentNumberStatus.ActiveId,
             IssuedByUserId = issuedByUserId,
             IssuedAt = DateTime.UtcNow
         };
 
-        docNumber._history.Add(DocumentNumberHistory.Create(docNumber.DocumentNumberId, "ISSUED", issuedByUserId, notes));
+        docNumber._history.Add(DocumentNumberHistory.Create(docNumber.DocumentNumberId, DocumentNumberEventType.IssuedId, issuedByUserId, notes));
         docNumber.RaiseDomainEvent(new OfficialNumberIssuedEvent(
             docNumber.DocumentNumberId,
             docNumber.DocumentId,
@@ -84,15 +85,15 @@ public sealed class DocumentNumber : AggregateRoot<Guid>
 
     public Result Cancel(Guid actorUserId, string? reason)
     {
-        if (Status != "ACTIVE")
+        if (StatusId != DocumentNumberStatus.ActiveId)
             return Result.Failure(DomainErrors.Numbering.AlreadyCancelled);
 
         if (string.IsNullOrWhiteSpace(reason))
             return Result.Failure(DomainErrors.Numbering.CancelReasonRequired);
 
-        Status = "CANCELLED";
+        StatusId = DocumentNumberStatus.CancelledId;
         CancellationReason = reason.Trim();
-        _history.Add(DocumentNumberHistory.Create(DocumentNumberId, "CANCELLED", actorUserId, reason.Trim()));
+        _history.Add(DocumentNumberHistory.Create(DocumentNumberId, DocumentNumberEventType.CancelledId, actorUserId, reason.Trim()));
 
         RaiseDomainEvent(new OfficialNumberCancelledEvent(DocumentNumberId, DocumentId, OfficialNumberText, actorUserId, reason.Trim()));
         return Result.Success();
@@ -100,7 +101,7 @@ public sealed class DocumentNumber : AggregateRoot<Guid>
 
     public Result ReplaceWith(Guid replacementNumberId, Guid actorUserId, string? reason)
     {
-        if (Status != "ACTIVE")
+        if (StatusId != DocumentNumberStatus.ActiveId)
             return Result.Failure(DomainErrors.Numbering.AlreadyCancelled);
 
         if (replacementNumberId == Guid.Empty || replacementNumberId == DocumentNumberId)
@@ -109,10 +110,10 @@ public sealed class DocumentNumber : AggregateRoot<Guid>
         if (string.IsNullOrWhiteSpace(reason))
             return Result.Failure(DomainErrors.Numbering.CancelReasonRequired);
 
-        Status = "REPLACED";
+        StatusId = DocumentNumberStatus.ReplacedId;
         ReplacedByNumberId = replacementNumberId;
         CancellationReason = reason.Trim();
-        _history.Add(DocumentNumberHistory.Create(DocumentNumberId, "REPLACED", actorUserId, reason.Trim()));
+        _history.Add(DocumentNumberHistory.Create(DocumentNumberId, DocumentNumberEventType.ReplacedId, actorUserId, reason.Trim()));
 
         RaiseDomainEvent(new OfficialNumberReplacedEvent(DocumentNumberId, replacementNumberId, DocumentId, actorUserId, reason.Trim()));
         return Result.Success();

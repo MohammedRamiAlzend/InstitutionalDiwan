@@ -1,4 +1,5 @@
 using InstitutionalDiwan.Application.Features.Correspondence.Documents;
+using InstitutionalDiwan.Domain.Entities.Correspondence;
 
 namespace InstitutionalDiwan.Tests.Application;
 
@@ -7,7 +8,8 @@ public sealed class CreateDocumentCommandValidatorTests
     private static readonly CreateDocumentCommandValidator Validator = new();
 
     private static CreateDocumentCommand Valid() =>
-        new(Guid.NewGuid(), "Some title", "LETTER", "INTERNAL", "2026/000001", 2026);
+        new(Guid.NewGuid(), "Some title", DocumentType.OutgoingLetterId, DocumentDirection.InternalId,
+            "2026/000001", 2026);
 
     [Fact]
     public void ValidCommand_Passes()
@@ -27,32 +29,34 @@ public sealed class CreateDocumentCommandValidatorTests
     }
 
     [Theory]
-    [InlineData("sideways")]
-    [InlineData("")]
-    [InlineData("internal-ish")]
-    public void InvalidDirection_Fails(string direction)
+    [InlineData(0)]
+    [InlineData(-1)]
+    [InlineData(99)]
+    public void InvalidDirection_Fails(int directionId)
     {
-        var result = Validator.Validate(Valid() with { Direction = direction });
+        var result = Validator.Validate(Valid() with { DirectionId = directionId });
 
         Assert.False(result.IsValid);
         Assert.Contains(result.Errors, error => error.ErrorCode == "Correspondence.DirectionInvalid");
     }
 
     [Theory]
-    [InlineData("INTERNAL")]
-    [InlineData("internal")]
-    [InlineData(" Incoming ")]
-    public void AllowedDirection_PassesRegardlessOfCase(string direction)
+    [InlineData(DocumentDirection.InternalId)]
+    [InlineData(DocumentDirection.IncomingId)]
+    [InlineData(DocumentDirection.OutgoingId)]
+    public void AllowedDirection_Passes(int directionId)
     {
-        var result = Validator.Validate(Valid() with { Direction = direction });
+        var result = Validator.Validate(Valid() with { DirectionId = directionId });
 
         Assert.True(result.IsValid);
     }
 
-    [Fact]
-    public void MissingTypeCode_Fails()
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-5)]
+    public void MissingTypeId_Fails(int documentTypeId)
     {
-        var result = Validator.Validate(Valid() with { DocumentTypeCode = " " });
+        var result = Validator.Validate(Valid() with { DocumentTypeId = documentTypeId });
 
         Assert.False(result.IsValid);
         Assert.Contains(result.Errors, error => error.ErrorCode == "Correspondence.TypeCodeEmpty");

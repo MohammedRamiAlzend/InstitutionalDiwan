@@ -1,5 +1,6 @@
 using InstitutionalDiwan.Application.Features.Numbering.Registries;
 using InstitutionalDiwan.Domain.Common;
+using InstitutionalDiwan.Domain.Entities.Correspondence;
 using InstitutionalDiwan.Domain.Entities.Numbering;
 using InstitutionalDiwan.Domain.Errors;
 using InstitutionalDiwan.Tests.Support;
@@ -11,7 +12,7 @@ public sealed class GetRegistryByIdQueryHandlerTests
     [Fact]
     public async Task Handle_WhenRegistryExists_ReturnsMappedResponse()
     {
-        var registry = NumberingRegistry.Create("outgoing", "صادر", direction: "OUTGOING");
+        var registry = NumberingRegistry.Create("outgoing", "صادر", directionId: DocumentDirection.OutgoingId);
         Assert.True(registry.IsSuccess);
         var registries = new FakeNumberingRegistryRepository();
         registries.Add(registry.Value);
@@ -25,7 +26,7 @@ public sealed class GetRegistryByIdQueryHandlerTests
         Assert.Equal(registry.Value.RegistryId, result.Value.RegistryId);
         Assert.Equal("OUTGOING", result.Value.Code);
         Assert.Equal("صادر", result.Value.NameAr);
-        Assert.Equal("OUTGOING", result.Value.Direction);
+        Assert.Equal(DocumentDirection.OutgoingId, result.Value.DirectionId);
         Assert.True(result.Value.IsActive);
         Assert.Empty(result.Value.Counters);
     }

@@ -14,6 +14,7 @@ internal sealed class CreateDocumentCommandHandler : ICommandHandler<CreateDocum
 
     private readonly IUserRepository _userRepository;
     private readonly IDocumentRepository _documentRepository;
+    private readonly IDocumentTypeRepository _documentTypeRepository;
     private readonly IDocumentNumberRepository _documentNumberRepository;
     private readonly INumberingRegistryRepository _numberingRegistryRepository;
     private readonly IUnitOfWork _unitOfWork;
@@ -21,12 +22,14 @@ internal sealed class CreateDocumentCommandHandler : ICommandHandler<CreateDocum
     public CreateDocumentCommandHandler(
         IUserRepository userRepository,
         IDocumentRepository documentRepository,
+        IDocumentTypeRepository documentTypeRepository,
         IDocumentNumberRepository documentNumberRepository,
         INumberingRegistryRepository numberingRegistryRepository,
         IUnitOfWork unitOfWork)
     {
         _userRepository = userRepository;
         _documentRepository = documentRepository;
+        _documentTypeRepository = documentTypeRepository;
         _documentNumberRepository = documentNumberRepository;
         _numberingRegistryRepository = numberingRegistryRepository;
         _unitOfWork = unitOfWork;
@@ -43,6 +46,13 @@ internal sealed class CreateDocumentCommandHandler : ICommandHandler<CreateDocum
         if (!user.IsActive)
             return Result.Failure<DocumentResponse>(DomainErrors.Identity.UserInactive);
 
+        var documentType = await _documentTypeRepository.GetByIdAsync(request.DocumentTypeId, cancellationToken);
+        if (documentType is null)
+            return Result.Failure<DocumentResponse>(DomainErrors.Correspondence.DocumentTypeNotFound);
+
+        if (!documentType.IsActive)
+            return Result.Failure<DocumentResponse>(DomainErrors.Correspondence.DocumentTypeInactive);
+
         var numberText = (request.OfficialNumberText ?? string.Empty).Trim();
         if (numberText.Length == 0)
             return Result.Failure<DocumentResponse>(DomainErrors.Numbering.OfficialNumberEmpty);
@@ -53,13 +63,13 @@ internal sealed class CreateDocumentCommandHandler : ICommandHandler<CreateDocum
 
         var documentResult = Document.CreateDraft(
             title: request.Title,
-            documentTypeCode: request.DocumentTypeCode,
-            direction: request.Direction,
+            documentTypeId: request.DocumentTypeId,
+            directionId: request.DirectionId,
             owningDepartmentId: user.PrimaryDepartmentId,
             createdByUserId: user.UserId,
             subjectSummary: request.SubjectSummary,
-            confidentialityLevel: request.ConfidentialityLevel ?? "NORMAL",
-            priorityLevel: request.PriorityLevel ?? "NORMAL");
+            confidentialityLevelId: request.ConfidentialityLevelId ?? DocumentConfidentialityLevel.NormalId,
+            priorityLevelId: request.PriorityLevelId ?? DocumentPriorityLevel.NormalId);
 
         if (documentResult.IsFailure)
             return Result.Failure<DocumentResponse>(documentResult.Error);
@@ -67,7 +77,7 @@ internal sealed class CreateDocumentCommandHandler : ICommandHandler<CreateDocum
         var document = documentResult.Value;
 
         var registryResult = await ResolveRegistryAsync(
-            user.PrimaryDepartmentId, request.DocumentTypeCode, request.Direction, cancellationToken);
+            user.PrimaryDepartmentId, request.DocumentTypeId, request.DirectionId, cancellationToken);
         if (registryResult.IsFailure)
             return Result.Failure<DocumentResponse>(registryResult.Error);
 
@@ -107,19 +117,12 @@ internal sealed class CreateDocumentCommandHandler : ICommandHandler<CreateDocum
 
     private async Task<Result<NumberingRegistry>> ResolveRegistryAsync(
         Guid departmentId,
-        string? documentTypeCode,
-        string? direction,
+        int documentTypeId,
+        int directionId,
         CancellationToken cancellationToken)
     {
-        var scopeDocumentType = string.IsNullOrWhiteSpace(documentTypeCode)
-            ? null
-            : documentTypeCode.Trim().ToUpperInvariant();
-        var scopeDirection = string.IsNullOrWhiteSpace(direction)
-            ? null
-            : direction.Trim().ToUpperInvariant();
-
         var registry = await _numberingRegistryRepository.GetActiveForScopeAsync(
-            departmentId, scopeDocumentType, scopeDirection, cancellationToken);
+            departmentId, documentTypeId, directionId, cancellationToken);
 
         if (registry is not null)
             return Result.Success(registry);

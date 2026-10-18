@@ -8,7 +8,7 @@ public sealed class ListDocumentsQueryHandlerTests
 {
     private static Document CreateDocument(string title)
     {
-        var document = Document.CreateDraft(title, "LETTER", "INTERNAL", Guid.NewGuid(), Guid.NewGuid());
+        var document = Document.CreateDraft(title, DocumentType.OutgoingLetterId, DocumentDirection.InternalId, Guid.NewGuid(), Guid.NewGuid());
         Assert.True(document.IsSuccess);
         return document.Value;
     }

@@ -70,13 +70,13 @@ public sealed class DocumentsController : ControllerBase
         var result = await _sender.Send(new CreateDocumentCommand(
             userId,
             request.Title,
-            request.DocumentTypeCode,
-            request.Direction,
+            request.DocumentTypeId,
+            request.DirectionId,
             request.OfficialNumberText,
             request.NumberingYear,
             request.SubjectSummary,
-            request.ConfidentialityLevel,
-            request.PriorityLevel), cancellationToken);
+            request.ConfidentialityLevelId,
+            request.PriorityLevelId), cancellationToken);
 
         return result.ToActionResult();
     }

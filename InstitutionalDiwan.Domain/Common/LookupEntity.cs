@@ -25,6 +25,16 @@ public abstract class LookupEntity : Entity<int>
     {
     }
 
+    /// <summary>Initializes a brand-new lookup entry with its stable id and labels.</summary>
+    protected LookupEntity(int id, string desc, string descAr)
+    {
+        Id = id;
+        Desc = desc.Trim();
+        DescAr = descAr.Trim();
+        IsActive = true;
+        CreatedAt = DateTime.UtcNow;
+    }
+
     /// <summary>Updates the labels (used by lookup CRUD endpoints).</summary>
     public void Relabel(string desc, string descAr)
     {

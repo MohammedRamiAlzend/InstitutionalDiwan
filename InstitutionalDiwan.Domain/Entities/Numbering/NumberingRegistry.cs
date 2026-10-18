@@ -20,11 +20,13 @@ public sealed class NumberingRegistry : AggregateRoot<Guid>
     public string NameAr { get; private set; } = null!;
     // FK → Department.DepartmentId (InstitutionalDiwan.Domain.Entities.Organization.Department)
     public Guid? DepartmentId { get; private set; }
-    // FK → DocumentType.Code (InstitutionalDiwan.Domain.Entities.Correspondence.DocumentType)
-    public string? DocumentTypeCode { get; private set; }
-    public string? Direction { get; private set; }
+    // FK → DocumentType.Id (InstitutionalDiwan.Domain.Entities.Correspondence.DocumentType)
+    public int? DocumentTypeId { get; private set; }
+    // FK → DocumentDirection.Id (InstitutionalDiwan.Domain.Entities.Correspondence.DocumentDirection)
+    public int? DirectionId { get; private set; }
     public string FormatPattern { get; private set; } = "{YEAR}/{SEQ:D6}";
-    public string ResetPolicy { get; private set; } = "YEARLY";
+    // FK → NumberingResetPolicy.Id (InstitutionalDiwan.Domain.Entities.Numbering.NumberingResetPolicy)
+    public int ResetPolicyId { get; private set; } = NumberingResetPolicy.YearlyId;
     public bool IsActive { get; private set; }
     public DateTime CreatedAt { get; private set; }
 
@@ -38,10 +40,10 @@ public sealed class NumberingRegistry : AggregateRoot<Guid>
         string? code,
         string? nameAr,
         string formatPattern = "{YEAR}/{SEQ:D6}",
-        string resetPolicy = "YEARLY",
+        int resetPolicyId = NumberingResetPolicy.YearlyId,
         Guid? departmentId = null,
-        string? documentTypeCode = null,
-        string? direction = null)
+        int? documentTypeId = null,
+        int? directionId = null)
     {
         if (string.IsNullOrWhiteSpace(code))
             return Result.Failure<NumberingRegistry>(DomainErrors.Numbering.RegistryCodeEmpty);
@@ -55,10 +57,10 @@ public sealed class NumberingRegistry : AggregateRoot<Guid>
             Code = code.Trim().ToUpperInvariant(),
             NameAr = nameAr.Trim(),
             DepartmentId = departmentId,
-            DocumentTypeCode = string.IsNullOrWhiteSpace(documentTypeCode) ? null : documentTypeCode.Trim().ToUpperInvariant(),
-            Direction = string.IsNullOrWhiteSpace(direction) ? null : direction.Trim().ToUpperInvariant(),
+            DocumentTypeId = documentTypeId is > 0 ? documentTypeId : null,
+            DirectionId = directionId is > 0 ? directionId : null,
             FormatPattern = string.IsNullOrWhiteSpace(formatPattern) ? "{YEAR}/{SEQ:D6}" : formatPattern.Trim(),
-            ResetPolicy = string.IsNullOrWhiteSpace(resetPolicy) ? "YEARLY" : resetPolicy.Trim().ToUpperInvariant(),
+            ResetPolicyId = resetPolicyId <= 0 ? NumberingResetPolicy.YearlyId : resetPolicyId,
             IsActive = true,
             CreatedAt = DateTime.UtcNow
         };

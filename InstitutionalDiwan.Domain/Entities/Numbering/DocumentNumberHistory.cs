@@ -13,7 +13,8 @@ public sealed class DocumentNumberHistory : Entity<Guid>
 
     // FK → DocumentNumber.DocumentNumberId (InstitutionalDiwan.Domain.Entities.Numbering.DocumentNumber)
     public Guid DocumentNumberId { get; private set; }
-    public string EventType { get; private set; } = null!;
+    // FK → DocumentNumberEventType.Id (InstitutionalDiwan.Domain.Entities.Numbering.DocumentNumberEventType)
+    public int EventTypeId { get; private set; }
     // FK → User.UserId (InstitutionalDiwan.Domain.Entities.Identity.User)
     public Guid ActorUserId { get; private set; }
     public string? Notes { get; private set; }
@@ -25,7 +26,7 @@ public sealed class DocumentNumberHistory : Entity<Guid>
 
     internal static DocumentNumberHistory Create(
         Guid documentNumberId,
-        string eventType,
+        int eventTypeId,
         Guid actorUserId,
         string? notes = null)
     {
@@ -33,7 +34,7 @@ public sealed class DocumentNumberHistory : Entity<Guid>
         {
             HistoryId = Guid.NewGuid(),
             DocumentNumberId = documentNumberId,
-            EventType = eventType.Trim().ToUpperInvariant(),
+            EventTypeId = eventTypeId,
             ActorUserId = actorUserId,
             Notes = string.IsNullOrWhiteSpace(notes) ? null : notes.Trim(),
             OccurredAt = DateTime.UtcNow

@@ -48,11 +48,18 @@ public interface IDocumentRepository
     void Add(Document document);
 }
 
+public interface IDocumentTypeRepository
+{
+    Task<DocumentType?> GetByIdAsync(int documentTypeId, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<DocumentType>> ListAllAsync(CancellationToken cancellationToken = default);
+    void Add(DocumentType documentType);
+}
+
 public interface INumberingRegistryRepository
 {
     Task<NumberingRegistry?> GetByIdAsync(Guid registryId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<NumberingRegistry>> ListAllAsync(CancellationToken cancellationToken = default);
-    Task<NumberingRegistry?> GetActiveForScopeAsync(Guid? departmentId, string? documentTypeCode, string? direction, CancellationToken cancellationToken = default);
+    Task<NumberingRegistry?> GetActiveForScopeAsync(Guid? departmentId, int? documentTypeId, int? directionId, CancellationToken cancellationToken = default);
     void Add(NumberingRegistry registry);
 }
 
