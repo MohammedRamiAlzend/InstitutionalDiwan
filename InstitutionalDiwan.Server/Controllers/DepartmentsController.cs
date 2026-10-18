@@ -73,7 +73,7 @@ public sealed class DepartmentsController : ControllerBase
         var result = await _sender.Send(new CreateDepartmentCommand(
             request.Code,
             request.NameAr,
-            request.DepartmentTypeCode,
+            request.DepartmentTypeId,
             request.ParentDepartmentId,
             request.NameEn,
             request.CanSendExternal,

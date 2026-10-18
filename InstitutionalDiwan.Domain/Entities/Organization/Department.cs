@@ -18,8 +18,8 @@ public sealed class Department : AggregateRoot<Guid>
     public string Code { get; private set; } = null!;
     public string NameAr { get; private set; } = null!;
     public string? NameEn { get; private set; }
-    // FK → DepartmentType.Code (InstitutionalDiwan.Domain.Entities.Organization.DepartmentType)
-    public string DepartmentTypeCode { get; private set; } = null!;
+    // FK → DepartmentType.Id (InstitutionalDiwan.Domain.Entities.Organization.DepartmentType)
+    public int DepartmentTypeId { get; private set; }
     // FK → Department.DepartmentId (self-reference, parent department)
     public Guid? ParentDepartmentId { get; private set; }
     // FK → Employee.EmployeeId (InstitutionalDiwan.Domain.Entities.Identity.Employee)
@@ -40,7 +40,7 @@ public sealed class Department : AggregateRoot<Guid>
         DepartmentCode code,
         string nameAr,
         string? nameEn,
-        string departmentTypeCode,
+        int departmentTypeId,
         Guid? parentDepartmentId,
         bool canSendExternal,
         bool canReceiveExternal,
@@ -51,7 +51,7 @@ public sealed class Department : AggregateRoot<Guid>
         Code = code.Value;
         NameAr = nameAr.Trim();
         NameEn = string.IsNullOrWhiteSpace(nameEn) ? null : nameEn.Trim();
-        DepartmentTypeCode = departmentTypeCode.Trim().ToUpperInvariant();
+        DepartmentTypeId = departmentTypeId;
         ParentDepartmentId = parentDepartmentId;
         IsActive = true;
         CanSendExternal = canSendExternal;
@@ -65,7 +65,7 @@ public sealed class Department : AggregateRoot<Guid>
     public static Result<Department> Create(
         string? code,
         string? nameAr,
-        string? departmentTypeCode,
+        int departmentTypeId,
         Guid? parentDepartmentId = null,
         string? nameEn = null,
         bool canSendExternal = false,
@@ -79,7 +79,7 @@ public sealed class Department : AggregateRoot<Guid>
         if (string.IsNullOrWhiteSpace(nameAr))
             return Result.Failure<Department>(DomainErrors.Department.NameEmpty);
 
-        if (string.IsNullOrWhiteSpace(departmentTypeCode))
+        if (departmentTypeId <= 0)
             return Result.Failure<Department>(DomainErrors.Department.TypeEmpty);
 
         var department = new Department(
@@ -87,7 +87,7 @@ public sealed class Department : AggregateRoot<Guid>
             codeResult.Value,
             nameAr,
             nameEn,
-            departmentTypeCode,
+            departmentTypeId,
             parentDepartmentId,
             canSendExternal,
             canReceiveExternal,

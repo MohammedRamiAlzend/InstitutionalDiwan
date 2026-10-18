@@ -17,7 +17,7 @@ public sealed class DepartmentConfiguration : IEntityTypeConfiguration<Departmen
         builder.Property(x => x.Code).HasColumnName("Code").HasMaxLength(50).IsRequired();
         builder.Property(x => x.NameAr).HasColumnName("NameAr").HasMaxLength(200).IsRequired();
         builder.Property(x => x.NameEn).HasColumnName("NameEn").HasMaxLength(200);
-        builder.Property(x => x.DepartmentTypeCode).HasColumnName("DepartmentTypeCode").HasMaxLength(50).IsRequired();
+        builder.Property(x => x.DepartmentTypeId).HasColumnName("DepartmentTypeId").IsRequired();
         builder.Property(x => x.ParentDepartmentId).HasColumnName("ParentDepartmentId");
         builder.Property(x => x.ManagerEmployeeId).HasColumnName("ManagerEmployeeId");
         builder.Property(x => x.IsActive).HasColumnName("IsActive").IsRequired();
@@ -29,11 +29,11 @@ public sealed class DepartmentConfiguration : IEntityTypeConfiguration<Departmen
 
         builder.HasIndex(x => x.Code).IsUnique().HasDatabaseName("UX_DEPARTMENTS_CODE");
         builder.HasIndex(x => x.ParentDepartmentId).HasDatabaseName("IX_DEPARTMENTS_PARENT");
-        builder.HasIndex(x => new { x.DepartmentTypeCode, x.IsActive }).HasDatabaseName("IX_DEPARTMENTS_TYPE_ACTIVE");
+        builder.HasIndex(x => new { x.DepartmentTypeId, x.IsActive }).HasDatabaseName("IX_DEPARTMENTS_TYPE_ACTIVE");
 
         builder.HasOne<DepartmentType>()
             .WithMany()
-            .HasForeignKey(x => x.DepartmentTypeCode)
+            .HasForeignKey(x => x.DepartmentTypeId)
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne<Department>()
@@ -48,12 +48,11 @@ public sealed class DepartmentTypeConfiguration : IEntityTypeConfiguration<Depar
     public void Configure(EntityTypeBuilder<DepartmentType> builder)
     {
         builder.ToTable("DEPARTMENT_TYPES");
-        builder.Ignore(x => x.Id);
 
-        builder.HasKey(x => x.Code);
-        builder.Property(x => x.Code).HasColumnName("Code").HasMaxLength(50).ValueGeneratedNever();
-        builder.Property(x => x.NameAr).HasColumnName("NameAr").HasMaxLength(150).IsRequired();
-        builder.Property(x => x.NameEn).HasColumnName("NameEn").HasMaxLength(150);
+        builder.HasKey(x => x.Id);
+        builder.Property(x => x.Id).HasColumnName("Id").ValueGeneratedNever();
+        builder.Property(x => x.Desc).HasColumnName("Desc").HasMaxLength(150).IsRequired();
+        builder.Property(x => x.DescAr).HasColumnName("DescAr").HasMaxLength(150).IsRequired();
         builder.Property(x => x.HierarchyLevelOrder).HasColumnName("HierarchyLevelOrder").IsRequired();
         builder.Property(x => x.IsActive).HasColumnName("IsActive").IsRequired();
         builder.Property(x => x.CreatedAt).HasColumnName("CreatedAt").HasColumnType("datetime2(3)").IsRequired();

@@ -8,13 +8,13 @@ namespace InstitutionalDiwan.Tests.Application;
 
 public sealed class ActivateDepartmentCommandHandlerTests
 {
-    private const string TypeCode = "SECTION";
+    private const int TypeId = DepartmentType.SectionId;
 
     [Fact]
     public async Task Handle_WhenDepartmentIsInactive_Reactivates()
     {
         var departments = new FakeDepartmentRepository();
-        var department = Department.Create("HR", "قسم", TypeCode);
+        var department = Department.Create("HR", "قسم", TypeId);
         Assert.True(department.IsSuccess);
         department.Value.Deactivate(hasActiveChildren: false);
         departments.Add(department.Value);

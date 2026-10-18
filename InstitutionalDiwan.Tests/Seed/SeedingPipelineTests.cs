@@ -5,11 +5,12 @@ using Microsoft.EntityFrameworkCore;
 
 namespace InstitutionalDiwan.Tests.Seed;
 
-/// <summary>End-to-end seeding pipeline tests: the three real seeders through the real runner.</summary>
+/// <summary>End-to-end seeding pipeline tests: the real seeders through the real runner.</summary>
 public sealed class SeedingPipelineTests
 {
     private static readonly ISeeder[] AllSeeders =
     {
+        new DepartmentTypeSeeder(),
         new PermissionSeeder(),
         new RoleSeeder(),
         new UserSeeder(),
@@ -35,7 +36,8 @@ public sealed class SeedingPipelineTests
 
         var executed = await RunAsync(db, SeedingEnvironments.Development);
 
-        Assert.Equal(3, executed);
+        Assert.Equal(4, executed);
+        Assert.Equal(4, await db.DepartmentTypes.CountAsync());
         Assert.Equal(10, await db.Permissions.CountAsync());
         Assert.Equal(2, await db.Roles.CountAsync());
         Assert.Equal(13, await db.RolePermissions.CountAsync());
@@ -50,7 +52,8 @@ public sealed class SeedingPipelineTests
 
         var executed = await RunAsync(db, SeedingEnvironments.Production);
 
-        Assert.Equal(2, executed);
+        Assert.Equal(3, executed);
+        Assert.Equal(4, await db.DepartmentTypes.CountAsync());
         Assert.Equal(10, await db.Permissions.CountAsync());
         Assert.Equal(2, await db.Roles.CountAsync());
         Assert.Equal(13, await db.RolePermissions.CountAsync());
@@ -66,8 +69,9 @@ public sealed class SeedingPipelineTests
 
         var executed = await RunAsync(db, SeedingEnvironments.Development);
 
-        Assert.Equal(3, executed);
+        Assert.Equal(4, executed);
         Assert.Equal(2, await db.Users.CountAsync());
+        Assert.Equal(4, await db.DepartmentTypes.CountAsync());
         Assert.Equal(10, await db.Permissions.CountAsync());
         Assert.Equal(13, await db.RolePermissions.CountAsync());
         Assert.Equal(usersAfterFirstRun, await db.Users.Select(u => u.UserId).OrderBy(id => id).ToListAsync());

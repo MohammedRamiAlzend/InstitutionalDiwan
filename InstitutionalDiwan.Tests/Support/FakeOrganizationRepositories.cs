@@ -52,11 +52,12 @@ internal sealed class FakeDepartmentTypeRepository : IDepartmentTypeRepository
 {
     public List<DepartmentType> DepartmentTypes { get; } = new();
 
-    public Task<DepartmentType?> GetByCodeAsync(string code, CancellationToken cancellationToken = default)
-    {
-        var normalized = code.Trim().ToUpperInvariant();
-        return Task.FromResult(DepartmentTypes.FirstOrDefault(type => type.Code == normalized));
-    }
+    public Task<DepartmentType?> GetByIdAsync(int departmentTypeId, CancellationToken cancellationToken = default)
+        => Task.FromResult(DepartmentTypes.FirstOrDefault(type => type.Id == departmentTypeId));
+
+    public Task<IReadOnlyList<DepartmentType>> ListAllAsync(CancellationToken cancellationToken = default)
+        => Task.FromResult<IReadOnlyList<DepartmentType>>(
+            DepartmentTypes.OrderBy(type => type.HierarchyLevelOrder).ToList());
 
     public void Add(DepartmentType departmentType) => DepartmentTypes.Add(departmentType);
 }

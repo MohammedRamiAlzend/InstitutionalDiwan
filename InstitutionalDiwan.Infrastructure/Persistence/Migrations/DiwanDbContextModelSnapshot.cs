@@ -1802,11 +1802,9 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                         .HasColumnType("datetime2(3)")
                         .HasColumnName("CreatedAt");
 
-                    b.Property<string>("DepartmentTypeCode")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)")
-                        .HasColumnName("DepartmentTypeCode");
+                    b.Property<int>("DepartmentTypeId")
+                        .HasColumnType("int")
+                        .HasColumnName("DepartmentTypeId");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit")
@@ -1849,7 +1847,7 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                     b.HasIndex("ParentDepartmentId")
                         .HasDatabaseName("IX_DEPARTMENTS_PARENT");
 
-                    b.HasIndex("DepartmentTypeCode", "IsActive")
+                    b.HasIndex("DepartmentTypeId", "IsActive")
                         .HasDatabaseName("IX_DEPARTMENTS_TYPE_ACTIVE");
 
                     b.ToTable("DEPARTMENTS", (string)null);
@@ -1857,14 +1855,25 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Organization.DepartmentType", b =>
                 {
-                    b.Property<string>("Code")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)")
-                        .HasColumnName("Code");
+                    b.Property<int>("Id")
+                        .HasColumnType("int")
+                        .HasColumnName("Id");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2(3)")
                         .HasColumnName("CreatedAt");
+
+                    b.Property<string>("Desc")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)")
+                        .HasColumnName("Desc");
+
+                    b.Property<string>("DescAr")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)")
+                        .HasColumnName("DescAr");
 
                     b.Property<int>("HierarchyLevelOrder")
                         .HasColumnType("int")
@@ -1874,18 +1883,7 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                         .HasColumnType("bit")
                         .HasColumnName("IsActive");
 
-                    b.Property<string>("NameAr")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)")
-                        .HasColumnName("NameAr");
-
-                    b.Property<string>("NameEn")
-                        .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)")
-                        .HasColumnName("NameEn");
-
-                    b.HasKey("Code");
+                    b.HasKey("Id");
 
                     b.ToTable("DEPARTMENT_TYPES", (string)null);
                 });
@@ -2180,7 +2178,7 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                 {
                     b.HasOne("InstitutionalDiwan.Domain.Entities.Organization.DepartmentType", null)
                         .WithMany()
-                        .HasForeignKey("DepartmentTypeCode")
+                        .HasForeignKey("DepartmentTypeId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 

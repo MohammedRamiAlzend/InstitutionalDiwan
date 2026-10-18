@@ -4,7 +4,7 @@ namespace InstitutionalDiwan.Server.Contracts.Organization;
 public sealed record CreateDepartmentRequest(
     string Code,
     string NameAr,
-    string DepartmentTypeCode,
+    int DepartmentTypeId,
     Guid? ParentDepartmentId = null,
     string? NameEn = null,
     bool CanSendExternal = false,

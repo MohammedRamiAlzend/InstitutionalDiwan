@@ -8,11 +8,11 @@ namespace InstitutionalDiwan.Tests.Application;
 
 public sealed class UpdateDepartmentCommandHandlerTests
 {
-    private const string TypeCode = "SECTION";
+    private const int TypeId = DepartmentType.SectionId;
 
     private static Department CreateDepartment(string code, Guid? parentId = null)
     {
-        var department = Department.Create(code, "قسم", TypeCode, parentId);
+        var department = Department.Create(code, "قسم", TypeId, parentId);
         Assert.True(department.IsSuccess);
         return department.Value;
     }

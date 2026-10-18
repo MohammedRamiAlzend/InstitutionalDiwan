@@ -6,7 +6,7 @@ namespace InstitutionalDiwan.Application.Features.Organization.Departments;
 public sealed record CreateDepartmentCommand(
     string Code,
     string NameAr,
-    string DepartmentTypeCode,
+    int DepartmentTypeId,
     Guid? ParentDepartmentId = null,
     string? NameEn = null,
     bool CanSendExternal = false,

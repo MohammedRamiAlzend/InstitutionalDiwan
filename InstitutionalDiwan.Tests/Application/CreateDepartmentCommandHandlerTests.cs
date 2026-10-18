@@ -8,12 +8,12 @@ namespace InstitutionalDiwan.Tests.Application;
 
 public sealed class CreateDepartmentCommandHandlerTests
 {
-    private const string TypeCode = "SECTION";
+    private const int TypeId = DepartmentType.SectionId;
 
     private static FakeDepartmentTypeRepository ActiveTypes(bool active = true)
     {
         var types = new FakeDepartmentTypeRepository();
-        var type = DepartmentType.Create(TypeCode, "قسم", hierarchyLevelOrder: 2);
+        var type = DepartmentType.Create(TypeId, "Section", "قسم", hierarchyLevelOrder: 2);
         Assert.True(type.IsSuccess);
         if (!active)
             type.Value.Deactivate();
@@ -34,13 +34,13 @@ public sealed class CreateDepartmentCommandHandlerTests
         var unitOfWork = new FakeUnitOfWork();
 
         var result = await CreateHandler(departments, ActiveTypes(), unitOfWork).Handle(
-            new CreateDepartmentCommand("hr", "الموارد البشرية", TypeCode, CanSendExternal: true),
+            new CreateDepartmentCommand("hr", "الموارد البشرية", TypeId, CanSendExternal: true),
             CancellationToken.None);
 
         Assert.True(result.IsSuccess);
         Assert.Equal("HR", result.Value.Code);
         Assert.Equal("الموارد البشرية", result.Value.NameAr);
-        Assert.Equal(TypeCode, result.Value.DepartmentTypeCode);
+        Assert.Equal(TypeId, result.Value.DepartmentTypeId);
         Assert.True(result.Value.IsActive);
         Assert.True(result.Value.CanSendExternal);
         Assert.Null(result.Value.ParentDepartmentId);
@@ -52,12 +52,12 @@ public sealed class CreateDepartmentCommandHandlerTests
     public async Task Handle_WhenCodeAlreadyExists_ReturnsConflict()
     {
         var departments = new FakeDepartmentRepository();
-        var existing = Department.Create("HR", "الموارد البشرية", TypeCode);
+        var existing = Department.Create("HR", "الموارد البشرية", TypeId);
         Assert.True(existing.IsSuccess);
         departments.Add(existing.Value);
 
         var result = await CreateHandler(departments, ActiveTypes(), new FakeUnitOfWork()).Handle(
-            new CreateDepartmentCommand("hr", "إدارة أخرى", TypeCode),
+            new CreateDepartmentCommand("hr", "إدارة أخرى", TypeId),
             CancellationToken.None);
 
         Assert.True(result.IsFailure);
@@ -69,7 +69,7 @@ public sealed class CreateDepartmentCommandHandlerTests
     public async Task Handle_WhenTypeIsUnknown_ReturnsValidationError()
     {
         var result = await CreateHandler(new FakeDepartmentRepository(), new FakeDepartmentTypeRepository(), new FakeUnitOfWork())
-            .Handle(new CreateDepartmentCommand("HR", "الموارد البشرية", TypeCode), CancellationToken.None);
+            .Handle(new CreateDepartmentCommand("HR", "الموارد البشرية", TypeId), CancellationToken.None);
 
         Assert.True(result.IsFailure);
         Assert.Equal(DomainErrors.Department.TypeNotFound.Code, result.Error.Code);
@@ -80,7 +80,7 @@ public sealed class CreateDepartmentCommandHandlerTests
     public async Task Handle_WhenTypeIsInactive_ReturnsConflict()
     {
         var result = await CreateHandler(new FakeDepartmentRepository(), ActiveTypes(active: false), new FakeUnitOfWork())
-            .Handle(new CreateDepartmentCommand("HR", "الموارد البشرية", TypeCode), CancellationToken.None);
+            .Handle(new CreateDepartmentCommand("HR", "الموارد البشرية", TypeId), CancellationToken.None);
 
         Assert.True(result.IsFailure);
         Assert.Equal(DomainErrors.Department.TypeInactive.Code, result.Error.Code);
@@ -92,7 +92,7 @@ public sealed class CreateDepartmentCommandHandlerTests
     {
         var result = await CreateHandler(new FakeDepartmentRepository(), ActiveTypes(), new FakeUnitOfWork())
             .Handle(
-                new CreateDepartmentCommand("HR", "الموارد البشرية", TypeCode, ParentDepartmentId: Guid.NewGuid()),
+                new CreateDepartmentCommand("HR", "الموارد البشرية", TypeId, ParentDepartmentId: Guid.NewGuid()),
                 CancellationToken.None);
 
         Assert.True(result.IsFailure);
@@ -103,13 +103,13 @@ public sealed class CreateDepartmentCommandHandlerTests
     public async Task Handle_WhenParentIsInactive_ReturnsConflict()
     {
         var departments = new FakeDepartmentRepository();
-        var parent = Department.Create("ROOT", "الإدارة العليا", TypeCode);
+        var parent = Department.Create("ROOT", "الإدارة العليا", TypeId);
         Assert.True(parent.IsSuccess);
         parent.Value.Deactivate(hasActiveChildren: false);
         departments.Add(parent.Value);
 
         var result = await CreateHandler(departments, ActiveTypes(), new FakeUnitOfWork()).Handle(
-            new CreateDepartmentCommand("HR", "الموارد البشرية", TypeCode, ParentDepartmentId: parent.Value.DepartmentId),
+            new CreateDepartmentCommand("HR", "الموارد البشرية", TypeId, ParentDepartmentId: parent.Value.DepartmentId),
             CancellationToken.None);
 
         Assert.True(result.IsFailure);

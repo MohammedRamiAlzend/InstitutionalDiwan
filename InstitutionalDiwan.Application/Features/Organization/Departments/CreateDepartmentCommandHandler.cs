@@ -30,8 +30,8 @@ internal sealed class CreateDepartmentCommandHandler
         if (await _departmentRepository.GetByCodeAsync(request.Code, cancellationToken) is not null)
             return Result.Failure<DepartmentResponse>(DomainErrors.Department.CodeAlreadyExists);
 
-        var departmentType = await _departmentTypeRepository.GetByCodeAsync(
-            request.DepartmentTypeCode, cancellationToken);
+        var departmentType = await _departmentTypeRepository.GetByIdAsync(
+            request.DepartmentTypeId, cancellationToken);
         if (departmentType is null)
             return Result.Failure<DepartmentResponse>(DomainErrors.Department.TypeNotFound);
 
@@ -51,7 +51,7 @@ internal sealed class CreateDepartmentCommandHandler
         var createResult = Department.Create(
             request.Code,
             request.NameAr,
-            request.DepartmentTypeCode,
+            request.DepartmentTypeId,
             request.ParentDepartmentId,
             request.NameEn,
             request.CanSendExternal,

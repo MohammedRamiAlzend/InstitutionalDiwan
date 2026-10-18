@@ -14,9 +14,8 @@ public sealed class CreateDepartmentCommandValidator : AbstractValidator<CreateD
             .Must(name => !string.IsNullOrWhiteSpace(name)).WithErrorCode("Department.NameEmpty")
             .MaximumLength(200);
 
-        RuleFor(command => command.DepartmentTypeCode)
-            .Must(code => !string.IsNullOrWhiteSpace(code)).WithErrorCode("Department.TypeEmpty")
-            .MaximumLength(50);
+        RuleFor(command => command.DepartmentTypeId)
+            .GreaterThan(0).WithErrorCode("Department.TypeEmpty");
 
         RuleFor(command => command.NameEn).MaximumLength(200);
         RuleFor(command => command.Notes).MaximumLength(500);

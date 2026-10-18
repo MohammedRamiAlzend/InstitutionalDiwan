@@ -14,7 +14,8 @@ public interface IDepartmentRepository
 
 public interface IDepartmentTypeRepository
 {
-    Task<DepartmentType?> GetByCodeAsync(string code, CancellationToken cancellationToken = default);
+    Task<DepartmentType?> GetByIdAsync(int departmentTypeId, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<DepartmentType>> ListAllAsync(CancellationToken cancellationToken = default);
     void Add(DepartmentType departmentType);
 }
 

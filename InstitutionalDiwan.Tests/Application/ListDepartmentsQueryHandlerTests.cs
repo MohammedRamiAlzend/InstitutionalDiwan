@@ -8,11 +8,11 @@ namespace InstitutionalDiwan.Tests.Application;
 
 public sealed class ListDepartmentsQueryHandlerTests
 {
-    private const string TypeCode = "SECTION";
+    private const int TypeId = DepartmentType.SectionId;
 
     private static Department CreateDepartment(string code, string nameAr = "قسم")
     {
-        var department = Department.Create(code, nameAr, TypeCode);
+        var department = Department.Create(code, nameAr, TypeId);
         Assert.True(department.IsSuccess);
         return department.Value;
     }
@@ -46,13 +46,13 @@ public sealed class ListDepartmentsQueryHandlerTests
 
 public sealed class GetDepartmentByIdQueryHandlerTests
 {
-    private const string TypeCode = "SECTION";
+    private const int TypeId = DepartmentType.SectionId;
 
     [Fact]
     public async Task Handle_WhenDepartmentExists_ReturnsMappedResponse()
     {
         var departments = new FakeDepartmentRepository();
-        var department = Department.Create("HR", "الموارد البشرية", TypeCode, nameEn: "Human Resources");
+        var department = Department.Create("HR", "الموارد البشرية", TypeId, nameEn: "Human Resources");
         Assert.True(department.IsSuccess);
         departments.Add(department.Value);
 

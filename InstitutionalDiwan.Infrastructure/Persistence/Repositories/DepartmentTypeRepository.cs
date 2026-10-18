@@ -10,12 +10,14 @@ internal sealed class DepartmentTypeRepository : IDepartmentTypeRepository
 
     public DepartmentTypeRepository(DiwanDbContext context) => _context = context;
 
-    public Task<DepartmentType?> GetByCodeAsync(string code, CancellationToken cancellationToken = default)
-    {
-        var normalized = code.Trim().ToUpperInvariant();
-        return _context.DepartmentTypes.FirstOrDefaultAsync(
-            departmentType => departmentType.Code == normalized, cancellationToken);
-    }
+    public Task<DepartmentType?> GetByIdAsync(int departmentTypeId, CancellationToken cancellationToken = default) =>
+        _context.DepartmentTypes.FirstOrDefaultAsync(
+            departmentType => departmentType.Id == departmentTypeId, cancellationToken);
+
+    public async Task<IReadOnlyList<DepartmentType>> ListAllAsync(CancellationToken cancellationToken = default) =>
+        await _context.DepartmentTypes
+            .OrderBy(departmentType => departmentType.HierarchyLevelOrder)
+            .ToListAsync(cancellationToken);
 
     public void Add(DepartmentType departmentType) => _context.DepartmentTypes.Add(departmentType);
 }

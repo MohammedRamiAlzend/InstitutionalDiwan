@@ -8,7 +8,7 @@ public sealed record DepartmentTreeNodeResponse(
     string Code,
     string NameAr,
     string? NameEn,
-    string DepartmentTypeCode,
+    int DepartmentTypeId,
     Guid? ParentDepartmentId,
     bool IsActive,
     IReadOnlyCollection<DepartmentTreeNodeResponse> Children)
@@ -63,7 +63,7 @@ public sealed record DepartmentTreeNodeResponse(
         department.Code,
         department.NameAr,
         department.NameEn,
-        department.DepartmentTypeCode,
+        department.DepartmentTypeId,
         department.ParentDepartmentId,
         department.IsActive,
         children);
