@@ -15,7 +15,8 @@ public sealed class ExternalOrganization : AggregateRoot<Guid>
     public string Code { get; private set; } = null!;
     public string NameAr { get; private set; } = null!;
     public string? NameEn { get; private set; }
-    public string OrganizationType { get; private set; } = "GOVERNMENT";
+    // FK → OrganizationType.Id (InstitutionalDiwan.Domain.Entities.Correspondence.OrganizationType)
+    public int OrganizationTypeId { get; private set; } = OrganizationType.GovernmentId;
     public string? ContactInfo { get; private set; }
     public bool IsActive { get; private set; }
     public DateTime CreatedAt { get; private set; }
@@ -28,7 +29,7 @@ public sealed class ExternalOrganization : AggregateRoot<Guid>
     public static Result<ExternalOrganization> Create(
         string? code,
         string? nameAr,
-        string organizationType = "GOVERNMENT",
+        int organizationTypeId = OrganizationType.GovernmentId,
         string? nameEn = null,
         string? contactInfo = null)
     {
@@ -38,13 +39,16 @@ public sealed class ExternalOrganization : AggregateRoot<Guid>
         if (string.IsNullOrWhiteSpace(nameAr))
             return Result.Failure<ExternalOrganization>(DomainErrors.Correspondence.ExternalOrgNameEmpty);
 
+        if (organizationTypeId <= 0)
+            return Result.Failure<ExternalOrganization>(DomainErrors.Lookup.InvalidId);
+
         var org = new ExternalOrganization
         {
             ExternalOrganizationId = Guid.NewGuid(),
             Code = code.Trim().ToUpperInvariant(),
             NameAr = nameAr.Trim(),
             NameEn = string.IsNullOrWhiteSpace(nameEn) ? null : nameEn.Trim(),
-            OrganizationType = string.IsNullOrWhiteSpace(organizationType) ? "GOVERNMENT" : organizationType.Trim().ToUpperInvariant(),
+            OrganizationTypeId = organizationTypeId,
             ContactInfo = contactInfo,
             IsActive = true,
             CreatedAt = DateTime.UtcNow

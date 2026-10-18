@@ -17,8 +17,8 @@ public sealed class AuditLogConfiguration : IEntityTypeConfiguration<AuditLog>
         builder.Property(x => x.ActorUserId).HasColumnName("ActorUserId");
         builder.Property(x => x.ActorDepartmentId).HasColumnName("ActorDepartmentId");
         builder.Property(x => x.ModuleName).HasColumnName("ModuleName").HasMaxLength(80).IsRequired();
-        builder.Property(x => x.ActionType).HasColumnName("ActionType").HasMaxLength(80).IsRequired();
-        builder.Property(x => x.EntityType).HasColumnName("EntityType").HasMaxLength(100).IsRequired();
+        builder.Property(x => x.ActionTypeId).HasColumnName("ActionTypeId").IsRequired();
+        builder.Property(x => x.EntityTypeId).HasColumnName("EntityTypeId").IsRequired();
         builder.Property(x => x.EntityId).HasColumnName("EntityId").HasMaxLength(100).IsRequired();
         builder.Property(x => x.RelatedDocumentId).HasColumnName("RelatedDocumentId");
         builder.Property(x => x.OldValuesJson).HasColumnName("OldValuesJson");
@@ -30,6 +30,17 @@ public sealed class AuditLogConfiguration : IEntityTypeConfiguration<AuditLog>
 
         builder.HasIndex(x => x.OccurredAtUtc).HasDatabaseName("IX_AUDIT_LOGS_OCCURRED_AT");
         builder.HasIndex(x => x.RelatedDocumentId).HasDatabaseName("IX_AUDIT_LOGS_DOC");
+        builder.HasIndex(x => new { x.EntityTypeId, x.EntityId }).HasDatabaseName("IX_AUDIT_LOGS_ENTITY");
+
+        builder.HasOne<AuditActionType>()
+            .WithMany()
+            .HasForeignKey(x => x.ActionTypeId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne<AuditEntityType>()
+            .WithMany()
+            .HasForeignKey(x => x.EntityTypeId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }
 
@@ -67,5 +78,35 @@ public sealed class AuditIntegrityCheckConfiguration : IEntityTypeConfiguration<
         builder.Property(x => x.FailureDetails).HasColumnName("FailureDetails").HasMaxLength(1000);
         builder.Property(x => x.ExecutedByUserId).HasColumnName("ExecutedByUserId").IsRequired();
         builder.Property(x => x.ExecutedAtUtc).HasColumnName("ExecutedAtUtc").HasColumnType("datetime2(3)").IsRequired();
+    }
+}
+
+public sealed class AuditActionTypeConfiguration : IEntityTypeConfiguration<AuditActionType>
+{
+    public void Configure(EntityTypeBuilder<AuditActionType> builder)
+    {
+        builder.ToTable("AUDIT_ACTION_TYPES");
+
+        builder.HasKey(x => x.Id);
+        builder.Property(x => x.Id).HasColumnName("Id").ValueGeneratedNever();
+        builder.Property(x => x.Desc).HasColumnName("Desc").HasMaxLength(150).IsRequired();
+        builder.Property(x => x.DescAr).HasColumnName("DescAr").HasMaxLength(150).IsRequired();
+        builder.Property(x => x.IsActive).HasColumnName("IsActive").IsRequired();
+        builder.Property(x => x.CreatedAt).HasColumnName("CreatedAt").HasColumnType("datetime2(3)").IsRequired();
+    }
+}
+
+public sealed class AuditEntityTypeConfiguration : IEntityTypeConfiguration<AuditEntityType>
+{
+    public void Configure(EntityTypeBuilder<AuditEntityType> builder)
+    {
+        builder.ToTable("AUDIT_ENTITY_TYPES");
+
+        builder.HasKey(x => x.Id);
+        builder.Property(x => x.Id).HasColumnName("Id").ValueGeneratedNever();
+        builder.Property(x => x.Desc).HasColumnName("Desc").HasMaxLength(150).IsRequired();
+        builder.Property(x => x.DescAr).HasColumnName("DescAr").HasMaxLength(150).IsRequired();
+        builder.Property(x => x.IsActive).HasColumnName("IsActive").IsRequired();
+        builder.Property(x => x.CreatedAt).HasColumnName("CreatedAt").HasColumnType("datetime2(3)").IsRequired();
     }
 }

@@ -42,15 +42,15 @@ public sealed class UserSeeder : ISeeder
             ?? throw new InvalidOperationException(
                 "Role 'USER' not found — RoleSeeder (Order 200) must run before UserSeeder.");
 
-        await EnsureUserAsync(context, DemoUsername, adminRole, scopeType: "SYSTEM", cancellationToken);
-        await EnsureUserAsync(context, DemoStandardUsername, userRole, scopeType: "DEPARTMENT", cancellationToken);
+        await EnsureUserAsync(context, DemoUsername, adminRole, UserScopeType.SystemId, cancellationToken);
+        await EnsureUserAsync(context, DemoStandardUsername, userRole, UserScopeType.DepartmentId, cancellationToken);
     }
 
     private static async Task EnsureUserAsync(
         SeederContext context,
         string username,
         Role role,
-        string scopeType,
+        int scopeTypeId,
         CancellationToken cancellationToken)
     {
         var db = context.Db;
@@ -64,7 +64,7 @@ public sealed class UserSeeder : ISeeder
             normalized,
             passwordHash,
             primaryDepartmentId: SeedDepartmentId,
-            scopeType: scopeType,
+            scopeTypeId: scopeTypeId,
             mustChangePassword: false);
 
         if (userResult.IsFailure)

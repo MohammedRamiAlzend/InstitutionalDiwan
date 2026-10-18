@@ -19,8 +19,8 @@ public sealed class DocumentFile : AggregateRoot<Guid>
 
     // FK → Document.DocumentId (InstitutionalDiwan.Domain.Entities.Correspondence.Document)
     public Guid DocumentId { get; private set; }
-    // FK → DocumentFileType.Code (InstitutionalDiwan.Domain.Entities.Attachments.DocumentFileType)
-    public string FileTypeCode { get; private set; } = null!;
+    // FK → DocumentFileType.Id (InstitutionalDiwan.Domain.Entities.Attachments.DocumentFileType)
+    public int FileTypeId { get; private set; } = DocumentFileType.AttachmentId;
     public string Title { get; private set; } = null!;
     public bool IsPrimaryScan { get; private set; }
     public int CurrentVersionNumber { get; private set; }
@@ -38,12 +38,12 @@ public sealed class DocumentFile : AggregateRoot<Guid>
 
     public static Result<DocumentFile> Create(
         Guid documentId,
-        string? fileTypeCode,
+        int fileTypeId,
         string? title,
         Guid createdByUserId,
         bool isPrimaryScan = false)
     {
-        if (string.IsNullOrWhiteSpace(fileTypeCode))
+        if (fileTypeId <= 0)
             return Result.Failure<DocumentFile>(DomainErrors.Attachments.FileTypeEmpty);
 
         if (string.IsNullOrWhiteSpace(title))
@@ -53,7 +53,7 @@ public sealed class DocumentFile : AggregateRoot<Guid>
         {
             FileId = Guid.NewGuid(),
             DocumentId = documentId,
-            FileTypeCode = fileTypeCode.Trim().ToUpperInvariant(),
+            FileTypeId = fileTypeId,
             Title = title.Trim(),
             IsPrimaryScan = isPrimaryScan,
             CurrentVersionNumber = 0,
@@ -62,12 +62,12 @@ public sealed class DocumentFile : AggregateRoot<Guid>
             CreatedAt = DateTime.UtcNow
         };
 
-        file.RaiseDomainEvent(new DocumentFileCreatedEvent(file.FileId, file.DocumentId, file.FileTypeCode, file.Title));
+        file.RaiseDomainEvent(new DocumentFileCreatedEvent(file.FileId, file.DocumentId, file.FileTypeId, file.Title));
         return Result.Success(file);
     }
 
     public Result<DocumentFileVersion> AddVersion(
-        string storageProviderCode,
+        int storageProviderId,
         string? relativePath,
         string? originalFileName,
         string? mimeType,
@@ -83,7 +83,7 @@ public sealed class DocumentFile : AggregateRoot<Guid>
         var versionResult = DocumentFileVersion.Create(
             FileId,
             nextVersionNo,
-            storageProviderCode,
+            storageProviderId,
             relativePath,
             originalFileName,
             mimeType,

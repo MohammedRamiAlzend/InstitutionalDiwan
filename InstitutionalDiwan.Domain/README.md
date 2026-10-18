@@ -164,32 +164,49 @@ Conventions applied to every lookup:
   existing rows are never overwritten), registered in `Infrastructure/DependencyInjection`.
 - Business documents store only the integer id; clients resolve labels from the lookup endpoints.
 
-### Converted so far
+### Converted
 
 | Lookup table | Replaced string | Referenced by |
 | --- | --- | --- |
 | `DEPARTMENT_TYPES` | `Department.DepartmentTypeCode` | `DEPARTMENTS.DepartmentTypeId` |
+| `NUMBERING_MODES` | `InstitutionSetting.NumberingMode` | `INSTITUTION_SETTINGS.NumberingModeId` |
+| `USER_SCOPE_TYPES` | `User.ScopeType` | `USERS.ScopeTypeId` |
+| `ASSIGNMENT_TYPES` | `UserDepartmentAssignment.AssignmentType` | `USER_DEPARTMENT_ASSIGNMENTS.AssignmentTypeId` |
+| `ACCESS_LEVELS` | `DocumentAccessGrant.AccessLevel` | `DOCUMENT_ACCESS_GRANTS.AccessLevelId` |
 | `DOCUMENT_DIRECTIONS` | `Document.Direction`, `NumberingRegistry.Direction` | `DOCUMENTS.DirectionId`, `NUMBERING_REGISTRIES.DirectionId` |
 | `DOCUMENT_TYPES` | `Document.DocumentTypeCode`, `NumberingRegistry.DocumentTypeCode` | `DOCUMENTS.DocumentTypeId`, `NUMBERING_REGISTRIES.DocumentTypeId` |
-| `DOCUMENT_STATUS_TYPES` | `Document.CurrentStatusCode`, `Document.StatusBeforeArchiveCode`, `DocumentStatusHistory.From/ToStatusCode` | `DOCUMENTS.CurrentStatusId`, `DOCUMENT_STATUS_HISTORY.FromStatusId/ToStatusId` |
+| `DOCUMENT_STATUS_TYPES` | `Document.CurrentStatusCode`, `Document.StatusBeforeArchiveCode`, `DocumentStatusHistory.From/ToStatusCode`, `DocumentArchiveEvent.Previous/NewStatusCode` | `DOCUMENTS.CurrentStatusId`, `DOCUMENT_STATUS_HISTORY.FromStatusId/ToStatusId`, `DOCUMENT_ARCHIVE_EVENTS.PreviousStatusId/NewStatusId` |
 | `DOCUMENT_CONFIDENTIALITY_LEVELS` | `Document.ConfidentialityLevel` | `DOCUMENTS.ConfidentialityLevelId` |
 | `DOCUMENT_PRIORITY_LEVELS` | `Document.PriorityLevel` | `DOCUMENTS.PriorityLevelId` |
 | `DOCUMENT_NUMBER_STATUSES` | `DocumentNumber.Status` | `DOCUMENT_NUMBERS.StatusId` |
 | `DOCUMENT_NUMBER_EVENT_TYPES` | `DocumentNumberHistory.EventType` | `DOCUMENT_NUMBER_HISTORY.EventTypeId` |
-| `NUMBERING_RESET_POLICIES` | `NumberingRegistry.ResetPolicy` | `NUMBERING_REGISTRIES.ResetPolicyId` |
+| `NUMBERING_RESET_POLICIES` | `NumberingRegistry.ResetPolicy`, `InstitutionSetting.NumberingResetPolicy` | `NUMBERING_REGISTRIES.ResetPolicyId`, `INSTITUTION_SETTINGS.NumberingResetPolicyId` |
+| `PARTICIPANT_ROLES` | `DocumentParticipant.RoleCode` | `DOCUMENT_PARTICIPANTS.RoleId` |
+| `PARTICIPANT_TARGET_TYPES` | `DocumentParticipant.TargetType` | `DOCUMENT_PARTICIPANTS.TargetTypeId` |
+| `ORGANIZATION_TYPES` | `ExternalOrganization.OrganizationType` | `EXTERNAL_ORGANIZATIONS.OrganizationTypeId` |
+| `MOVEMENT_TYPES` | `DocumentMovement.MovementType` | `DOCUMENT_MOVEMENTS.MovementTypeId` |
+| `MOVEMENT_STATUSES` | `DocumentMovement.StatusCode` | `DOCUMENT_MOVEMENTS.StatusId` |
+| `MOVEMENT_STEP_STATUSES` | `DocumentMovementStep.StepStatus` | `DOCUMENT_MOVEMENT_STEPS.StepStatusId` |
+| `MOVEMENT_EVENT_TYPES` | `DocumentMovementEvent.EventType` | `DOCUMENT_MOVEMENT_EVENTS.EventTypeId` |
+| `STORAGE_PROVIDER_TYPES` | `FileStorageProvider.ProviderType` | `FILE_STORAGE_PROVIDERS.ProviderTypeId` |
+| `DOCUMENT_FILE_TYPES` | `DocumentFile.FileTypeCode` | `DOCUMENT_FILES.FileTypeId` |
+| `FILE_STORAGE_PROVIDERS` | `DocumentFileVersion.StorageProviderCode` | `DOCUMENT_FILE_VERSIONS.StorageProviderId` |
+| `DOCUMENT_RELATION_TYPES` | `DocumentRelation.RelationTypeCode`, `DocumentRelationEvent.RelationTypeCode` | `DOCUMENT_RELATIONS.RelationTypeId`, `DOCUMENT_RELATION_EVENTS.RelationTypeId` |
+| `RELATION_ACTION_TYPES` | `DocumentRelationEvent.ActionType` | `DOCUMENT_RELATION_EVENTS.ActionTypeId` |
+| `ARCHIVE_EVENT_TYPES` | `DocumentArchiveEvent.EventType` | `DOCUMENT_ARCHIVE_EVENTS.EventTypeId` |
+| `ARCHIVE_LOCATIONS` | `DocumentArchiveEvent.ArchiveLocationCode` | `DOCUMENT_ARCHIVE_EVENTS.ArchiveLocationId` |
+| `AUDIT_ACTION_TYPES` | `AuditLog.ActionType` | `AUDIT_LOGS.ActionTypeId` |
+| `AUDIT_ENTITY_TYPES` | `AuditLog.EntityType` | `AUDIT_LOGS.EntityTypeId` |
+| `NOTIFICATION_TYPES` | `Notification.NotificationTypeCode` | `NOTIFICATIONS.NotificationTypeId` |
+| `NOTIFICATION_PRIORITIES` | `Notification.Priority` | `NOTIFICATIONS.PriorityId` |
+| `NOTIFICATION_CHANNELS` | `NotificationOutbox.Channel` | `NOTIFICATION_OUTBOX.ChannelId` |
+| `NOTIFICATION_OUTBOX_STATUSES` | `NotificationOutbox.Status` | `NOTIFICATION_OUTBOX.StatusId` |
 
-### Still to convert
-
-`DocumentParticipant.RoleCode`/`TargetType`, `ExternalOrganization.OrganizationType`,
-`InstitutionSetting.NumberingMode`/`NumberingResetPolicy`, `User.ScopeType`,
-`UserDepartmentAssignment.AssignmentType`, `DocumentAccessGrant.AccessLevel`,
-`DocumentFile.FileTypeCode`, `DocumentFileVersion.StorageProviderCode`,
-`FileStorageProvider.ProviderType`, `DocumentRelation.RelationTypeCode` &
-`DocumentRelationEvent.ActionType`, `Notification.NotificationTypeCode`/`Priority`,
-`NotificationRecipient` channels, `NotificationOutbox.Channel`/`Status`,
-`DocumentMovement.MovementType`/`StatusCode`, `DocumentMovementStep.StepStatus`,
-`DocumentMovementEvent.EventType`, `DocumentArchiveEvent.EventType`/`PreviousStatusCode`/
-`NewStatusCode`/`ArchiveLocationCode`, and `AuditLog.ActionType`/`EntityType`.
+Every reference/"code" string in the domain has now been converted. The only code-like columns that
+remain **intentionally** as strings are identity/business identifiers that are not lookups —
+`Role.Code`, `Permission.Code`, `Department.Code`, `NumberingRegistry.Code`,
+`ExternalOrganization.Code` — plus genuinely free-text multi-value fields such as
+`NotificationType.DefaultChannelsCsv` and `AuditLog.ModuleName`.
 
 ### Planned lookup CRUD endpoints
 
@@ -218,7 +235,7 @@ row is rejected with a Conflict.
 | `Errors/` | ✅ Implemented (`DomainErrors` catalog) |
 | `Events/` | ✅ Implemented (34 events) |
 | `Repositories/` | ✅ Implemented (11 interfaces) |
-| `Entities/` | ✅ Implemented (40 entities across 10 modules) |
+| `Entities/` | ✅ Implemented (64 entities across 10 modules, including reference/lookup tables) |
 
 ### Known issues / TODO
 
@@ -235,5 +252,6 @@ row is rejected with a Conflict.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-18 | opencode | Converted the **remaining** reference "code" strings to seeded lookup tables and completed the lookup programme: Identity (`UserScopeType`, `AssignmentType`, `AccessLevel`), Correspondence (`ParticipantRole`, `ParticipantTargetType`, `OrganizationType`), Movements (`MovementType`, `MovementStatus`, `MovementStepStatus`, `MovementEventType`), Attachments (`StorageProviderType`; reshaped `DocumentFileType`, `FileStorageProvider`), Relations (`DocumentRelationType`, `RelationActionType`), Archiving (`ArchiveEventType`, `ArchiveLocation`), Audit (`AuditActionType`, `AuditEntityType`), Notifications (`NotificationType`, `NotificationPriority`, `NotificationChannel`, `NotificationOutboxStatus`), and Organization (`NumberingMode`). Every reference string is now an integer FK; only identity/business codes and multi-value/free-text fields remain strings. |
 | 2026-10-18 | opencode | Introduced `LookupEntity` and replaced reference "code" strings with seeded lookup tables: Organization (`DepartmentType`), Correspondence (`DocumentType`, `DocumentStatusType`, `DocumentDirection`, confidentiality/priority levels), and Numbering (`DocumentNumberStatus`, `DocumentNumberEventType`, `NumberingResetPolicy`). Documented the pattern and the planned generic lookup CRUD endpoints. |
 | 2026-10-18 | opencode | Added `DomainErrors.Numbering.OfficialNumberTaken` (Conflict) and `IDocumentNumberRepository.ExistsByNumberAndYearAsync` — the domain contract behind the official-number + year duplicate check performed when creating a document. |

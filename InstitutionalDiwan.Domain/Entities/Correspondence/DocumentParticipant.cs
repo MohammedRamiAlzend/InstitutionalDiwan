@@ -15,8 +15,10 @@ public sealed class DocumentParticipant : Entity<Guid>
 
     // FK → Document.DocumentId (InstitutionalDiwan.Domain.Entities.Correspondence.Document)
     public Guid DocumentId { get; private set; }
-    public string RoleCode { get; private set; } = null!;
-    public string TargetType { get; private set; } = null!;
+    // FK → ParticipantRole.Id (InstitutionalDiwan.Domain.Entities.Correspondence.ParticipantRole)
+    public int RoleId { get; private set; }
+    // FK → ParticipantTargetType.Id (InstitutionalDiwan.Domain.Entities.Correspondence.ParticipantTargetType)
+    public int TargetTypeId { get; private set; }
     // FK → Department.DepartmentId (InstitutionalDiwan.Domain.Entities.Organization.Department)
     public Guid? InternalDepartmentId { get; private set; }
     // FK → ExternalOrganization.ExternalOrganizationId (InstitutionalDiwan.Domain.Entities.Correspondence.ExternalOrganization)
@@ -32,20 +34,25 @@ public sealed class DocumentParticipant : Entity<Guid>
 
     internal static Result<DocumentParticipant> Create(
         Guid documentId,
-        string? roleCode,
+        int roleId,
         ParticipantTarget target,
         bool isPrimary = false,
         string? notes = null)
     {
-        if (string.IsNullOrWhiteSpace(roleCode))
+        if (roleId <= 0)
             return Result.Failure<DocumentParticipant>(DomainErrors.Correspondence.ParticipantRoleEmpty);
 
         var participant = new DocumentParticipant
         {
             ParticipantId = Guid.NewGuid(),
             DocumentId = documentId,
-            RoleCode = roleCode.Trim().ToUpperInvariant(),
-            TargetType = target.Kind.ToString().ToUpperInvariant(),
+            RoleId = roleId,
+            TargetTypeId = target.Kind switch
+            {
+                ParticipantTargetKind.External => ParticipantTargetType.ExternalOrganizationId,
+                ParticipantTargetKind.Internal => ParticipantTargetType.InternalDepartmentId,
+                _ => ParticipantTargetType.PersonId
+            },
             InternalDepartmentId = target.InternalDepartmentId,
             ExternalOrganizationId = target.ExternalOrganizationId,
             PersonName = target.PersonName,

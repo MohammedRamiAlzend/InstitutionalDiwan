@@ -14,7 +14,8 @@ public sealed class DocumentMovementEvent : Entity<Guid>
     // FK → DocumentMovement.MovementId (InstitutionalDiwan.Domain.Entities.Movements.DocumentMovement)
     public Guid MovementId { get; private set; }
     public int StepNo { get; private set; }
-    public string EventType { get; private set; } = null!;
+    // FK → MovementEventType.Id (InstitutionalDiwan.Domain.Entities.Movements.MovementEventType)
+    public int EventTypeId { get; private set; }
     // FK → User.UserId (InstitutionalDiwan.Domain.Entities.Identity.User)
     public Guid ActorUserId { get; private set; }
     public string? Notes { get; private set; }
@@ -27,7 +28,7 @@ public sealed class DocumentMovementEvent : Entity<Guid>
     internal static DocumentMovementEvent Create(
         Guid movementId,
         int stepNo,
-        string eventType,
+        int eventTypeId,
         Guid actorUserId,
         string? notes = null)
     {
@@ -36,7 +37,7 @@ public sealed class DocumentMovementEvent : Entity<Guid>
             EventId = Guid.NewGuid(),
             MovementId = movementId,
             StepNo = stepNo,
-            EventType = eventType.Trim().ToUpperInvariant(),
+            EventTypeId = eventTypeId,
             ActorUserId = actorUserId,
             Notes = string.IsNullOrWhiteSpace(notes) ? null : notes.Trim(),
             OccurredAt = DateTime.UtcNow

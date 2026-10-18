@@ -45,7 +45,7 @@ internal sealed class RegisterCommandHandler : ICommandHandler<RegisterCommand, 
             username,
             passwordHash,
             primaryDepartmentId: Guid.Empty, // self-registered accounts have no department yet
-            scopeType: "DEPARTMENT",
+            scopeTypeId: UserScopeType.DepartmentId,
             mustChangePassword: false);
 
         if (userResult.IsFailure)

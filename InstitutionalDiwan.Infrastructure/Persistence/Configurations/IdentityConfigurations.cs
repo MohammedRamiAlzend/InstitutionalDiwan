@@ -20,7 +20,7 @@ public sealed class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(x => x.PasswordHash).HasColumnName("PasswordHash").HasMaxLength(500).IsRequired();
         builder.Property(x => x.EmployeeId).HasColumnName("EmployeeId");
         builder.Property(x => x.PrimaryDepartmentId).HasColumnName("PrimaryDepartmentId").IsRequired();
-        builder.Property(x => x.ScopeType).HasColumnName("ScopeType").HasMaxLength(50).IsRequired();
+        builder.Property(x => x.ScopeTypeId).HasColumnName("ScopeTypeId").IsRequired();
         builder.Property(x => x.IsActive).HasColumnName("IsActive").IsRequired();
         builder.Property(x => x.MustChangePassword).HasColumnName("MustChangePassword").IsRequired();
         builder.Property(x => x.LastLoginAt).HasColumnName("LastLoginAt").HasColumnType("datetime2(3)");
@@ -29,6 +29,11 @@ public sealed class UserConfiguration : IEntityTypeConfiguration<User>
 
         builder.HasIndex(x => x.Username).IsUnique().HasDatabaseName("UX_USERS_USERNAME");
         builder.HasIndex(x => x.PrimaryDepartmentId).HasDatabaseName("IX_USERS_PRIMARY_DEPT");
+
+        builder.HasOne<UserScopeType>()
+            .WithMany()
+            .HasForeignKey(x => x.ScopeTypeId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasMany(x => x.UserRoles)
             .WithOne()
@@ -156,7 +161,7 @@ public sealed class UserDepartmentAssignmentConfiguration : IEntityTypeConfigura
         builder.Property(x => x.AssignmentId).HasColumnName("AssignmentId").ValueGeneratedNever();
         builder.Property(x => x.UserId).HasColumnName("UserId").IsRequired();
         builder.Property(x => x.DepartmentId).HasColumnName("DepartmentId").IsRequired();
-        builder.Property(x => x.AssignmentType).HasColumnName("AssignmentType").HasMaxLength(50).IsRequired();
+        builder.Property(x => x.AssignmentTypeId).HasColumnName("AssignmentTypeId").IsRequired();
         builder.Property(x => x.IncludeSubtree).HasColumnName("IncludeSubtree").IsRequired();
         builder.Property(x => x.StartDate).HasColumnName("StartDate").HasColumnType("datetime2(3)").IsRequired();
         builder.Property(x => x.EndDate).HasColumnName("EndDate").HasColumnType("datetime2(3)");
@@ -164,6 +169,11 @@ public sealed class UserDepartmentAssignmentConfiguration : IEntityTypeConfigura
         builder.Property(x => x.CreatedAt).HasColumnName("CreatedAt").HasColumnType("datetime2(3)").IsRequired();
 
         builder.HasIndex(x => new { x.UserId, x.IsActive }).HasDatabaseName("IX_USER_DEPT_ASSIGNMENTS_USER_ACTIVE");
+
+        builder.HasOne<AssignmentType>()
+            .WithMany()
+            .HasForeignKey(x => x.AssignmentTypeId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }
 
@@ -179,7 +189,7 @@ public sealed class DocumentAccessGrantConfiguration : IEntityTypeConfiguration<
         builder.Property(x => x.GrantId).HasColumnName("GrantId").ValueGeneratedNever();
         builder.Property(x => x.DocumentId).HasColumnName("DocumentId").IsRequired();
         builder.Property(x => x.UserId).HasColumnName("UserId").IsRequired();
-        builder.Property(x => x.AccessLevel).HasColumnName("AccessLevel").HasMaxLength(50).IsRequired();
+        builder.Property(x => x.AccessLevelId).HasColumnName("AccessLevelId").IsRequired();
         builder.Property(x => x.GrantedByUserId).HasColumnName("GrantedByUserId").IsRequired();
         builder.Property(x => x.Reason).HasColumnName("Reason").HasMaxLength(500);
         builder.Property(x => x.GrantedAt).HasColumnName("GrantedAt").HasColumnType("datetime2(3)").IsRequired();
@@ -189,5 +199,56 @@ public sealed class DocumentAccessGrantConfiguration : IEntityTypeConfiguration<
         builder.Property(x => x.RevokedByUserId).HasColumnName("RevokedByUserId");
 
         builder.HasIndex(x => new { x.DocumentId, x.UserId, x.IsRevoked }).HasDatabaseName("IX_DOC_ACCESS_GRANTS_DOC_USER");
+
+        builder.HasOne<AccessLevel>()
+            .WithMany()
+            .HasForeignKey(x => x.AccessLevelId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }
+
+public sealed class UserScopeTypeConfiguration : IEntityTypeConfiguration<UserScopeType>
+{
+    public void Configure(EntityTypeBuilder<UserScopeType> builder)
+    {
+        builder.ToTable("USER_SCOPE_TYPES");
+
+        builder.HasKey(x => x.Id);
+        builder.Property(x => x.Id).HasColumnName("Id").ValueGeneratedNever();
+        builder.Property(x => x.Desc).HasColumnName("Desc").HasMaxLength(150).IsRequired();
+        builder.Property(x => x.DescAr).HasColumnName("DescAr").HasMaxLength(150).IsRequired();
+        builder.Property(x => x.IsActive).HasColumnName("IsActive").IsRequired();
+        builder.Property(x => x.CreatedAt).HasColumnName("CreatedAt").HasColumnType("datetime2(3)").IsRequired();
+    }
+}
+
+public sealed class AssignmentTypeConfiguration : IEntityTypeConfiguration<AssignmentType>
+{
+    public void Configure(EntityTypeBuilder<AssignmentType> builder)
+    {
+        builder.ToTable("ASSIGNMENT_TYPES");
+
+        builder.HasKey(x => x.Id);
+        builder.Property(x => x.Id).HasColumnName("Id").ValueGeneratedNever();
+        builder.Property(x => x.Desc).HasColumnName("Desc").HasMaxLength(150).IsRequired();
+        builder.Property(x => x.DescAr).HasColumnName("DescAr").HasMaxLength(150).IsRequired();
+        builder.Property(x => x.IsActive).HasColumnName("IsActive").IsRequired();
+        builder.Property(x => x.CreatedAt).HasColumnName("CreatedAt").HasColumnType("datetime2(3)").IsRequired();
+    }
+}
+
+public sealed class AccessLevelConfiguration : IEntityTypeConfiguration<AccessLevel>
+{
+    public void Configure(EntityTypeBuilder<AccessLevel> builder)
+    {
+        builder.ToTable("ACCESS_LEVELS");
+
+        builder.HasKey(x => x.Id);
+        builder.Property(x => x.Id).HasColumnName("Id").ValueGeneratedNever();
+        builder.Property(x => x.Desc).HasColumnName("Desc").HasMaxLength(150).IsRequired();
+        builder.Property(x => x.DescAr).HasColumnName("DescAr").HasMaxLength(150).IsRequired();
+        builder.Property(x => x.IsActive).HasColumnName("IsActive").IsRequired();
+        builder.Property(x => x.CreatedAt).HasColumnName("CreatedAt").HasColumnType("datetime2(3)").IsRequired();
+    }
+}
+

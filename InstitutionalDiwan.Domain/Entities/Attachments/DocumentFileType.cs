@@ -1,48 +1,52 @@
+using InstitutionalDiwan.Domain.Common;
+using InstitutionalDiwan.Domain.Errors;
+
 namespace InstitutionalDiwan.Domain.Entities.Attachments;
 
-public sealed class DocumentFileType : Entity<string>
+/// <summary>
+/// Reference table of document file types. Replaces the former string <c>DocumentFile.FileTypeCode</c>;
+/// files now reference it by id. Seeded by <c>DocumentFileTypeSeeder</c>.
+/// </summary>
+public sealed class DocumentFileType : LookupEntity
 {
-    public string Code
-    {
-        get => Id;
-        private set => Id = value;
-    }
+    public const int ScanId = 1;
+    public const int AttachmentId = 2;
+    public const int SignatureId = 3;
+    public const int OtherId = 4;
 
-    public string NameAr { get; private set; } = null!;
-    public string? NameEn { get; private set; }
+    /// <summary>Comma-separated list of extensions accepted for this file type.</summary>
     public string AllowedExtensionsCsv { get; private set; } = ".pdf,.tif,.tiff,.png,.jpg";
+
+    /// <summary>Maximum accepted file size in bytes.</summary>
     public long MaxFileSizeBytes { get; private set; } = 52428800;
-    public bool IsActive { get; private set; } = true;
-    public DateTime CreatedAt { get; private set; }
 
     private DocumentFileType()
     {
     }
 
-    public static Result<DocumentFileType> Create(
-        string? code,
-        string? nameAr,
-        string allowedExtensionsCsv = ".pdf,.tif,.tiff,.png,.jpg",
-        long maxFileSizeBytes = 52428800,
-        string? nameEn = null)
+    private DocumentFileType(int id, string desc, string descAr, string allowedExtensionsCsv, long maxFileSizeBytes)
+        : base(id, desc, descAr)
     {
-        if (string.IsNullOrWhiteSpace(code))
+        AllowedExtensionsCsv = allowedExtensionsCsv.Trim();
+        MaxFileSizeBytes = maxFileSizeBytes;
+    }
+
+    public static Result<DocumentFileType> Create(
+        int id,
+        string? desc,
+        string? descAr,
+        string allowedExtensionsCsv = ".pdf,.tif,.tiff,.png,.jpg",
+        long maxFileSizeBytes = 52428800)
+    {
+        if (id <= 0)
+            return Result.Failure<DocumentFileType>(DomainErrors.Lookup.InvalidId);
+
+        if (string.IsNullOrWhiteSpace(desc) || string.IsNullOrWhiteSpace(descAr))
             return Result.Failure<DocumentFileType>(DomainErrors.Attachments.FileTypeEmpty);
 
-        if (string.IsNullOrWhiteSpace(nameAr))
-            return Result.Failure<DocumentFileType>(DomainErrors.Attachments.TitleEmpty);
+        if (string.IsNullOrWhiteSpace(allowedExtensionsCsv) || maxFileSizeBytes <= 0)
+            return Result.Failure<DocumentFileType>(DomainErrors.Attachments.FileTypeEmpty);
 
-        var fileType = new DocumentFileType
-        {
-            Code = code.Trim().ToUpperInvariant(),
-            NameAr = nameAr.Trim(),
-            NameEn = string.IsNullOrWhiteSpace(nameEn) ? null : nameEn.Trim(),
-            AllowedExtensionsCsv = allowedExtensionsCsv,
-            MaxFileSizeBytes = maxFileSizeBytes,
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow
-        };
-
-        return Result.Success(fileType);
+        return Result.Success(new DocumentFileType(id, desc, descAr, allowedExtensionsCsv, maxFileSizeBytes));
     }
 }

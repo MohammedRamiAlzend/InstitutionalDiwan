@@ -2,6 +2,12 @@ namespace InstitutionalDiwan.Domain.Errors;
 
 public static class DomainErrors
 {
+    public static class Lookup
+    {
+        public static readonly Error InvalidId = Error.Validation("Lookup.InvalidId", "A lookup entry id must be a positive integer.");
+        public static readonly Error LabelEmpty = Error.Validation("Lookup.LabelEmpty", "A lookup entry requires both English and Arabic labels.");
+    }
+
     public static class Department
     {
         public static readonly Error CodeEmpty = Error.Validation("Department.CodeEmpty", "Department code is required.");
@@ -109,6 +115,8 @@ public static class DomainErrors
         public static readonly Error StoragePathEmpty = Error.Validation("Attachments.StoragePathEmpty", "Relative storage path is required.");
         public static readonly Error ChecksumInvalid = Error.Validation("Attachments.ChecksumInvalid", "SHA-256 checksum must be exactly 64 hex characters.");
         public static readonly Error FileSizeInvalid = Error.Validation("Attachments.FileSizeInvalid", "File size in bytes must be greater than zero.");
+        public static readonly Error ProviderNameEmpty = Error.Validation("Attachments.ProviderNameEmpty", "Storage provider name is required.");
+        public static readonly Error ProviderPathEmpty = Error.Validation("Attachments.ProviderPathEmpty", "Storage provider base path or endpoint is required.");
     }
 
     public static class Relations

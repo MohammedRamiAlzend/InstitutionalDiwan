@@ -17,7 +17,8 @@ public sealed class DocumentAccessGrant : AggregateRoot<Guid>
     public Guid DocumentId { get; private set; }
     // FK → User.UserId (InstitutionalDiwan.Domain.Entities.Identity.User)
     public Guid UserId { get; private set; }
-    public string AccessLevel { get; private set; } = "VIEW";
+    // FK → AccessLevel.Id (InstitutionalDiwan.Domain.Entities.Identity.AccessLevel)
+    public int AccessLevelId { get; private set; } = AccessLevel.ViewId;
     // FK → User.UserId (InstitutionalDiwan.Domain.Entities.Identity.User)
     public Guid GrantedByUserId { get; private set; }
     public string? Reason { get; private set; }
@@ -35,16 +36,12 @@ public sealed class DocumentAccessGrant : AggregateRoot<Guid>
     public static Result<DocumentAccessGrant> Grant(
         Guid documentId,
         Guid userId,
-        string? accessLevel,
+        int accessLevelId,
         Guid grantedByUserId,
         string? reason = null,
         DateTime? expiresAt = null)
     {
-        if (string.IsNullOrWhiteSpace(accessLevel))
-            return Result.Failure<DocumentAccessGrant>(DomainErrors.Identity.AccessLevelInvalid);
-
-        var normalizedLevel = accessLevel.Trim().ToUpperInvariant();
-        if (normalizedLevel is not ("VIEW" or "DOWNLOAD" or "FORWARD" or "MANAGE"))
+        if (accessLevelId is not (AccessLevel.ViewId or AccessLevel.DownloadId or AccessLevel.ForwardId or AccessLevel.ManageId))
             return Result.Failure<DocumentAccessGrant>(DomainErrors.Identity.AccessLevelInvalid);
 
         if (expiresAt.HasValue && expiresAt.Value <= DateTime.UtcNow)
@@ -55,7 +52,7 @@ public sealed class DocumentAccessGrant : AggregateRoot<Guid>
             GrantId = Guid.NewGuid(),
             DocumentId = documentId,
             UserId = userId,
-            AccessLevel = normalizedLevel,
+            AccessLevelId = accessLevelId,
             GrantedByUserId = grantedByUserId,
             Reason = reason,
             GrantedAt = DateTime.UtcNow,
@@ -63,7 +60,7 @@ public sealed class DocumentAccessGrant : AggregateRoot<Guid>
             IsRevoked = false
         };
 
-        grant.RaiseDomainEvent(new DocumentAccessGrantedEvent(grant.GrantId, grant.DocumentId, grant.UserId, grant.AccessLevel));
+        grant.RaiseDomainEvent(new DocumentAccessGrantedEvent(grant.GrantId, grant.DocumentId, grant.UserId, grant.AccessLevelId));
         return Result.Success(grant);
     }
 

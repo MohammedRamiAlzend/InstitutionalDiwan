@@ -16,7 +16,7 @@ public sealed class ChangePasswordCommandHandlerTests
             "holder",
             new FakePasswordHasher().Hash(OldPassword),
             Guid.NewGuid(),
-            scopeType: "SYSTEM",
+            scopeTypeId: UserScopeType.SystemId,
             mustChangePassword: mustChangePassword);
         Assert.True(user.IsSuccess);
 

@@ -16,7 +16,8 @@ public sealed class UserDepartmentAssignment : Entity<Guid>
     public Guid UserId { get; private set; }
     // FK → Department.DepartmentId (InstitutionalDiwan.Domain.Entities.Organization.Department)
     public Guid DepartmentId { get; private set; }
-    public string AssignmentType { get; private set; } = "ADDITIONAL";
+    // FK → AssignmentType.Id (InstitutionalDiwan.Domain.Entities.Identity.AssignmentType)
+    public int AssignmentTypeId { get; private set; } = AssignmentType.AdditionalId;
     public bool IncludeSubtree { get; private set; }
     public DateTime StartDate { get; private set; }
     public DateTime? EndDate { get; private set; }
@@ -30,7 +31,7 @@ public sealed class UserDepartmentAssignment : Entity<Guid>
     internal static Result<UserDepartmentAssignment> Create(
         Guid userId,
         Guid departmentId,
-        string assignmentType = "ADDITIONAL",
+        int assignmentTypeId = AssignmentType.AdditionalId,
         bool includeSubtree = false,
         DateTime? startDate = null,
         DateTime? endDate = null)
@@ -44,7 +45,7 @@ public sealed class UserDepartmentAssignment : Entity<Guid>
             AssignmentId = Guid.NewGuid(),
             UserId = userId,
             DepartmentId = departmentId,
-            AssignmentType = string.IsNullOrWhiteSpace(assignmentType) ? "ADDITIONAL" : assignmentType.Trim().ToUpperInvariant(),
+            AssignmentTypeId = assignmentTypeId > 0 ? assignmentTypeId : AssignmentType.AdditionalId,
             IncludeSubtree = includeSubtree,
             StartDate = effectiveStart,
             EndDate = endDate,

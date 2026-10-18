@@ -17,8 +17,8 @@ public sealed class DocumentRelation : AggregateRoot<Guid>
     public Guid SourceDocumentId { get; private set; }
     // FK → Document.DocumentId (InstitutionalDiwan.Domain.Entities.Correspondence.Document)
     public Guid TargetDocumentId { get; private set; }
-    // FK → DocumentRelationType.Code (InstitutionalDiwan.Domain.Entities.Relations.DocumentRelationType)
-    public string RelationTypeCode { get; private set; } = null!;
+    // FK → DocumentRelationType.Id (InstitutionalDiwan.Domain.Entities.Relations.DocumentRelationType)
+    public int RelationTypeId { get; private set; }
     public string? Notes { get; private set; }
     // FK → User.UserId (InstitutionalDiwan.Domain.Entities.Identity.User)
     public Guid CreatedByUserId { get; private set; }
@@ -52,7 +52,7 @@ public sealed class DocumentRelation : AggregateRoot<Guid>
             RelationId = Guid.NewGuid(),
             SourceDocumentId = normalizedSource,
             TargetDocumentId = normalizedTarget,
-            RelationTypeCode = relationType.Code,
+            RelationTypeId = relationType.Id,
             Notes = string.IsNullOrWhiteSpace(notes) ? null : notes.Trim(),
             CreatedByUserId = createdByUserId,
             CreatedAt = DateTime.UtcNow
@@ -62,7 +62,7 @@ public sealed class DocumentRelation : AggregateRoot<Guid>
             relation.RelationId,
             relation.SourceDocumentId,
             relation.TargetDocumentId,
-            relation.RelationTypeCode,
+            relation.RelationTypeId,
             createdByUserId));
 
         return Result.Success(relation);

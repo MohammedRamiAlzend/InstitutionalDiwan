@@ -152,8 +152,8 @@ public sealed class DocumentParticipantConfiguration : IEntityTypeConfiguration<
         builder.HasKey(x => x.ParticipantId);
         builder.Property(x => x.ParticipantId).HasColumnName("ParticipantId").ValueGeneratedNever();
         builder.Property(x => x.DocumentId).HasColumnName("DocumentId").IsRequired();
-        builder.Property(x => x.RoleCode).HasColumnName("RoleCode").HasMaxLength(50).IsRequired();
-        builder.Property(x => x.TargetType).HasColumnName("TargetType").HasMaxLength(30).IsRequired();
+        builder.Property(x => x.RoleId).HasColumnName("RoleId").IsRequired();
+        builder.Property(x => x.TargetTypeId).HasColumnName("TargetTypeId").IsRequired();
         builder.Property(x => x.InternalDepartmentId).HasColumnName("InternalDepartmentId");
         builder.Property(x => x.ExternalOrganizationId).HasColumnName("ExternalOrganizationId");
         builder.Property(x => x.PersonName).HasColumnName("PersonName").HasMaxLength(200);
@@ -162,6 +162,16 @@ public sealed class DocumentParticipantConfiguration : IEntityTypeConfiguration<
         builder.Property(x => x.CreatedAt).HasColumnName("CreatedAt").HasColumnType("datetime2(3)").IsRequired();
 
         builder.HasIndex(x => x.DocumentId).HasDatabaseName("IX_DOC_PARTICIPANTS_DOC");
+
+        builder.HasOne<ParticipantRole>()
+            .WithMany()
+            .HasForeignKey(x => x.RoleId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne<ParticipantTargetType>()
+            .WithMany()
+            .HasForeignKey(x => x.TargetTypeId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }
 
@@ -201,12 +211,62 @@ public sealed class ExternalOrganizationConfiguration : IEntityTypeConfiguration
         builder.Property(x => x.Code).HasColumnName("Code").HasMaxLength(50).IsRequired();
         builder.Property(x => x.NameAr).HasColumnName("NameAr").HasMaxLength(250).IsRequired();
         builder.Property(x => x.NameEn).HasColumnName("NameEn").HasMaxLength(250);
-        builder.Property(x => x.OrganizationType).HasColumnName("OrganizationType").HasMaxLength(50).IsRequired();
+        builder.Property(x => x.OrganizationTypeId).HasColumnName("OrganizationTypeId").IsRequired();
         builder.Property(x => x.ContactInfo).HasColumnName("ContactInfo").HasMaxLength(500);
         builder.Property(x => x.IsActive).HasColumnName("IsActive").IsRequired();
         builder.Property(x => x.CreatedAt).HasColumnName("CreatedAt").HasColumnType("datetime2(3)").IsRequired();
         builder.Property(x => x.UpdatedAt).HasColumnName("UpdatedAt").HasColumnType("datetime2(3)");
 
         builder.HasIndex(x => x.Code).IsUnique().HasDatabaseName("UX_EXTERNAL_ORGS_CODE");
+
+        builder.HasOne<OrganizationType>()
+            .WithMany()
+            .HasForeignKey(x => x.OrganizationTypeId)
+            .OnDelete(DeleteBehavior.Restrict);
+    }
+}
+
+public sealed class ParticipantRoleConfiguration : IEntityTypeConfiguration<ParticipantRole>
+{
+    public void Configure(EntityTypeBuilder<ParticipantRole> builder)
+    {
+        builder.ToTable("PARTICIPANT_ROLES");
+
+        builder.HasKey(x => x.Id);
+        builder.Property(x => x.Id).HasColumnName("Id").ValueGeneratedNever();
+        builder.Property(x => x.Desc).HasColumnName("Desc").HasMaxLength(150).IsRequired();
+        builder.Property(x => x.DescAr).HasColumnName("DescAr").HasMaxLength(150).IsRequired();
+        builder.Property(x => x.IsActive).HasColumnName("IsActive").IsRequired();
+        builder.Property(x => x.CreatedAt).HasColumnName("CreatedAt").HasColumnType("datetime2(3)").IsRequired();
+    }
+}
+
+public sealed class ParticipantTargetTypeConfiguration : IEntityTypeConfiguration<ParticipantTargetType>
+{
+    public void Configure(EntityTypeBuilder<ParticipantTargetType> builder)
+    {
+        builder.ToTable("PARTICIPANT_TARGET_TYPES");
+
+        builder.HasKey(x => x.Id);
+        builder.Property(x => x.Id).HasColumnName("Id").ValueGeneratedNever();
+        builder.Property(x => x.Desc).HasColumnName("Desc").HasMaxLength(150).IsRequired();
+        builder.Property(x => x.DescAr).HasColumnName("DescAr").HasMaxLength(150).IsRequired();
+        builder.Property(x => x.IsActive).HasColumnName("IsActive").IsRequired();
+        builder.Property(x => x.CreatedAt).HasColumnName("CreatedAt").HasColumnType("datetime2(3)").IsRequired();
+    }
+}
+
+public sealed class OrganizationTypeConfiguration : IEntityTypeConfiguration<OrganizationType>
+{
+    public void Configure(EntityTypeBuilder<OrganizationType> builder)
+    {
+        builder.ToTable("ORGANIZATION_TYPES");
+
+        builder.HasKey(x => x.Id);
+        builder.Property(x => x.Id).HasColumnName("Id").ValueGeneratedNever();
+        builder.Property(x => x.Desc).HasColumnName("Desc").HasMaxLength(150).IsRequired();
+        builder.Property(x => x.DescAr).HasColumnName("DescAr").HasMaxLength(150).IsRequired();
+        builder.Property(x => x.IsActive).HasColumnName("IsActive").IsRequired();
+        builder.Property(x => x.CreatedAt).HasColumnName("CreatedAt").HasColumnType("datetime2(3)").IsRequired();
     }
 }

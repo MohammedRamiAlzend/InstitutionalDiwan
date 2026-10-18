@@ -24,7 +24,8 @@ public sealed class User : AggregateRoot<Guid>
     public Guid? EmployeeId { get; private set; }
     // FK → Department.DepartmentId (InstitutionalDiwan.Domain.Entities.Organization.Department)
     public Guid PrimaryDepartmentId { get; private set; }
-    public string ScopeType { get; private set; } = "DEPARTMENT";
+    // FK → UserScopeType.Id (InstitutionalDiwan.Domain.Entities.Identity.UserScopeType)
+    public int ScopeTypeId { get; private set; } = UserScopeType.DepartmentId;
     public bool IsActive { get; private set; }
     public bool MustChangePassword { get; private set; }
     public DateTime? LastLoginAt { get; private set; }
@@ -43,7 +44,7 @@ public sealed class User : AggregateRoot<Guid>
         string? passwordHash,
         Guid primaryDepartmentId,
         Guid? employeeId = null,
-        string scopeType = "DEPARTMENT",
+        int scopeTypeId = UserScopeType.DepartmentId,
         bool mustChangePassword = true)
     {
         if (string.IsNullOrWhiteSpace(username))
@@ -59,7 +60,7 @@ public sealed class User : AggregateRoot<Guid>
             PasswordHash = passwordHash,
             PrimaryDepartmentId = primaryDepartmentId,
             EmployeeId = employeeId,
-            ScopeType = string.IsNullOrWhiteSpace(scopeType) ? "DEPARTMENT" : scopeType.Trim().ToUpperInvariant(),
+            ScopeTypeId = scopeTypeId > 0 ? scopeTypeId : UserScopeType.DepartmentId,
             IsActive = true,
             MustChangePassword = mustChangePassword,
             CreatedAt = DateTime.UtcNow
@@ -98,7 +99,7 @@ public sealed class User : AggregateRoot<Guid>
 
     public Result AssignDepartmentScope(
         Guid departmentId,
-        string assignmentType = "ADDITIONAL",
+        int assignmentTypeId = AssignmentType.AdditionalId,
         bool includeSubtree = false,
         DateTime? startDate = null,
         DateTime? endDate = null)
@@ -106,7 +107,7 @@ public sealed class User : AggregateRoot<Guid>
         var assignmentResult = UserDepartmentAssignment.Create(
             UserId,
             departmentId,
-            assignmentType,
+            assignmentTypeId,
             includeSubtree,
             startDate,
             endDate);

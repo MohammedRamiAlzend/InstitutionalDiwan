@@ -1,5 +1,6 @@
 using System;
 using InstitutionalDiwan.Domain.Common;
+using InstitutionalDiwan.Domain.Entities.Numbering;
 using InstitutionalDiwan.Domain.Errors;
 
 namespace InstitutionalDiwan.Domain.Entities.Organization;
@@ -15,8 +16,10 @@ public sealed class InstitutionSetting : AggregateRoot<Guid>
     public string InstitutionNameAr { get; private set; } = null!;
     public string? InstitutionNameEn { get; private set; }
     public string? LogoPath { get; private set; }
-    public string NumberingMode { get; private set; } = null!;
-    public string NumberingResetPolicy { get; private set; } = null!;
+    // FK → NumberingMode.Id (InstitutionalDiwan.Domain.Entities.Organization.NumberingMode)
+    public int NumberingModeId { get; private set; }
+    // FK → NumberingResetPolicy.Id (InstitutionalDiwan.Domain.Entities.Numbering.NumberingResetPolicy)
+    public int NumberingResetPolicyId { get; private set; }
     public string DefaultTimezone { get; private set; } = "Asia/Damascus";
     public DateTime UpdatedAt { get; private set; }
 
@@ -26,8 +29,8 @@ public sealed class InstitutionSetting : AggregateRoot<Guid>
 
     public static Result<InstitutionSetting> Create(
         string? institutionNameAr,
-        string? numberingMode,
-        string? numberingResetPolicy,
+        int numberingModeId,
+        int numberingResetPolicyId,
         string? institutionNameEn = null,
         string? logoPath = null,
         string defaultTimezone = "Asia/Damascus")
@@ -35,10 +38,10 @@ public sealed class InstitutionSetting : AggregateRoot<Guid>
         if (string.IsNullOrWhiteSpace(institutionNameAr))
             return Result.Failure<InstitutionSetting>(DomainErrors.InstitutionSetting.NameEmpty);
 
-        if (string.IsNullOrWhiteSpace(numberingMode))
+        if (numberingModeId <= 0)
             return Result.Failure<InstitutionSetting>(DomainErrors.InstitutionSetting.NumberingModeEmpty);
 
-        if (string.IsNullOrWhiteSpace(numberingResetPolicy))
+        if (numberingResetPolicyId <= 0)
             return Result.Failure<InstitutionSetting>(DomainErrors.InstitutionSetting.ResetPolicyEmpty);
 
         var setting = new InstitutionSetting
@@ -47,8 +50,8 @@ public sealed class InstitutionSetting : AggregateRoot<Guid>
             InstitutionNameAr = institutionNameAr.Trim(),
             InstitutionNameEn = string.IsNullOrWhiteSpace(institutionNameEn) ? null : institutionNameEn.Trim(),
             LogoPath = logoPath,
-            NumberingMode = numberingMode.Trim().ToUpperInvariant(),
-            NumberingResetPolicy = numberingResetPolicy.Trim().ToUpperInvariant(),
+            NumberingModeId = numberingModeId,
+            NumberingResetPolicyId = numberingResetPolicyId,
             DefaultTimezone = string.IsNullOrWhiteSpace(defaultTimezone) ? "Asia/Damascus" : defaultTimezone.Trim(),
             UpdatedAt = DateTime.UtcNow
         };
@@ -56,16 +59,16 @@ public sealed class InstitutionSetting : AggregateRoot<Guid>
         return Result.Success(setting);
     }
 
-    public Result UpdateNumberingPolicy(string? numberingMode, string? numberingResetPolicy)
+    public Result UpdateNumberingPolicy(int numberingModeId, int numberingResetPolicyId)
     {
-        if (string.IsNullOrWhiteSpace(numberingMode))
+        if (numberingModeId <= 0)
             return Result.Failure(DomainErrors.InstitutionSetting.NumberingModeEmpty);
 
-        if (string.IsNullOrWhiteSpace(numberingResetPolicy))
+        if (numberingResetPolicyId <= 0)
             return Result.Failure(DomainErrors.InstitutionSetting.ResetPolicyEmpty);
 
-        NumberingMode = numberingMode.Trim().ToUpperInvariant();
-        NumberingResetPolicy = numberingResetPolicy.Trim().ToUpperInvariant();
+        NumberingModeId = numberingModeId;
+        NumberingResetPolicyId = numberingResetPolicyId;
         UpdatedAt = DateTime.UtcNow;
         return Result.Success();
     }

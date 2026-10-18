@@ -133,7 +133,7 @@ public sealed class Document : AggregateRoot<Guid>
     }
 
     public Result<DocumentParticipant> AddParticipant(
-        string? roleCode,
+        int roleId,
         ParticipantTarget target,
         bool isPrimary = false,
         string? notes = null)
@@ -144,13 +144,13 @@ public sealed class Document : AggregateRoot<Guid>
             return Result.Failure<DocumentParticipant>(DomainErrors.Correspondence.SingleExternalPartyLimit);
         }
 
-        var participantResult = DocumentParticipant.Create(DocumentId, roleCode, target, isPrimary, notes);
+        var participantResult = DocumentParticipant.Create(DocumentId, roleId, target, isPrimary, notes);
         if (participantResult.IsFailure)
             return participantResult;
 
         _participants.Add(participantResult.Value);
         UpdatedAt = DateTime.UtcNow;
-        RaiseDomainEvent(new DocumentParticipantAddedEvent(DocumentId, participantResult.Value.ParticipantId, participantResult.Value.RoleCode));
+        RaiseDomainEvent(new DocumentParticipantAddedEvent(DocumentId, participantResult.Value.ParticipantId, participantResult.Value.RoleId));
         return participantResult;
     }
 

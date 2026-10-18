@@ -18,11 +18,12 @@ public sealed class Notification : AggregateRoot<Guid>
         private set => Id = value;
     }
 
-    // FK → NotificationType.Code (InstitutionalDiwan.Domain.Entities.Notifications.NotificationType)
-    public string NotificationTypeCode { get; private set; } = null!;
+    // FK → NotificationType.Id (InstitutionalDiwan.Domain.Entities.Notifications.NotificationType)
+    public int NotificationTypeId { get; private set; }
     public string TitleAr { get; private set; } = null!;
     public string BodyAr { get; private set; } = null!;
-    public string Priority { get; private set; } = "NORMAL";
+    // FK → NotificationPriority.Id (InstitutionalDiwan.Domain.Entities.Notifications.NotificationPriority)
+    public int PriorityId { get; private set; } = NotificationPriority.NormalId;
     // FK → Document.DocumentId (InstitutionalDiwan.Domain.Entities.Correspondence.Document)
     public Guid? RelatedDocumentId { get; private set; }
     // FK → DocumentMovement.MovementId (InstitutionalDiwan.Domain.Entities.Movements.DocumentMovement)
@@ -38,15 +39,15 @@ public sealed class Notification : AggregateRoot<Guid>
     }
 
     public static Result<Notification> Create(
-        string? notificationTypeCode,
+        int notificationTypeId,
         string? titleAr,
         string? bodyAr,
-        string priority = "NORMAL",
+        int priorityId = NotificationPriority.NormalId,
         Guid? relatedDocumentId = null,
         Guid? relatedMovementId = null,
         string? actionUrl = null)
     {
-        if (string.IsNullOrWhiteSpace(notificationTypeCode))
+        if (notificationTypeId <= 0)
             return Result.Failure<Notification>(DomainErrors.Notifications.TypeCodeEmpty);
 
         if (string.IsNullOrWhiteSpace(titleAr))
@@ -58,10 +59,10 @@ public sealed class Notification : AggregateRoot<Guid>
         var notification = new Notification
         {
             NotificationId = Guid.NewGuid(),
-            NotificationTypeCode = notificationTypeCode.Trim().ToUpperInvariant(),
+            NotificationTypeId = notificationTypeId,
             TitleAr = titleAr.Trim(),
             BodyAr = bodyAr.Trim(),
-            Priority = string.IsNullOrWhiteSpace(priority) ? "NORMAL" : priority.Trim().ToUpperInvariant(),
+            PriorityId = priorityId > 0 ? priorityId : NotificationPriority.NormalId,
             RelatedDocumentId = relatedDocumentId,
             RelatedMovementId = relatedMovementId,
             ActionUrl = actionUrl,
@@ -70,7 +71,7 @@ public sealed class Notification : AggregateRoot<Guid>
 
         notification.RaiseDomainEvent(new NotificationCreatedEvent(
             notification.NotificationId,
-            notification.NotificationTypeCode,
+            notification.NotificationTypeId,
             notification.RelatedDocumentId));
 
         return Result.Success(notification);
@@ -85,9 +86,9 @@ public sealed class Notification : AggregateRoot<Guid>
         return Result.Success();
     }
 
-    public Result EnqueueOutbox(string? channel, string? payloadJson)
+    public Result EnqueueOutbox(int channelId, string? payloadJson)
     {
-        var outboxResult = NotificationOutbox.Create(NotificationId, channel, payloadJson);
+        var outboxResult = NotificationOutbox.Create(NotificationId, channelId, payloadJson);
         if (outboxResult.IsFailure)
             return outboxResult;
 

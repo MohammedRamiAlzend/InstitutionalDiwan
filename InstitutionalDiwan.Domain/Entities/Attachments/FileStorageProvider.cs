@@ -1,49 +1,57 @@
-using System;
 using InstitutionalDiwan.Domain.Common;
 using InstitutionalDiwan.Domain.Errors;
 
 namespace InstitutionalDiwan.Domain.Entities.Attachments;
 
-public sealed class FileStorageProvider : Entity<string>
+/// <summary>
+/// Reference table of configured file storage providers. Replaces the former string
+/// <c>DocumentFileVersion.StorageProviderCode</c>; versions now reference it by id. Seeded by
+/// <c>FileStorageProviderSeeder</c>, which always provides a default local-file-system provider.
+/// </summary>
+public sealed class FileStorageProvider : LookupEntity
 {
-    public string Code
-    {
-        get => Id;
-        private set => Id = value;
-    }
+    public const int LocalDefaultId = 1;
 
-    public string NameAr { get; private set; } = null!;
-    public string ProviderType { get; private set; } = "LOCAL_FS";
+    /// <summary>FK → StorageProviderType.Id.</summary>
+    public int ProviderTypeId { get; private set; } = StorageProviderType.LocalFileSystemId;
+
+    /// <summary>Root path (local/network) or endpoint URL (cloud) used to store files.</summary>
     public string BasePathOrEndpoint { get; private set; } = null!;
+
     public bool IsDefault { get; private set; }
-    public bool IsActive { get; private set; }
-    public DateTime CreatedAt { get; private set; }
 
     private FileStorageProvider()
     {
     }
 
+    private FileStorageProvider(int id, string desc, string descAr, int providerTypeId, string basePathOrEndpoint, bool isDefault)
+        : base(id, desc, descAr)
+    {
+        ProviderTypeId = providerTypeId;
+        BasePathOrEndpoint = basePathOrEndpoint.Trim();
+        IsDefault = isDefault;
+    }
+
     public static Result<FileStorageProvider> Create(
-        string? code,
-        string? nameAr,
+        int id,
+        string? desc,
+        string? descAr,
         string? basePathOrEndpoint,
-        string providerType = "LOCAL_FS",
+        int providerTypeId = StorageProviderType.LocalFileSystemId,
         bool isDefault = false)
     {
-        if (string.IsNullOrWhiteSpace(code) || string.IsNullOrWhiteSpace(nameAr) || string.IsNullOrWhiteSpace(basePathOrEndpoint))
-            return Result.Failure<FileStorageProvider>(DomainErrors.Attachments.StoragePathEmpty);
+        if (id <= 0)
+            return Result.Failure<FileStorageProvider>(DomainErrors.Lookup.InvalidId);
 
-        var provider = new FileStorageProvider
-        {
-            Code = code.Trim().ToUpperInvariant(),
-            NameAr = nameAr.Trim(),
-            ProviderType = providerType.Trim().ToUpperInvariant(),
-            BasePathOrEndpoint = basePathOrEndpoint.Trim(),
-            IsDefault = isDefault,
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow
-        };
+        if (string.IsNullOrWhiteSpace(desc) || string.IsNullOrWhiteSpace(descAr))
+            return Result.Failure<FileStorageProvider>(DomainErrors.Attachments.ProviderNameEmpty);
 
-        return Result.Success(provider);
+        if (string.IsNullOrWhiteSpace(basePathOrEndpoint))
+            return Result.Failure<FileStorageProvider>(DomainErrors.Attachments.ProviderPathEmpty);
+
+        if (providerTypeId <= 0)
+            return Result.Failure<FileStorageProvider>(DomainErrors.Lookup.InvalidId);
+
+        return Result.Success(new FileStorageProvider(id, desc, descAr, providerTypeId, basePathOrEndpoint, isDefault));
     }
 }

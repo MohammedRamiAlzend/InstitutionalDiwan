@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using InstitutionalDiwan.Domain.Entities.Numbering;
 using InstitutionalDiwan.Domain.Entities.Organization;
 
 namespace InstitutionalDiwan.Infrastructure.Persistence.Configurations;
@@ -72,9 +73,34 @@ public sealed class InstitutionSettingConfiguration : IEntityTypeConfiguration<I
         builder.Property(x => x.InstitutionNameAr).HasColumnName("InstitutionNameAr").HasMaxLength(250).IsRequired();
         builder.Property(x => x.InstitutionNameEn).HasColumnName("InstitutionNameEn").HasMaxLength(250);
         builder.Property(x => x.LogoPath).HasColumnName("LogoPath").HasMaxLength(500);
-        builder.Property(x => x.NumberingMode).HasColumnName("NumberingMode").HasMaxLength(50).IsRequired();
-        builder.Property(x => x.NumberingResetPolicy).HasColumnName("NumberingResetPolicy").HasMaxLength(50).IsRequired();
+        builder.Property(x => x.NumberingModeId).HasColumnName("NumberingModeId").IsRequired();
+        builder.Property(x => x.NumberingResetPolicyId).HasColumnName("NumberingResetPolicyId").IsRequired();
         builder.Property(x => x.DefaultTimezone).HasColumnName("DefaultTimezone").HasMaxLength(100).IsRequired();
         builder.Property(x => x.UpdatedAt).HasColumnName("UpdatedAt").HasColumnType("datetime2(3)").IsRequired();
+
+        builder.HasOne<NumberingMode>()
+            .WithMany()
+            .HasForeignKey(x => x.NumberingModeId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne<NumberingResetPolicy>()
+            .WithMany()
+            .HasForeignKey(x => x.NumberingResetPolicyId)
+            .OnDelete(DeleteBehavior.Restrict);
+    }
+}
+
+public sealed class NumberingModeConfiguration : IEntityTypeConfiguration<NumberingMode>
+{
+    public void Configure(EntityTypeBuilder<NumberingMode> builder)
+    {
+        builder.ToTable("NUMBERING_MODES");
+
+        builder.HasKey(x => x.Id);
+        builder.Property(x => x.Id).HasColumnName("Id").ValueGeneratedNever();
+        builder.Property(x => x.Desc).HasColumnName("Desc").HasMaxLength(150).IsRequired();
+        builder.Property(x => x.DescAr).HasColumnName("DescAr").HasMaxLength(150).IsRequired();
+        builder.Property(x => x.IsActive).HasColumnName("IsActive").IsRequired();
+        builder.Property(x => x.CreatedAt).HasColumnName("CreatedAt").HasColumnType("datetime2(3)").IsRequired();
     }
 }

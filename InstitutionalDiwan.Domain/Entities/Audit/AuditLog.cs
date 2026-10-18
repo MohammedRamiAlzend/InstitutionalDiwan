@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 using InstitutionalDiwan.Domain.Common;
@@ -20,9 +21,11 @@ public sealed class AuditLog : Entity<long>
     // FK → Department.DepartmentId (InstitutionalDiwan.Domain.Entities.Organization.Department)
     public Guid? ActorDepartmentId { get; private set; }
     public string ModuleName { get; private set; } = null!;
-    public string ActionType { get; private set; } = null!;
-    public string EntityType { get; private set; } = null!;
-    // Polymorphic reference: id of the entity identified by EntityType (no single FK)
+    // FK → AuditActionType.Id (InstitutionalDiwan.Domain.Entities.Audit.AuditActionType)
+    public int ActionTypeId { get; private set; }
+    // FK → AuditEntityType.Id (InstitutionalDiwan.Domain.Entities.Audit.AuditEntityType)
+    public int EntityTypeId { get; private set; }
+    // Polymorphic reference: id of the entity identified by EntityTypeId (no single FK)
     public string EntityId { get; private set; } = null!;
     // FK → Document.DocumentId (InstitutionalDiwan.Domain.Entities.Correspondence.Document)
     public Guid? RelatedDocumentId { get; private set; }
@@ -39,8 +42,8 @@ public sealed class AuditLog : Entity<long>
 
     public static Result<AuditLog> Record(
         string? moduleName,
-        string? actionType,
-        string? entityType,
+        int actionTypeId,
+        int entityTypeId,
         string? entityId,
         string? previousHash,
         Guid? actorUserId = null,
@@ -53,8 +56,8 @@ public sealed class AuditLog : Entity<long>
         DateTime? occurredAtUtc = null)
     {
         if (string.IsNullOrWhiteSpace(moduleName) ||
-            string.IsNullOrWhiteSpace(actionType) ||
-            string.IsNullOrWhiteSpace(entityType) ||
+            actionTypeId <= 0 ||
+            entityTypeId <= 0 ||
             string.IsNullOrWhiteSpace(entityId) ||
             string.IsNullOrWhiteSpace(previousHash))
         {
@@ -67,8 +70,8 @@ public sealed class AuditLog : Entity<long>
             timestamp,
             actorUserId,
             moduleName.Trim().ToUpperInvariant(),
-            actionType.Trim().ToUpperInvariant(),
-            entityType.Trim().ToUpperInvariant(),
+            actionTypeId,
+            entityTypeId,
             entityId.Trim(),
             oldValuesJson,
             newValuesJson,
@@ -80,8 +83,8 @@ public sealed class AuditLog : Entity<long>
             ActorUserId = actorUserId,
             ActorDepartmentId = actorDepartmentId,
             ModuleName = moduleName.Trim().ToUpperInvariant(),
-            ActionType = actionType.Trim().ToUpperInvariant(),
-            EntityType = entityType.Trim().ToUpperInvariant(),
+            ActionTypeId = actionTypeId,
+            EntityTypeId = entityTypeId,
             EntityId = entityId.Trim(),
             RelatedDocumentId = relatedDocumentId,
             OldValuesJson = oldValuesJson,
@@ -104,8 +107,8 @@ public sealed class AuditLog : Entity<long>
             OccurredAtUtc,
             ActorUserId,
             ModuleName,
-            ActionType,
-            EntityType,
+            ActionTypeId,
+            EntityTypeId,
             EntityId,
             OldValuesJson,
             NewValuesJson,
@@ -120,14 +123,16 @@ public sealed class AuditLog : Entity<long>
         DateTime occurredAtUtc,
         Guid? actorUserId,
         string moduleName,
-        string actionType,
-        string entityType,
+        int actionTypeId,
+        int entityTypeId,
         string entityId,
         string? oldValuesJson,
         string? newValuesJson,
         string previousHash)
     {
-        var payload = $"{occurredAtUtc:O}|{actorUserId}|{moduleName}|{actionType}|{entityType}|{entityId}|{oldValuesJson}|{newValuesJson}|{previousHash}";
+        var action = actionTypeId.ToString(CultureInfo.InvariantCulture);
+        var entity = entityTypeId.ToString(CultureInfo.InvariantCulture);
+        var payload = $"{occurredAtUtc:O}|{actorUserId}|{moduleName}|{action}|{entity}|{entityId}|{oldValuesJson}|{newValuesJson}|{previousHash}";
         var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(payload));
         return Convert.ToHexString(bytes).ToLowerInvariant();
     }

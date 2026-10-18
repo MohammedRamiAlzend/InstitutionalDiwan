@@ -13,7 +13,7 @@ public sealed record UserCreatedEvent(Guid UserId, string Username, Guid Primary
 public sealed record UserDeactivatedEvent(Guid UserId) : DomainEventBase;
 public sealed record UserRoleAssignedEvent(Guid UserId, Guid RoleId, Guid?AssignedByUserId) : DomainEventBase;
 public sealed record UserRoleRevokedEvent(Guid UserId, Guid RoleId) : DomainEventBase;
-public sealed record DocumentAccessGrantedEvent(Guid GrantId, Guid DocumentId, Guid UserId, string AccessLevel) : DomainEventBase;
+public sealed record DocumentAccessGrantedEvent(Guid GrantId, Guid DocumentId, Guid UserId, int AccessLevelId) : DomainEventBase;
 public sealed record DocumentAccessRevokedEvent(Guid GrantId, Guid DocumentId, Guid UserId) : DomainEventBase;
 
 // Module 03 & 07: Correspondence & Archiving
@@ -22,7 +22,7 @@ public sealed record DocumentRegisteredEvent(Guid DocumentId, Guid OfficialNumbe
 public sealed record DocumentArchivedEvent(Guid DocumentId, int PreviousStatusId, Guid ActorUserId, string? Reason) : DomainEventBase;
 public sealed record DocumentUnarchivedEvent(Guid DocumentId, int RestoredStatusId, Guid ActorUserId, string? Reason) : DomainEventBase;
 public sealed record DocumentCanceledEvent(Guid DocumentId, int PreviousStatusId, Guid ActorUserId, string Reason) : DomainEventBase;
-public sealed record DocumentParticipantAddedEvent(Guid DocumentId, Guid ParticipantId, string RoleCode) : DomainEventBase;
+public sealed record DocumentParticipantAddedEvent(Guid DocumentId, Guid ParticipantId, int RoleId) : DomainEventBase;
 
 // Module 04: Official Numbering
 public sealed record OfficialNumberIssuedEvent(Guid DocumentNumberId, Guid DocumentId, Guid RegistryId, string OfficialNumberText, int NumberingYear, long SequenceValue) : DomainEventBase;
@@ -41,14 +41,14 @@ public sealed record MovementClosedEvent(Guid MovementId, Guid DocumentId, Guid 
 public sealed record MovementCancelledEvent(Guid MovementId, Guid DocumentId, Guid ActorUserId, string Reason) : DomainEventBase;
 
 // Module 06: Attachments
-public sealed record DocumentFileCreatedEvent(Guid FileId, Guid DocumentId, string FileTypeCode, string Title) : DomainEventBase;
+public sealed record DocumentFileCreatedEvent(Guid FileId, Guid DocumentId, int FileTypeId, string Title) : DomainEventBase;
 public sealed record DocumentFileVersionUploadedEvent(Guid FileId, Guid VersionId, Guid DocumentId, int VersionNumber, string ChecksumSha256) : DomainEventBase;
 public sealed record DocumentFileArchivedEvent(Guid FileId, Guid DocumentId) : DomainEventBase;
 
 // Module 08: Relations
-public sealed record DocumentRelationCreatedEvent(Guid RelationId, Guid SourceDocumentId, Guid TargetDocumentId, string RelationTypeCode, Guid ActorUserId) : DomainEventBase;
-public sealed record DocumentRelationRemovedEvent(Guid RelationId, Guid SourceDocumentId, Guid TargetDocumentId, string RelationTypeCode, Guid ActorUserId) : DomainEventBase;
+public sealed record DocumentRelationCreatedEvent(Guid RelationId, Guid SourceDocumentId, Guid TargetDocumentId, int RelationTypeId, Guid ActorUserId) : DomainEventBase;
+public sealed record DocumentRelationRemovedEvent(Guid RelationId, Guid SourceDocumentId, Guid TargetDocumentId, int RelationTypeId, Guid ActorUserId) : DomainEventBase;
 
 // Module 10: Notifications
-public sealed record NotificationCreatedEvent(Guid NotificationId, string NotificationTypeCode, Guid? RelatedDocumentId) : DomainEventBase;
+public sealed record NotificationCreatedEvent(Guid NotificationId, int NotificationTypeId, Guid? RelatedDocumentId) : DomainEventBase;
 public sealed record NotificationReadEvent(Guid NotificationId, Guid UserId, DateTime ReadAtUtc) : DomainEventBase;

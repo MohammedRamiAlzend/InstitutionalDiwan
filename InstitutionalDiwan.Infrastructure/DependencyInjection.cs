@@ -39,6 +39,30 @@ public static class DependencyInjection
         services.AddScoped<INumberingRegistryRepository, NumberingRegistryRepository>();
 
         // Ordered, environment-aware seeders — executed at startup by SeederRunner.
+        services.AddScoped<ISeeder, UserScopeTypeSeeder>();
+        services.AddScoped<ISeeder, AssignmentTypeSeeder>();
+        services.AddScoped<ISeeder, AccessLevelSeeder>();
+        services.AddScoped<ISeeder, ParticipantRoleSeeder>();
+        services.AddScoped<ISeeder, ParticipantTargetTypeSeeder>();
+        services.AddScoped<ISeeder, OrganizationTypeSeeder>();
+        services.AddScoped<ISeeder, MovementTypeSeeder>();
+        services.AddScoped<ISeeder, MovementStatusSeeder>();
+        services.AddScoped<ISeeder, MovementStepStatusSeeder>();
+        services.AddScoped<ISeeder, MovementEventTypeSeeder>();
+        services.AddScoped<ISeeder, StorageProviderTypeSeeder>();
+        services.AddScoped<ISeeder, DocumentFileTypeSeeder>();
+        services.AddScoped<ISeeder, FileStorageProviderSeeder>();
+        services.AddScoped<ISeeder, DocumentRelationTypeSeeder>();
+        services.AddScoped<ISeeder, RelationActionTypeSeeder>();
+        services.AddScoped<ISeeder, ArchiveEventTypeSeeder>();
+        services.AddScoped<ISeeder, ArchiveLocationSeeder>();
+        services.AddScoped<ISeeder, AuditActionTypeSeeder>();
+        services.AddScoped<ISeeder, AuditEntityTypeSeeder>();
+        services.AddScoped<ISeeder, NotificationTypeSeeder>();
+        services.AddScoped<ISeeder, NotificationPrioritySeeder>();
+        services.AddScoped<ISeeder, NotificationChannelSeeder>();
+        services.AddScoped<ISeeder, NotificationOutboxStatusSeeder>();
+        services.AddScoped<ISeeder, NumberingModeSeeder>();
         services.AddScoped<ISeeder, DepartmentTypeSeeder>();
         services.AddScoped<ISeeder, DocumentDirectionSeeder>();
         services.AddScoped<ISeeder, DocumentTypeSeeder>();

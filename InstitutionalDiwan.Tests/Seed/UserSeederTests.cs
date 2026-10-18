@@ -12,7 +12,10 @@ public sealed class UserSeederTests
         => new(db, new FakePasswordHasher(), environment);
 
     private static async Task SeedRolesAsync(DiwanDbContext db)
-        => await new RoleSeeder().SeedAsync(Context(db));
+    {
+        await new UserScopeTypeSeeder().SeedAsync(Context(db));
+        await new RoleSeeder().SeedAsync(Context(db));
+    }
 
     [Fact]
     public async Task SeedAsync_CreatesDemoAccountsWithRoleAssignments()
@@ -60,7 +63,7 @@ public sealed class UserSeederTests
         using var db = TestContextFactory.Create();
         await SeedRolesAsync(db);
 
-        var preExisting = User.Create("admin", "custom-hash", Guid.NewGuid(), scopeType: "SYSTEM", mustChangePassword: false);
+        var preExisting = User.Create("admin", "custom-hash", Guid.NewGuid(), scopeTypeId: UserScopeType.SystemId, mustChangePassword: false);
         Assert.True(preExisting.IsSuccess);
         db.Users.Add(preExisting.Value);
         await db.SaveChangesAsync();

@@ -17,9 +17,10 @@ public sealed class DocumentRelationEvent : Entity<Guid>
     public Guid SourceDocumentId { get; private set; }
     // FK → Document.DocumentId (InstitutionalDiwan.Domain.Entities.Correspondence.Document)
     public Guid TargetDocumentId { get; private set; }
-    // FK → DocumentRelationType.Code (InstitutionalDiwan.Domain.Entities.Relations.DocumentRelationType)
-    public string RelationTypeCode { get; private set; } = null!;
-    public string ActionType { get; private set; } = null!;
+    // FK → DocumentRelationType.Id (InstitutionalDiwan.Domain.Entities.Relations.DocumentRelationType)
+    public int RelationTypeId { get; private set; }
+    // FK → RelationActionType.Id (InstitutionalDiwan.Domain.Entities.Relations.RelationActionType)
+    public int ActionTypeId { get; private set; }
     // FK → User.UserId (InstitutionalDiwan.Domain.Entities.Identity.User)
     public Guid ActorUserId { get; private set; }
     public string? Reason { get; private set; }
@@ -33,8 +34,8 @@ public sealed class DocumentRelationEvent : Entity<Guid>
         Guid relationId,
         Guid sourceDocumentId,
         Guid targetDocumentId,
-        string relationTypeCode,
-        string actionType,
+        int relationTypeId,
+        int actionTypeId,
         Guid actorUserId,
         string? reason = null)
     {
@@ -44,10 +45,10 @@ public sealed class DocumentRelationEvent : Entity<Guid>
             RelationId = relationId,
             SourceDocumentId = sourceDocumentId,
             TargetDocumentId = targetDocumentId,
-            RelationTypeCode = relationTypeCode.Trim().ToUpperInvariant(),
-            ActionType = actionType.Trim().ToUpperInvariant(),
+            RelationTypeId = relationTypeId,
+            ActionTypeId = actionTypeId,
             ActorUserId = actorUserId,
-            Reason = reason,
+            Reason = string.IsNullOrWhiteSpace(reason) ? null : reason.Trim(),
             OccurredAt = DateTime.UtcNow
         };
 

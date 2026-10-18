@@ -14,9 +14,11 @@ public sealed class NotificationOutbox : Entity<Guid>
 
     // FK → Notification.NotificationId (InstitutionalDiwan.Domain.Entities.Notifications.Notification)
     public Guid NotificationId { get; private set; }
-    public string Channel { get; private set; } = "IN_APP";
+    // FK → NotificationChannel.Id (InstitutionalDiwan.Domain.Entities.Notifications.NotificationChannel)
+    public int ChannelId { get; private set; } = NotificationChannel.InAppId;
     public string PayloadJson { get; private set; } = null!;
-    public string Status { get; private set; } = "PENDING";
+    // FK → NotificationOutboxStatus.Id (InstitutionalDiwan.Domain.Entities.Notifications.NotificationOutboxStatus)
+    public int StatusId { get; private set; } = NotificationOutboxStatus.PendingId;
     public int RetryCount { get; private set; }
     public string? LastError { get; private set; }
     public DateTime? NextRetryAt { get; private set; }
@@ -27,18 +29,18 @@ public sealed class NotificationOutbox : Entity<Guid>
     {
     }
 
-    internal static Result<NotificationOutbox> Create(Guid notificationId, string? channel, string? payloadJson)
+    internal static Result<NotificationOutbox> Create(Guid notificationId, int channelId, string? payloadJson)
     {
-        if (string.IsNullOrWhiteSpace(channel))
+        if (channelId <= 0)
             return Result.Failure<NotificationOutbox>(DomainErrors.Notifications.ChannelEmpty);
 
         var outbox = new NotificationOutbox
         {
             OutboxId = Guid.NewGuid(),
             NotificationId = notificationId,
-            Channel = channel.Trim().ToUpperInvariant(),
+            ChannelId = channelId,
             PayloadJson = string.IsNullOrWhiteSpace(payloadJson) ? "{}" : payloadJson.Trim(),
-            Status = "PENDING",
+            StatusId = NotificationOutboxStatus.PendingId,
             RetryCount = 0,
             CreatedAt = DateTime.UtcNow
         };
@@ -48,7 +50,7 @@ public sealed class NotificationOutbox : Entity<Guid>
 
     public Result MarkProcessed()
     {
-        Status = "SENT";
+        StatusId = NotificationOutboxStatus.SentId;
         ProcessedAt = DateTime.UtcNow;
         LastError = null;
         return Result.Success();
@@ -59,7 +61,7 @@ public sealed class NotificationOutbox : Entity<Guid>
         RetryCount += 1;
         LastError = errorMessage;
         NextRetryAt = nextRetryAt;
-        Status = RetryCount >= maxRetries ? "DEAD_LETTER" : "FAILED";
+        StatusId = RetryCount >= maxRetries ? NotificationOutboxStatus.DeadLetterId : NotificationOutboxStatus.FailedId;
         return Result.Success();
     }
 }

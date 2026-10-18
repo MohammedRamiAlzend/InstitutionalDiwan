@@ -10,6 +10,30 @@ public sealed class SeedingPipelineTests
 {
     private static readonly ISeeder[] AllSeeders =
     {
+        new UserScopeTypeSeeder(),
+        new AssignmentTypeSeeder(),
+        new AccessLevelSeeder(),
+        new ParticipantRoleSeeder(),
+        new ParticipantTargetTypeSeeder(),
+        new OrganizationTypeSeeder(),
+        new MovementTypeSeeder(),
+        new MovementStatusSeeder(),
+        new MovementStepStatusSeeder(),
+        new MovementEventTypeSeeder(),
+        new StorageProviderTypeSeeder(),
+        new DocumentFileTypeSeeder(),
+        new FileStorageProviderSeeder(),
+        new DocumentRelationTypeSeeder(),
+        new RelationActionTypeSeeder(),
+        new ArchiveEventTypeSeeder(),
+        new ArchiveLocationSeeder(),
+        new AuditActionTypeSeeder(),
+        new AuditEntityTypeSeeder(),
+        new NotificationTypeSeeder(),
+        new NotificationPrioritySeeder(),
+        new NotificationChannelSeeder(),
+        new NotificationOutboxStatusSeeder(),
+        new NumberingModeSeeder(),
         new DepartmentTypeSeeder(),
         new DocumentDirectionSeeder(),
         new DocumentTypeSeeder(),
@@ -44,7 +68,35 @@ public sealed class SeedingPipelineTests
 
         var executed = await RunAsync(db, SeedingEnvironments.Development);
 
-        Assert.Equal(12, executed);
+        Assert.Equal(36, executed);
+
+        // Reference lookups
+        Assert.Equal(4, await db.UserScopeTypes.CountAsync());
+        Assert.Equal(2, await db.AssignmentTypes.CountAsync());
+        Assert.Equal(4, await db.AccessLevels.CountAsync());
+        Assert.Equal(4, await db.ParticipantRoles.CountAsync());
+        Assert.Equal(3, await db.ParticipantTargetTypes.CountAsync());
+        Assert.Equal(4, await db.OrganizationTypes.CountAsync());
+        Assert.Equal(4, await db.MovementTypes.CountAsync());
+        Assert.Equal(10, await db.MovementStatuses.CountAsync());
+        Assert.Equal(7, await db.MovementStepStatuses.CountAsync());
+        Assert.Equal(9, await db.MovementEventTypes.CountAsync());
+        Assert.Equal(4, await db.StorageProviderTypes.CountAsync());
+        Assert.Equal(4, await db.DocumentFileTypes.CountAsync());
+        Assert.Equal(1, await db.FileStorageProviders.CountAsync());
+        Assert.Equal(4, await db.DocumentRelationTypes.CountAsync());
+        Assert.Equal(3, await db.RelationActionTypes.CountAsync());
+        Assert.Equal(3, await db.ArchiveEventTypes.CountAsync());
+        Assert.Equal(3, await db.ArchiveLocations.CountAsync());
+        Assert.Equal(7, await db.AuditActionTypes.CountAsync());
+        Assert.Equal(8, await db.AuditEntityTypes.CountAsync());
+        Assert.Equal(6, await db.NotificationTypes.CountAsync());
+        Assert.Equal(3, await db.NotificationPriorities.CountAsync());
+        Assert.Equal(3, await db.NotificationChannels.CountAsync());
+        Assert.Equal(4, await db.NotificationOutboxStatuses.CountAsync());
+        Assert.Equal(2, await db.NumberingModes.CountAsync());
+
+        // Module lookups, permissions, roles, and demo users
         Assert.Equal(4, await db.DepartmentTypes.CountAsync());
         Assert.Equal(4, await db.DocumentDirections.CountAsync());
         Assert.Equal(5, await db.DocumentTypes.CountAsync());
@@ -68,11 +120,13 @@ public sealed class SeedingPipelineTests
 
         var executed = await RunAsync(db, SeedingEnvironments.Production);
 
-        Assert.Equal(11, executed);
+        Assert.Equal(35, executed);
         Assert.Equal(4, await db.DepartmentTypes.CountAsync());
         Assert.Equal(4, await db.DocumentDirections.CountAsync());
         Assert.Equal(5, await db.DocumentTypes.CountAsync());
         Assert.Equal(5, await db.DocumentStatusTypes.CountAsync());
+        Assert.Equal(4, await db.UserScopeTypes.CountAsync());
+        Assert.Equal(6, await db.NotificationTypes.CountAsync());
         Assert.Equal(10, await db.Permissions.CountAsync());
         Assert.Equal(2, await db.Roles.CountAsync());
         Assert.Equal(13, await db.RolePermissions.CountAsync());
@@ -88,10 +142,12 @@ public sealed class SeedingPipelineTests
 
         var executed = await RunAsync(db, SeedingEnvironments.Development);
 
-        Assert.Equal(12, executed);
+        Assert.Equal(36, executed);
         Assert.Equal(2, await db.Users.CountAsync());
         Assert.Equal(4, await db.DepartmentTypes.CountAsync());
+        Assert.Equal(4, await db.UserScopeTypes.CountAsync());
         Assert.Equal(5, await db.DocumentTypes.CountAsync());
+        Assert.Equal(7, await db.MovementStepStatuses.CountAsync());
         Assert.Equal(10, await db.Permissions.CountAsync());
         Assert.Equal(13, await db.RolePermissions.CountAsync());
         Assert.Equal(usersAfterFirstRun, await db.Users.Select(u => u.UserId).OrderBy(id => id).ToListAsync());

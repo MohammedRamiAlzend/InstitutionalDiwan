@@ -4,6 +4,10 @@ using InstitutionalDiwan.Domain.Errors;
 
 namespace InstitutionalDiwan.Domain.Entities.Archiving;
 
+/// <summary>
+/// Audit record of an archival transition on a document. Status ids reference
+/// <c>DocumentStatusType</c>; the event type and optional location reference their lookups.
+/// </summary>
 public sealed class DocumentArchiveEvent : Entity<Guid>
 {
     public Guid ArchiveEventId
@@ -14,15 +18,17 @@ public sealed class DocumentArchiveEvent : Entity<Guid>
 
     // FK → Document.DocumentId (InstitutionalDiwan.Domain.Entities.Correspondence.Document)
     public Guid DocumentId { get; private set; }
-    public string EventType { get; private set; } = null!;
-    // FK → DocumentStatusType.Code (InstitutionalDiwan.Domain.Entities.Correspondence.DocumentStatusType)
-    public string PreviousStatusCode { get; private set; } = null!;
-    // FK → DocumentStatusType.Code (InstitutionalDiwan.Domain.Entities.Correspondence.DocumentStatusType)
-    public string NewStatusCode { get; private set; } = null!;
+    // FK → ArchiveEventType.Id (InstitutionalDiwan.Domain.Entities.Archiving.ArchiveEventType)
+    public int EventTypeId { get; private set; }
+    // FK → DocumentStatusType.Id (InstitutionalDiwan.Domain.Entities.Correspondence.DocumentStatusType)
+    public int PreviousStatusId { get; private set; }
+    // FK → DocumentStatusType.Id (InstitutionalDiwan.Domain.Entities.Correspondence.DocumentStatusType)
+    public int NewStatusId { get; private set; }
     // FK → User.UserId (InstitutionalDiwan.Domain.Entities.Identity.User)
     public Guid ActorUserId { get; private set; }
     public string? Reason { get; private set; }
-    public string? ArchiveLocationCode { get; private set; }
+    // FK → ArchiveLocation.Id (InstitutionalDiwan.Domain.Entities.Archiving.ArchiveLocation)
+    public int? ArchiveLocationId { get; private set; }
     public DateTime OccurredAt { get; private set; }
 
     private DocumentArchiveEvent()
@@ -31,33 +37,32 @@ public sealed class DocumentArchiveEvent : Entity<Guid>
 
     public static Result<DocumentArchiveEvent> Record(
         Guid documentId,
-        string? eventType,
-        string previousStatusCode,
-        string newStatusCode,
+        int eventTypeId,
+        int previousStatusId,
+        int newStatusId,
         Guid actorUserId,
         string? reason = null,
-        string? archiveLocationCode = null)
+        int? archiveLocationId = null)
     {
-        if (string.IsNullOrWhiteSpace(eventType))
+        if (eventTypeId is not (ArchiveEventType.ArchivedId or ArchiveEventType.UnarchivedId or ArchiveEventType.RetentionAppliedId))
             return Result.Failure<DocumentArchiveEvent>(DomainErrors.Archiving.EventTypeInvalid);
 
-        var normalized = eventType.Trim().ToUpperInvariant();
-        if (normalized is not ("ARCHIVED" or "UNARCHIVED" or "RETAINED"))
+        if (previousStatusId <= 0 || newStatusId <= 0)
             return Result.Failure<DocumentArchiveEvent>(DomainErrors.Archiving.EventTypeInvalid);
 
-        var archiveEvent = new DocumentArchiveEvent
+        var ev = new DocumentArchiveEvent
         {
             ArchiveEventId = Guid.NewGuid(),
             DocumentId = documentId,
-            EventType = normalized,
-            PreviousStatusCode = previousStatusCode,
-            NewStatusCode = newStatusCode,
+            EventTypeId = eventTypeId,
+            PreviousStatusId = previousStatusId,
+            NewStatusId = newStatusId,
             ActorUserId = actorUserId,
-            Reason = reason,
-            ArchiveLocationCode = archiveLocationCode,
+            Reason = string.IsNullOrWhiteSpace(reason) ? null : reason.Trim(),
+            ArchiveLocationId = archiveLocationId,
             OccurredAt = DateTime.UtcNow
         };
 
-        return Result.Success(archiveEvent);
+        return Result.Success(ev);
     }
 }

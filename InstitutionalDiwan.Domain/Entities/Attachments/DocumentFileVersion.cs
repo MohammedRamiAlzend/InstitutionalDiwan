@@ -15,8 +15,8 @@ public sealed class DocumentFileVersion : Entity<Guid>
     // FK → DocumentFile.FileId (InstitutionalDiwan.Domain.Entities.Attachments.DocumentFile)
     public Guid FileId { get; private set; }
     public int VersionNumber { get; private set; }
-    // FK → FileStorageProvider.Code (InstitutionalDiwan.Domain.Entities.Attachments.FileStorageProvider)
-    public string StorageProviderCode { get; private set; } = null!;
+    // FK → FileStorageProvider.Id (InstitutionalDiwan.Domain.Entities.Attachments.FileStorageProvider)
+    public int StorageProviderId { get; private set; } = FileStorageProvider.LocalDefaultId;
     public string RelativePath { get; private set; } = null!;
     public string OriginalFileName { get; private set; } = null!;
     public string MimeType { get; private set; } = null!;
@@ -35,7 +35,7 @@ public sealed class DocumentFileVersion : Entity<Guid>
     internal static Result<DocumentFileVersion> Create(
         Guid fileId,
         int versionNumber,
-        string? storageProviderCode,
+        int storageProviderId,
         string? relativePath,
         string? originalFileName,
         string? mimeType,
@@ -61,7 +61,7 @@ public sealed class DocumentFileVersion : Entity<Guid>
             VersionId = Guid.NewGuid(),
             FileId = fileId,
             VersionNumber = versionNumber,
-            StorageProviderCode = string.IsNullOrWhiteSpace(storageProviderCode) ? "LOCAL_FS" : storageProviderCode.Trim().ToUpperInvariant(),
+            StorageProviderId = storageProviderId > 0 ? storageProviderId : FileStorageProvider.LocalDefaultId,
             RelativePath = relativePath.Trim(),
             OriginalFileName = string.IsNullOrWhiteSpace(originalFileName) ? "document.pdf" : originalFileName.Trim(),
             MimeType = string.IsNullOrWhiteSpace(mimeType) ? "application/pdf" : mimeType.Trim(),

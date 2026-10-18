@@ -31,7 +31,7 @@ public sealed class JwtProvider : IJwtProvider
             new(JwtRegisteredClaimNames.UniqueName, user.Username),
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
             new("dept_id", user.PrimaryDepartmentId.ToString()),
-            new("scope_type", user.ScopeType),
+            new("scope_type", user.ScopeTypeId.ToString(System.Globalization.CultureInfo.InvariantCulture)),
             new("must_change_password", user.MustChangePassword ? "true" : "false")
         };
 

@@ -20,7 +20,8 @@ public sealed class DocumentMovementStep : Entity<Guid>
     public Guid ToDepartmentId { get; private set; }
     // FK → User.UserId (InstitutionalDiwan.Domain.Entities.Identity.User)
     public Guid? AssignedToUserId { get; private set; }
-    public string StepStatus { get; private set; } = "PENDING";
+    // FK → MovementStepStatus.Id (InstitutionalDiwan.Domain.Entities.Movements.MovementStepStatus)
+    public int StepStatusId { get; private set; } = MovementStepStatus.PendingId;
     public string? Instructions { get; private set; }
     public string? OutcomeNotes { get; private set; }
     public DateTime? SentAt { get; private set; }
@@ -51,7 +52,7 @@ public sealed class DocumentMovementStep : Entity<Guid>
             FromDepartmentId = fromDepartmentId,
             ToDepartmentId = toDepartmentId,
             AssignedToUserId = assignedToUserId,
-            StepStatus = "PENDING",
+            StepStatusId = MovementStepStatus.PendingId,
             Instructions = instructions,
             DueDate = dueDate
         };
@@ -59,41 +60,41 @@ public sealed class DocumentMovementStep : Entity<Guid>
 
     internal void MarkSent()
     {
-        StepStatus = "SENT";
+        StepStatusId = MovementStepStatus.SentId;
         SentAt = DateTime.UtcNow;
     }
 
     internal void MarkReceived(Guid receivedByUserId)
     {
-        StepStatus = "RECEIVED";
+        StepStatusId = MovementStepStatus.ReceivedId;
         ReceivedAt = DateTime.UtcNow;
         ReceivedByUserId = receivedByUserId;
     }
 
     internal void MarkCompleted(string? notes)
     {
-        StepStatus = "COMPLETED";
+        StepStatusId = MovementStepStatus.CompletedId;
         OutcomeNotes = notes;
         CompletedAt = DateTime.UtcNow;
     }
 
     internal void MarkRejected(string reason)
     {
-        StepStatus = "REJECTED";
+        StepStatusId = MovementStepStatus.RejectedId;
         OutcomeNotes = reason;
         CompletedAt = DateTime.UtcNow;
     }
 
     internal void MarkReturned(string reason)
     {
-        StepStatus = "RETURNED";
+        StepStatusId = MovementStepStatus.ReturnedId;
         OutcomeNotes = reason;
         CompletedAt = DateTime.UtcNow;
     }
 
     internal void MarkRedirected(string? notes)
     {
-        StepStatus = "REDIRECTED";
+        StepStatusId = MovementStepStatus.RedirectedId;
         OutcomeNotes = notes;
         CompletedAt = DateTime.UtcNow;
     }
