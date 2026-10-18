@@ -30,6 +30,8 @@ public static class DependencyInjection
 
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IRoleRepository, RoleRepository>();
+        services.AddScoped<IDepartmentRepository, DepartmentRepository>();
+        services.AddScoped<IDepartmentTypeRepository, DepartmentTypeRepository>();
         services.AddScoped<IDocumentRepository, DocumentRepository>();
         services.AddScoped<IDocumentNumberRepository, DocumentNumberRepository>();
         services.AddScoped<INumberingRegistryRepository, NumberingRegistryRepository>();

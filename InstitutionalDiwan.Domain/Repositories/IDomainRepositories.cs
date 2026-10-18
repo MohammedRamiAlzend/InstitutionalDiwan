@@ -7,7 +7,15 @@ public interface IDepartmentRepository
     Task<Department?> GetByIdAsync(Guid departmentId, CancellationToken cancellationToken = default);
     Task<Department?> GetByCodeAsync(string code, CancellationToken cancellationToken = default);
     Task<bool> HasActiveChildrenAsync(Guid departmentId, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<Department>> ListAllAsync(CancellationToken cancellationToken = default);
+    Task<IReadOnlySet<Guid>> GetDescendantIdsAsync(Guid departmentId, CancellationToken cancellationToken = default);
     void Add(Department department);
+}
+
+public interface IDepartmentTypeRepository
+{
+    Task<DepartmentType?> GetByCodeAsync(string code, CancellationToken cancellationToken = default);
+    void Add(DepartmentType departmentType);
 }
 
 public interface IUserRepository

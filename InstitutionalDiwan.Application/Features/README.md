@@ -1,8 +1,8 @@
 # Application / Features
 
-> **Status:** Partially implemented — Identity (`Login`, `Register`, `ChangePassword`, `ListUsers`)
-> and Correspondence/`Documents` (create, get by id, list) slices are live; the remaining modules are
-> target design.
+> **Status:** Partially implemented — Identity (`Login`, `Register`, `ChangePassword`, `ListUsers`),
+> Correspondence/`Documents` (create, get by id, list), and Organization/`Departments` (create, update,
+> soft delete, activate, get by id, list, tree) slices are live; the remaining modules are target design.
 
 ## Purpose
 
@@ -23,8 +23,8 @@ grouping by technical type, so a slice can be read top-to-bottom.
 ## Planned use cases per module
 
 ### Organization (Module 01)
-- **Commands:** `CreateDepartmentCommand`, `RenameDepartmentCommand`, `MoveDepartmentCommand`, `DeactivateDepartmentCommand`, `UpdateInstitutionSettingsCommand`
-- **Queries:** `GetDepartmentTreeQuery`, `GetDepartmentByIdQuery`, `GetInstitutionSettingsQuery`
+- **Commands:** `CreateDepartmentCommand` ✅ (creates under an optional active parent; validates the department type exists and is active; rejects duplicate codes with `Department.CodeAlreadyExists`), `UpdateDepartmentCommand` ✅ (renames, moves parent with self/cycle/inactive guards, updates the external-correspondence policy), `DeleteDepartmentCommand` ✅ (soft delete via `Deactivate`, blocked by `Department.HasActiveChildren`), `ActivateDepartmentCommand` ✅; `UpdateInstitutionSettingsCommand` planned
+- **Queries:** `GetDepartmentTreeQuery` ✅ (root nodes with nested children), `GetDepartmentByIdQuery` ✅, `ListDepartmentsQuery` ✅; `GetInstitutionSettingsQuery` planned
 
 ### Identity (Module 02)
 - **Commands:** `LoginCommand`, `RegisterCommand`, `CreateUserCommand`, `AssignUserRoleCommand`, `RevokeUserRoleCommand`, `AssignUserDepartmentScopeCommand`, `GrantDocumentAccessCommand`, `RevokeDocumentAccessCommand`
@@ -77,10 +77,12 @@ persistence and authorization concerns; the invariants live in the domain.
 | --- | --- |
 | Identity (`Login`, `Register`, `ChangePassword`, `ListUsers`) | ✅ Implemented |
 | Correspondence/`Documents` (create with official number, get by id, list) | ✅ Implemented |
-| Organization, Numbering, Movements, Attachments, Archiving, Relations, Audit, Notifications | ❌ Not implemented |
+| Organization/`Departments` (create, update, soft delete, activate, get by id, list, tree) | ✅ Implemented |
+| Numbering, Movements, Attachments, Archiving, Relations, Audit, Notifications | ❌ Not implemented |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-18 | opencode | Added the Organization/`Departments` slice: `CreateDepartmentCommand`, `UpdateDepartmentCommand` (rename + move + external policy), `DeleteDepartmentCommand` (soft delete), `ActivateDepartmentCommand`, `GetDepartmentByIdQuery`, `ListDepartmentsQuery`, and `GetDepartmentTreeQuery`. |
 | 2026-10-18 | opencode | `CreateDocumentCommand` now carries `OfficialNumberText` + `NumberingYear`; the handler checks the pair for duplicates (Conflict → 409), resolves/auto-creates a numbering registry, issues a `DocumentNumber`, and saves the document as REGISTERED instead of DRAFT. |

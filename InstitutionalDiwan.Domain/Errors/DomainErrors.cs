@@ -12,6 +12,11 @@ public static class DomainErrors
         public static readonly Error CyclicHierarchy = Error.Conflict("Department.CyclicHierarchy", "Cannot move department under one of its own descendants.");
         public static readonly Error InactiveParent = Error.Conflict("Department.InactiveParent", "Cannot move department under an inactive parent department.");
         public static readonly Error HasActiveChildren = Error.Conflict("Department.HasActiveChildren", "Cannot deactivate a department that still has active child departments.");
+        public static readonly Error NotFound = Error.NotFound("Department.NotFound", "The department was not found.");
+        public static readonly Error CodeAlreadyExists = Error.Conflict("Department.CodeAlreadyExists", "A department with this code already exists.");
+        public static readonly Error TypeNotFound = Error.Validation("Department.TypeNotFound", "The specified department type does not exist.");
+        public static readonly Error TypeInactive = Error.Conflict("Department.TypeInactive", "Cannot assign an inactive department type.");
+        public static readonly Error ParentNotFound = Error.Validation("Department.ParentNotFound", "The specified parent department does not exist.");
     }
 
     public static class InstitutionSetting
