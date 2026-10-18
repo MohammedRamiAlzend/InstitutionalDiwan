@@ -30,7 +30,14 @@ public interface IRoleRepository
 {
     Task<Role?> GetByIdAsync(Guid roleId, CancellationToken cancellationToken = default);
     Task<Role?> GetByCodeAsync(string code, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<Role>> ListAllAsync(CancellationToken cancellationToken = default);
     void Add(Role role);
+}
+
+public interface IPermissionRepository
+{
+    Task<Permission?> GetByCodeAsync(string code, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<Permission>> ListAllAsync(CancellationToken cancellationToken = default);
 }
 
 public interface IDocumentRepository

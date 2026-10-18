@@ -30,7 +30,27 @@ internal sealed class FakeRoleRepository : IRoleRepository
     public Task<Role?> GetByCodeAsync(string code, CancellationToken cancellationToken = default)
         => Task.FromResult(Roles.FirstOrDefault(role => role.Code == code));
 
+    public Task<IReadOnlyList<Role>> ListAllAsync(CancellationToken cancellationToken = default)
+        => Task.FromResult<IReadOnlyList<Role>>(Roles.OrderBy(role => role.Code).ToList());
+
     public void Add(Role role) => Roles.Add(role);
+}
+
+internal sealed class FakePermissionRepository : IPermissionRepository
+{
+    public List<Permission> Permissions { get; } = new();
+
+    public Task<Permission?> GetByCodeAsync(string code, CancellationToken cancellationToken = default)
+    {
+        var normalized = code.Trim().ToUpperInvariant();
+        return Task.FromResult(Permissions.FirstOrDefault(permission => permission.Code == normalized));
+    }
+
+    public Task<IReadOnlyList<Permission>> ListAllAsync(CancellationToken cancellationToken = default)
+        => Task.FromResult<IReadOnlyList<Permission>>(
+            Permissions.OrderBy(permission => permission.ModuleName)
+                .ThenBy(permission => permission.Code)
+                .ToList());
 }
 
 internal sealed class FakeUnitOfWork : IUnitOfWork

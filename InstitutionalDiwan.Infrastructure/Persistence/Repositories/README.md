@@ -1,8 +1,9 @@
 # Infrastructure / Persistence / Repositories
 
-> **Status:** Partially implemented — `UserRepository`, `RoleRepository`, `DepartmentRepository`,
-> `DepartmentTypeRepository`, `DocumentRepository`, `NumberingRegistryRepository`, and
-> `DocumentNumberRepository` exist; the remaining interfaces have no implementation yet.
+> **Status:** Partially implemented — `UserRepository`, `RoleRepository`, `PermissionRepository`,
+> `DepartmentRepository`, `DepartmentTypeRepository`, `DocumentRepository`,
+> `NumberingRegistryRepository`, and `DocumentNumberRepository` exist; the remaining interfaces have
+> no implementation yet.
 
 ## Purpose
 
@@ -17,7 +18,8 @@ Concrete EF Core implementations of the repository interfaces declared in
 | File | Purpose |
 | --- | --- |
 | `UserRepository.cs` | Loads `User` aggregates (by id, username, or listing) with their role/department scopes for Identity and document-creation use cases. |
-| `RoleRepository.cs` | Loads `Role` aggregates by id or code for authorization and role management. |
+| `RoleRepository.cs` | Loads `Role` aggregates by id or code (or all, ordered by code) for authorization and role management. |
+| `PermissionRepository.cs` | Loads `Permission` catalog entries by code and listing, so `GrantRolePermissionCommand` can validate the code and `GET /api/permissions` can serve the catalog. |
 | `DepartmentRepository.cs` | Loads `Department` aggregates (by id, code, listing), implements `HasActiveChildrenAsync` (deactivation guard) and `GetDescendantIdsAsync` (cycle detection when moving a department under a new parent). |
 | `DepartmentTypeRepository.cs` | Loads `DepartmentType` by code so department create/update can validate the type exists and is active. |
 | `DocumentRepository.cs` | Loads `Document` with `Participants` and `StatusHistory`, supports the recent-documents listing, and attaches new documents. |
@@ -51,6 +53,7 @@ Concrete EF Core implementations of the repository interfaces declared in
 | Repository | State |
 | --- | --- |
 | `UserRepository`, `RoleRepository`, `DocumentRepository` | ✅ Implemented |
+| `PermissionRepository` | ✅ Implemented (2026-10-18) |
 | `NumberingRegistryRepository`, `DocumentNumberRepository` | ✅ Implemented (2026-10-18) |
 | `DepartmentRepository`, `DepartmentTypeRepository` | ✅ Implemented (2026-10-18) |
 | `DocumentMovementRepository`, `DocumentFileRepository`, `DocumentRelationRepository`, `AuditLogRepository`, `NotificationRepository` | ❌ Not implemented |
@@ -59,5 +62,6 @@ Concrete EF Core implementations of the repository interfaces declared in
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-18 | opencode | Added `PermissionRepository` (`GetByCodeAsync`, `ListAllAsync`) and `RoleRepository.ListAllAsync`, registered in `Infrastructure/DependencyInjection.cs` to back the role-management endpoints. |
 | 2026-10-18 | opencode | Added `DepartmentRepository` (listing, `HasActiveChildrenAsync`, `GetDescendantIdsAsync`) and `DepartmentTypeRepository` (`GetByCodeAsync`); both registered in `Infrastructure/DependencyInjection.cs` to back the department CRUD + tree endpoints. |
 | 2026-10-18 | opencode | Added `DocumentNumberRepository` (incl. `ExistsByNumberAndYearAsync` duplicate-number check) and `NumberingRegistryRepository` (scope matching with most-specific-first ordering); both registered in `Infrastructure/DependencyInjection.cs` to support official-number assignment at document creation. |

@@ -14,7 +14,7 @@ commands/queries map between them and the domain.
 | Module | Types |
 | --- | --- |
 | Organization | `CreateDepartmentRequest` ✅, `UpdateDepartmentRequest` ✅, `MoveDepartmentRequest` ✅, `DepartmentTreeResponse` |
-| Identity | `LoginRequest`, `LoginResponse`, `CreateUserRequest`, `GrantDocumentAccessRequest` |
+| Identity | `LoginRequest` ✅, `RegisterRequest` ✅, `ChangePasswordRequest` ✅, `CreateRoleRequest` ✅, `UpdateRoleRequest` ✅, `GrantPermissionRequest` ✅, `CreateUserRequest`, `GrantDocumentAccessRequest` |
 | Correspondence | `CreateDocumentRequest` ✅ (title, type, direction, `OfficialNumberText`, `NumberingYear`, optional summary/levels), `AddParticipantRequest`, `RegisterDocumentRequest`, `DocumentDetailsResponse` |
 | Numbering | `CreateNumberingRegistryRequest`, `CancelOfficialNumberRequest`, `OfficialNumberResponse` |
 | Movements | `CreateMovementRequest`, `RedirectMovementRequest`, `RejectMovementStepRequest`, `MovementTimelineResponse` |
@@ -38,12 +38,14 @@ commands/queries map between them and the domain.
 | --- | --- |
 | Correspondence `CreateDocumentRequest` | ✅ Implemented (incl. official number + numbering year) |
 | Organization `CreateDepartmentRequest`, `UpdateDepartmentRequest`, `MoveDepartmentRequest` | ✅ Implemented |
+| Identity `CreateRoleRequest`, `UpdateRoleRequest`, `GrantPermissionRequest` | ✅ Implemented |
 | Other request/response records | ❌ Not implemented |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-18 | opencode | Added `CreateRoleRequest`, `UpdateRoleRequest`, and `GrantPermissionRequest` for the role-management endpoints. |
 | 2026-10-18 | opencode | Added `MoveDepartmentRequest` for `PUT /api/departments/{id}/parent` (optional parent; `null` promotes to root; cycle moves rejected with 409). |
 | 2026-10-18 | opencode | Added `CreateDepartmentRequest` and `UpdateDepartmentRequest` for the department CRUD endpoints (parent is optional; update carries name, parent, and external-correspondence policy). |
 | 2026-10-18 | opencode | `CreateDocumentRequest` gained required `OfficialNumberText` + `NumberingYear`, which `POST /api/documents` forwards to `CreateDocumentCommand` (409 when the number+year pair is taken). |

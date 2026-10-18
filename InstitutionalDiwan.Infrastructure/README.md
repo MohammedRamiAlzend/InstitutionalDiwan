@@ -62,7 +62,7 @@ Persistence/Configurations/
 | EF Core provider package (`SqlServer`) | ✅ Referenced |
 | `DiwanDbContext` | ✅ Written and compiling |
 | Entity configurations | ✅ Written for all 40 entities |
-| Repositories | 🟡 `UserRepository`, `RoleRepository`, `DocumentRepository`, `NumberingRegistryRepository`, `DocumentNumberRepository` implemented; the rest pending |
+| Repositories | 🟡 `UserRepository`, `RoleRepository`, `PermissionRepository`, `DepartmentRepository`, `DepartmentTypeRepository`, `DocumentRepository`, `NumberingRegistryRepository`, `DocumentNumberRepository` implemented; the rest pending |
 | Seed | ✅ Ordered, environment-aware seeders (`PermissionSeeder`, `RoleSeeder`, `UserSeeder`) |
 | Authentication | 🟡 `PasswordHasher` (PBKDF2) + `JwtProvider` implemented; `UserContext` pending |
 | Migrations | ✅ 2 applied (`InitialCreate`, `AddUniqueOfficialNumber`) |

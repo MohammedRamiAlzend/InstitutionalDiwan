@@ -15,7 +15,7 @@ without knowing which provider is underneath.
 | --- | --- | --- |
 | `NewDiwanDbContext.cs` | ✅ Written | `DbContext, IUnitOfWork`; 40 `DbSet`s; applies configurations by assembly scan. |
 | `Configurations/` | ✅ Written (10 files) | `IEntityTypeConfiguration<T>` for all 40 entities. |
-| `Repositories/` | 🟡 Partial (5 files) | `UserRepository`, `RoleRepository`, `DocumentRepository`, `NumberingRegistryRepository`, `DocumentNumberRepository`. |
+| `Repositories/` | 🟡 Partial (8 files) | `UserRepository`, `RoleRepository`, `PermissionRepository`, `DepartmentRepository`, `DepartmentTypeRepository`, `DocumentRepository`, `NumberingRegistryRepository`, `DocumentNumberRepository`. |
 | `Interceptors/` | ❌ Empty | Domain-event dispatch + tamper-evident audit. |
 | `Migrations/` | ✅ Written (2) | `InitialCreate` + `AddUniqueOfficialNumber` (unique official-number + year index). |
 | `Seed/` | ✅ Written | `ISeeder` + `SeederRunner` (ordering + environment gating); `PermissionSeeder` (100), `RoleSeeder` (200), `UserSeeder` (300). |

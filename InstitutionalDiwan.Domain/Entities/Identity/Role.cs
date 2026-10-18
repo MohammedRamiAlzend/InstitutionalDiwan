@@ -85,12 +85,29 @@ public sealed class Role : AggregateRoot<Guid>
         return Result.Success();
     }
 
+    public Result UpdateDetails(string? nameAr, string? nameEn = null, string? description = null)
+    {
+        if (string.IsNullOrWhiteSpace(nameAr))
+            return Result.Failure(DomainErrors.Identity.RoleNameEmpty);
+
+        NameAr = nameAr.Trim();
+        NameEn = string.IsNullOrWhiteSpace(nameEn) ? null : nameEn.Trim();
+        Description = string.IsNullOrWhiteSpace(description) ? null : description.Trim();
+        return Result.Success();
+    }
+
     public Result Deactivate()
     {
         if (IsSystemRole)
             return Result.Failure(DomainErrors.Identity.SystemRoleProtected);
 
         IsActive = false;
+        return Result.Success();
+    }
+
+    public Result Activate()
+    {
+        IsActive = true;
         return Result.Success();
     }
 }

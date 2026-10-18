@@ -16,6 +16,9 @@ internal sealed class RoleRepository : IRoleRepository
     public Task<Role?> GetByCodeAsync(string code, CancellationToken cancellationToken = default) =>
         Query().FirstOrDefaultAsync(role => role.Code == code, cancellationToken);
 
+    public async Task<IReadOnlyList<Role>> ListAllAsync(CancellationToken cancellationToken = default) =>
+        await Query().OrderBy(role => role.Code).ToListAsync(cancellationToken);
+
     public void Add(Role role) => _context.Roles.Add(role);
 
     private IQueryable<Role> Query() =>

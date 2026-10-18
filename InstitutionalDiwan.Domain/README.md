@@ -83,12 +83,13 @@ A single static catalog nested by module (`DomainErrors.Department`, `.Identity`
 
 ### `Repositories/IDomainRepositories.cs`
 
-11 pure repository contracts: `IDepartmentRepository`, `IUserRepository`, `IRoleRepository`,
-`IDocumentRepository`, `INumberingRegistryRepository`, `IDocumentNumberRepository`,
-`IDocumentMovementRepository`, `IDocumentFileRepository`, `IDocumentRelationRepository`,
-`IAuditLogRepository`, `INotificationRepository`. They expose `GetByIdAsync`, a few targeted
-lookups (`HasActiveChildrenAsync`, `GetActiveForScopeAsync`, `HasActiveMovementsAsync`,
-`GetLatestAsync` for audit hash chaining), and `Add`/`Remove` — no `SaveChanges` (that is `IUnitOfWork`).
+12 pure repository contracts: `IDepartmentRepository`, `IUserRepository`, `IRoleRepository`,
+`IPermissionRepository`, `IDocumentRepository`, `INumberingRegistryRepository`,
+`IDocumentNumberRepository`, `IDocumentMovementRepository`, `IDocumentFileRepository`,
+`IDocumentRelationRepository`, `IAuditLogRepository`, `INotificationRepository`. They expose
+`GetByIdAsync`, a few targeted lookups (`HasActiveChildrenAsync`, `GetActiveForScopeAsync`,
+`HasActiveMovementsAsync`, `GetLatestAsync` for audit hash chaining), and `Add`/`Remove` — no
+`SaveChanges` (that is `IUnitOfWork`).
 
 ### `Entities/` — the 10 modules (40 entities)
 

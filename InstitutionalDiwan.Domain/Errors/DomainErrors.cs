@@ -46,6 +46,8 @@ public static class DomainErrors
         public static readonly Error UserInactive = Error.Forbidden("Identity.UserInactive", "The user account is inactive.");
         public static readonly Error UsernameTaken = Error.Conflict("Identity.UsernameTaken", "The username is already taken.");
         public static readonly Error RoleNotFound = Error.NotFound("Identity.RoleNotFound", "The specified role was not found.");
+        public static readonly Error RoleCodeAlreadyExists = Error.Conflict("Identity.RoleCodeAlreadyExists", "A role with this code already exists.");
+        public static readonly Error PermissionNotFound = Error.Validation("Identity.PermissionNotFound", "The specified permission does not exist.");
         public static readonly Error UserNotFound = Error.NotFound("Identity.UserNotFound", "The user account was not found.");
         public static readonly Error CurrentPasswordIncorrect = Error.Validation("Identity.CurrentPasswordIncorrect", "The current password is incorrect.");
     }

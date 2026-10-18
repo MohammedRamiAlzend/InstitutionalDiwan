@@ -1,7 +1,8 @@
 # InstitutionalDiwan.Server — Web API / Presentation Layer
 
 > **Status:** Implemented — `Program.cs` wires DI, auth, MediatR, and the exception middleware;
-> `Auth`, `Documents`, `Users`, `Departments`, and `NumberingRegistries` controllers serve the live endpoints.
+> `Auth`, `Documents`, `Users`, `Roles`, `Permissions`, `Departments`, and `NumberingRegistries`
+> controllers serve the live endpoints.
 
 ## Purpose
 
@@ -17,7 +18,7 @@ The project is named `NewDiwan.Presentation` in the older design notes; the actu
 
 | Folder | Responsibility | Code status |
 | --- | --- | --- |
-| `Controllers/` | REST controllers, one per module | ✅ `AuthController`, `DocumentsController`, `UsersController`, `DepartmentsController`, `NumberingRegistriesController` |
+| `Controllers/` | REST controllers, one per module | ✅ `AuthController`, `DocumentsController`, `UsersController`, `RolesController`, `PermissionsController`, `DepartmentsController`, `NumberingRegistriesController` |
 | [`Contracts/`](Contracts/README.md) | HTTP request/response DTO records grouped by module | 🟡 `CreateDocumentRequest` + Identity + Organization/`Departments` records live |
 | [`Middleware/`](Middleware/README.md) | Global exception handling, correlation-id tracking, audit IP capture | 🟡 `GlobalExceptionHandlingMiddleware` live (409 on unique-key violations) |
 | [`Extensions/`](Extensions/README.md) | `Result` → HTTP mapping, DI registration, Swagger, auth setup | ✅ `ResultExtensions` (ErrorType → status code incl. Conflict → 409), auth/Swagger setup |
@@ -67,7 +68,7 @@ and `Scalar.AspNetCore`, and project-references Application, Infrastructure, and
 | Item | State |
 | --- | --- |
 | `Program.cs` | ✅ Wired (DI, MediatR, FluentValidation, auth, exception middleware, SPA host) |
-| Controllers | ✅ `Auth`, `Documents` (incl. 409 on duplicate official number), `Users`, `Departments` (CRUD + reparent + tree, soft delete), `NumberingRegistries` |
+| Controllers | ✅ `Auth`, `Documents` (incl. 409 on duplicate official number), `Users`, `Roles` (CRUD + activate + grant/revoke permission), `Permissions` (catalog), `Departments` (CRUD + reparent + tree, soft delete), `NumberingRegistries` |
 | Contracts / Middleware / Extensions | 🟡 Partially implemented |
 | DI for Application/Infrastructure | ✅ Wired |
 | Authentication / Authorization setup | ✅ JWT + permission policies |
@@ -78,6 +79,7 @@ and `Scalar.AspNetCore`, and project-references Application, Infrastructure, and
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-18 | opencode | Added `RolesController` (`GET` list/by-id, `POST` create, `PUT` update, `DELETE` soft delete, `POST /activate`, `POST`/`DELETE …/permissions`) and `PermissionsController` (`GET` catalog), all protected by `ROLE_MANAGE`. |
 | 2026-10-18 | opencode | Added `PUT /api/departments/{id}/parent` to reparent a department; the handler validates the whole subtree so a move cannot create a hierarchy cycle (409 `Department.CyclicHierarchy`). |
 | 2026-10-18 | opencode | Added `DepartmentsController` (`GET` list/tree/by-id, `POST` create, `PUT` update, `DELETE` soft delete, `POST /activate`) protected by `DEPARTMENT_MANAGE`, and `NumberingRegistriesController` (`GET` list/by-id) protected by `NUMBERING_VIEW`. |
 | 2026-10-18 | opencode | `POST /api/documents` now requires `OfficialNumberText` + `NumberingYear` (409 Conflict when the pair is taken); `GlobalExceptionHandlingMiddleware` maps SQL unique-key violations to 409; refreshed stale status tables. |
