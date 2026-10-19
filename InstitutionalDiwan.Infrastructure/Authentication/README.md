@@ -1,6 +1,7 @@
 # Infrastructure / Authentication
 
-> **Status:** Partially implemented — `PasswordHasher`, `JwtOptions`, and `JwtProvider` exist; `JwtBearerOptionsSetup` and `UserContext` are still missing.
+> **Status:** Implemented — `PasswordHasher`, `JwtOptions`, `JwtProvider`, and `UserContext` exist;
+> `JwtBearerOptionsSetup` is superseded by `Server/Extensions/AuthenticationExtensions`.
 
 ## Purpose
 
@@ -30,8 +31,11 @@ Not implemented. ASP.NET Core JWT bearer validation setup (validation parameters
 challenge behavior) is still missing.
 
 ### `UserContext.cs` (`: IUserContext`)
-Not implemented. Ambients for `UserId`, `PrimaryDepartmentId`, `ScopeType`, `Permissions`,
-`CorrelationId`, and `IpAddress` extracted from the HTTP context are still missing.
+Implemented. Reads the ambient principal through `IHttpContextAccessor` and projects the claims
+`JwtProvider` issues: `UserId` (`sub` / `NameIdentifier`), `PrimaryDepartmentId` (`dept_id`),
+`ScopeTypeId` (`scope_type`), and the `Permission` set (one `permission` claim per granted code).
+An unauthenticated request yields `IsAuthenticated = false`, `UserId = Guid.Empty`, and an empty
+permission set — it fails safe instead of throwing.
 
 ## Design notes
 
@@ -50,9 +54,16 @@ Not implemented. Ambients for `UserId`, `PrimaryDepartmentId`, `ScopeType`, `Per
 | `PasswordHasher` | ✅ Implemented |
 | `JwtOptions` | ✅ Implemented |
 | `JwtProvider` | ✅ Implemented |
-| `JwtBearerOptionsSetup` | ❌ Not implemented |
-| `UserContext` | ❌ Not implemented |
+| `JwtBearerOptionsSetup` | ❌ Not implemented (equivalent setup lives in `Server/Extensions/AuthenticationExtensions.cs`) |
+| `UserContext` | ✅ Implemented |
 
-`AddInfrastructure()` registers `IPasswordHasher`, `IJwtProvider`, and `JwtOptions` from
-`appsettings.json`, but `Program.cs` still does **not** add JWT bearer authentication or
-authorization policies, so the API is not yet protected by tokens today.
+`AddInfrastructure()` registers `IPasswordHasher`, `IJwtProvider`, `IUserContext` (+
+`AddHttpContextAccessor`) and binds `JwtOptions` from `appsettings.json`; JWT bearer authentication
+and the one-policy-per-permission authorization setup live in `Server/Extensions/AuthenticationExtensions.cs`.
+
+## Change Log
+
+| Date | Author | Change |
+| --- | --- | --- |
+| 2026-10-19 | Buffy | Added `UserContext` (`: IUserContext`) reading `sub` / `dept_id` / `scope_type` / `permission` claims through `IHttpContextAccessor`; registered together with `AddHttpContextAccessor` in `Infrastructure/DependencyInjection.cs`. |
+| 2026-10-18 | opencode | Implemented `PasswordHasher` (PBKDF2), `JwtOptions`, and `JwtProvider` (access-token claims). |

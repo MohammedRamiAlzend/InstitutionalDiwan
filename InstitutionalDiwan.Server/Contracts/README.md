@@ -1,8 +1,8 @@
 # Presentation / Contracts
 
-> **Status:** Partially implemented — Correspondence (`CreateDocumentRequest`), Organization, Identity
-> (incl. employees and document access grants), and Lookups requests exist; the remaining modules are
-> target design.
+> **Status:** Partially implemented — Correspondence, Organization (incl. institution settings),
+> Numbering, Identity (incl. employees and document access grants), and Lookups requests exist; the
+> remaining modules are target design.
 
 ## Purpose
 
@@ -15,10 +15,10 @@ commands/queries map between them and the domain.
 | Module | Types |
 | --- | --- |
 | Lookups | `CreateLookupEntryRequest` ✅ (`Id`, `Desc`, `DescAr`), `RelabelLookupEntryRequest` ✅ (`Desc`, `DescAr`); the shared `LookupEntryResponse` read model lives in `Application/Features/Lookups/` |
-| Organization | `CreateDepartmentRequest` ✅, `UpdateDepartmentRequest` ✅, `MoveDepartmentRequest` ✅, `DepartmentTreeResponse` |
-| Identity | `LoginRequest` ✅, `RegisterRequest` ✅, `ChangePasswordRequest` ✅, `CreateRoleRequest` ✅, `UpdateRoleRequest` ✅, `GrantPermissionRequest` ✅, `CreateEmployeeRequest` ✅, `UpdateEmployeeRequest` ✅, `GrantDocumentAccessRequest` ✅, `CreateUserRequest` ✅, `UpdateUserRequest` ✅, `AssignUserRoleRequest` ✅ |
-| Correspondence | `CreateDocumentRequest` ✅ (title, type, direction, `OfficialNumberText`, `NumberingYear`, optional summary/levels), `AddParticipantRequest`, `RegisterDocumentRequest`, `DocumentDetailsResponse` |
-| Numbering | `CreateNumberingRegistryRequest`, `CancelOfficialNumberRequest`, `OfficialNumberResponse` |
+| Organization | `CreateDepartmentRequest` ✅, `UpdateDepartmentRequest` ✅, `MoveDepartmentRequest` ✅, `UpdateInstitutionSettingsRequest` ✅, `DepartmentTreeResponse` |
+| Identity | `LoginRequest` ✅, `RegisterRequest` ✅, `ChangePasswordRequest` ✅, `CreateRoleRequest` ✅, `UpdateRoleRequest` ✅, `GrantPermissionRequest` ✅, `CreateEmployeeRequest` ✅, `UpdateEmployeeRequest` ✅, `GrantDocumentAccessRequest` ✅, `CreateUserRequest` ✅, `UpdateUserRequest` ✅, `AssignUserRoleRequest` ✅, `AssignUserDepartmentScopeRequest` ✅ |
+| Correspondence | `CreateDocumentRequest` ✅ (title, type, direction, `OfficialNumberText`, `NumberingYear`, optional summary/levels), `CreateDraftDocumentRequest` ✅, `UpdateDocumentMetadataRequest` ✅, `RegisterDocumentRequest` ✅, `AddDocumentParticipantRequest` ✅, `CancelDocumentRequest` ✅, `CreateExternalOrganizationRequest` ✅, `UpdateExternalOrganizationRequest` ✅ |
+| Numbering | `CreateNumberingRegistryRequest` ✅, `UpdateNumberingRegistryRequest` ✅, `IssueOfficialNumberRequest` ✅, `CancelOfficialNumberRequest` ✅, `ReplaceOfficialNumberRequest` ✅, `OfficialNumberResponse` |
 | Movements | `CreateMovementRequest`, `RedirectMovementRequest`, `RejectMovementStepRequest`, `MovementTimelineResponse` |
 | Attachments | `UploadAttachmentVersionRequest`, `DocumentFileResponse` |
 | Archiving | `AdvancedDocumentSearchRequest`, `SaveSearchRequest`, `PagedDocumentsResponse` |
@@ -44,12 +44,17 @@ commands/queries map between them and the domain.
 | Identity `CreateUserRequest`, `UpdateUserRequest`, `AssignUserRoleRequest` | ✅ Implemented |
 | Identity `CreateEmployeeRequest`, `UpdateEmployeeRequest`, `GrantDocumentAccessRequest` | ✅ Implemented |
 | Lookups `CreateLookupEntryRequest`, `RelabelLookupEntryRequest` | ✅ Implemented |
+| Organization `UpdateInstitutionSettingsRequest` | ✅ Implemented |
+| Correspondence draft/update/participant/cancel + external-organization requests | ✅ Implemented |
+| Numbering registry create/update + number issue/cancel/replace requests | ✅ Implemented |
+| Identity `AssignUserDepartmentScopeRequest` | ✅ Implemented |
 | Other request/response records | ❌ Not implemented |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-19 | Buffy | Added `UpdateInstitutionSettingsRequest`, `CreateDraftDocumentRequest`, `UpdateDocumentMetadataRequest`, `RegisterDocumentRequest`, `AddDocumentParticipantRequest`, `CancelDocumentRequest`, `CreateExternalOrganizationRequest`, `UpdateExternalOrganizationRequest`, `AssignUserDepartmentScopeRequest`, and the `Numbering/` registry + number requests for the Module 01–04 endpoints. |
 | 2026-10-19 | opencode | Added `CreateLookupEntryRequest` and `RelabelLookupEntryRequest` (`Contracts/Lookups/LookupContracts.cs`) for the generic lookups endpoints. |
 | 2026-10-18 | opencode | Added `CreateUserRequest`, `UpdateUserRequest`, and `AssignUserRoleRequest` for the user-management endpoints. |
 | 2026-10-18 | opencode | Added `CreateEmployeeRequest`, `UpdateEmployeeRequest` (for `/api/employees`) and `GrantDocumentAccessRequest` (for `/api/documents/{documentId}/access-grants`). |

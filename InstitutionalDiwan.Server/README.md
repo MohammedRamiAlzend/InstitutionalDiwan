@@ -1,8 +1,9 @@
 # InstitutionalDiwan.Server — Web API / Presentation Layer
 
 > **Status:** Implemented — `Program.cs` wires DI, auth, MediatR, and the exception middleware; the
-> `Auth`, `Documents`, `Users`, `Roles`, `Permissions`, `Departments`, `Employees`,
-> `DocumentAccessGrants`, `NumberingRegistries`, and `Lookups` controllers serve the live endpoints.
+> `Auth`, `Documents`, `DocumentNumbers`, `ExternalOrganizations`, `InstitutionSettings`, `Users`,
+> `Roles`, `Permissions`, `Departments`, `Employees`, `DocumentAccessGrants`,
+> `NumberingRegistries`, and `Lookups` controllers serve the live endpoints.
 
 ## Purpose
 
@@ -18,7 +19,7 @@ Earlier design notes called the project `NewDiwan.Presentation`; the actual asse
 
 | Folder | Responsibility | Code status |
 | --- | --- | --- |
-| [`Controllers/`](Controllers/README.md) | REST controllers, one per module (plus the generic lookups controller) | ✅ 10 controllers live |
+| [`Controllers/`](Controllers/README.md) | REST controllers, one per module (plus the generic lookups controller) | ✅ 13 controllers live |
 | [`Contracts/`](Contracts/README.md) | HTTP request/response DTO records grouped by module | ✅ Correspondence, Organization, Identity, Lookups |
 | [`Middleware/`](Middleware/README.md) | Global exception handling, correlation-id tracking, audit IP capture | 🟡 `GlobalExceptionHandlingMiddleware` live (409 on unique-key violations) |
 | [`Extensions/`](Extensions/README.md) | `Result` → HTTP mapping, DI registration, OpenAPI/Scalar, auth setup | ✅ `ResultExtensions`, `DatabaseExtensions`, `AuthenticationExtensions`, `OpenApiExtensions` |
@@ -83,7 +84,7 @@ and `Scalar.AspNetCore`, and project-references Application, Infrastructure, and
 | Item | State |
 | --- | --- |
 | `Program.cs` | ✅ Wired (DI, MediatR, FluentValidation, auth, exception middleware, startup seeding, SPA host) |
-| Controllers | ✅ `Auth`, `Documents` (incl. 409 on duplicate official number), `Users`, `Roles` (CRUD + activate + grant/revoke permission), `Permissions` (catalog), `Departments` (CRUD + reparent + tree, soft delete), `Employees` (CRUD + deactivate/activate), `DocumentAccessGrants` (list/grant/revoke per document), `NumberingRegistries`, `Lookups` (generic reference catalogs: list/get/create/relabel/activate/deactivate) |
+| Controllers | ✅ `Auth`, `Documents` (drafts, update, register, participants, cancel, details, timeline, plus create with official number), `DocumentNumbers` (issue/cancel/replace/history), `ExternalOrganizations` (CRUD), `InstitutionSettings` (GET/PUT), `Users` (CRUD + roles + department-assignments + effective-permissions), `Roles` (CRUD + activate + grant/revoke permission), `Permissions` (catalog), `Departments` (CRUD + reparent + tree, soft delete), `Employees` (CRUD + deactivate/activate), `DocumentAccessGrants` (list/grant/revoke per document), `NumberingRegistries` (CRUD + activate/deactivate), `Lookups` (generic reference catalogs) |
 | Contracts / Middleware / Extensions | 🟡 Contracts complete for the live modules; `GlobalExceptionHandlingMiddleware` in place; extensions implemented |
 | DI for Application/Infrastructure | ✅ Wired |
 | Authentication / Authorization setup | ✅ JWT + permission policies |
@@ -94,6 +95,7 @@ and `Scalar.AspNetCore`, and project-references Application, Infrastructure, and
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-19 | Buffy | Completed the Module 01–04 endpoints: added `InstitutionSettingsController`, `ExternalOrganizationsController`, `DocumentNumbersController`, the document lifecycle routes on `DocumentsController`, department-scope + effective-permissions routes on `UsersController`, registry write routes on `NumberingRegistriesController`, and their `Contracts/` records; each controller declares its `NUMBERING_MANAGE` / `DOCUMENT_EDIT` / `DEPARTMENT_MANAGE` policy explicitly. |
 | 2026-10-19 | opencode | `BearerSecuritySchemeTransformer` now guards a null `document.Paths` (clears the pre-existing `CS8602` nullable warning so the solution builds with 0 warnings). |
 | 2026-10-19 | opencode | Added `LookupsController` (`GET/POST/PUT/PATCH` under `/api/lookups/{lookup}`, reads authenticated, writes guarded by the new `LOOKUP_MANAGE` permission) and the `Contracts/Lookups` records; replaced the README's stale "default template" `Program.cs` snippet and status tables with the real pipeline. |
 | 2026-10-18 | opencode | Completed `UsersController` (`GET` list/by-id, `POST` create, `PUT` update, `DELETE` deactivate, `POST /activate`, `POST`/`DELETE …/roles/{roleId}`), all protected by `USER_MANAGE`; added `CreateUserRequest`/`UpdateUserRequest`/`AssignUserRoleRequest` contracts. |

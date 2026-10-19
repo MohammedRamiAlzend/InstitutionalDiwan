@@ -30,5 +30,17 @@ internal sealed class DocumentNumberRepository : IDocumentNumberRepository
             number => number.OfficialNumberText == officialNumberText && number.NumberingYear == numberingYear,
             cancellationToken);
 
+    public async Task<IReadOnlyList<DocumentNumber>> ListByDocumentAsync(
+        Guid documentId,
+        CancellationToken cancellationToken = default) =>
+        await _context.DocumentNumbers
+            .Include(number => number.History)
+            .Where(number => number.DocumentId == documentId)
+            .OrderBy(number => number.IssuedAt)
+            .ToListAsync(cancellationToken);
+
+    public Task<bool> AnyByRegistryAsync(Guid registryId, CancellationToken cancellationToken = default) =>
+        _context.DocumentNumbers.AnyAsync(number => number.RegistryId == registryId, cancellationToken);
+
     public void Add(DocumentNumber documentNumber) => _context.DocumentNumbers.Add(documentNumber);
 }

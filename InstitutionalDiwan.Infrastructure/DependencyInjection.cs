@@ -1,7 +1,9 @@
 using InstitutionalDiwan.Application.Abstractions.Authentication;
+using InstitutionalDiwan.Application.Abstractions.Authorization;
 using InstitutionalDiwan.Domain.Common;
 using InstitutionalDiwan.Domain.Repositories;
 using InstitutionalDiwan.Infrastructure.Authentication;
+using InstitutionalDiwan.Infrastructure.Authorization;
 using InstitutionalDiwan.Infrastructure.Persistence;
 using InstitutionalDiwan.Infrastructure.Persistence.Repositories;
 using InstitutionalDiwan.Infrastructure.Persistence.Seed;
@@ -40,6 +42,15 @@ public static class DependencyInjection
         services.AddScoped<IDocumentNumberRepository, DocumentNumberRepository>();
         services.AddScoped<INumberingRegistryRepository, NumberingRegistryRepository>();
         services.AddScoped<ILookupRepository, LookupRepository>();
+        services.AddScoped<IInstitutionSettingRepository, InstitutionSettingRepository>();
+        services.AddScoped<IExternalOrganizationRepository, ExternalOrganizationRepository>();
+        services.AddScoped<IDocumentMovementRepository, DocumentMovementRepository>();
+
+        // Ambient request identity and the three-tier access evaluators (RBAC → scope → document).
+        services.AddHttpContextAccessor();
+        services.AddScoped<IUserContext, UserContext>();
+        services.AddScoped<IDepartmentScopeEvaluator, DepartmentScopeEvaluator>();
+        services.AddScoped<IDocumentAccessEvaluator, DocumentAccessEvaluator>();
 
         // Ordered, environment-aware seeders — executed at startup by SeederRunner.
         services.AddScoped<ISeeder, UserScopeTypeSeeder>();
@@ -78,6 +89,7 @@ public static class DependencyInjection
         services.AddScoped<ISeeder, PermissionSeeder>();
         services.AddScoped<ISeeder, RoleSeeder>();
         services.AddScoped<ISeeder, UserSeeder>();
+        services.AddScoped<ISeeder, InstitutionSettingSeeder>();
 
         services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
         services.AddSingleton<IPasswordHasher, PasswordHasher>();

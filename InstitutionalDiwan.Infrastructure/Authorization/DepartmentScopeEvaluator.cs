@@ -1,0 +1,93 @@
+using InstitutionalDiwan.Application.Abstractions.Authentication;
+using InstitutionalDiwan.Application.Abstractions.Authorization;
+using InstitutionalDiwan.Domain.Entities.Identity;
+using InstitutionalDiwan.Domain.Repositories;
+
+namespace InstitutionalDiwan.Infrastructure.Authorization;
+
+/// <summary>
+/// Resolves organizational scope from the caller's token plus their persisted profile:
+/// <list type="bullet">
+///   <item><c>DEPARTMENT</c> — the primary department and any active department assignment.</item>
+///   <item><c>DEPARTMENT_TREE</c> — the primary department's subtree, plus assignments
+///   (assignments expand descendants when their <c>IncludeSubtree</c> flag is set).</item>
+///   <item><c>INSTITUTION</c> / <c>SYSTEM</c> — every department.</item>
+/// </list>
+/// The scope is re-read from the user record because assignments are managed after the token was
+/// issued; the token contributes the identity and its scope type.
+/// </summary>
+public sealed class DepartmentScopeEvaluator : IDepartmentScopeEvaluator
+{
+    private readonly IUserContext _userContext;
+    private readonly IUserRepository _userRepository;
+    private readonly IDepartmentRepository _departmentRepository;
+
+    public DepartmentScopeEvaluator(
+        IUserContext userContext,
+        IUserRepository userRepository,
+        IDepartmentRepository departmentRepository)
+    {
+        _userContext = userContext;
+        _userRepository = userRepository;
+        _departmentRepository = departmentRepository;
+    }
+
+    public async Task<bool> CanAccessDepartmentAsync(
+        Guid departmentId,
+        CancellationToken cancellationToken = default)
+    {
+        if (!_userContext.IsAuthenticated || departmentId == Guid.Empty)
+            return false;
+
+        if (IsInstitutionWide(_userContext.ScopeTypeId) || _userContext.PrimaryDepartmentId == departmentId)
+            return true;
+
+        var user = await _userRepository.GetByIdAsync(_userContext.UserId, cancellationToken);
+        if (user is null || !user.IsActive)
+            return false;
+
+        if (IsInstitutionWide(user.ScopeTypeId) || user.PrimaryDepartmentId == departmentId)
+            return true;
+
+        if (user.ScopeTypeId == UserScopeType.DepartmentTreeId &&
+            await IsInsideSubtreeAsync(user.PrimaryDepartmentId, departmentId, cancellationToken))
+        {
+            return true;
+        }
+
+        var utcNow = DateTime.UtcNow;
+        foreach (var assignment in user.DepartmentAssignments.Where(
+                     assignment => IsCurrentlyActive(assignment, utcNow)))
+        {
+            if (assignment.DepartmentId == departmentId)
+                return true;
+
+            if (assignment.IncludeSubtree &&
+                await IsInsideSubtreeAsync(assignment.DepartmentId, departmentId, cancellationToken))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private async Task<bool> IsInsideSubtreeAsync(
+        Guid ancestorDepartmentId,
+        Guid candidateDepartmentId,
+        CancellationToken cancellationToken)
+    {
+        var descendants = await _departmentRepository.GetDescendantIdsAsync(
+            ancestorDepartmentId, cancellationToken);
+
+        return descendants.Contains(candidateDepartmentId);
+    }
+
+    private static bool IsCurrentlyActive(UserDepartmentAssignment assignment, DateTime utcNow) =>
+        assignment.IsActive &&
+        assignment.StartDate <= utcNow &&
+        (assignment.EndDate is null || assignment.EndDate.Value > utcNow);
+
+    private static bool IsInstitutionWide(int scopeTypeId) =>
+        scopeTypeId is UserScopeType.InstitutionId or UserScopeType.SystemId;
+}

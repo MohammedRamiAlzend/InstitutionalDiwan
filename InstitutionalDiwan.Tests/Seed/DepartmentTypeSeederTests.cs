@@ -19,7 +19,8 @@ public sealed class DepartmentTypeSeederTests
         await new DepartmentTypeSeeder().SeedAsync(Context(db));
 
         var ids = await db.DepartmentTypes.Select(type => type.Id).ToListAsync();
-        Assert.Equal(4, ids.Count);
+        Assert.Equal(5, ids.Count);
+        Assert.Contains(DepartmentType.CentralDiwanId, ids);
         Assert.Contains(DepartmentType.DirectorateId, ids);
         Assert.Contains(DepartmentType.DepartmentId, ids);
         Assert.Contains(DepartmentType.SectionId, ids);
@@ -40,7 +41,7 @@ public sealed class DepartmentTypeSeederTests
         await seeder.SeedAsync(Context(db));
         await seeder.SeedAsync(Context(db));
 
-        Assert.Equal(4, await db.DepartmentTypes.CountAsync());
+        Assert.Equal(5, await db.DepartmentTypes.CountAsync());
     }
 
     [Fact]
@@ -55,7 +56,7 @@ public sealed class DepartmentTypeSeederTests
 
         await new DepartmentTypeSeeder().SeedAsync(Context(db));
 
-        Assert.Equal(4, await db.DepartmentTypes.CountAsync());
+        Assert.Equal(5, await db.DepartmentTypes.CountAsync());
         var section = await db.DepartmentTypes.SingleAsync(type => type.Id == DepartmentType.SectionId);
         Assert.Equal("Custom Section", section.Desc);
         Assert.Equal(9, section.HierarchyLevelOrder);

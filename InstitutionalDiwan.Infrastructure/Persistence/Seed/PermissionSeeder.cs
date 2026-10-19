@@ -23,6 +23,7 @@ public sealed class PermissionSeeder : ISeeder
         (Permissions.DocumentDelete, "حذف المستندات", "Delete documents", "CORRESPONDENCE", "Delete documents they own or manage."),
         (Permissions.DocumentApprove, "اعتماد المستندات", "Approve documents", "CORRESPONDENCE", "Approve outgoing documents in the workflow."),
         (Permissions.NumberingView, "عرض سجلات الترقيم", "View numbering registries", "NUMBERING", "View document numbering registries and their counters."),
+        (Permissions.NumberingManage, "إدارة سجلات الترقيم", "Manage numbering registries", "NUMBERING", "Create, update and activate numbering registries and issue official numbers."),
         (Permissions.DepartmentManage, "إدارة الأقسام", "Manage departments", "ORGANIZATION", "Create, rename and reorganize departments."),
         (Permissions.RoleManage, "إدارة الأدوار", "Manage roles", "IDENTITY", "Create roles and grant or revoke permissions."),
         (Permissions.UserManage, "إدارة المستخدمين", "Manage users", "IDENTITY", "Create, deactivate and assign roles to users."),

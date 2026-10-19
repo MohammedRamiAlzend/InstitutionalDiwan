@@ -5,13 +5,16 @@ using InstitutionalDiwan.Domain.Errors;
 namespace InstitutionalDiwan.Domain.Entities.Organization;
 
 /// <summary>
-/// Reference table classifying a department by its hierarchical level (directorate, department,
-/// section, unit). Replaces the former string <c>DepartmentTypeCode</c>: <see cref="Department"/>
-/// now stores <see cref="Department.DepartmentTypeId"/>. Default rows are seeded by
-/// <c>DepartmentTypeSeeder</c>; the stable ids below are the ones the seed uses.
+/// Reference table classifying a department by its hierarchical level (Central Diwan, directorate,
+/// department, section, unit). Replaces the former string <c>DepartmentTypeCode</c>:
+/// <see cref="Department"/> now stores <see cref="Department.DepartmentTypeId"/>. Default rows are
+/// seeded by <c>DepartmentTypeSeeder</c>; the stable ids below are the ones the seed uses.
+/// <see cref="CentralDiwanId"/> is the root of the organization — the single department an
+/// <see cref="InstitutionSetting"/> designates as the Central Diwan.
 /// </summary>
 public sealed class DepartmentType : LookupEntity
 {
+    public const int CentralDiwanId = 5;
     public const int DirectorateId = 1;
     public const int DepartmentId = 2;
     public const int SectionId = 3;

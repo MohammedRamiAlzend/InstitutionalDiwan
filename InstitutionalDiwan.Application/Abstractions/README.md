@@ -1,7 +1,8 @@
 # Application / Abstractions
 
-> **Status:** Partially implemented — `Messaging/` (ICommand/IQuery/ICommandHandler/IQueryHandler) and
-> `Authentication/` (IJwtProvider, IPasswordHasher) are live; the data/storage/caching/clock
+> **Status:** Partially implemented — `Messaging/` (ICommand/IQuery/ICommandHandler/IQueryHandler),
+> `Authentication/` (`IJwtProvider`, `IPasswordHasher`, `IUserContext`), and `Authorization/`
+> (`IDepartmentScopeEvaluator`, `IDocumentAccessEvaluator`) are live; the data/storage/caching/clock
 > contracts are still target design.
 
 ## Purpose
@@ -26,9 +27,16 @@ technology choices swappable.
 
 | Interface | Shape | Notes |
 | --- | --- | --- |
-| `IUserContext` | `Guid UserId`, `Guid PrimaryDepartmentId`, `string ScopeType`, `IReadOnlySet<string> Permissions` | Ambient current user, populated from the HTTP context by the Infrastructure implementation. ❌ not implemented yet. |
+| `IUserContext` | `bool IsAuthenticated`, `Guid UserId`, `Guid PrimaryDepartmentId`, `int ScopeTypeId`, `IReadOnlySet<string> Permissions` | Ambient current user projected from the JWT claims (`sub`, `dept_id`, `scope_type`, one `permission` claim per code). ✅ Implemented (`Infrastructure/Authentication/UserContext.cs`). |
 | `IJwtProvider` | `GenerateAccessToken(...)` + permission/role claims | ✅ Implemented; consumed by `LoginCommand` and the auth controller. |
 | `IPasswordHasher` | `string Hash(string)`, `bool Verify(string, string)` | ✅ Implemented (PBKDF2 in `Infrastructure/Authentication/PasswordHasher.cs`). |
+
+### `Authorization/`
+
+| Interface | Shape | Notes |
+| --- | --- | --- |
+| `IDepartmentScopeEvaluator` | `Task<bool> CanAccessDepartmentAsync(Guid departmentId, CancellationToken)` | Tier 2 of the access model: is the target department inside the caller's scope (primary department, active assignments incl. subtree, institution-wide)? ✅ Implemented. |
+| `IDocumentAccessEvaluator` | `Task<bool> CanAccessDocumentAsync(Guid documentId, int requiredAccessLevelId, CancellationToken)` | Tier 3: combines explicit grants, authorship, department scope, and confidentiality for VIEW/DOWNLOAD/FORWARD/MANAGE. ✅ Implemented. |
 
 ### `Data/`
 
@@ -65,13 +73,17 @@ technology choices swappable.
 | `Messaging/IQueryHandler.cs` | `IQueryHandler<TQuery, TResponse>` for read-only use cases. |
 | `Authentication/IJwtProvider.cs` | Issues signed access tokens carrying user id, roles, and permission claims. |
 | `Authentication/IPasswordHasher.cs` | `Hash` / `Verify` for user credentials (PBKDF2 implementation in Infrastructure). |
+| `Authentication/IUserContext.cs` | Ambient caller identity (authenticated flag, user id, primary department, scope type, permission set) so handlers never touch `HttpContext`. |
+| `Authorization/IDepartmentScopeEvaluator.cs` | Answers “may the caller act on this department?”, implemented from the user's scope type, primary department, and active assignments. |
+| `Authorization/IDocumentAccessEvaluator.cs` | Answers “may the caller reach this document at this access level?”, implemented from grants, authorship, scope, and confidentiality. |
 
 ## Implementation status
 
 | Group | State |
 | --- | --- |
 | `Messaging/` | ✅ Implemented (ICommand, ICommandHandler, IQuery, IQueryHandler) |
-| `Authentication/` | ✅ Implemented (IJwtProvider, IPasswordHasher) |
+| `Authentication/` | ✅ Implemented (IJwtProvider, IPasswordHasher, IUserContext) |
+| `Authorization/` | ✅ Implemented (IDepartmentScopeEvaluator, IDocumentAccessEvaluator) |
 | `Data/` | ❌ Not implemented |
 | `Storage/` | ❌ Not implemented |
 | `Caching/` | ❌ Not implemented |
@@ -85,4 +97,5 @@ technology choices swappable.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-19 | Buffy | Added `Authentication/IUserContext` and the `Authorization/` group (`IDepartmentScopeEvaluator`, `IDocumentAccessEvaluator`) — the contracts behind the three-tier access model; implemented in `Infrastructure/Authentication/UserContext.cs` and `Infrastructure/Authorization/`. |
 | 2026-10-19 | opencode | Recorded `Messaging/` (`ICommand`, `ICommandHandler`, `IQuery`, `IQueryHandler`) and `Authentication/` (`IJwtProvider`, `IPasswordHasher`) as ✅ implemented with a per-file Contents table; the README previously reported both groups as not implemented. |

@@ -24,6 +24,17 @@ internal sealed class FakeDocumentNumberRepository : IDocumentNumberRepository
             number => number.OfficialNumberText == text && number.NumberingYear == numberingYear));
     }
 
+    public Task<IReadOnlyList<DocumentNumber>> ListByDocumentAsync(
+        Guid documentId,
+        CancellationToken cancellationToken = default)
+        => Task.FromResult<IReadOnlyList<DocumentNumber>>(
+            DocumentNumbers.Where(number => number.DocumentId == documentId)
+                .OrderBy(number => number.IssuedAt)
+                .ToList());
+
+    public Task<bool> AnyByRegistryAsync(Guid registryId, CancellationToken cancellationToken = default)
+        => Task.FromResult(DocumentNumbers.Any(number => number.RegistryId == registryId));
+
     public void Add(DocumentNumber documentNumber) => DocumentNumbers.Add(documentNumber);
 }
 

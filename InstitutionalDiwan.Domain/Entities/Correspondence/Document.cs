@@ -175,6 +175,25 @@ public sealed class Document : AggregateRoot<Guid>
         return Result.Success();
     }
 
+    /// <summary>
+    /// Points the document at the official number that replaces its current one after a correction.
+    /// The replaced number's own history keeps the link back; status is unchanged, because a number
+    /// correction is not a lifecycle transition.
+    /// </summary>
+    public Result AttachReplacementNumber(Guid replacementNumberId, OfficialNumberValue replacementText)
+    {
+        if (ActiveOfficialNumberId is null)
+            return Result.Failure(DomainErrors.Numbering.NumberNotFound);
+
+        if (replacementNumberId == Guid.Empty || replacementNumberId == ActiveOfficialNumberId)
+            return Result.Failure(DomainErrors.Numbering.ReplacementIdInvalid);
+
+        ActiveOfficialNumberId = replacementNumberId;
+        OfficialNumberText = replacementText.Value;
+        UpdatedAt = DateTime.UtcNow;
+        return Result.Success();
+    }
+
     public Result MarkInMovement(Guid actorUserId, string? notes = null)
     {
         if (CurrentStatusId is DocumentStatusType.ArchivedId or DocumentStatusType.CanceledId)

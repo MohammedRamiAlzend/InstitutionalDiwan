@@ -82,7 +82,23 @@ public interface IDocumentNumberRepository
     Task<DocumentNumber?> GetByIdAsync(Guid documentNumberId, CancellationToken cancellationToken = default);
     Task<DocumentNumber?> GetActiveByDocumentIdAsync(Guid documentId, CancellationToken cancellationToken = default);
     Task<bool> ExistsByNumberAndYearAsync(string officialNumberText, int numberingYear, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<DocumentNumber>> ListByDocumentAsync(Guid documentId, CancellationToken cancellationToken = default);
+    Task<bool> AnyByRegistryAsync(Guid registryId, CancellationToken cancellationToken = default);
     void Add(DocumentNumber documentNumber);
+}
+
+public interface IInstitutionSettingRepository
+{
+    Task<InstitutionSetting?> GetSingletonAsync(CancellationToken cancellationToken = default);
+    void Add(InstitutionSetting setting);
+}
+
+public interface IExternalOrganizationRepository
+{
+    Task<ExternalOrganization?> GetByIdAsync(Guid externalOrganizationId, CancellationToken cancellationToken = default);
+    Task<ExternalOrganization?> GetByCodeAsync(string code, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<ExternalOrganization>> ListAllAsync(CancellationToken cancellationToken = default);
+    void Add(ExternalOrganization externalOrganization);
 }
 
 public interface IDocumentMovementRepository

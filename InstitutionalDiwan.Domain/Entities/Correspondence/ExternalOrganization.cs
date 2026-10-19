@@ -57,9 +57,43 @@ public sealed class ExternalOrganization : AggregateRoot<Guid>
         return Result.Success(org);
     }
 
+    /// <summary>Updates the descriptive fields; the code is immutable because documents reference it.</summary>
+    public Result Update(
+        string? nameAr,
+        int organizationTypeId,
+        string? nameEn = null,
+        string? contactInfo = null)
+    {
+        if (string.IsNullOrWhiteSpace(nameAr))
+            return Result.Failure(DomainErrors.Correspondence.ExternalOrgNameEmpty);
+
+        if (organizationTypeId <= 0)
+            return Result.Failure(DomainErrors.Lookup.InvalidId);
+
+        NameAr = nameAr.Trim();
+        NameEn = string.IsNullOrWhiteSpace(nameEn) ? null : nameEn.Trim();
+        OrganizationTypeId = organizationTypeId;
+        ContactInfo = string.IsNullOrWhiteSpace(contactInfo) ? null : contactInfo.Trim();
+        UpdatedAt = DateTime.UtcNow;
+        return Result.Success();
+    }
+
     public Result Deactivate()
     {
+        if (!IsActive)
+            return Result.Success();
+
         IsActive = false;
+        UpdatedAt = DateTime.UtcNow;
+        return Result.Success();
+    }
+
+    public Result Activate()
+    {
+        if (IsActive)
+            return Result.Success();
+
+        IsActive = true;
         UpdatedAt = DateTime.UtcNow;
         return Result.Success();
     }

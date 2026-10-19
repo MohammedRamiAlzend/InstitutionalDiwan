@@ -157,6 +157,69 @@ public sealed class UsersController : ControllerBase
         return result.ToActionResult();
     }
 
+    /// <summary>
+    /// Starts a temporal department assignment, widening the user's organizational scope. Set
+    /// <c>includeSubtree</c> to cover the department's descendants as well.
+    /// </summary>
+    /// <response code="200">The updated user.</response>
+    /// <response code="400">The assignment type is unknown/inactive, or the date range is invalid.</response>
+    /// <response code="404">No user or department with that id exists.</response>
+    /// <response code="409">The user already has an active assignment for that department.</response>
+    [HttpPost("{userId:guid}/department-assignments")]
+    [ProducesResponseType<UserResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> AssignDepartmentScope(
+        Guid userId,
+        [FromBody] AssignUserDepartmentScopeRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await _sender.Send(new AssignUserDepartmentScopeCommand(
+            userId,
+            request.DepartmentId,
+            request.AssignmentTypeId,
+            request.IncludeSubtree,
+            request.StartDate,
+            request.EndDate), cancellationToken);
+
+        return result.ToActionResult();
+    }
+
+    /// <summary>Ends a department assignment, keeping the row for auditing.</summary>
+    /// <response code="200">The updated user.</response>
+    /// <response code="404">No user with that id exists, or the assignment does not belong to them.</response>
+    [HttpDelete("{userId:guid}/department-assignments/{assignmentId:guid}")]
+    [ProducesResponseType<UserResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> EndDepartmentScope(
+        Guid userId,
+        Guid assignmentId,
+        CancellationToken cancellationToken)
+    {
+        var result = await _sender.Send(
+            new EndUserDepartmentScopeCommand(userId, assignmentId), cancellationToken);
+
+        return result.ToActionResult();
+    }
+
+    /// <summary>
+    /// Resolves the user's effective permissions, role codes, scope type, and active department
+    /// assignments — the same permission set their access token carries.
+    /// </summary>
+    /// <response code="200">The effective authorization state.</response>
+    /// <response code="404">No user with that id exists.</response>
+    [HttpGet("{userId:guid}/effective-permissions")]
+    [ProducesResponseType<UserEffectivePermissionsResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetEffectivePermissions(Guid userId, CancellationToken cancellationToken)
+    {
+        var result = await _sender.Send(
+            new GetUserEffectivePermissionsQuery(userId), cancellationToken);
+
+        return result.ToActionResult();
+    }
+
     private Guid? CurrentUserId =>
         Guid.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var userId) ? userId : null;
 }

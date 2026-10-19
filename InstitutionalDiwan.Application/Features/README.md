@@ -2,9 +2,9 @@
 
 > **Status:** Partially implemented — `Lookups` (generic reference-catalog CRUD), Identity (`Login`,
 > `Register`, `ChangePassword`, `Users`, `Roles`, `Permissions`, `Employees`, `AccessGrants`),
-> Correspondence/`Documents` (create, get by id, list), and Organization/`Departments` (create,
-> update, soft delete, activate, get by id, list, tree) slices are live; the remaining modules are
-> target design.
+> Correspondence/`Documents` (full Module 03 lifecycle) and `ExternalOrganizations`, Organization
+> (`Departments`, `InstitutionSettings`), and Numbering (`Registries`, `Numbers`) slices are live;
+> Movements, Attachments, Archiving, Relations, Audit, and Notifications are target design.
 
 ## Purpose
 
@@ -31,20 +31,20 @@ grouping by technical type, so a slice can be read top-to-bottom.
   [`Lookups/README.md`](Lookups/README.md)
 
 ### Organization (Module 01)
-- **Commands:** `CreateDepartmentCommand` ✅ (creates under an optional active parent; validates the department type exists and is active; rejects duplicate codes with `Department.CodeAlreadyExists`), `UpdateDepartmentCommand` ✅ (renames, moves parent with self/cycle/inactive guards, updates the external-correspondence policy), `MoveDepartmentCommand` ✅ (dedicated reparent with full-subtree cycle validation → `Department.CyclicHierarchy`), `DeleteDepartmentCommand` ✅ (soft delete via `Deactivate`, blocked by `Department.HasActiveChildren`), `ActivateDepartmentCommand` ✅; `UpdateInstitutionSettingsCommand` planned
-- **Queries:** `GetDepartmentTreeQuery` ✅ (root nodes with nested children), `GetDepartmentByIdQuery` ✅, `ListDepartmentsQuery` ✅; `GetInstitutionSettingsQuery` planned
+- **Commands:** `CreateDepartmentCommand` ✅ (creates under an optional active parent; validates the department type exists and is active; rejects duplicate codes with `Department.CodeAlreadyExists`), `UpdateDepartmentCommand` ✅ (renames, moves parent with self/cycle/inactive guards, updates the external-correspondence policy), `MoveDepartmentCommand` ✅ (dedicated reparent with full-subtree cycle validation → `Department.CyclicHierarchy`), `DeleteDepartmentCommand` ✅ (soft delete via `Deactivate`, blocked by `Department.HasActiveChildren`), `ActivateDepartmentCommand` ✅, `UpdateInstitutionSettingsCommand` ✅ (validates the Central Diwan department is an active root of type `CENTRAL_DIWAN`; moving it requires a transfer reason; numbering mode/reset policy checked against their lookups — see [`Organization/InstitutionSettings/README.md`](Organization/InstitutionSettings/README.md))
+- **Queries:** `GetDepartmentTreeQuery` ✅ (root nodes with nested children), `GetDepartmentByIdQuery` ✅, `ListDepartmentsQuery` ✅; `GetInstitutionSettingsQuery` ✅
 
 ### Identity (Module 02)
-- **Commands:** `LoginCommand` ✅, `RegisterCommand` ✅, `ChangePasswordCommand` ✅, `CreateRoleCommand` ✅ (rejects duplicate codes with `Identity.RoleCodeAlreadyExists`), `UpdateRoleCommand` ✅ (names + description; the code is immutable), `DeleteRoleCommand` ✅ (soft delete via `Deactivate`, system roles rejected with `Identity.SystemRoleProtected`), `ActivateRoleCommand` ✅, `GrantRolePermissionCommand` ✅ (validates the code against the permission catalog, 409 `Identity.PermissionAlreadyGranted`), `RevokeRolePermissionCommand` ✅ (idempotent), `CreateEmployeeCommand` ✅, `UpdateEmployeeCommand` ✅, `DeactivateEmployeeCommand` ✅, `ActivateEmployeeCommand` ✅, `GrantDocumentAccessCommand` ✅, `RevokeDocumentAccessCommand` ✅, `CreateUserCommand` ✅ (hashes the raw password, rejects duplicate usernames with `Identity.UsernameTaken`, validates the primary department and optional employee), `UpdateUserCommand` ✅, `DeactivateUserCommand` ✅, `ActivateUserCommand` ✅, `AssignUserRoleCommand` ✅ (records the grantor; 409 `Identity.RoleAlreadyAssigned`), `RevokeUserRoleCommand` ✅; `AssignUserDepartmentScopeCommand` planned
-- **Queries:** `ListUsersQuery` ✅, `GetUserByIdQuery` ✅, `ListRolesQuery` ✅, `GetRoleByIdQuery` ✅, `ListPermissionsQuery` ✅ (permission catalog), `ListEmployeesQuery` ✅, `GetEmployeeByIdQuery` ✅, `ListDocumentAccessGrantsQuery` ✅; `GetUserProfileQuery`, `GetUserEffectivePermissionsQuery`, `GetRolesQuery` planned
+- **Commands:** `LoginCommand` ✅, `RegisterCommand` ✅, `ChangePasswordCommand` ✅, `CreateRoleCommand` ✅ (rejects duplicate codes with `Identity.RoleCodeAlreadyExists`), `UpdateRoleCommand` ✅ (names + description; the code is immutable), `DeleteRoleCommand` ✅ (soft delete via `Deactivate`, system roles rejected with `Identity.SystemRoleProtected`), `ActivateRoleCommand` ✅, `GrantRolePermissionCommand` ✅ (validates the code against the permission catalog, 409 `Identity.PermissionAlreadyGranted`), `RevokeRolePermissionCommand` ✅ (idempotent), `CreateEmployeeCommand` ✅, `UpdateEmployeeCommand` ✅, `DeactivateEmployeeCommand` ✅, `ActivateEmployeeCommand` ✅, `GrantDocumentAccessCommand` ✅, `RevokeDocumentAccessCommand` ✅, `CreateUserCommand` ✅ (hashes the raw password, rejects duplicate usernames with `Identity.UsernameTaken`, validates the primary department and optional employee), `UpdateUserCommand` ✅, `DeactivateUserCommand` ✅, `ActivateUserCommand` ✅, `AssignUserRoleCommand` ✅ (records the grantor; 409 `Identity.RoleAlreadyAssigned`), `RevokeUserRoleCommand` ✅, `AssignUserDepartmentScopeCommand` ✅ (starts a temporal assignment; 409 when the department is already assigned), `EndUserDepartmentScopeCommand` ✅ (keeps the row with its end date)
+- **Queries:** `ListUsersQuery` ✅, `GetUserByIdQuery` ✅, `ListRolesQuery` ✅, `GetRoleByIdQuery` ✅, `ListPermissionsQuery` ✅ (permission catalog), `ListEmployeesQuery` ✅, `GetEmployeeByIdQuery` ✅, `ListDocumentAccessGrantsQuery` ✅, `GetUserEffectivePermissionsQuery` ✅ (role codes + permission claims + active assignments, mirroring the token); `GetUserProfileQuery`, `GetRolesQuery` planned
 
 ### Correspondence (Module 03)
-- **Commands (planned):** `CreateDraftDocumentCommand` (✅ implemented as `Correspondence/Documents/CreateDocumentCommand` — validates the supplied official number + numbering year, rejects with `Numbering.OfficialNumberTaken` (409) when the pair is taken, otherwise issues a `DocumentNumber`, registers the document, and persists it as `REGISTERED`), `UpdateDraftMetadataCommand`, `AddDocumentParticipantCommand`, `RegisterDocumentCommand`, `CancelDocumentCommand`
-- **Queries (partial):** `GetDocumentByIdQuery` ✅, `ListDocumentsQuery` ✅; `GetDocumentDetailsQuery`, `GetDocumentTimelineQuery`, `ListDepartmentDocumentsQuery` planned
+- **Commands:** `CreateDocumentCommand` ✅ (single-step create with an explicit official number: validates the number + numbering year, rejects with `Numbering.OfficialNumberTaken` (409) when the pair is taken, issues a `DocumentNumber`, saves as `REGISTERED`), `CreateDraftDocumentCommand` ✅ (DRAFT, no number consumed), `UpdateDraftMetadataCommand` ✅ (only DRAFT editable → `Correspondence.OnlyDraftEditable`), `RegisterDocumentCommand` ✅ (DRAFT → REGISTERED with a registry-allocated number), `AddDocumentParticipantCommand` ✅ (exactly-one target; one external organization max), `CancelDocumentCommand` ✅ (reason required; blocked by active movements), `CreateExternalOrganizationCommand` ✅, `UpdateExternalOrganizationCommand` ✅, `DeactivateExternalOrganizationCommand` ✅, `ActivateExternalOrganizationCommand` ✅ (see [`Correspondence/ExternalOrganizations/README.md`](Correspondence/ExternalOrganizations/README.md))
+- **Queries:** `GetDocumentByIdQuery` ✅, `GetDocumentDetailsQuery` ✅, `GetDocumentTimelineQuery` ✅ (status + participant + number events), `ListDocumentsQuery` ✅, `ListExternalOrganizationsQuery` ✅, `GetExternalOrganizationByIdQuery` ✅; `ListDepartmentDocumentsQuery` planned
 
 ### Numbering (Module 04)
-- **Commands:** `IssueOfficialNumberCommand`, `CancelOfficialNumberCommand`, `ReplaceOfficialNumberCommand`, `CreateNumberingRegistryCommand`
-- **Queries:** `GetDocumentNumberHistoryQuery`, `GetNumberingRegistriesQuery`
+- **Commands:** `IssueOfficialNumberCommand` ✅, `CancelOfficialNumberCommand` ✅ (reason required; sequence never reused), `ReplaceOfficialNumberCommand` ✅ (links the replacement and re-points the document), `CreateNumberingRegistryCommand` ✅, `UpdateNumberingRegistryCommand` ✅ (format locked once numbers exist), `DeactivateNumberingRegistryCommand` ✅, `ActivateNumberingRegistryCommand` ✅
+- **Queries:** `GetDocumentNumberHistoryQuery` ✅, `ListRegistriesQuery` ✅, `GetRegistryByIdQuery` ✅
 
 ### Movements (Module 05)
 - **Commands:** `CreateMovementCommand`, `SendMovementCommand`, `ReceiveMovementStepCommand`, `CompleteMovementStepCommand`, `RejectMovementStepCommand`, `ReturnMovementToSenderCommand`, `RedirectMovementCommand`, `CloseMovementCommand`
@@ -88,15 +88,20 @@ persistence and authorization concerns; the invariants live in the domain.
 | Identity/`Roles` (create, update, soft delete, activate, get by id, list, grant/revoke permission) + Identity/`Permissions` catalog | ✅ Implemented |
 | Identity/`Employees` (create, update, deactivate/activate, get by id, list) | ✅ Implemented |
 | Identity/`AccessGrants` (grant, revoke, list by document) | ✅ Implemented |
-| Correspondence/`Documents` (create with official number, get by id, list) | ✅ Implemented |
+| Identity/`Users` department scope (assign, end, effective permissions) | ✅ Implemented |
+| Correspondence/`Documents` (immediate create, draft, update, register, participants, cancel, details, timeline, list) | ✅ Implemented |
+| Correspondence/`ExternalOrganizations` (create, update, list, get, deactivate, activate) | ✅ Implemented |
 | `Lookups` (list, get by id, create, relabel, deactivate, activate over all 33 catalogs) | ✅ Implemented |
 | Organization/`Departments` (create, update, soft delete, activate, get by id, list, tree) | ✅ Implemented |
-| Numbering, Movements, Attachments, Archiving, Relations, Audit, Notifications | ❌ Not implemented |
+| Organization/`InstitutionSettings` (get, update incl. Central Diwan guards) | ✅ Implemented |
+| Numbering/`Registries` + `Numbers` (registry CRUD, issue/cancel/replace, history) | ✅ Implemented |
+| Movements, Attachments, Archiving, Relations, Audit, Notifications | ❌ Not implemented |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-19 | Buffy | Completed Modules 01–04: added `Organization/InstitutionSettings`, `Correspondence/ExternalOrganizations`, the rest of the `Documents` lifecycle (draft/update/register/participants/cancel/details/timeline), `Identity/Users` department-scope commands, and the whole `Numbering` (`Registries`, `Numbers`) slice. |
 | 2026-10-19 | opencode | Added the cross-module `Lookups` slice exposing every seeded reference catalog through generic list/get/create/relabel/deactivate/activate use cases (see `Lookups/README.md`); documented it as the first entry of the per-module use-case list. |
 | 2026-10-18 | opencode | Completed the Identity/`Users` slice (`GetUserByIdQuery`, `CreateUserCommand`, `UpdateUserCommand`, `DeactivateUserCommand`, `ActivateUserCommand`, `AssignUserRoleCommand`, `RevokeUserRoleCommand`); moved `ListUsersQuery`/`UserResponse` into `Features/Identity/Users/` alongside a `UserResponseFactory` (resolves role codes, sorts them); added `User.UpdateProfile`/`Activate` and enriched `UserResponse` with employee, department, scope, and timestamp fields. |
 | 2026-10-18 | opencode | Added the Identity/`Employees` slice (`CreateEmployeeCommand`, `UpdateEmployeeCommand`, `DeactivateEmployeeCommand`, `ActivateEmployeeCommand`, `ListEmployeesQuery`, `GetEmployeeByIdQuery`) and the Identity/`AccessGrants` slice (`GrantDocumentAccessCommand`, `RevokeDocumentAccessCommand`, `ListDocumentAccessGrantsQuery`); added `Employee.Update`/`Activate`, the `IEmployeeRepository`/`IDocumentAccessGrantRepository` contracts, the `EMPLOYEE_MANAGE`/`ACCESS_GRANT_MANAGE` permissions, and the `Identity.EmployeeNotFound`/`Identity.AccessGrantNotFound` errors. |

@@ -52,7 +52,7 @@ public sealed class PermissionAuthorizationHandlerTests
     [Fact]
     public void PermissionCodes_AreUniqueAndComplete()
     {
-        Assert.Equal(13, Permissions.All.Count);
+        Assert.Equal(14, Permissions.All.Count);
         Assert.Equal(Permissions.All.Count, Permissions.All.Distinct().Count());
         Assert.Contains(Permissions.UserManage, Permissions.All);
         Assert.Contains(Permissions.DocumentApprove, Permissions.All);

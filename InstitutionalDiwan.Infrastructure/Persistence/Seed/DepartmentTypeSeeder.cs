@@ -16,6 +16,7 @@ public sealed class DepartmentTypeSeeder : ISeeder
 
     private static readonly (int Id, string Desc, string DescAr, int HierarchyLevelOrder)[] Catalog =
     {
+        (DepartmentType.CentralDiwanId, "Central Diwan", "الديوان المركزي", 0),
         (DepartmentType.DirectorateId, "Directorate", "مديرية", 1),
         (DepartmentType.DepartmentId, "Department", "قسم", 2),
         (DepartmentType.SectionId, "Section", "شعبة", 3),

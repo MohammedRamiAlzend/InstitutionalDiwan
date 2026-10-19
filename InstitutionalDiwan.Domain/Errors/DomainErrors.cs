@@ -16,6 +16,9 @@ public static class DomainErrors
         public static Error IdAlreadyExists(string lookup, int id) =>
             Error.Conflict("Lookup.IdAlreadyExists", $"Lookup entry {id} already exists in the '{lookup}' catalog.");
 
+        public static Error EntryInactive(string lookup, int id) =>
+            Error.Conflict("Lookup.EntryInactive", $"Lookup entry {id} in the '{lookup}' catalog is inactive and cannot be selected.");
+
         public static Error EntryInUse(string lookup, int id) =>
             Error.Conflict("Lookup.EntryInUse", $"Lookup entry {id} in the '{lookup}' catalog is referenced by other records and cannot be deactivated.");
 
@@ -45,6 +48,19 @@ public static class DomainErrors
         public static readonly Error NameEmpty = Error.Validation("InstitutionSetting.NameEmpty", "Institution Arabic name is required.");
         public static readonly Error NumberingModeEmpty = Error.Validation("InstitutionSetting.NumberingModeEmpty", "Numbering mode is required.");
         public static readonly Error ResetPolicyEmpty = Error.Validation("InstitutionSetting.ResetPolicyEmpty", "Numbering reset policy is required.");
+        public static readonly Error TimezoneEmpty = Error.Validation("InstitutionSetting.TimezoneEmpty", "A default timezone is required.");
+        public static readonly Error NotFound = Error.NotFound("InstitutionSetting.NotFound", "Institution settings have not been configured yet.");
+        public static readonly Error CentralDiwanRequired = Error.Validation("InstitutionSetting.CentralDiwanRequired", "The Central Diwan department is required.");
+        public static readonly Error CentralDiwanNotFound = Error.Validation("InstitutionSetting.CentralDiwanNotFound", "The designated Central Diwan department does not exist.");
+        public static readonly Error CentralDiwanNotRoot = Error.Conflict("InstitutionSetting.CentralDiwanNotRoot", "The designated Central Diwan department must be a root department (no parent).");
+        public static readonly Error CentralDiwanTypeInvalid = Error.Conflict("InstitutionSetting.CentralDiwanTypeInvalid", "The designated Central Diwan department must be of type CENTRAL_DIWAN.");
+        public static readonly Error CentralDiwanInactive = Error.Conflict("InstitutionSetting.CentralDiwanInactive", "Cannot designate an inactive department as the Central Diwan.");
+        public static readonly Error CentralDiwanTransferReasonRequired = Error.Validation("InstitutionSetting.CentralDiwanTransferReasonRequired", "Changing the Central Diwan department requires a documented transfer reason.");
+        public static readonly Error NumberingModeNotFound = Error.Validation("InstitutionSetting.NumberingModeNotFound", "The specified numbering mode does not exist.");
+        public static readonly Error NumberingModeInactive = Error.Conflict("InstitutionSetting.NumberingModeInactive", "Cannot select an inactive numbering mode.");
+        public static readonly Error ResetPolicyNotFound = Error.Validation("InstitutionSetting.ResetPolicyNotFound", "The specified numbering reset policy does not exist.");
+        public static readonly Error ResetPolicyInactive = Error.Conflict("InstitutionSetting.ResetPolicyInactive", "Cannot select an inactive numbering reset policy.");
+        public static readonly Error ResponsibleEmployeeNotFound = Error.Validation("InstitutionSetting.ResponsibleEmployeeNotFound", "The designated responsible employee does not exist.");
     }
 
     public static class Identity
@@ -73,6 +89,9 @@ public static class DomainErrors
         public static readonly Error CurrentPasswordIncorrect = Error.Validation("Identity.CurrentPasswordIncorrect", "The current password is incorrect.");
         public static readonly Error EmployeeNotFound = Error.NotFound("Identity.EmployeeNotFound", "The employee record was not found.");
         public static readonly Error AccessGrantNotFound = Error.NotFound("Identity.AccessGrantNotFound", "The document access grant was not found.");
+        public static readonly Error DepartmentAlreadyAssigned = Error.Conflict("Identity.DepartmentAlreadyAssigned", "The user already has an active assignment for this department.");
+        public static readonly Error DepartmentAssignmentNotFound = Error.NotFound("Identity.DepartmentAssignmentNotFound", "The department assignment was not found for this user.");
+        public static readonly Error AssignmentTypeInvalid = Error.Validation("Identity.AssignmentTypeInvalid", "The specified department assignment type does not exist or is inactive.");
     }
 
     public static class Correspondence
@@ -98,6 +117,13 @@ public static class DomainErrors
         public static readonly Error ParticipantTargetInvalid = Error.Validation("Correspondence.ParticipantTargetInvalid", "Participant target must specify exactly one External organization, Internal department, or Person name.");
         public static readonly Error ExternalOrgCodeEmpty = Error.Validation("Correspondence.ExternalOrgCodeEmpty", "External organization code is required.");
         public static readonly Error ExternalOrgNameEmpty = Error.Validation("Correspondence.ExternalOrgNameEmpty", "External organization Arabic name is required.");
+        public static readonly Error ExternalOrgCodeTooLong = Error.Validation("Correspondence.ExternalOrgCodeTooLong", "External organization code cannot exceed 50 characters.");
+        public static readonly Error ExternalOrgCodeAlreadyExists = Error.Conflict("Correspondence.ExternalOrgCodeAlreadyExists", "An external organization with this code already exists.");
+        public static readonly Error ExternalOrgNotFound = Error.NotFound("Correspondence.ExternalOrgNotFound", "The external organization was not found.");
+        public static readonly Error ExternalOrgContactInvalid = Error.Validation("Correspondence.ExternalOrgContactInvalid", "Contact information must be a valid e-mail address or phone number.");
+        public static readonly Error ParticipantRoleNotFound = Error.Validation("Correspondence.ParticipantRoleNotFound", "The specified participant role does not exist.");
+        public static readonly Error ParticipantDepartmentNotFound = Error.Validation("Correspondence.ParticipantDepartmentNotFound", "The specified internal participant department does not exist.");
+        public static readonly Error DocumentHasActiveNumber = Error.Conflict("Correspondence.DocumentHasActiveNumber", "Cancel or replace the existing official number before issuing a new one.");
     }
 
     public static class Numbering
@@ -112,6 +138,12 @@ public static class DomainErrors
         public static readonly Error RegistryInactive = Error.Conflict("Numbering.RegistryInactive", "Cannot allocate numbers from an inactive numbering registry.");
         public static readonly Error OfficialNumberTaken = Error.Conflict("Numbering.OfficialNumberTaken", "The official number is already taken for the specified numbering year.");
         public static readonly Error RegistryNotFound = Error.NotFound("Numbering.RegistryNotFound", "The numbering registry was not found.");
+        public static readonly Error RegistryCodeAlreadyExists = Error.Conflict("Numbering.RegistryCodeAlreadyExists", "A numbering registry with this code already exists.");
+        public static readonly Error RegistryTemplateLocked = Error.Conflict("Numbering.RegistryTemplateLocked", "The registry format cannot be changed after numbers have been issued from it.");
+        public static readonly Error NumberNotFound = Error.NotFound("Numbering.NumberNotFound", "The official number was not found for this document.");
+        public static readonly Error NumberNotActive = Error.Conflict("Numbering.NumberNotActive", "Only an active official number can be cancelled or replaced.");
+        public static readonly Error ReplacementNumberNotFound = Error.Validation("Numbering.ReplacementNumberNotFound", "The replacement number was not found for this document.");
+        public static readonly Error DocumentAlreadyNumbered = Error.Conflict("Numbering.DocumentAlreadyNumbered", "The document already has an active official number.");
     }
 
     public static class Movements

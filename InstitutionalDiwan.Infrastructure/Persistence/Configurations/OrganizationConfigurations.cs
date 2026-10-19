@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using InstitutionalDiwan.Domain.Entities.Identity;
 using InstitutionalDiwan.Domain.Entities.Numbering;
 using InstitutionalDiwan.Domain.Entities.Organization;
 
@@ -76,7 +77,11 @@ public sealed class InstitutionSettingConfiguration : IEntityTypeConfiguration<I
         builder.Property(x => x.NumberingModeId).HasColumnName("NumberingModeId").IsRequired();
         builder.Property(x => x.NumberingResetPolicyId).HasColumnName("NumberingResetPolicyId").IsRequired();
         builder.Property(x => x.DefaultTimezone).HasColumnName("DefaultTimezone").HasMaxLength(100).IsRequired();
+        builder.Property(x => x.CentralDiwanDepartmentId).HasColumnName("CentralDiwanDepartmentId");
+        builder.Property(x => x.ResponsibleEmployeeId).HasColumnName("ResponsibleEmployeeId");
         builder.Property(x => x.UpdatedAt).HasColumnName("UpdatedAt").HasColumnType("datetime2(3)").IsRequired();
+
+        builder.HasIndex(x => x.CentralDiwanDepartmentId).HasDatabaseName("IX_INSTITUTION_SETTINGS_CENTRAL_DIWAN");
 
         builder.HasOne<NumberingMode>()
             .WithMany()
@@ -86,6 +91,16 @@ public sealed class InstitutionSettingConfiguration : IEntityTypeConfiguration<I
         builder.HasOne<NumberingResetPolicy>()
             .WithMany()
             .HasForeignKey(x => x.NumberingResetPolicyId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne<Department>()
+            .WithMany()
+            .HasForeignKey(x => x.CentralDiwanDepartmentId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne<Employee>()
+            .WithMany()
+            .HasForeignKey(x => x.ResponsibleEmployeeId)
             .OnDelete(DeleteBehavior.Restrict);
     }
 }

@@ -68,6 +68,60 @@ public sealed class NumberingRegistry : AggregateRoot<Guid>
         return Result.Success(registry);
     }
 
+    /// <summary>
+    /// Applies a full registry update. <paramref name="hasIssuedNumbers"/> is supplied by the caller
+    /// (it needs a query): once numbers were issued from this registry the format pattern is frozen,
+    /// because changing it would make already-issued numbers inconsistent with the template.
+    /// </summary>
+    public Result Update(
+        string? nameAr,
+        string? formatPattern,
+        int resetPolicyId,
+        Guid? departmentId = null,
+        int? documentTypeId = null,
+        int? directionId = null,
+        bool hasIssuedNumbers = false)
+    {
+        if (string.IsNullOrWhiteSpace(nameAr))
+            return Result.Failure(DomainErrors.Numbering.RegistryCodeEmpty);
+
+        if (resetPolicyId <= 0)
+            return Result.Failure(DomainErrors.Numbering.SequenceInvalid);
+
+        var normalizedFormat = string.IsNullOrWhiteSpace(formatPattern)
+            ? FormatPattern
+            : formatPattern.Trim();
+
+        if (hasIssuedNumbers && !string.Equals(normalizedFormat, FormatPattern, StringComparison.Ordinal))
+            return Result.Failure(DomainErrors.Numbering.RegistryTemplateLocked);
+
+        NameAr = nameAr.Trim();
+        FormatPattern = normalizedFormat;
+        ResetPolicyId = resetPolicyId;
+        DepartmentId = departmentId;
+        DocumentTypeId = documentTypeId is > 0 ? documentTypeId : null;
+        DirectionId = directionId is > 0 ? directionId : null;
+        return Result.Success();
+    }
+
+    public Result Deactivate()
+    {
+        if (!IsActive)
+            return Result.Success();
+
+        IsActive = false;
+        return Result.Success();
+    }
+
+    public Result Activate()
+    {
+        if (IsActive)
+            return Result.Success();
+
+        IsActive = true;
+        return Result.Success();
+    }
+
     public Result<long> AllocateNextSequence(int numberingYear)
     {
         if (!IsActive)

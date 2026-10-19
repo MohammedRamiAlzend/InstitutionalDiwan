@@ -1,10 +1,11 @@
 # Infrastructure / Persistence / Repositories
 
-> **Status:** Partially implemented — 12 of the 17 repository interfaces have implementations
+> **Status:** Partially implemented — 14 of the 17 repository interfaces have implementations
 > (`UserRepository`, `RoleRepository`, `PermissionRepository`, `EmployeeRepository`,
 > `DepartmentRepository`, `DepartmentTypeRepository`, `DocumentRepository`, `DocumentTypeRepository`,
 > `NumberingRegistryRepository`, `DocumentNumberRepository`, `DocumentAccessGrantRepository`,
-> `LookupRepository`); five have none yet.
+> `LookupRepository`, `InstitutionSettingRepository`, `ExternalOrganizationRepository`,
+> `DocumentMovementRepository`); three have none yet.
 
 ## Purpose
 
@@ -29,12 +30,14 @@ Concrete EF Core implementations of the repository interfaces declared in
 | `EmployeeRepository.cs` | Loads `Employee` records by id and listing for the employee-management endpoints. |
 | `DocumentAccessGrantRepository.cs` | Loads per-document `DocumentAccessGrant` rows by id and by document, for grant/revoke/list. |
 | `LookupRepository.cs` | The one generic repository: resolves a kebab-case lookup slug to its `DbSet<TLookup>` through `LookupCatalog`, then lists/fetches/creates/relabels/(de)activates entries and answers `IsInUseAsync` from EF foreign-key metadata. Backs `/api/lookups/{lookup}`. |
+| `InstitutionSettingRepository.cs` | Loads the single `InstitutionSetting` row (table is a singleton by convention; the seeder owns the first insert) and attaches updates. |
+| `ExternalOrganizationRepository.cs` | Loads `ExternalOrganization` by id or normalized (upper-cased) code and lists them by code, for the external-correspondent CRUD endpoints. |
+| `DocumentMovementRepository.cs` | Loads a `DocumentMovement` with `Steps`/`Events` and answers `HasActiveMovementsAsync(documentId)` — true while the status is not `CLOSED`/`CANCELED`; backs the document cancel/archive guard. |
 
 ## Planned repositories not yet implemented
 
 | Repository (`:` interface) | Key behaviors |
 | --- | --- |
-| `DocumentMovementRepository` (`: IDocumentMovementRepository`) | Eagerly loads `Steps` and `Events`; implements `HasActiveMovementsAsync(documentId)` used by document archive/cancel guards. |
 | `DocumentFileRepository` (`: IDocumentFileRepository`) | Loads `DocumentFile` with its `Versions` collection. |
 | `DocumentRelationRepository` (`: IDocumentRelationRepository`) | Queries bidirectional document links and supports cycle checks when the relation type has `PreventCycles = true`. |
 | `AuditLogRepository` (`: IAuditLogRepository`) | **Append-only**; `GetLatestAsync()` returns the prior `EventHash` so the next tamper-evident entry can chain to it. |
@@ -62,12 +65,15 @@ Concrete EF Core implementations of the repository interfaces declared in
 | `DepartmentRepository`, `DepartmentTypeRepository` | ✅ Implemented (2026-10-18) |
 | `EmployeeRepository`, `DocumentAccessGrantRepository` | ✅ Implemented |
 | `LookupRepository` (generic reference catalogs) | ✅ Implemented (2026-10-19) |
-| `DocumentMovementRepository`, `DocumentFileRepository`, `DocumentRelationRepository`, `AuditLogRepository`, `NotificationRepository` | ❌ Not implemented |
+| `InstitutionSettingRepository`, `ExternalOrganizationRepository` | ✅ Implemented (2026-10-19) |
+| `DocumentMovementRepository` | ✅ Implemented (2026-10-19) |
+| `DocumentFileRepository`, `DocumentRelationRepository`, `AuditLogRepository`, `NotificationRepository` | ❌ Not implemented |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-19 | Buffy | Added `InstitutionSettingRepository` (`GetSingletonAsync`/`Add`), `ExternalOrganizationRepository` (by id / normalized code / listing), and `DocumentMovementRepository` (`HasActiveMovementsAsync` = status not CLOSED/CANCELED); all registered in `Infrastructure/DependencyInjection.cs`. |
 | 2026-10-19 | opencode | Added `LookupRepository` — one generic implementation covering all 33 seeded reference catalogs through a deterministic slug registry (`LookupCatalog`), with Creates/Relabel/(De)activate plus an `IsInUseAsync` guard derived from the EF model's foreign keys. Registered in `Infrastructure/DependencyInjection.cs`; also recorded the previously undocumented `EmployeeRepository` and `DocumentAccessGrantRepository`. |
 | 2026-10-18 | opencode | Added `PermissionRepository` (`GetByCodeAsync`, `ListAllAsync`) and `RoleRepository.ListAllAsync`, registered in `Infrastructure/DependencyInjection.cs` to back the role-management endpoints. |
 | 2026-10-18 | opencode | Added `DepartmentRepository` (listing, `HasActiveChildrenAsync`, `GetDescendantIdsAsync`) and `DepartmentTypeRepository` (`GetByCodeAsync`); both registered in `Infrastructure/DependencyInjection.cs` to back the department CRUD + tree endpoints. |

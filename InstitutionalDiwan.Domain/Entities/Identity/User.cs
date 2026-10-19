@@ -104,6 +104,12 @@ public sealed class User : AggregateRoot<Guid>
         DateTime? startDate = null,
         DateTime? endDate = null)
     {
+        if (_departmentAssignments.Any(assignment =>
+                assignment.IsActive && assignment.DepartmentId == departmentId))
+        {
+            return Result.Failure(DomainErrors.Identity.DepartmentAlreadyAssigned);
+        }
+
         var assignmentResult = UserDepartmentAssignment.Create(
             UserId,
             departmentId,
@@ -116,6 +122,26 @@ public sealed class User : AggregateRoot<Guid>
             return assignmentResult;
 
         _departmentAssignments.Add(assignmentResult.Value);
+        UpdatedAt = DateTime.UtcNow;
+        return Result.Success();
+    }
+
+    /// <summary>
+    /// Ends a temporal department assignment. The row is kept (with its end date) so the access
+    /// history stays auditable; only its <see cref="UserDepartmentAssignment.IsActive"/> flag drops.
+    /// </summary>
+    public Result EndDepartmentScope(Guid assignmentId, DateTime? endedAt = null)
+    {
+        var assignment = _departmentAssignments.FirstOrDefault(
+            candidate => candidate.AssignmentId == assignmentId);
+
+        if (assignment is null)
+            return Result.Failure(DomainErrors.Identity.DepartmentAssignmentNotFound);
+
+        if (!assignment.IsActive)
+            return Result.Success();
+
+        assignment.EndAssignment(endedAt);
         UpdatedAt = DateTime.UtcNow;
         return Result.Success();
     }
