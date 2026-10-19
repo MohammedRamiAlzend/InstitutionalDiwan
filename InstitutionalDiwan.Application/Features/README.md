@@ -1,9 +1,10 @@
 # Application / Features
 
-> **Status:** Partially implemented — Identity (`Login`, `Register`, `ChangePassword`, `Users`,
-> `Roles`, `Permissions`, `Employees`, `AccessGrants`), Correspondence/`Documents` (create, get by id,
-> list), and Organization/`Departments` (create, update, soft delete, activate, get by id, list, tree)
-> slices are live; the remaining modules are target design.
+> **Status:** Partially implemented — `Lookups` (generic reference-catalog CRUD), Identity (`Login`,
+> `Register`, `ChangePassword`, `Users`, `Roles`, `Permissions`, `Employees`, `AccessGrants`),
+> Correspondence/`Documents` (create, get by id, list), and Organization/`Departments` (create,
+> update, soft delete, activate, get by id, list, tree) slices are live; the remaining modules are
+> target design.
 
 ## Purpose
 
@@ -22,6 +23,12 @@ One folder per use case (`Features/Correspondence/Commands/CreateDraftDocument/`
 grouping by technical type, so a slice can be read top-to-bottom.
 
 ## Planned use cases per module
+
+### Lookups (cross-module)
+- **Implemented:** `ListLookupEntriesQuery` ✅, `GetLookupEntryByIdQuery` ✅, `CreateLookupEntryCommand` ✅,
+  `RelabelLookupEntryCommand` ✅, `DeactivateLookupEntryCommand` ✅ (rejects an entry that is still
+  referenced by another table with `Lookup.EntryInUse`), `ActivateLookupEntryCommand` ✅; see
+  [`Lookups/README.md`](Lookups/README.md)
 
 ### Organization (Module 01)
 - **Commands:** `CreateDepartmentCommand` ✅ (creates under an optional active parent; validates the department type exists and is active; rejects duplicate codes with `Department.CodeAlreadyExists`), `UpdateDepartmentCommand` ✅ (renames, moves parent with self/cycle/inactive guards, updates the external-correspondence policy), `MoveDepartmentCommand` ✅ (dedicated reparent with full-subtree cycle validation → `Department.CyclicHierarchy`), `DeleteDepartmentCommand` ✅ (soft delete via `Deactivate`, blocked by `Department.HasActiveChildren`), `ActivateDepartmentCommand` ✅; `UpdateInstitutionSettingsCommand` planned
@@ -82,6 +89,7 @@ persistence and authorization concerns; the invariants live in the domain.
 | Identity/`Employees` (create, update, deactivate/activate, get by id, list) | ✅ Implemented |
 | Identity/`AccessGrants` (grant, revoke, list by document) | ✅ Implemented |
 | Correspondence/`Documents` (create with official number, get by id, list) | ✅ Implemented |
+| `Lookups` (list, get by id, create, relabel, deactivate, activate over all 33 catalogs) | ✅ Implemented |
 | Organization/`Departments` (create, update, soft delete, activate, get by id, list, tree) | ✅ Implemented |
 | Numbering, Movements, Attachments, Archiving, Relations, Audit, Notifications | ❌ Not implemented |
 
@@ -89,6 +97,7 @@ persistence and authorization concerns; the invariants live in the domain.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-19 | opencode | Added the cross-module `Lookups` slice exposing every seeded reference catalog through generic list/get/create/relabel/deactivate/activate use cases (see `Lookups/README.md`); documented it as the first entry of the per-module use-case list. |
 | 2026-10-18 | opencode | Completed the Identity/`Users` slice (`GetUserByIdQuery`, `CreateUserCommand`, `UpdateUserCommand`, `DeactivateUserCommand`, `ActivateUserCommand`, `AssignUserRoleCommand`, `RevokeUserRoleCommand`); moved `ListUsersQuery`/`UserResponse` into `Features/Identity/Users/` alongside a `UserResponseFactory` (resolves role codes, sorts them); added `User.UpdateProfile`/`Activate` and enriched `UserResponse` with employee, department, scope, and timestamp fields. |
 | 2026-10-18 | opencode | Added the Identity/`Employees` slice (`CreateEmployeeCommand`, `UpdateEmployeeCommand`, `DeactivateEmployeeCommand`, `ActivateEmployeeCommand`, `ListEmployeesQuery`, `GetEmployeeByIdQuery`) and the Identity/`AccessGrants` slice (`GrantDocumentAccessCommand`, `RevokeDocumentAccessCommand`, `ListDocumentAccessGrantsQuery`); added `Employee.Update`/`Activate`, the `IEmployeeRepository`/`IDocumentAccessGrantRepository` contracts, the `EMPLOYEE_MANAGE`/`ACCESS_GRANT_MANAGE` permissions, and the `Identity.EmployeeNotFound`/`Identity.AccessGrantNotFound` errors. |
 | 2026-10-18 | opencode | Added the Identity/`Roles` slice (`CreateRoleCommand`, `UpdateRoleCommand`, `DeleteRoleCommand`, `ActivateRoleCommand`, `GrantRolePermissionCommand`, `RevokeRolePermissionCommand`, `ListRolesQuery`, `GetRoleByIdQuery`) and the Identity/`Permissions` catalog (`ListPermissionsQuery`); added `Role.UpdateDetails`/`Activate` and the `Identity.RoleCodeAlreadyExists`/`Identity.PermissionNotFound` errors. |

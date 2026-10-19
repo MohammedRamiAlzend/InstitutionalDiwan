@@ -9,9 +9,8 @@ invariants across the 10 modules using Domain-Driven Design (DDD) and the Result
 **zero external NuGet package dependencies** (no EF Core, no DataAnnotations schema attributes).
 Everything here is plain C# so the domain can be unit-tested without a database or web host.
 
-The project name and namespaces are `InstitutionalDiwan.Domain.*`. Older design notes and the
-Infrastructure layer still refer to the system as `NewDiwan` — that drift is tracked under
-[Known issues](#known-issues--todo).
+The project name and namespaces are `InstitutionalDiwan.Domain.*`. Earlier design notes used the
+`NewDiwan` name; no `NewDiwan.*` namespace or `NewDiwanDbContext` remains in the code.
 
 ## Design rules
 
@@ -63,8 +62,13 @@ GlobalUsing.cs Global usings for entities, common, and errors
 
 A single static catalog nested by module (`DomainErrors.Department`, `.Identity`, `.Correspondence`,
 `.Numbering`, `.Movements`, `.Attachments`, `.Relations`, `.Archiving`, `.Audit`, `.Notifications`,
-`.InstitutionSetting`). Each entry is a strongly-typed `Error` with a stable code such as
+`.InstitutionSetting`, `.Lookup`). Each entry is a strongly-typed `Error` with a stable code such as
 `Correspondence.OnlyDraftEditable` so the API can produce deterministic ProblemDetails.
+
+The `.Lookup` group drives the generic lookups API: `InvalidId` / `LabelEmpty` (validation),
+`UnknownCatalog` and `EntryNotFound` (NotFound), plus `IdAlreadyExists`, `EntryInUse` (Conflict)
+and `CatalogReadOnly` (validation) — the last one marks catalogs that need more than a label before
+an entry can be created.
 
 ### `Events/DomainEvents.cs`
 
@@ -83,14 +87,18 @@ A single static catalog nested by module (`DomainErrors.Department`, `.Identity`
 
 ### `Repositories/IDomainRepositories.cs`
 
-16 pure repository contracts: `IDepartmentRepository`, `IDepartmentTypeRepository`, `IUserRepository`,
+17 pure repository contracts: `IDepartmentRepository`, `IDepartmentTypeRepository`, `IUserRepository`,
 `IRoleRepository`, `IEmployeeRepository`, `IDocumentAccessGrantRepository`, `IPermissionRepository`,
 `IDocumentRepository`, `IDocumentTypeRepository`, `INumberingRegistryRepository`,
 `IDocumentNumberRepository`, `IDocumentMovementRepository`, `IDocumentFileRepository`,
-`IDocumentRelationRepository`, `IAuditLogRepository`, `INotificationRepository`. They expose
-`GetByIdAsync`, a few targeted lookups (`HasActiveChildrenAsync`, `GetActiveForScopeAsync`,
-`HasActiveMovementsAsync`, `GetLatestAsync` for audit hash chaining), and `Add`/`Remove` — no
-`SaveChanges` (that is `IUnitOfWork`).
+`IDocumentRelationRepository`, `IAuditLogRepository`, `INotificationRepository` and
+`ILookupRepository`. They expose `GetByIdAsync`, a few targeted lookups (`HasActiveChildrenAsync`,
+`GetActiveForScopeAsync`, `HasActiveMovementsAsync`, `GetLatestAsync` for audit hash chaining), and
+`Add`/`Remove` — no `SaveChanges` (that is `IUnitOfWork`).
+
+`ILookupRepository` is the one generic contract: it addresses any seeded reference catalog by its
+kebab-case slug (`IsSupported`, `ListAsync`, `GetByIdAsync`, `AddAsync`, `RelabelAsync`,
+`SetActiveStateAsync`, `IsInUseAsync`) so the lookups API needs no per-table repository.
 
 ### `Entities/` — the 10 modules (40 entities)
 
@@ -211,10 +219,11 @@ remain **intentionally** as strings are identity/business identifiers that are n
 `ExternalOrganization.Code` — plus genuinely free-text multi-value fields such as
 `NotificationType.DefaultChannelsCsv` and `AuditLog.ModuleName`.
 
-### Planned lookup CRUD endpoints
+### Lookup CRUD endpoints (implemented)
 
-A single generic `LookupsController` will expose CRUD over every reference table, with the lookup
-selected by a route segment resolved through a registry of allowed lookups:
+A single generic `LookupsController` exposes CRUD over every reference table, with the lookup
+selected by a route segment resolved through a registry of allowed slugs (see the Infrastructure
+`LookupRepository`):
 
 | Method | Route | Behavior |
 | --- | --- | --- |
@@ -225,9 +234,14 @@ selected by a route segment resolved through a registry of allowed lookups:
 | `PATCH` | `/api/lookups/{lookup}/{id}/deactivate` | Deactivate. |
 | `PATCH` | `/api/lookups/{lookup}/{id}/activate` | Reactivate. |
 
-Reads are guarded by the relevant module `*_VIEW` permission; writes by a new `LOOKUP_MANAGE`
-permission. Ids are immutable, and deactivating a lookup that is still referenced by a live business
-row is rejected with a Conflict.
+Every route — including reads — requires an authenticated token; writes additionally require the
+`LOOKUP_MANAGE` permission (`Permissions.LookupManage`). Ids are immutable, an unknown slug is a 404
+(`Lookup.UnknownCatalog`), a duplicate id is a 409 (`Lookup.IdAlreadyExists`), and deactivating a
+lookup that is still referenced by a live business row is rejected with a Conflict
+(`Lookup.EntryInUse`). `department-types`, `notification-types` and `file-storage-providers` cannot
+be created through the generic route (they need extra fields: `HierarchyLevelOrder`, Arabic message
+templates, and a storage endpoint respectively) — `POST` answers 400 `Lookup.CatalogReadOnly` for
+them, while listing, relabelling and (de)activation keep working.
 
 ## Implementation status
 
@@ -237,17 +251,17 @@ row is rejected with a Conflict.
 | `ValueObjects/` | ✅ Implemented (4 value objects) |
 | `Errors/` | ✅ Implemented (`DomainErrors` catalog) |
 | `Events/` | ✅ Implemented (34 events) |
-| `Repositories/` | ✅ Implemented (16 interfaces) |
+| `Repositories/` | ✅ Implemented (17 interfaces) |
 | `Entities/` | ✅ Implemented (64 entities across 10 modules, including reference/lookup tables) |
 
 ### Known issues / TODO
 
 1. ~~Build failure~~ **Resolved** — the entity usings now point at `InstitutionalDiwan.Domain.Events`
    and the Domain project builds cleanly.
-2. **Naming drift.** Code namespaces are now consistently `InstitutionalDiwan.*`; only the DbContext
-   class keeps the legacy `NewDiwanDbContext` name. Rename it when convenient.
-3. **No test project yet.** The pure domain is the cheapest place to start a unit-test suite for the
-   invariants above.
+2. ~~Naming drift~~ **Resolved** — code namespaces and the DbContext (`DiwanDbContext`) are
+   consistently `InstitutionalDiwan.*`; no `NewDiwan.*` references remain.
+3. ~~No test project yet~~ **Resolved** — `InstitutionalDiwan.Tests` covers the domain invariants,
+   application handlers, seeding pipeline and authorization.
 4. **Identity login errors added** — `DomainErrors.Identity.InvalidCredentials` (Unauthorized) and
    `DomainErrors.Identity.UserInactive` (Forbidden) support the login use case.
 
@@ -255,6 +269,7 @@ row is rejected with a Conflict.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-19 | opencode | Added the `LOOKUP_MANAGE` permission (`Permissions.LookupManage`, now part of `Permissions.All`), the `DomainErrors.Lookup` API errors (`UnknownCatalog`, `EntryNotFound`, `IdAlreadyExists`, `EntryInUse`, `CatalogReadOnly`), and the generic `ILookupRepository` contract (17th repository interface) — the domain side of the generic `/api/lookups/{lookup}` API; the lookup CRUD section now describes the implemented routes instead of a plan. |
 | 2026-10-18 | opencode | `User` gained `UpdateProfile` (primary department, employee link, scope, password-change flag) and `Activate` (reverses `Deactivate`). |
 | 2026-10-18 | opencode | Added `IEmployeeRepository` and `IDocumentAccessGrantRepository` plus the `Identity.EmployeeNotFound`/`Identity.AccessGrantNotFound` errors; `Employee` gained `Update` (full-field edit) and `Activate` alongside the existing `TransferDepartment`/`Deactivate`; refreshed the repository count to 16. |
 | 2026-10-18 | opencode | Converted the **remaining** reference "code" strings to seeded lookup tables and completed the lookup programme: Identity (`UserScopeType`, `AssignmentType`, `AccessLevel`), Correspondence (`ParticipantRole`, `ParticipantTargetType`, `OrganizationType`), Movements (`MovementType`, `MovementStatus`, `MovementStepStatus`, `MovementEventType`), Attachments (`StorageProviderType`; reshaped `DocumentFileType`, `FileStorageProvider`), Relations (`DocumentRelationType`, `RelationActionType`), Archiving (`ArchiveEventType`, `ArchiveLocation`), Audit (`AuditActionType`, `AuditEntityType`), Notifications (`NotificationType`, `NotificationPriority`, `NotificationChannel`, `NotificationOutboxStatus`), and Organization (`NumberingMode`). Every reference string is now an integer FK; only identity/business codes and multi-value/free-text fields remain strings. |

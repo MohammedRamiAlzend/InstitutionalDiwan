@@ -29,6 +29,7 @@ public sealed class PermissionSeeder : ISeeder
         (Permissions.EmployeeManage, "إدارة الموظفين", "Manage employees", "IDENTITY", "Create, update and deactivate employee records."),
         (Permissions.AccessGrantManage, "إدارة صلاحيات الوصول", "Manage document access", "IDENTITY", "Grant and revoke per-document access for users."),
         (Permissions.ReportView, "عرض التقارير", "View reports", "REPORTING", "View institutional reports and statistics."),
+        (Permissions.LookupManage, "إدارة القوائم المرجعية", "Manage reference lookups", "LOOKUPS", "Add, relabel, activate and deactivate reference lookup entries."),
     };
 
     public async Task SeedAsync(SeederContext context, CancellationToken cancellationToken = default)

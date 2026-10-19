@@ -1,9 +1,10 @@
 # Infrastructure / Persistence / Repositories
 
-> **Status:** Partially implemented — `UserRepository`, `RoleRepository`, `PermissionRepository`,
-> `DepartmentRepository`, `DepartmentTypeRepository`, `DocumentRepository`,
-> `NumberingRegistryRepository`, and `DocumentNumberRepository` exist; the remaining interfaces have
-> no implementation yet.
+> **Status:** Partially implemented — 12 of the 17 repository interfaces have implementations
+> (`UserRepository`, `RoleRepository`, `PermissionRepository`, `EmployeeRepository`,
+> `DepartmentRepository`, `DepartmentTypeRepository`, `DocumentRepository`, `DocumentTypeRepository`,
+> `NumberingRegistryRepository`, `DocumentNumberRepository`, `DocumentAccessGrantRepository`,
+> `LookupRepository`); five have none yet.
 
 ## Purpose
 
@@ -25,6 +26,9 @@ Concrete EF Core implementations of the repository interfaces declared in
 | `DocumentRepository.cs` | Loads `Document` with `Participants` and `StatusHistory`, supports the recent-documents listing, and attaches new documents. |
 | `NumberingRegistryRepository.cs` | Loads `NumberingRegistry` with its per-year `Counters`; `GetActiveForScopeAsync` picks the most specific active registry matching department/type/direction (null fields act as wildcards). |
 | `DocumentNumberRepository.cs` | Loads issued `DocumentNumber` rows (by id / active per document) and answers `ExistsByNumberAndYearAsync`, the duplicate-official-number check used by `CreateDocumentCommandHandler`. |
+| `EmployeeRepository.cs` | Loads `Employee` records by id and listing for the employee-management endpoints. |
+| `DocumentAccessGrantRepository.cs` | Loads per-document `DocumentAccessGrant` rows by id and by document, for grant/revoke/list. |
+| `LookupRepository.cs` | The one generic repository: resolves a kebab-case lookup slug to its `DbSet<TLookup>` through `LookupCatalog`, then lists/fetches/creates/relabels/(de)activates entries and answers `IsInUseAsync` from EF foreign-key metadata. Backs `/api/lookups/{lookup}`. |
 
 ## Planned repositories not yet implemented
 
@@ -56,12 +60,15 @@ Concrete EF Core implementations of the repository interfaces declared in
 | `PermissionRepository` | ✅ Implemented (2026-10-18) |
 | `NumberingRegistryRepository`, `DocumentNumberRepository` | ✅ Implemented (2026-10-18) |
 | `DepartmentRepository`, `DepartmentTypeRepository` | ✅ Implemented (2026-10-18) |
+| `EmployeeRepository`, `DocumentAccessGrantRepository` | ✅ Implemented |
+| `LookupRepository` (generic reference catalogs) | ✅ Implemented (2026-10-19) |
 | `DocumentMovementRepository`, `DocumentFileRepository`, `DocumentRelationRepository`, `AuditLogRepository`, `NotificationRepository` | ❌ Not implemented |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-19 | opencode | Added `LookupRepository` — one generic implementation covering all 33 seeded reference catalogs through a deterministic slug registry (`LookupCatalog`), with Creates/Relabel/(De)activate plus an `IsInUseAsync` guard derived from the EF model's foreign keys. Registered in `Infrastructure/DependencyInjection.cs`; also recorded the previously undocumented `EmployeeRepository` and `DocumentAccessGrantRepository`. |
 | 2026-10-18 | opencode | Added `PermissionRepository` (`GetByCodeAsync`, `ListAllAsync`) and `RoleRepository.ListAllAsync`, registered in `Infrastructure/DependencyInjection.cs` to back the role-management endpoints. |
 | 2026-10-18 | opencode | Added `DepartmentRepository` (listing, `HasActiveChildrenAsync`, `GetDescendantIdsAsync`) and `DepartmentTypeRepository` (`GetByCodeAsync`); both registered in `Infrastructure/DependencyInjection.cs` to back the department CRUD + tree endpoints. |
 | 2026-10-18 | opencode | Added `DocumentNumberRepository` (incl. `ExistsByNumberAndYearAsync` duplicate-number check) and `NumberingRegistryRepository` (scope matching with most-specific-first ordering); both registered in `Infrastructure/DependencyInjection.cs` to support official-number assignment at document creation. |

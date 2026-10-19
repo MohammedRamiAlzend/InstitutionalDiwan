@@ -6,6 +6,21 @@ public static class DomainErrors
     {
         public static readonly Error InvalidId = Error.Validation("Lookup.InvalidId", "A lookup entry id must be a positive integer.");
         public static readonly Error LabelEmpty = Error.Validation("Lookup.LabelEmpty", "A lookup entry requires both English and Arabic labels.");
+
+        public static Error UnknownCatalog(string lookup) =>
+            Error.NotFound("Lookup.UnknownCatalog", $"The lookup catalog '{lookup}' is not supported.");
+
+        public static Error EntryNotFound(string lookup, int id) =>
+            Error.NotFound("Lookup.EntryNotFound", $"Lookup entry {id} was not found in the '{lookup}' catalog.");
+
+        public static Error IdAlreadyExists(string lookup, int id) =>
+            Error.Conflict("Lookup.IdAlreadyExists", $"Lookup entry {id} already exists in the '{lookup}' catalog.");
+
+        public static Error EntryInUse(string lookup, int id) =>
+            Error.Conflict("Lookup.EntryInUse", $"Lookup entry {id} in the '{lookup}' catalog is referenced by other records and cannot be deactivated.");
+
+        public static Error CatalogReadOnly(string lookup) =>
+            Error.Validation("Lookup.CatalogReadOnly", $"The '{lookup}' catalog cannot be extended through the generic lookups endpoint because it requires additional fields.");
     }
 
     public static class Department

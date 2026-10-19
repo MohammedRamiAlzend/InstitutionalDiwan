@@ -1,8 +1,8 @@
 # Presentation / Contracts
 
-> **Status:** Partially implemented — Correspondence (`CreateDocumentRequest`), Organization, and
-> Identity requests/responses (incl. employees and document access grants) exist; the remaining
-> modules are target design.
+> **Status:** Partially implemented — Correspondence (`CreateDocumentRequest`), Organization, Identity
+> (incl. employees and document access grants), and Lookups requests exist; the remaining modules are
+> target design.
 
 ## Purpose
 
@@ -14,6 +14,7 @@ commands/queries map between them and the domain.
 
 | Module | Types |
 | --- | --- |
+| Lookups | `CreateLookupEntryRequest` ✅ (`Id`, `Desc`, `DescAr`), `RelabelLookupEntryRequest` ✅ (`Desc`, `DescAr`); the shared `LookupEntryResponse` read model lives in `Application/Features/Lookups/` |
 | Organization | `CreateDepartmentRequest` ✅, `UpdateDepartmentRequest` ✅, `MoveDepartmentRequest` ✅, `DepartmentTreeResponse` |
 | Identity | `LoginRequest` ✅, `RegisterRequest` ✅, `ChangePasswordRequest` ✅, `CreateRoleRequest` ✅, `UpdateRoleRequest` ✅, `GrantPermissionRequest` ✅, `CreateEmployeeRequest` ✅, `UpdateEmployeeRequest` ✅, `GrantDocumentAccessRequest` ✅, `CreateUserRequest` ✅, `UpdateUserRequest` ✅, `AssignUserRoleRequest` ✅ |
 | Correspondence | `CreateDocumentRequest` ✅ (title, type, direction, `OfficialNumberText`, `NumberingYear`, optional summary/levels), `AddParticipantRequest`, `RegisterDocumentRequest`, `DocumentDetailsResponse` |
@@ -42,12 +43,14 @@ commands/queries map between them and the domain.
 | Identity `CreateRoleRequest`, `UpdateRoleRequest`, `GrantPermissionRequest` | ✅ Implemented |
 | Identity `CreateUserRequest`, `UpdateUserRequest`, `AssignUserRoleRequest` | ✅ Implemented |
 | Identity `CreateEmployeeRequest`, `UpdateEmployeeRequest`, `GrantDocumentAccessRequest` | ✅ Implemented |
+| Lookups `CreateLookupEntryRequest`, `RelabelLookupEntryRequest` | ✅ Implemented |
 | Other request/response records | ❌ Not implemented |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-19 | opencode | Added `CreateLookupEntryRequest` and `RelabelLookupEntryRequest` (`Contracts/Lookups/LookupContracts.cs`) for the generic lookups endpoints. |
 | 2026-10-18 | opencode | Added `CreateUserRequest`, `UpdateUserRequest`, and `AssignUserRoleRequest` for the user-management endpoints. |
 | 2026-10-18 | opencode | Added `CreateEmployeeRequest`, `UpdateEmployeeRequest` (for `/api/employees`) and `GrantDocumentAccessRequest` (for `/api/documents/{documentId}/access-grants`). |
 | 2026-10-18 | opencode | Added `CreateRoleRequest`, `UpdateRoleRequest`, and `GrantPermissionRequest` for the role-management endpoints. |

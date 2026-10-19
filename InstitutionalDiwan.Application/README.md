@@ -1,6 +1,8 @@
 # InstitutionalDiwan.Application — Application Layer
 
-> **Status:** Scaffolding only — **no code yet**. All subfolders currently contain documentation, not `.cs` files.
+> **Status:** Implemented — `DependencyInjection.cs`, `Abstractions/` (messaging + authentication),
+> `Behaviors/ValidationPipelineBehavior.cs`, and the live feature slices under `Features/`
+> (Lookups, Organization, Identity, Correspondence, Numbering) are in place.
 
 ## Purpose
 
@@ -13,7 +15,7 @@ Responsibility Segregation) and the Result pattern. Handlers load aggregates thr
 
 | | |
 | --- | --- |
-| **Allowed** | `InstitutionalDiwan.Domain`, `MediatR.Contracts`, `FluentValidation` |
+| **Allowed** | `InstitutionalDiwan.Domain`, `MediatR`, `FluentValidation`, `Microsoft.Extensions.DependencyInjection.Abstractions` |
 | **Forbidden** | `Microsoft.EntityFrameworkCore`, `Microsoft.AspNetCore.*`, SQL Server drivers, file-system APIs |
 
 Rationale: keeping EF Core and ASP.NET out of this layer means every use case can be executed in a
@@ -23,26 +25,32 @@ plain unit test with in-memory/fake repositories.
 
 | Folder | Responsibility |
 | --- | --- |
-| [`Abstractions/`](Abstractions/README.md) | Interfaces the infrastructure must implement (messaging, auth, data, storage, caching, clock). |
-| [`Behaviors/`](Behaviors/README.md) | MediatR `IPipelineBehavior` classes for validation, logging, transactions, and query caching. |
+| [`Abstractions/`](Abstractions/README.md) | Interfaces the infrastructure must implement (messaging, auth) + the planned data/storage/caching/clock contracts. |
+| [`Behaviors/`](Behaviors/README.md) | MediatR `IPipelineBehavior` classes — `ValidationPipelineBehavior` is live; logging/transaction/caching are planned. |
 | [`Exceptions/`](Exceptions/README.md) | Technical/pipeline exceptions (validation fan-out, optimistic-concurrency conflicts). |
-| [`Features/`](Features/README.md) | Vertical feature slices per module (Commands, Queries, Validators, DTOs, EventHandlers). |
+| [`Features/`](Features/README.md) | Vertical feature slices per module (Commands, Queries, Validators, DTOs). |
 
-## Package footprint
+## Composition root
 
-`InstitutionalDiwan.Application.csproj` currently references **only** `InstitutionalDiwan.Domain`.
-To realize the design it still needs `MediatR` (or `MediatR.Contracts` + a dispatcher),
-`FluentValidation`, and a `Microsoft.Extensions.DependencyInjection.Abstractions` reference for a
-`DependencyInjection.cs` registration entry point.
+`DependencyInjection.AddApplication()` registers MediatR handlers from the assembly and applies the
+`ValidationPipelineBehavior<,>` open behavior plus every `FluentValidation` validator found by
+assembly scan; `Program.cs` calls it alongside `AddInfrastructure()`.
 
 ## Implementation status
 
 | Item | State |
 | --- | --- |
-| Commands / Queries / Validators / DTOs / EventHandlers | ❌ None implemented |
-| Pipeline behaviors | ❌ None implemented |
-| Abstractions | ❌ None implemented |
+| Commands / Queries / Validators / DTOs | ✅ Implemented (Lookups, Organization/Departments, Identity/Users·Roles·Permissions·Employees·AccessGrants·Login·Register·ChangePassword, Correspondence/Documents) |
+| Pipeline behaviors | 🟡 `ValidationPipelineBehavior` implemented; logging/transaction/caching planned |
+| Abstractions | 🟡 `Messaging/` + `Authentication/` implemented; data/storage/caching/clock planned |
+| `DependencyInjection.cs` | ✅ Implemented (`AddApplication`) |
 | `Class1.cs` placeholder | 🗑️ Removed |
-| Registered in the web host | ❌ Not wired into `Program.cs` |
+| Registered in the web host | ✅ `Program.cs` calls `AddApplication()` |
 
-See each subfolder's README for the full target design and a per-folder status table.
+See each subfolder's README for the full design and per-folder status tables.
+
+## Change Log
+
+| Date | Author | Change |
+| --- | --- | --- |
+| 2026-10-19 | opencode | Added the `Features/Lookups/` slice (generic list/get/create/relabel/deactivate/activate over all seeded reference catalogs) and refreshed this README, which still described the layer as "scaffolding only — no code yet". |

@@ -39,6 +39,7 @@ public static class DependencyInjection
         services.AddScoped<IDocumentTypeRepository, DocumentTypeRepository>();
         services.AddScoped<IDocumentNumberRepository, DocumentNumberRepository>();
         services.AddScoped<INumberingRegistryRepository, NumberingRegistryRepository>();
+        services.AddScoped<ILookupRepository, LookupRepository>();
 
         // Ordered, environment-aware seeders — executed at startup by SeederRunner.
         services.AddScoped<ISeeder, UserScopeTypeSeeder>();

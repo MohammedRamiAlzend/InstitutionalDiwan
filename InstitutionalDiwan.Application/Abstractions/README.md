@@ -1,6 +1,8 @@
 # Application / Abstractions
 
-> **Status:** Target design — **no interfaces implemented yet**. Nothing in this folder exists as code.
+> **Status:** Partially implemented — `Messaging/` (ICommand/IQuery/ICommandHandler/IQueryHandler) and
+> `Authentication/` (IJwtProvider, IPasswordHasher) are live; the data/storage/caching/clock
+> contracts are still target design.
 
 ## Purpose
 
@@ -24,9 +26,9 @@ technology choices swappable.
 
 | Interface | Shape | Notes |
 | --- | --- | --- |
-| `IUserContext` | `Guid UserId`, `Guid PrimaryDepartmentId`, `string ScopeType`, `IReadOnlySet<string> Permissions` | Ambient current user, populated from the HTTP context by the Infrastructure implementation. |
-| `IJwtProvider` | `GenerateAccessToken(User)`, `GenerateRefreshToken(User)`, validation helpers | Issues signed JWTs. |
-| `IPasswordHasher` | `string Hash(string)`, `bool Verify(string, string)` | PBKDF2 / BCrypt / Argon2id — algorithm chosen in Infrastructure. |
+| `IUserContext` | `Guid UserId`, `Guid PrimaryDepartmentId`, `string ScopeType`, `IReadOnlySet<string> Permissions` | Ambient current user, populated from the HTTP context by the Infrastructure implementation. ❌ not implemented yet. |
+| `IJwtProvider` | `GenerateAccessToken(...)` + permission/role claims | ✅ Implemented; consumed by `LoginCommand` and the auth controller. |
+| `IPasswordHasher` | `string Hash(string)`, `bool Verify(string, string)` | ✅ Implemented (PBKDF2 in `Infrastructure/Authentication/PasswordHasher.cs`). |
 
 ### `Data/`
 
@@ -53,16 +55,34 @@ technology choices swappable.
 | --- | --- | --- |
 | `IDateTimeProvider` | `DateTime UtcNow`, `DateTime ToInstitutionLocal(DateTime utc)`, `int NumberingYear(DateTime utc)` | Lets domain logic and numbering years be tested deterministically. |
 
+## Contents
+
+| File | Purpose |
+| --- | --- |
+| `Messaging/ICommand.cs` | `ICommand` / `ICommand<TResponse>` markers over `IRequest<Result>` / `IRequest<Result<TResponse>>`. |
+| `Messaging/ICommandHandler.cs` | `ICommandHandler<TCommand>` / `ICommandHandler<TCommand, TResponse>` — handlers always return a `Result`. |
+| `Messaging/IQuery.cs` | `IQuery<TResponse>` marker over `IRequest<Result<TResponse>>`. |
+| `Messaging/IQueryHandler.cs` | `IQueryHandler<TQuery, TResponse>` for read-only use cases. |
+| `Authentication/IJwtProvider.cs` | Issues signed access tokens carrying user id, roles, and permission claims. |
+| `Authentication/IPasswordHasher.cs` | `Hash` / `Verify` for user credentials (PBKDF2 implementation in Infrastructure). |
+
 ## Implementation status
 
 | Group | State |
 | --- | --- |
-| `Messaging/` | ❌ Not implemented |
-| `Authentication/` | ❌ Not implemented |
+| `Messaging/` | ✅ Implemented (ICommand, ICommandHandler, IQuery, IQueryHandler) |
+| `Authentication/` | ✅ Implemented (IJwtProvider, IPasswordHasher) |
 | `Data/` | ❌ Not implemented |
 | `Storage/` | ❌ Not implemented |
 | `Caching/` | ❌ Not implemented |
 | `Clock/` | ❌ Not implemented |
 
-> The Infrastructure folders named after these contracts (`Authentication/`, `Storage/`, `Time/`)
-> are likewise empty — see their READMEs for details.
+> The Infrastructure `Authentication/` folder implements these contracts (`JwtProvider`,
+> `PasswordHasher`); `Storage/`, `Outbox/`, `BackgroundJobs/` and `Time/` are still empty — see their
+> READMEs for details.
+
+## Change Log
+
+| Date | Author | Change |
+| --- | --- | --- |
+| 2026-10-19 | opencode | Recorded `Messaging/` (`ICommand`, `ICommandHandler`, `IQuery`, `IQueryHandler`) and `Authentication/` (`IJwtProvider`, `IPasswordHasher`) as ✅ implemented with a per-file Contents table; the README previously reported both groups as not implemented. |

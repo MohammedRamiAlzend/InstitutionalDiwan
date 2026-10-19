@@ -44,8 +44,14 @@ internal sealed class BearerSecuritySchemeTransformer(IAuthenticationSchemeProvi
             [new OpenApiSecuritySchemeReference("Bearer")] = []
         };
 
+        if (document.Paths is null)
+            return;
+
         foreach (var path in document.Paths.Values)
         {
+            if (path.Operations is null)
+                continue;
+
             foreach (var operation in path.Operations.Values)
             {
                 operation.Security ??= new List<OpenApiSecurityRequirement>();

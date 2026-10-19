@@ -4,7 +4,7 @@
 
 ## Purpose
 
-EF Core `SaveChangesInterceptor` implementations that hook into `NewDiwanDbContext.SaveChangesAsync` to
+EF Core `SaveChangesInterceptor` implementations that hook into `DiwanDbContext.SaveChangesAsync` to
 give persistence two cross-cutting behaviors: **domain-event dispatch** and **tamper-evident auditing**.
 
 ## Planned components
@@ -42,5 +42,5 @@ Automatically records immutable `AuditLog` entries with SHA-256 hash chaining
 | `PublishDomainEventsInterceptor` / `InsertOutboxMessagesInterceptor` | ❌ Not implemented |
 | `TamperEvidentAuditInterceptor` | ❌ Not implemented |
 
-No interceptor is registered on `NewDiwanDbContext` today, so domain events raised by aggregates are
+No interceptor is registered on `DiwanDbContext` today, so domain events raised by aggregates are
 currently never dispatched and no audit rows are produced.

@@ -117,3 +117,52 @@ public interface INotificationRepository
     Task<Notification?> GetByIdAsync(Guid notificationId, CancellationToken cancellationToken = default);
     void Add(Notification notification);
 }
+
+/// <summary>
+/// Generic access to the seeded reference ("lookup") catalogs. Implementations own the
+/// slug-to-entity registry, so callers address a catalog by its kebab-case key
+/// (<c>document-types</c>, <c>movement-statuses</c>, …) instead of a concrete entity type.
+/// </summary>
+public interface ILookupRepository
+{
+    /// <summary>True when <paramref name="lookupKey"/> maps to a known lookup catalog.</summary>
+    bool IsSupported(string lookupKey);
+
+    /// <summary>Lists a catalog ordered by id, optionally including deactivated entries.</summary>
+    Task<IReadOnlyList<LookupEntity>> ListAsync(
+        string lookupKey,
+        bool includeInactive,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>Loads a single tracked entry so it can be relabelled or (de)activated.</summary>
+    Task<LookupEntity?> GetByIdAsync(
+        string lookupKey,
+        int id,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>Creates and tracks a new catalog entry; fails when the id is taken or the labels are blank.</summary>
+    Task<Result<LookupEntity>> AddAsync(
+        string lookupKey,
+        int id,
+        string desc,
+        string descAr,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>Updates an entry's English/Arabic labels, or returns null when it does not exist.</summary>
+    Task<LookupEntity?> RelabelAsync(
+        string lookupKey,
+        int id,
+        string desc,
+        string descAr,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>Activates or deactivates an entry, or returns null when it does not exist.</summary>
+    Task<LookupEntity?> SetActiveStateAsync(
+        string lookupKey,
+        int id,
+        bool isActive,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>True when any table holds a foreign key to this entry, so it must not be deactivated.</summary>
+    Task<bool> IsInUseAsync(string lookupKey, int id, CancellationToken cancellationToken = default);
+}

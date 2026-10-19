@@ -19,12 +19,13 @@ public static class Permissions
     public const string EmployeeManage = "EMPLOYEE_MANAGE";
     public const string AccessGrantManage = "ACCESS_GRANT_MANAGE";
     public const string ReportView = "REPORT_VIEW";
+    public const string LookupManage = "LOOKUP_MANAGE";
 
     /// <summary>Every known permission — used to register one authorization policy per permission.</summary>
     public static readonly IReadOnlyCollection<string> All = new[]
     {
         DocumentView, DocumentCreate, DocumentEdit, DocumentDelete, DocumentApprove,
         NumberingView, DepartmentManage, RoleManage, UserManage, EmployeeManage,
-        AccessGrantManage, ReportView,
+        AccessGrantManage, ReportView, LookupManage,
     };
 }
