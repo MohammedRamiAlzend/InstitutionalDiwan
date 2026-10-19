@@ -1,5 +1,4 @@
 using FluentValidation;
-using InstitutionalDiwan.Domain.Entities.Correspondence;
 
 namespace InstitutionalDiwan.Application.Features.Correspondence.ExternalOrganizations;
 

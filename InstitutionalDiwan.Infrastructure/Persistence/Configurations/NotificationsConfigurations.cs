@@ -1,6 +1,6 @@
+using InstitutionalDiwan.Domain.Entities.Notifications;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using InstitutionalDiwan.Domain.Entities.Notifications;
 
 namespace InstitutionalDiwan.Infrastructure.Persistence.Configurations;
 

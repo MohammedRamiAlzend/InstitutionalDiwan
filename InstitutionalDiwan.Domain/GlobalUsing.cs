@@ -1,4 +1,5 @@
-﻿global using InstitutionalDiwan.Domain.Entities.Attachments;
+﻿global using InstitutionalDiwan.Domain.Common;
+global using InstitutionalDiwan.Domain.Entities.Attachments;
 global using InstitutionalDiwan.Domain.Entities.Audit;
 global using InstitutionalDiwan.Domain.Entities.Correspondence;
 global using InstitutionalDiwan.Domain.Entities.Identity;
@@ -7,5 +8,4 @@ global using InstitutionalDiwan.Domain.Entities.Notifications;
 global using InstitutionalDiwan.Domain.Entities.Numbering;
 global using InstitutionalDiwan.Domain.Entities.Organization;
 global using InstitutionalDiwan.Domain.Entities.Relations;
-global using InstitutionalDiwan.Domain.Common;
 global using InstitutionalDiwan.Domain.Errors;

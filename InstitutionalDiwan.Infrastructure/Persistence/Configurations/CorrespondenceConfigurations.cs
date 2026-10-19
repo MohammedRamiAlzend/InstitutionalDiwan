@@ -1,6 +1,6 @@
+using InstitutionalDiwan.Domain.Entities.Correspondence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using InstitutionalDiwan.Domain.Entities.Correspondence;
 
 namespace InstitutionalDiwan.Infrastructure.Persistence.Configurations;
 

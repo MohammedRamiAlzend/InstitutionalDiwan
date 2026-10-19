@@ -1,4 +1,3 @@
-using System.Reflection;
 using InstitutionalDiwan.Domain.Common;
 using InstitutionalDiwan.Domain.Entities.Archiving;
 using InstitutionalDiwan.Domain.Entities.Attachments;
@@ -13,6 +12,7 @@ using InstitutionalDiwan.Domain.Entities.Relations;
 using InstitutionalDiwan.Domain.Errors;
 using InstitutionalDiwan.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
+using System.Reflection;
 
 namespace InstitutionalDiwan.Infrastructure.Persistence.Repositories;
 
@@ -27,6 +27,9 @@ internal sealed class LookupRepository : ILookupRepository
     public LookupRepository(DiwanDbContext context) => _context = context;
 
     public bool IsSupported(string lookupKey) => LookupCatalog.TryGet(lookupKey, out _);
+
+    /// <summary>Returns all supported lookup catalog keys.</summary>
+    public IReadOnlyList<string> GetSupportedCatalogs() => LookupCatalog.GetSupportedCatalogKeys();
 
     public async Task<IReadOnlyList<LookupEntity>> ListAsync(
         string lookupKey,
@@ -191,7 +194,7 @@ internal sealed class LookupRepository : ILookupRepository
 }
 
 /// <summary>Creates and tracks one lookup entry; returns a domain failure for invalid labels.</summary>
-internal delegate Task<Result<LookupEntity>> LookupEntryFactory(
+public delegate Task<Result<LookupEntity>> LookupEntryFactory(
     DiwanDbContext context,
     int id,
     string desc,
@@ -199,7 +202,7 @@ internal delegate Task<Result<LookupEntity>> LookupEntryFactory(
     CancellationToken cancellationToken);
 
 /// <summary>Operation set for one catalog slug.</summary>
-internal sealed class LookupDefinition
+public sealed class LookupDefinition
 {
     public LookupDefinition(
         Type entityType,
@@ -226,9 +229,9 @@ internal sealed class LookupDefinition
 /// Deterministic route-segment registry: every supported <c>/api/lookups/{lookup}</c> slug maps to
 /// exactly one seeded lookup entity. Adding a lookup to the API means adding one entry here.
 /// </summary>
-internal static class LookupCatalog
+public static class LookupCatalog
 {
-    private static readonly Dictionary<string, LookupDefinition> Definitions =
+    public static readonly Dictionary<string, LookupDefinition> Definitions =
         new(StringComparer.OrdinalIgnoreCase)
         {
             // Module 01 — Organization
@@ -287,6 +290,9 @@ internal static class LookupCatalog
 
     public static bool TryGet(string lookupKey, out LookupDefinition definition) =>
         Definitions.TryGetValue(lookupKey?.Trim() ?? string.Empty, out definition!);
+
+    /// <summary>Returns all supported lookup catalog keys.</summary>
+    public static IReadOnlyList<string> GetSupportedCatalogKeys() => Definitions.Keys.ToList();
 
     private static LookupDefinition Define<TEntity>(
         Func<int, string?, string?, Result<TEntity>> create)

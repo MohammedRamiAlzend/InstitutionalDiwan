@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace InstitutionalDiwan.Domain.Common;
 
 public abstract class AggregateRoot<TId> : Entity<TId>

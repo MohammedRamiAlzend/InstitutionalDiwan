@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-
 namespace InstitutionalDiwan.Domain.Common;
 
 public abstract class Entity<TId> : IEquatable<Entity<TId>>

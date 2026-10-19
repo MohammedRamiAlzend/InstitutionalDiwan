@@ -1,5 +1,5 @@
-using System.Security.Cryptography;
 using InstitutionalDiwan.Application.Abstractions.Authentication;
+using System.Security.Cryptography;
 
 namespace InstitutionalDiwan.Infrastructure.Authentication;
 

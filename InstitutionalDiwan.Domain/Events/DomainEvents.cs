@@ -1,6 +1,3 @@
-using System;
-using InstitutionalDiwan.Domain.Common;
-
 namespace InstitutionalDiwan.Domain.Events;
 
 // Module 01: Organization
@@ -11,7 +8,7 @@ public sealed record DepartmentDeactivatedEvent(Guid DepartmentId) : DomainEvent
 // Module 02: Identity & Access
 public sealed record UserCreatedEvent(Guid UserId, string Username, Guid PrimaryDepartmentId) : DomainEventBase;
 public sealed record UserDeactivatedEvent(Guid UserId) : DomainEventBase;
-public sealed record UserRoleAssignedEvent(Guid UserId, Guid RoleId, Guid?AssignedByUserId) : DomainEventBase;
+public sealed record UserRoleAssignedEvent(Guid UserId, Guid RoleId, Guid? AssignedByUserId) : DomainEventBase;
 public sealed record UserRoleRevokedEvent(Guid UserId, Guid RoleId) : DomainEventBase;
 public sealed record DocumentAccessGrantedEvent(Guid GrantId, Guid DocumentId, Guid UserId, int AccessLevelId) : DomainEventBase;
 public sealed record DocumentAccessRevokedEvent(Guid GrantId, Guid DocumentId, Guid UserId) : DomainEventBase;

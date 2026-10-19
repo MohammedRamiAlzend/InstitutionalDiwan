@@ -1,9 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using InstitutionalDiwan.Domain.Common;
-using InstitutionalDiwan.Domain.Errors;
-
 namespace InstitutionalDiwan.Domain.Entities.Numbering;
 
 public sealed class NumberingRegistry : AggregateRoot<Guid>

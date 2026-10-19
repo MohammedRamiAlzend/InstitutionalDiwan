@@ -1,5 +1,3 @@
-using System;
-
 namespace InstitutionalDiwan.Domain.Common;
 
 public enum ErrorType

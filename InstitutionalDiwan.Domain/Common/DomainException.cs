@@ -1,5 +1,3 @@
-using System;
-
 namespace InstitutionalDiwan.Domain.Common;
 
 public sealed class DomainException : Exception

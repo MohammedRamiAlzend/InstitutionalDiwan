@@ -1,6 +1,3 @@
-using System;
-using InstitutionalDiwan.Domain.Common;
-
 namespace InstitutionalDiwan.Domain.Entities.Relations;
 
 public sealed class DocumentRelationEvent : Entity<Guid>

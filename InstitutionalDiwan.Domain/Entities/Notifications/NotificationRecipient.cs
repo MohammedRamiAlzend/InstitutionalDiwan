@@ -1,6 +1,3 @@
-using System;
-using InstitutionalDiwan.Domain.Common;
-
 namespace InstitutionalDiwan.Domain.Entities.Notifications;
 
 public sealed class NotificationRecipient : Entity<Guid>

@@ -3,7 +3,6 @@ using InstitutionalDiwan.Domain.Common;
 using InstitutionalDiwan.Domain.Entities.Correspondence;
 using InstitutionalDiwan.Domain.Entities.Numbering;
 using InstitutionalDiwan.Domain.Entities.Organization;
-using InstitutionalDiwan.Domain.Errors;
 using InstitutionalDiwan.Infrastructure.Persistence;
 using InstitutionalDiwan.Infrastructure.Persistence.Repositories;
 using InstitutionalDiwan.Tests.Support;

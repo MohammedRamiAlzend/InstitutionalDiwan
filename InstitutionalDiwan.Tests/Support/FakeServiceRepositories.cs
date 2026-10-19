@@ -4,7 +4,6 @@ using InstitutionalDiwan.Domain.Common;
 using InstitutionalDiwan.Domain.Entities.Correspondence;
 using InstitutionalDiwan.Domain.Entities.Identity;
 using InstitutionalDiwan.Domain.Entities.Movements;
-using InstitutionalDiwan.Domain.Entities.Numbering;
 using InstitutionalDiwan.Domain.Entities.Organization;
 using InstitutionalDiwan.Domain.Repositories;
 
@@ -78,6 +77,8 @@ internal sealed class FakeLookupRepository : ILookupRepository
     }
 
     public bool IsSupported(string lookupKey) => _entries.ContainsKey(lookupKey);
+
+    public IReadOnlyList<string> GetSupportedCatalogs() => _entries.Keys.ToList();
 
     public Task<IReadOnlyList<LookupEntity>> ListAsync(
         string lookupKey,

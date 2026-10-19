@@ -1,5 +1,6 @@
 using InstitutionalDiwan.Application.Features.Lookups;
 using InstitutionalDiwan.Domain.Common;
+using InstitutionalDiwan.Infrastructure.Persistence.Repositories;
 using InstitutionalDiwan.Server.Contracts.Lookups;
 using InstitutionalDiwan.Server.Extensions;
 using MediatR;
@@ -22,6 +23,18 @@ public sealed class LookupsController : ControllerBase
     private readonly ISender _sender;
 
     public LookupsController(ISender sender) => _sender = sender;
+
+    /// <summary>Lists all supported lookup catalog keys.</summary>
+    /// <response code="200">A list of lookup catalog slugs that can be used as the <c>{lookup}</c> segment.</response>
+    /// <response code="401">The token is missing, expired, or invalid.</response>
+    [HttpGet]
+    [ProducesResponseType<string[]>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
+    public IActionResult ListAllCatalogs()
+    {
+        var keys = LookupCatalog.Definitions.Keys.ToList();
+        return Ok(keys);
+    }
 
     /// <summary>Lists a reference catalog, ordered by id.</summary>
     /// <response code="200">The catalog entries (active only unless <c>includeInactive</c> is true).</response>

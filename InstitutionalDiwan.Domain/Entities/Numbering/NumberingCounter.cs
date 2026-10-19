@@ -1,6 +1,3 @@
-using System;
-using InstitutionalDiwan.Domain.Common;
-
 namespace InstitutionalDiwan.Domain.Entities.Numbering;
 
 public sealed class NumberingCounter : Entity<Guid>

@@ -1,9 +1,6 @@
-using System;
 using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
-using InstitutionalDiwan.Domain.Common;
-using InstitutionalDiwan.Domain.Errors;
 
 namespace InstitutionalDiwan.Domain.Entities.Audit;
 

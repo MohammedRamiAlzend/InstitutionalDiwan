@@ -1,6 +1,5 @@
 using FluentValidation;
 using InstitutionalDiwan.Application.Behaviors;
-using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace InstitutionalDiwan.Application;

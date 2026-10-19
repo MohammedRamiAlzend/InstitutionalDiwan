@@ -1,6 +1,3 @@
-using System;
-using InstitutionalDiwan.Domain.Common;
-using InstitutionalDiwan.Domain.Errors;
 using InstitutionalDiwan.Domain.ValueObjects;
 
 namespace InstitutionalDiwan.Domain.Entities.Correspondence;

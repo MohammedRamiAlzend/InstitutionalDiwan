@@ -1,7 +1,3 @@
-using System;
-using InstitutionalDiwan.Domain.Common;
-using InstitutionalDiwan.Domain.Errors;
-
 namespace InstitutionalDiwan.Domain.Entities.Audit;
 
 public sealed class AuditIntegrityCheck : Entity<Guid>

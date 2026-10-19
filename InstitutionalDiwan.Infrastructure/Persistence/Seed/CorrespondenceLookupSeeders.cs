@@ -1,5 +1,4 @@
 using InstitutionalDiwan.Domain.Entities.Correspondence;
-using Microsoft.EntityFrameworkCore;
 
 namespace InstitutionalDiwan.Infrastructure.Persistence.Seed;
 

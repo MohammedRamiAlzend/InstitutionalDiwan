@@ -1,6 +1,3 @@
-using System;
-using InstitutionalDiwan.Domain.Common;
-
 namespace InstitutionalDiwan.Domain.Entities.Correspondence;
 
 public sealed class DocumentStatusHistory : Entity<Guid>

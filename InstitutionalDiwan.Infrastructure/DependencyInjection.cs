@@ -10,7 +10,6 @@ using InstitutionalDiwan.Infrastructure.Persistence.Seed;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
 
 namespace InstitutionalDiwan.Infrastructure;
 

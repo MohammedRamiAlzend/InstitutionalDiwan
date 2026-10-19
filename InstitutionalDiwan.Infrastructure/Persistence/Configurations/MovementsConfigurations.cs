@@ -1,6 +1,6 @@
+using InstitutionalDiwan.Domain.Entities.Movements;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using InstitutionalDiwan.Domain.Entities.Movements;
 
 namespace InstitutionalDiwan.Infrastructure.Persistence.Configurations;
 

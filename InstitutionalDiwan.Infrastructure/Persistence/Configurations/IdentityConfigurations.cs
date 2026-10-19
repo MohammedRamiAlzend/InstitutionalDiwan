@@ -1,8 +1,6 @@
+using InstitutionalDiwan.Domain.Entities.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using InstitutionalDiwan.Domain.Entities.Correspondence;
-using InstitutionalDiwan.Domain.Entities.Identity;
-using InstitutionalDiwan.Domain.Entities.Organization;
 
 namespace InstitutionalDiwan.Infrastructure.Persistence.Configurations;
 

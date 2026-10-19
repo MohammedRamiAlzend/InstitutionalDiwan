@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using InstitutionalDiwan.Application.Features.Identity.AccessGrants;
 using InstitutionalDiwan.Domain.Common;
 using InstitutionalDiwan.Server.Contracts.Identity;
@@ -6,6 +5,7 @@ using InstitutionalDiwan.Server.Extensions;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace InstitutionalDiwan.Server.Controllers;
 

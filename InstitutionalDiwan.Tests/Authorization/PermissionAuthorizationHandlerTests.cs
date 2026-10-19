@@ -1,8 +1,8 @@
-using System.Security.Claims;
 using InstitutionalDiwan.Domain.Common;
 using InstitutionalDiwan.Infrastructure.Authentication;
 using InstitutionalDiwan.Server.Authorization;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace InstitutionalDiwan.Tests.Authorization;
 

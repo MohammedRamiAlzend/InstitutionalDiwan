@@ -144,6 +144,9 @@ public interface ILookupRepository
     /// <summary>True when <paramref name="lookupKey"/> maps to a known lookup catalog.</summary>
     bool IsSupported(string lookupKey);
 
+    /// <summary>Returns all supported lookup catalog keys.</summary>
+    IReadOnlyList<string> GetSupportedCatalogs();
+
     /// <summary>Lists a catalog ordered by id, optionally including deactivated entries.</summary>
     Task<IReadOnlyList<LookupEntity>> ListAsync(
         string lookupKey,

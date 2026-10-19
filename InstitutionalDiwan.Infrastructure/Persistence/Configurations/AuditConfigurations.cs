@@ -1,6 +1,6 @@
+using InstitutionalDiwan.Domain.Entities.Audit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using InstitutionalDiwan.Domain.Entities.Audit;
 
 namespace InstitutionalDiwan.Infrastructure.Persistence.Configurations;
 
