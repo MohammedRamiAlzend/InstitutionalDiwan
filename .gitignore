@@ -364,3 +364,6 @@ FodyWeavers.xsd
 
 # Freebuff desktop workspace metadata
 .freebuff/
+
+# LibreOffice/OpenOffice document lock files (present while a document is open)
+.~lock.*
