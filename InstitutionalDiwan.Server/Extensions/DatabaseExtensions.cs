@@ -24,7 +24,8 @@ public static class DatabaseExtensions
 
         if (app.Environment.IsDevelopment())
         {
-            await context.Database.MigrateAsync();
+            if ((await context.Database.GetPendingMigrationsAsync()).Any())
+                await context.Database.MigrateAsync();
         }
         else if (!await context.Database.CanConnectAsync())
         {
