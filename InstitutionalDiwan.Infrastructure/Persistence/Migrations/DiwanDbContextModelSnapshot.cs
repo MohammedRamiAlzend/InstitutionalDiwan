@@ -2649,6 +2649,10 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("SettingId");
 
+                    b.Property<Guid?>("CentralDiwanDepartmentId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("CentralDiwanDepartmentId");
+
                     b.Property<string>("DefaultTimezone")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -2679,15 +2683,24 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                         .HasColumnType("int")
                         .HasColumnName("NumberingResetPolicyId");
 
+                    b.Property<Guid?>("ResponsibleEmployeeId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("ResponsibleEmployeeId");
+
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2(3)")
                         .HasColumnName("UpdatedAt");
 
                     b.HasKey("SettingId");
 
+                    b.HasIndex("CentralDiwanDepartmentId")
+                        .HasDatabaseName("IX_INSTITUTION_SETTINGS_CENTRAL_DIWAN");
+
                     b.HasIndex("NumberingModeId");
 
                     b.HasIndex("NumberingResetPolicyId");
+
+                    b.HasIndex("ResponsibleEmployeeId");
 
                     b.ToTable("INSTITUTION_SETTINGS", (string)null);
                 });
@@ -3246,6 +3259,11 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Organization.InstitutionSetting", b =>
                 {
+                    b.HasOne("InstitutionalDiwan.Domain.Entities.Organization.Department", null)
+                        .WithMany()
+                        .HasForeignKey("CentralDiwanDepartmentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("InstitutionalDiwan.Domain.Entities.Organization.NumberingMode", null)
                         .WithMany()
                         .HasForeignKey("NumberingModeId")
@@ -3257,6 +3275,11 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                         .HasForeignKey("NumberingResetPolicyId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("InstitutionalDiwan.Domain.Entities.Identity.Employee", null)
+                        .WithMany()
+                        .HasForeignKey("ResponsibleEmployeeId")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Relations.DocumentRelation", b =>

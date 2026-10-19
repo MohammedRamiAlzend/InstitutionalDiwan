@@ -1,0 +1,1 @@
+dotnet ef migrations add InitialCreate --project   InstitutionalDiwan.Infrastructure --startup-project InstitutionalDiwan.Server  --output-dir Persistence/Migrations
