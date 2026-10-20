@@ -38,6 +38,59 @@ public sealed class DocumentNumbersController : ControllerBase
         return result.ToActionResult();
     }
 
+    /// <summary>
+    /// Returns the document's central number together with every department register line, each
+    /// with its dated registration events.
+    /// </summary>
+    /// <response code="200">The central number and department entries.</response>
+    /// <response code="404">No document with that id exists.</response>
+    [HttpGet("registry-entries")]
+    [Authorize(Policy = Permissions.NumberingView)]
+    [ProducesResponseType<DocumentRegistryNumbersResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetRegistryEntries(Guid documentId, CancellationToken cancellationToken)
+    {
+        var result = await _sender.Send(
+            new GetDocumentRegistryNumbersQuery(documentId), cancellationToken);
+
+        return result.ToActionResult();
+    }
+
+    /// <summary>
+    /// Records the number and date a department wrote in its own register. The central Diwan number
+    /// is not changed. Repeating the call for the same department keeps the number and appends a new
+    /// dated entry.
+    /// </summary>
+    /// <response code="200">The department register entry.</response>
+    /// <response code="400">The number or date is missing or invalid.</response>
+    /// <response code="404">No document or department with that id exists.</response>
+    /// <response code="409">The document has no central number yet, the department has no active
+    /// register, the number is taken for that year, or a different number was already recorded.</response>
+    [HttpPost("department-registration")]
+    [Authorize(Policy = Permissions.NumberingManage)]
+    [ProducesResponseType<DocumentNumberResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> RecordDepartmentRegistration(
+        Guid documentId,
+        [FromBody] RecordDepartmentRegistrationRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (CurrentUserId is not { } userId)
+            return Unauthorized();
+
+        var result = await _sender.Send(new RecordDepartmentRegistrationCommand(
+            documentId,
+            request.DepartmentId,
+            request.RegistryNumberText,
+            request.RegistryDate,
+            userId,
+            request.Notes), cancellationToken);
+
+        return result.ToActionResult();
+    }
+
     /// <summary>Issues the next official number for a DRAFT document and registers it.</summary>
     /// <response code="200">The issued number.</response>
     /// <response code="400">The numbering year is invalid.</response>

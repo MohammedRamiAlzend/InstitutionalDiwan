@@ -113,16 +113,24 @@ public sealed class DocumentMovement : AggregateRoot<Guid>
         return Result.Success();
     }
 
-    public Result ReceiveStep(Guid actorUserId, string? notes = null)
+    /// <summary>
+    /// Receives the current step. A receipt is only valid together with the department register
+    /// line the destination department wrote for this document, so a department can never take
+    /// custody without numbering it in its own register.
+    /// </summary>
+    public Result ReceiveStep(Guid actorUserId, Guid departmentRegistryNumberId, string? notes = null)
     {
         if (StatusId != StatusSent)
             return Result.Failure(DomainErrors.Movements.InvalidStatusTransition);
+
+        if (departmentRegistryNumberId == Guid.Empty)
+            return Result.Failure(DomainErrors.Numbering.DepartmentRegistrationRequired);
 
         var step = GetCurrentStep();
         if (step is null)
             return Result.Failure(DomainErrors.Movements.NoActiveStep);
 
-        step.MarkReceived(actorUserId);
+        step.MarkReceived(actorUserId, departmentRegistryNumberId);
         StatusId = StatusReceived;
         AppendEvent(CurrentStepNo, MovementEventType.ReceivedId, actorUserId, notes);
         RaiseDomainEvent(new MovementReceivedEvent(MovementId, DocumentId, CurrentStepNo, actorUserId));

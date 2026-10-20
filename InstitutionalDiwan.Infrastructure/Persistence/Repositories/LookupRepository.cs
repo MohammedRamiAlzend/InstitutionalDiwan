@@ -257,6 +257,7 @@ public static class LookupCatalog
             ["document-number-statuses"] = Define(DocumentNumberStatus.Create),
             ["document-number-event-types"] = Define(DocumentNumberEventType.Create),
             ["numbering-reset-policies"] = Define(NumberingResetPolicy.Create),
+            ["document-number-scopes"] = Define(DocumentNumberScope.Create),
 
             // Module 05 — Movements
             ["movement-types"] = Define(MovementType.Create),

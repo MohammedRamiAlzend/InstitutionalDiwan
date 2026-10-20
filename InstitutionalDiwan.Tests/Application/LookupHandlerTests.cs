@@ -47,7 +47,8 @@ public sealed class LookupHandlerTests
             "document-directions", "document-types", "document-status-types",
             "document-confidentiality-levels", "document-priority-levels",
             "participant-roles", "participant-target-types", "organization-types",
-            "document-number-statuses", "document-number-event-types", "numbering-reset-policies",
+            "document-number-statuses", "document-number-event-types", "document-number-scopes",
+            "numbering-reset-policies",
             "movement-types", "movement-statuses", "movement-step-statuses", "movement-event-types",
             "storage-provider-types", "document-file-types", "file-storage-providers",
             "archive-event-types", "archive-locations",
@@ -57,7 +58,7 @@ public sealed class LookupHandlerTests
             "notification-outbox-statuses",
         };
 
-        Assert.Equal(33, slugs.Length);
+        Assert.Equal(34, slugs.Length);
         Assert.All(slugs, slug => Assert.True(repository.IsSupported(slug), $"'{slug}' should be a supported catalog."));
         Assert.False(repository.IsSupported("not-a-catalog"));
     }

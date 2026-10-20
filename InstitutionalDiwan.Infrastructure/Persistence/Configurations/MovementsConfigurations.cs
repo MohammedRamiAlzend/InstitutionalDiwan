@@ -79,6 +79,7 @@ public sealed class DocumentMovementStepConfiguration : IEntityTypeConfiguration
         builder.Property(x => x.SentAt).HasColumnName("SentAt").HasColumnType("datetime2(3)");
         builder.Property(x => x.ReceivedAt).HasColumnName("ReceivedAt").HasColumnType("datetime2(3)");
         builder.Property(x => x.ReceivedByUserId).HasColumnName("ReceivedByUserId");
+        builder.Property(x => x.RegistryNumberId).HasColumnName("RegistryNumberId");
         builder.Property(x => x.CompletedAt).HasColumnName("CompletedAt").HasColumnType("datetime2(3)");
         builder.Property(x => x.DueDate).HasColumnName("DueDate").HasColumnType("datetime2(3)");
 

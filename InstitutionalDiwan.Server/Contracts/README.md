@@ -18,8 +18,8 @@ commands/queries map between them and the domain.
 | Organization | `CreateDepartmentRequest` ✅, `UpdateDepartmentRequest` ✅, `MoveDepartmentRequest` ✅, `UpdateInstitutionSettingsRequest` ✅, `DepartmentTreeResponse` |
 | Identity | `LoginRequest` ✅, `RegisterRequest` ✅, `ChangePasswordRequest` ✅, `CreateRoleRequest` ✅, `UpdateRoleRequest` ✅, `GrantPermissionRequest` ✅, `CreateEmployeeRequest` ✅, `UpdateEmployeeRequest` ✅, `GrantDocumentAccessRequest` ✅, `CreateUserRequest` ✅, `UpdateUserRequest` ✅, `AssignUserRoleRequest` ✅, `AssignUserDepartmentScopeRequest` ✅ |
 | Correspondence | `CreateDocumentRequest` ✅ (title, type, direction, `OfficialNumberText`, `NumberingYear`, optional summary/levels), `CreateDraftDocumentRequest` ✅, `UpdateDocumentMetadataRequest` ✅, `RegisterDocumentRequest` ✅, `AddDocumentParticipantRequest` ✅, `CancelDocumentRequest` ✅, `CreateExternalOrganizationRequest` ✅, `UpdateExternalOrganizationRequest` ✅ |
-| Numbering | `CreateNumberingRegistryRequest` ✅, `UpdateNumberingRegistryRequest` ✅, `IssueOfficialNumberRequest` ✅, `CancelOfficialNumberRequest` ✅, `ReplaceOfficialNumberRequest` ✅, `OfficialNumberResponse` |
-| Movements | `CreateMovementRequest`, `RedirectMovementRequest`, `RejectMovementStepRequest`, `MovementTimelineResponse` |
+| Numbering | `CreateNumberingRegistryRequest` ✅, `UpdateNumberingRegistryRequest` ✅, `IssueOfficialNumberRequest` ✅, `CancelOfficialNumberRequest` ✅, `ReplaceOfficialNumberRequest` ✅, `RecordDepartmentRegistrationRequest` ✅ (department id, typed number, register date, notes), `OfficialNumberResponse` |
+| Movements | `ReceiveDocumentRequest` ✅ (optional notes; the register entry must already exist), `CreateMovementRequest`, `RedirectMovementRequest`, `RejectMovementStepRequest`, `MovementTimelineResponse` |
 | Attachments | `UploadAttachmentVersionRequest`, `DocumentFileResponse` |
 | Archiving | `AdvancedDocumentSearchRequest`, `SaveSearchRequest`, `PagedDocumentsResponse` |
 | Relations | `CreateDocumentRelationRequest`, `DocumentRelationGraphResponse` |
@@ -47,6 +47,7 @@ commands/queries map between them and the domain.
 | Organization `UpdateInstitutionSettingsRequest` | ✅ Implemented |
 | Correspondence draft/update/participant/cancel + external-organization requests | ✅ Implemented |
 | Numbering registry create/update + number issue/cancel/replace requests | ✅ Implemented |
+| Department register entry + movement receipt requests | ✅ Implemented |
 | Identity `AssignUserDepartmentScopeRequest` | ✅ Implemented |
 | Other request/response records | ❌ Not implemented |
 
@@ -54,6 +55,7 @@ commands/queries map between them and the domain.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-20 | Buffy | Added `RecordDepartmentRegistrationRequest` (department register number + date typed by the clerk) and the `Movements/ReceiveDocumentRequest` folder for the register-gated receipt. |
 | 2026-10-19 | Buffy | Added `UpdateInstitutionSettingsRequest`, `CreateDraftDocumentRequest`, `UpdateDocumentMetadataRequest`, `RegisterDocumentRequest`, `AddDocumentParticipantRequest`, `CancelDocumentRequest`, `CreateExternalOrganizationRequest`, `UpdateExternalOrganizationRequest`, `AssignUserDepartmentScopeRequest`, and the `Numbering/` registry + number requests for the Module 01–04 endpoints. |
 | 2026-10-19 | opencode | Added `CreateLookupEntryRequest` and `RelabelLookupEntryRequest` (`Contracts/Lookups/LookupContracts.cs`) for the generic lookups endpoints. |
 | 2026-10-18 | opencode | Added `CreateUserRequest`, `UpdateUserRequest`, and `AssignUserRoleRequest` for the user-management endpoints. |

@@ -1,5 +1,6 @@
 using InstitutionalDiwan.Domain.Entities.Correspondence;
 using InstitutionalDiwan.Domain.Entities.Numbering;
+using InstitutionalDiwan.Domain.Entities.Organization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -17,6 +18,8 @@ public sealed class DocumentNumberConfiguration : IEntityTypeConfiguration<Docum
         builder.Property(x => x.DocumentNumberId).HasColumnName("DocumentNumberId").ValueGeneratedNever();
         builder.Property(x => x.DocumentId).HasColumnName("DocumentId").IsRequired();
         builder.Property(x => x.RegistryId).HasColumnName("RegistryId").IsRequired();
+        builder.Property(x => x.ScopeId).HasColumnName("ScopeId").HasDefaultValue(DocumentNumberScope.CentralId).IsRequired();
+        builder.Property(x => x.DepartmentId).HasColumnName("DepartmentId");
         builder.Property(x => x.NumberingYear).HasColumnName("NumberingYear").IsRequired();
         builder.Property(x => x.SequenceValue).HasColumnName("SequenceValue").IsRequired();
         builder.Property(x => x.OfficialNumberText).HasColumnName("OfficialNumberText").HasMaxLength(100).IsRequired();
@@ -25,16 +28,43 @@ public sealed class DocumentNumberConfiguration : IEntityTypeConfiguration<Docum
         builder.Property(x => x.IssuedAt).HasColumnName("IssuedAt").HasColumnType("datetime2(3)").IsRequired();
         builder.Property(x => x.ReplacedByNumberId).HasColumnName("ReplacedByNumberId");
         builder.Property(x => x.CancellationReason).HasColumnName("CancellationReason").HasMaxLength(500);
+        builder.Property(x => x.RegistryDate).HasColumnName("RegistryDate").HasColumnType("datetime2(3)");
 
+        // Central numbers keep their gap-free per-registry sequence; department numbers carry no
+        // sequence (the clerk types them), so only central rows take part in this index.
         builder.HasIndex(x => new { x.RegistryId, x.NumberingYear, x.SequenceValue })
             .IsUnique()
+            .HasFilter("[ScopeId] = 1")
             .HasDatabaseName("UX_DOC_NUMBERS_REG_YEAR_SEQ");
 
+        // Central numbers stay globally unique across every central registry.
         builder.HasIndex(x => new { x.OfficialNumberText, x.NumberingYear })
             .IsUnique()
+            .HasFilter("[ScopeId] = 1")
             .HasDatabaseName("UX_DOC_NUMBERS_TEXT_YEAR");
 
+        // A department may only use a number once per year, but the same text may exist in another
+        // department's register — that is the whole point of per-department numbering.
+        builder.HasIndex(x => new { x.RegistryId, x.OfficialNumberText, x.NumberingYear })
+            .IsUnique()
+            .HasFilter("[ScopeId] = 2")
+            .HasDatabaseName("UX_DOC_NUMBERS_DEPT_TEXT_YEAR");
+
+        // One register line per document per department; later arrivals add history, not rows.
+        builder.HasIndex(x => new { x.DocumentId, x.DepartmentId })
+            .IsUnique()
+            .HasFilter("[DepartmentId] IS NOT NULL")
+            .HasDatabaseName("UX_DOC_NUMBERS_DOC_DEPT");
+
+        builder.HasIndex(x => new { x.DepartmentId, x.RegistryDate })
+            .HasDatabaseName("IX_DOC_NUMBERS_DEPT_REG_DATE");
+
+        builder.HasIndex(x => new { x.RegistryId, x.NumberingYear })
+            .HasDatabaseName("IX_DOC_NUMBERS_REG_YEAR");
+
         builder.HasOne<DocumentNumberStatus>().WithMany().HasForeignKey(x => x.StatusId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<DocumentNumberScope>().WithMany().HasForeignKey(x => x.ScopeId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<Department>().WithMany().HasForeignKey(x => x.DepartmentId).OnDelete(DeleteBehavior.Restrict);
 
         builder.HasMany(x => x.History)
             .WithOne()
@@ -117,6 +147,7 @@ public sealed class DocumentNumberHistoryConfiguration : IEntityTypeConfiguratio
         builder.Property(x => x.ActorUserId).HasColumnName("ActorUserId").IsRequired();
         builder.Property(x => x.Notes).HasColumnName("Notes").HasMaxLength(500);
         builder.Property(x => x.OccurredAt).HasColumnName("OccurredAt").HasColumnType("datetime2(3)").IsRequired();
+        builder.Property(x => x.EffectiveDate).HasColumnName("EffectiveDate").HasColumnType("datetime2(3)");
 
         builder.HasOne<DocumentNumberEventType>().WithMany().HasForeignKey(x => x.EventTypeId).OnDelete(DeleteBehavior.Restrict);
     }
@@ -142,6 +173,21 @@ public sealed class DocumentNumberEventTypeConfiguration : IEntityTypeConfigurat
     public void Configure(EntityTypeBuilder<DocumentNumberEventType> builder)
     {
         builder.ToTable("DOCUMENT_NUMBER_EVENT_TYPES");
+
+        builder.HasKey(x => x.Id);
+        builder.Property(x => x.Id).HasColumnName("Id").ValueGeneratedNever();
+        builder.Property(x => x.Desc).HasColumnName("Desc").HasMaxLength(150).IsRequired();
+        builder.Property(x => x.DescAr).HasColumnName("DescAr").HasMaxLength(150).IsRequired();
+        builder.Property(x => x.IsActive).HasColumnName("IsActive").IsRequired();
+        builder.Property(x => x.CreatedAt).HasColumnName("CreatedAt").HasColumnType("datetime2(3)").IsRequired();
+    }
+}
+
+public sealed class DocumentNumberScopeConfiguration : IEntityTypeConfiguration<DocumentNumberScope>
+{
+    public void Configure(EntityTypeBuilder<DocumentNumberScope> builder)
+    {
+        builder.ToTable("DOCUMENT_NUMBER_SCOPES");
 
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Id).HasColumnName("Id").ValueGeneratedNever();

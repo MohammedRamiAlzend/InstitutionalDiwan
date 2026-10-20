@@ -1,3 +1,4 @@
+using InstitutionalDiwan.Domain.Entities.Numbering;
 using InstitutionalDiwan.Domain.Events;
 using InstitutionalDiwan.Domain.ValueObjects;
 
@@ -13,6 +14,7 @@ public sealed class Document : AggregateRoot<Guid>
 
     private readonly List<DocumentParticipant> _participants = new();
     private readonly List<DocumentStatusHistory> _statusHistory = new();
+    private readonly List<DocumentNumber> _numbers = new();
 
     public Guid DocumentId
     {
@@ -49,6 +51,12 @@ public sealed class Document : AggregateRoot<Guid>
 
     public IReadOnlyCollection<DocumentParticipant> Participants => _participants.AsReadOnly();
     public IReadOnlyCollection<DocumentStatusHistory> StatusHistory => _statusHistory.AsReadOnly();
+
+    /// <summary>
+    /// Every number this document carries: the central Diwan number plus at most one line per
+    /// department register it was written into.
+    /// </summary>
+    public IReadOnlyCollection<DocumentNumber> Numbers => _numbers.AsReadOnly();
 
     private Document()
     {
@@ -185,6 +193,37 @@ public sealed class Document : AggregateRoot<Guid>
 
         ActiveOfficialNumberId = replacementNumberId;
         OfficialNumberText = replacementText.Value;
+        UpdatedAt = DateTime.UtcNow;
+        return Result.Success();
+    }
+
+    /// <summary>The department-register line for <paramref name="departmentId"/>, if any.</summary>
+    public DocumentNumber? FindDepartmentNumber(Guid departmentId) =>
+        _numbers.FirstOrDefault(number =>
+            number.IsDepartmentEntry && number.DepartmentId == departmentId);
+
+    /// <summary>
+    /// Attaches a department-register entry to this document. One line per department: the second
+    /// and later arrivals reuse the existing number and only add a dated history event.
+    /// </summary>
+    public Result AddDepartmentNumber(DocumentNumber number)
+    {
+        if (number is null)
+            return Result.Failure(DomainErrors.Numbering.NumberNotFound);
+
+        if (number.DocumentId != DocumentId)
+            return Result.Failure(DomainErrors.Correspondence.DocumentNotFound);
+
+        if (!number.IsDepartmentEntry || number.DepartmentId is null)
+            return Result.Failure(DomainErrors.Numbering.DepartmentScopeMismatch);
+
+        if (_numbers.Any(existing =>
+                existing.IsDepartmentEntry && existing.DepartmentId == number.DepartmentId))
+        {
+            return Result.Failure(DomainErrors.Numbering.DepartmentNumberLocked);
+        }
+
+        _numbers.Add(number);
         UpdatedAt = DateTime.UtcNow;
         return Result.Success();
     }

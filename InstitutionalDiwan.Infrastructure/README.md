@@ -47,9 +47,10 @@ Persistence/Configurations/
                                   DOCUMENT_CONFIDENTIALITY_LEVELS, DOCUMENT_PRIORITY_LEVELS,
                                   DOCUMENT_PARTICIPANTS, DOCUMENT_STATUS_HISTORY, EXTERNAL_ORGANIZATIONS,
                                   PARTICIPANT_ROLES, PARTICIPANT_TARGET_TYPES, ORGANIZATION_TYPES
-  NumberingConfigurations.cs      DOCUMENT_NUMBERS, NUMBERING_REGISTRIES, NUMBERING_COUNTERS,
-                                  DOCUMENT_NUMBER_HISTORY, DOCUMENT_NUMBER_STATUSES,
-                                  DOCUMENT_NUMBER_EVENT_TYPES, NUMBERING_RESET_POLICIES
+  NumberingConfigurations.cs      DOCUMENT_NUMBERS (central + department rows), NUMBERING_REGISTRIES,
+                                  NUMBERING_COUNTERS, DOCUMENT_NUMBER_HISTORY, DOCUMENT_NUMBER_STATUSES,
+                                  DOCUMENT_NUMBER_EVENT_TYPES, DOCUMENT_NUMBER_SCOPES,
+                                  NUMBERING_RESET_POLICIES
   MovementsConfigurations.cs      DOCUMENT_MOVEMENTS, DOCUMENT_MOVEMENT_STEPS, DOCUMENT_MOVEMENT_EVENTS,
                                   MOVEMENT_TYPES, MOVEMENT_STATUSES, MOVEMENT_STEP_STATUSES,
                                   MOVEMENT_EVENT_TYPES
@@ -72,11 +73,11 @@ Persistence/Configurations/
 | --- | --- |
 | EF Core provider package (`SqlServer`) | ✅ Referenced |
 | `DiwanDbContext` | ✅ Written and compiling |
-| Entity configurations | ✅ Written for all 66 entities (10 configuration files) |
+| Entity configurations | ✅ Written for all 67 entities (10 configuration files) |
 | Repositories | 🟡 14 of 17 implemented — `UserRepository`, `RoleRepository`, `PermissionRepository`, `DepartmentRepository`, `DepartmentTypeRepository`, `DocumentRepository`, `DocumentTypeRepository`, `NumberingRegistryRepository`, `DocumentNumberRepository`, `EmployeeRepository`, `DocumentAccessGrantRepository`, `LookupRepository`, `InstitutionSettingRepository`, `ExternalOrganizationRepository`, `DocumentMovementRepository`; the rest pending |
 | Seed | ✅ Ordered, environment-aware seeders (33 lookup seeders, `InstitutionSettingSeeder`, `PermissionSeeder`, `RoleSeeder`, `UserSeeder`) |
 | Authentication | ✅ `PasswordHasher` (PBKDF2) + `JwtProvider` + `UserContext` (reads `sub`/`dept_id`/`scope_type`/`permission` claims) |
-| Migrations | ✅ 5 applied (`InitialCreate`, `AddUniqueOfficialNumber`, `Refactor_DepartmentTypes_ToLookup`, `Refactor_CorrespondenceNumbering_ToLookups`, `Refactor_AllRemaining_ToLookups`) |
+| Migrations | ✅ 7 written (`InitialCreate`, `AddUniqueOfficialNumber`, `Refactor_DepartmentTypes_ToLookup`, `Refactor_CorrespondenceNumbering_ToLookups`, `Refactor_AllRemaining_ToLookups`, `InitialCreate2`, `Add_Department_Register_Numbers`) |
 | Interceptors | ❌ Empty |
 | Authorization | ✅ `DepartmentScopeEvaluator` + `DocumentAccessEvaluator` implementing the Application contracts |
 | Storage / Outbox / BackgroundJobs / Time | ❌ Empty |
@@ -85,6 +86,7 @@ Persistence/Configurations/
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-20 | Buffy | Added department register numbering to persistence: `DOCUMENT_NUMBER_SCOPES` (entity, configuration, seeder), `ScopeId`/`DepartmentId`/`RegistryDate` + scoped indexes, `DOCUMENT_NUMBER_HISTORY.EffectiveDate`, `DOCUMENT_MOVEMENT_STEPS.RegistryNumberId`, the `Add_Department_Register_Numbers` migration (applied to a throwaway LocalDB database as verification), and scope-aware number queries. |
 | 2026-10-19 | Buffy | Added `Authentication/UserContext`, `Authorization/DepartmentScopeEvaluator`, `Authorization/DocumentAccessEvaluator`, the `InstitutionSettingRepository`/`ExternalOrganizationRepository`/`DocumentMovementRepository` implementations, and `Seed/InstitutionSettingSeeder`; `DependencyInjection` now registers `AddHttpContextAccessor` + the evaluators, and the csproj references the ASP.NET Core shared framework for `IHttpContextAccessor`. |
 | 2026-10-19 | opencode | Added `Persistence/Repositories/LookupRepository.cs` (generic slug-addressed access to all 33 reference catalogs, incl. metadata-driven reference-in-use checks) and registered it in `DependencyInjection.cs`; documented the actual `DiwanDbContext`/66-entity/12-of-17-repository state, removing the stale `NewDiwan.*` drift notes. |
 | 2026-10-18 | opencode | Registered `IDocumentNumberRepository` + `INumberingRegistryRepository` in `DependencyInjection.cs`; added unique official-number migration — supports number+year conflict check at document creation. |

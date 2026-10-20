@@ -144,6 +144,14 @@ public static class DomainErrors
         public static readonly Error NumberNotActive = Error.Conflict("Numbering.NumberNotActive", "Only an active official number can be cancelled or replaced.");
         public static readonly Error ReplacementNumberNotFound = Error.Validation("Numbering.ReplacementNumberNotFound", "The replacement number was not found for this document.");
         public static readonly Error DocumentAlreadyNumbered = Error.Conflict("Numbering.DocumentAlreadyNumbered", "The document already has an active official number.");
+        public static readonly Error RegistryDateInvalid = Error.Validation("Numbering.RegistryDateInvalid", "The register date must be a real date between 1900 and 2200.");
+        public static readonly Error DepartmentScopeMismatch = Error.Validation("Numbering.DepartmentScopeMismatch", "This number does not belong to a department register.");
+        public static readonly Error DepartmentRegistryNotConfigured = Error.Conflict("Numbering.DepartmentRegistryNotConfigured", "The department has no active numbering registry configured.");
+        public static readonly Error DepartmentRegistrationRequired = Error.Conflict("Numbering.DepartmentRegistrationRequired", "Record the department register number and date before receiving the document.");
+        public static readonly Error RegistryNumberTaken = Error.Conflict("Numbering.RegistryNumberTaken", "This number is already used in the department register for that year.");
+        public static readonly Error DepartmentNumberLocked = Error.Conflict("Numbering.DepartmentNumberLocked", "The document is already registered in this department under a different number.");
+        public static readonly Error DocumentNotRegistered = Error.Conflict("Numbering.DocumentNotRegistered", "Issue the central official number before recording a department register entry.");
+        public static readonly Error DepartmentNumberRequired = Error.Validation("Numbering.DepartmentNumberRequired", "The department register number is required.");
     }
 
     public static class Movements
@@ -153,6 +161,7 @@ public static class DomainErrors
         public static readonly Error NoActiveStep = Error.NotFound("Movements.NoActiveStep", "No active movement step was found for the current step number.");
         public static readonly Error ReasonRequired = Error.Validation("Movements.ReasonRequired", "A reason or note is required for rejecting, returning, or cancelling a movement.");
         public static readonly Error AlreadyTerminal = Error.Conflict("Movements.AlreadyTerminal", "Cannot modify a movement that is already CLOSED or CANCELED.");
+        public static readonly Error MovementNotFound = Error.NotFound("Movements.MovementNotFound", "The document movement was not found.");
     }
 
     public static class Attachments

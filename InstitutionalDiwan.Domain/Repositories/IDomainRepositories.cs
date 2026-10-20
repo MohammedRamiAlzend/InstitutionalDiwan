@@ -58,7 +58,12 @@ public interface IPermissionRepository
 public interface IDocumentRepository
 {
     Task<Document?> GetByIdAsync(Guid documentId, CancellationToken cancellationToken = default);
+    /// <summary>Loads the document together with its central and department numbers.</summary>
+    Task<Document?> GetWithNumbersAsync(Guid documentId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<Document>> ListRecentAsync(int limit, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<Document>> GetByIdsAsync(
+        IReadOnlyCollection<Guid> documentIds,
+        CancellationToken cancellationToken = default);
     void Add(Document document);
 }
 
@@ -74,6 +79,8 @@ public interface INumberingRegistryRepository
     Task<NumberingRegistry?> GetByIdAsync(Guid registryId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<NumberingRegistry>> ListAllAsync(CancellationToken cancellationToken = default);
     Task<NumberingRegistry?> GetActiveForScopeAsync(Guid? departmentId, int? documentTypeId, int? directionId, CancellationToken cancellationToken = default);
+    /// <summary>The active registry owned by <paramref name="departmentId"/>; never a shared default.</summary>
+    Task<NumberingRegistry?> GetActiveDepartmentRegistryAsync(Guid departmentId, CancellationToken cancellationToken = default);
     void Add(NumberingRegistry registry);
 }
 
@@ -82,7 +89,27 @@ public interface IDocumentNumberRepository
     Task<DocumentNumber?> GetByIdAsync(Guid documentNumberId, CancellationToken cancellationToken = default);
     Task<DocumentNumber?> GetActiveByDocumentIdAsync(Guid documentId, CancellationToken cancellationToken = default);
     Task<bool> ExistsByNumberAndYearAsync(string officialNumberText, int numberingYear, CancellationToken cancellationToken = default);
+    /// <summary>Uniqueness check scoped to one register: central or a single department.</summary>
+    Task<bool> ExistsInScopeAsync(
+        int scopeId,
+        Guid registryId,
+        string officialNumberText,
+        int numberingYear,
+        CancellationToken cancellationToken = default);
+    Task<DocumentNumber?> GetDepartmentEntryAsync(
+        Guid documentId,
+        Guid departmentId,
+        CancellationToken cancellationToken = default);
     Task<IReadOnlyList<DocumentNumber>> ListByDocumentAsync(Guid documentId, CancellationToken cancellationToken = default);
+    /// <summary>The register book: one department's entries, oldest register date first.</summary>
+    Task<IReadOnlyList<DocumentNumber>> ListByDepartmentAsync(
+        Guid departmentId,
+        int? numberingYear,
+        CancellationToken cancellationToken = default);
+    /// <summary>
+    /// True when the registry allocated a central number. Department entries are typed, never
+    /// formatted, so they must not freeze the registry template.
+    /// </summary>
     Task<bool> AnyByRegistryAsync(Guid registryId, CancellationToken cancellationToken = default);
     void Add(DocumentNumber documentNumber);
 }

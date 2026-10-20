@@ -41,6 +41,25 @@ internal sealed class NumberingRegistryRepository : INumberingRegistryRepository
             .FirstOrDefault();
     }
 
+    public async Task<NumberingRegistry?> GetActiveDepartmentRegistryAsync(
+        Guid departmentId,
+        CancellationToken cancellationToken = default)
+    {
+        if (departmentId == Guid.Empty)
+            return null;
+
+        var candidates = await _context.NumberingRegistries
+            .Include(registry => registry.Counters)
+            .Where(registry => registry.IsActive && registry.DepartmentId == departmentId)
+            .ToListAsync(cancellationToken);
+
+        return candidates
+            .OrderByDescending(registry =>
+                (registry.DocumentTypeId is null ? 0 : 1) + (registry.DirectionId is null ? 0 : 1))
+            .ThenBy(registry => registry.CreatedAt)
+            .FirstOrDefault();
+    }
+
     public void Add(NumberingRegistry registry) => _context.NumberingRegistries.Add(registry);
 
     private static int Specificity(

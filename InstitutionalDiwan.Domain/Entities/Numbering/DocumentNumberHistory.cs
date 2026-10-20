@@ -16,6 +16,11 @@ public sealed class DocumentNumberHistory : Entity<Guid>
     public Guid ActorUserId { get; private set; }
     public string? Notes { get; private set; }
     public DateTime OccurredAt { get; private set; }
+    /// <summary>
+    /// Date written in the department register for this event. Null for central register events,
+    /// which are dated by <see cref="OccurredAt"/>.
+    /// </summary>
+    public DateTime? EffectiveDate { get; private set; }
 
     private DocumentNumberHistory()
     {
@@ -25,7 +30,8 @@ public sealed class DocumentNumberHistory : Entity<Guid>
         Guid documentNumberId,
         int eventTypeId,
         Guid actorUserId,
-        string? notes = null)
+        string? notes = null,
+        DateTime? effectiveDate = null)
     {
         return new DocumentNumberHistory
         {
@@ -34,7 +40,8 @@ public sealed class DocumentNumberHistory : Entity<Guid>
             EventTypeId = eventTypeId,
             ActorUserId = actorUserId,
             Notes = string.IsNullOrWhiteSpace(notes) ? null : notes.Trim(),
-            OccurredAt = DateTime.UtcNow
+            OccurredAt = DateTime.UtcNow,
+            EffectiveDate = effectiveDate
         };
     }
 }

@@ -16,6 +16,14 @@ internal sealed class DocumentRepository : IDocumentRepository
             .Include(document => document.StatusHistory)
             .FirstOrDefaultAsync(document => document.DocumentId == documentId, cancellationToken);
 
+    public Task<Document?> GetWithNumbersAsync(
+        Guid documentId,
+        CancellationToken cancellationToken = default) =>
+        _context.Documents
+            .Include(document => document.Numbers)
+                .ThenInclude(number => number.History)
+            .FirstOrDefaultAsync(document => document.DocumentId == documentId, cancellationToken);
+
     public async Task<IReadOnlyList<Document>> ListRecentAsync(
         int limit,
         CancellationToken cancellationToken = default) =>
@@ -23,6 +31,18 @@ internal sealed class DocumentRepository : IDocumentRepository
             .OrderByDescending(document => document.CreatedAt)
             .Take(limit)
             .ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<Document>> GetByIdsAsync(
+        IReadOnlyCollection<Guid> documentIds,
+        CancellationToken cancellationToken = default)
+    {
+        if (documentIds.Count == 0)
+            return Array.Empty<Document>();
+
+        return await _context.Documents
+            .Where(document => documentIds.Contains(document.DocumentId))
+            .ToListAsync(cancellationToken);
+    }
 
     public void Add(Document document) => _context.Documents.Add(document);
 }

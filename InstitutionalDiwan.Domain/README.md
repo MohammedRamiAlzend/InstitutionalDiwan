@@ -100,14 +100,14 @@ an entry can be created.
 kebab-case slug (`IsSupported`, `ListAsync`, `GetByIdAsync`, `AddAsync`, `RelabelAsync`,
 `SetActiveStateAsync`, `IsInUseAsync`) so the lookups API needs no per-table repository.
 
-### `Entities/` — the 10 modules (40 entities)
+### `Entities/` — the 10 modules (41 entities)
 
 | # | Module | Entities | Notable aggregate roots |
 | --- | --- | --- | --- |
 | 01 | Organization | `Department`, `DepartmentType`, `InstitutionSetting` | `Department`, `InstitutionSetting` |
 | 02 | Identity & Access | `User`, `Role`, `Permission`, `UserRole`, `RolePermission`, `Employee`, `UserDepartmentAssignment`, `DocumentAccessGrant` | `User`, `Role`, `Employee`, `DocumentAccessGrant` |
 | 03 | Correspondence | `Document`, `DocumentParticipant`, `DocumentStatusHistory`, `DocumentType`, `DocumentStatusType`, `ExternalOrganization` | `Document`, `ExternalOrganization` |
-| 04 | Official Numbering | `DocumentNumber`, `NumberingRegistry`, `NumberingCounter`, `DocumentNumberHistory` | `DocumentNumber`, `NumberingRegistry` |
+| 04 | Official Numbering | `DocumentNumber`, `NumberingRegistry`, `NumberingCounter`, `DocumentNumberHistory`, `DocumentNumberScope` | `DocumentNumber`, `NumberingRegistry` |
 | 05 | Movements & Routing | `DocumentMovement`, `DocumentMovementStep`, `DocumentMovementEvent` | `DocumentMovement` |
 | 06 | Attachments | `DocumentFile`, `DocumentFileVersion`, `DocumentFileType`, `FileStorageProvider` | `DocumentFile` |
 | 07 | Archiving | `DocumentArchiveEvent`, `SavedSearch` | `SavedSearch` |
@@ -135,6 +135,15 @@ kebab-case slug (`IsSupported`, `ListAsync`, `GetByIdAsync`, `AddAsync`, `Relabe
   `DocumentMovementEvent`, and raise the matching domain event. Redirect creates the next numbered step.
 - **`DocumentNumber` / `NumberingRegistry`** — year in `[1900,2200]`, positive sequence, gap-free allocation via
   `NumberingRegistry.AllocateNextSequence`; cancel/replace require reasons; registry must be active.
+  A number is either **central** (`ScopeId = 1`, formatted by the registry, sequence allocated) or a
+  **department register entry** (`ScopeId = 2`, clerk-typed text + `RegistryDate`, sequence `0`). The
+  same department registering the document again does not create a second number: `ReRegisterInDepartment`
+  keeps the text and appends a new dated history row (`EffectiveDate`). `Document.AddDepartmentNumber`
+  enforces one entry per department and `Document.FindDepartmentNumber` is the lookup used by the
+  receipt gate; `ReplaceWith` refuses department entries.
+- **`DocumentMovement`** receipt — `ReceiveStep(actor, departmentRegistryNumberId)` rejects an empty
+  number id (`Numbering.DepartmentRegistrationRequired`) and stores it on the step
+  (`DocumentMovementStep.RegistryNumberId`), so custody always points at the register line that dated it.
 - **`DocumentFile`** — version numbers strictly sequential; archived files reject new versions; superseded versions flagged.
 - **`AuditLog`** — tamper-evident SHA-256 hash chaining: `Record(...)` computes `EventHash` from the payload plus
   `PreviousHash`; `VerifyIntegrity(expectedPreviousHash)` re-computes and detects a broken chain or hash mismatch.
@@ -191,6 +200,7 @@ Conventions applied to every lookup:
 | `DOCUMENT_PRIORITY_LEVELS` | `Document.PriorityLevel` | `DOCUMENTS.PriorityLevelId` |
 | `DOCUMENT_NUMBER_STATUSES` | `DocumentNumber.Status` | `DOCUMENT_NUMBERS.StatusId` |
 | `DOCUMENT_NUMBER_EVENT_TYPES` | `DocumentNumberHistory.EventType` | `DOCUMENT_NUMBER_HISTORY.EventTypeId` |
+| `DOCUMENT_NUMBER_SCOPES` | `DocumentNumber.Scope` (central vs department register) | `DOCUMENT_NUMBERS.ScopeId` |
 | `NUMBERING_RESET_POLICIES` | `NumberingRegistry.ResetPolicy`, `InstitutionSetting.NumberingResetPolicy` | `NUMBERING_REGISTRIES.ResetPolicyId`, `INSTITUTION_SETTINGS.NumberingResetPolicyId` |
 | `PARTICIPANT_ROLES` | `DocumentParticipant.RoleCode` | `DOCUMENT_PARTICIPANTS.RoleId` |
 | `PARTICIPANT_TARGET_TYPES` | `DocumentParticipant.TargetType` | `DOCUMENT_PARTICIPANTS.TargetTypeId` |
@@ -269,6 +279,7 @@ them, while listing, relabelling and (de)activation keep working.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-20 | Buffy | Added department register numbering: `DocumentNumberScope` lookup, `ScopeId`/`DepartmentId`/`RegistryDate` and `CreateDepartmentEntry`/`ReRegisterInDepartment` on `DocumentNumber`, `EffectiveDate` on `DocumentNumberHistory`, the `RegisteredInDepartment`/`ReRegisteredInDepartment` events, `Document.Numbers` with `AddDepartmentNumber`/`FindDepartmentNumber`, `DocumentMovementStep.RegistryNumberId` with a register-gated `ReceiveStep`, the new `DomainErrors.Numbering.*`/`Movements.MovementNotFound` entries, and the repository contracts for scoped uniqueness, department entries, register books, and bulk document loads. |
 | 2026-10-19 | Buffy | Added the Module 01–04 behavior the new use cases need: `InstitutionSetting.Update` (Central Diwan required + transfer-reason rule) and `UpdateNumberingPolicy`, `ExternalOrganization.Update`/`Activate`, `NumberingRegistry.Update(hasIssuedNumbers:)` (template lock), `Document.AttachReplacementNumber`, `User.AssignDepartmentScope` duplicate guard + `User.EndDepartmentScope`; plus the `NUMBERING_MANAGE` permission, `IInstitutionSettingRepository`/`IExternalOrganizationRepository` contracts, and the new `DomainErrors` entries (`InstitutionSetting.*`, `Lookup.EntryInactive`, `Identity.DepartmentAlreadyAssigned`/`DepartmentAssignmentNotFound`/`AssignmentTypeInvalid`). |
 | 2026-10-19 | opencode | Added the `LOOKUP_MANAGE` permission (`Permissions.LookupManage`, now part of `Permissions.All`), the `DomainErrors.Lookup` API errors (`UnknownCatalog`, `EntryNotFound`, `IdAlreadyExists`, `EntryInUse`, `CatalogReadOnly`), and the generic `ILookupRepository` contract (17th repository interface) — the domain side of the generic `/api/lookups/{lookup}` API; the lookup CRUD section now describes the implemented routes instead of a plan. |
 | 2026-10-18 | opencode | `User` gained `UpdateProfile` (primary department, employee link, scope, password-change flag) and `Activate` (reverses `Deactivate`). |

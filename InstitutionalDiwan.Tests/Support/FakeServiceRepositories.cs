@@ -49,16 +49,20 @@ internal sealed class FakeExternalOrganizationRepository : IExternalOrganization
 
 internal sealed class FakeDocumentMovementRepository : IDocumentMovementRepository
 {
+    public List<DocumentMovement> Movements { get; } = new();
     public HashSet<Guid> DocumentIdsWithActiveMovements { get; } = new();
 
     public Task<DocumentMovement?> GetByIdAsync(Guid movementId, CancellationToken cancellationToken = default)
-        => Task.FromResult<DocumentMovement?>(null);
+        => Task.FromResult(Movements.FirstOrDefault(movement => movement.MovementId == movementId));
 
     public Task<bool> HasActiveMovementsAsync(Guid documentId, CancellationToken cancellationToken = default)
         => Task.FromResult(DocumentIdsWithActiveMovements.Contains(documentId));
 
-    public void Add(DocumentMovement movement) =>
+    public void Add(DocumentMovement movement)
+    {
+        Movements.Add(movement);
         DocumentIdsWithActiveMovements.Add(movement.DocumentId);
+    }
 }
 
 internal sealed class FakeLookupRepository : ILookupRepository

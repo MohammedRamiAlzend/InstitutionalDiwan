@@ -13,12 +13,12 @@ without knowing which provider is underneath.
 
 | Path | State | Notes |
 | --- | --- | --- |
-| `DiwanDbContext.cs` | ✅ Written | `DbContext, IUnitOfWork`; 66 `DbSet`s; applies configurations by assembly scan. |
-| `Configurations/` | ✅ Written (10 files) | `IEntityTypeConfiguration<T>` for all 66 entities. |
+| `DiwanDbContext.cs` | ✅ Written | `DbContext, IUnitOfWork`; 67 `DbSet`s; applies configurations by assembly scan. |
+| `Configurations/` | ✅ Written (10 files) | `IEntityTypeConfiguration<T>` for all 67 entities. |
 | `Repositories/` | 🟡 Partial (14 of 17) | `UserRepository`, `RoleRepository`, `PermissionRepository`, `EmployeeRepository`, `DepartmentRepository`, `DepartmentTypeRepository`, `DocumentRepository`, `DocumentTypeRepository`, `NumberingRegistryRepository`, `DocumentNumberRepository`, `DocumentAccessGrantRepository`, `LookupRepository`, `InstitutionSettingRepository`, `ExternalOrganizationRepository`, `DocumentMovementRepository`. |
 | `Interceptors/` | ❌ Empty | Domain-event dispatch + tamper-evident audit. |
-| `Migrations/` | ✅ Written (5) | `InitialCreate`, `AddUniqueOfficialNumber` (unique official-number + year index), and three lookup refactors (`Refactor_DepartmentTypes_ToLookup`, `Refactor_CorrespondenceNumbering_ToLookups`, `Refactor_AllRemaining_ToLookups`). |
-| `Seed/` | ✅ Written | `ISeeder` + `SeederRunner` (ordering + environment gating); 33 `LookupSeederBase<T>` seeders, `PermissionSeeder` (100), `RoleSeeder` (200), `UserSeeder` (300). |
+| `Migrations/` | ✅ Written (7) | `InitialCreate`, `AddUniqueOfficialNumber` (unique official-number + year index), three lookup refactors (`Refactor_DepartmentTypes_ToLookup`, `Refactor_CorrespondenceNumbering_ToLookups`, `Refactor_AllRemaining_ToLookups`), `InitialCreate2`, and `Add_Department_Register_Numbers` (department registers + `ScopeId`-filtered uniqueness). |
+| `Seed/` | ✅ Written | `ISeeder` + `SeederRunner` (ordering + environment gating); 34 `LookupSeederBase<T>` seeders, `PermissionSeeder` (100), `RoleSeeder` (200), `UserSeeder` (300). |
 
 ## `DiwanDbContext` design
 
@@ -60,6 +60,8 @@ without knowing which provider is underneath.
 ## Change Log
 
 | Date | Author | Change |
+| --- | --- | --- |
+| 2026-10-20 | Buffy | Added `DOCUMENT_NUMBER_SCOPES` (`DiwanDbContext`, configuration, migration) and the department-register columns/indexes; `DocumentNumberRepository` queries are now scope-aware and the repository gained `ExistsInScopeAsync`, `GetDepartmentEntryAsync`, and `ListByDepartmentAsync`, while `DocumentRepository` gained `GetWithNumbersAsync` + `GetByIdsAsync`. |
 | --- | --- | --- |
 | 2026-10-19 | Buffy | Added `Repositories/InstitutionSettingRepository.cs`, `Repositories/ExternalOrganizationRepository.cs`, `Repositories/DocumentMovementRepository.cs`, and `Seed/InstitutionSettingSeeder.cs` (singleton settings + its Central Diwan department); repository count 12 → 14 of 17. |
 | 2026-10-19 | opencode | Added `Repositories/LookupRepository.cs` (generic access to every reference catalog via one slug registry) to `Contents`/status; corrected the stale README (it still called the context `NewDiwanDbContext`, counted 5 repositories and 2 migrations, and claimed the project could not build). |

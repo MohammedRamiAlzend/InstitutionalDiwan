@@ -15,7 +15,9 @@ access live here.
 | --- | --- | --- | --- |
 | `AuthController.cs` | `api/auth` | `[AllowAnonymous]` login/register, `[Authorize]` me/change-password | Login, registration, caller identity (`me`), password change. |
 | `DocumentsController.cs` | `api/documents` | `DOCUMENT_VIEW` reads; `DOCUMENT_CREATE` create/register; `DOCUMENT_EDIT` update/participants/cancel | Full lifecycle: immediate create, list, get, details, timeline, `POST drafts`, `PUT {id}`, `POST {id}/register`, `POST {id}/participants`, `POST {id}/cancel`. |
-| `DocumentNumbersController.cs` | `api/documents/{documentId}/numbers` | `NUMBERING_VIEW` history; `NUMBERING_MANAGE` writes | Number lifecycle: `issue`, `{numberId}/cancel`, `{numberId}/replace`, `history`. |
+| `DocumentNumbersController.cs` | `api/documents/{documentId}/numbers` | `NUMBERING_VIEW` reads; `NUMBERING_MANAGE` writes | Central number lifecycle (`issue`, `{numberId}/cancel`, `{numberId}/replace`, `history`), the department register write (`department-registration`: typed number + date), and `registry-entries` (central number + every department line). |
+| `DepartmentRegistersController.cs` | `api/departments/{departmentId}/register` | `NUMBERING_VIEW` | The department's register book, optionally filtered by numbering year. |
+| `MovementsController.cs` | `api/movements` | `DOCUMENT_EDIT` | `{movementId}/receive` — refuses custody until the destination department recorded its register number. |
 | `ExternalOrganizationsController.cs` | `api/external-organizations` | `DOCUMENT_VIEW` reads; `DOCUMENT_EDIT` writes | External correspondent CRUD: list (incl. `includeInactive`), get, create, update, deactivate, activate. |
 | `InstitutionSettingsController.cs` | `api/institution-settings` | `DEPARTMENT_MANAGE` | Reads and replaces the singleton institution settings (Central Diwan guards). |
 | `UsersController.cs` | `api/users` | `USER_MANAGE` | User CRUD, activate/deactivate, assign/revoke roles, `POST {id}/department-assignments`, `DELETE {id}/department-assignments/{assignmentId}`, `GET {id}/effective-permissions`. |
@@ -51,5 +53,6 @@ access live here.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-20 | Buffy | Added the department register routes: `POST /api/documents/{id}/numbers/department-registration` and `GET .../registry-entries` on `DocumentNumbersController`, `DepartmentRegistersController`, and `MovementsController` (`{id}/receive`, gated on a recorded register entry). |
 | 2026-10-19 | Buffy | Added `InstitutionSettingsController` (`GET`/`PUT /api/institution-settings`), `ExternalOrganizationsController` (CRUD), `DocumentNumbersController` (issue/cancel/replace/history), the document lifecycle endpoints on `DocumentsController` (drafts, update, register, participants, cancel, details, timeline), department-scope + effective-permissions endpoints on `UsersController`, and registry write endpoints on `NumberingRegistriesController`. |
 | 2026-10-19 | opencode | Added `LookupsController` and documented the folder's ten controllers, their routes and their permission policies (this README did not exist before). |

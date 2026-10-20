@@ -7,9 +7,12 @@ public sealed record DocumentNumberResponse(
     Guid DocumentNumberId,
     Guid DocumentId,
     Guid RegistryId,
+    int ScopeId,
+    Guid? DepartmentId,
     int NumberingYear,
     long SequenceValue,
     string OfficialNumberText,
+    DateTime? RegistryDate,
     int StatusId,
     Guid IssuedByUserId,
     DateTime IssuedAt,
@@ -21,9 +24,12 @@ public sealed record DocumentNumberResponse(
         number.DocumentNumberId,
         number.DocumentId,
         number.RegistryId,
+        number.ScopeId,
+        number.DepartmentId,
         number.NumberingYear,
         number.SequenceValue,
         number.OfficialNumberText,
+        number.RegistryDate,
         number.StatusId,
         number.IssuedByUserId,
         number.IssuedAt,
@@ -41,12 +47,14 @@ public sealed record DocumentNumberHistoryResponse(
     int EventTypeId,
     Guid ActorUserId,
     string? Notes,
-    DateTime OccurredAt)
+    DateTime OccurredAt,
+    DateTime? EffectiveDate)
 {
     public static DocumentNumberHistoryResponse From(DocumentNumberHistory history) => new(
         history.HistoryId,
         history.EventTypeId,
         history.ActorUserId,
         history.Notes,
-        history.OccurredAt);
+        history.OccurredAt,
+        history.EffectiveDate);
 }

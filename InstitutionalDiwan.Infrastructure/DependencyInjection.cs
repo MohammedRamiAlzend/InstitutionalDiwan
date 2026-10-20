@@ -84,6 +84,7 @@ public static class DependencyInjection
         services.AddScoped<ISeeder, DocumentPriorityLevelSeeder>();
         services.AddScoped<ISeeder, DocumentNumberStatusSeeder>();
         services.AddScoped<ISeeder, DocumentNumberEventTypeSeeder>();
+        services.AddScoped<ISeeder, DocumentNumberScopeSeeder>();
         services.AddScoped<ISeeder, NumberingResetPolicySeeder>();
         services.AddScoped<ISeeder, PermissionSeeder>();
         services.AddScoped<ISeeder, RoleSeeder>();

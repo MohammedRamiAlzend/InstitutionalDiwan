@@ -10,9 +10,18 @@ internal sealed class FakeDocumentRepository : IDocumentRepository
     public Task<Document?> GetByIdAsync(Guid documentId, CancellationToken cancellationToken = default)
         => Task.FromResult(Documents.FirstOrDefault(document => document.DocumentId == documentId));
 
+    public Task<Document?> GetWithNumbersAsync(Guid documentId, CancellationToken cancellationToken = default)
+        => Task.FromResult(Documents.FirstOrDefault(document => document.DocumentId == documentId));
+
     public Task<IReadOnlyList<Document>> ListRecentAsync(int limit, CancellationToken cancellationToken = default)
         => Task.FromResult<IReadOnlyList<Document>>(
             Documents.OrderByDescending(document => document.CreatedAt).Take(limit).ToList());
+
+    public Task<IReadOnlyList<Document>> GetByIdsAsync(
+        IReadOnlyCollection<Guid> documentIds,
+        CancellationToken cancellationToken = default)
+        => Task.FromResult<IReadOnlyList<Document>>(
+            Documents.Where(document => documentIds.Contains(document.DocumentId)).ToList());
 
     public void Add(Document document) => Documents.Add(document);
 }

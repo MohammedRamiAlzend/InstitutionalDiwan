@@ -1,5 +1,6 @@
 using InstitutionalDiwan.Domain.Common;
 using InstitutionalDiwan.Domain.Entities.Numbering;
+using InstitutionalDiwan.Domain.Errors;
 using InstitutionalDiwan.Domain.Repositories;
 
 namespace InstitutionalDiwan.Application.Features.Numbering;
@@ -35,5 +36,24 @@ internal static class NumberingRegistryResolver
 
         registryRepository.Add(created.Value);
         return Result.Success(created.Value);
+    }
+
+    /// <summary>
+    /// The registry a department writes its own numbers into. Unlike <see cref="ResolveCentralAsync"/>,
+    /// this never falls back to the shared default: a department without a configured register
+    /// cannot number anything, which is what blocks receipt.
+    /// </summary>
+    public static async Task<Result<NumberingRegistry>> RequireDepartmentRegistryAsync(
+        INumberingRegistryRepository registryRepository,
+        Guid departmentId,
+        CancellationToken cancellationToken)
+    {
+        var registry = await registryRepository.GetActiveDepartmentRegistryAsync(
+            departmentId, cancellationToken);
+
+        if (registry is null)
+            return Result.Failure<NumberingRegistry>(DomainErrors.Numbering.DepartmentRegistryNotConfigured);
+
+        return Result.Success(registry);
     }
 }

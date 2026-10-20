@@ -12,7 +12,9 @@ internal sealed class FakeDocumentNumberRepository : IDocumentNumberRepository
 
     public Task<DocumentNumber?> GetActiveByDocumentIdAsync(Guid documentId, CancellationToken cancellationToken = default)
         => Task.FromResult(DocumentNumbers.FirstOrDefault(
-            number => number.DocumentId == documentId && number.StatusId == DocumentNumberStatus.ActiveId));
+            number => number.DocumentId == documentId &&
+                      number.ScopeId == DocumentNumberScope.CentralId &&
+                      number.StatusId == DocumentNumberStatus.ActiveId));
 
     public Task<bool> ExistsByNumberAndYearAsync(
         string officialNumberText,
@@ -24,6 +26,30 @@ internal sealed class FakeDocumentNumberRepository : IDocumentNumberRepository
             number => number.OfficialNumberText == text && number.NumberingYear == numberingYear));
     }
 
+    public Task<bool> ExistsInScopeAsync(
+        int scopeId,
+        Guid registryId,
+        string officialNumberText,
+        int numberingYear,
+        CancellationToken cancellationToken = default)
+    {
+        var text = officialNumberText.Trim();
+        return Task.FromResult(DocumentNumbers.Any(number =>
+            number.ScopeId == scopeId &&
+            number.RegistryId == registryId &&
+            number.OfficialNumberText == text &&
+            number.NumberingYear == numberingYear));
+    }
+
+    public Task<DocumentNumber?> GetDepartmentEntryAsync(
+        Guid documentId,
+        Guid departmentId,
+        CancellationToken cancellationToken = default)
+        => Task.FromResult(DocumentNumbers.FirstOrDefault(number =>
+            number.DocumentId == documentId &&
+            number.ScopeId == DocumentNumberScope.DepartmentId &&
+            number.DepartmentId == departmentId));
+
     public Task<IReadOnlyList<DocumentNumber>> ListByDocumentAsync(
         Guid documentId,
         CancellationToken cancellationToken = default)
@@ -32,8 +58,19 @@ internal sealed class FakeDocumentNumberRepository : IDocumentNumberRepository
                 .OrderBy(number => number.IssuedAt)
                 .ToList());
 
+    public Task<IReadOnlyList<DocumentNumber>> ListByDepartmentAsync(
+        Guid departmentId,
+        int? numberingYear,
+        CancellationToken cancellationToken = default)
+        => Task.FromResult<IReadOnlyList<DocumentNumber>>(
+            DocumentNumbers.Where(number => number.DepartmentId == departmentId &&
+                                            (numberingYear == null || number.NumberingYear == numberingYear))
+                .OrderBy(number => number.RegistryDate)
+                .ToList());
+
     public Task<bool> AnyByRegistryAsync(Guid registryId, CancellationToken cancellationToken = default)
-        => Task.FromResult(DocumentNumbers.Any(number => number.RegistryId == registryId));
+        => Task.FromResult(DocumentNumbers.Any(number =>
+            number.RegistryId == registryId && number.ScopeId == DocumentNumberScope.CentralId));
 
     public void Add(DocumentNumber documentNumber) => DocumentNumbers.Add(documentNumber);
 }
@@ -79,6 +116,16 @@ internal sealed class FakeNumberingRegistryRepository : INumberingRegistryReposi
 
         return Task.FromResult(selected);
     }
+
+    public Task<NumberingRegistry?> GetActiveDepartmentRegistryAsync(
+        Guid departmentId,
+        CancellationToken cancellationToken = default)
+        => Task.FromResult(Registries
+            .Where(registry => registry.IsActive && registry.DepartmentId == departmentId)
+            .OrderByDescending(registry =>
+                (registry.DocumentTypeId is null ? 0 : 1) + (registry.DirectionId is null ? 0 : 1))
+            .ThenBy(registry => registry.CreatedAt)
+            .FirstOrDefault());
 
     public void Add(NumberingRegistry registry) => Registries.Add(registry);
 }

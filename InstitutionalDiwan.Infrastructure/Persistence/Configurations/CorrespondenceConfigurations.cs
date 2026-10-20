@@ -59,6 +59,17 @@ public sealed class DocumentConfiguration : IEntityTypeConfiguration<Document>
 
         builder.Navigation(x => x.StatusHistory)
             .UsePropertyAccessMode(PropertyAccessMode.Field);
+
+        // The central number plus one line per department register. DocumentNumber is written from
+        // two entry points (central issuance and department registration), so this navigation is a
+        // read path and the guard that keeps one line per department.
+        builder.HasMany(x => x.Numbers)
+            .WithOne()
+            .HasForeignKey(x => x.DocumentId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Navigation(x => x.Numbers)
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
     }
 }
 

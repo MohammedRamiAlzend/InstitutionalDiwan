@@ -24,9 +24,9 @@ Concrete EF Core implementations of the repository interfaces declared in
 | `PermissionRepository.cs` | Loads `Permission` catalog entries by code and listing, so `GrantRolePermissionCommand` can validate the code and `GET /api/permissions` can serve the catalog. |
 | `DepartmentRepository.cs` | Loads `Department` aggregates (by id, code, listing), implements `HasActiveChildrenAsync` (deactivation guard) and `GetDescendantIdsAsync` (cycle detection when moving a department under a new parent). |
 | `DepartmentTypeRepository.cs` | Loads `DepartmentType` by code so department create/update can validate the type exists and is active. |
-| `DocumentRepository.cs` | Loads `Document` with `Participants` and `StatusHistory`, supports the recent-documents listing, and attaches new documents. |
-| `NumberingRegistryRepository.cs` | Loads `NumberingRegistry` with its per-year `Counters`; `GetActiveForScopeAsync` picks the most specific active registry matching department/type/direction (null fields act as wildcards). |
-| `DocumentNumberRepository.cs` | Loads issued `DocumentNumber` rows (by id / active per document) and answers `ExistsByNumberAndYearAsync`, the duplicate-official-number check used by `CreateDocumentCommandHandler`. |
+| `DocumentRepository.cs` | Loads `Document` with `Participants` and `StatusHistory`; `GetWithNumbersAsync` adds the central + department numbers (with their history) for the record/receive flows, `GetByIdsAsync` batches the register-book join, and `ListRecentAsync` backs the listing. |
+| `NumberingRegistryRepository.cs` | Loads `NumberingRegistry` with its per-year `Counters`; `GetActiveForScopeAsync` picks the most specific active registry matching department/type/direction (null fields act as wildcards), while `GetActiveDepartmentRegistryAsync` returns only the registry owned by that department (no shared-default fallback). |
+| `DocumentNumberRepository.cs` | Loads `DocumentNumber` rows (by id / active central number per document) and answers `ExistsByNumberAndYearAsync` and the scope-aware `ExistsInScopeAsync`; `GetDepartmentEntryAsync` and `ListByDepartmentAsync` serve the register book. Department rows are excluded from the central lifecycle and from `AnyByRegistryAsync`, which decides the registry template lock. |
 | `EmployeeRepository.cs` | Loads `Employee` records by id and listing for the employee-management endpoints. |
 | `DocumentAccessGrantRepository.cs` | Loads per-document `DocumentAccessGrant` rows by id and by document, for grant/revoke/list. |
 | `LookupRepository.cs` | The one generic repository: resolves a kebab-case lookup slug to its `DbSet<TLookup>` through `LookupCatalog`, then lists/fetches/creates/relabels/(de)activates entries and answers `IsInUseAsync` from EF foreign-key metadata. Backs `/api/lookups/{lookup}`. |
@@ -52,8 +52,10 @@ Concrete EF Core implementations of the repository interfaces declared in
   `ConcurrencyException` (→ HTTP 409).
 - Official-number uniqueness is enforced twice: the handler pre-checks
   `ExistsByNumberAndYearAsync(text, year)` (→ `Numbering.OfficialNumberTaken`, 409) and the database
-  guarantees it with the `UX_DOC_NUMBERS_TEXT_YEAR` unique index; a concurrent race that slips past
-  the check surfaces as a SQL unique violation, which `GlobalExceptionHandlingMiddleware` maps to 409.
+  guarantees it with the filtered `UX_DOC_NUMBERS_TEXT_YEAR` (central rows) / `UX_DOC_NUMBERS_DEPT_TEXT_YEAR`
+  (one department register) indexes; `UX_DOC_NUMBERS_DOC_DEPT` is the backstop for "one line per
+  document per department". A concurrent race that slips past the check surfaces as a SQL unique
+  violation, which `GlobalExceptionHandlingMiddleware` maps to 409.
 
 ## Implementation status
 
@@ -73,6 +75,7 @@ Concrete EF Core implementations of the repository interfaces declared in
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-20 | Buffy | Made the numbering queries scope-aware (`GetActiveByDocumentIdAsync` and `AnyByRegistryAsync` now only see central numbers), added `ExistsInScopeAsync`/`GetDepartmentEntryAsync`/`ListByDepartmentAsync`, and added `DocumentRepository.GetWithNumbersAsync`/`GetByIdsAsync` for department registration and the register book. |
 | 2026-10-19 | Buffy | Added `InstitutionSettingRepository` (`GetSingletonAsync`/`Add`), `ExternalOrganizationRepository` (by id / normalized code / listing), and `DocumentMovementRepository` (`HasActiveMovementsAsync` = status not CLOSED/CANCELED); all registered in `Infrastructure/DependencyInjection.cs`. |
 | 2026-10-19 | opencode | Added `LookupRepository` — one generic implementation covering all 33 seeded reference catalogs through a deterministic slug registry (`LookupCatalog`), with Creates/Relabel/(De)activate plus an `IsInUseAsync` guard derived from the EF model's foreign keys. Registered in `Infrastructure/DependencyInjection.cs`; also recorded the previously undocumented `EmployeeRepository` and `DocumentAccessGrantRepository`. |
 | 2026-10-18 | opencode | Added `PermissionRepository` (`GetByCodeAsync`, `ListAllAsync`) and `RoleRepository.ListAllAsync`, registered in `Infrastructure/DependencyInjection.cs` to back the role-management endpoints. |

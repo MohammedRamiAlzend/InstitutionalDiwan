@@ -42,6 +42,7 @@ public sealed class SeedingPipelineTests
         new DocumentPriorityLevelSeeder(),
         new DocumentNumberStatusSeeder(),
         new DocumentNumberEventTypeSeeder(),
+        new DocumentNumberScopeSeeder(),
         new NumberingResetPolicySeeder(),
         new PermissionSeeder(),
         new RoleSeeder(),
@@ -69,7 +70,7 @@ public sealed class SeedingPipelineTests
 
         var executed = await RunAsync(db, SeedingEnvironments.Development);
 
-        Assert.Equal(37, executed);
+        Assert.Equal(38, executed);
 
         // Reference lookups
         Assert.Equal(4, await db.UserScopeTypes.CountAsync());
@@ -105,7 +106,8 @@ public sealed class SeedingPipelineTests
         Assert.Equal(4, await db.DocumentConfidentialityLevels.CountAsync());
         Assert.Equal(3, await db.DocumentPriorityLevels.CountAsync());
         Assert.Equal(3, await db.DocumentNumberStatuses.CountAsync());
-        Assert.Equal(3, await db.DocumentNumberEventTypes.CountAsync());
+        Assert.Equal(5, await db.DocumentNumberEventTypes.CountAsync());
+        Assert.Equal(2, await db.DocumentNumberScopes.CountAsync());
         Assert.Equal(3, await db.NumberingResetPolicies.CountAsync());
         Assert.Equal(14, await db.Permissions.CountAsync());
         Assert.Equal(2, await db.Roles.CountAsync());
@@ -125,7 +127,7 @@ public sealed class SeedingPipelineTests
 
         var executed = await RunAsync(db, SeedingEnvironments.Production);
 
-        Assert.Equal(36, executed);
+        Assert.Equal(37, executed);
         Assert.Equal(5, await db.DepartmentTypes.CountAsync());
         Assert.Equal(4, await db.DocumentDirections.CountAsync());
         Assert.Equal(5, await db.DocumentTypes.CountAsync());
@@ -147,7 +149,7 @@ public sealed class SeedingPipelineTests
 
         var executed = await RunAsync(db, SeedingEnvironments.Development);
 
-        Assert.Equal(37, executed);
+        Assert.Equal(38, executed);
         Assert.Equal(2, await db.Users.CountAsync());
         Assert.Equal(5, await db.DepartmentTypes.CountAsync());
         Assert.Equal(4, await db.UserScopeTypes.CountAsync());
