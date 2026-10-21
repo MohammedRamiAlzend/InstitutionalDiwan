@@ -1,6 +1,6 @@
 # Presentation / Controllers
 
-> **Status:** Implemented — thirteen thin controllers, one per module plus the generic lookups controller.
+> **Status:** Implemented — fifteen thin controllers, one per module plus the generic lookups controller.
 
 ## Purpose
 
@@ -17,7 +17,7 @@ access live here.
 | `DocumentsController.cs` | `api/documents` | `DOCUMENT_VIEW` reads; `DOCUMENT_CREATE` create/register; `DOCUMENT_EDIT` update/participants/cancel | Full lifecycle: immediate create, list, get, details, timeline, `POST drafts`, `PUT {id}`, `POST {id}/register`, `POST {id}/participants`, `POST {id}/cancel`. |
 | `DocumentNumbersController.cs` | `api/documents/{documentId}/numbers` | `NUMBERING_VIEW` reads; `NUMBERING_MANAGE` writes | Central number lifecycle (`issue`, `{numberId}/cancel`, `{numberId}/replace`, `history`), the department register write (`department-registration`: typed number + date), and `registry-entries` (central number + every department line). |
 | `DepartmentRegistersController.cs` | `api/departments/{departmentId}/register` | `NUMBERING_VIEW` | The department's register book, optionally filtered by numbering year. |
-| `MovementsController.cs` | `api/movements` | `DOCUMENT_EDIT` | `{movementId}/receive` — refuses custody until the destination department recorded its register number. |
+| `MovementsController.cs` | `api/movements` | `DOCUMENT_VIEW` reads; `DOCUMENT_EDIT` writes | The routing workflow: open a movement, send, receive (refuses custody until the destination department recorded its register number), complete, reject, return, redirect, close, cancel; plus the movement read endpoints and the department inbox/outbox. |
 | `ExternalOrganizationsController.cs` | `api/external-organizations` | `DOCUMENT_VIEW` reads; `DOCUMENT_EDIT` writes | External correspondent CRUD: list (incl. `includeInactive`), get, create, update, deactivate, activate. |
 | `InstitutionSettingsController.cs` | `api/institution-settings` | `DEPARTMENT_MANAGE` | Reads and replaces the singleton institution settings (Central Diwan guards). |
 | `UsersController.cs` | `api/users` | `USER_MANAGE` | User CRUD, activate/deactivate, assign/revoke roles, `POST {id}/department-assignments`, `DELETE {id}/department-assignments/{assignmentId}`, `GET {id}/effective-permissions`. |
@@ -40,6 +40,24 @@ access live here.
 | `PATCH` | `/api/lookups/{lookup}/{id}/deactivate` | Soft-delete an entry (409 when still referenced). |
 | `PATCH` | `/api/lookups/{lookup}/{id}/activate` | Reactivate an entry. |
 
+## Movements endpoints
+
+| Method | Route | Permission | Behavior |
+| --- | --- | --- | --- |
+| `POST` | `/api/movements` | `DOCUMENT_EDIT` | Route a document to another department by opening a movement. The source department is the caller's own primary department. |
+| `GET` | `/api/movements/{movementId}` | `DOCUMENT_VIEW` | One movement with its steps and audit trail. |
+| `GET` | `/api/movements/by-document/{documentId}` | `DOCUMENT_VIEW` | Every movement of a document, newest first. |
+| `GET` | `/api/movements/inbox?departmentId=` | `DOCUMENT_VIEW` | The documents waiting in a department's inbox. Defaults to the caller's own primary department. |
+| `GET` | `/api/movements/outbox?departmentId=` | `DOCUMENT_VIEW` | The documents a department sent out and that are still elsewhere. Defaults to the caller's own primary department. |
+| `POST` | `/api/movements/{movementId}/send` | `DOCUMENT_EDIT` | Send the current step to the destination department. |
+| `POST` | `/api/movements/{movementId}/receive` | `DOCUMENT_EDIT` | Receive the current step; refused until the destination department recorded its register number. |
+| `POST` | `/api/movements/{movementId}/complete` | `DOCUMENT_EDIT` | Complete the current step. |
+| `POST` | `/api/movements/{movementId}/reject` | `DOCUMENT_EDIT` | Reject the current step with a required reason. |
+| `POST` | `/api/movements/{movementId}/return` | `DOCUMENT_EDIT` | Return the document to the sending department with a required reason. |
+| `POST` | `/api/movements/{movementId}/redirect` | `DOCUMENT_EDIT` | Redirect the document to another department without closing the movement. |
+| `POST` | `/api/movements/{movementId}/close` | `DOCUMENT_EDIT` | Close the movement and release the document. |
+| `POST` | `/api/movements/{movementId}/cancel` | `DOCUMENT_EDIT` | Cancel the movement with a required reason and release the document. |
+
 ## Conventions / Notes
 
 - `{lookup}` is a kebab-case slug registered in the Infrastructure `LookupCatalog` (33 slugs, e.g.
@@ -48,11 +66,16 @@ access live here.
   restrictive policy wins because ASP.NET Core ANDs multiple `[Authorize]` attributes.
 - `MediatR` handlers are `internal`; MediatR discovers them by assembly scan, so controllers only
   depend on the public command/query records.
+- Every endpoint carries an `[EndpointSummary]`, an `[EndpointDescription]`, and a `<param>` block
+  with a concrete example for each route/query parameter — `OpenApiDocumentationTests` fails the
+  build otherwise. `add-endpoint-docs.mjs` at the repo root (run with Node) fills those in for a new
+  endpoint and is idempotent: it skips anything already documented.
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-21 | opencode | Rewrote `MovementsController` into the full routing workflow: open/send/receive/complete/reject/return/redirect/close/cancel, the movement read endpoints (`GET {movementId}`, `GET by-document/{documentId}`), and the department inbox and outbox (`GET inbox`, `GET outbox`). |
 | 2026-10-20 | Buffy | Added the department register routes: `POST /api/documents/{id}/numbers/department-registration` and `GET .../registry-entries` on `DocumentNumbersController`, `DepartmentRegistersController`, and `MovementsController` (`{id}/receive`, gated on a recorded register entry). |
 | 2026-10-19 | Buffy | Added `InstitutionSettingsController` (`GET`/`PUT /api/institution-settings`), `ExternalOrganizationsController` (CRUD), `DocumentNumbersController` (issue/cancel/replace/history), the document lifecycle endpoints on `DocumentsController` (drafts, update, register, participants, cancel, details, timeline), department-scope + effective-permissions endpoints on `UsersController`, and registry write endpoints on `NumberingRegistriesController`. |
 | 2026-10-19 | opencode | Added `LookupsController` and documented the folder's ten controllers, their routes and their permission policies (this README did not exist before). |

@@ -18,6 +18,65 @@ internal sealed class DocumentMovementRepository : IDocumentMovementRepository
             .Include(movement => movement.Events)
             .FirstOrDefaultAsync(movement => movement.MovementId == movementId, cancellationToken);
 
+    /// <summary>Every movement of a document, newest first, with its steps and events.</summary>
+    public async Task<IReadOnlyList<DocumentMovement>> ListByDocumentAsync(
+        Guid documentId,
+        CancellationToken cancellationToken = default) =>
+        await _context.DocumentMovements
+            .Include(movement => movement.Steps)
+            .Include(movement => movement.Events)
+            .Where(movement => movement.DocumentId == documentId)
+            .OrderByDescending(movement => movement.CreatedAt)
+            .ToListAsync(cancellationToken);
+
+    /// <summary>
+    /// Movements waiting in a department's inbox, newest first. The current step is addressed to
+    /// that department and has not left it yet (sent, received, or completed), so the document
+    /// still awaits the department's action; plus the documents that came back to it because the
+    /// receiving department rejected or returned them. Closed and canceled movements are left out.
+    /// </summary>
+    public async Task<IReadOnlyList<DocumentMovement>> ListInboxAsync(
+        Guid departmentId,
+        CancellationToken cancellationToken = default) =>
+        await _context.DocumentMovements
+            .Include(movement => movement.Steps)
+            .Include(movement => movement.Events)
+            .Where(movement => movement.StatusId != DocumentMovement.StatusClosed &&
+                               movement.StatusId != DocumentMovement.StatusCanceled &&
+                               movement.Steps.Any(step =>
+                                   step.StepNo == movement.CurrentStepNo &&
+                                   ((step.ToDepartmentId == departmentId &&
+                                     (step.StepStatusId == MovementStepStatus.SentId ||
+                                      step.StepStatusId == MovementStepStatus.ReceivedId ||
+                                      step.StepStatusId == MovementStepStatus.CompletedId)) ||
+                                    (step.FromDepartmentId == departmentId &&
+                                     (step.StepStatusId == MovementStepStatus.RejectedId ||
+                                      step.StepStatusId == MovementStepStatus.ReturnedId)))))
+            .OrderByDescending(movement => movement.CreatedAt)
+            .ToListAsync(cancellationToken);
+
+    /// <summary>
+    /// Movements a department sent out and that are still with the receiving side, newest first.
+    /// The origin of the current step is the department that handed the document over, which is
+    /// not the movement's source department once the document has been redirected onwards.
+    /// </summary>
+    public async Task<IReadOnlyList<DocumentMovement>> ListOutboxAsync(
+        Guid departmentId,
+        CancellationToken cancellationToken = default) =>
+        await _context.DocumentMovements
+            .Include(movement => movement.Steps)
+            .Include(movement => movement.Events)
+            .Where(movement => movement.StatusId != DocumentMovement.StatusClosed &&
+                               movement.StatusId != DocumentMovement.StatusCanceled &&
+                               movement.Steps.Any(step =>
+                                   step.StepNo == movement.CurrentStepNo &&
+                                   step.FromDepartmentId == departmentId &&
+                                   (step.StepStatusId == MovementStepStatus.SentId ||
+                                    step.StepStatusId == MovementStepStatus.ReceivedId ||
+                                    step.StepStatusId == MovementStepStatus.CompletedId)))
+            .OrderByDescending(movement => movement.CreatedAt)
+            .ToListAsync(cancellationToken);
+
     /// <summary>
     /// A movement is active until it reaches a terminal status (CLOSED or CANCELED); every state in
     /// between still holds the document.

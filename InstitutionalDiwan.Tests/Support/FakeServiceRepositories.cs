@@ -55,6 +55,51 @@ internal sealed class FakeDocumentMovementRepository : IDocumentMovementReposito
     public Task<DocumentMovement?> GetByIdAsync(Guid movementId, CancellationToken cancellationToken = default)
         => Task.FromResult(Movements.FirstOrDefault(movement => movement.MovementId == movementId));
 
+    public Task<IReadOnlyList<DocumentMovement>> ListByDocumentAsync(
+        Guid documentId,
+        CancellationToken cancellationToken = default)
+        => Task.FromResult<IReadOnlyList<DocumentMovement>>(
+            Movements
+                .Where(movement => movement.DocumentId == documentId)
+                .OrderByDescending(movement => movement.CreatedAt)
+                .ToList());
+
+    public Task<IReadOnlyList<DocumentMovement>> ListInboxAsync(
+        Guid departmentId,
+        CancellationToken cancellationToken = default)
+        => Task.FromResult<IReadOnlyList<DocumentMovement>>(
+            Movements
+                .Where(movement => movement.StatusId != DocumentMovement.StatusClosed &&
+                                   movement.StatusId != DocumentMovement.StatusCanceled &&
+                                   CurrentStep(movement) is { } step &&
+                                   ((step.ToDepartmentId == departmentId &&
+                                     (step.StepStatusId == MovementStepStatus.SentId ||
+                                      step.StepStatusId == MovementStepStatus.ReceivedId ||
+                                      step.StepStatusId == MovementStepStatus.CompletedId)) ||
+                                    (step.FromDepartmentId == departmentId &&
+                                     (step.StepStatusId == MovementStepStatus.RejectedId ||
+                                      step.StepStatusId == MovementStepStatus.ReturnedId))))
+                .OrderByDescending(movement => movement.CreatedAt)
+                .ToList());
+
+    public Task<IReadOnlyList<DocumentMovement>> ListOutboxAsync(
+        Guid departmentId,
+        CancellationToken cancellationToken = default)
+        => Task.FromResult<IReadOnlyList<DocumentMovement>>(
+            Movements
+                .Where(movement => movement.StatusId != DocumentMovement.StatusClosed &&
+                                   movement.StatusId != DocumentMovement.StatusCanceled &&
+                                   CurrentStep(movement) is { } step &&
+                                   step.FromDepartmentId == departmentId &&
+                                   (step.StepStatusId == MovementStepStatus.SentId ||
+                                    step.StepStatusId == MovementStepStatus.ReceivedId ||
+                                    step.StepStatusId == MovementStepStatus.CompletedId))
+                .OrderByDescending(movement => movement.CreatedAt)
+                .ToList());
+
+    private static DocumentMovementStep? CurrentStep(DocumentMovement movement) =>
+        movement.Steps.FirstOrDefault(step => step.StepNo == movement.CurrentStepNo);
+
     public Task<bool> HasActiveMovementsAsync(Guid documentId, CancellationToken cancellationToken = default)
         => Task.FromResult(DocumentIdsWithActiveMovements.Contains(documentId));
 

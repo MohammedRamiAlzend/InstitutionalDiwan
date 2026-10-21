@@ -131,6 +131,19 @@ public interface IExternalOrganizationRepository
 public interface IDocumentMovementRepository
 {
     Task<DocumentMovement?> GetByIdAsync(Guid movementId, CancellationToken cancellationToken = default);
+    /// <summary>Every movement of a document, newest first, with its steps and events.</summary>
+    Task<IReadOnlyList<DocumentMovement>> ListByDocumentAsync(Guid documentId, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Movements waiting in a department's inbox, newest first: the current step is addressed to
+    /// that department and has not left it yet, plus the documents that came back to it because
+    /// the receiving department rejected or returned them.
+    /// </summary>
+    Task<IReadOnlyList<DocumentMovement>> ListInboxAsync(Guid departmentId, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Movements a department sent out and that are still with the receiving side, newest first:
+    /// the current step leaves that department and has not come back.
+    /// </summary>
+    Task<IReadOnlyList<DocumentMovement>> ListOutboxAsync(Guid departmentId, CancellationToken cancellationToken = default);
     Task<bool> HasActiveMovementsAsync(Guid documentId, CancellationToken cancellationToken = default);
     void Add(DocumentMovement movement);
 }

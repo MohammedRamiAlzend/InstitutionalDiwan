@@ -243,6 +243,24 @@ public sealed class Document : AggregateRoot<Guid>
         return Result.Success();
     }
 
+    /// <summary>
+    /// Ends the document's movement: the document leaves <c>IN_MOVEMENT</c> and returns to
+    /// <c>REGISTERED</c>, the status it held when the movement started. Calling it on a document
+    /// that is not in movement is a no-op, so closing a movement twice is harmless.
+    /// </summary>
+    public Result MarkMovementEnded(Guid actorUserId, string? notes = null)
+    {
+        if (CurrentStatusId != DocumentStatusType.InMovementId)
+            return Result.Success();
+
+        var previous = CurrentStatusId;
+        CurrentStatusId = DocumentStatusType.RegisteredId;
+        UpdatedAt = DateTime.UtcNow;
+
+        AppendStatusHistory(previous, DocumentStatusType.RegisteredId, actorUserId, notes ?? "Movement ended");
+        return Result.Success();
+    }
+
     public Result Archive(Guid actorUserId, bool hasActiveMovements, string? reason = null)
     {
         if (CurrentStatusId == DocumentStatusType.ArchivedId)

@@ -41,6 +41,7 @@ public static class DomainErrors
         public static readonly Error TypeNotFound = Error.Validation("Department.TypeNotFound", "The specified department type does not exist.");
         public static readonly Error TypeInactive = Error.Conflict("Department.TypeInactive", "Cannot assign an inactive department type.");
         public static readonly Error ParentNotFound = Error.Validation("Department.ParentNotFound", "The specified parent department does not exist.");
+        public static readonly Error Inactive = Error.Conflict("Department.Inactive", "The department is inactive and cannot take part in a document movement.");
     }
 
     public static class InstitutionSetting
@@ -124,6 +125,7 @@ public static class DomainErrors
         public static readonly Error ParticipantRoleNotFound = Error.Validation("Correspondence.ParticipantRoleNotFound", "The specified participant role does not exist.");
         public static readonly Error ParticipantDepartmentNotFound = Error.Validation("Correspondence.ParticipantDepartmentNotFound", "The specified internal participant department does not exist.");
         public static readonly Error DocumentHasActiveNumber = Error.Conflict("Correspondence.DocumentHasActiveNumber", "Cancel or replace the existing official number before issuing a new one.");
+        public static readonly Error OnlyRegisteredRoutable = Error.Conflict("Correspondence.OnlyRegisteredRoutable", "Only documents in REGISTERED status can be routed to another department.");
     }
 
     public static class Numbering
@@ -162,6 +164,8 @@ public static class DomainErrors
         public static readonly Error ReasonRequired = Error.Validation("Movements.ReasonRequired", "A reason or note is required for rejecting, returning, or cancelling a movement.");
         public static readonly Error AlreadyTerminal = Error.Conflict("Movements.AlreadyTerminal", "Cannot modify a movement that is already CLOSED or CANCELED.");
         public static readonly Error MovementNotFound = Error.NotFound("Movements.MovementNotFound", "The document movement was not found.");
+        public static readonly Error ActiveMovementExists = Error.Conflict("Movements.ActiveMovementExists", "The document already has an active movement; close or cancel it before routing the document again.");
+        public static readonly Error DepartmentOutOfScope = Error.Forbidden("Movements.DepartmentOutOfScope", "The requested department is outside the caller's organizational scope.");
     }
 
     public static class Attachments

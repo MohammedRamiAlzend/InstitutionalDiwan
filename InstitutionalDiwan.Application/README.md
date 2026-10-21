@@ -2,7 +2,7 @@
 
 > **Status:** Implemented — `DependencyInjection.cs`, `Abstractions/` (messaging + authentication),
 > `Behaviors/ValidationPipelineBehavior.cs`, and the live feature slices under `Features/`
-> (Lookups, Organization, Identity, Correspondence, Numbering, Movements receipt) are in place.
+> (Lookups, Organization, Identity, Correspondence, Numbering, Movements routing workflow + inbox/outbox) are in place.
 
 ## Purpose
 
@@ -53,5 +53,6 @@ See each subfolder's README for the full design and per-folder status tables.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-21 | opencode | Completed `Features/Movements/`: the routing workflow commands (open/send/complete/reject/return/redirect/close/cancel), the movement queries, and the department inbox/outbox. |
 | 2026-10-20 | Buffy | Added `Features/Movements/` (receipt gated on a recorded department register number) and department register entries under `Features/Numbering/Numbers/` + `Registries/`. |
 | 2026-10-19 | opencode | Added the `Features/Lookups/` slice (generic list/get/create/relabel/deactivate/activate over all seeded reference catalogs) and refreshed this README, which still described the layer as "scaffolding only — no code yet". |

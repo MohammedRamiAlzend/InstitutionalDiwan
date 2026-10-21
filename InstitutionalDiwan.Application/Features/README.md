@@ -3,9 +3,9 @@
 > **Status:** Partially implemented — `Lookups` (generic reference-catalog CRUD), Identity (`Login`,
 > `Register`, `ChangePassword`, `Users`, `Roles`, `Permissions`, `Employees`, `AccessGrants`),
 > Correspondence/`Documents` (full Module 03 lifecycle) and `ExternalOrganizations`, Organization
-> (`Departments`, `InstitutionSettings`), Numbering (`Registries`, `Numbers`) slices, and the first
-> Movements use case (receiving a step) are live; the rest of Movements, Attachments, Archiving,
-> Relations, Audit, and Notifications are target design.
+> (`Departments`, `InstitutionSettings`), Numbering (`Registries`, `Numbers`), and the whole
+> Movements slice (routing workflow + inbox/outbox) are live; Attachments, Archiving, Relations,
+> Audit, and Notifications are target design.
 
 ## Purpose
 
@@ -48,8 +48,8 @@ grouping by technical type, so a slice can be read top-to-bottom.
 - **Queries:** `GetDocumentNumberHistoryQuery` ✅, `GetDocumentRegistryNumbersQuery` ✅ (central + per-department lines), `ListDepartmentRegisterQuery` ✅ (register book), `ListRegistriesQuery` ✅, `GetRegistryByIdQuery` ✅
 
 ### Movements (Module 05)
-- **Commands:** `ReceiveDocumentCommand` ✅ (blocked until the destination department recorded its register number — see [`Movements/README.md`](Movements/README.md)), `CreateMovementCommand`, `SendMovementCommand`, `CompleteMovementStepCommand`, `RejectMovementStepCommand`, `ReturnMovementToSenderCommand`, `RedirectMovementCommand`, `CloseMovementCommand`
-- **Queries:** `GetDepartmentInboxQuery`, `GetDepartmentOutboxQuery`, `GetMovementTrackingChainQuery`
+- **Commands:** `ReceiveDocumentCommand` ✅ (blocked until the destination department recorded its register number), `CreateMovementCommand` ✅ (only a REGISTERED document can be routed; one active movement per document), `SendMovementCommand` ✅, `CompleteMovementStepCommand` ✅, `RejectMovementStepCommand` ✅, `ReturnMovementToSenderCommand` ✅, `RedirectMovementCommand` ✅, `CloseMovementCommand` ✅, `CancelMovementCommand` ✅ — see [`Movements/README.md`](Movements/README.md)
+- **Queries:** `GetMovementByIdQuery` ✅, `ListDocumentMovementsQuery` ✅, `GetDepartmentInboxQuery` ✅, `GetDepartmentOutboxQuery` ✅ (both read the caller's primary department by default, or any department inside the caller's scope)
 
 ### Attachments (Module 06)
 - **Commands:** `CreateDocumentFileCommand`, `UploadDocumentFileVersionCommand`, `ArchiveDocumentFileCommand`
@@ -96,13 +96,14 @@ persistence and authorization concerns; the invariants live in the domain.
 | Organization/`Departments` (create, update, soft delete, activate, get by id, list, tree) | ✅ Implemented |
 | Organization/`InstitutionSettings` (get, update incl. Central Diwan guards) | ✅ Implemented |
 | Numbering/`Registries` + `Numbers` (registry CRUD, issue/cancel/replace, history, department register entries, register book) | ✅ Implemented |
-| Movements/`ReceiveDocumentCommand` (register-gated receipt) | ✅ Implemented |
-| Attachments, Archiving, Relations, Audit, Notifications, rest of Movements | ❌ Not implemented |
+| Movements (routing workflow + inbox/outbox) | ✅ Implemented |
+| Attachments, Archiving, Relations, Audit, Notifications | ❌ Not implemented |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-21 | opencode | Completed the Movements slice: the routing workflow (`CreateMovementCommand`, `SendMovementCommand`, `CompleteMovementStepCommand`, `RejectMovementStepCommand`, `ReturnMovementToSenderCommand`, `RedirectMovementCommand`, `CloseMovementCommand`, `CancelMovementCommand`) plus the read side (`GetMovementByIdQuery`, `ListDocumentMovementsQuery`, `GetDepartmentInboxQuery`, `GetDepartmentOutboxQuery`). |
 | 2026-10-20 | Buffy | Added department register numbering (`RecordDepartmentRegistrationCommand`, `GetDocumentRegistryNumbersQuery`, `ListDepartmentRegisterQuery`) and the first Movements use case, `ReceiveDocumentCommand`, which refuses custody until that register entry exists. |
 | 2026-10-19 | Buffy | Completed Modules 01–04: added `Organization/InstitutionSettings`, `Correspondence/ExternalOrganizations`, the rest of the `Documents` lifecycle (draft/update/register/participants/cancel/details/timeline), `Identity/Users` department-scope commands, and the whole `Numbering` (`Registries`, `Numbers`) slice. |
 | 2026-10-19 | opencode | Added the cross-module `Lookups` slice exposing every seeded reference catalog through generic list/get/create/relabel/deactivate/activate use cases (see `Lookups/README.md`); documented it as the first entry of the per-module use-case list. |

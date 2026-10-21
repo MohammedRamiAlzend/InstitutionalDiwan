@@ -70,6 +70,13 @@ The `.Lookup` group drives the generic lookups API: `InvalidId` / `LabelEmpty` (
 and `CatalogReadOnly` (validation) — the last one marks catalogs that need more than a label before
 an entry can be created.
 
+The `.Movements` group carries the routing errors: `MovementNotFound` (NotFound),
+`SameSourceAndDestination` / `ReasonRequired` (Validation), `InvalidStatusTransition` /
+`ActiveMovementExists` (Conflict), and `DepartmentOutOfScope` (Forbidden) — the last one answers a
+request to read a department inbox/outbox that sits outside the caller's organizational scope.
+`Department.Inactive` and `Correspondence.OnlyRegisteredRoutable` complete the picture: an inactive
+destination department cannot receive a document, and only a `REGISTERED` document can be routed.
+
 ### `Events/DomainEvents.cs`
 
 34 immutable `record` domain events (the older notes claimed 22, which is out of date). Grouped by module:
@@ -100,6 +107,10 @@ an entry can be created.
 kebab-case slug (`IsSupported`, `ListAsync`, `GetByIdAsync`, `AddAsync`, `RelabelAsync`,
 `SetActiveStateAsync`, `IsInUseAsync`) so the lookups API needs no per-table repository.
 
+`IDocumentMovementRepository` carries the routing reads: `GetByIdAsync` (with steps and events),
+`HasActiveMovementsAsync`, `ListByDocumentAsync` (a document's routing history), and
+`ListInboxAsync`/`ListOutboxAsync` (a department's two queues).
+
 ### `Entities/` — the 10 modules (41 entities)
 
 | # | Module | Entities | Notable aggregate roots |
@@ -122,7 +133,8 @@ kebab-case slug (`IsSupported`, `ListAsync`, `GetByIdAsync`, `AddAsync`, `Relabe
 - **`Document`** — status machine `DRAFT → REGISTERED → IN_MOVEMENT → {ARCHIVED, CANCELED}`;
   only `DRAFT` is editable/registerable; archived cannot be canceled without unarchiving; cancel requires a reason;
   at most one `ExternalOrganization` participant; archive/cancel blocked while active movements exist;
-  `RowVersion` exposed for optimistic concurrency.
+  `MarkInMovement`/`MarkMovementEnded` move the document between `REGISTERED` and `IN_MOVEMENT` as its
+  movement opens and closes; `RowVersion` exposed for optimistic concurrency.
 - **`User`** — username required and lower-cased; duplicate role assignment rejected; role revoke when absent returns NotFound;
   department scope assignment validates the date range; password change clears `MustChangePassword`;
   `UpdateProfile` edits the primary department, employee link, scope, and password-change flag; `Activate`
@@ -144,6 +156,10 @@ kebab-case slug (`IsSupported`, `ListAsync`, `GetByIdAsync`, `AddAsync`, `Relabe
 - **`DocumentMovement`** receipt — `ReceiveStep(actor, departmentRegistryNumberId)` rejects an empty
   number id (`Numbering.DepartmentRegistrationRequired`) and stores it on the step
   (`DocumentMovementStep.RegistryNumberId`), so custody always points at the register line that dated it.
+- **`DocumentMovement`** queues — the movement header's `DestinationDepartmentId` always mirrors the
+  current step's `ToDepartmentId`, but the movement's `SourceDepartmentId` stays at the origin, so
+  the "who holds the document now" question is answered from the **current step** (`CurrentStepNo`),
+  not from the header. `ListInboxAsync`/`ListOutboxAsync` in the Infrastructure layer rely on that.
 - **`DocumentFile`** — version numbers strictly sequential; archived files reject new versions; superseded versions flagged.
 - **`AuditLog`** — tamper-evident SHA-256 hash chaining: `Record(...)` computes `EventHash` from the payload plus
   `PreviousHash`; `VerifyIntegrity(expectedPreviousHash)` re-computes and detects a broken chain or hash mismatch.
@@ -279,6 +295,7 @@ them, while listing, relabelling and (de)activation keep working.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-21 | opencode | Added `Document.MarkMovementEnded` (a document leaves `IN_MOVEMENT` when its movement closes or is canceled), the `DomainErrors.Movements.ActiveMovementExists` / `DepartmentOutOfScope`, `DomainErrors.Department.Inactive`, and `DomainErrors.Correspondence.OnlyRegisteredRoutable` errors, and the `IDocumentMovementRepository.ListByDocumentAsync`/`ListInboxAsync`/`ListOutboxAsync` contracts. |
 | 2026-10-20 | Buffy | Added department register numbering: `DocumentNumberScope` lookup, `ScopeId`/`DepartmentId`/`RegistryDate` and `CreateDepartmentEntry`/`ReRegisterInDepartment` on `DocumentNumber`, `EffectiveDate` on `DocumentNumberHistory`, the `RegisteredInDepartment`/`ReRegisteredInDepartment` events, `Document.Numbers` with `AddDepartmentNumber`/`FindDepartmentNumber`, `DocumentMovementStep.RegistryNumberId` with a register-gated `ReceiveStep`, the new `DomainErrors.Numbering.*`/`Movements.MovementNotFound` entries, and the repository contracts for scoped uniqueness, department entries, register books, and bulk document loads. |
 | 2026-10-19 | Buffy | Added the Module 01–04 behavior the new use cases need: `InstitutionSetting.Update` (Central Diwan required + transfer-reason rule) and `UpdateNumberingPolicy`, `ExternalOrganization.Update`/`Activate`, `NumberingRegistry.Update(hasIssuedNumbers:)` (template lock), `Document.AttachReplacementNumber`, `User.AssignDepartmentScope` duplicate guard + `User.EndDepartmentScope`; plus the `NUMBERING_MANAGE` permission, `IInstitutionSettingRepository`/`IExternalOrganizationRepository` contracts, and the new `DomainErrors` entries (`InstitutionSetting.*`, `Lookup.EntryInactive`, `Identity.DepartmentAlreadyAssigned`/`DepartmentAssignmentNotFound`/`AssignmentTypeInvalid`). |
 | 2026-10-19 | opencode | Added the `LOOKUP_MANAGE` permission (`Permissions.LookupManage`, now part of `Permissions.All`), the `DomainErrors.Lookup` API errors (`UnknownCatalog`, `EntryNotFound`, `IdAlreadyExists`, `EntryInUse`, `CatalogReadOnly`), and the generic `ILookupRepository` contract (17th repository interface) — the domain side of the generic `/api/lookups/{lookup}` API; the lookup CRUD section now describes the implemented routes instead of a plan. |

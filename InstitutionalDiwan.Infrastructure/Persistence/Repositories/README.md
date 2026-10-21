@@ -32,7 +32,7 @@ Concrete EF Core implementations of the repository interfaces declared in
 | `LookupRepository.cs` | The one generic repository: resolves a kebab-case lookup slug to its `DbSet<TLookup>` through `LookupCatalog`, then lists/fetches/creates/relabels/(de)activates entries and answers `IsInUseAsync` from EF foreign-key metadata. Backs `/api/lookups/{lookup}`. |
 | `InstitutionSettingRepository.cs` | Loads the single `InstitutionSetting` row (table is a singleton by convention; the seeder owns the first insert) and attaches updates. |
 | `ExternalOrganizationRepository.cs` | Loads `ExternalOrganization` by id or normalized (upper-cased) code and lists them by code, for the external-correspondent CRUD endpoints. |
-| `DocumentMovementRepository.cs` | Loads a `DocumentMovement` with `Steps`/`Events` and answers `HasActiveMovementsAsync(documentId)` — true while the status is not `CLOSED`/`CANCELED`; backs the document cancel/archive guard. |
+| `DocumentMovementRepository.cs` | Loads a `DocumentMovement` with `Steps`/`Events` and answers `HasActiveMovementsAsync(documentId)` — true while the status is not `CLOSED`/`CANCELED`; backs the document cancel/archive guard. `ListByDocumentAsync` gives a document's routing history; `ListInboxAsync`/`ListOutboxAsync` give a department's two queues, both keyed on the **current step** so a redirect moves the custody with the document. |
 
 ## Planned repositories not yet implemented
 
@@ -68,13 +68,14 @@ Concrete EF Core implementations of the repository interfaces declared in
 | `EmployeeRepository`, `DocumentAccessGrantRepository` | ✅ Implemented |
 | `LookupRepository` (generic reference catalogs) | ✅ Implemented (2026-10-19) |
 | `InstitutionSettingRepository`, `ExternalOrganizationRepository` | ✅ Implemented (2026-10-19) |
-| `DocumentMovementRepository` | ✅ Implemented (2026-10-19) |
+| `DocumentMovementRepository` | ✅ Implemented (2026-10-19; inbox/outbox queries added 2026-10-21) |
 | `DocumentFileRepository`, `DocumentRelationRepository`, `AuditLogRepository`, `NotificationRepository` | ❌ Not implemented |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-21 | opencode | Added the movement queue queries to `DocumentMovementRepository`: `ListByDocumentAsync` (a document's routing history), `ListInboxAsync`, and `ListOutboxAsync`. The queue filters run against the movement's **current step** — a correlated `Steps.Any(step => step.StepNo == movement.CurrentStepNo && …)` — so a redirect hands the document to the new destination's inbox and to the redirecting department's outbox. |
 | 2026-10-20 | Buffy | Made the numbering queries scope-aware (`GetActiveByDocumentIdAsync` and `AnyByRegistryAsync` now only see central numbers), added `ExistsInScopeAsync`/`GetDepartmentEntryAsync`/`ListByDepartmentAsync`, and added `DocumentRepository.GetWithNumbersAsync`/`GetByIdsAsync` for department registration and the register book. |
 | 2026-10-19 | Buffy | Added `InstitutionSettingRepository` (`GetSingletonAsync`/`Add`), `ExternalOrganizationRepository` (by id / normalized code / listing), and `DocumentMovementRepository` (`HasActiveMovementsAsync` = status not CLOSED/CANCELED); all registered in `Infrastructure/DependencyInjection.cs`. |
 | 2026-10-19 | opencode | Added `LookupRepository` — one generic implementation covering all 33 seeded reference catalogs through a deterministic slug registry (`LookupCatalog`), with Creates/Relabel/(De)activate plus an `IsInUseAsync` guard derived from the EF model's foreign keys. Registered in `Infrastructure/DependencyInjection.cs`; also recorded the previously undocumented `EmployeeRepository` and `DocumentAccessGrantRepository`. |
