@@ -22,10 +22,13 @@ public sealed class PermissionsController : ControllerBase
     public PermissionsController(ISender sender) => _sender = sender;
 
     /// <summary>Lists every permission in the catalog, ordered by module.</summary>
+    /// <param name="cancellationToken">Request cancellation token (optional).</param>
     /// <response code="200">The permission catalog.</response>
     /// <response code="401">The token is missing, expired, or invalid.</response>
     /// <response code="403">The token lacks the ROLE_MANAGE permission.</response>
     [HttpGet]
+    [EndpointSummary("Lists every permission in the catalog, ordered by module.")]
+    [EndpointDescription("Lists every permission in the catalog, ordered by module. Requires the ROLE_MANAGE permission. Responses: 200 (The permission catalog.), 401 (The token is missing, expired, or invalid.), 403 (The token lacks the ROLE_MANAGE permission.)")]
     [ProducesResponseType<IReadOnlyCollection<PermissionResponse>>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden)]

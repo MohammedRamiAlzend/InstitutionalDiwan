@@ -5,6 +5,7 @@ using InstitutionalDiwan.Server.Extensions;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel;
 using System.Security.Claims;
 
 namespace InstitutionalDiwan.Server.Controllers;
@@ -23,6 +24,14 @@ public sealed class MovementsController : ControllerBase
     public MovementsController(ISender sender) => _sender = sender;
 
     /// <summary>Receives the movement's current step at the destination department.</summary>
+    /// <param name="movementId">Movement unique identifier (GUID, route). Example: <c>1a9d4e7b-2c58-4f3a-8e61-9b0d7c2f5a84</c>.</param>
+    /// <param name="request">
+    /// The request payload with the following fields:
+    /// <list type="bullet">
+    /// <item><term>notes</term><description>Notes (string, optional). Example: <c>Reviewed and forwarded to the responsible department.</c>.</description></item>
+    /// </list>
+    /// </param>
+    /// <param name="cancellationToken">Request cancellation token (optional).</param>
     /// <response code="200">The recorded receipt.</response>
     /// <response code="401">The token is missing, expired, or invalid.</response>
     /// <response code="403">The token lacks the DOCUMENT_EDIT permission.</response>
@@ -30,6 +39,8 @@ public sealed class MovementsController : ControllerBase
     /// <response code="409">The step is not awaiting receipt, or the department's register entry
     /// is missing — record it first.</response>
     [HttpPost("{movementId:guid}/receive")]
+    [EndpointSummary("Receives the movement's current step at the destination department.")]
+    [EndpointDescription("Receives the movement's current step at the destination department. Requires the DOCUMENT_EDIT permission. Responses: 200 (The recorded receipt.), 401 (The token is missing, expired, or invalid.), 403 (The token lacks the DOCUMENT_EDIT permission.), 404 (No movement with that id exists.), 409 (The step is not awaiting receipt, or the department's register entry is missing — record it first.)")]
     [Authorize(Policy = Permissions.DocumentEdit)]
     [ProducesResponseType<MovementStepReceiptResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
@@ -37,7 +48,7 @@ public sealed class MovementsController : ControllerBase
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Receive(
-        Guid movementId,
+        [Description("Movement unique identifier (GUID, route). Example: 1a9d4e7b-2c58-4f3a-8e61-9b0d7c2f5a84.")] Guid movementId,
         [FromBody] ReceiveDocumentRequest request,
         CancellationToken cancellationToken)
     {
