@@ -1,0 +1,20 @@
+# `src/widgets/document-registry-table` — Document Registry Table & Filter Bar Widget
+## 1. Purpose
+Composes the main institutional correspondence registry table (`@tanstack/react-table`), combining filter controls (direction, type, security level, date range, search query), pagination, `entities/document` status badges, and action triggers from `features/document-create` and `features/document-access-grant`.
+## 2. Strict FSD Rules
+- Allowed Imports: `src/features/document-create`, `src/features/document-access-grant`, `src/entities/document`, `src/entities/lookup`, `src/entities/department`, and `src/shared/*`.
+- Forbidden Imports: NEVER import from `src/app`, `src/pages`, or sibling `src/widgets/*` slices.
+- Public API: Export `DocumentRegistryTable` and `DocumentFilterBar` only via `src/widgets/document-registry-table/index.ts`.
+## 3. Planned Contents & Segments
+- `ui/DocumentRegistryTable.tsx` — Server-paginated RTL data table of correspondence records.
+- `ui/DocumentFilterBar.tsx` — Search and lookup filter toolbar.
+- `model/use-document-filters.ts` — URL search-param or local filter state hook.
+- `index.ts` — Public API barrel file.
+## 4. Required Packages
+- `@tanstack/react-table`, `@tanstack/react-query`, `lucide-react`, `date-fns`
+## 5. Implementation Status
+- Slice folder and FSD rules established
+- Implement `DocumentRegistryTable` and `DocumentFilterBar`
+## 6. Change Log
+- 2026-10-22: Converted this `README.md` from the Word document it was authored in to markdown, so the `README.md`-per-folder rule in `AGENT.md` holds and the content is diffable and agent-editable.
+- 2026-10-19: Created `widgets/document-registry-table` slice folder and `README.md`.
