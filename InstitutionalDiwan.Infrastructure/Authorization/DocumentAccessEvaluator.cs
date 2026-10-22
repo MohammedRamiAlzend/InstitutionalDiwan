@@ -1,5 +1,6 @@
 using InstitutionalDiwan.Application.Abstractions.Authentication;
 using InstitutionalDiwan.Application.Abstractions.Authorization;
+using InstitutionalDiwan.Domain.Common;
 using InstitutionalDiwan.Domain.Entities.Correspondence;
 using InstitutionalDiwan.Domain.Entities.Identity;
 using InstitutionalDiwan.Domain.Repositories;
@@ -28,17 +29,20 @@ public sealed class DocumentAccessEvaluator : IDocumentAccessEvaluator
     private readonly IDocumentRepository _documentRepository;
     private readonly IDocumentAccessGrantRepository _grantRepository;
     private readonly IDepartmentScopeEvaluator _departmentScopeEvaluator;
+    private readonly IClock _clock;
 
     public DocumentAccessEvaluator(
         IUserContext userContext,
         IDocumentRepository documentRepository,
         IDocumentAccessGrantRepository grantRepository,
-        IDepartmentScopeEvaluator departmentScopeEvaluator)
+        IDepartmentScopeEvaluator departmentScopeEvaluator,
+        IClock clock)
     {
         _userContext = userContext;
         _documentRepository = documentRepository;
         _grantRepository = grantRepository;
         _departmentScopeEvaluator = departmentScopeEvaluator;
+        _clock = clock;
     }
 
     public async Task<bool> CanAccessDocumentAsync(
@@ -53,7 +57,7 @@ public sealed class DocumentAccessEvaluator : IDocumentAccessEvaluator
         if (document is null)
             return false;
 
-        var utcNow = DateTime.UtcNow;
+        var utcNow = _clock.UtcNow;
         var grantedLevel = await GetGrantedLevelAsync(documentId, utcNow, cancellationToken);
         if (grantedLevel >= requiredAccessLevelId)
             return true;

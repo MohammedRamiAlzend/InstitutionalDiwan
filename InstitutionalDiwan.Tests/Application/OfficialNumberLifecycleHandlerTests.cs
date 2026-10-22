@@ -43,13 +43,13 @@ public sealed class OfficialNumberLifecycleHandlerTests
         }
 
         public IssueOfficialNumberCommandHandler IssueHandler() =>
-            new(Documents, Numbers, Registries, UnitOfWork);
+            new(Documents, Numbers, Registries, UnitOfWork, TestClock.Instance);
 
         public CancelOfficialNumberCommandHandler CancelHandler() =>
             new(Numbers, UnitOfWork);
 
         public ReplaceOfficialNumberCommandHandler ReplaceHandler() =>
-            new(Documents, Numbers, Registries, UnitOfWork);
+            new(Documents, Numbers, Registries, UnitOfWork, TestClock.Instance);
     }
 
     private static async Task<DocumentNumberResponse> IssueAsync(World world)

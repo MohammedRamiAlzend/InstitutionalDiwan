@@ -1,4 +1,5 @@
 using InstitutionalDiwan.Application.Abstractions.Authentication;
+using InstitutionalDiwan.Domain.Common;
 using InstitutionalDiwan.Domain.Entities.Identity;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -15,14 +16,20 @@ public sealed class JwtProvider : IJwtProvider
 
     private readonly JwtOptions _options;
 
-    public JwtProvider(IOptions<JwtOptions> options) => _options = options.Value;
+    private readonly IClock _clock;
+
+    public JwtProvider(IOptions<JwtOptions> options, IClock clock)
+    {
+        _options = options.Value;
+        _clock = clock;
+    }
 
     public AccessToken GenerateAccessToken(
         User user,
         IReadOnlyCollection<string> roles,
         IReadOnlyCollection<string> permissions)
     {
-        var now = DateTime.UtcNow;
+        var now = _clock.UtcNow;
         var expiresAt = now.AddMinutes(_options.AccessTokenExpirationMinutes);
 
         var claims = new List<Claim>

@@ -7,6 +7,7 @@ using InstitutionalDiwan.Infrastructure.Authorization;
 using InstitutionalDiwan.Infrastructure.Persistence;
 using InstitutionalDiwan.Infrastructure.Persistence.Repositories;
 using InstitutionalDiwan.Infrastructure.Persistence.Seed;
+using InstitutionalDiwan.Infrastructure.Time;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -28,6 +29,9 @@ public static class DependencyInjection
         });
         services.AddScoped<IUnitOfWork>(serviceProvider =>
             serviceProvider.GetRequiredService<DiwanDbContext>());
+
+        // One ambient source of "now" for the whole application.
+        services.AddSingleton<IClock, SystemClock>();
 
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IRoleRepository, RoleRepository>();

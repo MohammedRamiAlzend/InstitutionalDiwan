@@ -11,13 +11,16 @@ internal sealed class GetUserEffectivePermissionsQueryHandler
 {
     private readonly IUserRepository _userRepository;
     private readonly IRoleRepository _roleRepository;
+    private readonly IClock _clock;
 
     public GetUserEffectivePermissionsQueryHandler(
         IUserRepository userRepository,
-        IRoleRepository roleRepository)
+        IRoleRepository roleRepository,
+        IClock clock)
     {
         _userRepository = userRepository;
         _roleRepository = roleRepository;
+        _clock = clock;
     }
 
     public async Task<Result<UserEffectivePermissionsResponse>> Handle(
@@ -50,7 +53,7 @@ internal sealed class GetUserEffectivePermissionsQueryHandler
             .OrderBy(code => code, StringComparer.OrdinalIgnoreCase)
             .ToList();
 
-        var utcNow = DateTime.UtcNow;
+        var utcNow = _clock.UtcNow;
         var assignments = user.DepartmentAssignments
             .Where(assignment => IsCurrentlyActive(assignment, utcNow))
             .OrderBy(assignment => assignment.DepartmentId)

@@ -34,7 +34,7 @@ public sealed class DepartmentScopeEvaluatorTests
         var users = new FakeUserRepository();
         var departments = new FakeDepartmentRepository();
 
-        return (new DepartmentScopeEvaluator(context, users, departments), context, users, departments);
+        return (new DepartmentScopeEvaluator(context, users, departments, TestClock.Instance), context, users, departments);
     }
 
     [Fact]
@@ -114,7 +114,7 @@ public sealed class DepartmentScopeEvaluatorTests
         departments.Add(child);
 
         var user = CreateUser(home.DepartmentId);
-        user.AssignDepartmentScope(assigned.DepartmentId, includeSubtree: true);
+        user.AssignDepartmentScope(assigned.DepartmentId, includeSubtree: true, startDate: TestClock.Instance.UtcNow.AddDays(-1));
 
         context.IsAuthenticated = true;
         context.UserId = user.UserId;
@@ -137,7 +137,7 @@ public sealed class DepartmentScopeEvaluatorTests
         departments.Add(child);
 
         var user = CreateUser(home.DepartmentId);
-        user.AssignDepartmentScope(assigned.DepartmentId, includeSubtree: false);
+        user.AssignDepartmentScope(assigned.DepartmentId, includeSubtree: false, startDate: TestClock.Instance.UtcNow.AddDays(-1));
 
         context.IsAuthenticated = true;
         context.UserId = user.UserId;

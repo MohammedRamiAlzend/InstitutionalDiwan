@@ -35,7 +35,7 @@ public sealed class DocumentAccessEvaluatorTests
         var grants = new FakeDocumentAccessGrantRepository();
         var scope = new FakeDepartmentScopeEvaluator();
 
-        var evaluator = new DocumentAccessEvaluator(context, documents, grants, scope);
+        var evaluator = new DocumentAccessEvaluator(context, documents, grants, scope, TestClock.Instance);
         return (evaluator, context, documents, grants, scope);
     }
 

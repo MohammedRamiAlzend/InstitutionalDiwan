@@ -73,7 +73,7 @@ public sealed class MovementWorkflowHandlerTests
             new(Movements, UnitOfWork);
 
         public ReceiveDocumentCommandHandler ReceiveHandler() =>
-            new(Movements, Documents, UnitOfWork);
+            new(Movements, Documents, UnitOfWork, TestClock.Instance);
 
         public CompleteMovementStepCommandHandler CompleteHandler() =>
             new(Movements, UnitOfWork);
@@ -109,7 +109,7 @@ public sealed class MovementWorkflowHandlerTests
     private static async Task<Document> RegisterDocument(World world)
     {
         var result = await new RegisterDocumentCommandHandler(
-                world.Documents, world.Numbers, world.Registries, world.UnitOfWork)
+                world.Documents, world.Numbers, world.Registries, world.UnitOfWork, TestClock.Instance)
             .Handle(new RegisterDocumentCommand(world.Document.DocumentId, world.Clerk.UserId, 2026),
                 CancellationToken.None);
 

@@ -1,4 +1,5 @@
 using InstitutionalDiwan.Application.Abstractions.Authentication;
+using InstitutionalDiwan.Domain.Common;
 using InstitutionalDiwan.Application.Abstractions.Authorization;
 using InstitutionalDiwan.Domain.Entities.Identity;
 using InstitutionalDiwan.Domain.Repositories;
@@ -21,15 +22,18 @@ public sealed class DepartmentScopeEvaluator : IDepartmentScopeEvaluator
     private readonly IUserContext _userContext;
     private readonly IUserRepository _userRepository;
     private readonly IDepartmentRepository _departmentRepository;
+    private readonly IClock _clock;
 
     public DepartmentScopeEvaluator(
         IUserContext userContext,
         IUserRepository userRepository,
-        IDepartmentRepository departmentRepository)
+        IDepartmentRepository departmentRepository,
+        IClock clock)
     {
         _userContext = userContext;
         _userRepository = userRepository;
         _departmentRepository = departmentRepository;
+        _clock = clock;
     }
 
     public async Task<bool> CanAccessDepartmentAsync(
@@ -55,7 +59,7 @@ public sealed class DepartmentScopeEvaluator : IDepartmentScopeEvaluator
             return true;
         }
 
-        var utcNow = DateTime.UtcNow;
+        var utcNow = _clock.UtcNow;
         foreach (var assignment in user.DepartmentAssignments.Where(
                      assignment => IsCurrentlyActive(assignment, utcNow)))
         {

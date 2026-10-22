@@ -15,10 +15,13 @@ namespace InstitutionalDiwan.Infrastructure.Persistence;
 
 public sealed class DiwanDbContext : DbContext, IUnitOfWork
 {
-    public DiwanDbContext(DbContextOptions<DiwanDbContext> options)
-        : base(options)
-    {
-    }
+    private readonly IClock? _clock;
+
+    public DiwanDbContext(DbContextOptions<DiwanDbContext> options, IClock? clock = null)
+        : base(options) => _clock = clock;
+
+    /// <inheritdoc />
+    public DateTime UtcNow => _clock?.UtcNow ?? DateTime.UtcNow;
 
     // Module 01: Organization
     public DbSet<Department> Departments => Set<Department>();

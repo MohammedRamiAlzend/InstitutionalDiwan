@@ -130,4 +130,7 @@ internal sealed class FakeUnitOfWork : IUnitOfWork
         SaveChangesCallCount++;
         return Task.FromResult(1);
     }
+
+    /// <summary>The instant the fake stamps its writes with; tests override it to freeze time.</summary>
+    public DateTime UtcNow { get; set; } = DateTime.UtcNow;
 }

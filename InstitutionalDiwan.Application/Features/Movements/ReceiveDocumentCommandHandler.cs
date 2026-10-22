@@ -11,15 +11,18 @@ internal sealed class ReceiveDocumentCommandHandler
     private readonly IDocumentMovementRepository _movementRepository;
     private readonly IDocumentRepository _documentRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IClock _clock;
 
     public ReceiveDocumentCommandHandler(
         IDocumentMovementRepository movementRepository,
         IDocumentRepository documentRepository,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        IClock clock)
     {
         _movementRepository = movementRepository;
         _documentRepository = documentRepository;
         _unitOfWork = unitOfWork;
+        _clock = clock;
     }
 
     public async Task<Result<MovementStepReceiptResponse>> Handle(
@@ -56,6 +59,6 @@ internal sealed class ReceiveDocumentCommandHandler
             entry.DocumentNumberId,
             entry.OfficialNumberText,
             entry.RegistryDate,
-            step.ReceivedAt ?? DateTime.UtcNow));
+            step.ReceivedAt ?? _clock.UtcNow));
     }
 }
