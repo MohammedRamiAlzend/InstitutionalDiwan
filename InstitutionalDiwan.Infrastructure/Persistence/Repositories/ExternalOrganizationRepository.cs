@@ -1,3 +1,4 @@
+using InstitutionalDiwan.Domain.Common;
 using InstitutionalDiwan.Domain.Entities.Correspondence;
 using InstitutionalDiwan.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -32,6 +33,36 @@ internal sealed class ExternalOrganizationRepository : IExternalOrganizationRepo
         await _context.ExternalOrganizations
             .OrderBy(organization => organization.Code)
             .ToListAsync(cancellationToken);
+
+    public async Task<PagedList<ExternalOrganization>> ListPagedAsync(
+        PageRequest page,
+        bool includeInactive = false,
+        CancellationToken cancellationToken = default)
+    {
+        var query = _context.ExternalOrganizations.AsNoTracking();
+
+        if (!includeInactive)
+            query = query.Where(organization => organization.IsActive);
+
+        if (page.NormalizedSearch is { } search)
+        {
+            var pattern = $"%{search}%";
+            query = query.Where(organization =>
+                EF.Functions.Like(organization.Code, pattern) ||
+                EF.Functions.Like(organization.NameAr, pattern) ||
+                (organization.NameEn != null && EF.Functions.Like(organization.NameEn, pattern)));
+        }
+
+        query = query.OrderBy(organization => organization.Code);
+
+        var totalCount = await query.CountAsync(cancellationToken);
+        var items = await query
+            .Skip(page.Skip)
+            .Take(page.Take)
+            .ToListAsync(cancellationToken);
+
+        return new PagedList<ExternalOrganization>(items, totalCount);
+    }
 
     public void Add(ExternalOrganization externalOrganization) =>
         _context.ExternalOrganizations.Add(externalOrganization);

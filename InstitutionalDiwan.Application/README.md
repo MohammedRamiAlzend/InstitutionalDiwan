@@ -27,6 +27,7 @@ plain unit test with in-memory/fake repositories.
 | --- | --- |
 | [`Abstractions/`](Abstractions/README.md) | Interfaces the infrastructure must implement (messaging, auth) + the planned data/storage/caching/clock contracts. |
 | [`Behaviors/`](Behaviors/README.md) | MediatR `IPipelineBehavior` classes — `ValidationPipelineBehavior` is live; logging/transaction/caching are planned. |
+| [`Common/`](Common/README.md) | Shared response shapes — `PagedResult<T>` is the wire contract for every paged list endpoint. |
 | [`Exceptions/`](Exceptions/README.md) | Technical/pipeline exceptions (validation fan-out, optimistic-concurrency conflicts). |
 | [`Features/`](Features/README.md) | Vertical feature slices per module (Commands, Queries, Validators, DTOs). |
 
@@ -44,6 +45,7 @@ assembly scan; `Program.cs` calls it alongside `AddInfrastructure()`.
 | Pipeline behaviors | 🟡 `ValidationPipelineBehavior` implemented; logging/transaction/caching planned |
 | Abstractions | 🟡 `Messaging/` + `Authentication/` implemented; data/storage/caching/clock planned |
 | `DependencyInjection.cs` | ✅ Implemented (`AddApplication`) |
+| `Common/PagedResult<T>` | ✅ Implemented (paged list wire shape) |
 | `Class1.cs` placeholder | 🗑️ Removed |
 | Registered in the web host | ✅ `Program.cs` calls `AddApplication()` |
 
@@ -53,6 +55,7 @@ See each subfolder's README for the full design and per-folder status tables.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-22 | opencode | Added `Common/PagedResult<T>` and made the four unbounded list queries return it; filtering, sorting, and paging now run in the repositories. |
 | 2026-10-21 | opencode | Completed `Features/Movements/`: the routing workflow commands (open/send/complete/reject/return/redirect/close/cancel), the movement queries, and the department inbox/outbox. |
 | 2026-10-20 | Buffy | Added `Features/Movements/` (receipt gated on a recorded department register number) and department register entries under `Features/Numbering/Numbers/` + `Registries/`. |
 | 2026-10-19 | opencode | Added the `Features/Lookups/` slice (generic list/get/create/relabel/deactivate/activate over all seeded reference catalogs) and refreshed this README, which still described the layer as "scaffolding only — no code yet". |

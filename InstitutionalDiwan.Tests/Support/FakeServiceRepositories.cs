@@ -43,6 +43,29 @@ internal sealed class FakeExternalOrganizationRepository : IExternalOrganization
         => Task.FromResult<IReadOnlyList<ExternalOrganization>>(
             Organizations.OrderBy(organization => organization.Code).ToList());
 
+    public Task<PagedList<ExternalOrganization>> ListPagedAsync(
+        PageRequest page,
+        bool includeInactive = false,
+        CancellationToken cancellationToken = default)
+    {
+        var query = Organizations.AsEnumerable();
+
+        if (!includeInactive)
+            query = query.Where(organization => organization.IsActive);
+
+        if (page.NormalizedSearch is { } search)
+            query = query.Where(organization =>
+                organization.Code.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                organization.NameAr.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                (organization.NameEn?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false));
+
+        query = query.OrderBy(organization => organization.Code);
+
+        var totalCount = query.Count();
+        var items = query.Skip(page.Skip).Take(page.Take).ToList();
+        return Task.FromResult(new PagedList<ExternalOrganization>(items, totalCount));
+    }
+
     public void Add(ExternalOrganization externalOrganization) =>
         Organizations.Add(externalOrganization);
 }

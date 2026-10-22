@@ -1,10 +1,11 @@
 using InstitutionalDiwan.Application.Abstractions.Messaging;
+using InstitutionalDiwan.Application.Common;
 using InstitutionalDiwan.Domain.Common;
 using InstitutionalDiwan.Domain.Repositories;
 
 namespace InstitutionalDiwan.Application.Features.Identity.Users;
 
-internal sealed class ListUsersQueryHandler : IQueryHandler<ListUsersQuery, IReadOnlyCollection<UserResponse>>
+internal sealed class ListUsersQueryHandler : IQueryHandler<ListUsersQuery, PagedResult<UserResponse>>
 {
     private readonly IUserRepository _userRepository;
     private readonly IRoleRepository _roleRepository;
@@ -15,16 +16,21 @@ internal sealed class ListUsersQueryHandler : IQueryHandler<ListUsersQuery, IRea
         _roleRepository = roleRepository;
     }
 
-    public async Task<Result<IReadOnlyCollection<UserResponse>>> Handle(
+    public async Task<Result<PagedResult<UserResponse>>> Handle(
         ListUsersQuery request,
         CancellationToken cancellationToken)
     {
-        var users = await _userRepository.ListAllAsync(cancellationToken);
-        var responses = new List<UserResponse>(users.Count);
+        var page = new PageRequest(request.Page, request.PageSize, request.Search);
+        var users = await _userRepository.ListPagedAsync(page, cancellationToken);
 
-        foreach (var user in users)
+        var responses = new List<UserResponse>(users.Items.Count);
+        foreach (var user in users.Items)
             responses.Add(await UserResponseFactory.CreateAsync(user, _roleRepository, cancellationToken));
 
-        return Result.Success<IReadOnlyCollection<UserResponse>>(responses);
+        return Result.Success(new PagedResult<UserResponse>(
+            responses,
+            page.NormalizedPage,
+            page.NormalizedPageSize,
+            users.TotalCount));
     }
 }

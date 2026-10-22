@@ -1,3 +1,4 @@
+using InstitutionalDiwan.Application.Common;
 using InstitutionalDiwan.Application.Features.Identity.Employees;
 using InstitutionalDiwan.Domain.Common;
 using InstitutionalDiwan.Server.Contracts.Identity;
@@ -19,24 +20,34 @@ public sealed class EmployeesController : ControllerBase
 
     public EmployeesController(ISender sender) => _sender = sender;
 
-    /// <summary>Lists all employee records.</summary>
+    /// <summary>Lists a page of employee records ordered by Arabic name.</summary>
     /// <remarks>
-    /// Returns all employee records in the system. Requires the <c>EMPLOYEE_MANAGE</c> permission.
+    /// Supports server-side paging and a search across the Arabic name, English name, and employee
+    /// number. Requires the <c>EMPLOYEE_MANAGE</c> permission.
     /// </remarks>
+    /// <param name="page">Page number (integer, optional, 1-based). Example: <c>2</c>.</param>
+    /// <param name="pageSize">Rows per page (integer, optional, 1-100). Example: <c>20</c>.</param>
+    /// <param name="search">Name or employee-number search term (string, optional). Example: <c>Ali</c>.</param>
     /// <param name="cancellationToken">Request cancellation token (optional).</param>
-    /// <response code="200">The employee list returned as <c>IReadOnlyCollection&lt;EmployeeResponse&gt;</c>.</response>
+    /// <response code="200">One page of employees with the paging counters.</response>
     /// <response code="401">The token is missing, expired, or invalid.</response>
     /// <response code="403">The token does not carry the EMPLOYEE_MANAGE permission.</response>
     [HttpGet]
-    [EndpointSummary("Lists all employee records.")]
-    [EndpointDescription("Lists all employee records. Returns all employee records in the system. Requires the EMPLOYEE_MANAGE permission. Responses: 200 (The employee list returned as IReadOnlyCollection<EmployeeResponse>.), 401 (The token is missing, expired, or invalid.), 403 (The token does not carry the EMPLOYEE_MANAGE permission.)")]
-    [Produces("application/json", Type = typeof(IReadOnlyCollection<EmployeeResponse>))]
-    [ProducesResponseType<IReadOnlyCollection<EmployeeResponse>>(StatusCodes.Status200OK)]
+    [EndpointSummary("Lists a page of employee records ordered by Arabic name.")]
+    [EndpointDescription("Lists a page of employee records ordered by Arabic name. Supports server-side paging and a search across the Arabic name, English name, and employee number. Requires the EMPLOYEE_MANAGE permission. Responses: 200 (One page of employees with the paging counters.), 401 (The token is missing, expired, or invalid.), 403 (The token does not carry the EMPLOYEE_MANAGE permission.)")]
+    [Produces("application/json", Type = typeof(PagedResult<EmployeeResponse>))]
+    [ProducesResponseType<PagedResult<EmployeeResponse>>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden)]
-    public async Task<IActionResult> List(CancellationToken cancellationToken)
+    public async Task<IActionResult> List(
+        [Description("Page number (integer, optional, 1-based). Example: 2.")] [FromQuery] int page = 1,
+        [Description("Rows per page (integer, optional, 1-100). Example: 20.")] [FromQuery] int pageSize = 20,
+        [Description("Name or employee-number search term (string, optional). Example: Ali.")] [FromQuery] string? search = null,
+        CancellationToken cancellationToken = default)
     {
-        var result = await _sender.Send(new ListEmployeesQuery(), cancellationToken);
+        var result = await _sender.Send(
+            new ListEmployeesQuery(page, pageSize, search), cancellationToken);
+
         return result.ToActionResult();
     }
 

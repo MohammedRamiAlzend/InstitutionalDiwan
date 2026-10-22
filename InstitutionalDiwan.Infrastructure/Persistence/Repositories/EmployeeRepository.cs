@@ -1,3 +1,4 @@
+using InstitutionalDiwan.Domain.Common;
 using InstitutionalDiwan.Domain.Entities.Identity;
 using InstitutionalDiwan.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -15,6 +16,32 @@ internal sealed class EmployeeRepository : IEmployeeRepository
 
     public async Task<IReadOnlyList<Employee>> ListAllAsync(CancellationToken cancellationToken = default) =>
         await _context.Employees.OrderBy(employee => employee.FullNameAr).ToListAsync(cancellationToken);
+
+    public async Task<PagedList<Employee>> ListPagedAsync(
+        PageRequest page,
+        CancellationToken cancellationToken = default)
+    {
+        var query = _context.Employees.AsNoTracking();
+
+        if (page.NormalizedSearch is { } search)
+        {
+            var pattern = $"%{search}%";
+            query = query.Where(employee =>
+                EF.Functions.Like(employee.FullNameAr, pattern) ||
+                (employee.FullNameEn != null && EF.Functions.Like(employee.FullNameEn, pattern)) ||
+                (employee.EmployeeNumber != null && EF.Functions.Like(employee.EmployeeNumber, pattern)));
+        }
+
+        query = query.OrderBy(employee => employee.FullNameAr);
+
+        var totalCount = await query.CountAsync(cancellationToken);
+        var items = await query
+            .Skip(page.Skip)
+            .Take(page.Take)
+            .ToListAsync(cancellationToken);
+
+        return new PagedList<Employee>(items, totalCount);
+    }
 
     public void Add(Employee employee) => _context.Employees.Add(employee);
 }

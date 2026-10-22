@@ -1,3 +1,4 @@
+using InstitutionalDiwan.Domain.Common;
 using InstitutionalDiwan.Domain.Entities.Correspondence;
 using InstitutionalDiwan.Domain.Repositories;
 
@@ -13,9 +14,50 @@ internal sealed class FakeDocumentRepository : IDocumentRepository
     public Task<Document?> GetWithNumbersAsync(Guid documentId, CancellationToken cancellationToken = default)
         => Task.FromResult(Documents.FirstOrDefault(document => document.DocumentId == documentId));
 
-    public Task<IReadOnlyList<Document>> ListRecentAsync(int limit, CancellationToken cancellationToken = default)
-        => Task.FromResult<IReadOnlyList<Document>>(
-            Documents.OrderByDescending(document => document.CreatedAt).Take(limit).ToList());
+    public Task<PagedList<Document>> ListPagedAsync(
+        PageRequest page,
+        int? statusId = null,
+        Guid? owningDepartmentId = null,
+        int? directionId = null,
+        int? documentTypeId = null,
+        CancellationToken cancellationToken = default)
+    {
+        var query = Documents.AsEnumerable();
+
+        if (statusId is { } status)
+            query = query.Where(document => document.CurrentStatusId == status);
+
+        if (owningDepartmentId is { } departmentId)
+            query = query.Where(document => document.OwningDepartmentId == departmentId);
+
+        if (directionId is { } direction)
+            query = query.Where(document => document.DirectionId == direction);
+
+        if (documentTypeId is { } type)
+            query = query.Where(document => document.DocumentTypeId == type);
+
+        if (page.NormalizedSearch is { } search)
+            query = query.Where(document =>
+                document.Title.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                (document.SubjectSummary?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                (document.OfficialNumberText?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false));
+
+        query = (page.NormalizedSortBy, page.SortDescending) switch
+        {
+            ("title", true) => query.OrderByDescending(document => document.Title),
+            ("title", false) => query.OrderBy(document => document.Title),
+            ("registrationdate", true) => query.OrderByDescending(document => document.RegistrationDate),
+            ("registrationdate", false) => query.OrderBy(document => document.RegistrationDate),
+            ("officialnumber", true) => query.OrderByDescending(document => document.OfficialNumberText),
+            ("officialnumber", false) => query.OrderBy(document => document.OfficialNumberText),
+            (_, true) => query.OrderByDescending(document => document.CreatedAt),
+            _ => query.OrderBy(document => document.CreatedAt)
+        };
+
+        var totalCount = query.Count();
+        var items = query.Skip(page.Skip).Take(page.Take).ToList();
+        return Task.FromResult(new PagedList<Document>(items, totalCount));
+    }
 
     public Task<IReadOnlyList<Document>> GetByIdsAsync(
         IReadOnlyCollection<Guid> documentIds,

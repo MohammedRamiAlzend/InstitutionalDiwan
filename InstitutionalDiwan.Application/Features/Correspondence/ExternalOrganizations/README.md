@@ -24,7 +24,7 @@ rows, the organization simply stops being selectable for new correspondence.
 | `UpdateExternalOrganizationCommandValidator.cs` | FluentValidation rules mirroring the create validator for the update payload. |
 | `DeactivateExternalOrganizationCommand.cs` / `DeactivateExternalOrganizationCommandHandler.cs` | Soft delete through `ExternalOrganization.Deactivate` (idempotent), 404 when missing. |
 | `ActivateExternalOrganizationCommand.cs` / `ActivateExternalOrganizationCommandHandler.cs` | Reactivates a deactivated organization through `ExternalOrganization.Activate` (idempotent). |
-| `ListExternalOrganizationsQuery.cs` / `ListExternalOrganizationsQueryHandler.cs` | Lists organizations by code, optionally including deactivated ones (`IncludeInactive`). |
+| `ListExternalOrganizationsQuery.cs` / `ListExternalOrganizationsQueryHandler.cs` | Returns one page of organizations (`PagedResult<ExternalOrganizationResponse>`) ordered by code, with `Page`/`PageSize`, a code/name `Search`, and `IncludeInactive`. Filtering and paging run in `IExternalOrganizationRepository.ListPagedAsync`. |
 | `GetExternalOrganizationByIdQuery.cs` / `GetExternalOrganizationByIdQueryHandler.cs` | Fetches one organization by id (404 when missing). |
 
 ## Conventions / Notes
@@ -40,11 +40,12 @@ rows, the organization simply stops being selectable for new correspondence.
 | --- | --- |
 | Create / Update commands (+ validators) | ✅ |
 | Deactivate / Activate commands | ✅ |
-| List / GetById queries | ✅ |
+| List (paged + code/name search) / GetById queries | ✅ |
 | `ExternalOrganizationsController` CRUD endpoints | ✅ |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-22 | opencode | `ListExternalOrganizationsQuery` now returns `PagedResult<ExternalOrganizationResponse>` with `page`, `pageSize`, and a code/name `search`; `ExternalOrganizationRepository.ListPagedAsync` applies the active filter, the search, and `Skip`/`Take` in SQL. |
 | 2026-10-19 | Buffy | Added the external-organizations slice (create/update/deactivate/activate/list/get) with code-uniqueness, organization-type, and contact-format validation, plus `ExternalOrganization.Update`/`Activate` in the domain. |

@@ -48,6 +48,8 @@ GlobalUsing.cs Global usings for entities, common, and errors
 | `IDomainEvent` | `Guid EventId`, `DateTime OccurredOnUtc`. `DomainEventBase` is an abstract record supplying both with defaults (`Guid.NewGuid()`, `DateTime.UtcNow`). |
 | `DomainException` | Sealed exception carrying an `Error.Code`; used for truly exceptional technical violations, not expected business failures. |
 | `IUnitOfWork` | `Task<int> SaveChangesAsync(CancellationToken)` — the single abstraction over the persistence transaction. |
+| `PageRequest` | Normalized paging/search/sort input (`Page`, `PageSize`, `Search`, `SortBy`, `SortDescending`) with `NormalizedPage`, `NormalizedPageSize` (1–100), `Skip`, and `Take`. |
+| `PagedList<T>` | `PagedList<T>(IReadOnlyList<T> Items, int TotalCount)` — one page plus the total row count, returned by repository `ListPagedAsync` methods. |
 
 ### `ValueObjects/`
 
@@ -273,7 +275,7 @@ them, while listing, relabelling and (de)activation keep working.
 
 | Folder | State |
 | --- | --- |
-| `Common/` | ✅ Implemented (`Result`, `Error`, `Entity`, `AggregateRoot`, `ValueObject`, `IDomainEvent`, `DomainException`, `IUnitOfWork`) |
+| `Common/` | ✅ Implemented (`Result`, `Error`, `Entity`, `AggregateRoot`, `ValueObject`, `IDomainEvent`, `DomainException`, `IUnitOfWork`, `PageRequest`, `PagedList<T>`) |
 | `ValueObjects/` | ✅ Implemented (4 value objects) |
 | `Errors/` | ✅ Implemented (`DomainErrors` catalog) |
 | `Events/` | ✅ Implemented (34 events) |
@@ -295,6 +297,7 @@ them, while listing, relabelling and (de)activation keep working.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-22 | opencode | Added `Common/PageRequest` (normalized page/pageSize/search/sort with clamping) and `Common/PagedList<T>` (one page + total count), and the `ListPagedAsync` contracts on `IDocumentRepository`, `IUserRepository`, `IEmployeeRepository`, and `IExternalOrganizationRepository`. Replaced `IDocumentRepository.ListRecentAsync`. |
 | 2026-10-21 | opencode | Added `Document.MarkMovementEnded` (a document leaves `IN_MOVEMENT` when its movement closes or is canceled), the `DomainErrors.Movements.ActiveMovementExists` / `DepartmentOutOfScope`, `DomainErrors.Department.Inactive`, and `DomainErrors.Correspondence.OnlyRegisteredRoutable` errors, and the `IDocumentMovementRepository.ListByDocumentAsync`/`ListInboxAsync`/`ListOutboxAsync` contracts. |
 | 2026-10-20 | Buffy | Added department register numbering: `DocumentNumberScope` lookup, `ScopeId`/`DepartmentId`/`RegistryDate` and `CreateDepartmentEntry`/`ReRegisterInDepartment` on `DocumentNumber`, `EffectiveDate` on `DocumentNumberHistory`, the `RegisteredInDepartment`/`ReRegisteredInDepartment` events, `Document.Numbers` with `AddDepartmentNumber`/`FindDepartmentNumber`, `DocumentMovementStep.RegistryNumberId` with a register-gated `ReceiveStep`, the new `DomainErrors.Numbering.*`/`Movements.MovementNotFound` entries, and the repository contracts for scoped uniqueness, department entries, register books, and bulk document loads. |
 | 2026-10-19 | Buffy | Added the Module 01–04 behavior the new use cases need: `InstitutionSetting.Update` (Central Diwan required + transfer-reason rule) and `UpdateNumberingPolicy`, `ExternalOrganization.Update`/`Activate`, `NumberingRegistry.Update(hasIssuedNumbers:)` (template lock), `Document.AttachReplacementNumber`, `User.AssignDepartmentScope` duplicate guard + `User.EndDepartmentScope`; plus the `NUMBERING_MANAGE` permission, `IInstitutionSettingRepository`/`IExternalOrganizationRepository` contracts, and the new `DomainErrors` entries (`InstitutionSetting.*`, `Lookup.EntryInactive`, `Identity.DepartmentAlreadyAssigned`/`DepartmentAssignmentNotFound`/`AssignmentTypeInvalid`). |

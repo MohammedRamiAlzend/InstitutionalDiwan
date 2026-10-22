@@ -1,3 +1,4 @@
+using InstitutionalDiwan.Application.Common;
 using InstitutionalDiwan.Application.Features.Correspondence.ExternalOrganizations;
 using InstitutionalDiwan.Domain.Common;
 using InstitutionalDiwan.Server.Contracts.Correspondence;
@@ -23,24 +24,32 @@ public sealed class ExternalOrganizationsController : ControllerBase
 
     public ExternalOrganizationsController(ISender sender) => _sender = sender;
 
-    /// <summary>Lists external organizations ordered by code.</summary>
-    /// <param name="includeInactive">When true, deactivated organizations are included.</param>
+    /// <summary>Lists a page of external organizations ordered by code.</summary>
+    /// <param name="page">Page number (integer, optional, 1-based). Example: <c>2</c>.</param>
+    /// <param name="pageSize">Rows per page (integer, optional, 1-100). Example: <c>20</c>.</param>
+    /// <param name="search">Code or name search term (string, optional). Example: <c>MOI</c>.</param>
+    /// <param name="includeInactive">When true, deactivated organizations are included (boolean, optional, default false). Example: <c>true</c>.</param>
     /// <param name="cancellationToken">Request cancellation token (optional).</param>
-    /// <response code="200">The external organization list.</response>
+    /// <response code="200">One page of external organizations with the paging counters.</response>
     /// <response code="401">The token is missing, expired, or invalid.</response>
     /// <response code="403">The token lacks the DOCUMENT_VIEW permission.</response>
     [HttpGet]
-    [EndpointSummary("Lists external organizations ordered by code.")]
-    [EndpointDescription("Lists external organizations ordered by code. Requires the DOCUMENT_VIEW permission. Responses: 200 (The external organization list.), 401 (The token is missing, expired, or invalid.), 403 (The token lacks the DOCUMENT_VIEW permission.)")]
-    [ProducesResponseType<IReadOnlyCollection<ExternalOrganizationResponse>>(StatusCodes.Status200OK)]
+    [EndpointSummary("Lists a page of external organizations ordered by code.")]
+    [EndpointDescription("Lists a page of external organizations ordered by code. Supports server-side paging, a code or name search, and an option to include deactivated organizations. Requires the DOCUMENT_VIEW permission. Responses: 200 (One page of external organizations with the paging counters.), 401 (The token is missing, expired, or invalid.), 403 (The token lacks the DOCUMENT_VIEW permission.)")]
+    [Produces("application/json", Type = typeof(PagedResult<ExternalOrganizationResponse>))]
+    [ProducesResponseType<PagedResult<ExternalOrganizationResponse>>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> List(
-        [Description("Include inactive records (boolean, query parameter). Example: true.")] [FromQuery] bool includeInactive,
-        CancellationToken cancellationToken)
+        [Description("Page number (integer, optional, 1-based). Example: 2.")] [FromQuery] int page = 1,
+        [Description("Rows per page (integer, optional, 1-100). Example: 20.")] [FromQuery] int pageSize = 20,
+        [Description("Code or name search term (string, optional). Example: MOI.")] [FromQuery] string? search = null,
+        [Description("Include inactive records (boolean, optional, default false). Example: true.")] [FromQuery] bool includeInactive = false,
+        CancellationToken cancellationToken = default)
     {
         var result = await _sender.Send(
-            new ListExternalOrganizationsQuery(includeInactive), cancellationToken);
+            new ListExternalOrganizationsQuery(page, pageSize, search, includeInactive),
+            cancellationToken);
 
         return result.ToActionResult();
     }

@@ -1,7 +1,7 @@
 # Application / Features / Correspondence / Documents
 
 > **Status:** Implemented — full Module 03 lifecycle: immediate create, draft create, metadata
-> update, register, participants, cancel, detail, timeline, and recent list.
+> update, register, participants, cancel, detail, timeline, and a paged, searchable, filterable list.
 
 ## Purpose
 
@@ -42,7 +42,7 @@ commands the API actually walks: `CreateDraftDocumentCommand` → `UpdateDraftMe
 | `GetDocumentByIdQuery.cs` / `GetDocumentByIdQueryHandler.cs` | Fetches one document by id (NotFound when missing). |
 | `GetDocumentDetailsQuery.cs` / `GetDocumentDetailsQueryHandler.cs` | Fetches the document with participants and status history. |
 | `GetDocumentTimelineQuery.cs` / `GetDocumentTimelineQueryHandler.cs` | Merges status transitions, participant additions, and official-number events into one oldest-first timeline. |
-| `ListDocumentsQuery.cs` / `ListDocumentsQueryHandler.cs` | Returns the most recent documents, newest first. |
+| `ListDocumentsQuery.cs` / `ListDocumentsQueryHandler.cs` | Returns a page of documents (`PagedResult<DocumentResponse>`), newest first by default. Carries `Page`/`PageSize`/`Search`/`SortBy`/`SortDescending` plus `StatusId`/`OwningDepartmentId`/`DirectionId`/`DocumentTypeId` filters; the handler builds a `PageRequest` and delegates to `IDocumentRepository.ListPagedAsync`, so filtering, sorting, and `Skip`/`Take` run in SQL. |
 | `README.md` | This file. |
 
 ## Conventions / Notes
@@ -57,6 +57,11 @@ commands the API actually walks: `CreateDraftDocumentCommand` → `UpdateDraftMe
 - Reads (`GET`, `POST /drafts` etc.) are guarded by `DOCUMENT_VIEW` / `DOCUMENT_CREATE` /
   `DOCUMENT_EDIT`; timing-safe access checks per document (grants, confidentiality) live in
   `Infrastructure/Authorization/DocumentAccessEvaluator`.
+- `ListDocumentsQuery` sorts by `createdAt` (default, newest first), `title`, `registrationDate`, or
+  `officialNumber`; an unknown `sortBy` falls back to `createdAt`. `search` matches the title, the
+  subject summary, and the official number.
+- `pageSize` is clamped to 1–100 and `page` to ≥1, so a hostile query string cannot read the table in
+  one request. The response always carries `totalCount`, `totalPages`, `hasPrevious`, and `hasNext`.
 
 ## Implementation status
 
@@ -65,12 +70,14 @@ commands the API actually walks: `CreateDraftDocumentCommand` → `UpdateDraftMe
 | `CreateDocumentCommand` (+ handler/validator) with official-number conflict check | ✅ |
 | `CreateDraftDocumentCommand`, `UpdateDraftMetadataCommand`, `RegisterDocumentCommand` | ✅ |
 | `AddDocumentParticipantCommand`, `CancelDocumentCommand` | ✅ |
-| `GetDocumentByIdQuery`, `GetDocumentDetailsQuery`, `GetDocumentTimelineQuery`, `ListDocumentsQuery` | ✅ |
+| `GetDocumentByIdQuery`, `GetDocumentDetailsQuery`, `GetDocumentTimelineQuery` | ✅ |
+| `ListDocumentsQuery` (paged, searchable, sortable, filtered) | ✅ |
 | Archive/unarchive use cases (Module 07) | ❌ Not implemented |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-22 | opencode | `ListDocumentsQuery` now returns `PagedResult<DocumentResponse>` and accepts `page`, `pageSize`, `search`, `sortBy`, `sortDescending`, `statusId`, `owningDepartmentId`, `directionId`, and `documentTypeId`; `DocumentRepository.ListPagedAsync` pushes the filter, sort, and paging into SQL. |
 | 2026-10-19 | Buffy | Completed the Module 03 lifecycle: added draft create, draft metadata update, register (registry-backed allocation), add participant (exactly-one-target + single external party), cancel (blocked by active movements), document details, and the merged audit timeline; added the corresponding response records. |
 | 2026-10-18 | opencode | Added `OfficialNumberText` + `NumberingYear` to create; handler now performs the taken/not-taken check (409 on conflict), issues and registers an official number at creation, and `DocumentResponse` exposes the number + registration date. |

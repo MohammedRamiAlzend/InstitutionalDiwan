@@ -1,11 +1,12 @@
 using InstitutionalDiwan.Application.Abstractions.Messaging;
+using InstitutionalDiwan.Application.Common;
 using InstitutionalDiwan.Domain.Common;
 using InstitutionalDiwan.Domain.Repositories;
 
 namespace InstitutionalDiwan.Application.Features.Correspondence.ExternalOrganizations;
 
 internal sealed class ListExternalOrganizationsQueryHandler
-    : IQueryHandler<ListExternalOrganizationsQuery, IReadOnlyCollection<ExternalOrganizationResponse>>
+    : IQueryHandler<ListExternalOrganizationsQuery, PagedResult<ExternalOrganizationResponse>>
 {
     private readonly IExternalOrganizationRepository _externalOrganizationRepository;
 
@@ -13,17 +14,18 @@ internal sealed class ListExternalOrganizationsQueryHandler
         IExternalOrganizationRepository externalOrganizationRepository) =>
         _externalOrganizationRepository = externalOrganizationRepository;
 
-    public async Task<Result<IReadOnlyCollection<ExternalOrganizationResponse>>> Handle(
+    public async Task<Result<PagedResult<ExternalOrganizationResponse>>> Handle(
         ListExternalOrganizationsQuery request,
         CancellationToken cancellationToken)
     {
-        var organizations = await _externalOrganizationRepository.ListAllAsync(cancellationToken);
+        var page = new PageRequest(request.Page, request.PageSize, request.Search);
+        var organizations = await _externalOrganizationRepository.ListPagedAsync(
+            page, request.IncludeInactive, cancellationToken);
 
-        IReadOnlyCollection<ExternalOrganizationResponse> response = organizations
-            .Where(organization => request.IncludeInactive || organization.IsActive)
-            .Select(ExternalOrganizationResponse.From)
-            .ToList();
-
-        return Result.Success(response);
+        return Result.Success(new PagedResult<ExternalOrganizationResponse>(
+            organizations.Items.Select(ExternalOrganizationResponse.From).ToList(),
+            page.NormalizedPage,
+            page.NormalizedPageSize,
+            organizations.TotalCount));
     }
 }

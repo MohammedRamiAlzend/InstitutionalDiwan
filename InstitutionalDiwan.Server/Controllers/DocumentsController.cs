@@ -1,3 +1,4 @@
+using InstitutionalDiwan.Application.Common;
 using InstitutionalDiwan.Application.Features.Correspondence.Documents;
 using InstitutionalDiwan.Domain.Common;
 using InstitutionalDiwan.Server.Contracts.Correspondence;
@@ -20,24 +21,57 @@ public sealed class DocumentsController : ControllerBase
 
     public DocumentsController(ISender sender) => _sender = sender;
 
-    /// <summary>Lists the most recent documents, newest first.</summary>
+    /// <summary>Lists a page of documents, newest first by default.</summary>
     /// <remarks>
-    /// Returns all documents ordered by most recent first. Requires the <c>DOCUMENT_VIEW</c> permission.
+    /// Supports server-side paging, a free-text search across the title, subject summary, and
+    /// official number, and filters by status, owning department, direction, and document type.
+    /// Requires the <c>DOCUMENT_VIEW</c> permission.
     /// </remarks>
+    /// <param name="page">Page number (integer, optional, 1-based). Example: <c>2</c>.</param>
+    /// <param name="pageSize">Rows per page (integer, optional, 1-100). Example: <c>20</c>.</param>
+    /// <param name="search">Free-text search across title, summary, and official number (string, optional). Example: <c>2026</c>.</param>
+    /// <param name="sortBy">Sort key: <c>createdAt</c>, <c>title</c>, <c>registrationDate</c>, or <c>officialNumber</c> (string, optional). Example: <c>title</c>.</param>
+    /// <param name="sortDescending">Sort descending when true (boolean, optional). Example: <c>true</c>.</param>
+    /// <param name="statusId">Filter by document status id (integer, optional). Example: <c>2</c>.</param>
+    /// <param name="owningDepartmentId">Filter by owning department id (GUID, optional). Example: <c>e7a62f43-9b82-4d01-8c2e-7ab91e506d42</c>.</param>
+    /// <param name="directionId">Filter by direction id (integer, optional). Example: <c>1</c>.</param>
+    /// <param name="documentTypeId">Filter by document type id (integer, optional). Example: <c>1</c>.</param>
     /// <param name="cancellationToken">Request cancellation token (optional).</param>
-    /// <response code="200">The document list returned as <c>IReadOnlyCollection&lt;DocumentResponse&gt;</c>.</response>
+    /// <response code="200">One page of documents with the paging counters.</response>
     /// <response code="401">The token is missing, expired, or invalid.</response>
     /// <response code="403">The token lacks the DOCUMENT_VIEW permission.</response>
     [HttpGet]
-    [EndpointSummary("Lists the most recent documents, newest first.")]
-    [EndpointDescription("Lists the most recent documents, newest first. Returns all documents ordered by most recent first. Requires the DOCUMENT_VIEW permission. Responses: 200 (The document list returned as IReadOnlyCollection<DocumentResponse>.), 401 (The token is missing, expired, or invalid.), 403 (The token lacks the DOCUMENT_VIEW permission.)")]
-    [Produces("application/json", Type = typeof(IReadOnlyCollection<DocumentResponse>))]
-    [ProducesResponseType<IReadOnlyCollection<DocumentResponse>>(StatusCodes.Status200OK)]
+    [EndpointSummary("Lists a page of documents, newest first by default.")]
+    [EndpointDescription("Lists a page of documents, newest first by default. Supports server-side paging, a free-text search across the title, subject summary, and official number, and filters by status, owning department, direction, and document type. Requires the DOCUMENT_VIEW permission. Responses: 200 (One page of documents with the paging counters.), 401 (The token is missing, expired, or invalid.), 403 (The token lacks the DOCUMENT_VIEW permission.)")]
+    [Produces("application/json", Type = typeof(PagedResult<DocumentResponse>))]
+    [ProducesResponseType<PagedResult<DocumentResponse>>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden)]
-    public async Task<IActionResult> List(CancellationToken cancellationToken)
+    public async Task<IActionResult> List(
+        [Description("Page number (integer, optional, 1-based). Example: 2.")] [FromQuery] int page = 1,
+        [Description("Rows per page (integer, optional, 1-100). Example: 20.")] [FromQuery] int pageSize = 20,
+        [Description("Free-text search across title, summary, and official number (string, optional). Example: 2026.")] [FromQuery] string? search = null,
+        [Description("Sort key: createdAt, title, registrationDate, officialNumber (string, optional). Example: title.")] [FromQuery] string? sortBy = null,
+        [Description("Sort descending when true (boolean, optional). Example: true.")] [FromQuery] bool sortDescending = true,
+        [Description("Filter by document status id (integer, optional). Example: 2.")] [FromQuery] int? statusId = null,
+        [Description("Filter by owning department id (GUID, optional). Example: e7a62f43-9b82-4d01-8c2e-7ab91e506d42.")] [FromQuery] Guid? owningDepartmentId = null,
+        [Description("Filter by direction id (integer, optional). Example: 1.")] [FromQuery] int? directionId = null,
+        [Description("Filter by document type id (integer, optional). Example: 1.")] [FromQuery] int? documentTypeId = null,
+        CancellationToken cancellationToken = default)
     {
-        var result = await _sender.Send(new ListDocumentsQuery(), cancellationToken);
+        var result = await _sender.Send(
+            new ListDocumentsQuery(
+                page,
+                pageSize,
+                search,
+                sortBy,
+                sortDescending,
+                statusId,
+                owningDepartmentId,
+                directionId,
+                documentTypeId),
+            cancellationToken);
+
         return result.ToActionResult();
     }
 

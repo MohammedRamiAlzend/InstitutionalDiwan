@@ -1,7 +1,8 @@
 # Institutional Diwan React Client — Freebuff / Codebuff Knowledge
 
-> **Status:** Current as of 2026-10-22 — reflects the backend as of commit `0c5411d`
-> (Modules 01–05 complete: Organization, Identity, Correspondence, Numbering, Movements).
+> **Status:** Current as of 2026-10-22 — reflects the backend after the paged-list change
+> (Modules 01–05 complete: Organization, Identity, Correspondence, Numbering, Movements; the four
+> unbounded list endpoints are server-paged).
 
 ## Commands
 
@@ -28,6 +29,30 @@
 15 controllers, 95 endpoints. Every route except `api/auth/login`, `api/auth/register`, and
 `api/lookups` requires a bearer token; the permission column is the policy that guards it.
 
+### Paged list responses
+
+`GET /api/documents`, `/api/users`, `/api/employees`, and `/api/external-organizations` are
+server-paged and return the same envelope:
+
+```json
+{
+  "items": [ ... ],
+  "page": 1,
+  "pageSize": 20,
+  "totalCount": 42,
+  "totalPages": 3,
+  "hasPrevious": false,
+  "hasNext": true
+}
+```
+
+Query parameters: `page` (1-based, default 1), `pageSize` (default 20, clamped to 1–100), `search`.
+`/api/documents` also takes `sortBy` (`createdAt` default, `title`, `registrationDate`,
+`officialNumber`), `sortDescending`, `statusId`, `owningDepartmentId`, `directionId`, and
+`documentTypeId`; `/api/external-organizations` also takes `includeInactive`. Bounded reference data
+(lookups, permissions, roles, departments, registries, per-document grants and movements) still
+returns a plain JSON array — do not render a pager for those.
+
 ### Auth — `/api/auth`
 
 | Method | Route | Permission | Notes |
@@ -44,7 +69,7 @@ Demo dev credentials: `admin` / `12345678` (system scope, `ADMIN` role) and
 
 | Method | Route | Permission |
 | --- | --- | --- |
-| `GET` | `/api/documents` | `DOCUMENT_VIEW` |
+| `GET` | `/api/documents` | `DOCUMENT_VIEW` | Paged (see above): `page`, `pageSize`, `search`, `sortBy`, `sortDescending`, `statusId`, `owningDepartmentId`, `directionId`, `documentTypeId`. |
 | `GET` | `/api/documents/{documentId}` | `DOCUMENT_VIEW` |
 | `GET` | `/api/documents/{documentId}/details` | `DOCUMENT_VIEW` |
 | `GET` | `/api/documents/{documentId}/timeline` | `DOCUMENT_VIEW` |

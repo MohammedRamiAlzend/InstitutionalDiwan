@@ -17,7 +17,7 @@ set their access token carries.
 | --- | --- |
 | `UserResponse.cs` | Summary read model (id, username, employee, department, scope, flags, timestamps, role codes). |
 | `UserResponseFactory.cs` | Shared projection: resolves each `UserRole` to its role code via `IRoleRepository`, skips stale grants, sorts codes. |
-| `ListUsersQuery.cs` / `ListUsersQueryHandler.cs` | Lists every account with its roles. |
+| `ListUsersQuery.cs` / `ListUsersQueryHandler.cs` | Returns one page of accounts (`PagedResult<UserResponse>`) ordered by username, with a `Search` term against the username and `Page`/`PageSize` input; roles are resolved for the page only. |
 | `GetUserByIdQuery.cs` / `GetUserByIdQueryHandler.cs` | Fetches one account by id (404 when missing). |
 | `CreateUserCommand.cs` / `CreateUserCommandHandler.cs` / `CreateUserCommandValidator.cs` | Hashes the raw password, rejects duplicate usernames (409), validates the primary department and optional employee. |
 | `UpdateUserCommand.cs` / `UpdateUserCommandHandler.cs` / `UpdateUserCommandValidator.cs` | Updates department, employee link, scope type, and must-change-password flag. |
@@ -45,6 +45,7 @@ set their access token carries.
 | Item | State |
 | --- | --- |
 | CRUD + activation + role grant/revoke | ✅ |
+| `ListUsersQuery` (paged + username search) | ✅ |
 | `AssignUserDepartmentScopeCommand`, `EndUserDepartmentScopeCommand` | ✅ |
 | `GetUserEffectivePermissionsQuery` | ✅ |
 
@@ -52,4 +53,5 @@ set their access token carries.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-22 | opencode | `ListUsersQuery` now returns `PagedResult<UserResponse>` with `page`, `pageSize`, and a username `search`; `UserRepository.ListPagedAsync` pages in SQL and the handler resolves roles for the requested page only. |
 | 2026-10-19 | Buffy | Added the department-scope use cases (`AssignUserDepartmentScopeCommand`, `EndUserDepartmentScopeCommand`) and `GetUserEffectivePermissionsQuery`, plus `User.AssignDepartmentScope` duplicate guard and `User.EndDepartmentScope`; endpoints added to `UsersController`. |

@@ -24,6 +24,8 @@ public interface IUserRepository
     Task<User?> GetByIdAsync(Guid userId, CancellationToken cancellationToken = default);
     Task<User?> GetByUsernameAsync(string username, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<User>> ListAllAsync(CancellationToken cancellationToken = default);
+    /// <summary>A page of users ordered by username, optionally filtered by a username search term.</summary>
+    Task<PagedList<User>> ListPagedAsync(PageRequest page, CancellationToken cancellationToken = default);
     void Add(User user);
 }
 
@@ -39,6 +41,11 @@ public interface IEmployeeRepository
 {
     Task<Employee?> GetByIdAsync(Guid employeeId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<Employee>> ListAllAsync(CancellationToken cancellationToken = default);
+    /// <summary>
+    /// A page of employees ordered by Arabic name, optionally filtered by a name or employee-number
+    /// search term.
+    /// </summary>
+    Task<PagedList<Employee>> ListPagedAsync(PageRequest page, CancellationToken cancellationToken = default);
     void Add(Employee employee);
 }
 
@@ -60,7 +67,18 @@ public interface IDocumentRepository
     Task<Document?> GetByIdAsync(Guid documentId, CancellationToken cancellationToken = default);
     /// <summary>Loads the document together with its central and department numbers.</summary>
     Task<Document?> GetWithNumbersAsync(Guid documentId, CancellationToken cancellationToken = default);
-    Task<IReadOnlyList<Document>> ListRecentAsync(int limit, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// A page of documents with the optional status, owning-department, direction, and type filters
+    /// applied. <see cref="PageRequest.SortBy"/> accepts <c>createdAt</c>, <c>title</c>,
+    /// <c>registrationDate</c>, and <c>officialNumber</c>; the default is newest first.
+    /// </summary>
+    Task<PagedList<Document>> ListPagedAsync(
+        PageRequest page,
+        int? statusId = null,
+        Guid? owningDepartmentId = null,
+        int? directionId = null,
+        int? documentTypeId = null,
+        CancellationToken cancellationToken = default);
     Task<IReadOnlyList<Document>> GetByIdsAsync(
         IReadOnlyCollection<Guid> documentIds,
         CancellationToken cancellationToken = default);
@@ -125,6 +143,14 @@ public interface IExternalOrganizationRepository
     Task<ExternalOrganization?> GetByIdAsync(Guid externalOrganizationId, CancellationToken cancellationToken = default);
     Task<ExternalOrganization?> GetByCodeAsync(string code, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<ExternalOrganization>> ListAllAsync(CancellationToken cancellationToken = default);
+    /// <summary>
+    /// A page of organizations ordered by code, optionally filtered by a code/name search term and
+    /// restricted to active organizations unless <paramref name="includeInactive"/> is true.
+    /// </summary>
+    Task<PagedList<ExternalOrganization>> ListPagedAsync(
+        PageRequest page,
+        bool includeInactive = false,
+        CancellationToken cancellationToken = default);
     void Add(ExternalOrganization externalOrganization);
 }
 

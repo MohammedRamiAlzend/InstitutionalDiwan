@@ -1,3 +1,4 @@
+using InstitutionalDiwan.Application.Common;
 using InstitutionalDiwan.Application.Features.Identity.Users;
 using InstitutionalDiwan.Domain.Common;
 using InstitutionalDiwan.Server.Contracts.Identity;
@@ -24,25 +25,33 @@ public sealed class UsersController : ControllerBase
 
     public UsersController(ISender sender) => _sender = sender;
 
-    /// <summary>Lists all user accounts and their roles.</summary>
+    /// <summary>Lists a page of user accounts with their roles.</summary>
     /// <remarks>
-    /// Returns all user accounts in the system with their associated roles and profile details.
-    /// Requires the <c>USER_MANAGE</c> permission.
+    /// Supports server-side paging and a username search. Requires the <c>USER_MANAGE</c> permission.
     /// </remarks>
+    /// <param name="page">Page number (integer, optional, 1-based). Example: <c>2</c>.</param>
+    /// <param name="pageSize">Rows per page (integer, optional, 1-100). Example: <c>20</c>.</param>
+    /// <param name="search">Username search term (string, optional). Example: <c>admin</c>.</param>
     /// <param name="cancellationToken">Request cancellation token (optional).</param>
-    /// <response code="200">The user list returned as <c>IReadOnlyCollection&lt;UserResponse&gt;</c>.</response>
+    /// <response code="200">One page of users with the paging counters.</response>
     /// <response code="401">The token is missing, expired, or invalid.</response>
     /// <response code="403">The token does not carry the USER_MANAGE permission.</response>
     [HttpGet]
-    [EndpointSummary("Lists all user accounts and their roles.")]
-    [EndpointDescription("Lists all user accounts and their roles. Returns all user accounts in the system with their associated roles and profile details. Requires the USER_MANAGE permission. Responses: 200 (The user list returned as IReadOnlyCollection<UserResponse>.), 401 (The token is missing, expired, or invalid.), 403 (The token does not carry the USER_MANAGE permission.)")]
-    [Produces("application/json", Type = typeof(IReadOnlyCollection<UserResponse>))]
-    [ProducesResponseType<IReadOnlyCollection<UserResponse>>(StatusCodes.Status200OK)]
+    [EndpointSummary("Lists a page of user accounts with their roles.")]
+    [EndpointDescription("Lists a page of user accounts with their roles. Supports server-side paging and a username search. Requires the USER_MANAGE permission. Responses: 200 (One page of users with the paging counters.), 401 (The token is missing, expired, or invalid.), 403 (The token does not carry the USER_MANAGE permission.)")]
+    [Produces("application/json", Type = typeof(PagedResult<UserResponse>))]
+    [ProducesResponseType<PagedResult<UserResponse>>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden)]
-    public async Task<IActionResult> List(CancellationToken cancellationToken)
+    public async Task<IActionResult> List(
+        [Description("Page number (integer, optional, 1-based). Example: 2.")] [FromQuery] int page = 1,
+        [Description("Rows per page (integer, optional, 1-100). Example: 20.")] [FromQuery] int pageSize = 20,
+        [Description("Username search term (string, optional). Example: admin.")] [FromQuery] string? search = null,
+        CancellationToken cancellationToken = default)
     {
-        var result = await _sender.Send(new ListUsersQuery(), cancellationToken);
+        var result = await _sender.Send(
+            new ListUsersQuery(page, pageSize, search), cancellationToken);
+
         return result.ToActionResult();
     }
 

@@ -15,6 +15,8 @@ Composes the main institutional correspondence registry table (`@tanstack/react-
 ## 5. Implementation Status
 - Slice folder and FSD rules established
 - Implement `DocumentRegistryTable` and `DocumentFilterBar`
+- Backend support landed 2026-10-22: `GET /api/documents` accepts `page`, `pageSize`, `search`, `sortBy`, `sortDescending`, `statusId`, `owningDepartmentId`, `directionId`, `documentTypeId` and returns `{ items, totalCount, totalPages, hasPrevious, hasNext }`, so the table can drive filters and paging from URL search params without client-side slicing.
 ## 6. Change Log
+- 2026-10-22: Recorded that the backend now serves the server-paged `/api/documents` contract this widget needs.
 - 2026-10-22: Converted this `README.md` from the Word document it was authored in to markdown, so the `README.md`-per-folder rule in `AGENT.md` holds and the content is diffable and agent-editable.
 - 2026-10-19: Created `widgets/document-registry-table` slice folder and `README.md`.

@@ -17,6 +17,23 @@ internal sealed class FakeUserRepository : IUserRepository
     public Task<IReadOnlyList<User>> ListAllAsync(CancellationToken cancellationToken = default)
         => Task.FromResult<IReadOnlyList<User>>(Users.OrderBy(user => user.Username).ToList());
 
+    public Task<PagedList<User>> ListPagedAsync(
+        PageRequest page,
+        CancellationToken cancellationToken = default)
+    {
+        var query = Users.AsEnumerable();
+
+        if (page.NormalizedSearch is { } search)
+            query = query.Where(user =>
+                user.Username.Contains(search, StringComparison.OrdinalIgnoreCase));
+
+        query = query.OrderBy(user => user.Username);
+
+        var totalCount = query.Count();
+        var items = query.Skip(page.Skip).Take(page.Take).ToList();
+        return Task.FromResult(new PagedList<User>(items, totalCount));
+    }
+
     public void Add(User user) => Users.Add(user);
 }
 
@@ -63,6 +80,25 @@ internal sealed class FakeEmployeeRepository : IEmployeeRepository
     public Task<IReadOnlyList<Employee>> ListAllAsync(CancellationToken cancellationToken = default)
         => Task.FromResult<IReadOnlyList<Employee>>(
             Employees.OrderBy(employee => employee.FullNameAr).ToList());
+
+    public Task<PagedList<Employee>> ListPagedAsync(
+        PageRequest page,
+        CancellationToken cancellationToken = default)
+    {
+        var query = Employees.AsEnumerable();
+
+        if (page.NormalizedSearch is { } search)
+            query = query.Where(employee =>
+                employee.FullNameAr.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                (employee.FullNameEn?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                (employee.EmployeeNumber?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false));
+
+        query = query.OrderBy(employee => employee.FullNameAr);
+
+        var totalCount = query.Count();
+        var items = query.Skip(page.Skip).Take(page.Take).ToList();
+        return Task.FromResult(new PagedList<Employee>(items, totalCount));
+    }
 
     public void Add(Employee employee) => Employees.Add(employee);
 }

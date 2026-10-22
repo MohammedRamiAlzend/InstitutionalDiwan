@@ -169,11 +169,34 @@ public sealed class ExternalOrganizationHandlerTests
         var active = await handler.Handle(
             new ListExternalOrganizationsQuery(), CancellationToken.None);
         Assert.True(active.IsSuccess);
-        Assert.Single(active.Value);
+        Assert.Single(active.Value.Items);
 
         var all = await handler.Handle(
             new ListExternalOrganizationsQuery(IncludeInactive: true), CancellationToken.None);
         Assert.True(all.IsSuccess);
-        Assert.Equal(2, all.Value.Count);
+        Assert.Equal(2, all.Value.Items.Count);
+        Assert.Equal(2, all.Value.TotalCount);
+    }
+
+    [Fact]
+    public async Task List_PagesAndSearchesOrganizations()
+    {
+        var organizations = new FakeExternalOrganizationRepository();
+        for (var i = 0; i < 12; i++)
+            organizations.Add(CreateOrganization($"ORG{i:00}"));
+
+        var handler = new ListExternalOrganizationsQueryHandler(organizations);
+
+        var page = await handler.Handle(
+            new ListExternalOrganizationsQuery(Page: 2, PageSize: 5), CancellationToken.None);
+        Assert.True(page.IsSuccess);
+        Assert.Equal(5, page.Value.Items.Count);
+        Assert.Equal(12, page.Value.TotalCount);
+        Assert.Equal(3, page.Value.TotalPages);
+
+        var searched = await handler.Handle(
+            new ListExternalOrganizationsQuery(Search: "ORG03"), CancellationToken.None);
+        Assert.True(searched.IsSuccess);
+        Assert.Equal("ORG03", Assert.Single(searched.Value.Items).Code);
     }
 }

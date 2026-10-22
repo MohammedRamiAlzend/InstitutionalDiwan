@@ -14,17 +14,17 @@ access live here.
 | File | Route | Authorization | Responsibility |
 | --- | --- | --- | --- |
 | `AuthController.cs` | `api/auth` | `[AllowAnonymous]` login/register, `[Authorize]` me/change-password | Login, registration, caller identity (`me`), password change. |
-| `DocumentsController.cs` | `api/documents` | `DOCUMENT_VIEW` reads; `DOCUMENT_CREATE` create/register; `DOCUMENT_EDIT` update/participants/cancel | Full lifecycle: immediate create, list, get, details, timeline, `POST drafts`, `PUT {id}`, `POST {id}/register`, `POST {id}/participants`, `POST {id}/cancel`. |
+| `DocumentsController.cs` | `api/documents` | `DOCUMENT_VIEW` reads; `DOCUMENT_CREATE` create/register; `DOCUMENT_EDIT` update/participants/cancel | Full lifecycle: immediate create, paged/searchable/filterable list, get, details, timeline, `POST drafts`, `PUT {id}`, `POST {id}/register`, `POST {id}/participants`, `POST {id}/cancel`. |
 | `DocumentNumbersController.cs` | `api/documents/{documentId}/numbers` | `NUMBERING_VIEW` reads; `NUMBERING_MANAGE` writes | Central number lifecycle (`issue`, `{numberId}/cancel`, `{numberId}/replace`, `history`), the department register write (`department-registration`: typed number + date), and `registry-entries` (central number + every department line). |
 | `DepartmentRegistersController.cs` | `api/departments/{departmentId}/register` | `NUMBERING_VIEW` | The department's register book, optionally filtered by numbering year. |
 | `MovementsController.cs` | `api/movements` | `DOCUMENT_VIEW` reads; `DOCUMENT_EDIT` writes | The routing workflow: open a movement, send, receive (refuses custody until the destination department recorded its register number), complete, reject, return, redirect, close, cancel; plus the movement read endpoints and the department inbox/outbox. |
-| `ExternalOrganizationsController.cs` | `api/external-organizations` | `DOCUMENT_VIEW` reads; `DOCUMENT_EDIT` writes | External correspondent CRUD: list (incl. `includeInactive`), get, create, update, deactivate, activate. |
+| `ExternalOrganizationsController.cs` | `api/external-organizations` | `DOCUMENT_VIEW` reads; `DOCUMENT_EDIT` writes | External correspondent CRUD: paged/searchable list (incl. `includeInactive`), get, create, update, deactivate, activate. |
 | `InstitutionSettingsController.cs` | `api/institution-settings` | `DEPARTMENT_MANAGE` | Reads and replaces the singleton institution settings (Central Diwan guards). |
-| `UsersController.cs` | `api/users` | `USER_MANAGE` | User CRUD, activate/deactivate, assign/revoke roles, `POST {id}/department-assignments`, `DELETE {id}/department-assignments/{assignmentId}`, `GET {id}/effective-permissions`. |
+| `UsersController.cs` | `api/users` | `USER_MANAGE` | User CRUD (paged/searchable list), activate/deactivate, assign/revoke roles, `POST {id}/department-assignments`, `DELETE {id}/department-assignments/{assignmentId}`, `GET {id}/effective-permissions`. |
 | `RolesController.cs` | `api/roles` | `ROLE_MANAGE` | Role CRUD, activate, grant/revoke permissions. |
 | `PermissionsController.cs` | `api/permissions` | `ROLE_MANAGE` | The permission catalog. |
 | `DepartmentsController.cs` | `api/departments` | `DEPARTMENT_MANAGE` | Department CRUD, tree, reparent, soft delete + activate. |
-| `EmployeesController.cs` | `api/employees` | `EMPLOYEE_MANAGE` | Employee CRUD, deactivate/activate. |
+| `EmployeesController.cs` | `api/employees` | `EMPLOYEE_MANAGE` | Employee CRUD (paged/searchable list), deactivate/activate. |
 | `DocumentAccessGrantsController.cs` | `api/documents/{documentId}/access-grants` | `ACCESS_GRANT_MANAGE` | Per-document access grants: list/grant/revoke. |
 | `NumberingRegistriesController.cs` | `api/numbering/registries` | `NUMBERING_VIEW` reads; `NUMBERING_MANAGE` writes | Numbering registry list/by-id + create, update, deactivate, activate. |
 | `LookupsController.cs` | `api/lookups/{lookup}` | `[Authorize]` reads; `LOOKUP_MANAGE` writes | Generic reference-catalog API over all 33 seeded lookups. |
@@ -58,6 +58,22 @@ access live here.
 | `POST` | `/api/movements/{movementId}/close` | `DOCUMENT_EDIT` | Close the movement and release the document. |
 | `POST` | `/api/movements/{movementId}/cancel` | `DOCUMENT_EDIT` | Cancel the movement with a required reason and release the document. |
 
+## Paged list endpoints
+
+`GET /api/documents`, `/api/users`, `/api/employees`, and `/api/external-organizations` accept
+`page` (1-based, default 1), `pageSize` (default 20, clamped to 1–100), and `search`, and return:
+
+```json
+{ "items": [ ... ], "page": 1, "pageSize": 20, "totalCount": 42, "totalPages": 3,
+  "hasPrevious": false, "hasNext": true }
+```
+
+`/api/documents` additionally accepts `sortBy` (`createdAt` default, `title`, `registrationDate`,
+`officialNumber`), `sortDescending`, `statusId`, `owningDepartmentId`, `directionId`, and
+`documentTypeId`. `/api/external-organizations` accepts `includeInactive`. Bounded reference data
+(lookups, permissions, roles, departments, registries, per-document grants/movements) still returns a
+plain JSON array.
+
 ## Conventions / Notes
 
 - `{lookup}` is a kebab-case slug registered in the Infrastructure `LookupCatalog` (33 slugs, e.g.
@@ -75,6 +91,7 @@ access live here.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-22 | opencode | Turned the four unbounded list endpoints into paged queries: `GET /api/documents` (paging, search, sort, and status/department/direction/type filters), `GET /api/users` and `GET /api/employees` (paging + search), and `GET /api/external-organizations` (paging + search + `includeInactive`). All four now return `PagedResult<T>`. |
 | 2026-10-21 | opencode | Rewrote `MovementsController` into the full routing workflow: open/send/receive/complete/reject/return/redirect/close/cancel, the movement read endpoints (`GET {movementId}`, `GET by-document/{documentId}`), and the department inbox and outbox (`GET inbox`, `GET outbox`). |
 | 2026-10-20 | Buffy | Added the department register routes: `POST /api/documents/{id}/numbers/department-registration` and `GET .../registry-entries` on `DocumentNumbersController`, `DepartmentRegistersController`, and `MovementsController` (`{id}/receive`, gated on a recorded register entry). |
 | 2026-10-19 | Buffy | Added `InstitutionSettingsController` (`GET`/`PUT /api/institution-settings`), `ExternalOrganizationsController` (CRUD), `DocumentNumbersController` (issue/cancel/replace/history), the document lifecycle endpoints on `DocumentsController` (drafts, update, register, participants, cancel, details, timeline), department-scope + effective-permissions endpoints on `UsersController`, and registry write endpoints on `NumberingRegistriesController`. |

@@ -37,26 +37,62 @@ public sealed class ListUsersQueryHandlerTests
         var result = await handler.Handle(new ListUsersQuery(), CancellationToken.None);
 
         Assert.True(result.IsSuccess);
-        Assert.Equal(2, result.Value.Count);
+        Assert.Equal(2, result.Value.Items.Count);
+        Assert.Equal(2, result.Value.TotalCount);
 
-        var adminSummary = result.Value.Single(user => user.Username == "admin");
+        var adminSummary = result.Value.Items.Single(user => user.Username == "admin");
         Assert.Equal(new[] { "ADMIN" }, adminSummary.Roles);
         Assert.True(adminSummary.IsActive);
         Assert.False(adminSummary.MustChangePassword);
 
-        var userSummary = result.Value.Single(user => user.Username == "user");
+        var userSummary = result.Value.Items.Single(user => user.Username == "user");
         Assert.Equal(new[] { "USER" }, userSummary.Roles);
     }
 
     [Fact]
-    public async Task Handle_WithNoUsers_ReturnsEmptyCollection()
+    public async Task Handle_WithNoUsers_ReturnsEmptyPage()
     {
         var handler = new ListUsersQueryHandler(new FakeUserRepository(), new FakeRoleRepository());
 
         var result = await handler.Handle(new ListUsersQuery(), CancellationToken.None);
 
         Assert.True(result.IsSuccess);
-        Assert.Empty(result.Value);
+        Assert.Empty(result.Value.Items);
+        Assert.Equal(0, result.Value.TotalCount);
+    }
+
+    [Fact]
+    public async Task Handle_PagesUsersAndReportsTheTotal()
+    {
+        var roles = new FakeRoleRepository();
+        var users = new FakeUserRepository();
+        for (var i = 0; i < 25; i++)
+            users.Add(User.Create($"user-{i:00}", "hash", Guid.Empty, mustChangePassword: false).Value);
+
+        var result = await new ListUsersQueryHandler(users, roles).Handle(
+            new ListUsersQuery(Page: 2, PageSize: 10), CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(10, result.Value.Items.Count);
+        Assert.Equal(25, result.Value.TotalCount);
+        Assert.Equal(3, result.Value.TotalPages);
+        Assert.True(result.Value.HasNext);
+    }
+
+    [Fact]
+    public async Task Handle_SearchesByUsername()
+    {
+        var roles = new FakeRoleRepository();
+        var users = new FakeUserRepository();
+        users.Add(User.Create("admin", "hash", Guid.Empty, mustChangePassword: false).Value);
+        users.Add(User.Create("editor", "hash", Guid.Empty, mustChangePassword: false).Value);
+
+        var result = await new ListUsersQueryHandler(users, roles).Handle(
+            new ListUsersQuery(Search: "adm"), CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        var user = Assert.Single(result.Value.Items);
+        Assert.Equal("admin", user.Username);
     }
 
     [Fact]
@@ -74,6 +110,6 @@ public sealed class ListUsersQueryHandlerTests
         var result = await handler.Handle(new ListUsersQuery(), CancellationToken.None);
 
         Assert.True(result.IsSuccess);
-        Assert.Empty(Assert.Single(result.Value).Roles);
+        Assert.Empty(Assert.Single(result.Value.Items).Roles);
     }
 }

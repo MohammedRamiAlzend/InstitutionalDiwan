@@ -1,8 +1,8 @@
 # InstitutionalDiwan.Tests — xUnit test suite
 
-> **Status:** Implemented — 294 tests covering domain handlers, department register numbering, the
-> receipt gate, the movement routing workflow, the department inbox/outbox, seeding, authorization, and
-> the generic lookups API.
+> **Status:** Implemented — 303 tests covering domain handlers, department register numbering, the
+> receipt gate, the movement routing workflow, the department inbox/outbox, seeding, authorization,
+> paging/search/filtering, and the generic lookups API.
 
 ## Purpose
 
@@ -59,6 +59,7 @@ indexes) runs against a private SQLite in-memory database through `Support/TestC
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-22 | opencode | Extended the list-handler tests for the paged contracts (documents, users, employees, external organizations) with cases for paging, clamping, search, sorting, and filtering; the fakes now implement `ListPagedAsync`. 294 → 303 tests. |
 | 2026-10-21 | opencode | Added `Application/MovementWorkflowHandlerTests` (routing workflow + inbox/outbox) and `Persistence/DocumentMovementRepositoryTests` (the queue queries against SQLite); extended `FakeDocumentMovementRepository` with the list/queue members. |
 | 2026-10-20 | Buffy | Added `DepartmentRegisterNumberingTests` (11 cases) for department register entries and the register-gated receipt; updated the seeding pipeline expectations for the new `DOCUMENT_NUMBER_SCOPES` lookup and the two department event types, and extended the fakes with the new repository members. |
 | 2026-10-19 | Buffy | Added `InstitutionSettingsHandlerTests`, `ExternalOrganizationHandlerTests`, `DocumentLifecycleHandlerTests`, `OfficialNumberLifecycleHandlerTests`, `DepartmentScopeEvaluatorTests`, and `DocumentAccessEvaluatorTests` (60+ new tests) with shared fakes in `Support/FakeServiceRepositories.cs`; updated the permission (13 → 14), role-grant (16 → 17), department-type (4 → 5), and seeder-count expectations for `NUMBERING_MANAGE` and the new `InstitutionSettingSeeder`. |
