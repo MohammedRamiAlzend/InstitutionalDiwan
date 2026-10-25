@@ -23,7 +23,7 @@ public sealed class DepartmentType : LookupEntity
     {
     }
 
-    public static Result<DepartmentType> Create(int id, string? desc, string? descAr, int hierarchyLevelOrder)
+    public static Result<DepartmentType> Create(int id, string? desc, string? descAr, int hierarchyLevelOrder, DateTime? utcNow = null)
     {
         if (id <= 0)
             return Result.Failure<DepartmentType>(DomainErrors.Department.TypeEmpty);
@@ -37,7 +37,7 @@ public sealed class DepartmentType : LookupEntity
             Desc = desc.Trim(),
             DescAr = descAr.Trim(),
             IsActive = true,
-            CreatedAt = DateTime.UtcNow,
+            CreatedAt = utcNow ?? DateTime.UtcNow,
             HierarchyLevelOrder = hierarchyLevelOrder
         };
 

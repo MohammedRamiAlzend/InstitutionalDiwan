@@ -33,7 +33,7 @@ internal sealed class CancelOfficialNumberCommandHandler
         if (number.StatusId != DocumentNumberStatus.ActiveId)
             return Result.Failure<DocumentNumberResponse>(DomainErrors.Numbering.NumberNotActive);
 
-        var cancelResult = number.Cancel(request.UserId, request.Reason);
+        var cancelResult = number.Cancel(request.UserId, request.Reason, _unitOfWork.UtcNow);
         if (cancelResult.IsFailure)
             return Result.Failure<DocumentNumberResponse>(cancelResult.Error);
 

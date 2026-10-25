@@ -43,4 +43,5 @@ transfer reason — lives in `InstitutionSetting.Update` and is surfaced as
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-22 | Buffy | `UpdateInstitutionSettingsCommandHandler` now passes `IUnitOfWork.UtcNow` so `InstitutionSetting.UpdatedAt` comes from the transaction, not the system clock. |
 | 2026-10-19 | Buffy | Added the Module 01 institution-settings slice (query + full update command) with Central Diwan root/type/activity validation, lookup validation for numbering mode and reset policy, optional responsible-employee check, and the transfer-reason rule from the domain. |

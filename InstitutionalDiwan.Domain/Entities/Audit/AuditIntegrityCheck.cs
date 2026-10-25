@@ -27,7 +27,8 @@ public sealed class AuditIntegrityCheck : Entity<Guid>
     public static Result<AuditIntegrityCheck> RecordPass(
         long startAuditLogId,
         long endAuditLogId,
-        Guid executedByUserId)
+        Guid executedByUserId,
+        DateTime? utcNow = null)
     {
         if (endAuditLogId < startAuditLogId)
             return Result.Failure<AuditIntegrityCheck>(DomainErrors.Audit.InvalidCheckpointRange);
@@ -39,7 +40,7 @@ public sealed class AuditIntegrityCheck : Entity<Guid>
             EndAuditLogId = endAuditLogId,
             IsValid = true,
             ExecutedByUserId = executedByUserId,
-            ExecutedAtUtc = DateTime.UtcNow
+            ExecutedAtUtc = utcNow ?? DateTime.UtcNow
         });
     }
 
@@ -48,7 +49,8 @@ public sealed class AuditIntegrityCheck : Entity<Guid>
         long endAuditLogId,
         long firstCorruptedLogId,
         string failureDetails,
-        Guid executedByUserId)
+        Guid executedByUserId,
+        DateTime? utcNow = null)
     {
         if (endAuditLogId < startAuditLogId)
             return Result.Failure<AuditIntegrityCheck>(DomainErrors.Audit.InvalidCheckpointRange);
@@ -62,7 +64,7 @@ public sealed class AuditIntegrityCheck : Entity<Guid>
             FirstCorruptedLogId = firstCorruptedLogId,
             FailureDetails = failureDetails,
             ExecutedByUserId = executedByUserId,
-            ExecutedAtUtc = DateTime.UtcNow
+            ExecutedAtUtc = utcNow ?? DateTime.UtcNow
         });
     }
 }

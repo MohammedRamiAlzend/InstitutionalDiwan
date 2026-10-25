@@ -34,7 +34,8 @@ public sealed class DocumentParticipant : Entity<Guid>
         int roleId,
         ParticipantTarget target,
         bool isPrimary = false,
-        string? notes = null)
+        string? notes = null,
+        DateTime? utcNow = null)
     {
         if (roleId <= 0)
             return Result.Failure<DocumentParticipant>(DomainErrors.Correspondence.ParticipantRoleEmpty);
@@ -55,7 +56,7 @@ public sealed class DocumentParticipant : Entity<Guid>
             PersonName = target.PersonName,
             IsPrimary = isPrimary,
             Notes = string.IsNullOrWhiteSpace(notes) ? null : notes.Trim(),
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = utcNow ?? DateTime.UtcNow
         };
 
         return Result.Success(participant);

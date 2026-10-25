@@ -53,7 +53,8 @@ internal sealed class ReplaceOfficialNumberCommandHandler
             document.OwningDepartmentId,
             document.DocumentTypeId,
             document.DirectionId,
-            cancellationToken);
+            cancellationToken,
+            _unitOfWork.UtcNow);
 
         if (registryResult.IsFailure)
             return Result.Failure<DocumentNumberResponse>(registryResult.Error);
@@ -64,7 +65,7 @@ internal sealed class ReplaceOfficialNumberCommandHandler
             ?? document.DocumentDate?.Year
             ?? _clock.UtcNow.Year;
 
-        var sequenceResult = registry.AllocateNextSequence(numberingYear);
+        var sequenceResult = registry.AllocateNextSequence(numberingYear, _unitOfWork.UtcNow);
         if (sequenceResult.IsFailure)
             return Result.Failure<DocumentNumberResponse>(sequenceResult.Error);
 
@@ -84,13 +85,14 @@ internal sealed class ReplaceOfficialNumberCommandHandler
             sequenceResult.Value,
             numberText,
             request.UserId,
-            $"Replaces {replaced.OfficialNumberText}");
+            $"Replaces {replaced.OfficialNumberText}",
+            utcNow: _unitOfWork.UtcNow);
 
         if (replacementResult.IsFailure)
             return Result.Failure<DocumentNumberResponse>(replacementResult.Error);
 
         var replaceResult = replaced.ReplaceWith(
-            replacementResult.Value.DocumentNumberId, request.UserId, request.Reason);
+            replacementResult.Value.DocumentNumberId, request.UserId, request.Reason, _unitOfWork.UtcNow);
 
         if (replaceResult.IsFailure)
             return Result.Failure<DocumentNumberResponse>(replaceResult.Error);
@@ -100,7 +102,7 @@ internal sealed class ReplaceOfficialNumberCommandHandler
             return Result.Failure<DocumentNumberResponse>(officialNumberValue.Error);
 
         var attachResult = document.AttachReplacementNumber(
-            replacementResult.Value.DocumentNumberId, officialNumberValue.Value);
+            replacementResult.Value.DocumentNumberId, officialNumberValue.Value, _unitOfWork.UtcNow);
 
         if (attachResult.IsFailure)
             return Result.Failure<DocumentNumberResponse>(attachResult.Error);

@@ -40,7 +40,8 @@ internal sealed class UpdateEmployeeCommandHandler
             request.FullNameEn,
             request.JobTitleAr,
             request.Email,
-            request.Phone);
+            request.Phone,
+            utcNow: _unitOfWork.UtcNow);
 
         if (updateResult.IsFailure)
             return Result.Failure<EmployeeResponse>(updateResult.Error);

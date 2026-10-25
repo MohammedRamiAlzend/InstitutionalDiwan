@@ -34,7 +34,7 @@ internal sealed class GrantRolePermissionCommandHandler
         if (permission is null)
             return Result.Failure<RoleResponse>(DomainErrors.Identity.PermissionNotFound);
 
-        var grantResult = role.GrantPermission(permission.Code);
+        var grantResult = role.GrantPermission(permission.Code, _unitOfWork.UtcNow);
         if (grantResult.IsFailure)
             return Result.Failure<RoleResponse>(grantResult.Error);
 

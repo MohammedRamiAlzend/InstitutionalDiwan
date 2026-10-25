@@ -40,7 +40,8 @@ public sealed class Department : AggregateRoot<Guid>
         Guid? parentDepartmentId,
         bool canSendExternal,
         bool canReceiveExternal,
-        string? notes)
+        string? notes,
+        DateTime createdAt)
         : base(departmentId)
     {
         DepartmentId = departmentId;
@@ -53,7 +54,7 @@ public sealed class Department : AggregateRoot<Guid>
         CanSendExternal = canSendExternal;
         CanReceiveExternal = canReceiveExternal;
         Notes = string.IsNullOrWhiteSpace(notes) ? null : notes.Trim();
-        CreatedAt = DateTime.UtcNow;
+        CreatedAt = createdAt;
 
         RaiseDomainEvent(new DepartmentCreatedEvent(DepartmentId, Code, NameAr, ParentDepartmentId));
     }
@@ -66,8 +67,11 @@ public sealed class Department : AggregateRoot<Guid>
         string? nameEn = null,
         bool canSendExternal = false,
         bool canReceiveExternal = false,
-        string? notes = null)
+        string? notes = null,
+        DateTime? utcNow = null)
     {
+        var now = utcNow ?? DateTime.UtcNow;
+
         var codeResult = DepartmentCode.Create(code);
         if (codeResult.IsFailure)
             return Result.Failure<Department>(codeResult.Error);
@@ -87,24 +91,27 @@ public sealed class Department : AggregateRoot<Guid>
             parentDepartmentId,
             canSendExternal,
             canReceiveExternal,
-            notes);
+            notes,
+            now);
 
         return Result.Success(department);
     }
 
-    public Result Rename(string? nameAr, string? nameEn = null)
+    public Result Rename(string? nameAr, string? nameEn = null, DateTime? utcNow = null)
     {
+        var now = utcNow ?? DateTime.UtcNow;
         if (string.IsNullOrWhiteSpace(nameAr))
             return Result.Failure(DomainErrors.Department.NameEmpty);
 
         NameAr = nameAr.Trim();
         NameEn = string.IsNullOrWhiteSpace(nameEn) ? null : nameEn.Trim();
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = now;
         return Result.Success();
     }
 
-    public Result MoveToParent(Guid? newParentId, IReadOnlySet<Guid>? descendantDepartmentIds = null, bool newParentIsActive = true)
+    public Result MoveToParent(Guid? newParentId, IReadOnlySet<Guid>? descendantDepartmentIds = null, bool newParentIsActive = true, DateTime? utcNow = null)
     {
+        var now = utcNow ?? DateTime.UtcNow;
         if (newParentId.HasValue)
         {
             if (newParentId.Value == DepartmentId)
@@ -119,29 +126,33 @@ public sealed class Department : AggregateRoot<Guid>
 
         var oldParentId = ParentDepartmentId;
         ParentDepartmentId = newParentId;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = now;
 
         RaiseDomainEvent(new DepartmentMovedEvent(DepartmentId, oldParentId, newParentId));
         return Result.Success();
     }
 
-    public Result AssignManager(Guid? managerEmployeeId)
+    public Result AssignManager(Guid? managerEmployeeId, DateTime? utcNow = null)
     {
+        var now = utcNow ?? DateTime.UtcNow;
+
         ManagerEmployeeId = managerEmployeeId;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = now;
         return Result.Success();
     }
 
-    public Result UpdateExternalCorrespondencePolicy(bool canSendExternal, bool canReceiveExternal)
+    public Result UpdateExternalCorrespondencePolicy(bool canSendExternal, bool canReceiveExternal, DateTime? utcNow = null)
     {
+        var now = utcNow ?? DateTime.UtcNow;
         CanSendExternal = canSendExternal;
         CanReceiveExternal = canReceiveExternal;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = now;
         return Result.Success();
     }
 
-    public Result Deactivate(bool hasActiveChildren)
+    public Result Deactivate(bool hasActiveChildren, DateTime? utcNow = null)
     {
+        var now = utcNow ?? DateTime.UtcNow;
         if (hasActiveChildren)
             return Result.Failure(DomainErrors.Department.HasActiveChildren);
 
@@ -149,15 +160,16 @@ public sealed class Department : AggregateRoot<Guid>
             return Result.Success();
 
         IsActive = false;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = now;
         RaiseDomainEvent(new DepartmentDeactivatedEvent(DepartmentId));
         return Result.Success();
     }
 
-    public Result Activate()
+    public Result Activate(DateTime? utcNow = null)
     {
+        var now = utcNow ?? DateTime.UtcNow;
         IsActive = true;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = now;
         return Result.Success();
     }
 }

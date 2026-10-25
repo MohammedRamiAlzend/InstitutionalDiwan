@@ -31,7 +31,8 @@ internal sealed class UpdateDraftMetadataCommandHandler
             request.Title,
             request.SubjectSummary,
             request.ConfidentialityLevelId,
-            request.PriorityLevelId);
+            request.PriorityLevelId,
+            utcNow: _unitOfWork.UtcNow);
 
         if (updateResult.IsFailure)
             return Result.Failure<DocumentResponse>(updateResult.Error);

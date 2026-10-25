@@ -23,14 +23,18 @@ public abstract class LookupEntity : Entity<int>
     {
     }
 
-    /// <summary>Initializes a brand-new lookup entry with its stable id and labels.</summary>
-    protected LookupEntity(int id, string desc, string descAr)
+    /// <summary>
+    /// Initializes a brand-new lookup entry with its stable id and labels. <paramref name="utcNow"/> is
+    /// supplied when the caller wants the row stamped with a unit of work's instant instead of the
+    /// system clock.
+    /// </summary>
+    protected LookupEntity(int id, string desc, string descAr, DateTime? utcNow = null)
     {
         Id = id;
         Desc = desc.Trim();
         DescAr = descAr.Trim();
         IsActive = true;
-        CreatedAt = DateTime.UtcNow;
+        CreatedAt = utcNow ?? DateTime.UtcNow;
     }
 
     /// <summary>Updates the labels (used by lookup CRUD endpoints).</summary>

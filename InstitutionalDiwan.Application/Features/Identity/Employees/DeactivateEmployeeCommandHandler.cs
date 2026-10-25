@@ -27,7 +27,7 @@ internal sealed class DeactivateEmployeeCommandHandler
         if (employee is null)
             return Result.Failure<EmployeeResponse>(DomainErrors.Identity.EmployeeNotFound);
 
-        var result = employee.Deactivate();
+        var result = employee.Deactivate(_unitOfWork.UtcNow);
         if (result.IsFailure)
             return Result.Failure<EmployeeResponse>(result.Error);
 

@@ -13,8 +13,8 @@ access live here.
 
 | File | Route | Authorization | Responsibility |
 | --- | --- | --- | --- |
-| `AuthController.cs` | `api/auth` | `[AllowAnonymous]` login/register, `[Authorize]` me/change-password | Login, registration, caller identity (`me`), password change. |
-| `DocumentsController.cs` | `api/documents` | `DOCUMENT_VIEW` reads; `DOCUMENT_CREATE` create/register; `DOCUMENT_EDIT` update/participants/cancel | Full lifecycle: immediate create, paged/searchable/filterable list, get, details, timeline, `POST drafts`, `PUT {id}`, `POST {id}/register`, `POST {id}/participants`, `POST {id}/cancel`. |
+| `AuthController.cs` | `api/auth` | `[AllowAnonymous]` login/register, `[Authorize]` me/change-password | Login, registration, caller profile (`me` → `GetUserProfileQuery`), password change. |
+| `DocumentsController.cs` | `api/documents` | `DOCUMENT_VIEW` reads; `DOCUMENT_CREATE` create/register; `DOCUMENT_EDIT` update/participants/cancel | Full lifecycle: immediate create, paged/searchable/filterable list, a department's register view (`GET /api/departments/{departmentId}/documents`), get, details, timeline, `POST drafts`, `PUT {id}`, `POST {id}/register`, `POST {id}/participants`, `POST {id}/cancel`. |
 | `DocumentNumbersController.cs` | `api/documents/{documentId}/numbers` | `NUMBERING_VIEW` reads; `NUMBERING_MANAGE` writes | Central number lifecycle (`issue`, `{numberId}/cancel`, `{numberId}/replace`, `history`), the department register write (`department-registration`: typed number + date), and `registry-entries` (central number + every department line). |
 | `DepartmentRegistersController.cs` | `api/departments/{departmentId}/register` | `NUMBERING_VIEW` | The department's register book, optionally filtered by numbering year. |
 | `MovementsController.cs` | `api/movements` | `DOCUMENT_VIEW` reads; `DOCUMENT_EDIT` writes | The routing workflow: open a movement, send, receive (refuses custody until the destination department recorded its register number), complete, reject, return, redirect, close, cancel; plus the movement read endpoints and the department inbox/outbox. |
@@ -70,7 +70,9 @@ access live here.
 
 `/api/documents` additionally accepts `sortBy` (`createdAt` default, `title`, `registrationDate`,
 `officialNumber`), `sortDescending`, `statusId`, `owningDepartmentId`, `directionId`, and
-`documentTypeId`. `/api/external-organizations` accepts `includeInactive`. Bounded reference data
+`documentTypeId`. `/api/external-organizations` accepts `includeInactive`. `GET /api/departments/{departmentId}/documents`
+is the same document page narrowed to one department's register and is authorized against the
+caller's organizational scope (403 `Correspondence.DepartmentOutOfScope`). Bounded reference data
 (lookups, permissions, roles, departments, registries, per-document grants/movements) still returns a
 plain JSON array.
 
@@ -91,6 +93,7 @@ plain JSON array.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-22 | Buffy | `AuthController.Me` now sends `GetUserProfileQuery` instead of reading claims inline, and `DocumentsController` gained `GET /api/departments/{departmentId}/documents` (one department's paged register, scope-checked). |
 | 2026-10-22 | opencode | Turned the four unbounded list endpoints into paged queries: `GET /api/documents` (paging, search, sort, and status/department/direction/type filters), `GET /api/users` and `GET /api/employees` (paging + search), and `GET /api/external-organizations` (paging + search + `includeInactive`). All four now return `PagedResult<T>`. |
 | 2026-10-21 | opencode | Rewrote `MovementsController` into the full routing workflow: open/send/receive/complete/reject/return/redirect/close/cancel, the movement read endpoints (`GET {movementId}`, `GET by-document/{documentId}`), and the department inbox and outbox (`GET inbox`, `GET outbox`). |
 | 2026-10-20 | Buffy | Added the department register routes: `POST /api/documents/{id}/numbers/department-registration` and `GET .../registry-entries` on `DocumentNumbersController`, `DepartmentRegistersController`, and `MovementsController` (`{id}/receive`, gated on a recorded register entry). |

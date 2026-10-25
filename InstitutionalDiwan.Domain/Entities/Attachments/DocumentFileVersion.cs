@@ -38,7 +38,8 @@ public sealed class DocumentFileVersion : Entity<Guid>
         long fileSizeBytes,
         string? checksumSha256,
         Guid uploadedByUserId,
-        string? changeNotes = null)
+        string? changeNotes = null,
+        DateTime? utcNow = null)
     {
         if (versionNumber <= 0)
             return Result.Failure<DocumentFileVersion>(DomainErrors.Attachments.InvalidVersionNumber);
@@ -66,7 +67,7 @@ public sealed class DocumentFileVersion : Entity<Guid>
             IsCurrent = true,
             UploadedByUserId = uploadedByUserId,
             ChangeNotes = changeNotes,
-            UploadedAt = DateTime.UtcNow
+            UploadedAt = utcNow ?? DateTime.UtcNow
         };
 
         return Result.Success(version);

@@ -81,5 +81,6 @@ together with the `DocumentNumber` id it was dated by.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-22 | Buffy | The routing handlers now pass `IUnitOfWork.UtcNow` into every transition (`Create`, `Send`, `ReceiveStep`, `CompleteStep`, `RejectStep`, `ReturnToSender`, `RedirectTo`, `Close`, `Cancel`) and into `Document.MarkInMovement`/`MarkMovementEnded`, so steps and events in one transaction share the same instant. |
 | 2026-10-21 | opencode | Implemented the whole routing workflow and the read side: added the open/send/complete/reject/return/redirect/close/cancel commands, the movement queries, and the department inbox and outbox (`GetDepartmentInboxQuery`, `GetDepartmentOutboxQuery`, `MovementQueue`, `MovementQueueItemResponse`). |
 | 2026-10-20 | Buffy | Created the slice with `ReceiveDocumentCommand`: receiving is blocked until the destination department recorded its own register number, which is then stored on the movement step. |

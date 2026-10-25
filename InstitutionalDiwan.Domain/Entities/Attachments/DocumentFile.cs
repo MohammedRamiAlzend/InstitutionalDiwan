@@ -36,7 +36,8 @@ public sealed class DocumentFile : AggregateRoot<Guid>
         int fileTypeId,
         string? title,
         Guid createdByUserId,
-        bool isPrimaryScan = false)
+        bool isPrimaryScan = false,
+        DateTime? utcNow = null)
     {
         if (fileTypeId <= 0)
             return Result.Failure<DocumentFile>(DomainErrors.Attachments.FileTypeEmpty);
@@ -54,7 +55,7 @@ public sealed class DocumentFile : AggregateRoot<Guid>
             CurrentVersionNumber = 0,
             IsArchived = false,
             CreatedByUserId = createdByUserId,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = utcNow ?? DateTime.UtcNow
         };
 
         file.RaiseDomainEvent(new DocumentFileCreatedEvent(file.FileId, file.DocumentId, file.FileTypeId, file.Title));
@@ -69,8 +70,11 @@ public sealed class DocumentFile : AggregateRoot<Guid>
         long fileSizeBytes,
         string? checksumSha256,
         Guid uploadedByUserId,
-        string? changeNotes = null)
+        string? changeNotes = null,
+        DateTime? utcNow = null)
     {
+        var now = utcNow ?? DateTime.UtcNow;
+
         if (IsArchived)
             return Result.Failure<DocumentFileVersion>(DomainErrors.Attachments.FileArchived);
 
@@ -85,7 +89,8 @@ public sealed class DocumentFile : AggregateRoot<Guid>
             fileSizeBytes,
             checksumSha256,
             uploadedByUserId,
-            changeNotes);
+            changeNotes,
+            now);
 
         if (versionResult.IsFailure)
             return versionResult;
@@ -95,7 +100,7 @@ public sealed class DocumentFile : AggregateRoot<Guid>
 
         _versions.Add(versionResult.Value);
         CurrentVersionNumber = nextVersionNo;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = now;
 
         RaiseDomainEvent(new DocumentFileVersionUploadedEvent(
             FileId,
@@ -107,11 +112,13 @@ public sealed class DocumentFile : AggregateRoot<Guid>
         return versionResult;
     }
 
-    public Result Archive()
+    public Result Archive(DateTime? utcNow = null)
     {
+        var now = utcNow ?? DateTime.UtcNow;
+
         if (IsArchived) return Result.Success();
         IsArchived = true;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = now;
         RaiseDomainEvent(new DocumentFileArchivedEvent(FileId, DocumentId));
         return Result.Success();
     }

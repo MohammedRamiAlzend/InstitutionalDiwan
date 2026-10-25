@@ -29,7 +29,7 @@ internal sealed class DeactivateUserCommandHandler : ICommandHandler<DeactivateU
         if (user is null)
             return Result.Failure<UserResponse>(DomainErrors.Identity.UserNotFound);
 
-        var result = user.Deactivate();
+        var result = user.Deactivate(_unitOfWork.UtcNow);
         if (result.IsFailure)
             return Result.Failure<UserResponse>(result.Error);
 

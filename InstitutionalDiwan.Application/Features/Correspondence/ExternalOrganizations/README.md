@@ -47,5 +47,6 @@ rows, the organization simply stops being selectable for new correspondence.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-22 | Buffy | Handlers now pass `IUnitOfWork.UtcNow` into `ExternalOrganization.Create`/`Update`/`Activate`/`Deactivate` for deterministic timestamps. |
 | 2026-10-22 | opencode | `ListExternalOrganizationsQuery` now returns `PagedResult<ExternalOrganizationResponse>` with `page`, `pageSize`, and a code/name `search`; `ExternalOrganizationRepository.ListPagedAsync` applies the active filter, the search, and `Skip`/`Take` in SQL. |
 | 2026-10-19 | Buffy | Added the external-organizations slice (create/update/deactivate/activate/list/get) with code-uniqueness, organization-type, and contact-format validation, plus `ExternalOrganization.Update`/`Activate` in the domain. |

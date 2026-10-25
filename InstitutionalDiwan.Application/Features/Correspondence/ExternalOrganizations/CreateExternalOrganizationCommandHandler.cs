@@ -60,7 +60,8 @@ internal sealed class CreateExternalOrganizationCommandHandler
             request.NameAr,
             request.OrganizationTypeId,
             request.NameEn,
-            request.ContactInfo);
+            request.ContactInfo,
+            utcNow: _unitOfWork.UtcNow);
 
         if (createResult.IsFailure)
             return Result.Failure<ExternalOrganizationResponse>(createResult.Error);

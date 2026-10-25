@@ -126,7 +126,8 @@ have no `README.md` of their own yet — their content is documented in the encl
 - `InstitutionalDiwan.Domain/` — `Common/`, `Entities/` (and its 10 module folders),
   `Errors/`, `Events/`, `Repositories/`, `ValueObjects/`
 - `InstitutionalDiwan.Application/` — `Abstractions/` (3 subfolders), `Features/Correspondence/`,
-  `Features/Identity/` (7 subfolders), `Features/Organization/` (2 subfolders)
+  `Features/Identity/` (6 subfolders; `Login/` has its own README), `Features/Organization/`
+  (2 subfolders)
 - `InstitutionalDiwan.Infrastructure/` — `Persistence/Configurations/`
 - `InstitutionalDiwan.Server/` — `Authorization/`, `Contracts/` (6 subfolders)
 - `InstitutionalDiwan.Tests/` — `Application/`, `Authorization/`, `Persistence/`, `Seed/`,
@@ -136,4 +137,5 @@ have no `README.md` of their own yet — their content is documented in the encl
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-22 | Buffy | Documented `Features/Identity/Login/` with its own README (the caller-profile query now lives there) and updated the known-gap list; the backend now passes one deterministic instant per transaction through every domain write. |
 | 2026-10-22 | opencode | Added the missing root `README.md`: the repository layout, prerequisites, build/run/test commands, the per-module status table, and the conventions that govern work in this repository. |

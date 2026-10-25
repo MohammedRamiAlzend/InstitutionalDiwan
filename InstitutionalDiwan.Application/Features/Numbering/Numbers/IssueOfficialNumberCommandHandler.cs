@@ -56,14 +56,15 @@ internal sealed class IssueOfficialNumberCommandHandler
             document.OwningDepartmentId,
             document.DocumentTypeId,
             document.DirectionId,
-            cancellationToken);
+            cancellationToken,
+            _unitOfWork.UtcNow);
 
         if (registryResult.IsFailure)
             return Result.Failure<DocumentNumberResponse>(registryResult.Error);
 
         var registry = registryResult.Value;
 
-        var sequenceResult = registry.AllocateNextSequence(numberingYear);
+        var sequenceResult = registry.AllocateNextSequence(numberingYear, _unitOfWork.UtcNow);
         if (sequenceResult.IsFailure)
             return Result.Failure<DocumentNumberResponse>(sequenceResult.Error);
 
@@ -82,7 +83,8 @@ internal sealed class IssueOfficialNumberCommandHandler
             numberingYear,
             sequenceResult.Value,
             numberText,
-            request.UserId);
+            request.UserId,
+            utcNow: _unitOfWork.UtcNow);
 
         if (numberResult.IsFailure)
             return Result.Failure<DocumentNumberResponse>(numberResult.Error);
@@ -94,7 +96,8 @@ internal sealed class IssueOfficialNumberCommandHandler
         var registerResult = document.Register(
             numberResult.Value.DocumentNumberId,
             officialNumberValue.Value,
-            request.UserId);
+            request.UserId,
+            utcNow: _unitOfWork.UtcNow);
 
         if (registerResult.IsFailure)
             return Result.Failure<DocumentNumberResponse>(registerResult.Error);

@@ -60,7 +60,8 @@ internal sealed class AssignUserDepartmentScopeCommandHandler
             request.AssignmentTypeId > 0 ? request.AssignmentTypeId : AssignmentType.AdditionalId,
             request.IncludeSubtree,
             request.StartDate,
-            request.EndDate);
+            request.EndDate,
+            _unitOfWork.UtcNow);
 
         if (assignResult.IsFailure)
             return Result.Failure<UserResponse>(assignResult.Error);

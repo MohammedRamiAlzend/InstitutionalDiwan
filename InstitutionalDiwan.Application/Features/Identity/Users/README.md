@@ -53,5 +53,6 @@ set their access token carries.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-22 | Buffy | Every handler in this slice now passes `IUnitOfWork.UtcNow` into the `User` behavior it calls (create, role grant/revoke, department-scope assign/end, profile update, activation), so a write is stamped with the transaction's instant rather than the system clock. |
 | 2026-10-22 | opencode | `ListUsersQuery` now returns `PagedResult<UserResponse>` with `page`, `pageSize`, and a username `search`; `UserRepository.ListPagedAsync` pages in SQL and the handler resolves roles for the requested page only. |
 | 2026-10-19 | Buffy | Added the department-scope use cases (`AssignUserDepartmentScopeCommand`, `EndUserDepartmentScopeCommand`) and `GetUserEffectivePermissionsQuery`, plus `User.AssignDepartmentScope` duplicate guard and `User.EndDepartmentScope`; endpoints added to `UsersController`. |

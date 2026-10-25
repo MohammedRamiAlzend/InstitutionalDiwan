@@ -40,7 +40,8 @@ public sealed class Notification : AggregateRoot<Guid>
         int priorityId = NotificationPriority.NormalId,
         Guid? relatedDocumentId = null,
         Guid? relatedMovementId = null,
-        string? actionUrl = null)
+        string? actionUrl = null,
+        DateTime? utcNow = null)
     {
         if (notificationTypeId <= 0)
             return Result.Failure<Notification>(DomainErrors.Notifications.TypeCodeEmpty);
@@ -61,7 +62,7 @@ public sealed class Notification : AggregateRoot<Guid>
             RelatedDocumentId = relatedDocumentId,
             RelatedMovementId = relatedMovementId,
             ActionUrl = actionUrl,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = utcNow ?? DateTime.UtcNow
         };
 
         notification.RaiseDomainEvent(new NotificationCreatedEvent(
@@ -72,18 +73,18 @@ public sealed class Notification : AggregateRoot<Guid>
         return Result.Success(notification);
     }
 
-    public Result AddRecipient(Guid userId, Guid? departmentId = null)
+    public Result AddRecipient(Guid userId, Guid? departmentId = null, DateTime? utcNow = null)
     {
         if (_recipients.Any(r => r.UserId == userId))
             return Result.Failure(DomainErrors.Notifications.RecipientDuplicate);
 
-        _recipients.Add(NotificationRecipient.Create(NotificationId, userId, departmentId));
+        _recipients.Add(NotificationRecipient.Create(NotificationId, userId, departmentId, utcNow));
         return Result.Success();
     }
 
-    public Result EnqueueOutbox(int channelId, string? payloadJson)
+    public Result EnqueueOutbox(int channelId, string? payloadJson, DateTime? utcNow = null)
     {
-        var outboxResult = NotificationOutbox.Create(NotificationId, channelId, payloadJson);
+        var outboxResult = NotificationOutbox.Create(NotificationId, channelId, payloadJson, utcNow);
         if (outboxResult.IsFailure)
             return outboxResult;
 

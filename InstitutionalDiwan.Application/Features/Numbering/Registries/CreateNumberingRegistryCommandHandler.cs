@@ -68,7 +68,8 @@ internal sealed class CreateNumberingRegistryCommandHandler
             resetPolicyId,
             request.DepartmentId,
             request.DocumentTypeId,
-            request.DirectionId);
+            request.DirectionId,
+            utcNow: _unitOfWork.UtcNow);
 
         if (createResult.IsFailure)
             return Result.Failure<NumberingRegistryResponse>(createResult.Error);

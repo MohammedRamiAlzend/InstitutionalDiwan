@@ -30,7 +30,7 @@ internal sealed class DeactivateExternalOrganizationCommandHandler
             return Result.Failure<ExternalOrganizationResponse>(
                 DomainErrors.Correspondence.ExternalOrgNotFound);
 
-        var deactivateResult = organization.Deactivate();
+        var deactivateResult = organization.Deactivate(_unitOfWork.UtcNow);
         if (deactivateResult.IsFailure)
             return Result.Failure<ExternalOrganizationResponse>(deactivateResult.Error);
 

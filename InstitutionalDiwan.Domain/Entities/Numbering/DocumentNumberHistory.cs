@@ -31,7 +31,8 @@ public sealed class DocumentNumberHistory : Entity<Guid>
         int eventTypeId,
         Guid actorUserId,
         string? notes = null,
-        DateTime? effectiveDate = null)
+        DateTime? effectiveDate = null,
+        DateTime? utcNow = null)
     {
         return new DocumentNumberHistory
         {
@@ -40,7 +41,7 @@ public sealed class DocumentNumberHistory : Entity<Guid>
             EventTypeId = eventTypeId,
             ActorUserId = actorUserId,
             Notes = string.IsNullOrWhiteSpace(notes) ? null : notes.Trim(),
-            OccurredAt = DateTime.UtcNow,
+            OccurredAt = utcNow ?? DateTime.UtcNow,
             EffectiveDate = effectiveDate
         };
     }

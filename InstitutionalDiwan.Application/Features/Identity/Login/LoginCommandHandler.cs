@@ -41,7 +41,7 @@ internal sealed class LoginCommandHandler : ICommandHandler<LoginCommand, LoginR
         if (!user.IsActive)
             return Result.Failure<LoginResponse>(DomainErrors.Identity.UserInactive);
 
-        user.RecordLogin();
+        user.RecordLogin(_unitOfWork.UtcNow);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return await IdentityTokenIssuer.IssueAsync(user, _roleRepository, _jwtProvider, cancellationToken);

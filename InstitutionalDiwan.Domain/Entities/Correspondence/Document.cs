@@ -73,8 +73,11 @@ public sealed class Document : AggregateRoot<Guid>
         int priorityLevelId = DocumentPriorityLevel.NormalId,
         DateTime? documentDate = null,
         string? externalReferenceNumber = null,
-        DateTime? externalDocumentDate = null)
+        DateTime? externalDocumentDate = null,
+        DateTime? utcNow = null)
     {
+        var now = utcNow ?? DateTime.UtcNow;
+
         var titleResult = DocumentTitle.Create(title);
         if (titleResult.IsFailure)
             return Result.Failure<Document>(titleResult.Error);
@@ -97,13 +100,13 @@ public sealed class Document : AggregateRoot<Guid>
             CurrentStatusId = DocumentStatusType.DraftId,
             OwningDepartmentId = owningDepartmentId,
             CreatedByUserId = createdByUserId,
-            DocumentDate = documentDate ?? DateTime.UtcNow,
+            DocumentDate = documentDate ?? now,
             ExternalReferenceNumber = externalReferenceNumber,
             ExternalDocumentDate = externalDocumentDate,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = now
         };
 
-        doc.AppendStatusHistory(null, DocumentStatusType.DraftId, createdByUserId, "Initial draft created");
+        doc.AppendStatusHistory(null, DocumentStatusType.DraftId, createdByUserId, "Initial draft created", now);
         doc.RaiseDomainEvent(new DocumentCreatedEvent(doc.DocumentId, doc.DocumentTypeId, doc.DirectionId, doc.OwningDepartmentId, doc.CreatedByUserId));
 
         return Result.Success(doc);
@@ -113,8 +116,11 @@ public sealed class Document : AggregateRoot<Guid>
         string? title,
         string? subjectSummary,
         int? confidentialityLevelId = null,
-        int? priorityLevelId = null)
+        int? priorityLevelId = null,
+        DateTime? utcNow = null)
     {
+        var now = utcNow ?? DateTime.UtcNow;
+
         if (CurrentStatusId != DocumentStatusType.DraftId)
             return Result.Failure(DomainErrors.Correspondence.OnlyDraftEditable);
 
@@ -131,7 +137,7 @@ public sealed class Document : AggregateRoot<Guid>
         if (priorityLevelId is { } priority && priority > 0)
             PriorityLevelId = priority;
 
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = now;
         return Result.Success();
     }
 
@@ -139,20 +145,23 @@ public sealed class Document : AggregateRoot<Guid>
         int roleId,
         ParticipantTarget target,
         bool isPrimary = false,
-        string? notes = null)
+        string? notes = null,
+        DateTime? utcNow = null)
     {
+        var now = utcNow ?? DateTime.UtcNow;
+
         if (target.Kind == ParticipantTargetKind.External &&
             _participants.Any(p => p.ExternalOrganizationId.HasValue))
         {
             return Result.Failure<DocumentParticipant>(DomainErrors.Correspondence.SingleExternalPartyLimit);
         }
 
-        var participantResult = DocumentParticipant.Create(DocumentId, roleId, target, isPrimary, notes);
+        var participantResult = DocumentParticipant.Create(DocumentId, roleId, target, isPrimary, notes, now);
         if (participantResult.IsFailure)
             return participantResult;
 
         _participants.Add(participantResult.Value);
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = now;
         RaiseDomainEvent(new DocumentParticipantAddedEvent(DocumentId, participantResult.Value.ParticipantId, participantResult.Value.RoleId));
         return participantResult;
     }
@@ -161,19 +170,22 @@ public sealed class Document : AggregateRoot<Guid>
         Guid officialNumberId,
         OfficialNumberValue officialNumberText,
         Guid actorUserId,
-        string? notes = null)
+        string? notes = null,
+        DateTime? utcNow = null)
     {
+        var now = utcNow ?? DateTime.UtcNow;
+
         if (CurrentStatusId != DocumentStatusType.DraftId)
             return Result.Failure(DomainErrors.Correspondence.OnlyDraftRegisterable);
 
         var previous = CurrentStatusId;
         ActiveOfficialNumberId = officialNumberId;
         OfficialNumberText = officialNumberText.Value;
-        RegistrationDate = DateTime.UtcNow;
+        RegistrationDate = now;
         CurrentStatusId = DocumentStatusType.RegisteredId;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = now;
 
-        AppendStatusHistory(previous, DocumentStatusType.RegisteredId, actorUserId, notes ?? $"Registered with number {officialNumberText.Value}");
+        AppendStatusHistory(previous, DocumentStatusType.RegisteredId, actorUserId, notes ?? $"Registered with number {officialNumberText.Value}", now);
         RaiseDomainEvent(new DocumentRegisteredEvent(DocumentId, officialNumberId, officialNumberText.Value, RegistrationDate.Value));
         return Result.Success();
     }
@@ -183,8 +195,9 @@ public sealed class Document : AggregateRoot<Guid>
     /// The replaced number's own history keeps the link back; status is unchanged, because a number
     /// correction is not a lifecycle transition.
     /// </summary>
-    public Result AttachReplacementNumber(Guid replacementNumberId, OfficialNumberValue replacementText)
+    public Result AttachReplacementNumber(Guid replacementNumberId, OfficialNumberValue replacementText, DateTime? utcNow = null)
     {
+        var now = utcNow ?? DateTime.UtcNow;
         if (ActiveOfficialNumberId is null)
             return Result.Failure(DomainErrors.Numbering.NumberNotFound);
 
@@ -193,7 +206,7 @@ public sealed class Document : AggregateRoot<Guid>
 
         ActiveOfficialNumberId = replacementNumberId;
         OfficialNumberText = replacementText.Value;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = now;
         return Result.Success();
     }
 
@@ -206,8 +219,9 @@ public sealed class Document : AggregateRoot<Guid>
     /// Attaches a department-register entry to this document. One line per department: the second
     /// and later arrivals reuse the existing number and only add a dated history event.
     /// </summary>
-    public Result AddDepartmentNumber(DocumentNumber number)
+    public Result AddDepartmentNumber(DocumentNumber number, DateTime? utcNow = null)
     {
+        var now = utcNow ?? DateTime.UtcNow;
         if (number is null)
             return Result.Failure(DomainErrors.Numbering.NumberNotFound);
 
@@ -224,12 +238,13 @@ public sealed class Document : AggregateRoot<Guid>
         }
 
         _numbers.Add(number);
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = now;
         return Result.Success();
     }
 
-    public Result MarkInMovement(Guid actorUserId, string? notes = null)
+    public Result MarkInMovement(Guid actorUserId, string? notes = null, DateTime? utcNow = null)
     {
+        var now = utcNow ?? DateTime.UtcNow;
         if (CurrentStatusId is DocumentStatusType.ArchivedId or DocumentStatusType.CanceledId)
             return Result.Failure(DomainErrors.Correspondence.AlreadyArchived);
 
@@ -238,8 +253,8 @@ public sealed class Document : AggregateRoot<Guid>
 
         var previous = CurrentStatusId;
         CurrentStatusId = DocumentStatusType.InMovementId;
-        UpdatedAt = DateTime.UtcNow;
-        AppendStatusHistory(previous, DocumentStatusType.InMovementId, actorUserId, notes);
+        UpdatedAt = now;
+        AppendStatusHistory(previous, DocumentStatusType.InMovementId, actorUserId, notes, now);
         return Result.Success();
     }
 
@@ -248,21 +263,23 @@ public sealed class Document : AggregateRoot<Guid>
     /// <c>REGISTERED</c>, the status it held when the movement started. Calling it on a document
     /// that is not in movement is a no-op, so closing a movement twice is harmless.
     /// </summary>
-    public Result MarkMovementEnded(Guid actorUserId, string? notes = null)
+    public Result MarkMovementEnded(Guid actorUserId, string? notes = null, DateTime? utcNow = null)
     {
+        var now = utcNow ?? DateTime.UtcNow;
         if (CurrentStatusId != DocumentStatusType.InMovementId)
             return Result.Success();
 
         var previous = CurrentStatusId;
         CurrentStatusId = DocumentStatusType.RegisteredId;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = now;
 
-        AppendStatusHistory(previous, DocumentStatusType.RegisteredId, actorUserId, notes ?? "Movement ended");
+        AppendStatusHistory(previous, DocumentStatusType.RegisteredId, actorUserId, notes ?? "Movement ended", now);
         return Result.Success();
     }
 
-    public Result Archive(Guid actorUserId, bool hasActiveMovements, string? reason = null)
+    public Result Archive(Guid actorUserId, bool hasActiveMovements, string? reason = null, DateTime? utcNow = null)
     {
+        var now = utcNow ?? DateTime.UtcNow;
         if (CurrentStatusId == DocumentStatusType.ArchivedId)
             return Result.Failure(DomainErrors.Correspondence.AlreadyArchived);
 
@@ -275,30 +292,32 @@ public sealed class Document : AggregateRoot<Guid>
         var previous = CurrentStatusId;
         StatusBeforeArchiveId = previous;
         CurrentStatusId = DocumentStatusType.ArchivedId;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = now;
 
-        AppendStatusHistory(previous, DocumentStatusType.ArchivedId, actorUserId, reason);
+        AppendStatusHistory(previous, DocumentStatusType.ArchivedId, actorUserId, reason, now);
         RaiseDomainEvent(new DocumentArchivedEvent(DocumentId, previous, actorUserId, reason));
         return Result.Success();
     }
 
-    public Result Unarchive(Guid actorUserId, string? reason = null)
+    public Result Unarchive(Guid actorUserId, string? reason = null, DateTime? utcNow = null)
     {
+        var now = utcNow ?? DateTime.UtcNow;
         if (CurrentStatusId != DocumentStatusType.ArchivedId)
             return Result.Failure(DomainErrors.Correspondence.NotArchived);
 
         var restored = StatusBeforeArchiveId ?? DocumentStatusType.RegisteredId;
         StatusBeforeArchiveId = null;
         CurrentStatusId = restored;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = now;
 
-        AppendStatusHistory(DocumentStatusType.ArchivedId, restored, actorUserId, reason);
+        AppendStatusHistory(DocumentStatusType.ArchivedId, restored, actorUserId, reason, now);
         RaiseDomainEvent(new DocumentUnarchivedEvent(DocumentId, restored, actorUserId, reason));
         return Result.Success();
     }
 
-    public Result Cancel(Guid actorUserId, bool hasActiveMovements, string? reason)
+    public Result Cancel(Guid actorUserId, bool hasActiveMovements, string? reason, DateTime? utcNow = null)
     {
+        var now = utcNow ?? DateTime.UtcNow;
         if (CurrentStatusId == DocumentStatusType.CanceledId)
             return Result.Failure(DomainErrors.Correspondence.AlreadyCanceled);
 
@@ -313,15 +332,15 @@ public sealed class Document : AggregateRoot<Guid>
 
         var previous = CurrentStatusId;
         CurrentStatusId = DocumentStatusType.CanceledId;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = now;
 
-        AppendStatusHistory(previous, DocumentStatusType.CanceledId, actorUserId, reason.Trim());
+        AppendStatusHistory(previous, DocumentStatusType.CanceledId, actorUserId, reason.Trim(), now);
         RaiseDomainEvent(new DocumentCanceledEvent(DocumentId, previous, actorUserId, reason.Trim()));
         return Result.Success();
     }
 
-    private void AppendStatusHistory(int? fromStatusId, int toStatusId, Guid changedByUserId, string? reason)
+    private void AppendStatusHistory(int? fromStatusId, int toStatusId, Guid changedByUserId, string? reason, DateTime utcNow)
     {
-        _statusHistory.Add(DocumentStatusHistory.Create(DocumentId, fromStatusId, toStatusId, changedByUserId, reason));
+        _statusHistory.Add(DocumentStatusHistory.Create(DocumentId, fromStatusId, toStatusId, changedByUserId, reason, utcNow));
     }
 }

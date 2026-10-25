@@ -46,14 +46,15 @@ internal sealed class RegisterCommandHandler : ICommandHandler<RegisterCommand, 
             passwordHash,
             primaryDepartmentId: Guid.Empty, // self-registered accounts have no department yet
             scopeTypeId: UserScopeType.DepartmentId,
-            mustChangePassword: false);
+            mustChangePassword: false,
+            utcNow: _unitOfWork.UtcNow);
 
         if (userResult.IsFailure)
             return Result.Failure<RegisterResponse>(userResult.Error);
 
         var user = userResult.Value;
 
-        var assignResult = user.AssignRole(role.RoleId);
+        var assignResult = user.AssignRole(role.RoleId, utcNow: _unitOfWork.UtcNow);
         if (assignResult.IsFailure)
             return Result.Failure<RegisterResponse>(assignResult.Error);
 

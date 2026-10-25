@@ -29,7 +29,8 @@ public sealed class Role : AggregateRoot<Guid>
         string? nameAr,
         string? nameEn = null,
         string? description = null,
-        bool isSystemRole = false)
+        bool isSystemRole = false,
+        DateTime? utcNow = null)
     {
         if (string.IsNullOrWhiteSpace(code))
             return Result.Failure<Role>(DomainErrors.Identity.RoleCodeEmpty);
@@ -46,13 +47,13 @@ public sealed class Role : AggregateRoot<Guid>
             Description = description,
             IsSystemRole = isSystemRole,
             IsActive = true,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = utcNow ?? DateTime.UtcNow
         };
 
         return Result.Success(role);
     }
 
-    public Result GrantPermission(string? permissionCode)
+    public Result GrantPermission(string? permissionCode, DateTime? utcNow = null)
     {
         if (string.IsNullOrWhiteSpace(permissionCode))
             return Result.Failure(DomainErrors.Identity.PermissionCodeEmpty);
@@ -61,7 +62,7 @@ public sealed class Role : AggregateRoot<Guid>
         if (_rolePermissions.Any(p => p.PermissionCode == normalized))
             return Result.Failure(DomainErrors.Identity.PermissionAlreadyGranted);
 
-        var rpResult = RolePermission.Create(RoleId, normalized);
+        var rpResult = RolePermission.Create(RoleId, normalized, utcNow);
         if (rpResult.IsFailure)
             return rpResult;
 

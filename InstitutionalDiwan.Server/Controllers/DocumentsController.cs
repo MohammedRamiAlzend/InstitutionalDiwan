@@ -75,6 +75,63 @@ public sealed class DocumentsController : ControllerBase
         return result.ToActionResult();
     }
 
+    /// <summary>Lists a page of one department's documents, newest first by default.</summary>
+    /// <remarks>
+    /// This is the department's document register: the same server-side paging, search, sorting,
+    /// and filtering as <c>GET /api/documents</c>, narrowed to the documents the department owns
+    /// (<c>owningDepartmentId</c>). The department must sit inside the caller's organizational
+    /// scope. Requires the <c>DOCUMENT_VIEW</c> permission.
+    /// </remarks>
+    /// <param name="departmentId">Department unique identifier (GUID, route). Example: <c>e7a62f43-9b82-4d01-8c2e-7ab91e506d42</c>.</param>
+    /// <param name="page">Page number (integer, optional, 1-based). Example: <c>2</c>.</param>
+    /// <param name="pageSize">Rows per page (integer, optional, 1-100). Example: <c>20</c>.</param>
+    /// <param name="search">Free-text search across title, summary, and official number (string, optional). Example: <c>2026</c>.</param>
+    /// <param name="sortBy">Sort key: <c>createdAt</c>, <c>title</c>, <c>registrationDate</c>, or <c>officialNumber</c> (string, optional). Example: <c>title</c>.</param>
+    /// <param name="sortDescending">Sort descending when true (boolean, optional). Example: <c>true</c>.</param>
+    /// <param name="statusId">Filter by document status id (integer, optional). Example: <c>2</c>.</param>
+    /// <param name="directionId">Filter by direction id (integer, optional). Example: <c>1</c>.</param>
+    /// <param name="documentTypeId">Filter by document type id (integer, optional). Example: <c>1</c>.</param>
+    /// <param name="cancellationToken">Request cancellation token (optional).</param>
+    /// <response code="200">One page of the department's documents with the paging counters.</response>
+    /// <response code="401">The token is missing, expired, or invalid.</response>
+    /// <response code="403">The token lacks DOCUMENT_VIEW, or the department is outside the caller's scope.</response>
+    /// <response code="404">No department with that id exists.</response>
+    [HttpGet("/api/departments/{departmentId:guid}/documents")]
+    [EndpointSummary("Lists a page of one department's documents, newest first by default.")]
+    [EndpointDescription("Lists a page of one department's documents, newest first by default. This is the department's document register: the same server-side paging, search, sorting, and filtering as GET /api/documents, narrowed to the documents the department owns. The department must sit inside the caller's organizational scope. Requires the DOCUMENT_VIEW permission. Responses: 200 (One page of the department's documents with the paging counters.), 401 (The token is missing, expired, or invalid.), 403 (The token lacks DOCUMENT_VIEW, or the department is outside the caller's scope.), 404 (No department with that id exists.)")]
+    [Produces("application/json", Type = typeof(PagedResult<DocumentResponse>))]
+    [ProducesResponseType<PagedResult<DocumentResponse>>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> ListByDepartment(
+        [Description("Department unique identifier (GUID, route). Example: e7a62f43-9b82-4d01-8c2e-7ab91e506d42.")] Guid departmentId,
+        [Description("Page number (integer, optional, 1-based). Example: 2.")] [FromQuery] int page = 1,
+        [Description("Rows per page (integer, optional, 1-100). Example: 20.")] [FromQuery] int pageSize = 20,
+        [Description("Free-text search across title, summary, and official number (string, optional). Example: 2026.")] [FromQuery] string? search = null,
+        [Description("Sort key: createdAt, title, registrationDate, officialNumber (string, optional). Example: title.")] [FromQuery] string? sortBy = null,
+        [Description("Sort descending when true (boolean, optional). Example: true.")] [FromQuery] bool sortDescending = true,
+        [Description("Filter by document status id (integer, optional). Example: 2.")] [FromQuery] int? statusId = null,
+        [Description("Filter by direction id (integer, optional). Example: 1.")] [FromQuery] int? directionId = null,
+        [Description("Filter by document type id (integer, optional). Example: 1.")] [FromQuery] int? documentTypeId = null,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await _sender.Send(
+            new ListDepartmentDocumentsQuery(
+                departmentId,
+                page,
+                pageSize,
+                search,
+                sortBy,
+                sortDescending,
+                statusId,
+                directionId,
+                documentTypeId),
+            cancellationToken);
+
+        return result.ToActionResult();
+    }
+
     /// <summary>Fetches a document by id.</summary>
     /// <remarks>
     /// Retrieves a specific document by its unique identifier.

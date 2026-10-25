@@ -46,7 +46,8 @@ internal sealed class UpdateUserCommandHandler : ICommandHandler<UpdateUserComma
             request.PrimaryDepartmentId,
             request.EmployeeId,
             request.ScopeTypeId,
-            request.MustChangePassword);
+            request.MustChangePassword,
+            utcNow: _unitOfWork.UtcNow);
 
         if (updateResult.IsFailure)
             return Result.Failure<UserResponse>(updateResult.Error);

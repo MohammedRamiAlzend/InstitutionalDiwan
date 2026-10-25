@@ -81,7 +81,8 @@ internal sealed class UpdateInstitutionSettingsCommandHandler
             request.InstitutionNameEn,
             request.LogoPath,
             request.DefaultTimezone,
-            request.CentralDiwanTransferReason);
+            request.CentralDiwanTransferReason,
+            utcNow: _unitOfWork.UtcNow);
 
         if (updateResult.IsFailure)
             return Result.Failure<InstitutionSettingResponse>(updateResult.Error);

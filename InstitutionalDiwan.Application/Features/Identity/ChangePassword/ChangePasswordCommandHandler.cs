@@ -44,7 +44,8 @@ internal sealed class ChangePasswordCommandHandler
         if (!_passwordHasher.Verify(request.OldPassword, user.PasswordHash))
             return Result.Failure<LoginResponse>(DomainErrors.Identity.CurrentPasswordIncorrect);
 
-        var changeResult = user.ChangePasswordHash(_passwordHasher.Hash(request.NewPassword));
+        var changeResult = user.ChangePasswordHash(
+            _passwordHasher.Hash(request.NewPassword), _unitOfWork.UtcNow);
         if (changeResult.IsFailure)
             return Result.Failure<LoginResponse>(changeResult.Error);
 

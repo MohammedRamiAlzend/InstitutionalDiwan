@@ -30,7 +30,7 @@ internal sealed class ActivateExternalOrganizationCommandHandler
             return Result.Failure<ExternalOrganizationResponse>(
                 DomainErrors.Correspondence.ExternalOrgNotFound);
 
-        var activateResult = organization.Activate();
+        var activateResult = organization.Activate(_unitOfWork.UtcNow);
         if (activateResult.IsFailure)
             return Result.Failure<ExternalOrganizationResponse>(activateResult.Error);
 

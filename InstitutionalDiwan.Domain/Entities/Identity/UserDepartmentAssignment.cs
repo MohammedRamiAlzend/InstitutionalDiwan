@@ -30,9 +30,11 @@ public sealed class UserDepartmentAssignment : Entity<Guid>
         int assignmentTypeId = AssignmentType.AdditionalId,
         bool includeSubtree = false,
         DateTime? startDate = null,
-        DateTime? endDate = null)
+        DateTime? endDate = null,
+        DateTime? utcNow = null)
     {
-        var effectiveStart = startDate ?? DateTime.UtcNow;
+        var now = utcNow ?? DateTime.UtcNow;
+        var effectiveStart = startDate ?? now;
         if (endDate.HasValue && endDate.Value < effectiveStart)
             return Result.Failure<UserDepartmentAssignment>(DomainErrors.Identity.InvalidDateRange);
 
@@ -46,16 +48,16 @@ public sealed class UserDepartmentAssignment : Entity<Guid>
             StartDate = effectiveStart,
             EndDate = endDate,
             IsActive = true,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = now
         };
 
         return Result.Success(assignment);
     }
 
-    public Result EndAssignment(DateTime? endedAt = null)
+    public Result EndAssignment(DateTime? endedAt = null, DateTime? utcNow = null)
     {
         IsActive = false;
-        EndDate = endedAt ?? DateTime.UtcNow;
+        EndDate = endedAt ?? utcNow ?? DateTime.UtcNow;
         return Result.Success();
     }
 }

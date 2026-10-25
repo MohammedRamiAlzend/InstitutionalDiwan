@@ -48,7 +48,7 @@ internal sealed class MoveDepartmentCommandHandler
         }
 
         var moveResult = department.MoveToParent(
-            request.NewParentDepartmentId, descendantIds, newParentIsActive);
+            request.NewParentDepartmentId, descendantIds, newParentIsActive, _unitOfWork.UtcNow);
         if (moveResult.IsFailure)
             return Result.Failure<DepartmentResponse>(moveResult.Error);
 

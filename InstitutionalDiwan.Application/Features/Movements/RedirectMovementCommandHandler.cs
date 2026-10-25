@@ -53,7 +53,8 @@ internal sealed class RedirectMovementCommandHandler
             request.UserId,
             request.AssignedToUserId,
             request.Instructions,
-            request.DueDate);
+            request.DueDate,
+            _unitOfWork.UtcNow);
         if (redirect.IsFailure)
             return Result.Failure<MovementResponse>(redirect.Error);
 

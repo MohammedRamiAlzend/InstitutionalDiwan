@@ -28,7 +28,8 @@ public sealed class DocumentStatusHistory : Entity<Guid>
         int? fromStatusId,
         int toStatusId,
         Guid changedByUserId,
-        string? reason = null)
+        string? reason = null,
+        DateTime? utcNow = null)
     {
         return new DocumentStatusHistory
         {
@@ -38,7 +39,7 @@ public sealed class DocumentStatusHistory : Entity<Guid>
             ToStatusId = toStatusId,
             ChangedByUserId = changedByUserId,
             Reason = string.IsNullOrWhiteSpace(reason) ? null : reason.Trim(),
-            ChangedAt = DateTime.UtcNow
+            ChangedAt = utcNow ?? DateTime.UtcNow
         };
     }
 }

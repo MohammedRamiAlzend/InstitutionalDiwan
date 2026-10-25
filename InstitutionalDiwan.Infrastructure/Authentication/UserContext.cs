@@ -26,6 +26,23 @@ public sealed class UserContext : IUserContext
         ?? TryParseGuid(Principal?.FindFirst("sub")?.Value)
         ?? Guid.Empty;
 
+    public string Username => Principal?.Identity?.Name ?? string.Empty;
+
+    public IReadOnlySet<string> Roles
+    {
+        get
+        {
+            var principal = Principal;
+            if (principal is null)
+                return new HashSet<string>(StringComparer.Ordinal);
+
+            return principal
+                .FindAll(ClaimTypes.Role)
+                .Select(claim => claim.Value)
+                .ToHashSet(StringComparer.Ordinal);
+        }
+    }
+
     public Guid PrimaryDepartmentId =>
         TryParseGuid(Principal?.FindFirst(DepartmentClaimType)?.Value) ?? Guid.Empty;
 

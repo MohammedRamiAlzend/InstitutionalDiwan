@@ -35,7 +35,8 @@ public sealed class InstitutionSetting : AggregateRoot<Guid>
         string? logoPath = null,
         string defaultTimezone = "Asia/Damascus",
         Guid? centralDiwanDepartmentId = null,
-        Guid? responsibleEmployeeId = null)
+        Guid? responsibleEmployeeId = null,
+        DateTime? utcNow = null)
     {
         if (string.IsNullOrWhiteSpace(institutionNameAr))
             return Result.Failure<InstitutionSetting>(DomainErrors.InstitutionSetting.NameEmpty);
@@ -57,7 +58,7 @@ public sealed class InstitutionSetting : AggregateRoot<Guid>
             DefaultTimezone = string.IsNullOrWhiteSpace(defaultTimezone) ? "Asia/Damascus" : defaultTimezone.Trim(),
             CentralDiwanDepartmentId = centralDiwanDepartmentId,
             ResponsibleEmployeeId = responsibleEmployeeId,
-            UpdatedAt = DateTime.UtcNow
+            UpdatedAt = utcNow ?? DateTime.UtcNow
         };
 
         return Result.Success(setting);
@@ -78,8 +79,10 @@ public sealed class InstitutionSetting : AggregateRoot<Guid>
         string? institutionNameEn = null,
         string? logoPath = null,
         string? defaultTimezone = null,
-        string? centralDiwanTransferReason = null)
+        string? centralDiwanTransferReason = null,
+        DateTime? utcNow = null)
     {
+        var now = utcNow ?? DateTime.UtcNow;
         if (string.IsNullOrWhiteSpace(institutionNameAr))
             return Result.Failure(DomainErrors.InstitutionSetting.NameEmpty);
 
@@ -106,11 +109,11 @@ public sealed class InstitutionSetting : AggregateRoot<Guid>
         CentralDiwanDepartmentId = centralDiwanDepartmentId;
         ResponsibleEmployeeId = responsibleEmployeeId;
         DefaultTimezone = string.IsNullOrWhiteSpace(defaultTimezone) ? DefaultTimezone : defaultTimezone.Trim();
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = now;
         return Result.Success();
     }
 
-    public Result UpdateNumberingPolicy(int numberingModeId, int numberingResetPolicyId)
+    public Result UpdateNumberingPolicy(int numberingModeId, int numberingResetPolicyId, DateTime? utcNow = null)
     {
         if (numberingModeId <= 0)
             return Result.Failure(DomainErrors.InstitutionSetting.NumberingModeEmpty);
@@ -120,7 +123,7 @@ public sealed class InstitutionSetting : AggregateRoot<Guid>
 
         NumberingModeId = numberingModeId;
         NumberingResetPolicyId = numberingResetPolicyId;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = utcNow ?? DateTime.UtcNow;
         return Result.Success();
     }
 }

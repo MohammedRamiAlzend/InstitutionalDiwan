@@ -48,7 +48,8 @@ internal sealed class UpdateExternalOrganizationCommandHandler
             request.NameAr,
             request.OrganizationTypeId,
             request.NameEn,
-            request.ContactInfo);
+            request.ContactInfo,
+            utcNow: _unitOfWork.UtcNow);
 
         if (updateResult.IsFailure)
             return Result.Failure<ExternalOrganizationResponse>(updateResult.Error);

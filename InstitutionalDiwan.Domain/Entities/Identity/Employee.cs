@@ -31,7 +31,8 @@ public sealed class Employee : AggregateRoot<Guid>
         string? fullNameEn = null,
         string? jobTitleAr = null,
         string? email = null,
-        string? phone = null)
+        string? phone = null,
+        DateTime? utcNow = null)
     {
         if (string.IsNullOrWhiteSpace(fullNameAr))
             return Result.Failure<Employee>(DomainErrors.Identity.EmployeeNameEmpty);
@@ -47,18 +48,19 @@ public sealed class Employee : AggregateRoot<Guid>
             Email = string.IsNullOrWhiteSpace(email) ? null : email.Trim(),
             Phone = string.IsNullOrWhiteSpace(phone) ? null : phone.Trim(),
             IsActive = true,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = utcNow ?? DateTime.UtcNow
         };
 
         return Result.Success(employee);
     }
 
-    public Result TransferDepartment(Guid newDepartmentId, string? newJobTitleAr = null)
+    public Result TransferDepartment(Guid newDepartmentId, string? newJobTitleAr = null, DateTime? utcNow = null)
     {
+        var now = utcNow ?? DateTime.UtcNow;
         DepartmentId = newDepartmentId;
         if (!string.IsNullOrWhiteSpace(newJobTitleAr))
             JobTitleAr = newJobTitleAr.Trim();
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = now;
         return Result.Success();
     }
 
@@ -69,8 +71,11 @@ public sealed class Employee : AggregateRoot<Guid>
         string? fullNameEn = null,
         string? jobTitleAr = null,
         string? email = null,
-        string? phone = null)
+        string? phone = null,
+        DateTime? utcNow = null)
     {
+        var now = utcNow ?? DateTime.UtcNow;
+
         if (string.IsNullOrWhiteSpace(fullNameAr))
             return Result.Failure(DomainErrors.Identity.EmployeeNameEmpty);
 
@@ -81,23 +86,27 @@ public sealed class Employee : AggregateRoot<Guid>
         JobTitleAr = string.IsNullOrWhiteSpace(jobTitleAr) ? null : jobTitleAr.Trim();
         Email = string.IsNullOrWhiteSpace(email) ? null : email.Trim();
         Phone = string.IsNullOrWhiteSpace(phone) ? null : phone.Trim();
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = now;
         return Result.Success();
     }
 
-    public Result Deactivate()
+    public Result Deactivate(DateTime? utcNow = null)
     {
+        var now = utcNow ?? DateTime.UtcNow;
+
         if (!IsActive) return Result.Success();
         IsActive = false;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = now;
         return Result.Success();
     }
 
-    public Result Activate()
+    public Result Activate(DateTime? utcNow = null)
     {
+        var now = utcNow ?? DateTime.UtcNow;
+
         if (IsActive) return Result.Success();
         IsActive = true;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = now;
         return Result.Success();
     }
 }

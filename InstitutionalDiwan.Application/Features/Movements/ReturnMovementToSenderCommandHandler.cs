@@ -27,7 +27,7 @@ internal sealed class ReturnMovementToSenderCommandHandler
         if (movement is null)
             return Result.Failure<MovementResponse>(DomainErrors.Movements.MovementNotFound);
 
-        var returned = movement.ReturnToSender(request.UserId, request.Reason);
+        var returned = movement.ReturnToSender(request.UserId, request.Reason, _unitOfWork.UtcNow);
         if (returned.IsFailure)
             return Result.Failure<MovementResponse>(returned.Error);
 

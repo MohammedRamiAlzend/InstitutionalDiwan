@@ -5,8 +5,8 @@
 > Correspondence/`Documents` (full Module 03 lifecycle) and `ExternalOrganizations`, Organization
 > (`Departments`, `InstitutionSettings`), Numbering (`Registries`, `Numbers`), and the whole
 > Movements slice (routing workflow + inbox/outbox) are live; Attachments, Archiving, Relations,
-> Audit, and Notifications are target design. The four unbounded list queries are server-paged,
-> searchable, and sortable.
+> Audit, and Notifications are target design. The unbounded list queries are server-paged,
+> searchable, sortable, and — for documents — addressable as one department's register.
 
 ## Purpose
 
@@ -38,11 +38,11 @@ grouping by technical type, so a slice can be read top-to-bottom.
 
 ### Identity (Module 02)
 - **Commands:** `LoginCommand` ✅, `RegisterCommand` ✅, `ChangePasswordCommand` ✅, `CreateRoleCommand` ✅ (rejects duplicate codes with `Identity.RoleCodeAlreadyExists`), `UpdateRoleCommand` ✅ (names + description; the code is immutable), `DeleteRoleCommand` ✅ (soft delete via `Deactivate`, system roles rejected with `Identity.SystemRoleProtected`), `ActivateRoleCommand` ✅, `GrantRolePermissionCommand` ✅ (validates the code against the permission catalog, 409 `Identity.PermissionAlreadyGranted`), `RevokeRolePermissionCommand` ✅ (idempotent), `CreateEmployeeCommand` ✅, `UpdateEmployeeCommand` ✅, `DeactivateEmployeeCommand` ✅, `ActivateEmployeeCommand` ✅, `GrantDocumentAccessCommand` ✅, `RevokeDocumentAccessCommand` ✅, `CreateUserCommand` ✅ (hashes the raw password, rejects duplicate usernames with `Identity.UsernameTaken`, validates the primary department and optional employee), `UpdateUserCommand` ✅, `DeactivateUserCommand` ✅, `ActivateUserCommand` ✅, `AssignUserRoleCommand` ✅ (records the grantor; 409 `Identity.RoleAlreadyAssigned`), `RevokeUserRoleCommand` ✅, `AssignUserDepartmentScopeCommand` ✅ (starts a temporal assignment; 409 when the department is already assigned), `EndUserDepartmentScopeCommand` ✅ (keeps the row with its end date)
-- **Queries:** `ListUsersQuery` ✅ (paged + username search), `GetUserByIdQuery` ✅, `ListRolesQuery` ✅, `GetRoleByIdQuery` ✅, `ListPermissionsQuery` ✅ (permission catalog), `ListEmployeesQuery` ✅ (paged + name/number search), `GetEmployeeByIdQuery` ✅, `ListDocumentAccessGrantsQuery` ✅, `GetUserEffectivePermissionsQuery` ✅ (role codes + permission claims + active assignments, mirroring the token); `GetUserProfileQuery`, `GetRolesQuery` planned
+- **Queries:** `ListUsersQuery` ✅ (paged + username search), `GetUserByIdQuery` ✅, `ListRolesQuery` ✅, `GetRoleByIdQuery` ✅, `ListPermissionsQuery` ✅ (permission catalog), `ListEmployeesQuery` ✅ (paged + name/number search), `GetEmployeeByIdQuery` ✅, `ListDocumentAccessGrantsQuery` ✅, `GetUserEffectivePermissionsQuery` ✅ (role codes + permission claims + active assignments, mirroring the token), `GetUserProfileQuery` ✅ (the caller's own profile behind `GET /api/auth/me`, projected from the ambient `IUserContext` — see [`Identity/Login/README.md`](Identity/Login/README.md))
 
 ### Correspondence (Module 03)
 - **Commands:** `CreateDocumentCommand` ✅ (single-step create with an explicit official number: validates the number + numbering year, rejects with `Numbering.OfficialNumberTaken` (409) when the pair is taken, issues a `DocumentNumber`, saves as `REGISTERED`), `CreateDraftDocumentCommand` ✅ (DRAFT, no number consumed), `UpdateDraftMetadataCommand` ✅ (only DRAFT editable → `Correspondence.OnlyDraftEditable`), `RegisterDocumentCommand` ✅ (DRAFT → REGISTERED with a registry-allocated number), `AddDocumentParticipantCommand` ✅ (exactly-one target; one external organization max), `CancelDocumentCommand` ✅ (reason required; blocked by active movements), `CreateExternalOrganizationCommand` ✅, `UpdateExternalOrganizationCommand` ✅, `DeactivateExternalOrganizationCommand` ✅, `ActivateExternalOrganizationCommand` ✅ (see [`Correspondence/ExternalOrganizations/README.md`](Correspondence/ExternalOrganizations/README.md))
-- **Queries:** `GetDocumentByIdQuery` ✅, `GetDocumentDetailsQuery` ✅, `GetDocumentTimelineQuery` ✅ (status + participant + number events), `ListDocumentsQuery` ✅ (paged, searchable, sortable, filterable by status/department/direction/type), `ListExternalOrganizationsQuery` ✅ (paged + code/name search), `GetExternalOrganizationByIdQuery` ✅; `ListDepartmentDocumentsQuery` planned
+- **Queries:** `GetDocumentByIdQuery` ✅, `GetDocumentDetailsQuery` ✅, `GetDocumentTimelineQuery` ✅ (status + participant + number events), `ListDocumentsQuery` ✅ (paged, searchable, sortable, filterable by status/department/direction/type), `ListExternalOrganizationsQuery` ✅ (paged + code/name search), `GetExternalOrganizationByIdQuery` ✅, `ListDepartmentDocumentsQuery` ✅ (one department's documents, paged/searchable/sortable and authorized against the caller's scope)
 
 ### Numbering (Module 04)
 - **Commands:** `IssueOfficialNumberCommand` ✅, `CancelOfficialNumberCommand` ✅ (reason required; sequence never reused), `ReplaceOfficialNumberCommand` ✅ (links the replacement and re-points the document), `RecordDepartmentRegistrationCommand` ✅ (clerk-typed number + date in a department register; a second arrival keeps the number and adds a date), `CreateNumberingRegistryCommand` ✅, `UpdateNumberingRegistryCommand` ✅ (format locked once central numbers exist), `DeactivateNumberingRegistryCommand` ✅, `ActivateNumberingRegistryCommand` ✅
@@ -98,8 +98,8 @@ plus entity-specific filters. The handler wraps them in a `PageRequest`
 `PagedList<T>(Items, TotalCount)`. Filtering, sorting, and `Skip`/`Take` therefore run in SQL; the
 application layer never loads a whole table to page it in memory.
 
-Currently paged: `ListDocumentsQuery`, `ListUsersQuery`, `ListEmployeesQuery`,
-`ListExternalOrganizationsQuery`. Bounded reference data (lookups, permissions, roles, departments,
+Currently paged: `ListDocumentsQuery`, `ListDepartmentDocumentsQuery`, `ListUsersQuery`,
+`ListEmployeesQuery`, `ListExternalOrganizationsQuery`. Bounded reference data (lookups, permissions, roles, departments,
 registries, per-document grants/movements) still returns a plain collection on purpose.
 
 ## Implementation status
@@ -125,6 +125,7 @@ registries, per-document grants/movements) still returns a plain collection on p
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-22 | Buffy | Added `Identity/Login/GetUserProfileQuery` (moves `GET /api/auth/me` out of the controller and into the CQRS pipeline, reading the ambient identity instead of the database) and `Correspondence/Documents/ListDepartmentDocumentsQuery` (one department's register: paged/searchable/sortable, scope-checked). Handlers now pass `IUnitOfWork.UtcNow` into every time-stamping domain method, so one transaction writes one instant. |
 | 2026-10-22 | opencode | Added server-side paging, search, sorting, and filtering to the four unbounded list queries (`ListDocumentsQuery`, `ListUsersQuery`, `ListEmployeesQuery`, `ListExternalOrganizationsQuery`). They now return `PagedResult<T>`; the repositories gained `ListPagedAsync` so filtering and `Skip`/`Take` run in SQL. |
 | 2026-10-21 | opencode | Completed the Movements slice: the routing workflow (`CreateMovementCommand`, `SendMovementCommand`, `CompleteMovementStepCommand`, `RejectMovementStepCommand`, `ReturnMovementToSenderCommand`, `RedirectMovementCommand`, `CloseMovementCommand`, `CancelMovementCommand`) plus the read side (`GetMovementByIdQuery`, `ListDocumentMovementsQuery`, `GetDepartmentInboxQuery`, `GetDepartmentOutboxQuery`). |
 | 2026-10-20 | Buffy | Added department register numbering (`RecordDepartmentRegistrationCommand`, `GetDocumentRegistryNumbersQuery`, `ListDepartmentRegisterQuery`) and the first Movements use case, `ReceiveDocumentCommand`, which refuses custody until that register entry exists. |

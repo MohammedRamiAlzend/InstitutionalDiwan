@@ -32,10 +32,11 @@ challenge behavior) is still missing.
 
 ### `UserContext.cs` (`: IUserContext`)
 Implemented. Reads the ambient principal through `IHttpContextAccessor` and projects the claims
-`JwtProvider` issues: `UserId` (`sub` / `NameIdentifier`), `PrimaryDepartmentId` (`dept_id`),
-`ScopeTypeId` (`scope_type`), and the `Permission` set (one `permission` claim per granted code).
-An unauthenticated request yields `IsAuthenticated = false`, `UserId = Guid.Empty`, and an empty
-permission set — it fails safe instead of throwing.
+`JwtProvider` issues: `UserId` (`sub` / `NameIdentifier`), `Username` (`unique_name` → `Name`),
+`Roles` (the `role` claims), `PrimaryDepartmentId` (`dept_id`), `ScopeTypeId` (`scope_type`), and
+the `Permission` set (one `permission` claim per granted code). An unauthenticated request yields
+`IsAuthenticated = false`, `UserId = Guid.Empty`, an empty username, and empty role/permission
+sets — it fails safe instead of throwing.
 
 ## Design notes
 
@@ -65,5 +66,6 @@ and the one-policy-per-permission authorization setup live in `Server/Extensions
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-22 | Buffy | `UserContext` now also exposes `Username` and `Roles` (from `unique_name`/`Name` and the `role` claims) for `GetUserProfileQuery`. |
 | 2026-10-19 | Buffy | Added `UserContext` (`: IUserContext`) reading `sub` / `dept_id` / `scope_type` / `permission` claims through `IHttpContextAccessor`; registered together with `AddHttpContextAccessor` in `Infrastructure/DependencyInjection.cs`. |
 | 2026-10-18 | opencode | Implemented `PasswordHasher` (PBKDF2), `JwtOptions`, and `JwtProvider` (access-token claims). |

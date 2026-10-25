@@ -24,7 +24,8 @@ public sealed class SavedSearch : AggregateRoot<Guid>
         Guid userId,
         string? name,
         string? criteriaJson,
-        bool isDefault = false)
+        bool isDefault = false,
+        DateTime? utcNow = null)
     {
         if (string.IsNullOrWhiteSpace(name))
             return Result.Failure<SavedSearch>(DomainErrors.Archiving.SearchNameEmpty);
@@ -39,13 +40,13 @@ public sealed class SavedSearch : AggregateRoot<Guid>
             Name = name.Trim(),
             CriteriaJson = criteriaJson.Trim(),
             IsDefault = isDefault,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = utcNow ?? DateTime.UtcNow
         };
 
         return Result.Success(savedSearch);
     }
 
-    public Result UpdateCriteria(string? name, string? criteriaJson, bool isDefault)
+    public Result UpdateCriteria(string? name, string? criteriaJson, bool isDefault, DateTime? utcNow = null)
     {
         if (string.IsNullOrWhiteSpace(name))
             return Result.Failure(DomainErrors.Archiving.SearchNameEmpty);
@@ -56,7 +57,7 @@ public sealed class SavedSearch : AggregateRoot<Guid>
         Name = name.Trim();
         CriteriaJson = criteriaJson.Trim();
         IsDefault = isDefault;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = utcNow ?? DateTime.UtcNow;
         return Result.Success();
     }
 }

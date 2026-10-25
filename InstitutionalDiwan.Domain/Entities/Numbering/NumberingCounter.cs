@@ -19,7 +19,7 @@ public sealed class NumberingCounter : Entity<Guid>
     {
     }
 
-    internal static NumberingCounter Create(Guid registryId, int numberingYear)
+    internal static NumberingCounter Create(Guid registryId, int numberingYear, DateTime? utcNow = null)
     {
         return new NumberingCounter
         {
@@ -27,14 +27,14 @@ public sealed class NumberingCounter : Entity<Guid>
             RegistryId = registryId,
             NumberingYear = numberingYear,
             LastValue = 0,
-            UpdatedAt = DateTime.UtcNow
+            UpdatedAt = utcNow ?? DateTime.UtcNow
         };
     }
 
-    internal long Increment()
+    internal long Increment(DateTime? utcNow = null)
     {
         LastValue += 1;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = utcNow ?? DateTime.UtcNow;
         return LastValue;
     }
 }

@@ -57,45 +57,45 @@ public sealed class DocumentMovementStep : Entity<Guid>
         };
     }
 
-    internal void MarkSent()
+    internal void MarkSent(DateTime? utcNow = null)
     {
         StepStatusId = MovementStepStatus.SentId;
-        SentAt = DateTime.UtcNow;
+        SentAt = utcNow ?? DateTime.UtcNow;
     }
 
-    internal void MarkReceived(Guid receivedByUserId, Guid registryNumberId)
+    internal void MarkReceived(Guid receivedByUserId, Guid registryNumberId, DateTime? utcNow = null)
     {
         StepStatusId = MovementStepStatus.ReceivedId;
-        ReceivedAt = DateTime.UtcNow;
+        ReceivedAt = utcNow ?? DateTime.UtcNow;
         ReceivedByUserId = receivedByUserId;
         RegistryNumberId = registryNumberId;
     }
 
-    internal void MarkCompleted(string? notes)
+    internal void MarkCompleted(string? notes, DateTime? utcNow = null)
     {
         StepStatusId = MovementStepStatus.CompletedId;
         OutcomeNotes = notes;
-        CompletedAt = DateTime.UtcNow;
+        CompletedAt = utcNow ?? DateTime.UtcNow;
     }
 
-    internal void MarkRejected(string reason)
+    internal void MarkRejected(string reason, DateTime? utcNow = null)
     {
         StepStatusId = MovementStepStatus.RejectedId;
         OutcomeNotes = reason;
-        CompletedAt = DateTime.UtcNow;
+        CompletedAt = utcNow ?? DateTime.UtcNow;
     }
 
-    internal void MarkReturned(string reason)
+    internal void MarkReturned(string reason, DateTime? utcNow = null)
     {
         StepStatusId = MovementStepStatus.ReturnedId;
         OutcomeNotes = reason;
-        CompletedAt = DateTime.UtcNow;
+        CompletedAt = utcNow ?? DateTime.UtcNow;
     }
 
-    internal void MarkRedirected(string? notes)
+    internal void MarkRedirected(string? notes, DateTime? utcNow = null)
     {
         StepStatusId = MovementStepStatus.RedirectedId;
         OutcomeNotes = notes;
-        CompletedAt = DateTime.UtcNow;
+        CompletedAt = utcNow ?? DateTime.UtcNow;
     }
 }

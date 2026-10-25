@@ -37,7 +37,8 @@ internal sealed class CreateEmployeeCommandHandler
             request.FullNameEn,
             request.JobTitleAr,
             request.Email,
-            request.Phone);
+            request.Phone,
+            utcNow: _unitOfWork.UtcNow);
 
         if (createResult.IsFailure)
             return Result.Failure<EmployeeResponse>(createResult.Error);

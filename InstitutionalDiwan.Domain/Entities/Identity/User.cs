@@ -40,7 +40,8 @@ public sealed class User : AggregateRoot<Guid>
         Guid primaryDepartmentId,
         Guid? employeeId = null,
         int scopeTypeId = UserScopeType.DepartmentId,
-        bool mustChangePassword = true)
+        bool mustChangePassword = true,
+        DateTime? utcNow = null)
     {
         if (string.IsNullOrWhiteSpace(username))
             return Result.Failure<User>(DomainErrors.Identity.UsernameEmpty);
@@ -58,36 +59,38 @@ public sealed class User : AggregateRoot<Guid>
             ScopeTypeId = scopeTypeId > 0 ? scopeTypeId : UserScopeType.DepartmentId,
             IsActive = true,
             MustChangePassword = mustChangePassword,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = utcNow ?? DateTime.UtcNow
         };
 
         user.RaiseDomainEvent(new UserCreatedEvent(user.UserId, user.Username, user.PrimaryDepartmentId));
         return Result.Success(user);
     }
 
-    public Result AssignRole(Guid roleId, Guid? assignedByUserId = null)
+    public Result AssignRole(Guid roleId, Guid? assignedByUserId = null, DateTime? utcNow = null)
     {
+        var now = utcNow ?? DateTime.UtcNow;
         if (_userRoles.Any(r => r.RoleId == roleId))
             return Result.Failure(DomainErrors.Identity.RoleAlreadyAssigned);
 
-        var userRoleResult = UserRole.Create(UserId, roleId, assignedByUserId);
+        var userRoleResult = UserRole.Create(UserId, roleId, assignedByUserId, utcNow);
         if (userRoleResult.IsFailure)
             return userRoleResult;
 
         _userRoles.Add(userRoleResult.Value);
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = now;
         RaiseDomainEvent(new UserRoleAssignedEvent(UserId, roleId, assignedByUserId));
         return Result.Success();
     }
 
-    public Result RevokeRole(Guid roleId)
+    public Result RevokeRole(Guid roleId, DateTime? utcNow = null)
     {
+        var now = utcNow ?? DateTime.UtcNow;
         var existing = _userRoles.FirstOrDefault(r => r.RoleId == roleId);
         if (existing is null)
             return Result.Failure(DomainErrors.Identity.RoleNotAssigned);
 
         _userRoles.Remove(existing);
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = now;
         RaiseDomainEvent(new UserRoleRevokedEvent(UserId, roleId));
         return Result.Success();
     }
@@ -97,8 +100,10 @@ public sealed class User : AggregateRoot<Guid>
         int assignmentTypeId = AssignmentType.AdditionalId,
         bool includeSubtree = false,
         DateTime? startDate = null,
-        DateTime? endDate = null)
+        DateTime? endDate = null,
+        DateTime? utcNow = null)
     {
+        var now = utcNow ?? DateTime.UtcNow;
         if (_departmentAssignments.Any(assignment =>
                 assignment.IsActive && assignment.DepartmentId == departmentId))
         {
@@ -111,13 +116,14 @@ public sealed class User : AggregateRoot<Guid>
             assignmentTypeId,
             includeSubtree,
             startDate,
-            endDate);
+            endDate,
+            utcNow);
 
         if (assignmentResult.IsFailure)
             return assignmentResult;
 
         _departmentAssignments.Add(assignmentResult.Value);
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = now;
         return Result.Success();
     }
 
@@ -125,8 +131,9 @@ public sealed class User : AggregateRoot<Guid>
     /// Ends a temporal department assignment. The row is kept (with its end date) so the access
     /// history stays auditable; only its <see cref="UserDepartmentAssignment.IsActive"/> flag drops.
     /// </summary>
-    public Result EndDepartmentScope(Guid assignmentId, DateTime? endedAt = null)
+    public Result EndDepartmentScope(Guid assignmentId, DateTime? endedAt = null, DateTime? utcNow = null)
     {
+        var now = utcNow ?? DateTime.UtcNow;
         var assignment = _departmentAssignments.FirstOrDefault(
             candidate => candidate.AssignmentId == assignmentId);
 
@@ -136,25 +143,26 @@ public sealed class User : AggregateRoot<Guid>
         if (!assignment.IsActive)
             return Result.Success();
 
-        assignment.EndAssignment(endedAt);
-        UpdatedAt = DateTime.UtcNow;
+        assignment.EndAssignment(endedAt, utcNow);
+        UpdatedAt = now;
         return Result.Success();
     }
 
-    public Result RecordLogin()
+    public Result RecordLogin(DateTime? utcNow = null)
     {
-        LastLoginAt = DateTime.UtcNow;
+        LastLoginAt = utcNow ?? DateTime.UtcNow;
         return Result.Success();
     }
 
-    public Result ChangePasswordHash(string? newPasswordHash)
+    public Result ChangePasswordHash(string? newPasswordHash, DateTime? utcNow = null)
     {
+        var now = utcNow ?? DateTime.UtcNow;
         if (string.IsNullOrWhiteSpace(newPasswordHash))
             return Result.Failure(DomainErrors.Identity.PasswordHashEmpty);
 
         PasswordHash = newPasswordHash;
         MustChangePassword = false;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = now;
         return Result.Success();
     }
 
@@ -162,30 +170,36 @@ public sealed class User : AggregateRoot<Guid>
         Guid primaryDepartmentId,
         Guid? employeeId,
         int scopeTypeId,
-        bool mustChangePassword = true)
+        bool mustChangePassword = true,
+        DateTime? utcNow = null)
     {
+        var now = utcNow ?? DateTime.UtcNow;
         PrimaryDepartmentId = primaryDepartmentId;
         EmployeeId = employeeId;
         ScopeTypeId = scopeTypeId > 0 ? scopeTypeId : UserScopeType.DepartmentId;
         MustChangePassword = mustChangePassword;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = now;
         return Result.Success();
     }
 
-    public Result Deactivate()
+    public Result Deactivate(DateTime? utcNow = null)
     {
+        var now = utcNow ?? DateTime.UtcNow;
+
         if (!IsActive) return Result.Success();
         IsActive = false;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = now;
         RaiseDomainEvent(new UserDeactivatedEvent(UserId));
         return Result.Success();
     }
 
-    public Result Activate()
+    public Result Activate(DateTime? utcNow = null)
     {
+        var now = utcNow ?? DateTime.UtcNow;
+
         if (IsActive) return Result.Success();
         IsActive = true;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = now;
         return Result.Success();
     }
 }

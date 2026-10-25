@@ -56,7 +56,8 @@ internal sealed class CreateDraftDocumentCommandHandler
             request.PriorityLevelId ?? DocumentPriorityLevel.NormalId,
             request.DocumentDate,
             request.ExternalReferenceNumber,
-            request.ExternalDocumentDate);
+            request.ExternalDocumentDate,
+            utcNow: _unitOfWork.UtcNow);
 
         if (documentResult.IsFailure)
             return Result.Failure<DocumentResponse>(documentResult.Error);

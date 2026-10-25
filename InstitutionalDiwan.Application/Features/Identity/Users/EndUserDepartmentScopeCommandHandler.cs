@@ -30,7 +30,7 @@ internal sealed class EndUserDepartmentScopeCommandHandler
         if (user is null)
             return Result.Failure<UserResponse>(DomainErrors.Identity.UserNotFound);
 
-        var endResult = user.EndDepartmentScope(request.AssignmentId);
+        var endResult = user.EndDepartmentScope(request.AssignmentId, utcNow: _unitOfWork.UtcNow);
         if (endResult.IsFailure)
             return Result.Failure<UserResponse>(endResult.Error);
 

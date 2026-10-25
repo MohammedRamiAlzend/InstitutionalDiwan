@@ -27,7 +27,7 @@ internal sealed class ActivateEmployeeCommandHandler
         if (employee is null)
             return Result.Failure<EmployeeResponse>(DomainErrors.Identity.EmployeeNotFound);
 
-        var result = employee.Activate();
+        var result = employee.Activate(_unitOfWork.UtcNow);
         if (result.IsFailure)
             return Result.Failure<EmployeeResponse>(result.Error);
 

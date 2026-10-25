@@ -44,7 +44,8 @@ internal sealed class ReceiveDocumentCommandHandler
                 DomainErrors.Numbering.DepartmentRegistrationRequired);
         }
 
-        var receive = movement.ReceiveStep(request.UserId, entry.DocumentNumberId, request.Notes);
+        var receive = movement.ReceiveStep(
+            request.UserId, entry.DocumentNumberId, request.Notes, _unitOfWork.UtcNow);
         if (receive.IsFailure)
             return Result.Failure<MovementStepReceiptResponse>(receive.Error);
 

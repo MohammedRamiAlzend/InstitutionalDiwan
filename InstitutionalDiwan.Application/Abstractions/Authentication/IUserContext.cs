@@ -13,6 +13,12 @@ public interface IUserContext
     /// <summary>Token subject (<c>sub</c>); <see cref="System.Guid.Empty"/> when not signed in.</summary>
     Guid UserId { get; }
 
+    /// <summary>Signed-in username (the token's <c>unique_name</c>); empty when not signed in.</summary>
+    string Username { get; }
+
+    /// <summary>Every role code granted to the caller (<c>role</c> claims).</summary>
+    IReadOnlySet<string> Roles { get; }
+
     /// <summary>Primary department claim (<c>dept_id</c>) — the caller's home department.</summary>
     Guid PrimaryDepartmentId { get; }
 

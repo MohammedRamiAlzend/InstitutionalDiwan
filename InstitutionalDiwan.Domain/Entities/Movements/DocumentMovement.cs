@@ -60,8 +60,11 @@ public sealed class DocumentMovement : AggregateRoot<Guid>
         int movementTypeId = MovementType.ReferralId,
         Guid? assignedToUserId = null,
         string? instructions = null,
-        DateTime? dueDate = null)
+        DateTime? dueDate = null,
+        DateTime? utcNow = null)
     {
+        var now = utcNow ?? DateTime.UtcNow;
+
         if (sourceDepartmentId == destinationDepartmentId && !assignedToUserId.HasValue)
             return Result.Failure<DocumentMovement>(DomainErrors.Movements.SameSourceAndDestination);
 
@@ -78,7 +81,7 @@ public sealed class DocumentMovement : AggregateRoot<Guid>
             Instructions = instructions,
             DueDate = dueDate,
             CreatedByUserId = createdByUserId,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = now
         };
 
         var initialStep = DocumentMovementStep.Create(
@@ -91,14 +94,15 @@ public sealed class DocumentMovement : AggregateRoot<Guid>
             dueDate);
 
         movement._steps.Add(initialStep);
-        movement.AppendEvent(1, MovementEventType.CreatedId, createdByUserId, instructions);
+        movement.AppendEvent(1, MovementEventType.CreatedId, createdByUserId, instructions, now);
         movement.RaiseDomainEvent(new MovementCreatedEvent(movement.MovementId, movement.DocumentId, sourceDepartmentId, destinationDepartmentId));
 
         return Result.Success(movement);
     }
 
-    public Result Send(Guid actorUserId, string? notes = null)
+    public Result Send(Guid actorUserId, string? notes = null, DateTime? utcNow = null)
     {
+        var now = utcNow ?? DateTime.UtcNow;
         if (StatusId is not (StatusDraft or StatusRedirected))
             return Result.Failure(DomainErrors.Movements.InvalidStatusTransition);
 
@@ -106,9 +110,9 @@ public sealed class DocumentMovement : AggregateRoot<Guid>
         if (step is null)
             return Result.Failure(DomainErrors.Movements.NoActiveStep);
 
-        step.MarkSent();
+        step.MarkSent(now);
         StatusId = StatusSent;
-        AppendEvent(CurrentStepNo, MovementEventType.SentId, actorUserId, notes);
+        AppendEvent(CurrentStepNo, MovementEventType.SentId, actorUserId, notes, now);
         RaiseDomainEvent(new MovementSentEvent(MovementId, DocumentId, CurrentStepNo, actorUserId));
         return Result.Success();
     }
@@ -118,8 +122,9 @@ public sealed class DocumentMovement : AggregateRoot<Guid>
     /// line the destination department wrote for this document, so a department can never take
     /// custody without numbering it in its own register.
     /// </summary>
-    public Result ReceiveStep(Guid actorUserId, Guid departmentRegistryNumberId, string? notes = null)
+    public Result ReceiveStep(Guid actorUserId, Guid departmentRegistryNumberId, string? notes = null, DateTime? utcNow = null)
     {
+        var now = utcNow ?? DateTime.UtcNow;
         if (StatusId != StatusSent)
             return Result.Failure(DomainErrors.Movements.InvalidStatusTransition);
 
@@ -130,15 +135,16 @@ public sealed class DocumentMovement : AggregateRoot<Guid>
         if (step is null)
             return Result.Failure(DomainErrors.Movements.NoActiveStep);
 
-        step.MarkReceived(actorUserId, departmentRegistryNumberId);
+        step.MarkReceived(actorUserId, departmentRegistryNumberId, now);
         StatusId = StatusReceived;
-        AppendEvent(CurrentStepNo, MovementEventType.ReceivedId, actorUserId, notes);
+        AppendEvent(CurrentStepNo, MovementEventType.ReceivedId, actorUserId, notes, now);
         RaiseDomainEvent(new MovementReceivedEvent(MovementId, DocumentId, CurrentStepNo, actorUserId));
         return Result.Success();
     }
 
-    public Result CompleteStep(Guid actorUserId, string? notes = null)
+    public Result CompleteStep(Guid actorUserId, string? notes = null, DateTime? utcNow = null)
     {
+        var now = utcNow ?? DateTime.UtcNow;
         if (StatusId is not (StatusReceived or StatusInProgress))
             return Result.Failure(DomainErrors.Movements.InvalidStatusTransition);
 
@@ -146,15 +152,16 @@ public sealed class DocumentMovement : AggregateRoot<Guid>
         if (step is null)
             return Result.Failure(DomainErrors.Movements.NoActiveStep);
 
-        step.MarkCompleted(notes);
+        step.MarkCompleted(notes, now);
         StatusId = StatusCompleted;
-        AppendEvent(CurrentStepNo, MovementEventType.CompletedId, actorUserId, notes);
+        AppendEvent(CurrentStepNo, MovementEventType.CompletedId, actorUserId, notes, now);
         RaiseDomainEvent(new MovementCompletedEvent(MovementId, DocumentId, CurrentStepNo, actorUserId));
         return Result.Success();
     }
 
-    public Result RejectStep(Guid actorUserId, string? reason)
+    public Result RejectStep(Guid actorUserId, string? reason, DateTime? utcNow = null)
     {
+        var now = utcNow ?? DateTime.UtcNow;
         if (StatusId is not (StatusSent or StatusReceived or StatusInProgress))
             return Result.Failure(DomainErrors.Movements.InvalidStatusTransition);
 
@@ -165,15 +172,16 @@ public sealed class DocumentMovement : AggregateRoot<Guid>
         if (step is null)
             return Result.Failure(DomainErrors.Movements.NoActiveStep);
 
-        step.MarkRejected(reason.Trim());
+        step.MarkRejected(reason.Trim(), now);
         StatusId = StatusRejected;
-        AppendEvent(CurrentStepNo, MovementEventType.RejectedId, actorUserId, reason.Trim());
+        AppendEvent(CurrentStepNo, MovementEventType.RejectedId, actorUserId, reason.Trim(), now);
         RaiseDomainEvent(new MovementRejectedEvent(MovementId, DocumentId, CurrentStepNo, actorUserId, reason.Trim()));
         return Result.Success();
     }
 
-    public Result ReturnToSender(Guid actorUserId, string? reason)
+    public Result ReturnToSender(Guid actorUserId, string? reason, DateTime? utcNow = null)
     {
+        var now = utcNow ?? DateTime.UtcNow;
         if (StatusId is not (StatusReceived or StatusInProgress))
             return Result.Failure(DomainErrors.Movements.InvalidStatusTransition);
 
@@ -184,15 +192,16 @@ public sealed class DocumentMovement : AggregateRoot<Guid>
         if (step is null)
             return Result.Failure(DomainErrors.Movements.NoActiveStep);
 
-        step.MarkReturned(reason.Trim());
+        step.MarkReturned(reason.Trim(), now);
         StatusId = StatusReturned;
-        AppendEvent(CurrentStepNo, MovementEventType.ReturnedId, actorUserId, reason.Trim());
+        AppendEvent(CurrentStepNo, MovementEventType.ReturnedId, actorUserId, reason.Trim(), now);
         RaiseDomainEvent(new MovementReturnedEvent(MovementId, DocumentId, CurrentStepNo, actorUserId, reason.Trim()));
         return Result.Success();
     }
 
-    public Result RedirectTo(Guid newDestinationDepartmentId, Guid actorUserId, Guid? assignedToUserId = null, string? instructions = null, DateTime? dueDate = null)
+    public Result RedirectTo(Guid newDestinationDepartmentId, Guid actorUserId, Guid? assignedToUserId = null, string? instructions = null, DateTime? dueDate = null, DateTime? utcNow = null)
     {
+        var now = utcNow ?? DateTime.UtcNow;
         if (StatusId is StatusClosed or StatusCanceled)
             return Result.Failure(DomainErrors.Movements.AlreadyTerminal);
 
@@ -200,7 +209,7 @@ public sealed class DocumentMovement : AggregateRoot<Guid>
         if (step is null)
             return Result.Failure(DomainErrors.Movements.NoActiveStep);
 
-        step.MarkRedirected(instructions);
+        step.MarkRedirected(instructions, now);
 
         var nextStepNo = CurrentStepNo + 1;
         var nextStep = DocumentMovementStep.Create(
@@ -217,27 +226,29 @@ public sealed class DocumentMovement : AggregateRoot<Guid>
         DestinationDepartmentId = newDestinationDepartmentId;
         AssignedToUserId = assignedToUserId;
         StatusId = StatusSent;
-        nextStep.MarkSent();
+        nextStep.MarkSent(now);
 
-        AppendEvent(nextStepNo, MovementEventType.RedirectedId, actorUserId, instructions);
+        AppendEvent(nextStepNo, MovementEventType.RedirectedId, actorUserId, instructions, now);
         RaiseDomainEvent(new MovementRedirectedEvent(MovementId, DocumentId, nextStepNo, newDestinationDepartmentId, actorUserId));
         return Result.Success();
     }
 
-    public Result Close(Guid actorUserId, string? notes = null)
+    public Result Close(Guid actorUserId, string? notes = null, DateTime? utcNow = null)
     {
+        var now = utcNow ?? DateTime.UtcNow;
         if (StatusId is StatusClosed or StatusCanceled)
             return Result.Failure(DomainErrors.Movements.AlreadyTerminal);
 
         StatusId = StatusClosed;
-        ClosedAt = DateTime.UtcNow;
-        AppendEvent(CurrentStepNo, MovementEventType.ClosedId, actorUserId, notes);
+        ClosedAt = now;
+        AppendEvent(CurrentStepNo, MovementEventType.ClosedId, actorUserId, notes, now);
         RaiseDomainEvent(new MovementClosedEvent(MovementId, DocumentId, actorUserId));
         return Result.Success();
     }
 
-    public Result Cancel(Guid actorUserId, string? reason)
+    public Result Cancel(Guid actorUserId, string? reason, DateTime? utcNow = null)
     {
+        var now = utcNow ?? DateTime.UtcNow;
         if (StatusId is StatusClosed or StatusCanceled)
             return Result.Failure(DomainErrors.Movements.AlreadyTerminal);
 
@@ -245,8 +256,8 @@ public sealed class DocumentMovement : AggregateRoot<Guid>
             return Result.Failure(DomainErrors.Movements.ReasonRequired);
 
         StatusId = StatusCanceled;
-        ClosedAt = DateTime.UtcNow;
-        AppendEvent(CurrentStepNo, MovementEventType.CanceledId, actorUserId, reason.Trim());
+        ClosedAt = now;
+        AppendEvent(CurrentStepNo, MovementEventType.CanceledId, actorUserId, reason.Trim(), now);
         RaiseDomainEvent(new MovementCancelledEvent(MovementId, DocumentId, actorUserId, reason.Trim()));
         return Result.Success();
     }
@@ -254,8 +265,8 @@ public sealed class DocumentMovement : AggregateRoot<Guid>
     private DocumentMovementStep? GetCurrentStep() =>
         _steps.FirstOrDefault(s => s.StepNo == CurrentStepNo);
 
-    private void AppendEvent(int stepNo, int eventTypeId, Guid actorUserId, string? notes)
+    private void AppendEvent(int stepNo, int eventTypeId, Guid actorUserId, string? notes, DateTime utcNow)
     {
-        _events.Add(DocumentMovementEvent.Create(MovementId, stepNo, eventTypeId, actorUserId, notes));
+        _events.Add(DocumentMovementEvent.Create(MovementId, stepNo, eventTypeId, actorUserId, notes, utcNow));
     }
 }

@@ -30,7 +30,7 @@ internal sealed class CancelMovementCommandHandler
         if (movement is null)
             return Result.Failure<MovementResponse>(DomainErrors.Movements.MovementNotFound);
 
-        var cancel = movement.Cancel(request.UserId, request.Reason);
+        var cancel = movement.Cancel(request.UserId, request.Reason, _unitOfWork.UtcNow);
         if (cancel.IsFailure)
             return Result.Failure<MovementResponse>(cancel.Error);
 
@@ -39,7 +39,8 @@ internal sealed class CancelMovementCommandHandler
         var document = await _documentRepository.GetByIdAsync(movement.DocumentId, cancellationToken);
         if (document is not null)
         {
-            var released = document.MarkMovementEnded(request.UserId, request.Reason);
+            var released = document.MarkMovementEnded(
+                request.UserId, request.Reason, _unitOfWork.UtcNow);
             if (released.IsFailure)
                 return Result.Failure<MovementResponse>(released.Error);
         }

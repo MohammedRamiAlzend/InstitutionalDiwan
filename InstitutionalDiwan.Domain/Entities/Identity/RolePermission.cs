@@ -12,7 +12,7 @@ public sealed class RolePermission
     {
     }
 
-    internal static Result<RolePermission> Create(Guid roleId, string? permissionCode)
+    internal static Result<RolePermission> Create(Guid roleId, string? permissionCode, DateTime? utcNow = null)
     {
         if (string.IsNullOrWhiteSpace(permissionCode))
             return Result.Failure<RolePermission>(DomainErrors.Identity.PermissionCodeEmpty);
@@ -21,7 +21,7 @@ public sealed class RolePermission
         {
             RoleId = roleId,
             PermissionCode = permissionCode.Trim().ToUpperInvariant(),
-            GrantedAt = DateTime.UtcNow
+            GrantedAt = utcNow ?? DateTime.UtcNow
         };
 
         return Result.Success(rp);

@@ -56,5 +56,6 @@ entries ordered by the department's own date, with the central Diwan number kept
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-22 | Buffy | `CreateNumberingRegistryCommandHandler` now stamps the registry with `IUnitOfWork.UtcNow` (the shared `NumberingRegistryResolver` does the same for the auto-created default registry). |
 | 2026-10-20 | Buffy | Added the department register book (`ListDepartmentRegisterQuery`) and noted that the template lock now counts only central numbers, so typed department entries cannot freeze a registry format. |
 | 2026-10-19 | Buffy | Added registry write use cases (create, update with the issued-numbers template lock, deactivate, activate) plus the shared `NumberingRegistryValidation` scope/policy checks; write endpoints added to `NumberingRegistriesController`. |

@@ -27,7 +27,8 @@ public sealed class AuditCheckpoint : Entity<Guid>
         long toAuditLogId,
         string? terminalHash,
         long recordCount,
-        Guid createdByUserId)
+        Guid createdByUserId,
+        DateTime? utcNow = null)
     {
         if (toAuditLogId < fromAuditLogId || recordCount <= 0)
             return Result.Failure<AuditCheckpoint>(DomainErrors.Audit.InvalidCheckpointRange);
@@ -43,7 +44,7 @@ public sealed class AuditCheckpoint : Entity<Guid>
             TerminalHash = terminalHash.Trim().ToLowerInvariant(),
             RecordCount = recordCount,
             CreatedByUserId = createdByUserId,
-            CreatedAtUtc = DateTime.UtcNow
+            CreatedAtUtc = utcNow ?? DateTime.UtcNow
         };
 
         return Result.Success(checkpoint);

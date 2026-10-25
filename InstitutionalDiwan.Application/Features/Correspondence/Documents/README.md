@@ -1,7 +1,8 @@
 # Application / Features / Correspondence / Documents
 
 > **Status:** Implemented — full Module 03 lifecycle: immediate create, draft create, metadata
-> update, register, participants, cancel, detail, timeline, and a paged, searchable, filterable list.
+> update, register, participants, cancel, detail, timeline, a paged, searchable, filterable list, and
+> the same list narrowed to one department's register.
 
 ## Purpose
 
@@ -43,6 +44,7 @@ commands the API actually walks: `CreateDraftDocumentCommand` → `UpdateDraftMe
 | `GetDocumentDetailsQuery.cs` / `GetDocumentDetailsQueryHandler.cs` | Fetches the document with participants and status history. |
 | `GetDocumentTimelineQuery.cs` / `GetDocumentTimelineQueryHandler.cs` | Merges status transitions, participant additions, and official-number events into one oldest-first timeline. |
 | `ListDocumentsQuery.cs` / `ListDocumentsQueryHandler.cs` | Returns a page of documents (`PagedResult<DocumentResponse>`), newest first by default. Carries `Page`/`PageSize`/`Search`/`SortBy`/`SortDescending` plus `StatusId`/`OwningDepartmentId`/`DirectionId`/`DocumentTypeId` filters; the handler builds a `PageRequest` and delegates to `IDocumentRepository.ListPagedAsync`, so filtering, sorting, and `Skip`/`Take` run in SQL. |
+| `ListDepartmentDocumentsQuery.cs` / `ListDepartmentDocumentsQueryHandler.cs` | One department's document register: the paged/searchable/sortable contract of `ListDocumentsQuery` with the department as the filter. The handler returns 404 for an unknown department and 403 (`Correspondence.DepartmentOutOfScope`) when the department sits outside the caller's scope, then delegates to `IDocumentRepository.ListPagedAsync`. |
 | `README.md` | This file. |
 
 ## Conventions / Notes
@@ -62,6 +64,11 @@ commands the API actually walks: `CreateDraftDocumentCommand` → `UpdateDraftMe
   subject summary, and the official number.
 - `pageSize` is clamped to 1–100 and `page` to ≥1, so a hostile query string cannot read the table in
   one request. The response always carries `totalCount`, `totalPages`, `hasPrevious`, and `hasNext`.
+- `ListDepartmentDocumentsQuery` is the register view behind `GET /api/departments/{departmentId}/documents`.
+  It checks the department through `IDepartmentScopeEvaluator` (tier 2 of the access model) before
+  reading, so an empty page never masks a department the caller may not see.
+- Every handler stamps the aggregate with `IUnitOfWork.UtcNow`; the domain methods take it as an
+  optional `utcNow` argument so tests can still construct documents at a fixed instant.
 
 ## Implementation status
 
@@ -72,12 +79,14 @@ commands the API actually walks: `CreateDraftDocumentCommand` → `UpdateDraftMe
 | `AddDocumentParticipantCommand`, `CancelDocumentCommand` | ✅ |
 | `GetDocumentByIdQuery`, `GetDocumentDetailsQuery`, `GetDocumentTimelineQuery` | ✅ |
 | `ListDocumentsQuery` (paged, searchable, sortable, filtered) | ✅ |
+| `ListDepartmentDocumentsQuery` (paged + scope-checked) | ✅ |
 | Archive/unarchive use cases (Module 07) | ❌ Not implemented |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-22 | Buffy | Added `ListDepartmentDocumentsQuery`/`Handler` — a department's document register, paged like `ListDocumentsQuery`, authorized with `IDepartmentScopeEvaluator` (403 `Correspondence.DepartmentOutOfScope`, 404 for an unknown department). Handlers now stamp document writes with `IUnitOfWork.UtcNow`. |
 | 2026-10-22 | opencode | `ListDocumentsQuery` now returns `PagedResult<DocumentResponse>` and accepts `page`, `pageSize`, `search`, `sortBy`, `sortDescending`, `statusId`, `owningDepartmentId`, `directionId`, and `documentTypeId`; `DocumentRepository.ListPagedAsync` pushes the filter, sort, and paging into SQL. |
 | 2026-10-19 | Buffy | Completed the Module 03 lifecycle: added draft create, draft metadata update, register (registry-backed allocation), add participant (exactly-one-target + single external party), cancel (blocked by active movements), document details, and the merged audit timeline; added the corresponding response records. |
 | 2026-10-18 | opencode | Added `OfficialNumberText` + `NumberingYear` to create; handler now performs the taken/not-taken check (409 on conflict), issues and registers an official number at creation, and `DocumentResponse` exposes the number + registration date. |

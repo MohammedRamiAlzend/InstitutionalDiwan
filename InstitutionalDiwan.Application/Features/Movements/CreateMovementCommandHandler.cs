@@ -74,7 +74,8 @@ internal sealed class CreateMovementCommandHandler
             request.MovementTypeId,
             request.AssignedToUserId,
             request.Instructions,
-            request.DueDate);
+            request.DueDate,
+            utcNow: _unitOfWork.UtcNow);
 
         if (movementResult.IsFailure)
             return Result.Failure<MovementResponse>(movementResult.Error);
@@ -82,7 +83,7 @@ internal sealed class CreateMovementCommandHandler
         var movement = movementResult.Value;
 
         var inMovement = document.MarkInMovement(
-            user.UserId, $"Routed to {destination.NameAr}");
+            user.UserId, $"Routed to {destination.NameAr}", _unitOfWork.UtcNow);
         if (inMovement.IsFailure)
             return Result.Failure<MovementResponse>(inMovement.Error);
 

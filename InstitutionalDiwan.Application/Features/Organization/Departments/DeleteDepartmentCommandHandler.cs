@@ -27,7 +27,7 @@ internal sealed class DeleteDepartmentCommandHandler : ICommandHandler<DeleteDep
         var hasActiveChildren = await _departmentRepository.HasActiveChildrenAsync(
             department.DepartmentId, cancellationToken);
 
-        var deactivateResult = department.Deactivate(hasActiveChildren);
+        var deactivateResult = department.Deactivate(hasActiveChildren, _unitOfWork.UtcNow);
         if (deactivateResult.IsFailure)
             return Result.Failure(deactivateResult.Error);
 

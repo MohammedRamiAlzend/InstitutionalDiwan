@@ -38,7 +38,8 @@ public sealed class DocumentArchiveEvent : Entity<Guid>
         int newStatusId,
         Guid actorUserId,
         string? reason = null,
-        int? archiveLocationId = null)
+        int? archiveLocationId = null,
+        DateTime? utcNow = null)
     {
         if (eventTypeId is not (ArchiveEventType.ArchivedId or ArchiveEventType.UnarchivedId or ArchiveEventType.RetentionAppliedId))
             return Result.Failure<DocumentArchiveEvent>(DomainErrors.Archiving.EventTypeInvalid);
@@ -56,7 +57,7 @@ public sealed class DocumentArchiveEvent : Entity<Guid>
             ActorUserId = actorUserId,
             Reason = string.IsNullOrWhiteSpace(reason) ? null : reason.Trim(),
             ArchiveLocationId = archiveLocationId,
-            OccurredAt = DateTime.UtcNow
+            OccurredAt = utcNow ?? DateTime.UtcNow
         };
 
         return Result.Success(ev);

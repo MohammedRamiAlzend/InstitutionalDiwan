@@ -55,6 +55,7 @@ See each subfolder's README for the full design and per-folder status tables.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-22 | Buffy | Added `Identity/Login/GetUserProfileQuery` (the `/api/auth/me` use case) and `Correspondence/Documents/ListDepartmentDocumentsQuery`; every mutating handler now passes `IUnitOfWork.UtcNow` to the aggregate it touches. |
 | 2026-10-22 | opencode | Added `Common/PagedResult<T>` and made the four unbounded list queries return it; filtering, sorting, and paging now run in the repositories. |
 | 2026-10-21 | opencode | Completed `Features/Movements/`: the routing workflow commands (open/send/complete/reject/return/redirect/close/cancel), the movement queries, and the department inbox/outbox. |
 | 2026-10-20 | Buffy | Added `Features/Movements/` (receipt gated on a recorded department register number) and department register entries under `Features/Numbering/Numbers/` + `Registries/`. |

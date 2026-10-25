@@ -55,7 +55,8 @@ internal sealed class CreateUserCommandHandler : ICommandHandler<CreateUserComma
             request.PrimaryDepartmentId,
             request.EmployeeId,
             request.ScopeTypeId,
-            request.MustChangePassword);
+            request.MustChangePassword,
+            utcNow: _unitOfWork.UtcNow);
 
         if (userResult.IsFailure)
             return Result.Failure<UserResponse>(userResult.Error);

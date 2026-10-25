@@ -37,7 +37,8 @@ public sealed class NumberingRegistry : AggregateRoot<Guid>
         int resetPolicyId = NumberingResetPolicy.YearlyId,
         Guid? departmentId = null,
         int? documentTypeId = null,
-        int? directionId = null)
+        int? directionId = null,
+        DateTime? utcNow = null)
     {
         if (string.IsNullOrWhiteSpace(code))
             return Result.Failure<NumberingRegistry>(DomainErrors.Numbering.RegistryCodeEmpty);
@@ -56,7 +57,7 @@ public sealed class NumberingRegistry : AggregateRoot<Guid>
             FormatPattern = string.IsNullOrWhiteSpace(formatPattern) ? "{YEAR}/{SEQ:D6}" : formatPattern.Trim(),
             ResetPolicyId = resetPolicyId <= 0 ? NumberingResetPolicy.YearlyId : resetPolicyId,
             IsActive = true,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = utcNow ?? DateTime.UtcNow
         };
 
         return Result.Success(registry);
@@ -116,7 +117,7 @@ public sealed class NumberingRegistry : AggregateRoot<Guid>
         return Result.Success();
     }
 
-    public Result<long> AllocateNextSequence(int numberingYear)
+    public Result<long> AllocateNextSequence(int numberingYear, DateTime? utcNow = null)
     {
         if (!IsActive)
             return Result.Failure<long>(DomainErrors.Numbering.RegistryInactive);
@@ -127,10 +128,10 @@ public sealed class NumberingRegistry : AggregateRoot<Guid>
         var counter = _counters.FirstOrDefault(c => c.NumberingYear == numberingYear);
         if (counter is null)
         {
-            counter = NumberingCounter.Create(RegistryId, numberingYear);
+            counter = NumberingCounter.Create(RegistryId, numberingYear, utcNow);
             _counters.Add(counter);
         }
 
-        return Result.Success(counter.Increment());
+        return Result.Success(counter.Increment(utcNow));
     }
 }

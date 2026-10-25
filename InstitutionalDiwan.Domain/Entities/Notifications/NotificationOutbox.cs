@@ -25,7 +25,7 @@ public sealed class NotificationOutbox : Entity<Guid>
     {
     }
 
-    internal static Result<NotificationOutbox> Create(Guid notificationId, int channelId, string? payloadJson)
+    internal static Result<NotificationOutbox> Create(Guid notificationId, int channelId, string? payloadJson, DateTime? utcNow = null)
     {
         if (channelId <= 0)
             return Result.Failure<NotificationOutbox>(DomainErrors.Notifications.ChannelEmpty);
@@ -38,16 +38,16 @@ public sealed class NotificationOutbox : Entity<Guid>
             PayloadJson = string.IsNullOrWhiteSpace(payloadJson) ? "{}" : payloadJson.Trim(),
             StatusId = NotificationOutboxStatus.PendingId,
             RetryCount = 0,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = utcNow ?? DateTime.UtcNow
         };
 
         return Result.Success(outbox);
     }
 
-    public Result MarkProcessed()
+    public Result MarkProcessed(DateTime? utcNow = null)
     {
         StatusId = NotificationOutboxStatus.SentId;
-        ProcessedAt = DateTime.UtcNow;
+        ProcessedAt = utcNow ?? DateTime.UtcNow;
         LastError = null;
         return Result.Success();
     }

@@ -59,7 +59,8 @@ internal sealed class AddDocumentParticipantCommandHandler
             request.RoleId,
             targetResult.Value,
             request.IsPrimary,
-            request.Notes);
+            request.Notes,
+            utcNow: _unitOfWork.UtcNow);
 
         if (addResult.IsFailure)
             return Result.Failure<DocumentParticipantResponse>(addResult.Error);

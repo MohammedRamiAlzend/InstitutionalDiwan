@@ -19,7 +19,8 @@ internal static class NumberingRegistryResolver
         Guid departmentId,
         int documentTypeId,
         int directionId,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        DateTime? utcNow = null)
     {
         var registry = await registryRepository.GetActiveForScopeAsync(
             departmentId, documentTypeId, directionId, cancellationToken);
@@ -29,7 +30,8 @@ internal static class NumberingRegistryResolver
 
         var created = NumberingRegistry.Create(
             DefaultRegistryCode,
-            "سجل الترقيم الافتراضي");
+            "سجل الترقيم الافتراضي",
+            utcNow: utcNow);
 
         if (created.IsFailure)
             return Result.Failure<NumberingRegistry>(created.Error);

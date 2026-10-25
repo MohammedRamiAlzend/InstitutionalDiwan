@@ -53,8 +53,10 @@ public sealed class DocumentNumber : AggregateRoot<Guid>
         long sequenceValue,
         string? officialNumberText,
         Guid issuedByUserId,
-        string? notes = null)
+        string? notes = null,
+        DateTime? utcNow = null)
     {
+        var now = utcNow ?? DateTime.UtcNow;
         if (numberingYear is < 1900 or > 2200)
             return Result.Failure<DocumentNumber>(DomainErrors.Numbering.YearInvalid);
 
@@ -76,10 +78,10 @@ public sealed class DocumentNumber : AggregateRoot<Guid>
             OfficialNumberText = numberValResult.Value.Value,
             StatusId = DocumentNumberStatus.ActiveId,
             IssuedByUserId = issuedByUserId,
-            IssuedAt = DateTime.UtcNow
+            IssuedAt = now
         };
 
-        docNumber._history.Add(DocumentNumberHistory.Create(docNumber.DocumentNumberId, DocumentNumberEventType.IssuedId, issuedByUserId, notes));
+        docNumber._history.Add(DocumentNumberHistory.Create(docNumber.DocumentNumberId, DocumentNumberEventType.IssuedId, issuedByUserId, notes, utcNow: now));
         docNumber.RegistryDate = docNumber.IssuedAt;
         docNumber.RaiseDomainEvent(new OfficialNumberIssuedEvent(
             docNumber.DocumentNumberId,
@@ -104,8 +106,10 @@ public sealed class DocumentNumber : AggregateRoot<Guid>
         string? registryNumberText,
         DateTime registryDate,
         Guid recordedByUserId,
-        string? notes = null)
+        string? notes = null,
+        DateTime? utcNow = null)
     {
+        var now = utcNow ?? DateTime.UtcNow;
         if (departmentId == Guid.Empty)
             return Result.Failure<DocumentNumber>(DomainErrors.Department.NotFound);
 
@@ -128,7 +132,7 @@ public sealed class DocumentNumber : AggregateRoot<Guid>
             OfficialNumberText = numberValResult.Value.Value,
             StatusId = DocumentNumberStatus.ActiveId,
             IssuedByUserId = recordedByUserId,
-            IssuedAt = DateTime.UtcNow,
+            IssuedAt = now,
             RegistryDate = registryDate
         };
 
@@ -137,7 +141,8 @@ public sealed class DocumentNumber : AggregateRoot<Guid>
             DocumentNumberEventType.RegisteredInDepartmentId,
             recordedByUserId,
             notes,
-            registryDate));
+            registryDate,
+            now));
 
         return Result.Success(entry);
     }
@@ -146,7 +151,7 @@ public sealed class DocumentNumber : AggregateRoot<Guid>
     /// Records another arrival in a department that already registered this document. The number
     /// stays the same — only a new date and a history line are added.
     /// </summary>
-    public Result ReRegisterInDepartment(Guid actorUserId, DateTime registryDate, string? notes = null)
+    public Result ReRegisterInDepartment(Guid actorUserId, DateTime registryDate, string? notes = null, DateTime? utcNow = null)
     {
         if (!IsDepartmentEntry)
             return Result.Failure(DomainErrors.Numbering.DepartmentScopeMismatch);
@@ -163,12 +168,13 @@ public sealed class DocumentNumber : AggregateRoot<Guid>
             DocumentNumberEventType.ReRegisteredInDepartmentId,
             actorUserId,
             notes,
-            registryDate));
+            registryDate,
+            utcNow));
 
         return Result.Success();
     }
 
-    public Result Cancel(Guid actorUserId, string? reason)
+    public Result Cancel(Guid actorUserId, string? reason, DateTime? utcNow = null)
     {
         if (StatusId != DocumentNumberStatus.ActiveId)
             return Result.Failure(DomainErrors.Numbering.AlreadyCancelled);
@@ -178,13 +184,13 @@ public sealed class DocumentNumber : AggregateRoot<Guid>
 
         StatusId = DocumentNumberStatus.CancelledId;
         CancellationReason = reason.Trim();
-        _history.Add(DocumentNumberHistory.Create(DocumentNumberId, DocumentNumberEventType.CancelledId, actorUserId, reason.Trim()));
+        _history.Add(DocumentNumberHistory.Create(DocumentNumberId, DocumentNumberEventType.CancelledId, actorUserId, reason.Trim(), utcNow: utcNow));
 
         RaiseDomainEvent(new OfficialNumberCancelledEvent(DocumentNumberId, DocumentId, OfficialNumberText, actorUserId, reason.Trim()));
         return Result.Success();
     }
 
-    public Result ReplaceWith(Guid replacementNumberId, Guid actorUserId, string? reason)
+    public Result ReplaceWith(Guid replacementNumberId, Guid actorUserId, string? reason, DateTime? utcNow = null)
     {
         if (IsDepartmentEntry)
             return Result.Failure(DomainErrors.Numbering.DepartmentScopeMismatch);
@@ -201,7 +207,7 @@ public sealed class DocumentNumber : AggregateRoot<Guid>
         StatusId = DocumentNumberStatus.ReplacedId;
         ReplacedByNumberId = replacementNumberId;
         CancellationReason = reason.Trim();
-        _history.Add(DocumentNumberHistory.Create(DocumentNumberId, DocumentNumberEventType.ReplacedId, actorUserId, reason.Trim()));
+        _history.Add(DocumentNumberHistory.Create(DocumentNumberId, DocumentNumberEventType.ReplacedId, actorUserId, reason.Trim(), utcNow: utcNow));
 
         RaiseDomainEvent(new OfficialNumberReplacedEvent(DocumentNumberId, replacementNumberId, DocumentId, actorUserId, reason.Trim()));
         return Result.Success();

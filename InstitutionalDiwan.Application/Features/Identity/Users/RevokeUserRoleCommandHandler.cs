@@ -29,7 +29,7 @@ internal sealed class RevokeUserRoleCommandHandler : ICommandHandler<RevokeUserR
         if (user is null)
             return Result.Failure<UserResponse>(DomainErrors.Identity.UserNotFound);
 
-        var revokeResult = user.RevokeRole(request.RoleId);
+        var revokeResult = user.RevokeRole(request.RoleId, _unitOfWork.UtcNow);
         if (revokeResult.IsFailure)
             return Result.Failure<UserResponse>(revokeResult.Error);
 

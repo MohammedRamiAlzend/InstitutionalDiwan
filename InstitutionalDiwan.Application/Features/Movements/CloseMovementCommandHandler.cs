@@ -30,7 +30,7 @@ internal sealed class CloseMovementCommandHandler
         if (movement is null)
             return Result.Failure<MovementResponse>(DomainErrors.Movements.MovementNotFound);
 
-        var close = movement.Close(request.UserId, request.Notes);
+        var close = movement.Close(request.UserId, request.Notes, _unitOfWork.UtcNow);
         if (close.IsFailure)
             return Result.Failure<MovementResponse>(close.Error);
 
@@ -39,7 +39,8 @@ internal sealed class CloseMovementCommandHandler
         var document = await _documentRepository.GetByIdAsync(movement.DocumentId, cancellationToken);
         if (document is not null)
         {
-            var released = document.MarkMovementEnded(request.UserId, request.Notes ?? "Movement closed");
+            var released = document.MarkMovementEnded(
+                request.UserId, request.Notes ?? "Movement closed", _unitOfWork.UtcNow);
             if (released.IsFailure)
                 return Result.Failure<MovementResponse>(released.Error);
         }

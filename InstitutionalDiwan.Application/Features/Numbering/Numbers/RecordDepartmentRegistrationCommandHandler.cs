@@ -59,7 +59,7 @@ internal sealed class RecordDepartmentRegistrationCommandHandler
                 return Result.Failure<DocumentNumberResponse>(DomainErrors.Numbering.DepartmentNumberLocked);
 
             var reRegister = existing.ReRegisterInDepartment(
-                request.UserId, request.RegistryDate, request.Notes);
+                request.UserId, request.RegistryDate, request.Notes, _unitOfWork.UtcNow);
 
             if (reRegister.IsFailure)
                 return Result.Failure<DocumentNumberResponse>(reRegister.Error);
@@ -87,12 +87,13 @@ internal sealed class RecordDepartmentRegistrationCommandHandler
             numberText,
             request.RegistryDate,
             request.UserId,
-            request.Notes);
+            request.Notes,
+            utcNow: _unitOfWork.UtcNow);
 
         if (entryResult.IsFailure)
             return Result.Failure<DocumentNumberResponse>(entryResult.Error);
 
-        var attachResult = document.AddDepartmentNumber(entryResult.Value);
+        var attachResult = document.AddDepartmentNumber(entryResult.Value, _unitOfWork.UtcNow);
         if (attachResult.IsFailure)
             return Result.Failure<DocumentNumberResponse>(attachResult.Error);
 

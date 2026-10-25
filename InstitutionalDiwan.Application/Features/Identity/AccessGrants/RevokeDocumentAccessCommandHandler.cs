@@ -27,7 +27,7 @@ internal sealed class RevokeDocumentAccessCommandHandler
         if (grant is null)
             return Result.Failure<DocumentAccessGrantResponse>(DomainErrors.Identity.AccessGrantNotFound);
 
-        var revokeResult = grant.Revoke(request.RevokedByUserId);
+        var revokeResult = grant.Revoke(request.RevokedByUserId, _unitOfWork.UtcNow);
         if (revokeResult.IsFailure)
             return Result.Failure<DocumentAccessGrantResponse>(revokeResult.Error);
 

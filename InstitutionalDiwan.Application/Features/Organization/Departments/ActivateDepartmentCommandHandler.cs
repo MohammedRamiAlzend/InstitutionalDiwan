@@ -27,7 +27,7 @@ internal sealed class ActivateDepartmentCommandHandler
         if (department is null)
             return Result.Failure<DepartmentResponse>(DomainErrors.Department.NotFound);
 
-        var activateResult = department.Activate();
+        var activateResult = department.Activate(_unitOfWork.UtcNow);
         if (activateResult.IsFailure)
             return Result.Failure<DepartmentResponse>(activateResult.Error);
 

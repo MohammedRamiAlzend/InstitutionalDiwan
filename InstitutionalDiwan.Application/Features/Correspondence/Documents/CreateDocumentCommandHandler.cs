@@ -69,7 +69,8 @@ internal sealed class CreateDocumentCommandHandler : ICommandHandler<CreateDocum
             createdByUserId: user.UserId,
             subjectSummary: request.SubjectSummary,
             confidentialityLevelId: request.ConfidentialityLevelId ?? DocumentConfidentialityLevel.NormalId,
-            priorityLevelId: request.PriorityLevelId ?? DocumentPriorityLevel.NormalId);
+            priorityLevelId: request.PriorityLevelId ?? DocumentPriorityLevel.NormalId,
+            utcNow: _unitOfWork.UtcNow);
 
         if (documentResult.IsFailure)
             return Result.Failure<DocumentResponse>(documentResult.Error);
@@ -83,7 +84,8 @@ internal sealed class CreateDocumentCommandHandler : ICommandHandler<CreateDocum
 
         var registry = registryResult.Value;
 
-        var sequenceResult = registry.AllocateNextSequence(request.NumberingYear);
+        var sequenceResult = registry.AllocateNextSequence(
+            request.NumberingYear, _unitOfWork.UtcNow);
         if (sequenceResult.IsFailure)
             return Result.Failure<DocumentResponse>(sequenceResult.Error);
 
@@ -93,7 +95,8 @@ internal sealed class CreateDocumentCommandHandler : ICommandHandler<CreateDocum
             request.NumberingYear,
             sequenceResult.Value,
             numberText,
-            user.UserId);
+            user.UserId,
+            utcNow: _unitOfWork.UtcNow);
         if (numberResult.IsFailure)
             return Result.Failure<DocumentResponse>(numberResult.Error);
 
@@ -104,7 +107,8 @@ internal sealed class CreateDocumentCommandHandler : ICommandHandler<CreateDocum
         var registerResult = document.Register(
             numberResult.Value.DocumentNumberId,
             officialNumberValue.Value,
-            user.UserId);
+            user.UserId,
+            utcNow: _unitOfWork.UtcNow);
         if (registerResult.IsFailure)
             return Result.Failure<DocumentResponse>(registerResult.Error);
 
@@ -129,7 +133,8 @@ internal sealed class CreateDocumentCommandHandler : ICommandHandler<CreateDocum
 
         var created = NumberingRegistry.Create(
             DefaultRegistryCode,
-            "سجل الترقيم الافتراضي");
+            "سجل الترقيم الافتراضي",
+            utcNow: _unitOfWork.UtcNow);
         if (created.IsFailure)
             return Result.Failure<NumberingRegistry>(created.Error);
 

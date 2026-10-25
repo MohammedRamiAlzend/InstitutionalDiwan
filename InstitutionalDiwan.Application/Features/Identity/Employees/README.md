@@ -40,5 +40,6 @@ soft-deleted through `IsActive` so historical references survive.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-22 | Buffy | Handlers now pass `IUnitOfWork.UtcNow` into `Employee.Create`/`Update`/`Activate`/`Deactivate` for deterministic timestamps. |
 | 2026-10-22 | opencode | Documented the slice and made `ListEmployeesQuery` return `PagedResult<EmployeeResponse>` with `page`, `pageSize`, and a name/employee-number `search`; `EmployeeRepository.ListPagedAsync` applies the filter and `Skip`/`Take` in SQL. |
 | 2026-10-18 | opencode | Added the slice (`CreateEmployeeCommand`, `UpdateEmployeeCommand`, `DeactivateEmployeeCommand`, `ActivateEmployeeCommand`, `ListEmployeesQuery`, `GetEmployeeByIdQuery`) together with the `EMPLOYEE_MANAGE` permission. |

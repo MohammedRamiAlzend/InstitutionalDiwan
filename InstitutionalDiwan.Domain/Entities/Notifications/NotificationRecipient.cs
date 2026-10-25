@@ -23,7 +23,7 @@ public sealed class NotificationRecipient : Entity<Guid>
     {
     }
 
-    internal static NotificationRecipient Create(Guid notificationId, Guid userId, Guid? departmentId = null)
+    internal static NotificationRecipient Create(Guid notificationId, Guid userId, Guid? departmentId = null, DateTime? utcNow = null)
     {
         return new NotificationRecipient
         {
@@ -33,16 +33,16 @@ public sealed class NotificationRecipient : Entity<Guid>
             DepartmentId = departmentId,
             IsRead = false,
             IsDismissed = false,
-            DeliveredAt = DateTime.UtcNow
+            DeliveredAt = utcNow ?? DateTime.UtcNow
         };
     }
 
-    public Result MarkAsRead()
+    public Result MarkAsRead(DateTime? utcNow = null)
     {
         if (!IsRead)
         {
             IsRead = true;
-            ReadAt = DateTime.UtcNow;
+            ReadAt = utcNow ?? DateTime.UtcNow;
         }
         return Result.Success();
     }

@@ -1,8 +1,8 @@
 # InstitutionalDiwan.Tests — xUnit test suite
 
-> **Status:** Implemented — 303 tests covering domain handlers, department register numbering, the
+> **Status:** Implemented — 312 tests covering domain handlers, department register numbering, the
 > receipt gate, the movement routing workflow, the department inbox/outbox, seeding, authorization,
-> paging/search/filtering, and the generic lookups API.
+> paging/search/filtering, the caller profile, deterministic time, and the generic lookups API.
 
 ## Purpose
 
@@ -14,7 +14,7 @@ indexes) runs against a private SQLite in-memory database through `Support/TestC
 
 | Folder | Contents |
 | --- | --- |
-| `Application/` | Handler/validator tests per slice — Identity (users, roles, permissions, employees, access grants, login/register/change password), Organization/Departments + `InstitutionSettingsHandlerTests`, Correspondence/`Documents` (`DocumentLifecycleHandlerTests`) + `ExternalOrganizationsHandlerTests`, Numbering (`OfficialNumberLifecycleHandlerTests`, `DepartmentRegisterNumberingTests`), Movements (`MovementWorkflowHandlerTests`), and `LookupHandlerTests.cs`. |
+| `Application/` | Handler/validator tests per slice — Identity (users, roles, permissions, employees, access grants, login/register/change password, `GetUserProfileQueryHandlerTests`), Organization/Departments + `InstitutionSettingsHandlerTests`, Correspondence/`Documents` (`DocumentLifecycleHandlerTests`, `ListDepartmentDocumentsQueryHandlerTests`) + `ExternalOrganizationsHandlerTests`, Numbering (`OfficialNumberLifecycleHandlerTests`, `DepartmentRegisterNumberingTests`), Movements (`MovementWorkflowHandlerTests`), `UnitOfWorkClockTests` (handler-stamped times come from `IUnitOfWork.UtcNow`), and `LookupHandlerTests.cs`. |
 | `Authorization/` | `PermissionAuthorizationHandlerTests` (policy handler + `Permissions.All` integrity), `DepartmentScopeEvaluatorTests` (primary department, institution/dept-tree scope, temporal assignments incl. `IncludeSubtree` and ended assignments), `DocumentAccessEvaluatorTests` (authorship, grants incl. revoked, scope, confidentiality, anonymous). |
 | `Persistence/` | `DocumentMovementRepositoryTests` — the inbox/outbox queries against a real SQLite database, so the SQL EF Core generates for the correlated current-step filters is verified and not only the in-memory fake. |
 | `Server/` | `OpenApiDocumentationTests` — every controller endpoint must carry an `[EndpointSummary]`, an `[EndpointDescription]`, and a `<param>` description with an example. |
@@ -59,6 +59,7 @@ indexes) runs against a private SQLite in-memory database through `Support/TestC
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-22 | Buffy | Added `GetUserProfileQueryHandlerTests` (authenticated projection + unauthenticated 401), `ListDepartmentDocumentsQueryHandlerTests` (department filter, paging, 404, out-of-scope 403), and `UnitOfWorkClockTests` (document, numbering, and login writes all carry the unit of work's instant). 303 → 312 tests. |
 | 2026-10-22 | opencode | Extended the list-handler tests for the paged contracts (documents, users, employees, external organizations) with cases for paging, clamping, search, sorting, and filtering; the fakes now implement `ListPagedAsync`. 294 → 303 tests. |
 | 2026-10-21 | opencode | Added `Application/MovementWorkflowHandlerTests` (routing workflow + inbox/outbox) and `Persistence/DocumentMovementRepositoryTests` (the queue queries against SQLite); extended `FakeDocumentMovementRepository` with the list/queue members. |
 | 2026-10-20 | Buffy | Added `DepartmentRegisterNumberingTests` (11 cases) for department register entries and the register-gated receipt; updated the seeding pipeline expectations for the new `DOCUMENT_NUMBER_SCOPES` lookup and the two department event types, and extended the fakes with the new repository members. |

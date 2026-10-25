@@ -36,12 +36,15 @@ public sealed class DocumentAccessGrant : AggregateRoot<Guid>
         int accessLevelId,
         Guid grantedByUserId,
         string? reason = null,
-        DateTime? expiresAt = null)
+        DateTime? expiresAt = null,
+        DateTime? utcNow = null)
     {
+        var now = utcNow ?? DateTime.UtcNow;
+
         if (accessLevelId is not (AccessLevel.ViewId or AccessLevel.DownloadId or AccessLevel.ForwardId or AccessLevel.ManageId))
             return Result.Failure<DocumentAccessGrant>(DomainErrors.Identity.AccessLevelInvalid);
 
-        if (expiresAt.HasValue && expiresAt.Value <= DateTime.UtcNow)
+        if (expiresAt.HasValue && expiresAt.Value <= now)
             return Result.Failure<DocumentAccessGrant>(DomainErrors.Identity.InvalidDateRange);
 
         var grant = new DocumentAccessGrant
@@ -52,7 +55,7 @@ public sealed class DocumentAccessGrant : AggregateRoot<Guid>
             AccessLevelId = accessLevelId,
             GrantedByUserId = grantedByUserId,
             Reason = reason,
-            GrantedAt = DateTime.UtcNow,
+            GrantedAt = now,
             ExpiresAt = expiresAt,
             IsRevoked = false
         };
@@ -61,13 +64,13 @@ public sealed class DocumentAccessGrant : AggregateRoot<Guid>
         return Result.Success(grant);
     }
 
-    public Result Revoke(Guid revokedByUserId)
+    public Result Revoke(Guid revokedByUserId, DateTime? utcNow = null)
     {
         if (IsRevoked)
             return Result.Failure(DomainErrors.Identity.GrantAlreadyRevoked);
 
         IsRevoked = true;
-        RevokedAt = DateTime.UtcNow;
+        RevokedAt = utcNow ?? DateTime.UtcNow;
         RevokedByUserId = revokedByUserId;
 
         RaiseDomainEvent(new DocumentAccessRevokedEvent(GrantId, DocumentId, UserId));

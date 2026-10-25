@@ -42,7 +42,8 @@ internal sealed class GrantDocumentAccessCommandHandler
             request.AccessLevelId,
             request.GrantedByUserId,
             request.Reason,
-            request.ExpiresAt);
+            request.ExpiresAt,
+            utcNow: _unitOfWork.UtcNow);
 
         if (grantResult.IsFailure)
             return Result.Failure<DocumentAccessGrantResponse>(grantResult.Error);

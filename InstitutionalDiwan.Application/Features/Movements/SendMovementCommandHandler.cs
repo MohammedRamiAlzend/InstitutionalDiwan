@@ -27,7 +27,7 @@ internal sealed class SendMovementCommandHandler
         if (movement is null)
             return Result.Failure<MovementResponse>(DomainErrors.Movements.MovementNotFound);
 
-        var send = movement.Send(request.UserId, request.Notes);
+        var send = movement.Send(request.UserId, request.Notes, _unitOfWork.UtcNow);
         if (send.IsFailure)
             return Result.Failure<MovementResponse>(send.Error);
 

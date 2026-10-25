@@ -27,7 +27,7 @@ internal sealed class UpdateDepartmentCommandHandler
         if (department is null)
             return Result.Failure<DepartmentResponse>(DomainErrors.Department.NotFound);
 
-        var renameResult = department.Rename(request.NameAr, request.NameEn);
+        var renameResult = department.Rename(request.NameAr, request.NameEn, _unitOfWork.UtcNow);
         if (renameResult.IsFailure)
             return Result.Failure<DepartmentResponse>(renameResult.Error);
 
@@ -48,12 +48,13 @@ internal sealed class UpdateDepartmentCommandHandler
             }
 
             var moveResult = department.MoveToParent(
-                request.ParentDepartmentId, descendantIds, newParentIsActive);
+                request.ParentDepartmentId, descendantIds, newParentIsActive, _unitOfWork.UtcNow);
             if (moveResult.IsFailure)
                 return Result.Failure<DepartmentResponse>(moveResult.Error);
         }
 
-        department.UpdateExternalCorrespondencePolicy(request.CanSendExternal, request.CanReceiveExternal);
+        department.UpdateExternalCorrespondencePolicy(
+            request.CanSendExternal, request.CanReceiveExternal, _unitOfWork.UtcNow);
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 

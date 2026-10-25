@@ -27,7 +27,7 @@ technology choices swappable.
 
 | Interface | Shape | Notes |
 | --- | --- | --- |
-| `IUserContext` | `bool IsAuthenticated`, `Guid UserId`, `Guid PrimaryDepartmentId`, `int ScopeTypeId`, `IReadOnlySet<string> Permissions` | Ambient current user projected from the JWT claims (`sub`, `dept_id`, `scope_type`, one `permission` claim per code). ✅ Implemented (`Infrastructure/Authentication/UserContext.cs`). |
+| `IUserContext` | `bool IsAuthenticated`, `Guid UserId`, `string Username`, `IReadOnlySet<string> Roles`, `Guid PrimaryDepartmentId`, `int ScopeTypeId`, `IReadOnlySet<string> Permissions` | Ambient current user projected from the JWT claims (`sub`, `unique_name`, `role`, `dept_id`, `scope_type`, one `permission` claim per code). ✅ Implemented (`Infrastructure/Authentication/UserContext.cs`). |
 | `IJwtProvider` | `GenerateAccessToken(...)` + permission/role claims | ✅ Implemented; consumed by `LoginCommand` and the auth controller. |
 | `IPasswordHasher` | `string Hash(string)`, `bool Verify(string, string)` | ✅ Implemented (PBKDF2 in `Infrastructure/Authentication/PasswordHasher.cs`). |
 
@@ -73,7 +73,7 @@ technology choices swappable.
 | `Messaging/IQueryHandler.cs` | `IQueryHandler<TQuery, TResponse>` for read-only use cases. |
 | `Authentication/IJwtProvider.cs` | Issues signed access tokens carrying user id, roles, and permission claims. |
 | `Authentication/IPasswordHasher.cs` | `Hash` / `Verify` for user credentials (PBKDF2 implementation in Infrastructure). |
-| `Authentication/IUserContext.cs` | Ambient caller identity (authenticated flag, user id, primary department, scope type, permission set) so handlers never touch `HttpContext`. |
+| `Authentication/IUserContext.cs` | Ambient caller identity (authenticated flag, user id, username, role codes, primary department, scope type, permission set) so handlers never touch `HttpContext`; backs `GetUserProfileQuery`. |
 | `Authorization/IDepartmentScopeEvaluator.cs` | Answers “may the caller act on this department?”, implemented from the user's scope type, primary department, and active assignments. |
 | `Authorization/IDocumentAccessEvaluator.cs` | Answers “may the caller reach this document at this access level?”, implemented from grants, authorship, scope, and confidentiality. |
 
@@ -97,5 +97,6 @@ technology choices swappable.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-22 | Buffy | Extended `IUserContext` with `Username` and `Roles` so `GetUserProfileQuery` can project the caller's profile (`GET /api/auth/me`) without reading claims in the controller. |
 | 2026-10-19 | Buffy | Added `Authentication/IUserContext` and the `Authorization/` group (`IDepartmentScopeEvaluator`, `IDocumentAccessEvaluator`) — the contracts behind the three-tier access model; implemented in `Infrastructure/Authentication/UserContext.cs` and `Infrastructure/Authorization/`. |
 | 2026-10-19 | opencode | Recorded `Messaging/` (`ICommand`, `ICommandHandler`, `IQuery`, `IQueryHandler`) and `Authentication/` (`IJwtProvider`, `IPasswordHasher`) as ✅ implemented with a per-file Contents table; the README previously reported both groups as not implemented. |

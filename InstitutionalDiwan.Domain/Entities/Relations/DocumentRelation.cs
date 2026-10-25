@@ -31,7 +31,8 @@ public sealed class DocumentRelation : AggregateRoot<Guid>
         DocumentRelationType relationType,
         Guid createdByUserId,
         bool wouldIntroduceCycle = false,
-        string? notes = null)
+        string? notes = null,
+        DateTime? utcNow = null)
     {
         if (sourceDocumentId == targetDocumentId)
             return Result.Failure<DocumentRelation>(DomainErrors.Relations.SelfRelation);
@@ -52,7 +53,7 @@ public sealed class DocumentRelation : AggregateRoot<Guid>
             RelationTypeId = relationType.Id,
             Notes = string.IsNullOrWhiteSpace(notes) ? null : notes.Trim(),
             CreatedByUserId = createdByUserId,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = utcNow ?? DateTime.UtcNow
         };
 
         relation.RaiseDomainEvent(new DocumentRelationCreatedEvent(

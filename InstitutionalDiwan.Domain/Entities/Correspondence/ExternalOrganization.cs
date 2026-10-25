@@ -27,7 +27,8 @@ public sealed class ExternalOrganization : AggregateRoot<Guid>
         string? nameAr,
         int organizationTypeId = OrganizationType.GovernmentId,
         string? nameEn = null,
-        string? contactInfo = null)
+        string? contactInfo = null,
+        DateTime? utcNow = null)
     {
         if (string.IsNullOrWhiteSpace(code))
             return Result.Failure<ExternalOrganization>(DomainErrors.Correspondence.ExternalOrgCodeEmpty);
@@ -47,7 +48,7 @@ public sealed class ExternalOrganization : AggregateRoot<Guid>
             OrganizationTypeId = organizationTypeId,
             ContactInfo = contactInfo,
             IsActive = true,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = utcNow ?? DateTime.UtcNow
         };
 
         return Result.Success(org);
@@ -58,8 +59,11 @@ public sealed class ExternalOrganization : AggregateRoot<Guid>
         string? nameAr,
         int organizationTypeId,
         string? nameEn = null,
-        string? contactInfo = null)
+        string? contactInfo = null,
+        DateTime? utcNow = null)
     {
+        var now = utcNow ?? DateTime.UtcNow;
+
         if (string.IsNullOrWhiteSpace(nameAr))
             return Result.Failure(DomainErrors.Correspondence.ExternalOrgNameEmpty);
 
@@ -70,27 +74,29 @@ public sealed class ExternalOrganization : AggregateRoot<Guid>
         NameEn = string.IsNullOrWhiteSpace(nameEn) ? null : nameEn.Trim();
         OrganizationTypeId = organizationTypeId;
         ContactInfo = string.IsNullOrWhiteSpace(contactInfo) ? null : contactInfo.Trim();
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = now;
         return Result.Success();
     }
 
-    public Result Deactivate()
+    public Result Deactivate(DateTime? utcNow = null)
     {
+        var now = utcNow ?? DateTime.UtcNow;
         if (!IsActive)
             return Result.Success();
 
         IsActive = false;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = now;
         return Result.Success();
     }
 
-    public Result Activate()
+    public Result Activate(DateTime? utcNow = null)
     {
+        var now = utcNow ?? DateTime.UtcNow;
         if (IsActive)
             return Result.Success();
 
         IsActive = true;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = now;
         return Result.Success();
     }
 }

@@ -22,6 +22,7 @@ The project name and namespaces are `InstitutionalDiwan.Domain.*`. Earlier desig
 | Expected failures are values | Business-rule violations return `Result` / `Result<T>`; they do **not** throw. |
 | Invariants at construction | Factory methods (`Create`, `Issue`, `Grant`, …) validate and return `Result<T>`; private parameterless constructors exist only for persistence. |
 | Domain events | Aggregate roots raise immutable `IDomainEvent` records into a private collection exposed read-only. |
+| Deterministic time | Every method that stamps a timestamp takes a trailing optional `DateTime? utcNow` and falls back to `DateTime.UtcNow` only when it is omitted. Application handlers pass `IUnitOfWork.UtcNow`, so one transaction writes one instant and tests can pin it. |
 
 ## Folder contents
 
@@ -275,7 +276,7 @@ them, while listing, relabelling and (de)activation keep working.
 
 | Folder | State |
 | --- | --- |
-| `Common/` | ✅ Implemented (`Result`, `Error`, `Entity`, `AggregateRoot`, `ValueObject`, `IDomainEvent`, `DomainException`, `IUnitOfWork`, `PageRequest`, `PagedList<T>`) |
+| `Common/` | ✅ Implemented (`Result`, `Error`, `Entity`, `AggregateRoot`, `ValueObject`, `IDomainEvent`, `DomainException`, `IClock`, `IUnitOfWork`, `PageRequest`, `PagedList<T>`) |
 | `ValueObjects/` | ✅ Implemented (4 value objects) |
 | `Errors/` | ✅ Implemented (`DomainErrors` catalog) |
 | `Events/` | ✅ Implemented (34 events) |
@@ -297,6 +298,7 @@ them, while listing, relabelling and (de)activation keep working.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-22 | Buffy | Threaded deterministic time through the whole layer: every aggregate factory/behavior that stamps a timestamp (`Document`, `User`, `Department`, `Employee`, `DocumentMovement` + steps/events, `DocumentNumber`, `NumberingRegistry`/`Counter`, `InstitutionSetting`, `ExternalOrganization`, `DocumentAccessGrant`, `Role`/`Permission`/`RolePermission`, `UserRole`/`UserDepartmentAssignment`, `DocumentFile`, `AuditCheckpoint`/`AuditIntegrityCheck`, `Notification*`, `SavedSearch`, relations, lookups, `DepartmentType`) now accepts an optional `utcNow` and uses it for nested rows too. The system clock remains only as the fallback (`IDomainEvent.OccurredOnUtc`, `AuditLog.Record`). Added `DomainErrors.Identity.NotAuthenticated` and `DomainErrors.Correspondence.DepartmentOutOfScope`. |
 | 2026-10-22 | opencode | Added `Common/PageRequest` (normalized page/pageSize/search/sort with clamping) and `Common/PagedList<T>` (one page + total count), and the `ListPagedAsync` contracts on `IDocumentRepository`, `IUserRepository`, `IEmployeeRepository`, and `IExternalOrganizationRepository`. Replaced `IDocumentRepository.ListRecentAsync`. |
 | 2026-10-21 | opencode | Added `Document.MarkMovementEnded` (a document leaves `IN_MOVEMENT` when its movement closes or is canceled), the `DomainErrors.Movements.ActiveMovementExists` / `DepartmentOutOfScope`, `DomainErrors.Department.Inactive`, and `DomainErrors.Correspondence.OnlyRegisteredRoutable` errors, and the `IDocumentMovementRepository.ListByDocumentAsync`/`ListInboxAsync`/`ListOutboxAsync` contracts. |
 | 2026-10-20 | Buffy | Added department register numbering: `DocumentNumberScope` lookup, `ScopeId`/`DepartmentId`/`RegistryDate` and `CreateDepartmentEntry`/`ReRegisterInDepartment` on `DocumentNumber`, `EffectiveDate` on `DocumentNumberHistory`, the `RegisteredInDepartment`/`ReRegisteredInDepartment` events, `Document.Numbers` with `AddDepartmentNumber`/`FindDepartmentNumber`, `DocumentMovementStep.RegistryNumberId` with a register-gated `ReceiveStep`, the new `DomainErrors.Numbering.*`/`Movements.MovementNotFound` entries, and the repository contracts for scoped uniqueness, department entries, register books, and bulk document loads. |

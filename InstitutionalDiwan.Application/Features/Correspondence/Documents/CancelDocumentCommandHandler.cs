@@ -33,7 +33,8 @@ internal sealed class CancelDocumentCommandHandler
         var hasActiveMovements = await _documentMovementRepository.HasActiveMovementsAsync(
             document.DocumentId, cancellationToken);
 
-        var cancelResult = document.Cancel(request.UserId, hasActiveMovements, request.Reason);
+        var cancelResult = document.Cancel(
+            request.UserId, hasActiveMovements, request.Reason, utcNow: _unitOfWork.UtcNow);
         if (cancelResult.IsFailure)
             return Result.Failure<DocumentResponse>(cancelResult.Error);
 

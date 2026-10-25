@@ -208,6 +208,8 @@ internal sealed class FakeUserContext : IUserContext
 {
     public bool IsAuthenticated { get; set; }
     public Guid UserId { get; set; }
+    public string Username { get; set; } = string.Empty;
+    public IReadOnlySet<string> Roles { get; set; } = new HashSet<string>(StringComparer.Ordinal);
     public Guid PrimaryDepartmentId { get; set; }
     public int ScopeTypeId { get; set; } = UserScopeType.DepartmentId;
     public IReadOnlySet<string> Permissions { get; set; } =

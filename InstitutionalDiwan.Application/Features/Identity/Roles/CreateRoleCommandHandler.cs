@@ -31,7 +31,8 @@ internal sealed class CreateRoleCommandHandler : ICommandHandler<CreateRoleComma
             request.NameAr,
             request.NameEn,
             request.Description,
-            isSystemRole: false);
+            isSystemRole: false,
+            utcNow: _unitOfWork.UtcNow);
 
         if (roleResult.IsFailure)
             return Result.Failure<RoleResponse>(roleResult.Error);

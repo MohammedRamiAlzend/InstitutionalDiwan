@@ -27,7 +27,7 @@ internal sealed class RejectMovementStepCommandHandler
         if (movement is null)
             return Result.Failure<MovementResponse>(DomainErrors.Movements.MovementNotFound);
 
-        var reject = movement.RejectStep(request.UserId, request.Reason);
+        var reject = movement.RejectStep(request.UserId, request.Reason, _unitOfWork.UtcNow);
         if (reject.IsFailure)
             return Result.Failure<MovementResponse>(reject.Error);
 

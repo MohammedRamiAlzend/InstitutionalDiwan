@@ -23,7 +23,8 @@ public sealed class Permission : Entity<string>
         string? nameAr,
         string? moduleName,
         string? nameEn = null,
-        string? description = null)
+        string? description = null,
+        DateTime? utcNow = null)
     {
         if (string.IsNullOrWhiteSpace(code))
             return Result.Failure<Permission>(DomainErrors.Identity.PermissionCodeEmpty);
@@ -41,7 +42,7 @@ public sealed class Permission : Entity<string>
             NameEn = string.IsNullOrWhiteSpace(nameEn) ? null : nameEn.Trim(),
             ModuleName = moduleName.Trim().ToUpperInvariant(),
             Description = description,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = utcNow ?? DateTime.UtcNow
         };
 
         return Result.Success(permission);

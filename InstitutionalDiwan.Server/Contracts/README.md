@@ -56,6 +56,7 @@ commands/queries map between them and the domain.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-22 | Buffy | Removed `Identity/MeResponse.cs`; `GET /api/auth/me` now returns `UserProfileResponse` from `Features/Identity/Login/`, the same way the auth endpoints already return the Application-layer `LoginResponse`. The JSON shape is unchanged. |
 | 2026-10-21 | opencode | Completed the `Movements/` folder: `CreateMovementRequest`, `SendMovementRequest`, `CompleteMovementStepRequest`, `RejectMovementStepRequest`, `ReturnMovementToSenderRequest`, `RedirectMovementRequest`, `CloseMovementRequest`, and `CancelMovementRequest` for the routing workflow. |
 | 2026-10-20 | Buffy | Added `RecordDepartmentRegistrationRequest` (department register number + date typed by the clerk) and the `Movements/ReceiveDocumentRequest` folder for the register-gated receipt. |
 | 2026-10-19 | Buffy | Added `UpdateInstitutionSettingsRequest`, `CreateDraftDocumentRequest`, `UpdateDocumentMetadataRequest`, `RegisterDocumentRequest`, `AddDocumentParticipantRequest`, `CancelDocumentRequest`, `CreateExternalOrganizationRequest`, `UpdateExternalOrganizationRequest`, `AssignUserDepartmentScopeRequest`, and the `Numbering/` registry + number requests for the Module 01–04 endpoints. |

@@ -27,7 +27,7 @@ internal sealed class CompleteMovementStepCommandHandler
         if (movement is null)
             return Result.Failure<MovementResponse>(DomainErrors.Movements.MovementNotFound);
 
-        var complete = movement.CompleteStep(request.UserId, request.Notes);
+        var complete = movement.CompleteStep(request.UserId, request.Notes, _unitOfWork.UtcNow);
         if (complete.IsFailure)
             return Result.Failure<MovementResponse>(complete.Error);
 

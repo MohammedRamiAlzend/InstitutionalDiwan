@@ -34,7 +34,8 @@ public sealed class DocumentRelationEvent : Entity<Guid>
         int relationTypeId,
         int actionTypeId,
         Guid actorUserId,
-        string? reason = null)
+        string? reason = null,
+        DateTime? utcNow = null)
     {
         var ev = new DocumentRelationEvent
         {
@@ -46,7 +47,7 @@ public sealed class DocumentRelationEvent : Entity<Guid>
             ActionTypeId = actionTypeId,
             ActorUserId = actorUserId,
             Reason = string.IsNullOrWhiteSpace(reason) ? null : reason.Trim(),
-            OccurredAt = DateTime.UtcNow
+            OccurredAt = utcNow ?? DateTime.UtcNow
         };
 
         return Result.Success(ev);

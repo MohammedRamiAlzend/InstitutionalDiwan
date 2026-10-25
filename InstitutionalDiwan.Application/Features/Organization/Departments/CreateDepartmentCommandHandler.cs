@@ -56,7 +56,8 @@ internal sealed class CreateDepartmentCommandHandler
             request.NameEn,
             request.CanSendExternal,
             request.CanReceiveExternal,
-            request.Notes);
+            request.Notes,
+            utcNow: _unitOfWork.UtcNow);
 
         if (createResult.IsFailure)
             return Result.Failure<DepartmentResponse>(createResult.Error);

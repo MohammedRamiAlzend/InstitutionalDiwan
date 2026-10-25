@@ -62,5 +62,6 @@ one document.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-22 | Buffy | Issue/cancel/replace and department-registration handlers now pass `IUnitOfWork.UtcNow` into the registry allocation and the number factories, so the counter, the number, and its history share one instant. |
 | 2026-10-20 | Buffy | Added department register entries: a clerk-typed number and date per department (`RecordDepartmentRegistrationCommand`), a second arrival that reuses the number and adds a dated history row, and `GetDocumentRegistryNumbersQuery` to read the central number alongside every department line. |
 | 2026-10-19 | Buffy | Added the four official-number use cases, backed by `NumberingRegistry.AllocateNextSequence`, `DocumentNumber.Issue/Cancel/ReplaceWith`, and the new `Document.AttachReplacementNumber`; endpoints exposed on `DocumentNumbersController` behind `NUMBERING_MANAGE` / `NUMBERING_VIEW`. |

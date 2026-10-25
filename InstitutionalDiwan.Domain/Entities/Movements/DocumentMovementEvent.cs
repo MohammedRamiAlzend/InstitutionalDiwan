@@ -27,7 +27,8 @@ public sealed class DocumentMovementEvent : Entity<Guid>
         int stepNo,
         int eventTypeId,
         Guid actorUserId,
-        string? notes = null)
+        string? notes = null,
+        DateTime? utcNow = null)
     {
         return new DocumentMovementEvent
         {
@@ -37,7 +38,7 @@ public sealed class DocumentMovementEvent : Entity<Guid>
             EventTypeId = eventTypeId,
             ActorUserId = actorUserId,
             Notes = string.IsNullOrWhiteSpace(notes) ? null : notes.Trim(),
-            OccurredAt = DateTime.UtcNow
+            OccurredAt = utcNow ?? DateTime.UtcNow
         };
     }
 }

@@ -81,6 +81,7 @@ public static class DomainErrors
         public static readonly Error AccessLevelInvalid = Error.Validation("Identity.AccessLevelInvalid", "Access level must be VIEW, DOWNLOAD, FORWARD, or MANAGE.");
         public static readonly Error GrantAlreadyRevoked = Error.Conflict("Identity.GrantAlreadyRevoked", "Document access grant has already been revoked.");
         public static readonly Error InvalidCredentials = Error.Unauthorized("Identity.InvalidCredentials", "Invalid username or password.");
+        public static readonly Error NotAuthenticated = Error.Unauthorized("Identity.NotAuthenticated", "No authenticated caller is attached to the current request.");
         public static readonly Error UserInactive = Error.Forbidden("Identity.UserInactive", "The user account is inactive.");
         public static readonly Error UsernameTaken = Error.Conflict("Identity.UsernameTaken", "The username is already taken.");
         public static readonly Error RoleNotFound = Error.NotFound("Identity.RoleNotFound", "The specified role was not found.");
@@ -113,6 +114,7 @@ public static class DomainErrors
         public static readonly Error CannotCancelArchived = Error.Conflict("Correspondence.CannotCancelArchived", "Archived documents must be unarchived before cancellation.");
         public static readonly Error CancelReasonEmpty = Error.Validation("Correspondence.CancelReasonEmpty", "A cancellation reason is required.");
         public static readonly Error DocumentNotFound = Error.NotFound("Correspondence.DocumentNotFound", "The document was not found.");
+        public static readonly Error DepartmentOutOfScope = Error.Forbidden("Correspondence.DepartmentOutOfScope", "The requested department's documents are outside the caller's organizational scope.");
         public static readonly Error SingleExternalPartyLimit = Error.Conflict("Correspondence.SingleExternalPartyLimit", "A document can have at most one ExternalOrganization participant.");
         public static readonly Error ParticipantRoleEmpty = Error.Validation("Correspondence.ParticipantRoleEmpty", "Participant role code is required.");
         public static readonly Error ParticipantTargetInvalid = Error.Validation("Correspondence.ParticipantTargetInvalid", "Participant target must specify exactly one External organization, Internal department, or Person name.");

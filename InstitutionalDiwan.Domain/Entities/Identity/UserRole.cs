@@ -14,13 +14,17 @@ public sealed class UserRole
     {
     }
 
-    internal static Result<UserRole> Create(Guid userId, Guid roleId, Guid? assignedByUserId = null)
+    internal static Result<UserRole> Create(
+        Guid userId,
+        Guid roleId,
+        Guid? assignedByUserId = null,
+        DateTime? utcNow = null)
     {
         var userRole = new UserRole
         {
             UserId = userId,
             RoleId = roleId,
-            AssignedAt = DateTime.UtcNow,
+            AssignedAt = utcNow ?? DateTime.UtcNow,
             AssignedByUserId = assignedByUserId
         };
 
