@@ -1,19 +1,50 @@
-# `src/pages/documents` — Correspondence Registry & Document Details Page Slice (`/documents`)
-## 1. Purpose
-Renders the primary correspondence registry view at `/documents` and individual document detail view at `/documents/:id`, composing `DocumentRegistryTable` (`widgets/document-registry-table`), `CreateDocumentModal` (`features/document-create`), and `DocumentAccessModal` (`features/document-access-grant`).
-## 2. Strict FSD Rules
-- Allowed Imports: `src/widgets/*`, `src/features/*`, `src/entities/*`, and `src/shared/*`.
-- Forbidden Imports: NEVER import from `src/app` or sibling `src/pages/*` slices.
-- Public API: Export `DocumentsPage` and `DocumentDetailsPage` only via `src/pages/documents/index.ts`.
-## 3. Planned Contents & Segments
-- `ui/DocumentsPage.tsx` — Main registry view with header action bar and `DocumentRegistryTable`.
-- `ui/DocumentDetailsPage.tsx` — Detailed metadata, numbering badge, and access control list for a single document.
-- `index.ts` — Public API barrel file.
-## 4. Required Packages
-- `react-router-dom`, `@tanstack/react-query`, `lucide-react`
-## 5. Implementation Status
-- Slice folder and FSD rules established
-- Implement `DocumentsPage` and `DocumentDetailsPage`
-## 6. Change Log
-- 2026-10-22: Converted this `README.md` from the Word document it was authored in to markdown, so the `README.md`-per-folder rule in `AGENT.md` holds and the content is diffable and agent-editable.
-- 2026-10-19: Created `pages/documents` slice folder and `README.md`.
+# `src/pages/documents` — Correspondence Registry & Document Details (`/documents`)
+
+> **Status:** Docs only — backend Modules 03 + 06 ready; page code pending.
+
+## Purpose
+
+Renders the correspondence registry at `/documents` and document detail at `/documents/:documentId`.
+Detail composes metadata, numbering, access grants, movement timeline, and the **attachments panel**
+(Module 06).
+
+## Strict FSD Rules
+
+- Allowed: `@/widgets/*`, `@/features/*`, `@/entities/*`, `@/shared/*`.
+- Forbidden: `@/app/*`, sibling pages.
+- Public API: export `DocumentsPage` and `DocumentDetailsPage` via `index.ts`.
+
+## Planned Contents
+
+| File | Purpose |
+| --- | --- |
+| `ui/DocumentsPage.tsx` | Registry + create document entry point. |
+| `ui/DocumentDetailsPage.tsx` | Tabs/sections: details, participants, numbers, movements, files, grants. |
+| `index.ts` | Public barrel. |
+
+## Widgets / features composed
+
+- `widgets/document-registry-table`
+- `widgets/document-attachments-panel` ← `GET/POST /api/documents/{id}/files`
+- `widgets/movement-timeline`
+- `features/document-create`, `document-access-grant`, `attachment-upload`, `movement-routing`
+
+## URL state
+
+- List: `?page=&pageSize=&search=&statusId=&directionId=&documentTypeId=&sortBy=&sortDescending=`
+- Detail: `?tab=details|files|movements|grants`
+
+## Implementation status
+
+| Item | State |
+| --- | --- |
+| Slice folder + rules | ✅ Documented |
+| Page components | ❌ Not implemented |
+
+## Change Log
+
+| Date | Author | Change |
+| --- | --- | --- |
+| 2026-10-25 | Cursor | Documented Module 06 attachments panel on detail, URL tabs, and composed widgets. |
+| 2026-10-22 | opencode | Converted this README from the Word document it was authored in to markdown. |
+| 2026-10-19 | agent | Created `pages/documents` slice folder and README. |

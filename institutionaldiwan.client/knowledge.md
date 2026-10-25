@@ -1,14 +1,24 @@
 # Institutional Diwan React Client — Freebuff / Codebuff Knowledge
 
-> **Status:** Current as of 2026-10-22 — reflects the backend after the paged-list change
-> (Modules 01–05 complete: Organization, Identity, Correspondence, Numbering, Movements; the four
-> unbounded list endpoints are server-paged).
+> **Status:** Current as of **2026-10-25** — backend Modules **01–06** and **09** are live
+> (Organization, Identity, Correspondence, Numbering, Movements, Attachments, Audit) plus the
+> generic Lookups API. The React SPA is still scaffolding only (Vite template + FSD docs).
+
+## As-is vs to-be (read this first)
+
+| Area | As-is (today) | To-be (before feature work) |
+| --- | --- | --- |
+| Application code | Vite `App.tsx` / `main.tsx` only | FSD slices under `src/{app,pages,widgets,features,entities,shared}` |
+| `package.json` | `react` + `react-dom` (+ Vite/TS/ESLint) | Install the packages listed in [`README.md`](README.md) |
+| `vite.config.ts` proxy | Still `^/weatherforecast` | Rewrite to `^/api` and `^/hubs` (see README) |
+| Backend | 17 controllers, ~112 endpoints | Client consumes relative `/api/...` URLs |
+| Modules without API | 07 Archiving, 08 Relations, 10 Notifications | Do **not** call them; domain/lookups exist only |
 
 ## Commands
 
 - Install deps: `npm install` (run inside `institutionaldiwan.client/`)
-- Dev server: `npm run dev` (runs Vite on `https://localhost:61325`, proxying `/api` and `/hubs`
-  to `https://localhost:7126`)
+- Install planned feature stack: see [`README.md`](README.md) “Required Packages”
+- Dev server: `npm run dev` (Vite on `https://localhost:61325`)
 - Typecheck & build: `npm run build` (`tsc -b && vite build`)
 - Lint: `npm run lint` (`eslint .`)
 
@@ -22,17 +32,45 @@
   `ui/` badges/cards).
 - Writes (`POST`/`PUT`/`DELETE`) go in `src/features/<slice>/` (`api/`, `model/` with Zod schema &
   `useMutation`, `ui/` forms/dialogs).
-- Arabic-first UI: `dir="rtl"` on the document root, `dir="ltr"` on code, ids, and official numbers.
+- Arabic-first UI: `dir="rtl"` on the document root, `dir="ltr"` on codes, ids, and official numbers.
+
+## Canonical permissions (16)
+
+Must match `InstitutionalDiwan.Domain/Common/Permissions.cs` exactly. Client source of truth:
+`src/shared/config/permissions.ts` (planned).
+
+| Code | Typical use |
+| --- | --- |
+| `DOCUMENT_VIEW` | Read documents, movements inbox/outbox, file list/download/verify, most lookups |
+| `DOCUMENT_CREATE` | Create / draft / register documents |
+| `DOCUMENT_EDIT` | Update/cancel documents, participants, movements actions, attachment writes |
+| `DOCUMENT_DELETE` | Reserved |
+| `DOCUMENT_APPROVE` | Reserved |
+| `NUMBERING_VIEW` / `NUMBERING_MANAGE` | Registries, official numbers, department register |
+| `DEPARTMENT_MANAGE` | Departments + institution settings |
+| `ROLE_MANAGE` | Roles + permission catalog |
+| `USER_MANAGE` | Users, roles on users, department assignments |
+| `EMPLOYEE_MANAGE` | Employees |
+| `ACCESS_GRANT_MANAGE` | Per-document access grants |
+| `REPORT_VIEW` | Reserved |
+| `LOOKUP_MANAGE` | Mutating reference catalogs |
+| `AUDIT_VIEW` | Search audit log + list integrity reports |
+| `AUDIT_MANAGE` | Create checkpoints + run integrity checks |
 
 ## Live Backend Endpoints (`InstitutionalDiwan.Server`)
 
-15 controllers, 95 endpoints. Every route except `api/auth/login`, `api/auth/register`, and
-`api/lookups` requires a bearer token; the permission column is the policy that guards it.
+**17 controllers**, ~**112** endpoints. Every route except `POST /api/auth/login`,
+`POST /api/auth/register`, and the read paths under `/api/lookups` that the server marks public
+requires a bearer token; the permission column is the policy that guards it.
+
+Demo credentials: `admin` / `12345678` (system scope), `user` / `12345678` (department scope).
 
 ### Paged list responses
 
-`GET /api/documents`, `/api/users`, `/api/employees`, and `/api/external-organizations` are
-server-paged and return the same envelope:
+These endpoints return the shared `PagedResult<T>` envelope:
+
+`GET /api/documents`, `/api/users`, `/api/employees`, `/api/external-organizations`,
+`GET /api/audit-logs`, `GET /api/audit-logs/integrity-checks`.
 
 ```json
 {
@@ -46,12 +84,9 @@ server-paged and return the same envelope:
 }
 ```
 
-Query parameters: `page` (1-based, default 1), `pageSize` (default 20, clamped to 1–100), `search`.
-`/api/documents` also takes `sortBy` (`createdAt` default, `title`, `registrationDate`,
-`officialNumber`), `sortDescending`, `statusId`, `owningDepartmentId`, `directionId`, and
-`documentTypeId`; `/api/external-organizations` also takes `includeInactive`. Bounded reference data
-(lookups, permissions, roles, departments, registries, per-document grants and movements) still
-returns a plain JSON array — do not render a pager for those.
+Query parameters (common): `page` (1-based, default 1), `pageSize` (default 20, clamped 1–100),
+`search`. Bounded lists (lookups, permissions, roles, departments, registries, per-document grants,
+movements, document files) return a plain JSON array — do not render a pager for those.
 
 ### Auth — `/api/auth`
 
@@ -59,17 +94,14 @@ returns a plain JSON array — do not render a pager for those.
 | --- | --- | --- | --- |
 | `POST` | `/api/auth/login` | — (public) | Returns a JWT access token. |
 | `POST` | `/api/auth/register` | — (public) | Self-registration. |
-| `GET` | `/api/auth/me` | `DOCUMENT_VIEW` | The caller's profile. |
+| `GET` | `/api/auth/me` | `DOCUMENT_VIEW` | Caller profile. |
 | `POST` | `/api/auth/change-password` | `DOCUMENT_VIEW` | |
-
-Demo dev credentials: `admin` / `12345678` (system scope, `ADMIN` role) and
-`user` / `12345678` (department scope).
 
 ### Documents — `/api/documents`
 
 | Method | Route | Permission |
 | --- | --- | --- |
-| `GET` | `/api/documents` | `DOCUMENT_VIEW` | Paged (see above): `page`, `pageSize`, `search`, `sortBy`, `sortDescending`, `statusId`, `owningDepartmentId`, `directionId`, `documentTypeId`. |
+| `GET` | `/api/documents` | `DOCUMENT_VIEW` | Paged; also `sortBy`, `sortDescending`, `statusId`, `owningDepartmentId`, `directionId`, `documentTypeId`. |
 | `GET` | `/api/documents/{documentId}` | `DOCUMENT_VIEW` |
 | `GET` | `/api/documents/{documentId}/details` | `DOCUMENT_VIEW` |
 | `GET` | `/api/documents/{documentId}/timeline` | `DOCUMENT_VIEW` |
@@ -81,12 +113,30 @@ Demo dev credentials: `admin` / `12345678` (system scope, `ADMIN` role) and
 | `POST` | `/api/documents/{documentId}/cancel` | `DOCUMENT_EDIT` |
 
 `POST /api/documents` requires `title`, `documentTypeId`, `directionId`, `officialNumberText`, and
-`numberingYear`; it answers `409 Conflict` with code `Numbering.OfficialNumberTaken` when the
-`(officialNumberText, numberingYear)` pair already exists.
+`numberingYear`; `409` with `Numbering.OfficialNumberTaken` when the pair already exists.
 
 ### Document access grants — `/api/documents/{documentId}/access-grants`
 
 `GET` (list), `POST` (grant), `DELETE /{grantId}` (revoke) — all `ACCESS_GRANT_MANAGE`.
+
+### Attachments (Module 06) — `/api/document-files` and document-scoped aliases
+
+Access is permission **plus** document access level: writes need **MANAGE**, list/verify need
+**VIEW**, download needs **DOWNLOAD**. Prefer the document-scoped routes for the UI.
+
+| Method | Route | Permission | Notes |
+| --- | --- | --- | --- |
+| `POST` | `/api/documents/{documentId}/files` | `DOCUMENT_EDIT` | **Preferred** atomic create: multipart metadata + first version. |
+| `GET` | `/api/documents/{documentId}/files` | `DOCUMENT_VIEW` | List files + version history for one document. |
+| `POST` | `/api/document-files` | `DOCUMENT_EDIT` | Metadata-only open; still needs a first version upload. |
+| `POST` | `/api/document-files/{fileId}/versions` | `DOCUMENT_EDIT` | Multipart `File` (+ optional `ChangeNotes`). |
+| `POST` | `/api/document-files/{fileId}/archive` | `DOCUMENT_EDIT` | Soft-archive; versions stay readable. |
+| `GET` | `/api/document-files/by-document/{documentId}` | `DOCUMENT_VIEW` | Alias of document-scoped list. |
+| `GET` | `/api/document-files/{fileId}/download` | `DOCUMENT_VIEW` | Streams current (or selected) version bytes. |
+| `GET` | `/api/document-files/{fileId}/verify` | `DOCUMENT_VIEW` | Recomputes SHA-256; returns recorded vs actual + `isMatch`. |
+
+Upload validation: extension allow-list, size limit, and magic bytes (PDF/PNG/JPEG/TIFF/Office/SVG).
+Each version stores a **64-char hex SHA-256**. Max upload ~50 MB (+ multipart overhead).
 
 ### Numbering — `/api/documents/{documentId}/numbers`
 
@@ -99,8 +149,7 @@ Demo dev credentials: `admin` / `12345678` (system scope, `ADMIN` role) and
 | `POST` | `.../numbers/{documentNumberId}/replace` | `NUMBERING_MANAGE` |
 | `POST` | `.../numbers/department-registration` | `NUMBERING_MANAGE` |
 
-`department-registration` records the destination department's own register number and date — the
-`receive` movement action is refused until it exists.
+`department-registration` must exist before `receive` on a movement is allowed.
 
 ### Numbering registries — `/api/numbering/registries`
 
@@ -110,8 +159,7 @@ Demo dev credentials: `admin` / `12345678` (system scope, `ADMIN` role) and
 
 ### Department register — `/api/departments/{departmentId}/register`
 
-`GET` — `NUMBERING_VIEW`. The register book of one department, optionally filtered by numbering
-year.
+`GET` — `NUMBERING_VIEW`. Optional numbering-year filter.
 
 ### Movements — `/api/movements`
 
@@ -131,25 +179,70 @@ year.
 | `POST` | `/api/movements/{movementId}/close` | `DOCUMENT_EDIT` |
 | `POST` | `/api/movements/{movementId}/cancel` | `DOCUMENT_EDIT` |
 
-`GET /api/movements/inbox` and `/api/movements/outbox` default to the caller's own primary
-department and accept `?departmentId=` only inside the caller's organizational scope (403
-otherwise).
+Inbox/outbox default to the caller's primary department; `?departmentId=` only inside scope
+(otherwise `403` / `Movements.DepartmentOutOfScope`).
+
+### Audit (Module 09) — `/api/audit-logs`
+
+| Method | Route | Permission | Notes |
+| --- | --- | --- | --- |
+| `GET` | `/api/audit-logs` | `AUDIT_VIEW` | Paged search; **each call appends a self-audit View row**. |
+| `POST` | `/api/audit-logs/checkpoints` | `AUDIT_MANAGE` | Body: `{ "toAuditLogId": number \| null }`. Verifies chain before sealing. |
+| `POST` | `/api/audit-logs/integrity-checks` | `AUDIT_MANAGE` | Body: `{ "startAuditLogId", "endAuditLogId" }` optional. **HTTP 200 even when `isValid: false`.** |
+| `GET` | `/api/audit-logs/integrity-checks` | `AUDIT_VIEW` | Newest-first paged integrity reports. |
+
+List filters: `moduleName`, `actionTypeId`, `entityTypeId`, `entityId`, `actorUserId`,
+`actorDepartmentId`, `relatedDocumentId`, `correlationId`, `ipAddress`, `fromUtc`, `toUtc`,
+`search`, `sortBy` (`occurredAt` \| `module` \| `action` \| `entity`), `sortDescending`.
+
+Wire shapes (camelCase JSON):
+
+```ts
+type AuditLogResponse = {
+  auditLogId: number;
+  occurredAtUtc: string;
+  actorUserId: string | null;
+  actorDepartmentId: string | null;
+  moduleName: string;
+  actionTypeId: number;
+  entityTypeId: number;
+  entityId: string;
+  relatedDocumentId: string | null;
+  oldValuesJson: string | null;
+  newValuesJson: string | null;
+  ipAddress: string | null;
+  correlationId: string | null;
+  previousHash: string; // 64 hex
+  eventHash: string;    // 64 hex
+};
+
+type AuditIntegrityCheckResponse = {
+  checkId: string;
+  startAuditLogId: number;
+  endAuditLogId: number;
+  isValid: boolean;
+  firstCorruptedLogId: number | null;
+  failureDetails: string | null;
+  executedByUserId: string;
+  executedAtUtc: string;
+};
+```
 
 ### Departments — `/api/departments`
 
 `GET` (list), `GET /tree`, `GET /{departmentId}` — `DEPARTMENT_MANAGE`;
-`POST`, `PUT /{departmentId}`, `PUT /{departmentId}/parent` (reparent, subtree cycle check →
-`409 Department.CyclicHierarchy`), `DELETE /{departmentId}` (soft deactivate →
-`409 Department.HasActiveChildren`), `POST /{departmentId}/activate` — `DEPARTMENT_MANAGE`.
+`POST`, `PUT /{departmentId}`, `PUT /{departmentId}/parent`,
+`DELETE /{departmentId}`, `POST /{departmentId}/activate` — `DEPARTMENT_MANAGE`.
+
+Notable codes: `Department.CyclicHierarchy`, `Department.HasActiveChildren`.
 
 ### Institution settings — `/api/institution-settings`
 
-`GET` and `PUT` — `DEPARTMENT_MANAGE`. The singleton institution record; the Central Diwan
-department is guarded.
+`GET` and `PUT` — `DEPARTMENT_MANAGE`.
 
 ### Users — `/api/users`
 
-`GET` (list), `GET /{userId}`, `POST`, `PUT /{userId}`, `DELETE /{userId}`,
+`GET` (paged list), `GET /{userId}`, `POST`, `PUT /{userId}`, `DELETE /{userId}`,
 `POST /{userId}/activate`, `POST /{userId}/roles`, `DELETE /{userId}/roles/{roleId}`,
 `POST /{userId}/department-assignments`,
 `DELETE /{userId}/department-assignments/{assignmentId}`,
@@ -158,28 +251,24 @@ department is guarded.
 ### Roles & permissions — `/api/roles`, `/api/permissions`
 
 `GET /api/permissions` — `ROLE_MANAGE`.
-`GET` (list), `GET /{roleId}`, `POST`, `PUT /{roleId}`, `DELETE /{roleId}`,
-`POST /{roleId}/activate`, `POST /{roleId}/permissions`,
-`DELETE /{roleId}/permissions/{permissionCode}` — all `ROLE_MANAGE`.
+Roles: list/get/create/update/delete/activate + grant/revoke permission — `ROLE_MANAGE`.
 
 ### Employees — `/api/employees`
 
-`GET` (list), `GET /{employeeId}`, `POST`, `PUT /{employeeId}`, `DELETE /{employeeId}`,
-`POST /{employeeId}/activate` — all `EMPLOYEE_MANAGE`.
+Paged list + CRUD + activate — all `EMPLOYEE_MANAGE`.
 
 ### External organizations — `/api/external-organizations`
 
-`GET` (list, `?includeInactive=`), `GET /{externalOrganizationId}` — `DOCUMENT_VIEW`;
-`POST`, `PUT /{externalOrganizationId}`, `DELETE /{externalOrganizationId}` (deactivate),
-`POST /{externalOrganizationId}/activate` — `DOCUMENT_EDIT`.
+Paged list (`?includeInactive=`), get — `DOCUMENT_VIEW`;
+create/update/deactivate/activate — `DOCUMENT_EDIT`.
 
 ### Lookups — `/api/lookups/{lookup}`
 
 `GET` (list, `?includeInactive=`), `GET /{lookup}/{id}` — `DOCUMENT_VIEW`;
 `POST`, `PUT /{lookup}/{id}`, `PATCH /{lookup}/{id}/deactivate`, `PATCH /{lookup}/{id}/activate` —
-`LOOKUP_MANAGE`. An unknown slug is a 404.
+`LOOKUP_MANAGE`. Unknown slug → 404.
 
-34 lookup slugs are exposed, one per seeded reference catalog:
+34 lookup slugs:
 
 `access-levels`, `archive-event-types`, `archive-locations`, `assignment-types`,
 `audit-action-types`, `audit-entity-types`, `department-types`,
@@ -195,14 +284,44 @@ department is guarded.
 ## Error Shape (RFC 7807)
 
 Every failure returns `{ type, title, status, detail }` where `title` is the domain error code
-(e.g. `Numbering.OfficialNumberTaken`, `Department.CyclicHierarchy`) and `detail` is the human
-message. `shared/api/httpClient.ts` must normalize this into an `ApiError` exposing
-`.code` (= `title`), `.detail`, and `.status`.
+(e.g. `Numbering.OfficialNumberTaken`, `Department.CyclicHierarchy`, `Audit.NothingToCheckpoint`)
+and `detail` is the human message. `shared/api/httpClient.ts` must normalize this into an
+`ApiError` exposing `.code` (= `title`), `.detail`, and `.status`.
 
-## Not Yet Implemented on the Backend
+Branch UI on `.code`, never on HTTP status alone. Exception: audit integrity **command** returns
+**200** with `isValid: false` — treat as a successful RPC whose payload reports failure.
 
-Modules 06–10 have domain entities and seeded lookups but no API yet — the client must not call
-them: Attachments (06), Archiving (07), Relations (08), Audit (09), Notifications (10).
+## Not yet implemented on the backend (client must not call)
+
+| Module | What exists | What is missing |
+| --- | --- | --- |
+| 07 — Archiving | Domain entities + lookups + EF config | Application handlers, repositories in use, controllers |
+| 08 — Relations | Domain entities + lookups + EF config | Same |
+| 10 — Notifications | Domain entities + lookups + EF config | Same; transactional outbox processor empty |
+| SignalR hubs | Planned | Not wired in `Program.cs` |
+| CORS | — | Not configured (dev relies on Vite proxy) |
+
+## UI acceptance (minimum per interactive screen)
+
+Every page/widget that loads server data must define:
+
+1. **Loading** — skeleton or spinner in the content region (not a blank page).
+2. **Empty** — Arabic-first empty copy + optional primary CTA when the list is empty by design.
+3. **Error** — toast or inline alert showing `ApiError.detail`; retry when safe.
+4. **Forbidden** — when the caller lacks the route permission, show a dedicated state (do not loop
+   redirect forever).
+5. **URL state** — filters/tabs live in `useSearchParams`.
+
+See [`README.md`](README.md) “UI / design contract” and [`src/app/styles/README.md`](src/app/styles/README.md).
+
+## Recommended build order (first vertical slices)
+
+1. `shared/` (`api`, `config/permissions`, `types`) + `vite` proxy + Tailwind entry
+2. `features/auth` + `entities/user` + `app/router` + `pages/login`
+3. `widgets/app-shell` + `pages/dashboard`
+4. `entities/document` + `pages/documents` (+ attachments panel via `entities/document-file`)
+5. `pages/movements` (inbox/outbox)
+6. `pages/audit` (search + integrity; respect self-audit side effect)
 
 ## Mandatory Documentation Rule (`AGENT.md`)
 

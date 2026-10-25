@@ -22,9 +22,9 @@
 | `providers/AppProviders.tsx` | Composes `QueryProvider`, `DirectionProvider` (`dir="rtl"` default for Arabic), `AuthSessionLoader`, and `Toaster`. |
 | `providers/QueryProvider.tsx` | Configures singleton `QueryClient` and wraps children in `QueryClientProvider`. |
 | `providers/AuthSessionLoader.tsx` | Hydrates current user session on startup via `GET /api/auth/me` when a JWT exists in storage. |
-| `router/AppRouter.tsx` | Declares public routes (`/login`) and protected shell routes (`/`, `/documents`, `/movements`, `/departments`, `/users`, `/roles`, `/employees`, `/numbering`, `/archive`, `/audit`). |
+| `router/AppRouter.tsx` | Declares public routes (`/login`) and protected shell routes (`/`, `/documents`, `/movements`, `/departments`, `/users`, `/roles`, `/employees`, `/numbering`, `/audit`). `/archive` stays out until Module 07 exists. |
 | `router/ProtectedRoute.tsx` | Redirects unauthenticated users to `/login` and forces `/change-password` when `must_change_password === "true"` in JWT claims. |
-| `router/RequirePermission.tsx` | Route/component guard checking caller permissions against `Permissions` constants (`DOCUMENT_VIEW`, `USER_MANAGE`, `ROLE_MANAGE`, `DEPARTMENT_MANAGE`, `EMPLOYEE_MANAGE`, `ACCESS_GRANT_MANAGE`, `NUMBERING_VIEW`, `REPORT_VIEW`). |
+| `router/RequirePermission.tsx` | Route/component guard using the full 16-code `Permissions` set (incl. `AUDIT_VIEW` / `AUDIT_MANAGE`). |
 | `styles/index.css` | Tailwind CSS v4 entry, Arabic font declarations (`Cairo` / `Readex Pro`), and CSS custom properties for light/dark institutional theme. |
 ## Conventions / Vibe-Coding Notes (OpenCode & Freebuff)
 - Always enforce `dir="rtl"` and `lang="ar"` on `<html>` by default (with optional toggle to `ltr`/`en` since lookups carry both `DescAr` and `Desc`).
@@ -39,5 +39,6 @@
 ## Change Log
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-25 | Cursor | Wired route map to live modules (audit in, archive deferred); RequirePermission covers all 16 permission codes. |
 | 2026-10-22 | opencode | Converted this folder's `README.md` from the Word document it was authored in to markdown, so the `README.md`-per-folder rule in `AGENT.md` holds and the content is diffable and agent-editable. |
 | 2026-10-19 | agent | Initialized `src/app` FSD layer folder and documented architecture, import rules, and required packages. |

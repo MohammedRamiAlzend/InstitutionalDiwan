@@ -1,7 +1,8 @@
 # institutionaldiwan.client / src — Client Source Root
 
-> **Status:** Partially implemented — only the Vite template's entry files exist. Every FSD
-> layer folder below is documented and scaffolded, but holds no application code yet.
+> **Status:** Docs complete (2026-10-25) against backend Modules 01–06 + 09; only the Vite
+> template's entry files exist as code. Every FSD layer folder below is documented; no feature
+> application code yet.
 
 ## Purpose
 
@@ -53,4 +54,5 @@ layer is implemented, `main.tsx` will mount that layer's root component instead 
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-25 | Cursor | Noted docs are current for Modules 01–06 + 09 while application code remains the Vite template only. |
 | 2026-10-22 | opencode | Added the missing `src/README.md`: the entry files the Vite template left behind, the six FSD layer folders, the import-direction rule, and the `@` path alias. |

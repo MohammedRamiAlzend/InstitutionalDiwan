@@ -1,7 +1,8 @@
 # AGENTS.md — Rules for AI Agents Working in `institutionaldiwan.client`
 
-> This file is the client-side companion to the repository-root `AGENT.md`. Read it **before**
-> changing anything under `institutionaldiwan.client/`.
+> This file is the client-side companion to the repository-root `AGENT.md`. Read this file **before**
+> changing anything under `institutionaldiwan.client/`. Keep [`knowledge.md`](knowledge.md) in sync
+> with the live backend whenever Modules or permissions change.
 
 ## The one rule everything else follows
 
@@ -40,7 +41,7 @@ key factory, never a hand-written string.
 ## Conventions
 
 - **Arabic first.** The document root is `dir="rtl"`. Latin-only content (codes, ids, official
-  numbers, dates) is rendered `dir="ltr"` inside an RTL page. Use logical CSS properties
+  numbers, dates, hash hex) is rendered `dir="ltr"` inside an RTL page. Use logical CSS properties
   (`ps-*`/`pe-*`, `ms-*`/`me-*`) so a single stylesheet serves both directions.
 - **One slice per route.** `pages/<slice>/` holds exactly one route page; keep it under ~120
   lines and push composite sections into `widgets/` and interactive forms into `features/`.
@@ -50,14 +51,85 @@ key factory, never a hand-written string.
   hooks. Local `useState` is for view state only.
 - **Errors come from the API.** The backend answers RFC 7807 `ProblemDetails`; surface
   `error.detail` to the user and branch on `error.code` (the domain error code), never on the
-  HTTP status alone.
+  HTTP status alone. Exception: `POST /api/audit-logs/integrity-checks` returns **200** with
+  `isValid: false` when the chain is broken — read the body, do not treat it as a transport error.
 - **Permissions are exact strings.** The codes in `src/shared/config/permissions.ts` must match
-  `InstitutionalDiwan.Domain/Common/Permissions.cs` exactly. There are 14 of them:
+  `InstitutionalDiwan.Domain/Common/Permissions.cs` exactly. There are **16** of them:
   `DOCUMENT_VIEW`, `DOCUMENT_CREATE`, `DOCUMENT_EDIT`, `DOCUMENT_DELETE`, `DOCUMENT_APPROVE`,
   `NUMBERING_VIEW`, `NUMBERING_MANAGE`, `DEPARTMENT_MANAGE`, `ROLE_MANAGE`, `USER_MANAGE`,
-  `EMPLOYEE_MANAGE`, `ACCESS_GRANT_MANAGE`, `REPORT_VIEW`, `LOOKUP_MANAGE`.
+  `EMPLOYEE_MANAGE`, `ACCESS_GRANT_MANAGE`, `REPORT_VIEW`, `LOOKUP_MANAGE`,
+  `AUDIT_VIEW`, `AUDIT_MANAGE`.
+- **Do not invent backend routes.** Live vs pending modules are listed in `knowledge.md`. Never call
+  Modules 07 / 08 / 10 until those APIs exist.
 - **No deep imports, no `any`.** `npm run build` runs `tsc -b` — it must pass with no errors,
   and `npm run lint` must stay clean.
+
+## First-slice file contracts (copy shapes, then implement)
+
+When creating the first real TypeScript files, match these public shapes so agents stay consistent.
+
+### `src/shared/config/permissions.ts`
+
+```ts
+export const Permissions = {
+  DocumentView: 'DOCUMENT_VIEW',
+  DocumentCreate: 'DOCUMENT_CREATE',
+  DocumentEdit: 'DOCUMENT_EDIT',
+  DocumentDelete: 'DOCUMENT_DELETE',
+  DocumentApprove: 'DOCUMENT_APPROVE',
+  NumberingView: 'NUMBERING_VIEW',
+  NumberingManage: 'NUMBERING_MANAGE',
+  DepartmentManage: 'DEPARTMENT_MANAGE',
+  RoleManage: 'ROLE_MANAGE',
+  UserManage: 'USER_MANAGE',
+  EmployeeManage: 'EMPLOYEE_MANAGE',
+  AccessGrantManage: 'ACCESS_GRANT_MANAGE',
+  ReportView: 'REPORT_VIEW',
+  LookupManage: 'LOOKUP_MANAGE',
+  AuditView: 'AUDIT_VIEW',
+  AuditManage: 'AUDIT_MANAGE',
+} as const;
+
+export type PermissionCode = (typeof Permissions)[keyof typeof Permissions];
+
+export const AllPermissions: readonly PermissionCode[] = Object.values(Permissions);
+```
+
+### `src/shared/api` — `ApiError` + query-key factory pattern
+
+```ts
+export class ApiError extends Error {
+  constructor(
+    public readonly code: string,   // ProblemDetails.title
+    public readonly detail: string, // ProblemDetails.detail
+    public readonly status: number,
+  ) {
+    super(detail);
+  }
+}
+
+// entities/document/model/queries.ts
+export const documentKeys = {
+  all: ['documents'] as const,
+  list: (params: object) => [...documentKeys.all, 'list', params] as const,
+  detail: (id: string) => [...documentKeys.all, 'detail', id] as const,
+};
+```
+
+### Entity barrel
+
+Every new entity/feature slice ships `index.ts` that re-exports only the public hooks/components —
+never deep paths from outside the slice.
+
+## UI / state contract (every interactive screen)
+
+| State | Required behavior |
+| --- | --- |
+| Loading | Region skeleton / spinner; never a blank content area |
+| Empty | Arabic-first empty copy; optional primary CTA |
+| Error | Show `ApiError.detail`; offer retry when idempotent |
+| Forbidden | Dedicated “no permission” state for missing route policy |
+| Success mutation | Toast (`sonner`) + invalidate the owning entity query keys |
 
 ## Before you finish
 
@@ -66,9 +138,10 @@ key factory, never a hand-written string.
 - [ ] Every touched folder's `README.md` reflects the new `Contents`.
 - [ ] A `Change Log` row was appended to each touched folder's `README.md`.
 - [ ] The new public exports are reachable through the slice's `index.ts` barrel.
+- [ ] If endpoints or permissions changed, `knowledge.md` was updated in the same turn.
 
 ## Where to look
 
-- `knowledge.md` — the commands, the live endpoint list, the lookup slugs, and the error shape.
-- `README.md` — the FSD layer map, the required npm packages, and the `vite.config.ts` proxy.
-- `src/<layer>/README.md` — the rules and the planned slices of that layer.
+- `knowledge.md` — as-is/to-be, live endpoint list (incl. Attachments + Audit), lookup slugs, errors.
+- `README.md` — FSD map, package install commands, UI/design contract, implementation status.
+- `src/<layer>/README.md` — rules and planned slices for that layer.

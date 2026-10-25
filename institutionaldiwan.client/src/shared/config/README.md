@@ -1,20 +1,51 @@
 # institutionaldiwan.client / src/shared/config — Permissions, Routes & Environment Configuration
+
 > **Status:** Scaffolding & Rules — Config rules and permission constants defined; code pending.
+
 ## Purpose
-Centralizes application constants, route paths, and the canonical permission codes shared with `InstitutionalDiwan.Domain/Common/Permissions.cs` so route guards, sidebar items, and action buttons never use magic strings.
-## Contents
+
+Centralizes application constants, route paths, and the canonical permission codes shared with
+`InstitutionalDiwan.Domain/Common/Permissions.cs` so route guards, sidebar items, and action buttons
+never use magic strings.
+
+## Contents (planned)
+
 | File | Purpose |
 | --- | --- |
-| `permissions.ts` | Exports `Permissions` constant object with all 14 canonical codes (`DOCUMENT_VIEW`, `DOCUMENT_CREATE`, `DOCUMENT_EDIT`, `DOCUMENT_DELETE`, `DOCUMENT_APPROVE`, `NUMBERING_VIEW`, `NUMBERING_MANAGE`, `DEPARTMENT_MANAGE`, `ROLE_MANAGE`, `USER_MANAGE`, `EMPLOYEE_MANAGE`, `ACCESS_GRANT_MANAGE`, `REPORT_VIEW`, `LOOKUP_MANAGE`) and `PermissionCode` union type. |
-| `routes.ts` | Typed route path builders (`ROUTES.LOGIN`, `ROUTES.DOCUMENTS`, `ROUTES.DOCUMENT_DETAIL(id)`, `ROUTES.DEPARTMENTS`, `ROUTES.USERS`, `ROUTES.ROLES`, `ROUTES.EMPLOYEES`, `ROUTES.NUMBERING`, `ROUTES.MOVEMENTS`, `ROUTES.ARCHIVE`, `ROUTES.AUDIT`). |
-| `env.ts` | Typed access to `import.meta.env` variables (`API_BASE_URL`, `DEFAULT_TIMEZONE = 'Asia/Damascus'`). |
+| `permissions.ts` | Exports `Permissions` with all **16** codes (incl. `AUDIT_VIEW`, `AUDIT_MANAGE`), `PermissionCode`, and `AllPermissions`. Exact shape is specified in root `AGENTS.md`. |
+| `routes.ts` | Typed builders: `LOGIN`, `DASHBOARD`, `DOCUMENTS`, `DOCUMENT_DETAIL(id)`, `MOVEMENTS`, `DEPARTMENTS`, `USERS`, `ROLES`, `EMPLOYEES`, `NUMBERING`, `AUDIT` (no `/archive` until Module 07). |
+| `env.ts` | Typed `import.meta.env` access (`API_BASE_URL` optional; default relative `/api`), `DEFAULT_TIMEZONE = 'Asia/Damascus'`. |
 | `index.ts` | Public barrel exporting `Permissions`, `ROUTES`, and `ENV`. |
+
+## Example `routes.ts` shape
+
+```ts
+export const ROUTES = {
+  LOGIN: '/login',
+  CHANGE_PASSWORD: '/change-password',
+  DASHBOARD: '/',
+  DOCUMENTS: '/documents',
+  DOCUMENT_DETAIL: (id: string) => `/documents/${id}`,
+  MOVEMENTS: '/movements',
+  DEPARTMENTS: '/departments',
+  USERS: '/users',
+  ROLES: '/roles',
+  EMPLOYEES: '/employees',
+  NUMBERING: '/numbering',
+  AUDIT: '/audit',
+} as const;
+```
+
 ## Implementation status
+
 | Item | State |
 | --- | --- |
 | `permissions.ts`, `routes.ts`, `env.ts` | ❌ Not implemented |
+
 ## Change Log
+
 | Date | Author | Change |
 | --- | --- | --- |
-| 2026-10-22 | opencode | Converted this folder's `README.md` from the Word document it was authored in to markdown, so the `README.md`-per-folder rule in `AGENT.md` holds and the content is diffable and agent-editable. |
+| 2026-10-25 | Cursor | Updated to 16 permissions (added audit); expanded routes for movements/audit; deferred archive route; linked AGENTS.md contract. |
+| 2026-10-22 | opencode | Converted this folder's `README.md` from the Word document it was authored in to markdown. |
 | 2026-10-19 | agent | Initialized `src/shared/config` segment and documented canonical permission and route constants. |
