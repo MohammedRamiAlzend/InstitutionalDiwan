@@ -100,9 +100,16 @@ export default defineConfig(({ mode }) => {
         },
         server: {
             proxy: {
-                '^/weatherforecast': {
+                '^/api': {
                     target,
-                    secure: false
+                    secure: false,
+                    changeOrigin: true
+                },
+                '^/hubs': {
+                    target,
+                    secure: false,
+                    changeOrigin: true,
+                    ws: true
                 }
             },
             port: resolvePort(env.DEV_SERVER_PORT, 61325),

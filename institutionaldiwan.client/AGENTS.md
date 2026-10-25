@@ -10,6 +10,45 @@
 must be updated in the same turn — the `Contents` table, the `Implementation status` table, and a
 new `Change Log` row. A change is not "done" until both happened.
 
+## Non-negotiable: Arabic/RTL first, light + dark themes
+
+**Every component must be built Arabic-first (`lang="ar"`, `dir="rtl"`) and must also work in LTR.**
+There is no later "RTL pass": logical CSS, mirrored icons, menu/tooltip positioning, and
+Arabic-capable typography are part of a component's definition of done.
+
+The application ships **light and dark themes**, both driven by one token source:
+`src/app/styles/tokens.css`. Components never contain hex colors; they consume semantic CSS
+variables (`--color-bg`, `--color-surface`, `--color-text`, `--color-accent`, …). Changing a value
+in that one file updates both themes everywhere.
+
+- **Direction:** `<html lang="ar" dir="rtl">` by default. Use `dir="ltr"` islands only for codes,
+official numbers, hashes, ISO dates, and Latin-only content. Never use physical CSS (`ml-*`, `mr-*`,
+`left-*`, `right-*`, `text-left/right`); use `ms-*`, `me-*`, `start-*`, `end-*`, `text-start/end`.
+- **Mirroring:** mirror directional icons (arrows, chevrons, back/forward, indent) in RTL. Never
+mirror logos, numbers, or numeric chart axes.
+- **Theme:** default to the OS (`prefers-color-scheme`); the user can choose light / dark / system.
+The choice persists in `localStorage` under `diwan.theme` and is applied as `data-theme` on `<html>`
+before first paint (small inline boot script in `index.html`, no white flash).
+- **Verification:** every table, tree, menu, drawer, form, and Mermaid surface is checked in both
+RTL and LTR, and in both light and dark. Contrast must meet WCAG AA for body text, table text, and
+menu items; focus rings stay visible on every surface.
+- **Charts/diagrams:** Mermaid keeps its geometric layout LTR while labels may be Arabic; pass the
+current theme's tokens to Mermaid (`themeVariables`) and re-render on theme change. Native trees
+follow RTL ordering.
+
+### Brand palette (single source: `src/app/styles/tokens.css`)
+
+| Family | Shades |
+| --- | --- |
+| Forest | `#428177` · `#054239` · `#002623` |
+| Golden Wheat | `#edebe0` · `#b9a779` · `#988561` |
+| Charcoal | `#ffffff` · `#3d3a3b` · `#161616` |
+
+These nine colors are the only brand colors. Functional status colors (`danger`, `success`,
+`warning`) live in the same token file as semantic variables and must never be hardcoded in
+components. The exact light/dark mapping is in
+[`src/app/styles/README.md`](src/app/styles/README.md#design-tokens-contract).
+
 ## Feature-Sliced Design (FSD v2.1) is not negotiable
 
 The six layers live in `src/` and imports may only ever flow **downward**:
@@ -40,9 +79,10 @@ key factory, never a hand-written string.
 
 ## Conventions
 
-- **Arabic first.** The document root is `dir="rtl"`. Latin-only content (codes, ids, official
-  numbers, dates, hash hex) is rendered `dir="ltr"` inside an RTL page. Use logical CSS properties
-  (`ps-*`/`pe-*`, `ms-*`/`me-*`) so a single stylesheet serves both directions.
+- **Arabic first.** The document root is `lang="ar" dir="rtl"`. Latin-only content (codes, ids,
+official numbers, dates, hash hex) is rendered `dir="ltr"` inside an RTL page. Use logical CSS
+properties (`ps-*`/`pe-*`, `ms-*`/`me-*`) so a single stylesheet serves both directions. The app also
+ships light and dark themes from one token file — see the non-negotiable section above.
 - **One slice per route.** `pages/<slice>/` holds exactly one route page; keep it under ~120
   lines and push composite sections into `widgets/` and interactive forms into `features/`.
 - **URL-driven filters.** Table filters, search terms, sorting, and pagination belong in URL search
@@ -198,6 +238,8 @@ never deep paths from outside the slice.
 - [ ] A `Change Log` row was appended to each touched folder's `README.md`.
 - [ ] The new public exports are reachable through the slice's `index.ts` barrel.
 - [ ] If endpoints or permissions changed, `knowledge.md` was updated in the same turn.
+- [ ] The component is verified in Arabic RTL **and** LTR, and in light **and** dark themes; no
+      physical CSS and no hardcoded hex colors.
 - [ ] New tables ship filters, pagination, sorting, a column chooser persisted in `localStorage`,
       and row/header context menus.
 - [ ] Context-menu actions are permission-filtered and keyboard reachable (`Shift+F10`).

@@ -1,6 +1,9 @@
 @InstitutionalDiwan.Server_HostAddress = http://localhost:5028
+@token = paste-a-valid-jwt-here
 
-GET {{InstitutionalDiwan.Server_HostAddress}}/weatherforecast/
+# Requires AUDIT_VIEW. Returns a PagedResult<AuditLogListItem>.
+GET {{InstitutionalDiwan.Server_HostAddress}}/api/audit-logs?page=1&pageSize=20
 Accept: application/json
+Authorization: Bearer {{token}}
 
 ###

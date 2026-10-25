@@ -92,12 +92,13 @@ and `Scalar.AspNetCore`, and project-references Application, Infrastructure, and
 | DI for Application/Infrastructure | ✅ Wired |
 | Authentication / Authorization setup | ✅ JWT + permission policies |
 | SignalR | ❌ Not wired |
-| `InstitutionalDiwan.Server.http` | ⚠️ Still the sample `weatherforecast` request |
+| `InstitutionalDiwan.Server.http` | ✅ Sample `GET /api/audit-logs` request (replace `@token` with a valid JWT) |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-25 | Buffy | Replaced the leftover template `weatherforecast` sample request with a real `GET /api/audit-logs` request. |
 | 2026-10-25 | opencode | Added the Module 09 `AuditLogsController`, audit contracts, and `RequestContextLoggingMiddleware`; updated the `Program.cs` excerpt and status tables. |
 | 2026-10-25 | opencode | Added `DocumentFilesController` and the Attachments contracts, exposing Module 06: create file, upload a validated version with streamed SHA-256, archive, list by document, download, and checksum verification. |
 | 2026-10-21 | opencode | Rewrote `MovementsController` into the full routing workflow: `POST /api/movements`, `GET /api/movements/{movementId}`, `GET /api/movements/by-document/{documentId}`, `GET /api/movements/inbox`, `GET /api/movements/outbox`, and the `{movementId}/send|receive|complete|reject|return|redirect|close|cancel` transitions. Reads take `DOCUMENT_VIEW`, writes `DOCUMENT_EDIT`; the inbox/outbox default to the caller's own primary department and accept another one only inside the caller's organizational scope (403 otherwise). |

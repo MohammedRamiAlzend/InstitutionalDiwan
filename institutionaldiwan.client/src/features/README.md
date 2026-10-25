@@ -36,6 +36,9 @@ error handling, and form/dialog UI.
 - Map `ProblemDetails.title` → `ApiError.code`; never show a generic failure when a domain code exists.
 - Lookup IDs are integers in payloads.
 - Invalidate the owning entity query keys on success (never hand-written key strings).
+- A feature exposes the mutation/handler; the widget that mounts the surface owns the context-menu
+  item definition (label, icon, permission code, confirmation) and calls the feature. No menu
+  rendering or keyboard wiring inside a feature slice.
 
 ## Implementation status
 
@@ -48,6 +51,7 @@ error handling, and form/dialog UI.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-25 | Buffy | Clarified that features expose handlers/mutations while the mounting widget owns permission-filtered context-menu item definitions. |
 | 2026-10-25 | Cursor | Marked movement/attachment/audit feature slices as backend-ready; added `audit-manage` mapping and integrity HTTP 200 semantics. |
 | 2026-10-22 | opencode | Converted this folder's `README.md` from the Word document it was authored in to markdown. |
 | 2026-10-19 | agent | Initialized `src/features` FSD layer folder and mapped slices to backend CQRS commands and error codes. |

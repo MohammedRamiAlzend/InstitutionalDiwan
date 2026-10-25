@@ -19,6 +19,13 @@ Compliance surface for the append-only SHA-256 audit chain: filtered search, int
 
 `/audit?page=&pageSize=&moduleName=&actionTypeId=&fromUtc=&toUtc=&search=&sortBy=&sortDescending=&panel=logs|integrity`
 
+## Table contract
+
+The log and the integrity-report list both use `shared/ui/data-table` (table ids `audit-logs` and
+`audit-integrity-reports`): server-side paging/filtering from the URL, a column chooser persisted in
+`localStorage` (`auditLogId` / `occurredAtUtc` stay visible), and permission-filtered row and header
+context menus (`AUDIT_MANAGE` items hidden otherwise).
+
 ## Planned Contents
 
 | File | Purpose |
@@ -42,4 +49,5 @@ Compliance surface for the append-only SHA-256 audit chain: filtered search, int
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-25 | Buffy | Documented the shared data-grid contract and context menus for the audit log and integrity reports. |
 | 2026-10-25 | Cursor | Added audit page slice docs for Module 09 (self-audit side effect + integrity 200 semantics). |

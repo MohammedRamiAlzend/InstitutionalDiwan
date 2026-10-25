@@ -20,7 +20,7 @@ developers can implement slices predictably without spaghetti imports.
 | Item | As-is | To-be |
 | --- | --- | --- |
 | Runtime deps in `package.json` | `react`, `react-dom` only | Full stack in “Required Packages” below |
-| Dev proxy | `^/weatherforecast` in `vite.config.ts` | `^/api` + `^/hubs` → API |
+| Dev proxy | ✅ `^/api` + `^/hubs` proxied; target from `.env` (`DEV_PROXY_TARGET`) or the ASP.NET environment | Same prefixes behind the production reverse proxy (see [`DEPLOYMENT.md`](DEPLOYMENT.md)) |
 | UI | Vite welcome page | RTL app shell + module pages |
 | Backend coverage docs | Must stay aligned with `knowledge.md` | Modules 01–06, 09 live; 07/08/10 deferred |
 
@@ -33,7 +33,7 @@ checklist before coding features.
 > inside `institutionaldiwan.client/` before implementing the first slice.
 
 ```bash
-# 1. Core runtime packages (Routing, Server/Client State, HTTP, Forms, Validation, Icons, UI, SignalR)
+# 1. Core runtime packages (Routing, Server/Client State, HTTP, Forms, Validation, Icons, UI, SignalR, Mermaid)
 npm install react-router-dom @tanstack/react-query @tanstack/react-table zustand axios react-hook-form zod @hookform/resolvers lucide-react clsx tailwind-merge class-variance-authority sonner @microsoft/signalr mermaid
 
 # 2. Radix UI primitives (for RTL-ready shadcn/ui components in src/shared/ui)
@@ -43,29 +43,32 @@ npm install @radix-ui/react-dialog @radix-ui/react-dropdown-menu @radix-ui/react
 npm install -D tailwindcss @tailwindcss/vite @tanstack/react-query-devtools
 ```
 
-### Required `vite.config.ts` Proxy Update
+### API Target & Vite Proxy (configured)
 
-Replace the sample `^/weatherforecast` proxy in `vite.config.ts` with `^/api` and `^/hubs` so all
-API and SignalR traffic proxies cleanly to `InstitutionalDiwan.Server`
-(`https://localhost:7126` / `http://localhost:5028`):
+`vite.config.ts` proxies `/api` and `/hubs` (WebSocket upgrade included) to the backend. The target
+is resolved in this order: `DEV_PROXY_TARGET` from `.env` → `ASPNETCORE_HTTPS_PORT` →
+`ASPNETCORE_URLS` → `https://localhost:7126`.
 
 ```ts
 server: {
   proxy: {
-    '^/api': {
-      target,
-      secure: false,
-    },
-    '^/hubs': {
-      target,
-      secure: false,
-      ws: true,
-    },
+    '^/api': { target, secure: false, changeOrigin: true },
+    '^/hubs': { target, secure: false, changeOrigin: true, ws: true },
   },
-  port: parseInt(env.DEV_SERVER_PORT || '61325'),
+  port: resolvePort(env.DEV_SERVER_PORT, 61325),
   // ...
 }
 ```
+
+Configuration lives in [`.env`](.env.example):
+
+| Key | Purpose |
+| --- | --- |
+| `DEV_PROXY_TARGET` | Absolute backend origin for local development (`http://192.168.1.20:5028`, `https://localhost:7126`). Unset by default so Visual Studio's ASP.NET variables win. |
+| `VITE_API_BASE_URL` | Public base URL baked into the build (`/api` for same-origin deployments, absolute only for a cross-origin API + CORS). |
+
+**Changing the API host, publishing the SPA, and wiring a new endpoint end to end are covered in
+[`DEPLOYMENT.md`](DEPLOYMENT.md).**
 
 ## Feature-Sliced Design (FSD) Layer Hierarchy
 
@@ -95,9 +98,10 @@ Institutional, Arabic-first, calm — not a generic SaaS dashboard skin.
 
 | Token / concern | Contract |
 | --- | --- |
-| Direction | `html[dir="rtl"]` by default; `dir="ltr"` islands for codes, official numbers, hashes, ISO dates |
+| Direction | `html[lang="ar"][dir="rtl"]` by default; every component must also work in LTR; `dir="ltr"` islands for codes, official numbers, hashes, ISO dates |
 | Typography | Prefer Arabic-capable faces (e.g. Cairo / Readex Pro / Noto Sans Arabic) via `app/styles`; avoid Inter/Roboto/Arial as the primary UI font |
-| Color | CSS variables on `:root` — `--color-bg`, `--color-surface`, `--color-text`, `--color-accent`, `--color-danger`, `--color-border`. Prefer a restrained institutional palette (deep teal/ink + warm paper), not purple gradients |
+| Color | One token file, `src/app/styles/tokens.css`: Forest `#428177` / `#054239` / `#002623`, Golden Wheat `#edebe0` / `#b9a779` / `#988561`, Charcoal `#ffffff` / `#3d3a3b` / `#161616`. Components consume semantic variables (`--color-bg`, `--color-surface`, `--color-text`, `--color-accent`, …) and never hardcode hex |
+| Theme | Light + dark from the same tokens; default follows `prefers-color-scheme`, user picks light/dark/system, persisted as `diwan.theme` and applied via `data-theme` before first paint |
 | Spacing | 4-px base scale; content max-width for reading panes; full-bleed only for the app shell chrome |
 | Components | Prefer `shared/ui` primitives; cards only when they wrap an interactive unit |
 | Motion | Subtle (150–250 ms) for drawer/dialog; no decorative loop animations |
@@ -154,9 +158,10 @@ Full endpoint tables: [`knowledge.md`](knowledge.md).
 | `src/shared/` | Axios client + RFC 7807 adapter, RTL UI kit, utilities, and constants (`README.md` inside). |
 | `src/App.tsx` | Vite template placeholder root; replaced by the `app` layer once built. |
 | `src/main.tsx` | Vite entry that mounts `<App />`; will mount `app` providers instead. |
-| `AGENTS.md` | Agent rules, 16 permissions, first-slice TypeScript contracts, UI state checklist. |
+| `AGENTS.md` | Agent rules, desktop-grade interaction contract, 16 permissions, first-slice TypeScript contracts, UI state checklist. |
+| `DEPLOYMENT.md` | Publishing guide, API host/IP configuration, and step-by-step endpoint wiring. |
 | `knowledge.md` | As-is/to-be, live endpoints (incl. Attachments + Audit), lookups, errors, build order. |
-| `vite.config.ts` | Vite bundler, `@` → `./src`, HTTPS cert, proxy (**still weatherforecast until updated**). |
+| `vite.config.ts` | Vite bundler, `@` → `./src`, HTTPS cert, and the `/api` + `/hubs` proxy (target from `.env`). |
 | `package.json` | Scripts + current deps (React only until the install commands above are run). |
 | `package-lock.json` | Locked dependency tree. |
 | `eslint.config.js` | Flat ESLint config. |
@@ -173,21 +178,26 @@ Full endpoint tables: [`knowledge.md`](knowledge.md).
 | --- | --- |
 | FSD folder structure & layer `README.md` rules | ✅ Configured |
 | Agent docs (`AGENTS.md`, `knowledge.md`) aligned to Modules 01–06 + 09 | ✅ Current (2026-10-25) |
+| Per-slice docs (`entities/*`, `features/*`, `pages/*`, `widgets/*` READMEs) | ✅ Documented — code still pending |
 | UI / design contract documented | ✅ Documented |
 | Interaction contract (context menus, data-grid preferences, Mermaid visualization) | ✅ Documented (2026-10-25) |
 | Required npm packages installed | ❌ Not installed — React/Vite only |
 | `src/shared/` (`api`, `ui`, `lib`, `config`, `types`) | ❌ Not implemented |
 | `src/entities/` (document, document-file, department, user, role, numbering-registry, movement, audit-log, lookup) | ❌ Not implemented |
 | `src/features/` (auth, document-*, department-*, user-*, role-*, movement-routing, attachment-upload, audit-manage) | ❌ Not implemented |
-| `src/widgets/` (app-shell, registry table, hierarchy tree, movement timeline/inbox, attachments panel, audit table) | ❌ Not implemented |
+| `src/widgets/` (app-shell, registry table, hierarchy tree, movement timeline/inbox, attachments panel, audit table, visualization panel) | ❌ Not implemented |
 | `src/pages/` (login, dashboard, documents, movements, departments, users, numbering, audit; archive deferred) | ❌ Not implemented |
 | `src/app/` (`providers`, `router`, `styles`) | ❌ Not implemented |
-| `vite.config.ts` proxy for `^/api` and `^/hubs` | ❌ Still `^/weatherforecast` |
+| `vite.config.ts` proxy for `^/api` and `^/hubs` | ✅ Configured, target from `.env` / ASP.NET env |
+| Publishing & API wiring guide (`DEPLOYMENT.md`) | ✅ Documented (2026-10-25) |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-25 | Buffy | Locked the visual foundation: Arabic/RTL-first for every component, light/dark themes from the single `styles/tokens.css` palette (Forest / Golden Wheat / Charcoal), and the header theme toggle persisted as `diwan.theme`. |
+| 2026-10-25 | Buffy | Removed the Vite template's sample proxy; `/api` and `/hubs` now proxy to the backend with an env-driven target. Added [`DEPLOYMENT.md`](DEPLOYMENT.md) for publishing, API host/IP changes, `.env` keys, and endpoint wiring. |
+| 2026-10-25 | Buffy | Aligned the per-slice docs with that contract: table widgets, shared `ui`/`lib` segments, the department tree, entity builders, and every page that hosts a table or hierarchy now state their table ids, column-chooser storage, and context-menu/visualization behavior. |
 | 2026-10-25 | Buffy | Added the desktop-grade interaction contract: right-click context menus on every data surface, mandatory table filters/pagination/column chooser persisted in `localStorage`, and Mermaid-driven diagram/chart/tree visualization (including API-derived hierarchy trees). Added `mermaid` and `@radix-ui/react-context-menu` to the required packages. |
 | 2026-10-25 | Cursor | Brought client docs to current backend truth: as-is/to-be, Modules 06/09, 16 permissions, UI/design contract, and backend-ready route map. |
 | 2026-10-22 | opencode | Converted this folder's `README.md` from the Word document it was authored in to markdown, so the `README.md`-per-folder rule in `AGENT.md` holds and the content is diffable and agent-editable. |

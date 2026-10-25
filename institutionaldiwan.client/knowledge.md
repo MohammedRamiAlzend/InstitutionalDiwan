@@ -10,7 +10,7 @@
 | --- | --- | --- |
 | Application code | Vite `App.tsx` / `main.tsx` only | FSD slices under `src/{app,pages,widgets,features,entities,shared}` |
 | `package.json` | `react` + `react-dom` (+ Vite/TS/ESLint) | Install the packages listed in [`README.md`](README.md) |
-| `vite.config.ts` proxy | Still `^/weatherforecast` | Rewrite to `^/api` and `^/hubs` (see README) |
+| `vite.config.ts` proxy | ✅ `^/api` + `^/hubs` proxied; target from `DEV_PROXY_TARGET` or the ASP.NET env | Same prefixes behind the production reverse proxy ([`DEPLOYMENT.md`](DEPLOYMENT.md)) |
 | Backend | 17 controllers, ~112 endpoints | Client consumes relative `/api/...` URLs |
 | Modules without API | 07 Archiving, 08 Relations, 10 Notifications | Do **not** call them; domain/lookups exist only |
 
@@ -86,7 +86,9 @@ These endpoints return the shared `PagedResult<T>` envelope:
 
 Query parameters (common): `page` (1-based, default 1), `pageSize` (default 20, clamped 1–100),
 `search`. Bounded lists (lookups, permissions, roles, departments, registries, per-document grants,
-movements, document files) return a plain JSON array — do not render a pager for those.
+movements, document files) return a plain JSON array, so they accept no server paging params; the
+shared data grid still paginates them **client-side** with the same pager and page-size control
+required for every table.
 
 ### Auth — `/api/auth`
 
@@ -322,6 +324,10 @@ Every page/widget that loads server data must define:
    a diagram / chart / tree switcher. Hierarchy trees are built from API data (for example
    `GET /api/departments/tree` plus employees) and can be exported to Mermaid (`flowchart TD`).
    Invalid Mermaid shows an Arabic-first error state with the parser message.
+9. **Arabic/RTL and theme** — every screen is built for Arabic `dir="rtl"` first and verified in
+   LTR as well, and in both light and dark themes. Colors come only from
+   `src/app/styles/tokens.css`; the user's light/dark/system choice persists in `diwan.theme`.
+   Directional icons mirror in RTL; codes, numbers, hashes, and ISO dates stay `dir="ltr"`.
 
 See [`README.md`](README.md) “UI / design contract” and [`src/app/styles/README.md`](src/app/styles/README.md).
 
