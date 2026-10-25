@@ -221,6 +221,10 @@ public static class DomainErrors
         public static readonly Error ChainBroken = Error.Conflict("Audit.ChainBroken", "Audit log hash chain link to previous event is broken.");
         public static readonly Error RequiredFieldsMissing = Error.Validation("Audit.RequiredFieldsMissing", "Audit log module, action, entity type, and hashes are required.");
         public static readonly Error InvalidCheckpointRange = Error.Validation("Audit.InvalidCheckpointRange", "Checkpoint ToLogId must be greater than or equal to FromLogId.");
+        public static readonly Error NoAuditLogs = Error.NotFound("Audit.NoAuditLogs", "No audit log entries are available.");
+        public static readonly Error NothingToCheckpoint = Error.Conflict("Audit.NothingToCheckpoint", "No new audit log entries have been recorded since the last checkpoint.");
+        public static readonly Error InvalidIntegrityRange = Error.Validation("Audit.InvalidIntegrityRange", "The audit integrity range is invalid.");
+        public static readonly Error PreviousLogNotFound = Error.NotFound("Audit.PreviousLogNotFound", "The audit log entry immediately before the requested range was not found.");
     }
 
     public static class Notifications

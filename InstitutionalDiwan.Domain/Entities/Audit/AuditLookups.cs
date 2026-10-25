@@ -48,6 +48,10 @@ public sealed class AuditEntityType : LookupEntity
     public const int FileId = 6;
     public const int NumberingRegistryId = 7;
     public const int SettingId = 8;
+    public const int AuditLogId = 9;
+    public const int DocumentNumberId = 10;
+    public const int DocumentRelationId = 11;
+    public const int ExternalOrganizationId = 12;
 
     private AuditEntityType()
     {

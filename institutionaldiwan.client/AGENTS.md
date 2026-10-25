@@ -45,8 +45,10 @@ key factory, never a hand-written string.
   (`ps-*`/`pe-*`, `ms-*`/`me-*`) so a single stylesheet serves both directions.
 - **One slice per route.** `pages/<slice>/` holds exactly one route page; keep it under ~120
   lines and push composite sections into `widgets/` and interactive forms into `features/`.
-- **URL-driven filters.** Table filters, search terms, and active tabs belong in URL search
-  params (`useSearchParams`), not local `useState`, so views are bookmarkable and shareable.
+- **URL-driven filters.** Table filters, search terms, sorting, and pagination belong in URL search
+  params (`useSearchParams`), not local `useState`, so views are bookmarkable and shareable. Column
+  visibility is the one exception — it is a per-browser preference stored in `localStorage`
+  (see [Desktop-grade interaction contract](#desktop-grade-interaction-contract)).
 - **Server state is React Query's job.** Do not copy server data into `useState`; use the entity
   hooks. Local `useState` is for view state only.
 - **Errors come from the API.** The backend answers RFC 7807 `ProblemDetails`; surface
@@ -63,6 +65,63 @@ key factory, never a hand-written string.
   Modules 07 / 08 / 10 until those APIs exist.
 - **No deep imports, no `any`.** `npm run build` runs `tsc -b` — it must pass with no errors,
   and `npm run lint` must stay clean.
+
+## Desktop-grade interaction contract
+
+The client is a **desktop-style institutional workspace**, not a marketing dashboard. The three
+behaviours below are mandatory on every data surface; a screen that lacks them is not done.
+
+### 1. Right-click context menus everywhere
+
+- One shared primitive in `src/shared/ui/context-menu` (built on
+  `@radix-ui/react-context-menu`). Never hand-roll a menu inside a feature.
+- Every interactive data surface supplies its **own menu definition** to that primitive: table row,
+  table header, empty table area, tree node, card, tab, attachment row, timeline step, and the
+  app-shell chrome. The widget/feature owns the items; the primitive only renders and positions.
+- Menu items are **permission-filtered** with the same codes as route guards (`DOCUMENT_EDIT`,
+  `AUDIT_MANAGE`, …). Never render an item the caller cannot execute; render it disabled with a
+  reason only when that aids discovery.
+- Every context-menu action is also keyboard reachable: `Shift+F10` or the `ContextMenu` key opens
+  the menu on the focused element, arrow keys move, `Enter` activates, `Esc` closes and returns
+  focus to the trigger.
+- Destructive entries sit in their own group, use the danger token, and require confirmation. Show
+  shortcut hints where a shortcut exists.
+- Menus open at the pointer in RTL and LTR alike; labels stay start-aligned and inherit `dir`.
+- The app shell has a menu on empty chrome (refresh data, toggle density, open settings). Tables
+  have row, header, and empty-area menus.
+
+### 2. Every table is a full data grid
+
+Mandatory for **all** tables, including bounded-list endpoints that return a plain array:
+
+| Requirement | Contract |
+| --- | --- |
+| Filtering | A filter bar on every table; filter values live in URL search params, never `useState`. |
+| Search | Free-text search in the URL; debounce the input and reset `page` when it changes. |
+| Pagination | Paged endpoints send `page`/`pageSize`; plain arrays paginate client-side with the same pager UI. |
+| Sorting | Sort key and direction in the URL; server-side where the endpoint supports it. |
+| Column chooser | Mandatory. Each table declares its default columns in code; the user toggles visibility and can reset to defaults. At least one identifying column can never be hidden. |
+| Preference storage | Visibility persists **per table, per browser** in `localStorage` under `diwan.table.<tableId>.columns.v1` (versioned; parse defensively and fall back to defaults). It is view state — never server state, React Query, or URL state. |
+| Stable table id | Use a stable id (`documents`, `audit-logs`, `movements-inbox`, …) so saved preferences survive refactors. |
+| Row actions | Available through the row context menu **and** an always-visible overflow trigger for touch and keyboard users. |
+
+### 3. Mermaid-driven visualization
+
+- Render Mermaid through one lazy-loaded `shared/ui/mermaid-view` component built on the `mermaid`
+  package (`securityLevel: 'strict'`, HTML/script labels rejected, external links disabled by
+  default, input size capped).
+- A visualization surface offers a **view switcher**: rendered Mermaid diagram, chart (pie, gantt,
+  sequence, timeline, …), and **tree view** for hierarchies. Default to the diagram type declared
+  by the source (`flowchart`, `mindmap`, `timeline`, …).
+- Tree view is the canonical hierarchy presentation (departments → employees, document → movement
+  chain, role → permission). Build it from API data and allow exporting to Mermaid
+  (`flowchart TD`) so the same data can be shown as a Mermaid diagram.
+- Data → Mermaid and data → tree builders live in the owning entity's `model/` (for example
+  `entities/department/model/toMermaid.ts`); rendering and interaction primitives live in
+  `shared/ui`; the composing surface is a widget.
+- Invalid Mermaid renders an Arabic-first error state with the parser message, never a blank area.
+- Tree and diagram nodes expose their own context menus (expand/collapse, copy id, open record)
+  through the same shared primitive.
 
 ## First-slice file contracts (copy shapes, then implement)
 
@@ -139,6 +198,10 @@ never deep paths from outside the slice.
 - [ ] A `Change Log` row was appended to each touched folder's `README.md`.
 - [ ] The new public exports are reachable through the slice's `index.ts` barrel.
 - [ ] If endpoints or permissions changed, `knowledge.md` was updated in the same turn.
+- [ ] New tables ship filters, pagination, sorting, a column chooser persisted in `localStorage`,
+      and row/header context menus.
+- [ ] Context-menu actions are permission-filtered and keyboard reachable (`Shift+F10`).
+- [ ] Mermaid/visualization surfaces are lazy-loaded and handle invalid syntax.
 
 ## Where to look
 

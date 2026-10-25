@@ -310,18 +310,31 @@ Every page/widget that loads server data must define:
 3. **Error** — toast or inline alert showing `ApiError.detail`; retry when safe.
 4. **Forbidden** — when the caller lacks the route permission, show a dedicated state (do not loop
    redirect forever).
-5. **URL state** — filters/tabs live in `useSearchParams`.
+5. **URL state** — filters, search, sorting, pagination, and tabs live in `useSearchParams`.
+6. **Context menus** — every row, header, empty area, tree node, card, and shell region exposes its
+   actions on right-click through `shared/ui/context-menu`; items are permission-filtered and the
+   same actions open from the keyboard (`Shift+F10` / `ContextMenu`).
+7. **Table contract** — all tables (paged endpoints and plain arrays alike) have filters, search,
+   sorting, pagination, and a column chooser. Column visibility is saved per table per browser in
+   `localStorage` under `diwan.table.<tableId>.columns.v1`, with reset-to-default; it is never sent
+   to the server or put in the URL.
+8. **Visualization** — Mermaid source renders through the lazy-loaded `shared/ui/mermaid-view` with
+   a diagram / chart / tree switcher. Hierarchy trees are built from API data (for example
+   `GET /api/departments/tree` plus employees) and can be exported to Mermaid (`flowchart TD`).
+   Invalid Mermaid shows an Arabic-first error state with the parser message.
 
 See [`README.md`](README.md) “UI / design contract” and [`src/app/styles/README.md`](src/app/styles/README.md).
 
 ## Recommended build order (first vertical slices)
 
-1. `shared/` (`api`, `config/permissions`, `types`) + `vite` proxy + Tailwind entry
+1. `shared/` (`api`, `config/permissions`, `types`, `ui/context-menu`, `ui/data-table`,
+   `ui/mermaid-view`, `lib/columnPreferences`) + `vite` proxy + Tailwind entry
 2. `features/auth` + `entities/user` + `app/router` + `pages/login`
 3. `widgets/app-shell` + `pages/dashboard`
 4. `entities/document` + `pages/documents` (+ attachments panel via `entities/document-file`)
 5. `pages/movements` (inbox/outbox)
 6. `pages/audit` (search + integrity; respect self-audit side effect)
+7. `widgets/visualization-panel` + department/employee tree and Mermaid views
 
 ## Mandatory Documentation Rule (`AGENT.md`)
 

@@ -41,8 +41,13 @@ complex business mutations, raw `axios`/`fetch` calls, or reusable domain models
 
 ## Screen acceptance (pages)
 
-Every page must compose loading / empty / error / forbidden states (see root `AGENTS.md`). Filters
-and tabs belong in URL search params.
+Every page must compose loading / empty / error / forbidden states (see root `AGENTS.md`). Filters,
+search, sorting, pagination, and tabs belong in URL search params.
+
+Data pages mount `widgets/*-table` / `widgets/*-inbox` (the shared data grid) rather than rendering
+tables directly, so the column chooser, pagination, and row/header context menus are identical
+everywhere. Pages with hierarchy or diagram content mount `widgets/visualization-panel`, which
+offers the Mermaid diagram / chart / tree switcher.
 
 ## Implementation status
 
@@ -56,6 +61,7 @@ and tabs belong in URL search params.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-25 | Buffy | Documented that pages compose the shared data grid and visualization widgets, so table preferences and context menus stay consistent across routes. |
 | 2026-10-25 | Cursor | Aligned route map with live Modules 05/06/09: movements + audit as first-class pages; documents host attachments; archive marked blocked. |
 | 2026-10-22 | opencode | Converted this folder's `README.md` from the Word document it was authored in to markdown. |
 | 2026-10-19 | agent | Initialized `src/pages` FSD layer folder and documented route slices, backend mappings, and FSD rules. |

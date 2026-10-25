@@ -640,6 +640,10 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                     b.HasIndex("OccurredAtUtc")
                         .HasDatabaseName("IX_AUDIT_LOGS_OCCURRED_AT");
 
+                    b.HasIndex("PreviousHash")
+                        .IsUnique()
+                        .HasDatabaseName("UX_AUDIT_LOGS_PREVIOUS_HASH");
+
                     b.HasIndex("RelatedDocumentId")
                         .HasDatabaseName("IX_AUDIT_LOGS_DOC");
 

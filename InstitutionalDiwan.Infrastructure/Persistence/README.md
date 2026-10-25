@@ -1,7 +1,8 @@
 # Infrastructure / Persistence
 
-> **Status:** Implemented (partially) — `DiwanDbContext` and ten configuration files exist, plus 14
-> of 17 repositories, five applied migrations, and the ordered seeder pipeline. Interceptors remain empty.
+> **Status:** Implemented (partially) — `DiwanDbContext` and ten configuration files exist, plus 19
+> of 21 repositories, eight written migrations, the ordered seeder pipeline, and the tamper-evident
+> audit interceptor. The outbox interceptor remains empty.
 
 ## Purpose
 
@@ -15,8 +16,9 @@ without knowing which provider is underneath.
 | --- | --- | --- |
 | `DiwanDbContext.cs` | ✅ Written | `DbContext, IUnitOfWork`; 67 `DbSet`s; applies configurations by assembly scan. |
 | `Configurations/` | ✅ Written (10 files) | `IEntityTypeConfiguration<T>` for all 67 entities. |
-| `Repositories/` | 🟡 Partial (14 of 17) | `UserRepository`, `RoleRepository`, `PermissionRepository`, `EmployeeRepository`, `DepartmentRepository`, `DepartmentTypeRepository`, `DocumentRepository`, `DocumentTypeRepository`, `NumberingRegistryRepository`, `DocumentNumberRepository`, `DocumentAccessGrantRepository`, `LookupRepository`, `InstitutionSettingRepository`, `ExternalOrganizationRepository`, `DocumentMovementRepository`. |
-| `Interceptors/` | ❌ Empty | Domain-event dispatch + tamper-evident audit. |
+| `Repositories/` | 🟡 Partial (19 of 21) | `UserRepository`, `RoleRepository`, `PermissionRepository`, `EmployeeRepository`, `DepartmentRepository`, `DepartmentTypeRepository`, `DocumentRepository`, `DocumentTypeRepository`, `NumberingRegistryRepository`, `DocumentNumberRepository`, `DocumentAccessGrantRepository`, `LookupRepository`, `InstitutionSettingRepository`, `ExternalOrganizationRepository`, `DocumentMovementRepository`, `DocumentFileRepository`, `DocumentFileTypeRepository`, `FileStorageProviderRepository`, `AuditLogRepository`; relation and notification repositories pending. |
+| `Interceptors/` | 🟡 Partial | `TamperEvidentAuditInterceptor` is registered; domain-event/outbox dispatch is pending. |
+| `Transactions/` | ✅ Written | `EfTransactionManager` / `EfTransactionScope` — commit on success, rollback on dispose. |
 | `Migrations/` | ✅ Written (7) | `InitialCreate`, `AddUniqueOfficialNumber` (unique official-number + year index), three lookup refactors (`Refactor_DepartmentTypes_ToLookup`, `Refactor_CorrespondenceNumbering_ToLookups`, `Refactor_AllRemaining_ToLookups`), `InitialCreate2`, and `Add_Department_Register_Numbers` (department registers + `ScopeId`-filtered uniqueness). |
 | `Seed/` | ✅ Written | `ISeeder` + `SeederRunner` (ordering + environment gating); 34 `LookupSeederBase<T>` seeders, `PermissionSeeder` (100), `RoleSeeder` (200), `UserSeeder` (300). |
 
@@ -52,17 +54,17 @@ without knowing which provider is underneath.
 | --- | --- |
 | `DbContext` | ✅ Written |
 | All 66 entity configurations | ✅ Written |
-| Repository implementations | 🟡 14 of 17 (lookups, institution settings, external organizations, movements included; files/relations/audit/notifications pending) |
-| Interceptors | ❌ None |
-| Migrations | ✅ 5 applied (`InitialCreate`, `AddUniqueOfficialNumber`, three lookup refactors) |
+| Repository implementations | 🟡 19 of 21 (files, audit, lookups, institution settings, external organizations, movements included; relations/notifications pending) |
+| Interceptors | 🟡 `TamperEvidentAuditInterceptor` implemented; outbox interceptor pending |
+| Migrations | ✅ 8 written (`InitialCreate`, `AddUniqueOfficialNumber`, three lookup refactors, `InitialCreate2`, `Add_Department_Register_Numbers`, `Add_Audit_Chain_Uniqueness`) |
 | Seed data | ✅ 33 reference catalogs + permissions + system roles + demo users (`Seed/` — ordered + environment-gated) |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-25 | opencode | Added `AuditLogRepository` and registered `TamperEvidentAuditInterceptor`; refreshed repository/interceptor/migration counts. |
 | 2026-10-20 | Buffy | Added `DOCUMENT_NUMBER_SCOPES` (`DiwanDbContext`, configuration, migration) and the department-register columns/indexes; `DocumentNumberRepository` queries are now scope-aware and the repository gained `ExistsInScopeAsync`, `GetDepartmentEntryAsync`, and `ListByDepartmentAsync`, while `DocumentRepository` gained `GetWithNumbersAsync` + `GetByIdsAsync`. |
-| --- | --- | --- |
 | 2026-10-19 | Buffy | Added `Repositories/InstitutionSettingRepository.cs`, `Repositories/ExternalOrganizationRepository.cs`, `Repositories/DocumentMovementRepository.cs`, and `Seed/InstitutionSettingSeeder.cs` (singleton settings + its Central Diwan department); repository count 12 → 14 of 17. |
 | 2026-10-19 | opencode | Added `Repositories/LookupRepository.cs` (generic access to every reference catalog via one slug registry) to `Contents`/status; corrected the stale README (it still called the context `NewDiwanDbContext`, counted 5 repositories and 2 migrations, and claimed the project could not build). |
 | 2026-10-18 | opencode | Added `DocumentNumberRepository` + `NumberingRegistryRepository`, the unique `UX_DOC_NUMBERS_TEXT_YEAR` index (`NumberingConfigurations.cs`), and the `AddUniqueOfficialNumber` migration — official numbers are now uniqueness-checked at document creation. |

@@ -1,6 +1,6 @@
 # Presentation / Controllers
 
-> **Status:** Implemented — sixteen thin controllers, one per module plus the generic lookups controller.
+> **Status:** Implemented — seventeen thin controllers, one per module plus the generic lookups controller.
 
 ## Purpose
 
@@ -29,6 +29,7 @@ access live here.
 | `DocumentAccessGrantsController.cs` | `api/documents/{documentId}/access-grants` | `ACCESS_GRANT_MANAGE` | Per-document access grants: list/grant/revoke. |
 | `NumberingRegistriesController.cs` | `api/numbering/registries` | `NUMBERING_VIEW` reads; `NUMBERING_MANAGE` writes | Numbering registry list/by-id + create, update, deactivate, activate. |
 | `LookupsController.cs` | `api/lookups/{lookup}` | `[Authorize]` reads; `LOOKUP_MANAGE` writes | Generic reference-catalog API over all 33 seeded lookups. |
+| `AuditLogsController.cs` | `api/audit-logs` | `AUDIT_VIEW` reads; `AUDIT_MANAGE` checkpoints/integrity checks | Module 09 audit trail: filtered self-auditing search, checkpoint creation, integrity verification, and integrity-report listing. |
 
 ## Lookups endpoints
 
@@ -79,10 +80,20 @@ access live here.
 | `GET` | `/api/document-files/{fileId}/download?versionId=` | `DOCUMENT_VIEW` | Stream one version (current by default) under its original name/MIME type; requires DOWNLOAD access. |
 | `GET` | `/api/document-files/{fileId}/verify?versionId=` | `DOCUMENT_VIEW` | Recompute the stored SHA-256 and return both checksums plus `isMatch`. |
 
+## Audit endpoints (Module 09)
+
+| Method | Route | Permission | Behavior |
+| --- | --- | --- | --- |
+| `GET` | `/api/audit-logs` | `AUDIT_VIEW` | Paged/filtered search by module, action, entity, actor, department, document, correlation id, IP, time window, and free text; appends a self-audit entry. |
+| `POST` | `/api/audit-logs/checkpoints` | `AUDIT_MANAGE` | Verify and seal every entry since the previous checkpoint (optional `toAuditLogId`). |
+| `POST` | `/api/audit-logs/integrity-checks` | `AUDIT_MANAGE` | Verify a range (default whole chain) and persist the report; a broken chain returns 200 with `isValid = false`. |
+| `GET` | `/api/audit-logs/integrity-checks` | `AUDIT_VIEW` | Paged list of persisted reports, newest first. |
+
 ## Paged list endpoints
 
-`GET /api/documents`, `/api/users`, `/api/employees`, and `/api/external-organizations` accept
-`page` (1-based, default 1), `pageSize` (default 20, clamped to 1–100), and `search`, and return:
+`GET /api/documents`, `/api/users`, `/api/employees`, `/api/external-organizations`, and
+`GET /api/audit-logs` accept `page` (1-based, default 1), `pageSize` (default 20, clamped to 1–100),
+and return:
 
 ```json
 { "items": [ ... ], "page": 1, "pageSize": 20, "totalCount": 42, "totalPages": 3,
@@ -114,6 +125,7 @@ plain JSON array.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-25 | opencode | Added `AuditLogsController` for Module 09 (`AUDIT_VIEW` search/reports, `AUDIT_MANAGE` checkpoint/integrity check); reading the log appends a self-audit entry. |
 | 2026-10-25 | opencode | Added the planned route aliases: document-scoped movement history, department-scoped inbox/outbox, step-scoped receive/complete/reject/return, and atomic `POST /api/documents/{documentId}/files`. Rejections now route to the Central Diwan and ordinary → ordinary movements are refused. |
 | 2026-10-25 | opencode | Added `DocumentFilesController` for Module 06: create, upload version (multipart), archive, list by document, download, and checksum verification. |
 | 2026-10-22 | Buffy | `AuthController.Me` now sends `GetUserProfileQuery` instead of reading claims inline, and `DocumentsController` gained `GET /api/departments/{departmentId}/documents` (one department's paged register, scope-checked). |

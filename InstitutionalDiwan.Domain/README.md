@@ -89,6 +89,12 @@ and `StorageProviderNotFound` (NotFound), `FileTypeInactive` / `StorageProviderI
 `FileArchived` / `FileAlreadyArchived` (Conflict), and the upload-validation errors `FileEmpty`,
 `FileTooLarge`, `ExtensionNotAllowed`, and `SignatureMismatch` (Validation).
 
+The `.Audit` group covers Module 09: `NoAuditLogs` / `PreviousLogNotFound` (NotFound), `HashMismatch` /
+`ChainBroken` / `NothingToCheckpoint` (Conflict), and `RequiredFieldsMissing` /
+`InvalidCheckpointRange` / `InvalidIntegrityRange` (Validation) so the checkpoint and integrity
+handlers can report an empty chain, a broken link, a tampered row, or an unusable range
+deterministically.
+
 ### `Events/DomainEvents.cs`
 
 34 immutable `record` domain events (the older notes claimed 22, which is out of date). Grouped by module:
@@ -128,6 +134,11 @@ history), and `ListInboxAsync`/`ListOutboxAsync` (a department's two queues).
 document's files; `IDocumentFileTypeRepository` supplies the allowed extensions/size limit for
 validation, and `IFileStorageProviderRepository` resolves the active default (or a specific) storage
 provider for Module 06.
+
+`IAuditLogRepository` is append-only: `GetLatestAsync` provides the previous `EventHash`,
+`GetByIdAsync` anchors a verification range, `ListRangeAsync` walks an ordered range for checkpoints
+and integrity checks, and `SearchAsync` applies the audit filters and paging. Checkpoints and
+integrity reports have their own add/list/latest methods; no update or delete is exposed.
 
 ### `Entities/` — the 10 modules (41 entities)
 
@@ -181,8 +192,13 @@ provider for Module 06.
   the "who holds the document now" question is answered from the **current step** (`CurrentStepNo`),
   not from the header. `ListInboxAsync`/`ListOutboxAsync` in the Infrastructure layer rely on that.
 - **`DocumentFile`** — version numbers strictly sequential; archived files reject new versions; superseded versions flagged.
-- **`AuditLog`** — tamper-evident SHA-256 hash chaining: `Record(...)` computes `EventHash` from the payload plus
-  `PreviousHash`; `VerifyIntegrity(expectedPreviousHash)` re-computes and detects a broken chain or hash mismatch.
+- **`AuditLog`** — tamper-evident SHA-256 hash chaining: `Record(...)` normalizes `OccurredAtUtc` to
+  UTC milliseconds, hashes every stored field except `AuditLogId`/`EventHash` (including actor
+  department, related document, IP, and correlation id), and links it to `PreviousHash`;
+  `VerifyIntegrity(expectedPreviousHash)` re-computes and detects a broken chain or hash mismatch,
+  and `Reseal(previousHash)` re-chains a not-yet-persisted row onto the current predecessor after the
+  persistence layer takes the chain lock. The first row chains to `AuditLog.GenesisHash` (64 zeroes).
+  Checkpoints and integrity reports are separate immutable records.
 - **`Notification` / `NotificationOutbox`** — duplicate recipients rejected; outbox transitions
   `PENDING → SENT` or `→ FAILED/DEAD_LETTER` with `RetryCount` and `NextRetryAt`.
 - **`DocumentRelation`** — no self-relations; inactive relation types rejected; optional cycle prevention and
@@ -315,6 +331,8 @@ them, while listing, relabelling and (de)activation keep working.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-25 | Buffy | Added `AuditLog.Reseal(previousHash)` so an unpersisted audit row can be re-chained onto the current predecessor after the persistence layer serializes appends. |
+| 2026-10-25 | opencode | Strengthened the Module 09 audit domain: `AuditLog.GenesisHash`, UTC/millisecond normalization, a hash payload covering every stored field, the expanded `IAuditLogRepository` (range/checkpoint/integrity queries), audit entity-type ids, and the `Audit.*` error catalog. |
 | 2026-10-25 | opencode | Added the Central Diwan routing errors (`CentralDiwanRoutingRequired`, `CentralDiwanNotConfigured`, `StepNotCurrent`), `IDocumentMovementRepository.GetActiveByDocumentIdAsync`, and rejection routing back to the Central Diwan as a new sent step. |
 | 2026-10-25 | opencode | Added the Module 06 attachment errors (`FileNotFound`, `VersionNotFound`, `FileTypeNotFound`, `StorageProviderNotFound`, `FileTypeInactive`, `StorageProviderInactive`, `FileAlreadyArchived`, `FileEmpty`, `FileTooLarge`, `ExtensionNotAllowed`, `SignatureMismatch`, `TitleTooLong`), `Correspondence.DocumentAccessDenied`, and the `IDocumentFileTypeRepository` / `IFileStorageProviderRepository` contracts plus `IDocumentFileRepository.ListByDocumentAsync`. |
 | 2026-10-22 | Buffy | Threaded deterministic time through the whole layer: every aggregate factory/behavior that stamps a timestamp (`Document`, `User`, `Department`, `Employee`, `DocumentMovement` + steps/events, `DocumentNumber`, `NumberingRegistry`/`Counter`, `InstitutionSetting`, `ExternalOrganization`, `DocumentAccessGrant`, `Role`/`Permission`/`RolePermission`, `UserRole`/`UserDepartmentAssignment`, `DocumentFile`, `AuditCheckpoint`/`AuditIntegrityCheck`, `Notification*`, `SavedSearch`, relations, lookups, `DepartmentType`) now accepts an optional `utcNow` and uses it for nested rows too. The system clock remains only as the fallback (`IDomainEvent.OccurredOnUtc`, `AuditLog.Record`). Added `DomainErrors.Identity.NotAuthenticated` and `DomainErrors.Correspondence.DepartmentOutOfScope`. |

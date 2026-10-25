@@ -2,8 +2,10 @@
 
 > **Status:** Partially implemented — `Messaging/` (ICommand/IQuery/ICommandHandler/IQueryHandler),
 > `Authentication/` (`IJwtProvider`, `IPasswordHasher`, `IUserContext`), `Authorization/`
-> (`IDepartmentScopeEvaluator`, `IDocumentAccessEvaluator`), and `Storage/` (`IFileStorageService`,
-> `IFileSignatureValidator`, `StoredFile`) are live; the data/caching contracts are still target design.
+> (`IDepartmentScopeEvaluator`, `IDocumentAccessEvaluator`), `Storage/` (`IFileStorageService`,
+> `IFileSignatureValidator`, `StoredFile`), `Time/` (`IDateTimeProvider`), `Context/`
+> (`IRequestContext`), and `Persistence/` (`ITransactionManager`) are live; the data/caching
+> contracts are still target design.
 
 ## Purpose
 
@@ -62,7 +64,20 @@ technology choices swappable.
 
 | Interface | Shape | Notes |
 | --- | --- | --- |
-| `IDateTimeProvider` | `DateTime UtcNow`, `DateTime ToInstitutionLocal(DateTime utc)`, `int NumberingYear(DateTime utc)` | Lets domain logic and numbering years be tested deterministically. |
+| `IDateTimeProvider` | `DateTime UtcNow`, `DateTime ToInstitutionLocal(DateTime utc)`, `int NumberingYear(DateTime utc)` | Lets domain logic and numbering years be tested deterministically. ✅ Implemented by `Infrastructure/Time/DateTimeProvider`. |
+
+### `Context/`
+
+| Interface | Shape | Notes |
+| --- | --- | --- |
+| `IRequestContext` | `string? CorrelationId { get; }`, `string? IpAddress { get; }` | Ambient request metadata for logging and explicit audit rows; null outside a request. ✅ Implemented by `Infrastructure/Context/HttpRequestContext`. |
+
+### `Persistence/`
+
+| Interface | Shape | Notes |
+| --- | --- | --- |
+| `ITransactionManager` | `Task<ITransactionScope> BeginTransactionAsync(CancellationToken)` | Opens an explicit database transaction so one command's writes, outbox work, and audit rows commit together. ✅ Implemented by `Infrastructure/Persistence/Transactions/EfTransactionManager`. |
+| `ITransactionScope` | `CommitAsync`, `DisposeAsync` | Disposing without commit rolls back. |
 
 ## Contents
 
@@ -80,6 +95,9 @@ technology choices swappable.
 | `Storage/IFileStorageService.cs` | Persists and reads document bytes under a provider root, returning the streamed SHA-256 checksum of an upload. |
 | `Storage/IFileSignatureValidator.cs` | Validates an upload's extension, size, and magic bytes before any bytes are stored. |
 | `Storage/StoredFile.cs` | Value returned by storage after a save: relative path, original name, MIME type, size, checksum, and provider id. |
+| `Time/IDateTimeProvider.cs` | UTC now plus institution-local conversion and numbering-year helpers; implemented by Infrastructure `DateTimeProvider` over `IClock`. |
+| `Context/IRequestContext.cs` | Correlation id and client IP for the current request, kept host-agnostic; implemented by Infrastructure `HttpRequestContext`. |
+| `Persistence/ITransactionManager.cs` | `BeginTransactionAsync` returns an `ITransactionScope`; commit on success and roll back on a failed `Result` or exception. |
 
 ## Implementation status
 
@@ -91,16 +109,18 @@ technology choices swappable.
 | `Data/` | ❌ Not implemented |
 | `Storage/` | ✅ Implemented (`IFileStorageService`, `IFileSignatureValidator`, `StoredFile`) |
 | `Caching/` | ❌ Not implemented |
-| `Clock/` | ❌ Not implemented |
+| `Clock/` | ✅ Implemented (`IDateTimeProvider` + Infrastructure `DateTimeProvider`) |
+| `Context/` | ✅ Implemented (`IRequestContext` + Infrastructure `HttpRequestContext`) |
+| `Persistence/` | ✅ Implemented (`ITransactionManager` + Infrastructure `EfTransactionManager`) |
 
-> The Infrastructure `Authentication/` folder implements these contracts (`JwtProvider`,
-> `PasswordHasher`); `Storage/`, `Outbox/`, `BackgroundJobs/` and `Time/` are still empty — see their
-> READMEs for details.
+> The Infrastructure `Authentication/`, `Storage/`, `Time/`, `Context/`, and `Persistence/` folders
+> implement these contracts; `Data/` and `Caching/` remain target design. See their READMEs for details.
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-25 | opencode | Added `Context/IRequestContext` and `Persistence/ITransactionManager`, and marked `IDateTimeProvider` implemented by Infrastructure `DateTimeProvider` for Module 09. |
 | 2026-10-25 | opencode | Added the `Storage/` contracts (`IFileStorageService`, `IFileSignatureValidator`, `StoredFile`) so the Module 06 Attachments handlers depend on abstractions instead of the file system or ASP.NET upload types. |
 | 2026-10-22 | Buffy | Extended `IUserContext` with `Username` and `Roles` so `GetUserProfileQuery` can project the caller's profile (`GET /api/auth/me`) without reading claims in the controller. |
 | 2026-10-19 | Buffy | Added `Authentication/IUserContext` and the `Authorization/` group (`IDepartmentScopeEvaluator`, `IDocumentAccessEvaluator`) — the contracts behind the three-tier access model; implemented in `Infrastructure/Authentication/UserContext.cs` and `Infrastructure/Authorization/`. |

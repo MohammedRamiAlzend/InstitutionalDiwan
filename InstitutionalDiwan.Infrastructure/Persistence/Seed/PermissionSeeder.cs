@@ -31,6 +31,8 @@ public sealed class PermissionSeeder : ISeeder
         (Permissions.AccessGrantManage, "إدارة صلاحيات الوصول", "Manage document access", "IDENTITY", "Grant and revoke per-document access for users."),
         (Permissions.ReportView, "عرض التقارير", "View reports", "REPORTING", "View institutional reports and statistics."),
         (Permissions.LookupManage, "إدارة القوائم المرجعية", "Manage reference lookups", "LOOKUPS", "Add, relabel, activate and deactivate reference lookup entries."),
+        (Permissions.AuditView, "عرض سجل التدقيق", "View audit log", "AUDIT", "Browse and verify the tamper-evident audit log."),
+        (Permissions.AuditManage, "إدارة سلامة سجل التدقيق", "Manage audit integrity", "AUDIT", "Create checkpoints and run integrity verification over the audit log."),
     };
 
     public async Task SeedAsync(SeederContext context, CancellationToken cancellationToken = default)

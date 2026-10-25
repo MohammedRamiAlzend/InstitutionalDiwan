@@ -1,8 +1,8 @@
 # Presentation / Contracts
 
 > **Status:** Partially implemented — Correspondence, Organization (incl. institution settings),
-> Numbering, Identity (incl. employees and document access grants), Movements, Lookups, and
-> Attachments requests exist; the remaining modules are target design.
+> Numbering, Identity (incl. employees and document access grants), Movements, Lookups, Attachments,
+> and Audit requests exist; the remaining modules are target design.
 
 ## Purpose
 
@@ -23,7 +23,7 @@ commands/queries map between them and the domain.
 | Attachments | `CreateDocumentFileRequest` ✅ (document id, file type, title, primary-scan flag), `UploadDocumentFileVersionRequest` ✅ (multipart `File` + optional `ChangeNotes`); the read models live in `Application/Features/Attachments/` |
 | Archiving | `AdvancedDocumentSearchRequest`, `SaveSearchRequest`, `PagedDocumentsResponse` |
 | Relations | `CreateDocumentRelationRequest`, `DocumentRelationGraphResponse` |
-| Audit | `AuditLogSearchRequest`, `AuditIntegrityReportResponse` |
+| Audit | `CreateAuditCheckpointRequest` ✅ (optional `ToAuditLogId`), `RunAuditIntegrityCheckRequest` ✅ (optional start/end ids); read models (`AuditLogResponse`, `AuditCheckpointResponse`, `AuditIntegrityCheckResponse`) live in `Application/Features/Audit/` |
 | Notifications | `NotificationListResponse`, `UnreadCountResponse` |
 
 ## Conventions
@@ -51,12 +51,14 @@ commands/queries map between them and the domain.
 | Movements open/send/complete/reject/return/redirect/close/cancel requests | ✅ Implemented |
 | Identity `AssignUserDepartmentScopeRequest` | ✅ Implemented |
 | Attachments `CreateDocumentFileRequest`, `UploadDocumentFileVersionRequest` | ✅ Implemented |
+| Audit `CreateAuditCheckpointRequest`, `RunAuditIntegrityCheckRequest` | ✅ Implemented |
 | Other request/response records | ❌ Not implemented |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-25 | opencode | Added `Audit/AuditRequests.cs` with the checkpoint and integrity-check payloads for `AuditLogsController`; documented that audit read models reuse the Application DTOs. |
 | 2026-10-25 | opencode | Added `Attachments/DocumentFileRequests.cs` with the create-file payload and the multipart version-upload payload for `DocumentFilesController`. |
 | 2026-10-22 | Buffy | Removed `Identity/MeResponse.cs`; `GET /api/auth/me` now returns `UserProfileResponse` from `Features/Identity/Login/`, the same way the auth endpoints already return the Application-layer `LoginResponse`. The JSON shape is unchanged. |
 | 2026-10-21 | opencode | Completed the `Movements/` folder: `CreateMovementRequest`, `SendMovementRequest`, `CompleteMovementStepRequest`, `RejectMovementStepRequest`, `ReturnMovementToSenderRequest`, `RedirectMovementRequest`, `CloseMovementRequest`, and `CancelMovementRequest` for the routing workflow. |

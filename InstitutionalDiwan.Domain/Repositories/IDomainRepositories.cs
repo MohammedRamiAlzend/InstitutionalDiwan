@@ -209,10 +209,56 @@ public interface IDocumentRelationRepository
     void Remove(DocumentRelation relation);
 }
 
+/// <summary>
+/// Filter applied to <see cref="IAuditLogRepository.SearchAsync"/>. All values are optional; a null
+/// value means "do not filter on this column".
+/// </summary>
+public sealed record AuditLogFilter(
+    string? ModuleName = null,
+    int? ActionTypeId = null,
+    int? EntityTypeId = null,
+    string? EntityId = null,
+    Guid? ActorUserId = null,
+    Guid? ActorDepartmentId = null,
+    Guid? RelatedDocumentId = null,
+    string? CorrelationId = null,
+    string? IpAddress = null,
+    DateTime? FromUtc = null,
+    DateTime? ToUtc = null,
+    string? Search = null);
+
 public interface IAuditLogRepository
 {
+    /// <summary>The last appended audit entry, or null when the chain is empty.</summary>
     Task<AuditLog?> GetLatestAsync(CancellationToken cancellationToken = default);
+
+    Task<AuditLog?> GetByIdAsync(long auditLogId, CancellationToken cancellationToken = default);
+
+    /// <summary>Filtered, paged audit entries, newest first unless <paramref name="page"/> requests otherwise.</summary>
+    Task<PagedList<AuditLog>> SearchAsync(
+        AuditLogFilter filter,
+        PageRequest page,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>Every entry between two ids (inclusive), ordered by id, for chain verification.</summary>
+    Task<IReadOnlyList<AuditLog>> ListRangeAsync(
+        long fromAuditLogId,
+        long toAuditLogId,
+        CancellationToken cancellationToken = default);
+
+    Task<AuditCheckpoint?> GetLatestCheckpointAsync(CancellationToken cancellationToken = default);
+
+    Task<PagedList<AuditCheckpoint>> ListCheckpointsAsync(
+        PageRequest page,
+        CancellationToken cancellationToken = default);
+
+    Task<PagedList<AuditIntegrityCheck>> ListIntegrityChecksAsync(
+        PageRequest page,
+        CancellationToken cancellationToken = default);
+
     void Add(AuditLog auditLog);
+    void AddCheckpoint(AuditCheckpoint checkpoint);
+    void AddIntegrityCheck(AuditIntegrityCheck integrityCheck);
 }
 
 public interface INotificationRepository

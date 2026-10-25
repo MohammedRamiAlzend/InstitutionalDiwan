@@ -3,7 +3,7 @@
 Ordered, environment-aware database seeding.
 
 > **Status:** Implemented — 33 reference-catalog seeders, the institution-settings singleton,
-> permissions, system roles, and demo users.
+> 16 permissions, system roles with 19 grants, and demo users.
 
 ## How it works
 
@@ -26,8 +26,8 @@ Development, Production, etc.
 | --- | --- | --- | --- |
 | 41–90 | 34 `LookupSeederBase<T>` subclasses (`IdentityLookupSeeders.cs`, `ParticipantLookupSeeders.cs`, `MovementsLookupSeeders.cs`, `AttachmentsLookupSeeders.cs`, `RelationsLookupSeeders.cs`, `ArchivingLookupSeeders.cs`, `CorrespondenceLookupSeeders.cs`, `AuditLookupSeeders.cs`, `NotificationsLookupSeeders.cs`, `NumberingLookupSeeders.cs`, `OrganizationLookupSeeders.cs`, `DepartmentTypeSeeder.cs`) | All | Every reference catalog: scope/assignment/access levels, participant roles + target types, movement types/statuses/step statuses/event types, storage provider types + file types + the default local provider, relation types + action types, archive event types + locations, document directions/types/statuses/confidentiality/priority, audit action + entity types, notification types/priorities/channels/outbox statuses, numbering modes/statuses/event types/scopes (central vs department register)/reset policies, department types. |
 | 95 | `InstitutionSettingSeeder` | All | The singleton `InstitutionSetting` row (automatic numbering, yearly reset) plus the `CENTRAL_DIWAN` root department it designates; runs after the numbering lookups and department types it references. |
-| 100 | `PermissionSeeder` | All | Permission catalog — the 14 codes in `Permissions.All`, including `LOOKUP_MANAGE` and `NUMBERING_MANAGE`. |
-| 200 | `RoleSeeder` | All | `ADMIN` / `USER` roles plus their permission grants (ADMIN receives all 14, USER the three document permissions). |
+| 100 | `PermissionSeeder` | All | Permission catalog — the 16 codes in `Permissions.All`, including `LOOKUP_MANAGE`, `NUMBERING_MANAGE`, `AUDIT_VIEW`, and `AUDIT_MANAGE`. |
+| 200 | `RoleSeeder` | All | `ADMIN` / `USER` roles plus their permission grants (ADMIN receives all 16, USER the three document permissions; 19 grants total). |
 | 300 | `UserSeeder` | Development, Staging | Demo accounts `admin` / `user` (password `12345678`) with role assignments. |
 
 Order matters: the lookup catalogs are seeded before permissions/roles so business tables can
@@ -43,6 +43,7 @@ Production requires opting in by adding `SeedingEnvironments.Production` to
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-25 | opencode | Added `AUDIT_VIEW` and `AUDIT_MANAGE` to the catalog (14 → 16) and granted both to `ADMIN` (17 → 19 grants); extended the audit entity-type lookup to 12 types. |
 | 2026-10-20 | Buffy | Added `DocumentNumberScopeSeeder` (Order 88, `DOCUMENT_NUMBER_SCOPES`: central register / department register) and two department event types (`RegisteredInDepartment`, `ReRegisteredInDepartment`) to `DocumentNumberEventTypeSeeder`; registered the new seeder in `Infrastructure/DependencyInjection.cs` (34 lookup seeders). |
 | 2026-10-19 | Buffy | Added `InstitutionSettingSeeder` (Order 95) seeding the settings singleton and its `CENTRAL_DIWAN` root department; `PermissionSeeder` now seeds `NUMBERING_MANAGE` and `RoleSeeder` grants it to `ADMIN` (catalog 13 → 14 codes, ADMIN grants 16 → 17). |
 | 2026-10-19 | opencode | `PermissionSeeder` now seeds `LOOKUP_MANAGE` and `RoleSeeder` grants it to `ADMIN` (catalog 12 → 13 codes, ADMIN grants 12 → 13); documented the 33 lookup seeders that this README previously omitted, including `LookupSeederBase<T>` and the 41–90 order range. |

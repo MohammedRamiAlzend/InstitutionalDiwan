@@ -1,13 +1,20 @@
 using InstitutionalDiwan.Application.Abstractions.Authentication;
 using InstitutionalDiwan.Application.Abstractions.Authorization;
+using InstitutionalDiwan.Application.Abstractions.Context;
+using InstitutionalDiwan.Application.Abstractions.Persistence;
 using InstitutionalDiwan.Application.Abstractions.Storage;
+using InstitutionalDiwan.Application.Abstractions.Time;
 using InstitutionalDiwan.Domain.Common;
 using InstitutionalDiwan.Domain.Repositories;
 using InstitutionalDiwan.Infrastructure.Authentication;
 using InstitutionalDiwan.Infrastructure.Authorization;
+using InstitutionalDiwan.Infrastructure.BackgroundJobs;
+using InstitutionalDiwan.Infrastructure.Context;
 using InstitutionalDiwan.Infrastructure.Persistence;
+using InstitutionalDiwan.Infrastructure.Persistence.Interceptors;
 using InstitutionalDiwan.Infrastructure.Persistence.Repositories;
 using InstitutionalDiwan.Infrastructure.Persistence.Seed;
+using InstitutionalDiwan.Infrastructure.Persistence.Transactions;
 using InstitutionalDiwan.Infrastructure.Storage;
 using InstitutionalDiwan.Infrastructure.Time;
 using Microsoft.EntityFrameworkCore;
@@ -23,17 +30,33 @@ public static class DependencyInjection
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        services.AddDbContext<DiwanDbContext>(options =>
+        services.AddDbContext<DiwanDbContext>((serviceProvider, options) =>
         {
             options.UseSqlServer(
                 configuration.GetConnectionString("DefaultConnection")
                 ?? "Server=(localdb)\\MSSQLLocalDB;Database=InstitutionalDiwan;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True");
+
+            // The interceptor appends the audit trail from the same SaveChanges call that writes
+            // the business change, so the two rows share one transaction.
+            options.AddInterceptors(serviceProvider.GetRequiredService<TamperEvidentAuditInterceptor>());
         });
         services.AddScoped<IUnitOfWork>(serviceProvider =>
             serviceProvider.GetRequiredService<DiwanDbContext>());
 
         // One ambient source of "now" for the whole application.
         services.AddSingleton<IClock, SystemClock>();
+        services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
+        services.AddSingleton<TamperEvidentAuditInterceptor>();
+
+        // Request metadata and one explicit transaction scope per command.
+        services.AddScoped<IRequestContext, HttpRequestContext>();
+        services.AddScoped<ITransactionManager, EfTransactionManager>();
+
+        // Scheduled audit maintenance. Both jobs are idempotent and no-op when there is nothing
+        // new to seal or no entries to verify.
+        services.Configure<AuditJobsOptions>(configuration.GetSection(AuditJobsOptions.SectionName));
+        services.AddHostedService<AuditChainIntegrityVerificationJob>();
+        services.AddHostedService<DailyAuditCheckpointJob>();
 
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IRoleRepository, RoleRepository>();
@@ -53,6 +76,7 @@ public static class DependencyInjection
         services.AddScoped<IDocumentFileRepository, DocumentFileRepository>();
         services.AddScoped<IDocumentFileTypeRepository, DocumentFileTypeRepository>();
         services.AddScoped<IFileStorageProviderRepository, FileStorageProviderRepository>();
+        services.AddScoped<IAuditLogRepository, AuditLogRepository>();
 
         // Module 06 physical storage: local file system + magic-byte validation, both consumed by
         // the Attachments handlers through Application abstractions.

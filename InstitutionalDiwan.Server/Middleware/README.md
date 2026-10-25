@@ -1,7 +1,8 @@
 # Presentation / Middleware
 
-> **Status:** Partially implemented — `GlobalExceptionHandlingMiddleware` is implemented and
-> registered outermost in `Program.cs`; `RequestContextLoggingMiddleware` remains target design.
+> **Status:** Implemented — `RequestContextLoggingMiddleware` is registered first and
+> `GlobalExceptionHandlingMiddleware` immediately after it, so correlation ids reach both the
+> exception log and every inner handler.
 
 ## Purpose
 
@@ -21,28 +22,33 @@ clean RFC 7807 `ProblemDetails` JSON response **without leaking stack traces**. 
   logged at `Warning`).
 
 ### `RequestContextLoggingMiddleware.cs`
-Reads or generates the `X-Correlation-Id` header and pushes `CorrelationId`, `IpAddress`, and `UserId`
-into the structured logging scope (`LogContext.PushProperty`) and the audit context, so every log line
-and `AUDIT_LOGS.CorrelationId` value can be tied back to a single request.
+Reads or generates the `X-Correlation-Id` header, stores it (and the client IP) in
+`HttpContext.Items` for `HttpRequestContext` and the audit interceptor, echoes it on the response,
+and pushes `CorrelationId`, `IpAddress`, and `UserId` into the structured logging scope. Every log
+line and `AUDIT_LOGS.CorrelationId` can therefore be tied back to one request.
 
 ## Pipeline position
 
-Register exception handling **outermost**, then request-context logging, then authorization, then
+Register request-context logging **outermost**, then exception handling, then authorization, then
 controllers:
 
 ```
-GlobalExceptionHandling → RequestContextLogging → Authentication → Authorization → Endpoints
+RequestContextLogging → GlobalExceptionHandling → Authentication → Authorization → Endpoints
 ```
+
+Request-context logging must come first so the correlation id is already in the logging scope when
+an exception is recorded and is available to controllers that fail early.
 
 ## Implementation status
 
 | Middleware | State |
 | --- | --- |
 | `GlobalExceptionHandlingMiddleware` | ✅ Implemented (500 fallback + 409 for unique-key violations) |
-| `RequestContextLoggingMiddleware` | ❌ Not implemented |
+| `RequestContextLoggingMiddleware` | ✅ Implemented (correlation id, IP, user id, response header) |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-25 | opencode | Implemented `RequestContextLoggingMiddleware` for Module 09 and corrected the pipeline order (request context outermost, then exception handling). |
 | 2026-10-18 | opencode | `GlobalExceptionHandlingMiddleware` now maps SQL Server unique-key violations (`DbUpdateException`, errors 2601/2627) to `409 Conflict` — concurrent duplicate official numbers return 409 instead of 500. |

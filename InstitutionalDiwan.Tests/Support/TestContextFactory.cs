@@ -1,6 +1,8 @@
+using InstitutionalDiwan.Domain.Entities.Audit;
 using InstitutionalDiwan.Infrastructure.Persistence;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace InstitutionalDiwan.Tests.Support;
 
@@ -11,17 +13,31 @@ namespace InstitutionalDiwan.Tests.Support;
 /// </summary>
 internal static class TestContextFactory
 {
-    public static DiwanDbContext Create()
+    public static DiwanDbContext Create(params IInterceptor[] interceptors)
     {
         var connection = new SqliteConnection("DataSource=:memory:");
         connection.Open();
 
-        var options = new DbContextOptionsBuilder<DiwanDbContext>()
-            .UseSqlite(connection)
-            .Options;
+        var optionsBuilder = new DbContextOptionsBuilder<DiwanDbContext>()
+            .UseSqlite(connection);
 
-        var context = new DiwanDbContext(options);
+        if (interceptors.Length > 0)
+            optionsBuilder.AddInterceptors(interceptors);
+
+        var context = new DiwanDbContext(optionsBuilder.Options);
         context.Database.EnsureCreated();
         return context;
+    }
+
+    /// <summary>Seeds the audit lookup FKs required before an AUDIT_LOGS row can be inserted.</summary>
+    public static void SeedAuditLookups(DiwanDbContext context)
+    {
+        for (var id = 1; id <= 7; id++)
+            context.AuditActionTypes.Add(AuditActionType.Create(id, $"Action {id}", $"إجراء {id}").Value);
+
+        for (var id = 1; id <= 12; id++)
+            context.AuditEntityTypes.Add(AuditEntityType.Create(id, $"Entity {id}", $"كيان {id}").Value);
+
+        context.SaveChanges();
     }
 }

@@ -1,9 +1,10 @@
 # InstitutionalDiwan.Application — Application Layer
 
-> **Status:** Implemented — `DependencyInjection.cs`, `Abstractions/` (messaging + authentication),
-> `Behaviors/ValidationPipelineBehavior.cs`, and the live feature slices under `Features/`
-> (Lookups, Organization, Identity, Correspondence, Numbering, Movements routing workflow + inbox/outbox,
-> and Attachments) are in place.
+> **Status:** Implemented — `DependencyInjection.cs`, `Abstractions/` (messaging, authentication,
+> authorization, storage, time, request context, transactions), `Behaviors/` (validation, logging,
+> transactions), and the live feature slices under `Features/` (Lookups, Organization, Identity,
+> Correspondence, Numbering, Movements routing workflow + inbox/outbox, Attachments, and Audit) are in
+> place.
 
 ## Purpose
 
@@ -26,8 +27,8 @@ plain unit test with in-memory/fake repositories.
 
 | Folder | Responsibility |
 | --- | --- |
-| [`Abstractions/`](Abstractions/README.md) | Interfaces the infrastructure must implement (messaging, auth, authorization, storage) + the planned data/caching contracts. |
-| [`Behaviors/`](Behaviors/README.md) | MediatR `IPipelineBehavior` classes — `ValidationPipelineBehavior` is live; logging/transaction/caching are planned. |
+| [`Abstractions/`](Abstractions/README.md) | Interfaces the infrastructure must implement (messaging, auth, authorization, storage, time, request context, transactions) + the planned data/caching contracts. |
+| [`Behaviors/`](Behaviors/README.md) | MediatR `IPipelineBehavior` classes — validation, logging, and transaction behaviors are live; caching is planned. |
 | [`Common/`](Common/README.md) | Shared response shapes — `PagedResult<T>` is the wire contract for every paged list endpoint. |
 | [`Exceptions/`](Exceptions/README.md) | Technical/pipeline exceptions (validation fan-out, optimistic-concurrency conflicts). |
 | [`Features/`](Features/README.md) | Vertical feature slices per module (Commands, Queries, Validators, DTOs). |
@@ -35,16 +36,17 @@ plain unit test with in-memory/fake repositories.
 ## Composition root
 
 `DependencyInjection.AddApplication()` registers MediatR handlers from the assembly and applies the
-`ValidationPipelineBehavior<,>` open behavior plus every `FluentValidation` validator found by
-assembly scan; `Program.cs` calls it alongside `AddInfrastructure()`.
+`ValidationPipelineBehavior<,>`, `LoggingPipelineBehavior<,>`, and `TransactionPipelineBehavior<,>`
+open behaviors plus every `FluentValidation` validator found by assembly scan; `Program.cs` calls it
+alongside `AddInfrastructure()`.
 
 ## Implementation status
 
 | Item | State |
 | --- | --- |
-| Commands / Queries / Validators / DTOs | ✅ Implemented (Lookups, Organization/Departments, Identity/Users·Roles·Permissions·Employees·AccessGrants·Login·Register·ChangePassword, Correspondence/Documents, Movements, Attachments) |
-| Pipeline behaviors | 🟡 `ValidationPipelineBehavior` implemented; logging/transaction/caching planned |
-| Abstractions | 🟡 `Messaging/`, `Authentication/`, `Authorization/`, and `Storage/` implemented; data/caching planned |
+| Commands / Queries / Validators / DTOs | ✅ Implemented (Lookups, Organization/Departments, Identity/Users·Roles·Permissions·Employees·AccessGrants·Login·Register·ChangePassword, Correspondence/Documents, Movements, Attachments, Audit) |
+| Pipeline behaviors | ✅ Validation, logging, and transaction implemented; caching planned |
+| Abstractions | ✅ `Messaging/`, `Authentication/`, `Authorization/`, `Storage/`, `Time/`, `Context/`, and `Persistence/` implemented; data/caching planned |
 | `DependencyInjection.cs` | ✅ Implemented (`AddApplication`) |
 | `Common/PagedResult<T>` | ✅ Implemented (paged list wire shape) |
 | `Class1.cs` placeholder | 🗑️ Removed |
@@ -56,6 +58,7 @@ See each subfolder's README for the full design and per-folder status tables.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-25 | opencode | Added the Module 09 Audit slice (`GetAuditLogsQuery`, checkpoint/integrity commands and reports, `AuditLogAppender`), plus logging/transaction pipeline behaviors and the time, request-context, and transaction abstractions. |
 | 2026-10-25 | opencode | Added the Module 06 Attachments slice and the `Abstractions/Storage` contracts; every operation checks document access (VIEW/DOWNLOAD/MANAGE) and uploads carry a streamed SHA-256 checksum. |
 | 2026-10-22 | Buffy | Added `Identity/Login/GetUserProfileQuery` (the `/api/auth/me` use case) and `Correspondence/Documents/ListDepartmentDocumentsQuery`; every mutating handler now passes `IUnitOfWork.UtcNow` to the aggregate it touches. |
 | 2026-10-22 | opencode | Added `Common/PagedResult<T>` and made the four unbounded list queries return it; filtering, sorting, and paging now run in the repositories. |

@@ -1,10 +1,11 @@
 # InstitutionalDiwan.Tests — xUnit test suite
 
-> **Status:** Implemented — 348 tests covering domain handlers, department register numbering, the
+> **Status:** Implemented — 375 tests covering domain handlers, department register numbering, the
 > receipt gate, the movement routing workflow (including the Central Diwan hub and rejection routing),
 > the department inbox/outbox, attachments (atomic first upload, versions, SHA-256 streaming, magic
-> bytes), movement participation, seeding, authorization, paging/search/filtering, the caller
-> profile, deterministic time, and the generic lookups API.
+> bytes), movement participation, the tamper-evident audit chain (hashing, projections, checkpoints,
+> integrity reports, redaction), seeding, authorization, paging/search/filtering, the caller profile,
+> deterministic time, and the generic lookups API.
 
 ## Purpose
 
@@ -16,10 +17,10 @@ indexes) runs against a private SQLite in-memory database through `Support/TestC
 
 | Folder | Contents |
 | --- | --- |
-| `Application/` | Handler/validator tests per slice — Identity (users, roles, permissions, employees, access grants, login/register/change password, `GetUserProfileQueryHandlerTests`), Organization/Departments + `InstitutionSettingsHandlerTests`, Correspondence/`Documents` (`DocumentLifecycleHandlerTests`, `ListDepartmentDocumentsQueryHandlerTests`) + `ExternalOrganizationsHandlerTests`, Numbering (`OfficialNumberLifecycleHandlerTests`, `DepartmentRegisterNumberingTests`), Movements (`MovementWorkflowHandlerTests`), Attachments (`AttachmentHandlerTests`), `UnitOfWorkClockTests` (handler-stamped times come from `IUnitOfWork.UtcNow`), and `LookupHandlerTests.cs`. |
+| `Application/` | Handler/validator tests per slice — Identity (users, roles, permissions, employees, access grants, login/register/change password, `GetUserProfileQueryHandlerTests`), Organization/Departments + `InstitutionSettingsHandlerTests`, Correspondence/`Documents` (`DocumentLifecycleHandlerTests`, `ListDepartmentDocumentsQueryHandlerTests`) + `ExternalOrganizationsHandlerTests`, Numbering (`OfficialNumberLifecycleHandlerTests`, `DepartmentRegisterNumberingTests`), Movements (`MovementWorkflowHandlerTests`), Attachments (`AttachmentHandlerTests`), Audit (`AuditDomainTests`, `AuditHandlerTests`), `UnitOfWorkClockTests` (handler-stamped times come from `IUnitOfWork.UtcNow`), and `LookupHandlerTests.cs`. |
 | `Storage/` | `LocalFileStorageServiceTests` (layout, streamed checksum, read-back, root-escape guard) and `FileSignatureValidatorTests` (PDF/PNG/JPEG/TIFF/ZIP/OLE/SVG magic bytes, extension allow-list, size limit). |
 | `Authorization/` | `PermissionAuthorizationHandlerTests` (policy handler + `Permissions.All` integrity), `DepartmentScopeEvaluatorTests` (primary department, institution/dept-tree scope, temporal assignments incl. `IncludeSubtree` and ended assignments), `DocumentAccessEvaluatorTests` (authorship, grants incl. revoked, scope, confidentiality, movement participation, anonymous). |
-| `Persistence/` | `DocumentMovementRepositoryTests` — the inbox/outbox queries against a real SQLite database, so the SQL EF Core generates for the correlated current-step filters is verified and not only the in-memory fake. |
+| `Persistence/` | `DocumentMovementRepositoryTests` — the inbox/outbox queries against a real SQLite database; `AuditLogRepositoryTests` — filtered search, range reads, checkpoint/integrity persistence; `TamperEvidentAuditInterceptorTests` — domain-event projection, sensitive-field redaction, and request-only writes against SQLite. |
 | `Server/` | `OpenApiDocumentationTests` — every controller endpoint must carry an `[EndpointSummary]`, an `[EndpointDescription]`, and a `<param>` description with an example. |
 | `Seed/` | Seeder and pipeline tests — `PermissionSeederTests`, `RoleSeederTests`, `UserSeederTests`, `DepartmentTypeSeederTests`, `SeederRunnerTests`, `SeedingPipelineTests`. |
 | `Support/` | Shared test doubles: `TestContextFactory` (SQLite in-memory `DiwanDbContext`), fake repositories/unit-of-work, fake hasher and JWT provider. |
@@ -66,6 +67,18 @@ indexes) runs against a private SQLite in-memory database through `Support/TestC
   document still requires an explicit grant.
 - `LocalFileStorageServiceTests` writes real temp files to prove the `{Year}/{Month}/{DocumentId}`
   layout, one-pass SHA-256, read-back, missing-file behaviour, and refusal of a `../` path escape.
+- `AuditDomainTests` covers the SHA-256 chain: the first row links to genesis, a valid chain verifies,
+  tampering with a stored field breaks the recomputed hash, a wrong previous hash breaks the link,
+  UTC/millisecond normalization survives a round-trip, and `Reseal` re-chains onto a new predecessor.
+- `AuditHandlerTests` covers the audit use cases: search appends a self-audit entry, a checkpoint
+  verifies before sealing and refuses an empty range, integrity checks record pass or fail, and both
+  commands no-op with `Audit.NoAuditLogs` when the chain is empty.
+- `AuditLogRepositoryTests` covers SQL-side filtering and paging, ordered range reads, the unique
+  previous-hash guard that prevents a chain fork, and checkpoint / integrity-report persistence
+  against SQLite.
+- `TamperEvidentAuditInterceptorTests` proves domain events become audit rows with request metadata,
+  multiple entries chain in order, password/secret fields never reach `OldValuesJson`/`NewValuesJson`,
+  writes outside an HTTP request produce no automatic audit row, and audit rows are not re-audited.
 - `SeedingPipelineTests` runs the full ordered seeder set per environment and asserts the resulting
   permission/role/lookup counts, including idempotency on repeated runs.
 
@@ -73,6 +86,8 @@ indexes) runs against a private SQLite in-memory database through `Support/TestC
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-25 | Buffy | Added the `AuditDomainTests.Reseal` case after audit appends were serialized under a chain lock. 374 → 375 tests. |
+| 2026-10-25 | opencode | Added Module 09 coverage: `AuditDomainTests`, `AuditHandlerTests`, `AuditLogRepositoryTests`, and `TamperEvidentAuditInterceptorTests`, plus audit fakes and lookup seeding. 348 → 374 tests. |
 | 2026-10-25 | opencode | Added coverage for the missing Module 02/05/06 gaps: Central Diwan routing, rejection routing to the hub, stale-step refusal, movement participation, and the atomic first upload. 338 → 348 tests. |
 | 2026-10-25 | opencode | Added Module 06 coverage: `Application/AttachmentHandlerTests` (create/upload/archive/list/download/verify), `Storage/LocalFileStorageServiceTests`, and `Storage/FileSignatureValidatorTests`, with shared attachment fakes. 312 → 338 tests. |
 | 2026-10-22 | Buffy | Added `GetUserProfileQueryHandlerTests` (authenticated projection + unauthenticated 401), `ListDepartmentDocumentsQueryHandlerTests` (department filter, paging, 404, out-of-scope 403), and `UnitOfWorkClockTests` (document, numbering, and login writes all carry the unit of work's instant). 303 → 312 tests. |

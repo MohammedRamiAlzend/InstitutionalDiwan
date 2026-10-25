@@ -34,6 +34,11 @@ read-only presentational UI. Entities never perform write mutations.
 - Deterministic lookup ID constants may live in `entities/lookup/model/constants.ts` as a fallback.
 - Every slice exports a typed query key factory for feature invalidation.
 - Audit list reads are side-effecting on the server (self-audit row) — treat refetch as costly.
+- Hierarchy and diagram builders live in the owning entity's `model/` — for example
+  `department/model/toMermaid.ts` and `department/model/toTree.ts` for the departments → employees
+  tree, or `movement/model/toMermaid.ts` for the document step chain. They are pure functions over
+  the entity's read models so widgets can render the same data as a tree, a Mermaid diagram, or a
+  chart. Rendering itself belongs to `shared/ui/mermaid-view`, never to an entity.
 
 ## Implementation status
 
@@ -46,6 +51,7 @@ read-only presentational UI. Entities never perform write mutations.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-25 | Buffy | Documented pure `model/` builders (`toTree`, `toMermaid`) so entity read models feed the shared tree/Mermaid visualization without owning UI. |
 | 2026-10-25 | Cursor | Added `document-file`, `movement`, and `audit-log` entity slices mapped to live Modules 05/06/09 APIs. |
 | 2026-10-22 | opencode | Converted this folder's `README.md` from the Word document it was authored in to markdown. |
 | 2026-10-19 | agent | Initialized `src/entities` FSD layer folder and documented domain entity slices, query key conventions, and lookup handling. |

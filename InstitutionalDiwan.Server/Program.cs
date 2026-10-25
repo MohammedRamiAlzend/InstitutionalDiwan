@@ -17,6 +17,7 @@ builder.Services.AddOpenApi("v1", options =>
 });
 var app = builder.Build();
 
+app.UseMiddleware<RequestContextLoggingMiddleware>();
 app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
 
 app.UseDefaultFiles();

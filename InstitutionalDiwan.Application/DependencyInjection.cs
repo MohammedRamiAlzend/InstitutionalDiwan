@@ -15,6 +15,8 @@ public static class DependencyInjection
         {
             configuration.RegisterServicesFromAssembly(assembly);
             configuration.AddOpenBehavior(typeof(ValidationPipelineBehavior<,>));
+            configuration.AddOpenBehavior(typeof(LoggingPipelineBehavior<,>));
+            configuration.AddOpenBehavior(typeof(TransactionPipelineBehavior<,>));
         });
 
         services.AddValidatorsFromAssembly(assembly);
@@ -22,6 +24,7 @@ public static class DependencyInjection
         // Cross-cutting rules shared by the movement and attachment command handlers.
         services.AddScoped<Features.Movements.CentralDiwanRouting>();
         services.AddScoped<Features.Attachments.AttachmentUploader>();
+        services.AddScoped<Features.Audit.AuditLogAppender>();
 
         return services;
     }

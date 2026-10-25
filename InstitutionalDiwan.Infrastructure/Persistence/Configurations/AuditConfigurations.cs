@@ -32,6 +32,13 @@ public sealed class AuditLogConfiguration : IEntityTypeConfiguration<AuditLog>
         builder.HasIndex(x => x.RelatedDocumentId).HasDatabaseName("IX_AUDIT_LOGS_DOC");
         builder.HasIndex(x => new { x.EntityTypeId, x.EntityId }).HasDatabaseName("IX_AUDIT_LOGS_ENTITY");
 
+        // A chain row may have exactly one successor. The unique constraint makes concurrent appends
+        // serialize at the database: the loser sees a duplicate-key conflict instead of forking the
+        // chain. It is the last line of defence behind the in-transaction latest-hash read.
+        builder.HasIndex(x => x.PreviousHash)
+            .IsUnique()
+            .HasDatabaseName("UX_AUDIT_LOGS_PREVIOUS_HASH");
+
         builder.HasOne<AuditActionType>()
             .WithMany()
             .HasForeignKey(x => x.ActionTypeId)

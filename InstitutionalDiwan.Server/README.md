@@ -1,10 +1,11 @@
 # InstitutionalDiwan.Server — Web API / Presentation Layer
 
-> **Status:** Implemented — `Program.cs` wires DI, auth, MediatR, and the exception middleware; the
-> `Auth`, `Documents`, `DocumentNumbers`, `ExternalOrganizations`, `InstitutionSettings`, `Users`,
-> `Roles`, `Permissions`, `Departments`, `Employees`, `DocumentAccessGrants`,
-> `NumberingRegistries`, `DepartmentRegisters`, `Movements` (routing workflow + inbox/outbox),
-> `DocumentFiles` (Module 06 attachments), and `Lookups` controllers serve the live endpoints.
+> **Status:** Implemented — `Program.cs` wires DI, auth, MediatR, request-context logging, and the
+> exception middleware; the `Auth`, `Documents`, `DocumentNumbers`, `ExternalOrganizations`,
+> `InstitutionSettings`, `Users`, `Roles`, `Permissions`, `Departments`, `Employees`,
+> `DocumentAccessGrants`, `NumberingRegistries`, `DepartmentRegisters`, `Movements` (routing workflow
+> + inbox/outbox), `DocumentFiles` (Module 06 attachments), `AuditLogs` (Module 09), and `Lookups`
+> controllers serve the live endpoints.
 
 ## Purpose
 
@@ -20,9 +21,9 @@ Earlier design notes called the project `NewDiwan.Presentation`; the actual asse
 
 | Folder | Responsibility | Code status |
 | --- | --- | --- |
-| [`Controllers/`](Controllers/README.md) | REST controllers, one per module (plus the generic lookups controller) | ✅ 16 controllers live |
-| [`Contracts/`](Contracts/README.md) | HTTP request/response DTO records grouped by module | ✅ Correspondence, Organization, Identity, Numbering, Movements, Attachments, Lookups |
-| [`Middleware/`](Middleware/README.md) | Global exception handling, correlation-id tracking, audit IP capture | 🟡 `GlobalExceptionHandlingMiddleware` live (409 on unique-key violations) |
+| [`Controllers/`](Controllers/README.md) | REST controllers, one per module (plus the generic lookups controller) | ✅ 17 controllers live |
+| [`Contracts/`](Contracts/README.md) | HTTP request/response DTO records grouped by module | ✅ Correspondence, Organization, Identity, Numbering, Movements, Attachments, Audit, Lookups |
+| [`Middleware/`](Middleware/README.md) | Global exception handling, correlation-id tracking, audit IP capture | ✅ `RequestContextLoggingMiddleware` + `GlobalExceptionHandlingMiddleware` live |
 | [`Extensions/`](Extensions/README.md) | `Result` → HTTP mapping, DI registration, OpenAPI/Scalar, auth setup | ✅ `ResultExtensions`, `DatabaseExtensions`, `AuthenticationExtensions`, `OpenApiExtensions` |
 
 ## Current `Program.cs`
@@ -39,6 +40,7 @@ builder.Services.AddOpenApi("v1", options => options.AddDocumentTransformer<Bear
 
 var app = builder.Build();
 
+app.UseMiddleware<RequestContextLoggingMiddleware>();   // correlation id + IP + logging scope
 app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
 app.UseDefaultFiles();
 app.MapStaticAssets();
@@ -62,9 +64,9 @@ app.MapFallbackToFile("/index.html");  // SPA fallback
 app.Run();
 ```
 
-Wired today: authentication/authorization policies, the global exception middleware, MediatR,
-FluentValidation, the `DbContext`, and the Application/Infrastructure DI entry points. Not yet wired:
-CORS, correlation-id middleware, SignalR.
+Wired today: authentication/authorization policies, request-context logging, the global exception
+middleware, MediatR, FluentValidation, the `DbContext`, and the Application/Infrastructure DI entry
+points. Not yet wired: CORS and SignalR.
 
 ## Hosting & the SPA
 
@@ -85,8 +87,8 @@ and `Scalar.AspNetCore`, and project-references Application, Infrastructure, and
 | Item | State |
 | --- | --- |
 | `Program.cs` | ✅ Wired (DI, MediatR, FluentValidation, auth, exception middleware, startup seeding, SPA host) |
-| Controllers | ✅ `Auth`, `Documents` (drafts, update, register, participants, cancel, details, timeline, plus create with official number), `DocumentNumbers` (issue/cancel/replace/history + department register entries), `DepartmentRegisters` (register book), `Movements` (routing workflow — open/send/receive/complete/reject/return/redirect/close/cancel — plus the movement reads and the department inbox/outbox), `ExternalOrganizations` (CRUD), `InstitutionSettings` (GET/PUT), `Users` (CRUD + roles + department-assignments + effective-permissions), `Roles` (CRUD + activate + grant/revoke permission), `Permissions` (catalog), `Departments` (CRUD + reparent + tree, soft delete), `Employees` (CRUD + deactivate/activate), `DocumentAccessGrants` (list/grant/revoke per document), `NumberingRegistries` (CRUD + activate/deactivate), `DocumentFiles` (Module 06: create/upload/archive/list/download/verify), `Lookups` (generic reference catalogs) |
-| Contracts / Middleware / Extensions | 🟡 Contracts complete for the live modules; `GlobalExceptionHandlingMiddleware` in place; extensions implemented |
+| Controllers | ✅ `Auth`, `Documents` (drafts, update, register, participants, cancel, details, timeline, plus create with official number), `DocumentNumbers` (issue/cancel/replace/history + department register entries), `DepartmentRegisters` (register book), `Movements` (routing workflow — open/send/receive/complete/reject/return/redirect/close/cancel — plus the movement reads and the department inbox/outbox), `ExternalOrganizations` (CRUD), `InstitutionSettings` (GET/PUT), `Users` (CRUD + roles + department-assignments + effective-permissions), `Roles` (CRUD + activate + grant/revoke permission), `Permissions` (catalog), `Departments` (CRUD + reparent + tree, soft delete), `Employees` (CRUD + deactivate/activate), `DocumentAccessGrants` (list/grant/revoke per document), `NumberingRegistries` (CRUD + activate/deactivate), `DocumentFiles` (Module 06: create/upload/archive/list/download/verify), `AuditLogs` (Module 09: search/checkpoint/integrity), `Lookups` (generic reference catalogs) |
+| Contracts / Middleware / Extensions | ✅ Contracts complete for the live modules; request-context + global exception middleware in place; extensions implemented |
 | DI for Application/Infrastructure | ✅ Wired |
 | Authentication / Authorization setup | ✅ JWT + permission policies |
 | SignalR | ❌ Not wired |
@@ -96,6 +98,7 @@ and `Scalar.AspNetCore`, and project-references Application, Infrastructure, and
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-25 | opencode | Added the Module 09 `AuditLogsController`, audit contracts, and `RequestContextLoggingMiddleware`; updated the `Program.cs` excerpt and status tables. |
 | 2026-10-25 | opencode | Added `DocumentFilesController` and the Attachments contracts, exposing Module 06: create file, upload a validated version with streamed SHA-256, archive, list by document, download, and checksum verification. |
 | 2026-10-21 | opencode | Rewrote `MovementsController` into the full routing workflow: `POST /api/movements`, `GET /api/movements/{movementId}`, `GET /api/movements/by-document/{documentId}`, `GET /api/movements/inbox`, `GET /api/movements/outbox`, and the `{movementId}/send|receive|complete|reject|return|redirect|close|cancel` transitions. Reads take `DOCUMENT_VIEW`, writes `DOCUMENT_EDIT`; the inbox/outbox default to the caller's own primary department and accept another one only inside the caller's organizational scope (403 otherwise). |
 | 2026-10-20 | Buffy | Exposed department register numbering: `POST /api/documents/{id}/numbers/department-registration`, `GET .../registry-entries`, `GET /api/departments/{id}/register`, and `POST /api/movements/{id}/receive` (409 unless the department recorded its register number first). |

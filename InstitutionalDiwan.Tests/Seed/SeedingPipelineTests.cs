@@ -91,7 +91,7 @@ public sealed class SeedingPipelineTests
         Assert.Equal(3, await db.ArchiveEventTypes.CountAsync());
         Assert.Equal(3, await db.ArchiveLocations.CountAsync());
         Assert.Equal(7, await db.AuditActionTypes.CountAsync());
-        Assert.Equal(8, await db.AuditEntityTypes.CountAsync());
+        Assert.Equal(12, await db.AuditEntityTypes.CountAsync());
         Assert.Equal(6, await db.NotificationTypes.CountAsync());
         Assert.Equal(3, await db.NotificationPriorities.CountAsync());
         Assert.Equal(3, await db.NotificationChannels.CountAsync());
@@ -109,9 +109,9 @@ public sealed class SeedingPipelineTests
         Assert.Equal(5, await db.DocumentNumberEventTypes.CountAsync());
         Assert.Equal(2, await db.DocumentNumberScopes.CountAsync());
         Assert.Equal(3, await db.NumberingResetPolicies.CountAsync());
-        Assert.Equal(14, await db.Permissions.CountAsync());
+        Assert.Equal(16, await db.Permissions.CountAsync());
         Assert.Equal(2, await db.Roles.CountAsync());
-        Assert.Equal(17, await db.RolePermissions.CountAsync());
+        Assert.Equal(19, await db.RolePermissions.CountAsync());
 
         // Institution settings singleton, including the Central Diwan department it designates
         Assert.Equal(1, await db.InstitutionSettings.CountAsync());
@@ -134,9 +134,9 @@ public sealed class SeedingPipelineTests
         Assert.Equal(5, await db.DocumentStatusTypes.CountAsync());
         Assert.Equal(4, await db.UserScopeTypes.CountAsync());
         Assert.Equal(6, await db.NotificationTypes.CountAsync());
-        Assert.Equal(14, await db.Permissions.CountAsync());
+        Assert.Equal(16, await db.Permissions.CountAsync());
         Assert.Equal(2, await db.Roles.CountAsync());
-        Assert.Equal(17, await db.RolePermissions.CountAsync());
+        Assert.Equal(19, await db.RolePermissions.CountAsync());
         Assert.Equal(0, await db.Users.CountAsync());
     }
 
@@ -155,8 +155,8 @@ public sealed class SeedingPipelineTests
         Assert.Equal(4, await db.UserScopeTypes.CountAsync());
         Assert.Equal(5, await db.DocumentTypes.CountAsync());
         Assert.Equal(7, await db.MovementStepStatuses.CountAsync());
-        Assert.Equal(14, await db.Permissions.CountAsync());
-        Assert.Equal(17, await db.RolePermissions.CountAsync());
+        Assert.Equal(16, await db.Permissions.CountAsync());
+        Assert.Equal(19, await db.RolePermissions.CountAsync());
         Assert.Equal(1, await db.InstitutionSettings.CountAsync());
         Assert.Equal(usersAfterFirstRun, await db.Users.Select(u => u.UserId).OrderBy(id => id).ToListAsync());
     }

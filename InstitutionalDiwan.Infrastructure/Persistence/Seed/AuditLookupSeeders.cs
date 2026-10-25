@@ -37,6 +37,10 @@ public sealed class AuditEntityTypeSeeder : LookupSeederBase<AuditEntityType>
         (AuditEntityType.FileId, "File", "ملف"),
         (AuditEntityType.NumberingRegistryId, "Numbering registry", "سجل ترقيم"),
         (AuditEntityType.SettingId, "Setting", "إعداد"),
+        (AuditEntityType.AuditLogId, "Audit log", "سجل التدقيق"),
+        (AuditEntityType.DocumentNumberId, "Official number", "رقم رسمي"),
+        (AuditEntityType.DocumentRelationId, "Document relation", "ربط وثيقة"),
+        (AuditEntityType.ExternalOrganizationId, "External organization", "جهة خارجية"),
     };
 
     protected override AuditEntityType BuildItem(int id, string desc, string descAr) =>

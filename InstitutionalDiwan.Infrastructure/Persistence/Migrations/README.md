@@ -1,7 +1,8 @@
 # Infrastructure / Persistence / Migrations
 
-> **Status:** Implemented — `InitialCreate` (full schema) and `AddUniqueOfficialNumber` are generated
-> and applied at startup by `Server/Extensions/DatabaseExtensions.cs` (`Database.MigrateAsync`).
+> **Status:** Implemented — eight migrations, including the Module 09 `Add_Audit_Chain_Uniqueness` guard,
+> are generated. Startup applies them through `Server/Extensions/DatabaseExtensions.cs`
+> (`Database.MigrateAsync`).
 
 ## Purpose
 
@@ -24,6 +25,7 @@ empty migration when the model changed.
 | `20261014200146_InitialCreate` | Creates the full schema (40+ tables, `UX_*`/`IX_*` indexes, FKs). |
 | `20261018071440_AddUniqueOfficialNumber` | Replaces the non-unique `IX_DOC_NUMBERS_TEXT` on `DOCUMENT_NUMBERS.OfficialNumberText` with the unique `UX_DOC_NUMBERS_TEXT_YEAR (OfficialNumberText, NumberingYear)` — the database-level backstop behind the official-number duplicate check. |
 | `20261020105152_Add_Department_Register_Numbers` | Adds `DOCUMENT_NUMBERS.ScopeId`/`DepartmentId`/`RegistryDate`, `DOCUMENT_NUMBER_HISTORY.EffectiveDate`, `DOCUMENT_MOVEMENT_STEPS.RegistryNumberId`, and the `DOCUMENT_NUMBER_SCOPES` lookup (rows 1–2 inserted inside the migration so the new FK holds for existing rows). Replaces the two global unique indexes with `ScopeId`-filtered ones (`UX_DOC_NUMBERS_REG_YEAR_SEQ`, `UX_DOC_NUMBERS_TEXT_YEAR` for central numbers only), adds `UX_DOC_NUMBERS_DEPT_TEXT_YEAR` + `UX_DOC_NUMBERS_DOC_DEPT` for department registers, and backfills `RegistryDate = IssuedAt` for existing central numbers. |
+| `20261025100040_Add_Audit_Chain_Uniqueness` | Adds the unique `UX_AUDIT_LOGS_PREVIOUS_HASH` index on `AUDIT_LOGS.PreviousHash`, so a chain row can have exactly one successor. Concurrent appends then surface as a duplicate-key conflict instead of forking the hash chain. |
 
 ## Custom (hand-written) migration steps
 
@@ -41,6 +43,7 @@ empty migration when the model changed.
 | Initial migration | ✅ Created + applied |
 | Unique official-number index (`UX_DOC_NUMBERS_TEXT_YEAR`) | ✅ Created + applied (2026-10-18) |
 | Department register numbering (`Add_Department_Register_Numbers`) | ✅ Created + applied against LocalDB (2026-10-20) |
+| Audit chain uniqueness (`Add_Audit_Chain_Uniqueness`) | ✅ Created + applied against LocalDB (2026-10-25) |
 | Audit immutability trigger / DENY | ❌ Not created |
 | Closure table / indexed view | ❌ Not created |
 | Full-text catalog & indexes | ❌ Not created |
@@ -55,5 +58,6 @@ empty migration when the model changed.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-25 | opencode | Added `Add_Audit_Chain_Uniqueness` (unique `UX_AUDIT_LOGS_PREVIOUS_HASH`) so concurrent audit appends cannot fork the chain. |
 | 2026-10-20 | Buffy | Added `Add_Department_Register_Numbers`: scope columns + lookup seed rows, history `EffectiveDate`, movement-step `RegistryNumberId`, `ScopeId`-filtered uniqueness replacing the global indexes, one-line-per-department index, and the `RegistryDate` backfill; verified by applying it to a throwaway LocalDB database and probing the indexes. |
 | 2026-10-18 | opencode | Added `AddUniqueOfficialNumber` — drops `IX_DOC_NUMBERS_TEXT`, creates unique `UX_DOC_NUMBERS_TEXT_YEAR (OfficialNumberText, NumberingYear)` so a duplicate official number + year can never be saved (409 backstop for `CreateDocumentCommand`). |

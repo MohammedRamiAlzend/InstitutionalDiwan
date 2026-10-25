@@ -1,10 +1,11 @@
 # InstitutionalDiwan.Infrastructure — Infrastructure & Persistence Layer
 
-> **Status:** Partially implemented — `Persistence/` (`DiwanDbContext` + 10 EF configurations + 18
-> of 21 repositories + migrations + ordered seeders), `Authentication/` (PBKDF2 hasher, JWT
-> provider, `UserContext`), `Authorization/` (department scope + document access evaluators), and
-> `Storage/` (local file storage + magic-byte validation) are live; outbox and background jobs are
-> still to come.
+> **Status:** Partially implemented — `Persistence/` (`DiwanDbContext` + 10 EF configuration files +
+> 19 of 21 repositories + migrations + ordered seeders), `Authentication/` (PBKDF2 hasher, JWT provider,
+> `UserContext`), `Authorization/` (department scope + document access evaluators), `Storage/` (local
+> file storage + magic-byte validation), `Persistence/Interceptors/` (tamper-evident audit chain),
+> `Time/` (`IDateTimeProvider`), and the two audit `BackgroundJobs/` are live; the transactional outbox
+> and notification jobs are still to come.
 
 ## Purpose
 
@@ -19,13 +20,14 @@ All code uses the `InstitutionalDiwan.*` namespaces — the legacy `NewDiwan.*` 
 
 | Folder | Responsibility | Code status |
 | --- | --- | --- |
-| [`Persistence/`](Persistence/README.md) | `DiwanDbContext`, `Configurations/`, `Repositories/`, `Interceptors/`, `Migrations/`, `Seed/` | ⚠️ `DbContext` + 10 configurations + 14 repositories + 5 migrations + ordered seeders |
+| [`Persistence/`](Persistence/README.md) | `DiwanDbContext`, `Configurations/`, `Repositories/`, `Interceptors/`, `Migrations/`, `Seed/` | ⚠️ `DbContext` + 10 configuration files + 19 repositories + 8 migrations + ordered seeders |
 | [`Authentication/`](Authentication/README.md) | JWT token generation, password hashing, HTTP `UserContext` | ✅ `PasswordHasher` + `JwtProvider` + `UserContext` implemented |
+| [`Context/`](Context/README.md) | Ambient request metadata (`IRequestContext`) | ✅ `HttpRequestContext` implemented |
 | [`Authorization/`](Authorization/README.md) | Permission-based RBAC + organizational scope and document-access evaluators | ✅ `DepartmentScopeEvaluator` + `DocumentAccessEvaluator` implemented |
 | [`Storage/`](Storage/README.md) | Local binary file storage, streamed SHA-256, and magic-byte validation | ✅ `LocalFileStorageService` + `FileSignatureValidator` (S3/MinIO still planned) |
 | [`Outbox/`](Outbox/README.md) | Transactional outbox processor and domain-event dispatcher | ❌ Empty |
-| [`BackgroundJobs/`](BackgroundJobs/README.md) | Scheduled integrity checks, audit checkpoints, SLA escalations | ❌ Empty |
-| [`Time/`](Time/README.md) | System clock implementation | ❌ Empty |
+| [`BackgroundJobs/`](BackgroundJobs/README.md) | Scheduled integrity checks, audit checkpoints, SLA escalations | 🟡 `AuditChainIntegrityVerificationJob` + `DailyAuditCheckpointJob` implemented; outbox/SLA jobs pending |
+| [`Time/`](Time/README.md) | System clock implementation | ✅ `DateTimeProvider` (UTC storage + `Asia/Damascus` conversion) |
 
 ## Persistence at a glance
 
@@ -75,19 +77,22 @@ Persistence/Configurations/
 | EF Core provider package (`SqlServer`) | ✅ Referenced |
 | `DiwanDbContext` | ✅ Written and compiling |
 | Entity configurations | ✅ Written for all 67 entities (10 configuration files) |
-| Repositories | 🟡 18 of 21 implemented — `UserRepository`, `RoleRepository`, `PermissionRepository`, `DepartmentRepository`, `DepartmentTypeRepository`, `DocumentRepository`, `DocumentTypeRepository`, `NumberingRegistryRepository`, `DocumentNumberRepository`, `EmployeeRepository`, `DocumentAccessGrantRepository`, `LookupRepository`, `InstitutionSettingRepository`, `ExternalOrganizationRepository`, `DocumentMovementRepository`, `DocumentFileRepository`, `DocumentFileTypeRepository`, `FileStorageProviderRepository`; relation, audit, and notification repositories pending |
+| Repositories | 🟡 19 of 21 implemented — `UserRepository`, `RoleRepository`, `PermissionRepository`, `DepartmentRepository`, `DepartmentTypeRepository`, `DocumentRepository`, `DocumentTypeRepository`, `NumberingRegistryRepository`, `DocumentNumberRepository`, `EmployeeRepository`, `DocumentAccessGrantRepository`, `LookupRepository`, `InstitutionSettingRepository`, `ExternalOrganizationRepository`, `DocumentMovementRepository`, `DocumentFileRepository`, `DocumentFileTypeRepository`, `FileStorageProviderRepository`, `AuditLogRepository`; relation and notification repositories pending |
 | Seed | ✅ Ordered, environment-aware seeders (33 lookup seeders, `InstitutionSettingSeeder`, `PermissionSeeder`, `RoleSeeder`, `UserSeeder`) |
 | Authentication | ✅ `PasswordHasher` (PBKDF2) + `JwtProvider` + `UserContext` (reads `sub`/`dept_id`/`scope_type`/`permission` claims) |
-| Migrations | ✅ 7 written (`InitialCreate`, `AddUniqueOfficialNumber`, `Refactor_DepartmentTypes_ToLookup`, `Refactor_CorrespondenceNumbering_ToLookups`, `Refactor_AllRemaining_ToLookups`, `InitialCreate2`, `Add_Department_Register_Numbers`) |
-| Interceptors | ❌ Empty |
+| Migrations | ✅ 8 written (`InitialCreate`, `AddUniqueOfficialNumber`, `Refactor_DepartmentTypes_ToLookup`, `Refactor_CorrespondenceNumbering_ToLookups`, `Refactor_AllRemaining_ToLookups`, `InitialCreate2`, `Add_Department_Register_Numbers`, `Add_Audit_Chain_Uniqueness`) |
+| Interceptors | ✅ `TamperEvidentAuditInterceptor` (domain events + generic old/new snapshots, SHA-256 chain, sensitive-field redaction, no writes outside an HTTP request) |
 | Authorization | ✅ `DepartmentScopeEvaluator` + `DocumentAccessEvaluator` implementing the Application contracts |
 | Storage | ✅ `LocalFileStorageService` + `FileSignatureValidator` |
-| Outbox / BackgroundJobs | ❌ Empty |
+| BackgroundJobs | 🟡 `AuditChainIntegrityVerificationJob` + `DailyAuditCheckpointJob` (configurable, idempotent) |
+| Outbox | ❌ Empty |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-25 | Buffy | Serialized audit-chain appends with a transaction-scoped SQL Server application lock and a locking head read, after concurrent audit reads and the two scheduled jobs collided on `UX_AUDIT_LOGS_PREVIOUS_HASH`; explicit job rows now share the same path. |
+| 2026-10-25 | opencode | Implemented Module 09 infrastructure: `AuditLogRepository` (paged search, range reads, checkpoints, integrity reports), `TamperEvidentAuditInterceptor` (hash chain, domain-event projection, sensitive-field redaction), `DateTimeProvider`, `HttpRequestContext`, `EfTransactionManager`, the `Add_Audit_Chain_Uniqueness` migration, and the scheduled `AuditChainIntegrityVerificationJob` / `DailyAuditCheckpointJob` (configurable via the `AuditJobs` section, actor resolved from `ActorUserId` or the first active user). |
 | 2026-10-25 | opencode | Implemented Module 06 persistence and storage: `DocumentFileRepository` (file + versions), `DocumentFileTypeRepository`, `FileStorageProviderRepository`, `LocalFileStorageService` (streamed SHA-256, safe path resolution), and `FileSignatureValidator`; all registered in `DependencyInjection`. |
 | 2026-10-20 | Buffy | Added department register numbering to persistence: `DOCUMENT_NUMBER_SCOPES` (entity, configuration, seeder), `ScopeId`/`DepartmentId`/`RegistryDate` + scoped indexes, `DOCUMENT_NUMBER_HISTORY.EffectiveDate`, `DOCUMENT_MOVEMENT_STEPS.RegistryNumberId`, the `Add_Department_Register_Numbers` migration (applied to a throwaway LocalDB database as verification), and scope-aware number queries. |
 | 2026-10-19 | Buffy | Added `Authentication/UserContext`, `Authorization/DepartmentScopeEvaluator`, `Authorization/DocumentAccessEvaluator`, the `InstitutionSettingRepository`/`ExternalOrganizationRepository`/`DocumentMovementRepository` implementations, and `Seed/InstitutionSettingSeeder`; `DependencyInjection` now registers `AddHttpContextAccessor` + the evaluators, and the csproj references the ASP.NET Core shared framework for `IHttpContextAccessor`. |

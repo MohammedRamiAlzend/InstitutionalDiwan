@@ -1,12 +1,13 @@
 # Infrastructure / Persistence / Repositories
 
-> **Status:** Partially implemented — 18 of the 21 repository interfaces have implementations
+> **Status:** Partially implemented — 19 of the 21 repository interfaces have implementations
 > (`UserRepository`, `RoleRepository`, `PermissionRepository`, `EmployeeRepository`,
 > `DepartmentRepository`, `DepartmentTypeRepository`, `DocumentRepository`, `DocumentTypeRepository`,
 > `NumberingRegistryRepository`, `DocumentNumberRepository`, `DocumentAccessGrantRepository`,
 > `LookupRepository`, `InstitutionSettingRepository`, `ExternalOrganizationRepository`,
 > `DocumentMovementRepository`, `DocumentFileRepository`, `DocumentFileTypeRepository`,
-> `FileStorageProviderRepository`); three have none yet.
+> `FileStorageProviderRepository`, `AuditLogRepository`); relation and notification repositories
+> have none yet.
 
 ## Purpose
 
@@ -35,13 +36,13 @@ Concrete EF Core implementations of the repository interfaces declared in
 | `ExternalOrganizationRepository.cs` | Loads `ExternalOrganization` by id or normalized (upper-cased) code and lists them by code; `ListPagedAsync` adds the active filter, a code/name search, and `Skip`/`Take` for the external-correspondent CRUD endpoints. |
 | `DocumentMovementRepository.cs` | Loads a `DocumentMovement` with `Steps`/`Events`, answers `HasActiveMovementsAsync(documentId)` (true while the status is not `CLOSED`/`CANCELED`; backs the document cancel/archive guard), and returns `GetActiveByDocumentIdAsync` for the access evaluator's movement participation. `ListByDocumentAsync` gives a document's routing history; `ListInboxAsync`/`ListOutboxAsync` give a department's two queues, both keyed on the **current step** so a rejection routed to the Central Diwan or a redirect moves the custody with the document. |
 | `DocumentFileRepository.cs` | Loads a `DocumentFile` with its full `Versions` chain by id or per document (oldest first), so the Attachments handlers can append versions and project history. Also holds `DocumentFileTypeRepository` (file-type extension/size limits) and `FileStorageProviderRepository` (by id or active default) in the same file. |
+| `AuditLogRepository.cs` | **Append-only** audit access: `GetLatestAsync` for the next hash link, `GetByIdAsync` for range anchoring, `ListRangeAsync` for ordered chain walks, `SearchAsync` for filtered paging, and `AddCheckpoint`/`AddIntegrityCheck` plus their latest/listing queries. No update or delete path exists. |
 
 ## Planned repositories not yet implemented
 
 | Repository (`:` interface) | Key behaviors |
 | --- | --- |
 | `DocumentRelationRepository` (`: IDocumentRelationRepository`) | Queries bidirectional document links and supports cycle checks when the relation type has `PreventCycles = true`. |
-| `AuditLogRepository` (`: IAuditLogRepository`) | **Append-only**; `GetLatestAsync()` returns the prior `EventHash` so the next tamper-evident entry can chain to it. |
 | `NotificationRepository` (`: INotificationRepository`) | Persists `Notification`, `NotificationRecipient`, and `NotificationOutbox` records. |
 
 ## Conventions
@@ -74,12 +75,14 @@ Concrete EF Core implementations of the repository interfaces declared in
 | `InstitutionSettingRepository`, `ExternalOrganizationRepository` | ✅ Implemented (2026-10-19) |
 | `DocumentMovementRepository` | ✅ Implemented (2026-10-19; inbox/outbox added 2026-10-21; active-by-document added 2026-10-25) |
 | `DocumentFileRepository`, `DocumentFileTypeRepository`, `FileStorageProviderRepository` | ✅ Implemented (2026-10-25) |
-| `DocumentRelationRepository`, `AuditLogRepository`, `NotificationRepository` | ❌ Not implemented |
+| `AuditLogRepository` | ✅ Implemented (2026-10-25) |
+| `DocumentRelationRepository`, `NotificationRepository` | ❌ Not implemented |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-25 | opencode | Added `AuditLogRepository` (latest/range reads, filtered paging, checkpoints and integrity reports; append-only) for Module 09. |
 | 2026-10-25 | opencode | Added `DocumentMovementRepository.GetActiveByDocumentIdAsync` for the access evaluator's movement participation, and documented that the queues follow the current step after a rejection routed to the Central Diwan. |
 | 2026-10-25 | opencode | Added `DocumentFileRepository` (file + versions by id and per document), `DocumentFileTypeRepository`, and `FileStorageProviderRepository` (by id / active default) for the Module 06 Attachments slice. |
 | 2026-10-22 | opencode | Added `ListPagedAsync` to `DocumentRepository`, `UserRepository`, `EmployeeRepository`, and `ExternalOrganizationRepository` so the four unbounded lists filter, sort, count, and page in SQL. |

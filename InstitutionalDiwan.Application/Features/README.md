@@ -3,10 +3,10 @@
 > **Status:** Partially implemented — `Lookups` (generic reference-catalog CRUD), Identity (`Login`,
 > `Register`, `ChangePassword`, `Users`, `Roles`, `Permissions`, `Employees`, `AccessGrants`),
 > Correspondence/`Documents` (full Module 03 lifecycle) and `ExternalOrganizations`, Organization
-> (`Departments`, `InstitutionSettings`), Numbering (`Registries`, `Numbers`), and the whole
-> Movements slice (routing workflow + inbox/outbox), and Attachments (Module 06) are live;
-> Archiving, Relations, Audit, and Notifications are target design. The unbounded list queries are server-paged,
-> searchable, sortable, and — for documents — addressable as one department's register.
+> (`Departments`, `InstitutionSettings`), Numbering (`Registries`, `Numbers`), the whole
+> Movements slice (routing workflow + inbox/outbox), Attachments (Module 06), and Audit (Module 09)
+> are live; Archiving, Relations, and Notifications are target design. The unbounded list queries are
+> server-paged, searchable, sortable, and — for documents — addressable as one department's register.
 
 ## Purpose
 
@@ -65,8 +65,8 @@ grouping by technical type, so a slice can be read top-to-bottom.
 - **Queries:** `GetDocumentRelationsGraphQuery`
 
 ### Audit (Module 09)
-- **Commands:** `CreateAuditCheckpointCommand`, `RunAuditIntegrityCheckCommand`
-- **Queries:** `GetAuditLogsQuery`, `GetAuditIntegrityReportsQuery`
+- **Commands:** `CreateAuditCheckpointCommand` ✅ (seals every entry since the previous checkpoint after re-verifying the range; rejects an empty range), `RunAuditIntegrityCheckCommand` ✅ (recomputes the SHA-256 chain; a broken chain is a successful report with `isValid = false` and the first corrupted id)
+- **Queries:** `GetAuditLogsQuery` ✅ (paged/filterable search by module, action, entity type/id, actor, department, related document, correlation id, IP, and time window; every call appends a self-audit entry), `GetAuditIntegrityReportsQuery` ✅ (newest-first paged reports) — see [`Audit/README.md`](Audit/README.md)
 
 ### Notifications (Module 10)
 - **Commands:** `MarkNotificationReadCommand`, `DismissNotificationCommand`
@@ -99,7 +99,8 @@ plus entity-specific filters. The handler wraps them in a `PageRequest`
 application layer never loads a whole table to page it in memory.
 
 Currently paged: `ListDocumentsQuery`, `ListDepartmentDocumentsQuery`, `ListUsersQuery`,
-`ListEmployeesQuery`, `ListExternalOrganizationsQuery`. Bounded reference data (lookups, permissions, roles, departments,
+`ListEmployeesQuery`, `ListExternalOrganizationsQuery`, `GetAuditLogsQuery`, and
+`GetAuditIntegrityReportsQuery`. Bounded reference data (lookups, permissions, roles, departments,
 registries, per-document grants/movements) still returns a plain collection on purpose.
 
 ## Implementation status
@@ -120,12 +121,14 @@ registries, per-document grants/movements) still returns a plain collection on p
 | Numbering/`Registries` + `Numbers` (registry CRUD, issue/cancel/replace, history, department register entries, register book) | ✅ Implemented |
 | Movements (routing workflow + inbox/outbox + Central Diwan hub) | ✅ Implemented |
 | Attachments (Module 06: create/upload/archive, list/download/verify) | ✅ Implemented |
-| Archiving, Relations, Audit, Notifications | ❌ Not implemented |
+| Audit (Module 09: search, checkpoints, integrity checks/reports) | ✅ Implemented |
+| Archiving, Relations, Notifications | ❌ Not implemented |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-25 | opencode | Implemented the Module 09 Audit slice: `GetAuditLogsQuery` (self-auditing filtered search), `CreateAuditCheckpointCommand` (verify-then-seal), `RunAuditIntegrityCheckCommand`, and `GetAuditIntegrityReportsQuery`; added `AuditLogAppender` for explicit chain appends. |
 | 2026-10-25 | opencode | Closed the Module 05 gaps (mandatory Central Diwan hub, rejection routing to the hub, step-scoped route support) and added the atomic Module 06 initial upload (`CreateDocumentFileWithVersionCommand`). |
 | 2026-10-25 | opencode | Completed the Module 06 Attachments slice: create file, upload version (extension/size/magic-byte validation + streamed SHA-256), archive, list, download, and checksum verification, all guarded by `IDocumentAccessEvaluator`. |
 | 2026-10-22 | Buffy | Added `Identity/Login/GetUserProfileQuery` (moves `GET /api/auth/me` out of the controller and into the CQRS pipeline, reading the ambient identity instead of the database) and `Correspondence/Documents/ListDepartmentDocumentsQuery` (one department's register: paged/searchable/sortable, scope-checked). Handlers now pass `IUnitOfWork.UtcNow` into every time-stamping domain method, so one transaction writes one instant. |

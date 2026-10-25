@@ -1,8 +1,8 @@
 # Institutional Diwan — نظام الديوان المؤسساتي الموحد
 
-> **Status:** Backend implemented for Modules 01–05 (Organization, Identity, Correspondence,
-> Numbering, Movements) plus the cross-module reference catalogs. The React client is documented
-> and scaffolded but has no application code yet.
+> **Status:** Backend implemented for Modules 01–06 and 09 (Organization, Identity, Correspondence,
+> Numbering, Movements, Attachments, Audit) plus the cross-module reference catalogs. The React client
+> is documented and scaffolded but has no application code yet.
 
 The unified institutional correspondence system: a clean-architecture ASP.NET Core 10 API that
 registers documents, allocates official numbers, routes them between departments, and keeps an
@@ -71,10 +71,11 @@ npm run lint
 ```
 
 > The client currently contains only the Vite template's `App.tsx` and `main.tsx`. Its
-> architecture, planned slices, and rules are documented in
+> architecture, planned slices (incl. Attachments + Audit), 16 permissions, UI/design contract, and
+> live endpoint catalog are documented in
 > [`institutionaldiwan.client/README.md`](institutionaldiwan.client/README.md),
 > [`AGENTS.md`](institutionaldiwan.client/AGENTS.md), and
-> [`knowledge.md`](institutionaldiwan.client/knowledge.md).
+> [`knowledge.md`](institutionaldiwan.client/knowledge.md) (current as of 2026-10-25).
 
 ## Module status
 
@@ -85,10 +86,10 @@ npm run lint
 | 03 — Correspondence | Documents (create, draft, update, register, participants, cancel, details, timeline), external organizations | ✅ Implemented |
 | 04 — Numbering | Registries, central official numbers, department register books | ✅ Implemented |
 | 05 — Movements | Routing workflow (open, send, receive, complete, reject, return, redirect, close, cancel) + department inbox/outbox | ✅ Implemented |
-| 06 — Attachments | Domain entities and lookups only | ❌ Not implemented |
+| 06 — Attachments | File metadata, version chain, upload/download, checksum verification | ✅ Implemented |
 | 07 — Archiving | Domain entities and lookups only | ❌ Not implemented |
 | 08 — Relations | Domain entities and lookups only | ❌ Not implemented |
-| 09 — Audit | Domain entities and lookups only | ❌ Not implemented |
+| 09 — Audit | Append-only SHA-256 chain, search, checkpoints, integrity checks/reports, scheduled maintenance | ✅ Implemented |
 | 10 — Notifications | Domain entities and lookups only | ❌ Not implemented |
 
 ## Conventions
@@ -125,11 +126,10 @@ have no `README.md` of their own yet — their content is documented in the encl
 
 - `InstitutionalDiwan.Domain/` — `Common/`, `Entities/` (and its 10 module folders),
   `Errors/`, `Events/`, `Repositories/`, `ValueObjects/`
-- `InstitutionalDiwan.Application/` — `Abstractions/` (3 subfolders), `Features/Correspondence/`,
-  `Features/Identity/` (6 subfolders; `Login/` has its own README), `Features/Organization/`
-  (2 subfolders)
+- `InstitutionalDiwan.Application/` — `Features/Correspondence/`, `Features/Identity/` (6 subfolders;
+  `Login/` has its own README), `Features/Organization/` (2 subfolders)
 - `InstitutionalDiwan.Infrastructure/` — `Persistence/Configurations/`
-- `InstitutionalDiwan.Server/` — `Authorization/`, `Contracts/` (6 subfolders)
+- `InstitutionalDiwan.Server/` — `Authorization/`, `Contracts/` (8 subfolders)
 - `InstitutionalDiwan.Tests/` — `Application/`, `Authorization/`, `Persistence/`, `Seed/`,
   `Server/`, `Support/`
 
@@ -137,5 +137,8 @@ have no `README.md` of their own yet — their content is documented in the encl
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-25 | Cursor | Noted that client docs now track Modules 01–06 + 09 (endpoints, permissions, UI contract) while SPA code remains the Vite template. |
+| 2026-10-25 | Buffy | Serialized audit-chain appends so concurrent reads, writes, and scheduled audit jobs cannot collide on the chain head; the suite now has 375 tests. |
+| 2026-10-25 | opencode | Marked Modules 06 (Attachments) and 09 (Audit) implemented; documented the audit chain, scheduled checkpoint/integrity jobs, and the current 374-test suite. |
 | 2026-10-22 | Buffy | Documented `Features/Identity/Login/` with its own README (the caller-profile query now lives there) and updated the known-gap list; the backend now passes one deterministic instant per transaction through every domain write. |
 | 2026-10-22 | opencode | Added the missing root `README.md`: the repository layout, prerequisites, build/run/test commands, the per-module status table, and the conventions that govern work in this repository. |

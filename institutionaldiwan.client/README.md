@@ -34,10 +34,10 @@ checklist before coding features.
 
 ```bash
 # 1. Core runtime packages (Routing, Server/Client State, HTTP, Forms, Validation, Icons, UI, SignalR)
-npm install react-router-dom @tanstack/react-query @tanstack/react-table zustand axios react-hook-form zod @hookform/resolvers lucide-react clsx tailwind-merge class-variance-authority sonner @microsoft/signalr
+npm install react-router-dom @tanstack/react-query @tanstack/react-table zustand axios react-hook-form zod @hookform/resolvers lucide-react clsx tailwind-merge class-variance-authority sonner @microsoft/signalr mermaid
 
 # 2. Radix UI primitives (for RTL-ready shadcn/ui components in src/shared/ui)
-npm install @radix-ui/react-dialog @radix-ui/react-dropdown-menu @radix-ui/react-select @radix-ui/react-tabs @radix-ui/react-tooltip @radix-ui/react-label @radix-ui/react-slot @radix-ui/react-checkbox @radix-ui/react-popover
+npm install @radix-ui/react-dialog @radix-ui/react-dropdown-menu @radix-ui/react-context-menu @radix-ui/react-select @radix-ui/react-tabs @radix-ui/react-tooltip @radix-ui/react-label @radix-ui/react-slot @radix-ui/react-checkbox @radix-ui/react-popover
 
 # 3. Tailwind CSS v4 + React Query Devtools
 npm install -D tailwindcss @tailwindcss/vite @tanstack/react-query-devtools
@@ -103,9 +103,28 @@ Institutional, Arabic-first, calm — not a generic SaaS dashboard skin.
 | Motion | Subtle (150–250 ms) for drawer/dialog; no decorative loop animations |
 | Screen states | Loading / empty / error / forbidden required (see `AGENTS.md` and `knowledge.md`) |
 | Density | Tables are the primary correspondence surface; keep filter bars URL-driven and compact |
+| Interaction | Desktop-style workspace: right-click context menus on every data surface, keyboard equivalents, and always-visible overflow triggers for touch |
+| Tables | Every table ships filters, search, sorting, pagination, and a column chooser; the user's column visibility is saved per table in `localStorage` |
+| Visualization | Mermaid renderer with a diagram / chart / tree view switcher; hierarchies also render as native trees built from API data |
 
 Print: official receipts/register extracts use a dedicated `@media print` block in `app/styles`
 (no sidebar, black text, LTR for numbers).
+
+### Desktop-grade interaction contract
+
+The full, binding rules live in [`AGENTS.md`](AGENTS.md#desktop-grade-interaction-contract).
+Summary:
+
+- **Context menus:** one `shared/ui/context-menu` primitive; each widget/feature supplies its own
+  permission-filtered items for rows, headers, empty areas, tree nodes, cards, and shell chrome.
+  The same actions are reachable with `Shift+F10` / the `ContextMenu` key.
+- **Data grids:** filters, search, sorting, and pagination are URL state; column visibility is
+  view state persisted per table under `diwan.table.<tableId>.columns.v1` (versioned, with a
+  reset-to-default action). Bounded arrays paginate client-side with the same pager.
+- **Mermaid visualization:** lazy-loaded `shared/ui/mermaid-view` (`securityLevel: 'strict'`)
+  with a diagram / chart / tree switcher; entity `model/` builders turn API hierarchies into
+  Mermaid or tree data (for example departments → employees), and invalid Mermaid shows an
+  Arabic-first error state.
 
 ## Planned routes (backend-ready first)
 
@@ -155,6 +174,7 @@ Full endpoint tables: [`knowledge.md`](knowledge.md).
 | FSD folder structure & layer `README.md` rules | ✅ Configured |
 | Agent docs (`AGENTS.md`, `knowledge.md`) aligned to Modules 01–06 + 09 | ✅ Current (2026-10-25) |
 | UI / design contract documented | ✅ Documented |
+| Interaction contract (context menus, data-grid preferences, Mermaid visualization) | ✅ Documented (2026-10-25) |
 | Required npm packages installed | ❌ Not installed — React/Vite only |
 | `src/shared/` (`api`, `ui`, `lib`, `config`, `types`) | ❌ Not implemented |
 | `src/entities/` (document, document-file, department, user, role, numbering-registry, movement, audit-log, lookup) | ❌ Not implemented |
@@ -168,6 +188,7 @@ Full endpoint tables: [`knowledge.md`](knowledge.md).
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-25 | Buffy | Added the desktop-grade interaction contract: right-click context menus on every data surface, mandatory table filters/pagination/column chooser persisted in `localStorage`, and Mermaid-driven diagram/chart/tree visualization (including API-derived hierarchy trees). Added `mermaid` and `@radix-ui/react-context-menu` to the required packages. |
 | 2026-10-25 | Cursor | Brought client docs to current backend truth: as-is/to-be, Modules 06/09, 16 permissions, UI/design contract, and backend-ready route map. |
 | 2026-10-22 | opencode | Converted this folder's `README.md` from the Word document it was authored in to markdown, so the `README.md`-per-folder rule in `AGENT.md` holds and the content is diffable and agent-editable. |
 | 2026-10-22 | opencode | Restored this folder's documentation as markdown: converted `README.md.docx` and `knowledge.md.docx` to `README.md` and `knowledge.md` so the golden rule in `AGENT.md` (a `README.md` per folder) holds and the content is diffable again; added the missing `AGENTS.md`; re-fenced the npm, `vite.config.ts`, and FSD-tree code blocks; completed the `Contents` table with every file in the folder. |
