@@ -4,8 +4,8 @@
 > `Register`, `ChangePassword`, `Users`, `Roles`, `Permissions`, `Employees`, `AccessGrants`),
 > Correspondence/`Documents` (full Module 03 lifecycle) and `ExternalOrganizations`, Organization
 > (`Departments`, `InstitutionSettings`), Numbering (`Registries`, `Numbers`), and the whole
-> Movements slice (routing workflow + inbox/outbox) are live; Attachments, Archiving, Relations,
-> Audit, and Notifications are target design. The unbounded list queries are server-paged,
+> Movements slice (routing workflow + inbox/outbox), and Attachments (Module 06) are live;
+> Archiving, Relations, Audit, and Notifications are target design. The unbounded list queries are server-paged,
 > searchable, sortable, and — for documents — addressable as one department's register.
 
 ## Purpose
@@ -49,12 +49,12 @@ grouping by technical type, so a slice can be read top-to-bottom.
 - **Queries:** `GetDocumentNumberHistoryQuery` ✅, `GetDocumentRegistryNumbersQuery` ✅ (central + per-department lines), `ListDepartmentRegisterQuery` ✅ (register book), `ListRegistriesQuery` ✅, `GetRegistryByIdQuery` ✅
 
 ### Movements (Module 05)
-- **Commands:** `ReceiveDocumentCommand` ✅ (blocked until the destination department recorded its register number), `CreateMovementCommand` ✅ (only a REGISTERED document can be routed; one active movement per document), `SendMovementCommand` ✅, `CompleteMovementStepCommand` ✅, `RejectMovementStepCommand` ✅, `ReturnMovementToSenderCommand` ✅, `RedirectMovementCommand` ✅, `CloseMovementCommand` ✅, `CancelMovementCommand` ✅ — see [`Movements/README.md`](Movements/README.md)
+- **Commands:** `ReceiveDocumentCommand` ✅ (blocked until the destination department recorded its register number), `CreateMovementCommand` ✅ (only a REGISTERED document can be routed; one active movement per document; ordinary → ordinary hops must go through the Central Diwan), `SendMovementCommand` ✅, `CompleteMovementStepCommand` ✅, `RejectMovementStepCommand` ✅ (records the rejection and routes a new sent step back to the Central Diwan), `ReturnMovementToSenderCommand` ✅, `RedirectMovementCommand` ✅ (also Central Diwan checked), `CloseMovementCommand` ✅, `CancelMovementCommand` ✅ — see [`Movements/README.md`](Movements/README.md)
 - **Queries:** `GetMovementByIdQuery` ✅, `ListDocumentMovementsQuery` ✅, `GetDepartmentInboxQuery` ✅, `GetDepartmentOutboxQuery` ✅ (both read the caller's primary department by default, or any department inside the caller's scope)
 
 ### Attachments (Module 06)
-- **Commands:** `CreateDocumentFileCommand`, `UploadDocumentFileVersionCommand`, `ArchiveDocumentFileCommand`
-- **Queries:** `DownloadDocumentFileVersionQuery`, `VerifyAttachmentChecksumQuery`, `ListDocumentFilesQuery`
+- **Commands:** `CreateDocumentFileCommand` ✅ (metadata + empty version chain, kept for compatibility), `CreateDocumentFileWithVersionCommand` ✅ (atomic initial upload: file + version 1 in one save), `UploadDocumentFileVersionCommand` ✅ (validates extension/size/magic bytes, streams to storage with SHA-256, appends an immutable version), `ArchiveDocumentFileCommand` ✅ (closes the chain; versions stay readable)
+- **Queries:** `DownloadDocumentFileVersionQuery` ✅ (current or named version, DOWNLOAD access), `VerifyAttachmentChecksumQuery` ✅ (recomputes and compares), `ListDocumentFilesQuery` ✅ — see [`Attachments/README.md`](Attachments/README.md)
 
 ### Archiving (Module 07)
 - **Commands:** `ArchiveDocumentCommand`, `UnarchiveDocumentCommand`, `CreateSavedSearchCommand`
@@ -118,13 +118,16 @@ registries, per-document grants/movements) still returns a plain collection on p
 | Organization/`Departments` (create, update, soft delete, activate, get by id, list, tree) | ✅ Implemented |
 | Organization/`InstitutionSettings` (get, update incl. Central Diwan guards) | ✅ Implemented |
 | Numbering/`Registries` + `Numbers` (registry CRUD, issue/cancel/replace, history, department register entries, register book) | ✅ Implemented |
-| Movements (routing workflow + inbox/outbox) | ✅ Implemented |
-| Attachments, Archiving, Relations, Audit, Notifications | ❌ Not implemented |
+| Movements (routing workflow + inbox/outbox + Central Diwan hub) | ✅ Implemented |
+| Attachments (Module 06: create/upload/archive, list/download/verify) | ✅ Implemented |
+| Archiving, Relations, Audit, Notifications | ❌ Not implemented |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-25 | opencode | Closed the Module 05 gaps (mandatory Central Diwan hub, rejection routing to the hub, step-scoped route support) and added the atomic Module 06 initial upload (`CreateDocumentFileWithVersionCommand`). |
+| 2026-10-25 | opencode | Completed the Module 06 Attachments slice: create file, upload version (extension/size/magic-byte validation + streamed SHA-256), archive, list, download, and checksum verification, all guarded by `IDocumentAccessEvaluator`. |
 | 2026-10-22 | Buffy | Added `Identity/Login/GetUserProfileQuery` (moves `GET /api/auth/me` out of the controller and into the CQRS pipeline, reading the ambient identity instead of the database) and `Correspondence/Documents/ListDepartmentDocumentsQuery` (one department's register: paged/searchable/sortable, scope-checked). Handlers now pass `IUnitOfWork.UtcNow` into every time-stamping domain method, so one transaction writes one instant. |
 | 2026-10-22 | opencode | Added server-side paging, search, sorting, and filtering to the four unbounded list queries (`ListDocumentsQuery`, `ListUsersQuery`, `ListEmployeesQuery`, `ListExternalOrganizationsQuery`). They now return `PagedResult<T>`; the repositories gained `ListPagedAsync` so filtering and `Skip`/`Take` run in SQL. |
 | 2026-10-21 | opencode | Completed the Movements slice: the routing workflow (`CreateMovementCommand`, `SendMovementCommand`, `CompleteMovementStepCommand`, `RejectMovementStepCommand`, `ReturnMovementToSenderCommand`, `RedirectMovementCommand`, `CloseMovementCommand`, `CancelMovementCommand`) plus the read side (`GetMovementByIdQuery`, `ListDocumentMovementsQuery`, `GetDepartmentInboxQuery`, `GetDepartmentOutboxQuery`). |

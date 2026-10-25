@@ -75,10 +75,19 @@ an entry can be created.
 
 The `.Movements` group carries the routing errors: `MovementNotFound` (NotFound),
 `SameSourceAndDestination` / `ReasonRequired` (Validation), `InvalidStatusTransition` /
-`ActiveMovementExists` (Conflict), and `DepartmentOutOfScope` (Forbidden) — the last one answers a
-request to read a department inbox/outbox that sits outside the caller's organizational scope.
-`Department.Inactive` and `Correspondence.OnlyRegisteredRoutable` complete the picture: an inactive
-destination department cannot receive a document, and only a `REGISTERED` document can be routed.
+`ActiveMovementExists` / `CentralDiwanRoutingRequired` / `CentralDiwanNotConfigured` /
+`StepNotCurrent` (Conflict), and `DepartmentOutOfScope` (Forbidden) — the last one answers a request
+to read a department inbox/outbox that sits outside the caller's organizational scope. The Central
+Diwan errors enforce the mandatory hub: ordinary → ordinary hops must go through the configured
+Central Diwan, and the setting must be present. `StepNotCurrent` backs the planned step-scoped route
+aliases. `Department.Inactive` and `Correspondence.OnlyRegisteredRoutable` complete the picture: an
+inactive destination department cannot receive a document, and only a `REGISTERED` document can be
+routed.
+
+The `.Attachments` group covers Module 06: `FileNotFound` / `VersionNotFound` / `FileTypeNotFound`
+and `StorageProviderNotFound` (NotFound), `FileTypeInactive` / `StorageProviderInactive` /
+`FileArchived` / `FileAlreadyArchived` (Conflict), and the upload-validation errors `FileEmpty`,
+`FileTooLarge`, `ExtensionNotAllowed`, and `SignatureMismatch` (Validation).
 
 ### `Events/DomainEvents.cs`
 
@@ -97,12 +106,12 @@ destination department cannot receive a document, and only a `REGISTERED` docume
 
 ### `Repositories/IDomainRepositories.cs`
 
-17 pure repository contracts: `IDepartmentRepository`, `IDepartmentTypeRepository`, `IUserRepository`,
+21 pure repository contracts: `IDepartmentRepository`, `IDepartmentTypeRepository`, `IUserRepository`,
 `IRoleRepository`, `IEmployeeRepository`, `IDocumentAccessGrantRepository`, `IPermissionRepository`,
 `IDocumentRepository`, `IDocumentTypeRepository`, `INumberingRegistryRepository`,
 `IDocumentNumberRepository`, `IDocumentMovementRepository`, `IDocumentFileRepository`,
-`IDocumentRelationRepository`, `IAuditLogRepository`, `INotificationRepository` and
-`ILookupRepository`. They expose `GetByIdAsync`, a few targeted lookups (`HasActiveChildrenAsync`,
+`IDocumentFileTypeRepository`, `IFileStorageProviderRepository`, `IDocumentRelationRepository`,
+`IAuditLogRepository`, `INotificationRepository`, and `ILookupRepository`. They expose `GetByIdAsync`, a few targeted lookups (`HasActiveChildrenAsync`,
 `GetActiveForScopeAsync`, `HasActiveMovementsAsync`, `GetLatestAsync` for audit hash chaining), and
 `Add`/`Remove` — no `SaveChanges` (that is `IUnitOfWork`).
 
@@ -111,8 +120,14 @@ kebab-case slug (`IsSupported`, `ListAsync`, `GetByIdAsync`, `AddAsync`, `Relabe
 `SetActiveStateAsync`, `IsInUseAsync`) so the lookups API needs no per-table repository.
 
 `IDocumentMovementRepository` carries the routing reads: `GetByIdAsync` (with steps and events),
-`HasActiveMovementsAsync`, `ListByDocumentAsync` (a document's routing history), and
-`ListInboxAsync`/`ListOutboxAsync` (a department's two queues).
+`HasActiveMovementsAsync`, `GetActiveByDocumentIdAsync` (the document currently held by a
+non-terminal movement, used for movement participation), `ListByDocumentAsync` (a document's routing
+history), and `ListInboxAsync`/`ListOutboxAsync` (a department's two queues).
+
+`IDocumentFileRepository` loads a file with its immutable `Versions` chain (by id) and lists a
+document's files; `IDocumentFileTypeRepository` supplies the allowed extensions/size limit for
+validation, and `IFileStorageProviderRepository` resolves the active default (or a specific) storage
+provider for Module 06.
 
 ### `Entities/` — the 10 modules (41 entities)
 
@@ -148,6 +163,8 @@ kebab-case slug (`IsSupported`, `ListAsync`, `GetByIdAsync`, `AddAsync`, `Relabe
 - **`DocumentMovement`** — explicit movement status machine; send/receive/complete/reject/return/redirect/close/cancel
   all guard legal transitions (`InvalidStatusTransition`), require reasons where applicable, append an immutable
   `DocumentMovementEvent`, and raise the matching domain event. Redirect creates the next numbered step.
+  A rejection may append a new sent step back to the configured Central Diwan, leaving the rejected step
+  untouched as history; the movement becomes active again while the hub holds it.
 - **`DocumentNumber` / `NumberingRegistry`** — year in `[1900,2200]`, positive sequence, gap-free allocation via
   `NumberingRegistry.AllocateNextSequence`; cancel/replace require reasons; registry must be active.
   A number is either **central** (`ScopeId = 1`, formatted by the registry, sequence allocated) or a
@@ -280,7 +297,7 @@ them, while listing, relabelling and (de)activation keep working.
 | `ValueObjects/` | ✅ Implemented (4 value objects) |
 | `Errors/` | ✅ Implemented (`DomainErrors` catalog) |
 | `Events/` | ✅ Implemented (34 events) |
-| `Repositories/` | ✅ Implemented (17 interfaces) |
+| `Repositories/` | ✅ Implemented (21 interfaces) |
 | `Entities/` | ✅ Implemented (64 entities across 10 modules, including reference/lookup tables) |
 
 ### Known issues / TODO
@@ -298,6 +315,8 @@ them, while listing, relabelling and (de)activation keep working.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-25 | opencode | Added the Central Diwan routing errors (`CentralDiwanRoutingRequired`, `CentralDiwanNotConfigured`, `StepNotCurrent`), `IDocumentMovementRepository.GetActiveByDocumentIdAsync`, and rejection routing back to the Central Diwan as a new sent step. |
+| 2026-10-25 | opencode | Added the Module 06 attachment errors (`FileNotFound`, `VersionNotFound`, `FileTypeNotFound`, `StorageProviderNotFound`, `FileTypeInactive`, `StorageProviderInactive`, `FileAlreadyArchived`, `FileEmpty`, `FileTooLarge`, `ExtensionNotAllowed`, `SignatureMismatch`, `TitleTooLong`), `Correspondence.DocumentAccessDenied`, and the `IDocumentFileTypeRepository` / `IFileStorageProviderRepository` contracts plus `IDocumentFileRepository.ListByDocumentAsync`. |
 | 2026-10-22 | Buffy | Threaded deterministic time through the whole layer: every aggregate factory/behavior that stamps a timestamp (`Document`, `User`, `Department`, `Employee`, `DocumentMovement` + steps/events, `DocumentNumber`, `NumberingRegistry`/`Counter`, `InstitutionSetting`, `ExternalOrganization`, `DocumentAccessGrant`, `Role`/`Permission`/`RolePermission`, `UserRole`/`UserDepartmentAssignment`, `DocumentFile`, `AuditCheckpoint`/`AuditIntegrityCheck`, `Notification*`, `SavedSearch`, relations, lookups, `DepartmentType`) now accepts an optional `utcNow` and uses it for nested rows too. The system clock remains only as the fallback (`IDomainEvent.OccurredOnUtc`, `AuditLog.Record`). Added `DomainErrors.Identity.NotAuthenticated` and `DomainErrors.Correspondence.DepartmentOutOfScope`. |
 | 2026-10-22 | opencode | Added `Common/PageRequest` (normalized page/pageSize/search/sort with clamping) and `Common/PagedList<T>` (one page + total count), and the `ListPagedAsync` contracts on `IDocumentRepository`, `IUserRepository`, `IEmployeeRepository`, and `IExternalOrganizationRepository`. Replaced `IDocumentRepository.ListRecentAsync`. |
 | 2026-10-21 | opencode | Added `Document.MarkMovementEnded` (a document leaves `IN_MOVEMENT` when its movement closes or is canceled), the `DomainErrors.Movements.ActiveMovementExists` / `DepartmentOutOfScope`, `DomainErrors.Department.Inactive`, and `DomainErrors.Correspondence.OnlyRegisteredRoutable` errors, and the `IDocumentMovementRepository.ListByDocumentAsync`/`ListInboxAsync`/`ListOutboxAsync` contracts. |

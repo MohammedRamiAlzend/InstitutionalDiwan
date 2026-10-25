@@ -19,6 +19,10 @@ public static class DependencyInjection
 
         services.AddValidatorsFromAssembly(assembly);
 
+        // Cross-cutting rules shared by the movement and attachment command handlers.
+        services.AddScoped<Features.Movements.CentralDiwanRouting>();
+        services.AddScoped<Features.Attachments.AttachmentUploader>();
+
         return services;
     }
 }

@@ -9,4 +9,5 @@ namespace InstitutionalDiwan.Application.Features.Movements;
 public sealed record RejectMovementStepCommand(
     Guid MovementId,
     Guid UserId,
-    string Reason) : ICommand<MovementResponse>;
+    string Reason,
+    Guid? StepId = null) : ICommand<MovementResponse>;

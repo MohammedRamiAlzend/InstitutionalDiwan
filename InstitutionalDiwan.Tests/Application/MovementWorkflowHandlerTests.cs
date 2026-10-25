@@ -20,6 +20,7 @@ public sealed class MovementWorkflowHandlerTests
         public FakeDocumentNumberRepository Numbers { get; } = new();
         public FakeNumberingRegistryRepository Registries { get; } = new();
         public FakeDepartmentRepository Departments { get; } = new();
+        public FakeInstitutionSettingRepository Settings { get; } = new();
         public FakeDocumentMovementRepository Movements { get; } = new();
         public FakeDepartmentScopeEvaluator Scope { get; } = new();
         public FakeUnitOfWork UnitOfWork { get; } = new();
@@ -34,6 +35,11 @@ public sealed class MovementWorkflowHandlerTests
         {
             DiwanId = AddDepartment("DIWAN");
             HrId = AddDepartment("HR");
+
+            var settings = InstitutionSetting.Create(
+                "المؤسسة", 1, 1, centralDiwanDepartmentId: DiwanId);
+            Assert.True(settings.IsSuccess);
+            Settings.Add(settings.Value);
 
             var clerk = User.Create("clerk", "hash", DiwanId);
             Assert.True(clerk.IsSuccess);
@@ -66,11 +72,13 @@ public sealed class MovementWorkflowHandlerTests
             return department.Value.DepartmentId;
         }
 
+        public CentralDiwanRouting Routing() => new(Settings);
+
         public CreateMovementCommandHandler CreateMovementHandler() =>
-            new(Movements, Documents, Departments, Users, UnitOfWork);
+            new(Movements, Documents, Departments, Users, Routing(), UnitOfWork);
 
         public SendMovementCommandHandler SendMovementHandler() =>
-            new(Movements, UnitOfWork);
+            new(Movements, Routing(), UnitOfWork);
 
         public ReceiveDocumentCommandHandler ReceiveHandler() =>
             new(Movements, Documents, UnitOfWork, TestClock.Instance);
@@ -79,13 +87,13 @@ public sealed class MovementWorkflowHandlerTests
             new(Movements, UnitOfWork);
 
         public RejectMovementStepCommandHandler RejectHandler() =>
-            new(Movements, UnitOfWork);
+            new(Movements, Routing(), UnitOfWork);
 
         public ReturnMovementToSenderCommandHandler ReturnHandler() =>
             new(Movements, UnitOfWork);
 
         public RedirectMovementCommandHandler RedirectHandler() =>
-            new(Movements, Departments, Users, UnitOfWork);
+            new(Movements, Departments, Users, Routing(), UnitOfWork);
 
         public CloseMovementCommandHandler CloseHandler() =>
             new(Movements, Documents, UnitOfWork);
@@ -173,6 +181,75 @@ public sealed class MovementWorkflowHandlerTests
     }
 
     [Fact]
+    public async Task CreateMovement_BetweenTwoOrdinaryDepartments_IsRefused()
+    {
+        var world = new World();
+        var financeId = world.AddDepartment("FIN");
+        await RegisterDocument(world);
+
+        var result = await world.CreateMovementHandler().Handle(
+            new CreateMovementCommand(world.Document.DocumentId, world.HROfficer.UserId, financeId),
+            CancellationToken.None);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(DomainErrors.Movements.CentralDiwanRoutingRequired.Code, result.Error.Code);
+    }
+
+    [Fact]
+    public async Task CreateMovement_FromAnOrdinaryDepartmentToTheCentralDiwan_IsAllowed()
+    {
+        var world = new World();
+        await RegisterDocument(world);
+
+        var result = await world.CreateMovementHandler().Handle(
+            new CreateMovementCommand(world.Document.DocumentId, world.HROfficer.UserId, world.DiwanId),
+            CancellationToken.None);
+
+        Assert.True(result.IsSuccess, result.Error?.Code);
+        Assert.Equal(world.HrId, result.Value.SourceDepartmentId);
+        Assert.Equal(world.DiwanId, result.Value.DestinationDepartmentId);
+    }
+
+    [Fact]
+    public async Task Redirect_FromAnOrdinaryDepartmentToAnotherOrdinaryDepartment_IsRefused()
+    {
+        var world = new World();
+        var financeId = world.AddDepartment("FIN");
+        await RegisterDocument(world);
+        var movement = await CreateMovement(world);
+        await world.SendMovementHandler().Handle(
+            new SendMovementCommand(movement.MovementId, world.Clerk.UserId),
+            CancellationToken.None);
+
+        var result = await world.RedirectHandler().Handle(
+            new RedirectMovementCommand(
+                movement.MovementId, world.HROfficer.UserId, financeId, null, "تحويل"),
+            CancellationToken.None);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(DomainErrors.Movements.CentralDiwanRoutingRequired.Code, result.Error.Code);
+    }
+
+    [Fact]
+    public async Task Receive_WithANonCurrentStep_IsRefused()
+    {
+        var world = new World();
+        await RegisterDocument(world);
+        var movement = await CreateMovement(world);
+        await world.SendMovementHandler().Handle(
+            new SendMovementCommand(movement.MovementId, world.Clerk.UserId),
+            CancellationToken.None);
+
+        var result = await world.ReceiveHandler().Handle(
+            new ReceiveDocumentCommand(
+                movement.MovementId, world.HROfficer.UserId, StepId: Guid.NewGuid()),
+            CancellationToken.None);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(DomainErrors.Movements.StepNotCurrent.Code, result.Error.Code);
+    }
+
+    [Fact]
     public async Task SendReceiveComplete_ClosesMovementAndReleasesDocument()
     {
         var world = new World();
@@ -216,7 +293,7 @@ public sealed class MovementWorkflowHandlerTests
     }
 
     [Fact]
-    public async Task RejectMovement_TransitionsToRejected()
+    public async Task RejectMovement_RoutesTheDocumentBackToTheCentralDiwan()
     {
         var world = new World();
         await RegisterDocument(world);
@@ -229,8 +306,49 @@ public sealed class MovementWorkflowHandlerTests
             new RejectMovementStepCommand(movement.MovementId, world.HROfficer.UserId, "غير مطابق"),
             CancellationToken.None);
 
-        Assert.True(result.IsSuccess);
+        Assert.True(result.IsSuccess, result.Error?.Code);
+        Assert.Equal(MovementStatus.SentId, result.Value.StatusId);
+        Assert.Equal(2, result.Value.CurrentStepNo);
+        Assert.Equal(world.DiwanId, result.Value.DestinationDepartmentId);
+
+        var rejectedStep = Assert.Single(
+            result.Value.Steps,
+            step => step.StepStatusId == MovementStepStatus.RejectedId);
+        Assert.Equal(1, rejectedStep.StepNo);
+
+        var returnStep = Assert.Single(
+            result.Value.Steps,
+            step => step.StepNo == result.Value.CurrentStepNo);
+        Assert.Equal(2, returnStep.StepNo);
+        Assert.Equal(world.HrId, returnStep.FromDepartmentId);
+        Assert.Equal(world.DiwanId, returnStep.ToDepartmentId);
+        Assert.Equal(MovementStepStatus.SentId, returnStep.StepStatusId);
+    }
+
+    [Fact]
+    public async Task RejectMovement_ByTheCentralDiwan_StaysRejectedWithoutASelfStep()
+    {
+        var world = new World();
+        await RegisterDocument(world);
+
+        var movementResult = await world.CreateMovementHandler().Handle(
+            new CreateMovementCommand(world.Document.DocumentId, world.HROfficer.UserId, world.DiwanId),
+            CancellationToken.None);
+        Assert.True(movementResult.IsSuccess, movementResult.Error?.Code);
+
+        await world.SendMovementHandler().Handle(
+            new SendMovementCommand(movementResult.Value.MovementId, world.HROfficer.UserId),
+            CancellationToken.None);
+
+        var result = await world.RejectHandler().Handle(
+            new RejectMovementStepCommand(
+                movementResult.Value.MovementId, world.Clerk.UserId, "غير مطابق"),
+            CancellationToken.None);
+
+        Assert.True(result.IsSuccess, result.Error?.Code);
         Assert.Equal(MovementStatus.RejectedId, result.Value.StatusId);
+        Assert.Equal(1, result.Value.CurrentStepNo);
+        Assert.Single(result.Value.Steps);
     }
 
     [Fact]
@@ -270,19 +388,20 @@ public sealed class MovementWorkflowHandlerTests
     public async Task RedirectMovement_AppendsNewStepAndResends()
     {
         var world = new World();
-        var financeId = world.AddDepartment("FIN");
         await RegisterDocument(world);
         var movement = await CreateMovement(world);
         await world.SendMovementHandler().Handle(
             new SendMovementCommand(movement.MovementId, world.Clerk.UserId),
             CancellationToken.None);
 
+        // The document is at HR; the only legal next hop without another ordinary department is
+        // back through the Central Diwan.
         var result = await world.RedirectHandler().Handle(
             new RedirectMovementCommand(
-                movement.MovementId, world.Clerk.UserId, financeId, null, "تحويل"),
+                movement.MovementId, world.Clerk.UserId, world.DiwanId, null, "تحويل"),
             CancellationToken.None);
 
-        Assert.True(result.IsSuccess);
+        Assert.True(result.IsSuccess, result.Error?.Code);
         Assert.Equal(MovementStatus.SentId, result.Value.StatusId);
         Assert.Equal(2, result.Value.CurrentStepNo);
         Assert.Equal(2, result.Value.Steps.Count);

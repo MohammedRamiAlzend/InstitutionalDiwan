@@ -1,6 +1,6 @@
 # Presentation / Controllers
 
-> **Status:** Implemented — fifteen thin controllers, one per module plus the generic lookups controller.
+> **Status:** Implemented — sixteen thin controllers, one per module plus the generic lookups controller.
 
 ## Purpose
 
@@ -17,7 +17,8 @@ access live here.
 | `DocumentsController.cs` | `api/documents` | `DOCUMENT_VIEW` reads; `DOCUMENT_CREATE` create/register; `DOCUMENT_EDIT` update/participants/cancel | Full lifecycle: immediate create, paged/searchable/filterable list, a department's register view (`GET /api/departments/{departmentId}/documents`), get, details, timeline, `POST drafts`, `PUT {id}`, `POST {id}/register`, `POST {id}/participants`, `POST {id}/cancel`. |
 | `DocumentNumbersController.cs` | `api/documents/{documentId}/numbers` | `NUMBERING_VIEW` reads; `NUMBERING_MANAGE` writes | Central number lifecycle (`issue`, `{numberId}/cancel`, `{numberId}/replace`, `history`), the department register write (`department-registration`: typed number + date), and `registry-entries` (central number + every department line). |
 | `DepartmentRegistersController.cs` | `api/departments/{departmentId}/register` | `NUMBERING_VIEW` | The department's register book, optionally filtered by numbering year. |
-| `MovementsController.cs` | `api/movements` | `DOCUMENT_VIEW` reads; `DOCUMENT_EDIT` writes | The routing workflow: open a movement, send, receive (refuses custody until the destination department recorded its register number), complete, reject, return, redirect, close, cancel; plus the movement read endpoints and the department inbox/outbox. |
+| `MovementsController.cs` | `api/movements` (plus planned document/department/step aliases) | `DOCUMENT_VIEW` reads; `DOCUMENT_EDIT` writes | The routing workflow: open a movement (Central Diwan hub enforced), send, receive (refuses custody until the destination department recorded its register number), complete, reject (routed back to the Central Diwan), return, redirect, close, cancel; plus the movement read endpoints, the department inbox/outbox, and the planned step-scoped route aliases. |
+| `DocumentFilesController.cs` | `api/document-files` (plus planned `/api/documents/{documentId}/files` aliases) | `DOCUMENT_VIEW` reads; `DOCUMENT_EDIT` writes | Module 06 attachments: create a file's version chain (metadata-only or atomic first-version upload), upload the next version (multipart; extension/size/magic-byte validation), archive, list by document, download a version, and verify its SHA-256. |
 | `ExternalOrganizationsController.cs` | `api/external-organizations` | `DOCUMENT_VIEW` reads; `DOCUMENT_EDIT` writes | External correspondent CRUD: paged/searchable list (incl. `includeInactive`), get, create, update, deactivate, activate. |
 | `InstitutionSettingsController.cs` | `api/institution-settings` | `DEPARTMENT_MANAGE` | Reads and replaces the singleton institution settings (Central Diwan guards). |
 | `UsersController.cs` | `api/users` | `USER_MANAGE` | User CRUD (paged/searchable list), activate/deactivate, assign/revoke roles, `POST {id}/department-assignments`, `DELETE {id}/department-assignments/{assignmentId}`, `GET {id}/effective-permissions`. |
@@ -47,16 +48,36 @@ access live here.
 | `POST` | `/api/movements` | `DOCUMENT_EDIT` | Route a document to another department by opening a movement. The source department is the caller's own primary department. |
 | `GET` | `/api/movements/{movementId}` | `DOCUMENT_VIEW` | One movement with its steps and audit trail. |
 | `GET` | `/api/movements/by-document/{documentId}` | `DOCUMENT_VIEW` | Every movement of a document, newest first. |
+| `GET` | `/api/documents/{documentId}/movements` | `DOCUMENT_VIEW` | Planned alias of the document movement history. |
 | `GET` | `/api/movements/inbox?departmentId=` | `DOCUMENT_VIEW` | The documents waiting in a department's inbox. Defaults to the caller's own primary department. |
+| `GET` | `/api/departments/{departmentId}/inbox` | `DOCUMENT_VIEW` | Planned alias of the department inbox. |
 | `GET` | `/api/movements/outbox?departmentId=` | `DOCUMENT_VIEW` | The documents a department sent out and that are still elsewhere. Defaults to the caller's own primary department. |
+| `GET` | `/api/departments/{departmentId}/outbox` | `DOCUMENT_VIEW` | Planned alias of the department outbox. |
 | `POST` | `/api/movements/{movementId}/send` | `DOCUMENT_EDIT` | Send the current step to the destination department. |
 | `POST` | `/api/movements/{movementId}/receive` | `DOCUMENT_EDIT` | Receive the current step; refused until the destination department recorded its register number. |
 | `POST` | `/api/movements/{movementId}/complete` | `DOCUMENT_EDIT` | Complete the current step. |
-| `POST` | `/api/movements/{movementId}/reject` | `DOCUMENT_EDIT` | Reject the current step with a required reason. |
+| `POST` | `/api/movements/{movementId}/reject` | `DOCUMENT_EDIT` | Reject the current step with a required reason; the rejection is routed back to the Central Diwan for administrative resolution. |
 | `POST` | `/api/movements/{movementId}/return` | `DOCUMENT_EDIT` | Return the document to the sending department with a required reason. |
+| `POST` | `/api/movements/{movementId}/steps/{stepId}/receive` | `DOCUMENT_EDIT` | Planned step-scoped alias for receive; the named step must be current. |
+| `POST` | `/api/movements/{movementId}/steps/{stepId}/complete` | `DOCUMENT_EDIT` | Planned step-scoped alias for complete; the named step must be current. |
+| `POST` | `/api/movements/{movementId}/steps/{stepId}/reject` | `DOCUMENT_EDIT` | Planned step-scoped alias for reject; the named step must be current. |
+| `POST` | `/api/movements/{movementId}/steps/{stepId}/return` | `DOCUMENT_EDIT` | Planned step-scoped alias for return; the named step must be current. |
 | `POST` | `/api/movements/{movementId}/redirect` | `DOCUMENT_EDIT` | Redirect the document to another department without closing the movement. |
 | `POST` | `/api/movements/{movementId}/close` | `DOCUMENT_EDIT` | Close the movement and release the document. |
 | `POST` | `/api/movements/{movementId}/cancel` | `DOCUMENT_EDIT` | Cancel the movement with a required reason and release the document. |
+
+## Document file endpoints (Module 06)
+
+| Method | Route | Permission | Behavior |
+| --- | --- | --- | --- |
+| `POST` | `/api/document-files` | `DOCUMENT_EDIT` | Open a file's version chain (`documentId`, `fileTypeId`, `title`, `isPrimaryScan`). Requires MANAGE access to the document. |
+| `POST` | `/api/documents/{documentId}/files` | `DOCUMENT_EDIT` | Planned atomic initial upload (multipart `file`, `fileTypeId`, `title`, optional `isPrimaryScan`/`changeNotes`); creates the file and version 1 in one save. |
+| `POST` | `/api/document-files/{fileId}/versions` | `DOCUMENT_EDIT` | Upload the next immutable version (multipart `file` + optional `changeNotes`). Validates extension, size, and magic bytes; stores the bytes with a streamed SHA-256 checksum. |
+| `POST` | `/api/document-files/{fileId}/archive` | `DOCUMENT_EDIT` | Close the chain; existing versions stay readable. |
+| `GET` | `/api/document-files/by-document/{documentId}` | `DOCUMENT_VIEW` | The document's files with their full version history. |
+| `GET` | `/api/documents/{documentId}/files` | `DOCUMENT_VIEW` | Planned alias of the document file list. |
+| `GET` | `/api/document-files/{fileId}/download?versionId=` | `DOCUMENT_VIEW` | Stream one version (current by default) under its original name/MIME type; requires DOWNLOAD access. |
+| `GET` | `/api/document-files/{fileId}/verify?versionId=` | `DOCUMENT_VIEW` | Recompute the stored SHA-256 and return both checksums plus `isMatch`. |
 
 ## Paged list endpoints
 
@@ -93,6 +114,8 @@ plain JSON array.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-25 | opencode | Added the planned route aliases: document-scoped movement history, department-scoped inbox/outbox, step-scoped receive/complete/reject/return, and atomic `POST /api/documents/{documentId}/files`. Rejections now route to the Central Diwan and ordinary → ordinary movements are refused. |
+| 2026-10-25 | opencode | Added `DocumentFilesController` for Module 06: create, upload version (multipart), archive, list by document, download, and checksum verification. |
 | 2026-10-22 | Buffy | `AuthController.Me` now sends `GetUserProfileQuery` instead of reading claims inline, and `DocumentsController` gained `GET /api/departments/{departmentId}/documents` (one department's paged register, scope-checked). |
 | 2026-10-22 | opencode | Turned the four unbounded list endpoints into paged queries: `GET /api/documents` (paging, search, sort, and status/department/direction/type filters), `GET /api/users` and `GET /api/employees` (paging + search), and `GET /api/external-organizations` (paging + search + `includeInactive`). All four now return `PagedResult<T>`. |
 | 2026-10-21 | opencode | Rewrote `MovementsController` into the full routing workflow: open/send/receive/complete/reject/return/redirect/close/cancel, the movement read endpoints (`GET {movementId}`, `GET by-document/{documentId}`), and the department inbox and outbox (`GET inbox`, `GET outbox`). |

@@ -123,6 +123,16 @@ internal sealed class FakeDocumentMovementRepository : IDocumentMovementReposito
     private static DocumentMovementStep? CurrentStep(DocumentMovement movement) =>
         movement.Steps.FirstOrDefault(step => step.StepNo == movement.CurrentStepNo);
 
+    public Task<DocumentMovement?> GetActiveByDocumentIdAsync(
+        Guid documentId,
+        CancellationToken cancellationToken = default)
+        => Task.FromResult(Movements
+            .Where(movement => movement.DocumentId == documentId &&
+                               movement.StatusId != DocumentMovement.StatusClosed &&
+                               movement.StatusId != DocumentMovement.StatusCanceled)
+            .OrderByDescending(movement => movement.CreatedAt)
+            .FirstOrDefault());
+
     public Task<bool> HasActiveMovementsAsync(Guid documentId, CancellationToken cancellationToken = default)
         => Task.FromResult(DocumentIdsWithActiveMovements.Contains(documentId));
 

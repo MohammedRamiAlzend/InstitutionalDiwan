@@ -77,6 +77,19 @@ internal sealed class DocumentMovementRepository : IDocumentMovementRepository
             .OrderByDescending(movement => movement.CreatedAt)
             .ToListAsync(cancellationToken);
 
+    /// <summary>The non-terminal movement that currently holds the document, if there is one.</summary>
+    public Task<DocumentMovement?> GetActiveByDocumentIdAsync(
+        Guid documentId,
+        CancellationToken cancellationToken = default) =>
+        _context.DocumentMovements
+            .Include(movement => movement.Steps)
+            .Include(movement => movement.Events)
+            .Where(movement => movement.DocumentId == documentId &&
+                               movement.StatusId != DocumentMovement.StatusClosed &&
+                               movement.StatusId != DocumentMovement.StatusCanceled)
+            .OrderByDescending(movement => movement.CreatedAt)
+            .FirstOrDefaultAsync(cancellationToken);
+
     /// <summary>
     /// A movement is active until it reaches a terminal status (CLOSED or CANCELED); every state in
     /// between still holds the document.

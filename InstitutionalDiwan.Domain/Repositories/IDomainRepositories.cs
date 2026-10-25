@@ -170,14 +170,35 @@ public interface IDocumentMovementRepository
     /// the current step leaves that department and has not come back.
     /// </summary>
     Task<IReadOnlyList<DocumentMovement>> ListOutboxAsync(Guid departmentId, CancellationToken cancellationToken = default);
+    /// <summary>The non-terminal movement that currently holds the document, if any.</summary>
+    Task<DocumentMovement?> GetActiveByDocumentIdAsync(
+        Guid documentId,
+        CancellationToken cancellationToken = default);
     Task<bool> HasActiveMovementsAsync(Guid documentId, CancellationToken cancellationToken = default);
     void Add(DocumentMovement movement);
 }
 
 public interface IDocumentFileRepository
 {
+    /// <summary>Loads a file with every version it has held, current first in version order.</summary>
     Task<DocumentFile?> GetByIdAsync(Guid fileId, CancellationToken cancellationToken = default);
+    /// <summary>Every file attached to a document, oldest first, with their versions.</summary>
+    Task<IReadOnlyList<DocumentFile>> ListByDocumentAsync(
+        Guid documentId,
+        CancellationToken cancellationToken = default);
     void Add(DocumentFile documentFile);
+}
+
+public interface IDocumentFileTypeRepository
+{
+    Task<DocumentFileType?> GetByIdAsync(int fileTypeId, CancellationToken cancellationToken = default);
+}
+
+public interface IFileStorageProviderRepository
+{
+    Task<FileStorageProvider?> GetByIdAsync(int storageProviderId, CancellationToken cancellationToken = default);
+    /// <summary>The active provider marked as default; the first active local provider as a fallback.</summary>
+    Task<FileStorageProvider?> GetDefaultAsync(CancellationToken cancellationToken = default);
 }
 
 public interface IDocumentRelationRepository

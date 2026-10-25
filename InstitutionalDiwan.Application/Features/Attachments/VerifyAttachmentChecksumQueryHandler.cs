@@ -1,0 +1,86 @@
+using InstitutionalDiwan.Application.Abstractions.Authorization;
+using InstitutionalDiwan.Application.Abstractions.Messaging;
+using InstitutionalDiwan.Application.Abstractions.Storage;
+using InstitutionalDiwan.Domain.Common;
+using InstitutionalDiwan.Domain.Entities.Attachments;
+using InstitutionalDiwan.Domain.Entities.Identity;
+using InstitutionalDiwan.Domain.Errors;
+using InstitutionalDiwan.Domain.Repositories;
+
+namespace InstitutionalDiwan.Application.Features.Attachments;
+
+internal sealed class VerifyAttachmentChecksumQueryHandler
+    : IQueryHandler<VerifyAttachmentChecksumQuery, AttachmentChecksumResponse>
+{
+    private readonly IDocumentFileRepository _fileRepository;
+    private readonly IFileStorageProviderRepository _providerRepository;
+    private readonly IUserRepository _userRepository;
+    private readonly IDocumentAccessEvaluator _documentAccessEvaluator;
+    private readonly IFileStorageService _storage;
+
+    public VerifyAttachmentChecksumQueryHandler(
+        IDocumentFileRepository fileRepository,
+        IFileStorageProviderRepository providerRepository,
+        IUserRepository userRepository,
+        IDocumentAccessEvaluator documentAccessEvaluator,
+        IFileStorageService storage)
+    {
+        _fileRepository = fileRepository;
+        _providerRepository = providerRepository;
+        _userRepository = userRepository;
+        _documentAccessEvaluator = documentAccessEvaluator;
+        _storage = storage;
+    }
+
+    public async Task<Result<AttachmentChecksumResponse>> Handle(
+        VerifyAttachmentChecksumQuery request,
+        CancellationToken cancellationToken)
+    {
+        var user = await _userRepository.GetByIdAsync(request.UserId, cancellationToken);
+        if (user is null)
+            return Result.Failure<AttachmentChecksumResponse>(DomainErrors.Identity.UserNotFound);
+
+        if (!user.IsActive)
+            return Result.Failure<AttachmentChecksumResponse>(DomainErrors.Identity.UserInactive);
+
+        var file = await _fileRepository.GetByIdAsync(request.FileId, cancellationToken);
+        if (file is null)
+            return Result.Failure<AttachmentChecksumResponse>(DomainErrors.Attachments.FileNotFound);
+
+        if (!await _documentAccessEvaluator.CanAccessDocumentAsync(
+                file.DocumentId, AccessLevel.ViewId, cancellationToken))
+        {
+            return Result.Failure<AttachmentChecksumResponse>(
+                DomainErrors.Correspondence.DocumentAccessDenied);
+        }
+
+        var version = FindVersion(file, request.VersionId);
+        if (version is null)
+            return Result.Failure<AttachmentChecksumResponse>(DomainErrors.Attachments.VersionNotFound);
+
+        var provider = await _providerRepository.GetByIdAsync(
+            version.StorageProviderId, cancellationToken);
+        if (provider is null)
+            return Result.Failure<AttachmentChecksumResponse>(
+                DomainErrors.Attachments.StorageProviderNotFound);
+
+        await using var content = await _storage.OpenReadAsync(
+            provider.BasePathOrEndpoint, version.RelativePath, cancellationToken);
+        if (content is null)
+            return Result.Failure<AttachmentChecksumResponse>(DomainErrors.Attachments.FileNotFound);
+
+        var computed = await _storage.ComputeSha256Async(content, cancellationToken);
+
+        return Result.Success(new AttachmentChecksumResponse(
+            file.FileId,
+            version.VersionId,
+            version.VersionNumber,
+            version.ChecksumSha256,
+            computed));
+    }
+
+    private static DocumentFileVersion? FindVersion(DocumentFile file, Guid? versionId) =>
+        versionId is { } id
+            ? file.Versions.FirstOrDefault(version => version.VersionId == id)
+            : file.Versions.FirstOrDefault(version => version.IsCurrent);
+}

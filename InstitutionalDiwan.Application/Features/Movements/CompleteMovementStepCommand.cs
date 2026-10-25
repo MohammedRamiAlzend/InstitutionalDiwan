@@ -9,4 +9,5 @@ namespace InstitutionalDiwan.Application.Features.Movements;
 public sealed record CompleteMovementStepCommand(
     Guid MovementId,
     Guid UserId,
-    string? Notes = null) : ICommand<MovementResponse>;
+    string? Notes = null,
+    Guid? StepId = null) : ICommand<MovementResponse>;

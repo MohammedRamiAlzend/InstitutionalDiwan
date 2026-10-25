@@ -1,9 +1,9 @@
 # Application / Abstractions
 
 > **Status:** Partially implemented — `Messaging/` (ICommand/IQuery/ICommandHandler/IQueryHandler),
-> `Authentication/` (`IJwtProvider`, `IPasswordHasher`, `IUserContext`), and `Authorization/`
-> (`IDepartmentScopeEvaluator`, `IDocumentAccessEvaluator`) are live; the data/storage/caching/clock
-> contracts are still target design.
+> `Authentication/` (`IJwtProvider`, `IPasswordHasher`, `IUserContext`), `Authorization/`
+> (`IDepartmentScopeEvaluator`, `IDocumentAccessEvaluator`), and `Storage/` (`IFileStorageService`,
+> `IFileSignatureValidator`, `StoredFile`) are live; the data/caching contracts are still target design.
 
 ## Purpose
 
@@ -48,7 +48,8 @@ technology choices swappable.
 
 | Interface | Shape | Notes |
 | --- | --- | --- |
-| `IFileStorageService` | `Task<StoredFile> SaveAsync(Stream, …)`, `Task<Stream> OpenReadAsync(string path)`, `Task<string> ComputeSha256Async(Stream)` | Abstracts document scans/attachments (Module 06) and returns the SHA-256 checksum recorded by `DocumentFile.AddVersion`. |
+| `IFileStorageService` | `Task<StoredFile> SaveAsync(Stream, …, int providerId, string basePath)`, `Task<Stream?> OpenReadAsync(string basePath, string relativePath)`, `Task<string> ComputeSha256Async(Stream)` | Abstracts document scans/attachments (Module 06) and returns the SHA-256 checksum recorded by `DocumentFile.AddVersion`. ✅ Implemented by `Infrastructure/Storage/LocalFileStorageService`. |
+| `IFileSignatureValidator` | `Result Validate(ReadOnlySpan<byte> header, string fileName, long size, DocumentFileType type)` | Enforces the file type's extension allow-list and size limit, then checks magic bytes so a renamed executable cannot masquerade as a PDF/image. ✅ Implemented by `Infrastructure/Storage/FileSignatureValidator`. |
 
 ### `Caching/`
 
@@ -76,6 +77,9 @@ technology choices swappable.
 | `Authentication/IUserContext.cs` | Ambient caller identity (authenticated flag, user id, username, role codes, primary department, scope type, permission set) so handlers never touch `HttpContext`; backs `GetUserProfileQuery`. |
 | `Authorization/IDepartmentScopeEvaluator.cs` | Answers “may the caller act on this department?”, implemented from the user's scope type, primary department, and active assignments. |
 | `Authorization/IDocumentAccessEvaluator.cs` | Answers “may the caller reach this document at this access level?”, implemented from grants, authorship, scope, and confidentiality. |
+| `Storage/IFileStorageService.cs` | Persists and reads document bytes under a provider root, returning the streamed SHA-256 checksum of an upload. |
+| `Storage/IFileSignatureValidator.cs` | Validates an upload's extension, size, and magic bytes before any bytes are stored. |
+| `Storage/StoredFile.cs` | Value returned by storage after a save: relative path, original name, MIME type, size, checksum, and provider id. |
 
 ## Implementation status
 
@@ -85,7 +89,7 @@ technology choices swappable.
 | `Authentication/` | ✅ Implemented (IJwtProvider, IPasswordHasher, IUserContext) |
 | `Authorization/` | ✅ Implemented (IDepartmentScopeEvaluator, IDocumentAccessEvaluator) |
 | `Data/` | ❌ Not implemented |
-| `Storage/` | ❌ Not implemented |
+| `Storage/` | ✅ Implemented (`IFileStorageService`, `IFileSignatureValidator`, `StoredFile`) |
 | `Caching/` | ❌ Not implemented |
 | `Clock/` | ❌ Not implemented |
 
@@ -97,6 +101,7 @@ technology choices swappable.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-25 | opencode | Added the `Storage/` contracts (`IFileStorageService`, `IFileSignatureValidator`, `StoredFile`) so the Module 06 Attachments handlers depend on abstractions instead of the file system or ASP.NET upload types. |
 | 2026-10-22 | Buffy | Extended `IUserContext` with `Username` and `Roles` so `GetUserProfileQuery` can project the caller's profile (`GET /api/auth/me`) without reading claims in the controller. |
 | 2026-10-19 | Buffy | Added `Authentication/IUserContext` and the `Authorization/` group (`IDepartmentScopeEvaluator`, `IDocumentAccessEvaluator`) — the contracts behind the three-tier access model; implemented in `Infrastructure/Authentication/UserContext.cs` and `Infrastructure/Authorization/`. |
 | 2026-10-19 | opencode | Recorded `Messaging/` (`ICommand`, `ICommandHandler`, `IQuery`, `IQueryHandler`) and `Authentication/` (`IJwtProvider`, `IPasswordHasher`) as ✅ implemented with a per-file Contents table; the README previously reported both groups as not implemented. |

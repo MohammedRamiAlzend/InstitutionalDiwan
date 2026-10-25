@@ -114,6 +114,7 @@ public static class DomainErrors
         public static readonly Error CannotCancelArchived = Error.Conflict("Correspondence.CannotCancelArchived", "Archived documents must be unarchived before cancellation.");
         public static readonly Error CancelReasonEmpty = Error.Validation("Correspondence.CancelReasonEmpty", "A cancellation reason is required.");
         public static readonly Error DocumentNotFound = Error.NotFound("Correspondence.DocumentNotFound", "The document was not found.");
+        public static readonly Error DocumentAccessDenied = Error.Forbidden("Correspondence.DocumentAccessDenied", "The caller does not have the required access level on this document.");
         public static readonly Error DepartmentOutOfScope = Error.Forbidden("Correspondence.DepartmentOutOfScope", "The requested department's documents are outside the caller's organizational scope.");
         public static readonly Error SingleExternalPartyLimit = Error.Conflict("Correspondence.SingleExternalPartyLimit", "A document can have at most one ExternalOrganization participant.");
         public static readonly Error ParticipantRoleEmpty = Error.Validation("Correspondence.ParticipantRoleEmpty", "Participant role code is required.");
@@ -168,11 +169,15 @@ public static class DomainErrors
         public static readonly Error MovementNotFound = Error.NotFound("Movements.MovementNotFound", "The document movement was not found.");
         public static readonly Error ActiveMovementExists = Error.Conflict("Movements.ActiveMovementExists", "The document already has an active movement; close or cancel it before routing the document again.");
         public static readonly Error DepartmentOutOfScope = Error.Forbidden("Movements.DepartmentOutOfScope", "The requested department is outside the caller's organizational scope.");
+        public static readonly Error CentralDiwanRoutingRequired = Error.Conflict("Movements.CentralDiwanRoutingRequired", "A movement between two non-Central-Diwan departments must be routed through the Central Diwan.");
+        public static readonly Error CentralDiwanNotConfigured = Error.Conflict("Movements.CentralDiwanNotConfigured", "The Central Diwan department is not configured in the institution settings.");
+        public static readonly Error StepNotCurrent = Error.Conflict("Movements.StepNotCurrent", "The requested movement step is not the movement's current step.");
     }
 
     public static class Attachments
     {
         public static readonly Error TitleEmpty = Error.Validation("Attachments.TitleEmpty", "Document file title is required.");
+        public static readonly Error TitleTooLong = Error.Validation("Attachments.TitleTooLong", "Document file title cannot exceed 300 characters.");
         public static readonly Error FileTypeEmpty = Error.Validation("Attachments.FileTypeEmpty", "Document file type code is required.");
         public static readonly Error FileArchived = Error.Conflict("Attachments.FileArchived", "Cannot upload a new version to an archived document file.");
         public static readonly Error InvalidVersionNumber = Error.Validation("Attachments.InvalidVersionNumber", "Version number must be positive and strictly sequential.");
@@ -181,6 +186,17 @@ public static class DomainErrors
         public static readonly Error FileSizeInvalid = Error.Validation("Attachments.FileSizeInvalid", "File size in bytes must be greater than zero.");
         public static readonly Error ProviderNameEmpty = Error.Validation("Attachments.ProviderNameEmpty", "Storage provider name is required.");
         public static readonly Error ProviderPathEmpty = Error.Validation("Attachments.ProviderPathEmpty", "Storage provider base path or endpoint is required.");
+        public static readonly Error FileNotFound = Error.NotFound("Attachments.FileNotFound", "The document file was not found.");
+        public static readonly Error VersionNotFound = Error.NotFound("Attachments.VersionNotFound", "The document file version was not found.");
+        public static readonly Error FileTypeNotFound = Error.NotFound("Attachments.FileTypeNotFound", "The specified document file type does not exist.");
+        public static readonly Error FileTypeInactive = Error.Conflict("Attachments.FileTypeInactive", "The specified document file type is inactive.");
+        public static readonly Error StorageProviderNotFound = Error.NotFound("Attachments.StorageProviderNotFound", "No file storage provider is configured.");
+        public static readonly Error StorageProviderInactive = Error.Conflict("Attachments.StorageProviderInactive", "The file storage provider is inactive.");
+        public static readonly Error FileEmpty = Error.Validation("Attachments.FileEmpty", "The uploaded file is empty.");
+        public static readonly Error FileTooLarge = Error.Validation("Attachments.FileTooLarge", "The uploaded file exceeds the maximum size allowed for its file type.");
+        public static readonly Error ExtensionNotAllowed = Error.Validation("Attachments.ExtensionNotAllowed", "The file extension is not allowed for this document file type.");
+        public static readonly Error SignatureMismatch = Error.Validation("Attachments.SignatureMismatch", "The file content does not match its extension (magic-byte check failed).");
+        public static readonly Error FileAlreadyArchived = Error.Conflict("Attachments.FileAlreadyArchived", "The document file is already archived.");
     }
 
     public static class Relations

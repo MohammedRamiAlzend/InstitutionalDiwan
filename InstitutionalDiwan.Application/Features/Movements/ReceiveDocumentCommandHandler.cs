@@ -33,6 +33,10 @@ internal sealed class ReceiveDocumentCommandHandler
         if (movement is null)
             return Result.Failure<MovementStepReceiptResponse>(DomainErrors.Movements.MovementNotFound);
 
+        var stepGuard = MovementStepGuard.EnsureCurrent(movement, request.StepId);
+        if (stepGuard.IsFailure)
+            return Result.Failure<MovementStepReceiptResponse>(stepGuard.Error);
+
         var document = await _documentRepository.GetWithNumbersAsync(movement.DocumentId, cancellationToken);
         if (document is null)
             return Result.Failure<MovementStepReceiptResponse>(DomainErrors.Correspondence.DocumentNotFound);

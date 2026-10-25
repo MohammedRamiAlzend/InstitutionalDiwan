@@ -2,7 +2,8 @@
 
 > **Status:** Implemented — `DependencyInjection.cs`, `Abstractions/` (messaging + authentication),
 > `Behaviors/ValidationPipelineBehavior.cs`, and the live feature slices under `Features/`
-> (Lookups, Organization, Identity, Correspondence, Numbering, Movements routing workflow + inbox/outbox) are in place.
+> (Lookups, Organization, Identity, Correspondence, Numbering, Movements routing workflow + inbox/outbox,
+> and Attachments) are in place.
 
 ## Purpose
 
@@ -25,7 +26,7 @@ plain unit test with in-memory/fake repositories.
 
 | Folder | Responsibility |
 | --- | --- |
-| [`Abstractions/`](Abstractions/README.md) | Interfaces the infrastructure must implement (messaging, auth) + the planned data/storage/caching/clock contracts. |
+| [`Abstractions/`](Abstractions/README.md) | Interfaces the infrastructure must implement (messaging, auth, authorization, storage) + the planned data/caching contracts. |
 | [`Behaviors/`](Behaviors/README.md) | MediatR `IPipelineBehavior` classes — `ValidationPipelineBehavior` is live; logging/transaction/caching are planned. |
 | [`Common/`](Common/README.md) | Shared response shapes — `PagedResult<T>` is the wire contract for every paged list endpoint. |
 | [`Exceptions/`](Exceptions/README.md) | Technical/pipeline exceptions (validation fan-out, optimistic-concurrency conflicts). |
@@ -41,9 +42,9 @@ assembly scan; `Program.cs` calls it alongside `AddInfrastructure()`.
 
 | Item | State |
 | --- | --- |
-| Commands / Queries / Validators / DTOs | ✅ Implemented (Lookups, Organization/Departments, Identity/Users·Roles·Permissions·Employees·AccessGrants·Login·Register·ChangePassword, Correspondence/Documents) |
+| Commands / Queries / Validators / DTOs | ✅ Implemented (Lookups, Organization/Departments, Identity/Users·Roles·Permissions·Employees·AccessGrants·Login·Register·ChangePassword, Correspondence/Documents, Movements, Attachments) |
 | Pipeline behaviors | 🟡 `ValidationPipelineBehavior` implemented; logging/transaction/caching planned |
-| Abstractions | 🟡 `Messaging/` + `Authentication/` implemented; data/storage/caching/clock planned |
+| Abstractions | 🟡 `Messaging/`, `Authentication/`, `Authorization/`, and `Storage/` implemented; data/caching planned |
 | `DependencyInjection.cs` | ✅ Implemented (`AddApplication`) |
 | `Common/PagedResult<T>` | ✅ Implemented (paged list wire shape) |
 | `Class1.cs` placeholder | 🗑️ Removed |
@@ -55,6 +56,7 @@ See each subfolder's README for the full design and per-folder status tables.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-25 | opencode | Added the Module 06 Attachments slice and the `Abstractions/Storage` contracts; every operation checks document access (VIEW/DOWNLOAD/MANAGE) and uploads carry a streamed SHA-256 checksum. |
 | 2026-10-22 | Buffy | Added `Identity/Login/GetUserProfileQuery` (the `/api/auth/me` use case) and `Correspondence/Documents/ListDepartmentDocumentsQuery`; every mutating handler now passes `IUnitOfWork.UtcNow` to the aggregate it touches. |
 | 2026-10-22 | opencode | Added `Common/PagedResult<T>` and made the four unbounded list queries return it; filtering, sorting, and paging now run in the repositories. |
 | 2026-10-21 | opencode | Completed `Features/Movements/`: the routing workflow commands (open/send/complete/reject/return/redirect/close/cancel), the movement queries, and the department inbox/outbox. |

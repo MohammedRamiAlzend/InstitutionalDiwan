@@ -10,7 +10,8 @@ namespace InstitutionalDiwan.Application.Features.Movements;
 public sealed record ReceiveDocumentCommand(
     Guid MovementId,
     Guid UserId,
-    string? Notes = null) : ICommand<MovementStepReceiptResponse>;
+    string? Notes = null,
+    Guid? StepId = null) : ICommand<MovementStepReceiptResponse>;
 
 /// <summary>What a completed receipt recorded.</summary>
 public sealed record MovementStepReceiptResponse(

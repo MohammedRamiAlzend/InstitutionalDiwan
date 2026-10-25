@@ -1,8 +1,10 @@
 # InstitutionalDiwan.Tests — xUnit test suite
 
-> **Status:** Implemented — 312 tests covering domain handlers, department register numbering, the
-> receipt gate, the movement routing workflow, the department inbox/outbox, seeding, authorization,
-> paging/search/filtering, the caller profile, deterministic time, and the generic lookups API.
+> **Status:** Implemented — 348 tests covering domain handlers, department register numbering, the
+> receipt gate, the movement routing workflow (including the Central Diwan hub and rejection routing),
+> the department inbox/outbox, attachments (atomic first upload, versions, SHA-256 streaming, magic
+> bytes), movement participation, seeding, authorization, paging/search/filtering, the caller
+> profile, deterministic time, and the generic lookups API.
 
 ## Purpose
 
@@ -14,8 +16,9 @@ indexes) runs against a private SQLite in-memory database through `Support/TestC
 
 | Folder | Contents |
 | --- | --- |
-| `Application/` | Handler/validator tests per slice — Identity (users, roles, permissions, employees, access grants, login/register/change password, `GetUserProfileQueryHandlerTests`), Organization/Departments + `InstitutionSettingsHandlerTests`, Correspondence/`Documents` (`DocumentLifecycleHandlerTests`, `ListDepartmentDocumentsQueryHandlerTests`) + `ExternalOrganizationsHandlerTests`, Numbering (`OfficialNumberLifecycleHandlerTests`, `DepartmentRegisterNumberingTests`), Movements (`MovementWorkflowHandlerTests`), `UnitOfWorkClockTests` (handler-stamped times come from `IUnitOfWork.UtcNow`), and `LookupHandlerTests.cs`. |
-| `Authorization/` | `PermissionAuthorizationHandlerTests` (policy handler + `Permissions.All` integrity), `DepartmentScopeEvaluatorTests` (primary department, institution/dept-tree scope, temporal assignments incl. `IncludeSubtree` and ended assignments), `DocumentAccessEvaluatorTests` (authorship, grants incl. revoked, scope, confidentiality, anonymous). |
+| `Application/` | Handler/validator tests per slice — Identity (users, roles, permissions, employees, access grants, login/register/change password, `GetUserProfileQueryHandlerTests`), Organization/Departments + `InstitutionSettingsHandlerTests`, Correspondence/`Documents` (`DocumentLifecycleHandlerTests`, `ListDepartmentDocumentsQueryHandlerTests`) + `ExternalOrganizationsHandlerTests`, Numbering (`OfficialNumberLifecycleHandlerTests`, `DepartmentRegisterNumberingTests`), Movements (`MovementWorkflowHandlerTests`), Attachments (`AttachmentHandlerTests`), `UnitOfWorkClockTests` (handler-stamped times come from `IUnitOfWork.UtcNow`), and `LookupHandlerTests.cs`. |
+| `Storage/` | `LocalFileStorageServiceTests` (layout, streamed checksum, read-back, root-escape guard) and `FileSignatureValidatorTests` (PDF/PNG/JPEG/TIFF/ZIP/OLE/SVG magic bytes, extension allow-list, size limit). |
+| `Authorization/` | `PermissionAuthorizationHandlerTests` (policy handler + `Permissions.All` integrity), `DepartmentScopeEvaluatorTests` (primary department, institution/dept-tree scope, temporal assignments incl. `IncludeSubtree` and ended assignments), `DocumentAccessEvaluatorTests` (authorship, grants incl. revoked, scope, confidentiality, movement participation, anonymous). |
 | `Persistence/` | `DocumentMovementRepositoryTests` — the inbox/outbox queries against a real SQLite database, so the SQL EF Core generates for the correlated current-step filters is verified and not only the in-memory fake. |
 | `Server/` | `OpenApiDocumentationTests` — every controller endpoint must carry an `[EndpointSummary]`, an `[EndpointDescription]`, and a `<param>` description with an example. |
 | `Seed/` | Seeder and pipeline tests — `PermissionSeederTests`, `RoleSeederTests`, `UserSeederTests`, `DepartmentTypeSeederTests`, `SeederRunnerTests`, `SeedingPipelineTests`. |
@@ -45,13 +48,24 @@ indexes) runs against a private SQLite in-memory database through `Support/TestC
   stamped with the register number).
 - `MovementWorkflowHandlerTests` covers the routing workflow end to end: opening a movement (only a
   REGISTERED document, one active movement per document, the source department taken from the caller),
-  send, receive, complete, reject, return, redirect, close, and cancel — plus the movement queries and
-  the department inbox/outbox (the document waiting for the destination, the document still out, and a
-  department outside the caller's scope → 403).
+  the Central Diwan hub (ordinary → ordinary refused, ordinary → hub allowed, redirect re-checked),
+  send, receive, complete, reject (routed back to the hub as a new sent step; a hub rejection stays
+  rejected), return, redirect, close, and cancel, plus a stale step id → 409 — plus the movement
+  queries and the department inbox/outbox (the document waiting for the destination, the document
+  still out, and a department outside the caller's scope → 403).
 - `DocumentMovementRepositoryTests` runs the inbox/outbox queries against SQLite: a sent movement lands
   in the destination's inbox and the sender's outbox, a draft lands in neither, a closed movement lands
   in neither, a rejected document comes back to the sender's inbox, and a redirect moves the custody —
   the new destination gets the inbox, the redirecting department keeps the outbox.
+- `AttachmentHandlerTests` covers Module 06: creating a file (MANAGE required), the atomic first upload
+  (file + version 1 in one save), uploading a version (checksum recorded, current version flipped,
+  invalid signature and archived file refused), downloading (DOWNLOAD required), verifying checksums,
+  and listing a document's files.
+- `DocumentAccessEvaluatorTests` covers movement participation: the current step's sender/receiver
+  gets VIEW/DOWNLOAD outside the owning department, a draft step grants nothing, and a confidential
+  document still requires an explicit grant.
+- `LocalFileStorageServiceTests` writes real temp files to prove the `{Year}/{Month}/{DocumentId}`
+  layout, one-pass SHA-256, read-back, missing-file behaviour, and refusal of a `../` path escape.
 - `SeedingPipelineTests` runs the full ordered seeder set per environment and asserts the resulting
   permission/role/lookup counts, including idempotency on repeated runs.
 
@@ -59,6 +73,8 @@ indexes) runs against a private SQLite in-memory database through `Support/TestC
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-25 | opencode | Added coverage for the missing Module 02/05/06 gaps: Central Diwan routing, rejection routing to the hub, stale-step refusal, movement participation, and the atomic first upload. 338 → 348 tests. |
+| 2026-10-25 | opencode | Added Module 06 coverage: `Application/AttachmentHandlerTests` (create/upload/archive/list/download/verify), `Storage/LocalFileStorageServiceTests`, and `Storage/FileSignatureValidatorTests`, with shared attachment fakes. 312 → 338 tests. |
 | 2026-10-22 | Buffy | Added `GetUserProfileQueryHandlerTests` (authenticated projection + unauthenticated 401), `ListDepartmentDocumentsQueryHandlerTests` (department filter, paging, 404, out-of-scope 403), and `UnitOfWorkClockTests` (document, numbering, and login writes all carry the unit of work's instant). 303 → 312 tests. |
 | 2026-10-22 | opencode | Extended the list-handler tests for the paged contracts (documents, users, employees, external organizations) with cases for paging, clamping, search, sorting, and filtering; the fakes now implement `ListPagedAsync`. 294 → 303 tests. |
 | 2026-10-21 | opencode | Added `Application/MovementWorkflowHandlerTests` (routing workflow + inbox/outbox) and `Persistence/DocumentMovementRepositoryTests` (the queue queries against SQLite); extended `FakeDocumentMovementRepository` with the list/queue members. |

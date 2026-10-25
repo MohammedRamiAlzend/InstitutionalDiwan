@@ -14,6 +14,7 @@ internal sealed class CreateMovementCommandHandler
     private readonly IDocumentRepository _documentRepository;
     private readonly IDepartmentRepository _departmentRepository;
     private readonly IUserRepository _userRepository;
+    private readonly CentralDiwanRouting _centralDiwanRouting;
     private readonly IUnitOfWork _unitOfWork;
 
     public CreateMovementCommandHandler(
@@ -21,12 +22,14 @@ internal sealed class CreateMovementCommandHandler
         IDocumentRepository documentRepository,
         IDepartmentRepository departmentRepository,
         IUserRepository userRepository,
+        CentralDiwanRouting centralDiwanRouting,
         IUnitOfWork unitOfWork)
     {
         _movementRepository = movementRepository;
         _documentRepository = documentRepository;
         _departmentRepository = departmentRepository;
         _userRepository = userRepository;
+        _centralDiwanRouting = centralDiwanRouting;
         _unitOfWork = unitOfWork;
     }
 
@@ -58,6 +61,11 @@ internal sealed class CreateMovementCommandHandler
 
         if (!destination.IsActive)
             return Result.Failure<MovementResponse>(DomainErrors.Department.Inactive);
+
+        var routeResult = await _centralDiwanRouting.ValidateRouteAsync(
+            user.PrimaryDepartmentId, destination.DepartmentId, cancellationToken);
+        if (routeResult.IsFailure)
+            return Result.Failure<MovementResponse>(routeResult.Error);
 
         if (request.AssignedToUserId is { } assignedToUserId)
         {

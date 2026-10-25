@@ -159,7 +159,16 @@ public sealed class DocumentMovement : AggregateRoot<Guid>
         return Result.Success();
     }
 
-    public Result RejectStep(Guid actorUserId, string? reason, DateTime? utcNow = null)
+    /// <summary>
+    /// Rejects the current step. When a Central Diwan department is supplied and the rejecting
+    /// department is not the Central Diwan itself, the rejection is routed back to the Central
+    /// Diwan as a new sent step so it can resolve the case administratively.
+    /// </summary>
+    public Result RejectStep(
+        Guid actorUserId,
+        string? reason,
+        Guid? centralDiwanDepartmentId = null,
+        DateTime? utcNow = null)
     {
         var now = utcNow ?? DateTime.UtcNow;
         if (StatusId is not (StatusSent or StatusReceived or StatusInProgress))
@@ -172,10 +181,46 @@ public sealed class DocumentMovement : AggregateRoot<Guid>
         if (step is null)
             return Result.Failure(DomainErrors.Movements.NoActiveStep);
 
-        step.MarkRejected(reason.Trim(), now);
+        var trimmedReason = reason.Trim();
+        step.MarkRejected(trimmedReason, now);
         StatusId = StatusRejected;
-        AppendEvent(CurrentStepNo, MovementEventType.RejectedId, actorUserId, reason.Trim(), now);
-        RaiseDomainEvent(new MovementRejectedEvent(MovementId, DocumentId, CurrentStepNo, actorUserId, reason.Trim()));
+        AppendEvent(CurrentStepNo, MovementEventType.RejectedId, actorUserId, trimmedReason, now);
+        RaiseDomainEvent(new MovementRejectedEvent(
+            MovementId, DocumentId, CurrentStepNo, actorUserId, trimmedReason));
+
+        if (centralDiwanDepartmentId is not { } centralDepartmentId ||
+            centralDepartmentId == Guid.Empty ||
+            centralDepartmentId == step.ToDepartmentId)
+        {
+            return Result.Success();
+        }
+
+        var nextStepNo = CurrentStepNo + 1;
+        var centralStep = DocumentMovementStep.Create(
+            MovementId,
+            nextStepNo,
+            step.ToDepartmentId,
+            centralDepartmentId,
+            instructions: $"Rejected: {trimmedReason}");
+
+        _steps.Add(centralStep);
+        CurrentStepNo = nextStepNo;
+        DestinationDepartmentId = centralDepartmentId;
+        AssignedToUserId = null;
+        centralStep.MarkSent(now);
+
+        // The rejected step is immutable history; the movement itself is active again while the
+        // Central Diwan holds the document.
+        StatusId = StatusSent;
+        AppendEvent(
+            nextStepNo,
+            MovementEventType.RedirectedId,
+            actorUserId,
+            $"Rejected step routed to the Central Diwan: {trimmedReason}",
+            now);
+        RaiseDomainEvent(new MovementRedirectedEvent(
+            MovementId, DocumentId, nextStepNo, centralDepartmentId, actorUserId));
+
         return Result.Success();
     }
 

@@ -1,47 +1,55 @@
 # Infrastructure / Storage
 
-> **Status:** Target design — **no code yet**.
+> **Status:** Implemented — local file-system storage, streamed SHA-256 checksums, and magic-byte
+> validation are live. S3-compatible storage is still optional/planned.
 
 ## Purpose
 
 Implements physical binary file storage and cryptographic verification for Module 06
-(Attachments & Files), satisfying `IFileStorageService`.
+(Attachments & Files), satisfying `Application/Abstractions/Storage/IFileStorageService` and
+`IFileSignatureValidator`.
 
-## Planned components
+## Contents
 
-### `LocalFileStorageService.cs` (`: IFileStorageService`)
-Stores uploaded document scans and attachments on disk under a partitioned path
-`{Year}/{Month}/{DocumentId}/{VersionId}.ext`, resolved from
-`FILE_STORAGE_PROVIDERS.BasePathOrEndpoint`. It computes the **SHA-256 checksum** (64 hex characters)
-while streaming the upload and passes it to `DocumentFile.AddVersion(...)`.
+| File | Purpose |
+| --- | --- |
+| `LocalFileStorageService.cs` | Stores uploads on disk under `{Year}/{Month}/{DocumentId}/{Random}.ext` and computes the **SHA-256 checksum** while streaming the bytes (one pass). Also opens stored files for reading, refusing paths that escape the configured root, and exposes `ComputeSha256Async`. |
+| `FileSignatureValidator.cs` | Validates an upload against `DocumentFileType.AllowedExtensionsCsv` and `MaxFileSizeBytes`, then checks the **magic bytes** for PDF, PNG, JPEG, TIFF, ZIP-based Office (`docx`/`xlsx`/`pptx`/`zip`), legacy OLE Office (`doc`/`xls`/`ppt`), and SVG; a renamed executable is rejected with `Attachments.SignatureMismatch`. |
 
-### `S3CompatibleStorageService.cs` (optional)
-Implements the same contract for MinIO / S3 object storage when `ProviderType == "S3"`.
+## Selected provider
 
-### `FileSignatureValidator.cs`
-Validates file **magic bytes** (PDF, TIFF, PNG, JPEG) against
-`DocumentFileType.AllowedExtensionsCsv` and enforces `MaxFileSizeBytes` before anything is persisted.
+`FILE_STORAGE_PROVIDERS` holds `Code`, `ProviderType` (`LOCAL` / `S3` / `MINIO`),
+`BasePathOrEndpoint`, `IsDefault`, and `IsActive`. The upload handler resolves the active row with
+`IsDefault = true` (falling back to the first active row); downloads resolve the provider recorded on
+the `DocumentFileVersion`. A relative `BasePathOrEndpoint` such as the seeded `storage/documents` is
+anchored at the application directory.
+
+## Path layout and safety
+
+```
+{BasePathOrEndpoint}/{yyyy}/{MM}/{DocumentId}/{random-guid}{ext}
+```
+
+`OpenReadAsync` resolves the relative path under the root and rejects any path that would escape it
+(`UnauthorizedAccessException`), so a tampered database row cannot read arbitrary files.
 
 ## Domain contract it satisfies
 
-`DocumentFile.AddVersion(storageProviderCode, relativePath, originalFileName, mimeType, fileSizeBytes,
-checksumSha256, uploadedByUserId, changeNotes)` already validates the checksum format (exactly 64 hex
-chars), positivity of the size, and version sequencing. The storage service must supply a matching
-checksum or the domain will reject the version.
-
-## Selection of provider
-
-`FILE_STORAGE_PROVIDERS` holds `Code`, `ProviderType` (`LOCAL` / `S3` / `MINIO`),
-`BasePathOrEndpoint`, `IsDefault`, and `IsActive`. Pick the row with `IsDefault = true` (or resolve by
-code) when a file is stored.
+`DocumentFile.AddVersion(storageProviderId, relativePath, originalFileName, mimeType, fileSizeBytes,
+checksumSha256, uploadedByUserId, changeNotes)` validates the provider id, path, positive size,
+64-hex checksum, and version sequencing. The storage service returns exactly that checksum; the
+domain remains the final guard.
 
 ## Implementation status
 
 | Component | State |
 | --- | --- |
-| `LocalFileStorageService` | ❌ Not implemented |
-| `S3CompatibleStorageService` | ❌ Not implemented |
-| `FileSignatureValidator` | ❌ Not implemented |
+| `LocalFileStorageService` | ✅ Implemented (streamed SHA-256, safe root resolution) |
+| `FileSignatureValidator` | ✅ Implemented (extension, size, magic bytes) |
+| `S3CompatibleStorageService` | ❌ Not implemented (planned for MinIO/S3; MinIO/S3 provider rows are seeded but no service resolves them yet) |
 
-The `FILE_STORAGE_PROVIDERS` table and `DocumentFile` invariants are configured, but no storage code
-exists and no path/base configuration is present in `appsettings.json` yet.
+## Change Log
+
+| Date | Author | Change |
+| --- | --- | --- |
+| 2026-10-25 | opencode | Implemented Module 06 storage: `LocalFileStorageService` (one-pass SHA-256, `{Year}/{Month}/{DocumentId}` layout, root-escape guard) and `FileSignatureValidator` (extension allow-list, size limit, magic bytes). |

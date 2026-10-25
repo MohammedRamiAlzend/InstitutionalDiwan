@@ -1,5 +1,6 @@
 using InstitutionalDiwan.Application.Abstractions.Authentication;
 using InstitutionalDiwan.Application.Abstractions.Authorization;
+using InstitutionalDiwan.Application.Abstractions.Storage;
 using InstitutionalDiwan.Domain.Common;
 using InstitutionalDiwan.Domain.Repositories;
 using InstitutionalDiwan.Infrastructure.Authentication;
@@ -7,6 +8,7 @@ using InstitutionalDiwan.Infrastructure.Authorization;
 using InstitutionalDiwan.Infrastructure.Persistence;
 using InstitutionalDiwan.Infrastructure.Persistence.Repositories;
 using InstitutionalDiwan.Infrastructure.Persistence.Seed;
+using InstitutionalDiwan.Infrastructure.Storage;
 using InstitutionalDiwan.Infrastructure.Time;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -48,6 +50,14 @@ public static class DependencyInjection
         services.AddScoped<IInstitutionSettingRepository, InstitutionSettingRepository>();
         services.AddScoped<IExternalOrganizationRepository, ExternalOrganizationRepository>();
         services.AddScoped<IDocumentMovementRepository, DocumentMovementRepository>();
+        services.AddScoped<IDocumentFileRepository, DocumentFileRepository>();
+        services.AddScoped<IDocumentFileTypeRepository, DocumentFileTypeRepository>();
+        services.AddScoped<IFileStorageProviderRepository, FileStorageProviderRepository>();
+
+        // Module 06 physical storage: local file system + magic-byte validation, both consumed by
+        // the Attachments handlers through Application abstractions.
+        services.AddSingleton<IFileStorageService, LocalFileStorageService>();
+        services.AddSingleton<IFileSignatureValidator, FileSignatureValidator>();
 
         // Ambient request identity and the three-tier access evaluators (RBAC → scope → document).
         services.AddHttpContextAccessor();

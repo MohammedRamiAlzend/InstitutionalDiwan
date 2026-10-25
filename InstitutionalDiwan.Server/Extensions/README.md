@@ -12,7 +12,7 @@ consistently shaped.
 
 | File | Purpose |
 | --- | --- |
-| `ResultExtensions.cs` | Maps `Result` / `Result<T>` to `IActionResult`, turning `ErrorType` into an HTTP status code and an RFC 7807 `ProblemDetails` body. The single place where domain outcomes become HTTP. |
+| `ResultExtensions.cs` | Maps `Result` / `Result<T>` to `IActionResult`, turning `ErrorType` into an HTTP status code and an RFC 7807 `ProblemDetails` body. The single place where domain outcomes become HTTP. Also exposes `Error.ToActionResult()` for endpoints that return a non-JSON success payload (the attachment download stream). |
 | `DatabaseExtensions.cs` | `InitializeDatabaseAsync`: applies pending migrations in Development (other environments only seed when the database is reachable) and then runs the registered `ISeeder`s through `SeederRunner`, ordered by `Order` and filtered by each seeder's declared environments. |
 | `AuthenticationExtensions.cs` | `AddInstitutionalAuthentication`: JWT bearer setup (issuer/audience/key from configuration) plus one authorization policy per `Permissions.All` entry and the `PermissionAuthorizationHandler`. |
 | `OpenApiExtensions.cs` | `AddInstitutionalOpenApi`: registers the OpenAPI document, the Bearer security scheme transformer, and the Scalar API reference used in Development. |
@@ -53,5 +53,6 @@ The `ProblemDetails` body carries the domain error code as `Title` and its descr
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-25 | opencode | Added `Error.ToActionResult()` so `DocumentFilesController.Download` can return a file stream on success and still map domain errors to ProblemDetails. |
 | 2026-10-19 | opencode | Recorded the four implemented extension files with a Contents table and corrected the implementation status (the README reported every component as not implemented and referred to a `SwaggerExtensions`/`MigrationExtensions` that do not exist). |
 | 2026-10-18 | opencode | `DatabaseExtensions.InitializeDatabaseAsync` now runs ordered, environment-aware seeders instead of a fixed sequence. |

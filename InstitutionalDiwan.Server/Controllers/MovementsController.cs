@@ -515,6 +515,223 @@ public sealed class MovementsController : ControllerBase
         return result.ToActionResult();
     }
 
+    /// <summary>Lists every movement of a document using the planned document-scoped route.</summary>
+    /// <param name="documentId">Document unique identifier (GUID, route). Example: <c>7c9e3b42-8a61-4d52-9f17-2ab85c6e7934</c>.</param>
+    /// <param name="cancellationToken">Request cancellation token (optional).</param>
+    /// <response code="200">The document's movements, newest first.</response>
+    /// <response code="401">The token is missing, expired, or invalid.</response>
+    /// <response code="403">The token lacks the DOCUMENT_VIEW permission.</response>
+    [HttpGet("/api/documents/{documentId:guid}/movements")]
+    [EndpointSummary("Lists every movement of a document using the planned document-scoped route.")]
+    [EndpointDescription("Lists every movement of a document, newest first, with its steps and events. This is the planned alias of GET /api/movements/by-document/{documentId}. Requires the DOCUMENT_VIEW permission. Responses: 200 (The document's movements, newest first.), 401 (The token is missing, expired, or invalid.), 403 (The token lacks the DOCUMENT_VIEW permission.)")]
+    [Authorize(Policy = Permissions.DocumentView)]
+    [ProducesResponseType<IReadOnlyCollection<MovementResponse>>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden)]
+    public Task<IActionResult> ListByDocumentScoped(
+        [Description("Document unique identifier (GUID, route). Example: 7c9e3b42-8a61-4d52-9f17-2ab85c6e7934.")] Guid documentId,
+        CancellationToken cancellationToken)
+        => ListByDocument(documentId, cancellationToken);
+
+    /// <summary>Lists a department's inbox using the planned department-scoped route.</summary>
+    /// <param name="departmentId">Department unique identifier (GUID, route). Example: <c>e7a62f43-9b82-4d01-8c2e-7ab91e506d42</c>.</param>
+    /// <param name="cancellationToken">Request cancellation token (optional).</param>
+    /// <response code="200">The department inbox.</response>
+    /// <response code="401">The token is missing, expired, or invalid.</response>
+    /// <response code="403">The token lacks DOCUMENT_VIEW, or the department is outside the caller's scope.</response>
+    /// <response code="404">The caller's user account was not found.</response>
+    [HttpGet("/api/departments/{departmentId:guid}/inbox")]
+    [EndpointSummary("Lists a department's inbox using the planned department-scoped route.")]
+    [EndpointDescription("Lists the documents waiting in a department's inbox. This is the planned alias of GET /api/movements/inbox. The department must be inside the caller's organizational scope. Requires the DOCUMENT_VIEW permission. Responses: 200 (The department inbox.), 401 (The token is missing, expired, or invalid.), 403 (The token lacks DOCUMENT_VIEW, or the department is outside the caller's scope.), 404 (The caller's user account was not found.)")]
+    [Authorize(Policy = Permissions.DocumentView)]
+    [ProducesResponseType<IReadOnlyCollection<MovementQueueItemResponse>>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    public Task<IActionResult> InboxScoped(
+        [Description("Department unique identifier (GUID, route). Example: e7a62f43-9b82-4d01-8c2e-7ab91e506d42.")] Guid departmentId,
+        CancellationToken cancellationToken)
+        => Inbox(departmentId, cancellationToken);
+
+    /// <summary>Lists a department's outbox using the planned department-scoped route.</summary>
+    /// <param name="departmentId">Department unique identifier (GUID, route). Example: <c>e7a62f43-9b82-4d01-8c2e-7ab91e506d42</c>.</param>
+    /// <param name="cancellationToken">Request cancellation token (optional).</param>
+    /// <response code="200">The department outbox.</response>
+    /// <response code="401">The token is missing, expired, or invalid.</response>
+    /// <response code="403">The token lacks DOCUMENT_VIEW, or the department is outside the caller's scope.</response>
+    /// <response code="404">The caller's user account was not found.</response>
+    [HttpGet("/api/departments/{departmentId:guid}/outbox")]
+    [EndpointSummary("Lists a department's outbox using the planned department-scoped route.")]
+    [EndpointDescription("Lists the documents a department sent out and that are still elsewhere. This is the planned alias of GET /api/movements/outbox. The department must be inside the caller's organizational scope. Requires the DOCUMENT_VIEW permission. Responses: 200 (The department outbox.), 401 (The token is missing, expired, or invalid.), 403 (The token lacks DOCUMENT_VIEW, or the department is outside the caller's scope.), 404 (The caller's user account was not found.)")]
+    [Authorize(Policy = Permissions.DocumentView)]
+    [ProducesResponseType<IReadOnlyCollection<MovementQueueItemResponse>>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    public Task<IActionResult> OutboxScoped(
+        [Description("Department unique identifier (GUID, route). Example: e7a62f43-9b82-4d01-8c2e-7ab91e506d42.")] Guid departmentId,
+        CancellationToken cancellationToken)
+        => Outbox(departmentId, cancellationToken);
+
+    /// <summary>Receives a named step when it is the movement's current step.</summary>
+    /// <param name="movementId">Movement unique identifier (GUID, route). Example: <c>1a9d4e7b-2c58-4f3a-8e61-9b0d7c2f5a84</c>.</param>
+    /// <param name="stepId">Movement step unique identifier (GUID, route). Example: <c>9e2b7c41-6d55-4f08-a3c9-8b7d1e52a640</c>.</param>
+    /// <param name="request">
+    /// The request payload with the following fields:
+    /// <list type="bullet">
+    /// <item><term>notes</term><description>Notes (string, optional). Example: <c>تم الاستلام</c>.</description></item>
+    /// </list>
+    /// </param>
+    /// <param name="cancellationToken">Request cancellation token (optional).</param>
+    /// <response code="200">The recorded receipt.</response>
+    /// <response code="401">The token is missing, expired, or invalid.</response>
+    /// <response code="403">The token lacks the DOCUMENT_EDIT permission.</response>
+    /// <response code="404">No movement with that id exists.</response>
+    /// <response code="409">The step is not current or awaiting receipt, or the department register entry is missing.</response>
+    [HttpPost("{movementId:guid}/steps/{stepId:guid}/receive")]
+    [EndpointSummary("Receives a named step when it is the movement's current step.")]
+    [EndpointDescription("Receives a named step when it is the movement's current step. The destination department must first record its own register number. Requires the DOCUMENT_EDIT permission. Responses: 200 (The recorded receipt.), 401 (The token is missing, expired, or invalid.), 403 (The token lacks the DOCUMENT_EDIT permission.), 404 (No movement with that id exists.), 409 (The step is not current or awaiting receipt, or the department register entry is missing.)")]
+    [Authorize(Policy = Permissions.DocumentEdit)]
+    [ProducesResponseType<MovementStepReceiptResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> ReceiveStep(
+        [Description("Movement unique identifier (GUID, route). Example: 1a9d4e7b-2c58-4f3a-8e61-9b0d7c2f5a84.")] Guid movementId,
+        [Description("Movement step unique identifier (GUID, route). Example: 9e2b7c41-6d55-4f08-a3c9-8b7d1e52a640.")] Guid stepId,
+        [FromBody] ReceiveDocumentRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (CurrentUserId is not { } userId)
+            return Unauthorized();
+
+        var result = await _sender.Send(
+            new ReceiveDocumentCommand(movementId, userId, request.Notes, stepId), cancellationToken);
+        return result.ToActionResult();
+    }
+
+    /// <summary>Completes a named step when it is the movement's current step.</summary>
+    /// <param name="movementId">Movement unique identifier (GUID, route). Example: <c>1a9d4e7b-2c58-4f3a-8e61-9b0d7c2f5a84</c>.</param>
+    /// <param name="stepId">Movement step unique identifier (GUID, route). Example: <c>9e2b7c41-6d55-4f08-a3c9-8b7d1e52a640</c>.</param>
+    /// <param name="request">
+    /// The request payload with the following fields:
+    /// <list type="bullet">
+    /// <item><term>notes</term><description>Outcome notes (string, optional). Example: <c>انتهى</c>.</description></item>
+    /// </list>
+    /// </param>
+    /// <param name="cancellationToken">Request cancellation token (optional).</param>
+    /// <response code="200">The completed movement.</response>
+    /// <response code="401">The token is missing, expired, or invalid.</response>
+    /// <response code="403">The token lacks the DOCUMENT_EDIT permission.</response>
+    /// <response code="404">No movement with that id exists.</response>
+    /// <response code="409">The step is not current, was not received, or the movement is terminal.</response>
+    [HttpPost("{movementId:guid}/steps/{stepId:guid}/complete")]
+    [EndpointSummary("Completes a named step when it is the movement's current step.")]
+    [EndpointDescription("Completes a named step when it is the movement's current step. Only a received step can be completed. Requires the DOCUMENT_EDIT permission. Responses: 200 (The completed movement.), 401 (The token is missing, expired, or invalid.), 403 (The token lacks the DOCUMENT_EDIT permission.), 404 (No movement with that id exists.), 409 (The step is not current, was not received, or the movement is terminal.)")]
+    [Authorize(Policy = Permissions.DocumentEdit)]
+    [ProducesResponseType<MovementResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> CompleteStep(
+        [Description("Movement unique identifier (GUID, route). Example: 1a9d4e7b-2c58-4f3a-8e61-9b0d7c2f5a84.")] Guid movementId,
+        [Description("Movement step unique identifier (GUID, route). Example: 9e2b7c41-6d55-4f08-a3c9-8b7d1e52a640.")] Guid stepId,
+        [FromBody] CompleteMovementStepRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (CurrentUserId is not { } userId)
+            return Unauthorized();
+
+        var result = await _sender.Send(
+            new CompleteMovementStepCommand(movementId, userId, request.Notes, stepId),
+            cancellationToken);
+        return result.ToActionResult();
+    }
+
+    /// <summary>Rejects a named step and routes it to the Central Diwan.</summary>
+    /// <param name="movementId">Movement unique identifier (GUID, route). Example: <c>1a9d4e7b-2c58-4f3a-8e61-9b0d7c2f5a84</c>.</param>
+    /// <param name="stepId">Movement step unique identifier (GUID, route). Example: <c>9e2b7c41-6d55-4f08-a3c9-8b7d1e52a640</c>.</param>
+    /// <param name="request">
+    /// The request payload with the following fields:
+    /// <list type="bullet">
+    /// <item><term>reason</term><description>Reason (string, required). Example: <c>غير مطابق</c>.</description></item>
+    /// </list>
+    /// </param>
+    /// <param name="cancellationToken">Request cancellation token (optional).</param>
+    /// <response code="200">The rejected movement, routed to the Central Diwan when needed.</response>
+    /// <response code="400">The reason is missing.</response>
+    /// <response code="401">The token is missing, expired, or invalid.</response>
+    /// <response code="403">The token lacks the DOCUMENT_EDIT permission.</response>
+    /// <response code="404">No movement with that id exists.</response>
+    /// <response code="409">The step is not current or rejectable, or the Central Diwan is not configured.</response>
+    [HttpPost("{movementId:guid}/steps/{stepId:guid}/reject")]
+    [EndpointSummary("Rejects a named step and routes it to the Central Diwan.")]
+    [EndpointDescription("Rejects a named step when it is the movement's current step. The rejection is recorded, and a new step back to the configured Central Diwan is opened unless the rejecting department is the Central Diwan itself. Requires the DOCUMENT_EDIT permission. Responses: 200 (The rejected movement, routed to the Central Diwan when needed.), 400 (The reason is missing.), 401 (The token is missing, expired, or invalid.), 403 (The token lacks the DOCUMENT_EDIT permission.), 404 (No movement with that id exists.), 409 (The step is not current or rejectable, or the Central Diwan is not configured.)")]
+    [Authorize(Policy = Permissions.DocumentEdit)]
+    [ProducesResponseType<MovementResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> RejectStep(
+        [Description("Movement unique identifier (GUID, route). Example: 1a9d4e7b-2c58-4f3a-8e61-9b0d7c2f5a84.")] Guid movementId,
+        [Description("Movement step unique identifier (GUID, route). Example: 9e2b7c41-6d55-4f08-a3c9-8b7d1e52a640.")] Guid stepId,
+        [FromBody] RejectMovementStepRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (CurrentUserId is not { } userId)
+            return Unauthorized();
+
+        var result = await _sender.Send(
+            new RejectMovementStepCommand(movementId, userId, request.Reason, stepId),
+            cancellationToken);
+        return result.ToActionResult();
+    }
+
+    /// <summary>Returns a named step to the sending department.</summary>
+    /// <param name="movementId">Movement unique identifier (GUID, route). Example: <c>1a9d4e7b-2c58-4f3a-8e61-9b0d7c2f5a84</c>.</param>
+    /// <param name="stepId">Movement step unique identifier (GUID, route). Example: <c>9e2b7c41-6d55-4f08-a3c9-8b7d1e52a640</c>.</param>
+    /// <param name="request">
+    /// The request payload with the following fields:
+    /// <list type="bullet">
+    /// <item><term>reason</term><description>Reason (string, required). Example: <c>يحتاج تصحيح</c>.</description></item>
+    /// </list>
+    /// </param>
+    /// <param name="cancellationToken">Request cancellation token (optional).</param>
+    /// <response code="200">The returned movement.</response>
+    /// <response code="400">The reason is missing.</response>
+    /// <response code="401">The token is missing, expired, or invalid.</response>
+    /// <response code="403">The token lacks the DOCUMENT_EDIT permission.</response>
+    /// <response code="404">No movement with that id exists.</response>
+    /// <response code="409">The step is not current, not received, or the movement is terminal.</response>
+    [HttpPost("{movementId:guid}/steps/{stepId:guid}/return")]
+    [EndpointSummary("Returns a named step to the sending department.")]
+    [EndpointDescription("Returns a named step to the sending department when it is the movement's current step. Only a received step can be returned, and the reason is mandatory. Requires the DOCUMENT_EDIT permission. Responses: 200 (The returned movement.), 400 (The reason is missing.), 401 (The token is missing, expired, or invalid.), 403 (The token lacks the DOCUMENT_EDIT permission.), 404 (No movement with that id exists.), 409 (The step is not current, not received, or the movement is terminal.)")]
+    [Authorize(Policy = Permissions.DocumentEdit)]
+    [ProducesResponseType<MovementResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> ReturnStep(
+        [Description("Movement unique identifier (GUID, route). Example: 1a9d4e7b-2c58-4f3a-8e61-9b0d7c2f5a84.")] Guid movementId,
+        [Description("Movement step unique identifier (GUID, route). Example: 9e2b7c41-6d55-4f08-a3c9-8b7d1e52a640.")] Guid stepId,
+        [FromBody] ReturnMovementToSenderRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (CurrentUserId is not { } userId)
+            return Unauthorized();
+
+        var result = await _sender.Send(
+            new ReturnMovementToSenderCommand(movementId, userId, request.Reason, stepId),
+            cancellationToken);
+        return result.ToActionResult();
+    }
+
     private Guid? CurrentUserId =>
         Guid.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var userId) ? userId : null;
 }

@@ -16,6 +16,12 @@ public static class ResultExtensions
     public static IActionResult ToActionResult<TValue>(this Result<TValue> result) =>
         result.IsSuccess ? new OkObjectResult(result.Value) : ToProblem(result.Error);
 
+    /// <summary>
+    /// Translates a failed <see cref="Error"/> on its own. Used by endpoints that return a payload
+    /// which cannot go through <see cref="OkObjectResult"/> — for example a file stream.
+    /// </summary>
+    public static IActionResult ToActionResult(this Error error) => ToProblem(error);
+
     private static IActionResult ToProblem(Error error)
     {
         var statusCode = error.Type switch

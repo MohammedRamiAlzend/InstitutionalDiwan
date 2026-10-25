@@ -1,9 +1,10 @@
 # InstitutionalDiwan.Infrastructure — Infrastructure & Persistence Layer
 
-> **Status:** Partially implemented — `Persistence/` (`DiwanDbContext` + 10 EF configurations + 14
-> of 17 repositories + 5 migrations + ordered seeders), `Authentication/` (PBKDF2 hasher, JWT
-> provider, `UserContext`), and `Authorization/` (department scope + document access evaluators) are
-> live; outbox, background jobs, and the clock are still to come.
+> **Status:** Partially implemented — `Persistence/` (`DiwanDbContext` + 10 EF configurations + 18
+> of 21 repositories + migrations + ordered seeders), `Authentication/` (PBKDF2 hasher, JWT
+> provider, `UserContext`), `Authorization/` (department scope + document access evaluators), and
+> `Storage/` (local file storage + magic-byte validation) are live; outbox and background jobs are
+> still to come.
 
 ## Purpose
 
@@ -21,7 +22,7 @@ All code uses the `InstitutionalDiwan.*` namespaces — the legacy `NewDiwan.*` 
 | [`Persistence/`](Persistence/README.md) | `DiwanDbContext`, `Configurations/`, `Repositories/`, `Interceptors/`, `Migrations/`, `Seed/` | ⚠️ `DbContext` + 10 configurations + 14 repositories + 5 migrations + ordered seeders |
 | [`Authentication/`](Authentication/README.md) | JWT token generation, password hashing, HTTP `UserContext` | ✅ `PasswordHasher` + `JwtProvider` + `UserContext` implemented |
 | [`Authorization/`](Authorization/README.md) | Permission-based RBAC + organizational scope and document-access evaluators | ✅ `DepartmentScopeEvaluator` + `DocumentAccessEvaluator` implemented |
-| [`Storage/`](Storage/README.md) | Local/S3/MinIO binary file storage and SHA-256 stream verification | ❌ Empty |
+| [`Storage/`](Storage/README.md) | Local binary file storage, streamed SHA-256, and magic-byte validation | ✅ `LocalFileStorageService` + `FileSignatureValidator` (S3/MinIO still planned) |
 | [`Outbox/`](Outbox/README.md) | Transactional outbox processor and domain-event dispatcher | ❌ Empty |
 | [`BackgroundJobs/`](BackgroundJobs/README.md) | Scheduled integrity checks, audit checkpoints, SLA escalations | ❌ Empty |
 | [`Time/`](Time/README.md) | System clock implementation | ❌ Empty |
@@ -74,18 +75,20 @@ Persistence/Configurations/
 | EF Core provider package (`SqlServer`) | ✅ Referenced |
 | `DiwanDbContext` | ✅ Written and compiling |
 | Entity configurations | ✅ Written for all 67 entities (10 configuration files) |
-| Repositories | 🟡 14 of 17 implemented — `UserRepository`, `RoleRepository`, `PermissionRepository`, `DepartmentRepository`, `DepartmentTypeRepository`, `DocumentRepository`, `DocumentTypeRepository`, `NumberingRegistryRepository`, `DocumentNumberRepository`, `EmployeeRepository`, `DocumentAccessGrantRepository`, `LookupRepository`, `InstitutionSettingRepository`, `ExternalOrganizationRepository`, `DocumentMovementRepository`; the rest pending |
+| Repositories | 🟡 18 of 21 implemented — `UserRepository`, `RoleRepository`, `PermissionRepository`, `DepartmentRepository`, `DepartmentTypeRepository`, `DocumentRepository`, `DocumentTypeRepository`, `NumberingRegistryRepository`, `DocumentNumberRepository`, `EmployeeRepository`, `DocumentAccessGrantRepository`, `LookupRepository`, `InstitutionSettingRepository`, `ExternalOrganizationRepository`, `DocumentMovementRepository`, `DocumentFileRepository`, `DocumentFileTypeRepository`, `FileStorageProviderRepository`; relation, audit, and notification repositories pending |
 | Seed | ✅ Ordered, environment-aware seeders (33 lookup seeders, `InstitutionSettingSeeder`, `PermissionSeeder`, `RoleSeeder`, `UserSeeder`) |
 | Authentication | ✅ `PasswordHasher` (PBKDF2) + `JwtProvider` + `UserContext` (reads `sub`/`dept_id`/`scope_type`/`permission` claims) |
 | Migrations | ✅ 7 written (`InitialCreate`, `AddUniqueOfficialNumber`, `Refactor_DepartmentTypes_ToLookup`, `Refactor_CorrespondenceNumbering_ToLookups`, `Refactor_AllRemaining_ToLookups`, `InitialCreate2`, `Add_Department_Register_Numbers`) |
 | Interceptors | ❌ Empty |
 | Authorization | ✅ `DepartmentScopeEvaluator` + `DocumentAccessEvaluator` implementing the Application contracts |
-| Storage / Outbox / BackgroundJobs / Time | ❌ Empty |
+| Storage | ✅ `LocalFileStorageService` + `FileSignatureValidator` |
+| Outbox / BackgroundJobs | ❌ Empty |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-25 | opencode | Implemented Module 06 persistence and storage: `DocumentFileRepository` (file + versions), `DocumentFileTypeRepository`, `FileStorageProviderRepository`, `LocalFileStorageService` (streamed SHA-256, safe path resolution), and `FileSignatureValidator`; all registered in `DependencyInjection`. |
 | 2026-10-20 | Buffy | Added department register numbering to persistence: `DOCUMENT_NUMBER_SCOPES` (entity, configuration, seeder), `ScopeId`/`DepartmentId`/`RegistryDate` + scoped indexes, `DOCUMENT_NUMBER_HISTORY.EffectiveDate`, `DOCUMENT_MOVEMENT_STEPS.RegistryNumberId`, the `Add_Department_Register_Numbers` migration (applied to a throwaway LocalDB database as verification), and scope-aware number queries. |
 | 2026-10-19 | Buffy | Added `Authentication/UserContext`, `Authorization/DepartmentScopeEvaluator`, `Authorization/DocumentAccessEvaluator`, the `InstitutionSettingRepository`/`ExternalOrganizationRepository`/`DocumentMovementRepository` implementations, and `Seed/InstitutionSettingSeeder`; `DependencyInjection` now registers `AddHttpContextAccessor` + the evaluators, and the csproj references the ASP.NET Core shared framework for `IHttpContextAccessor`. |
 | 2026-10-19 | opencode | Added `Persistence/Repositories/LookupRepository.cs` (generic slug-addressed access to all 33 reference catalogs, incl. metadata-driven reference-in-use checks) and registered it in `DependencyInjection.cs`; documented the actual `DiwanDbContext`/66-entity/12-of-17-repository state, removing the stale `NewDiwan.*` drift notes. |

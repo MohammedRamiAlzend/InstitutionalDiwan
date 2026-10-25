@@ -11,17 +11,20 @@ internal sealed class RedirectMovementCommandHandler
     private readonly IDocumentMovementRepository _movementRepository;
     private readonly IDepartmentRepository _departmentRepository;
     private readonly IUserRepository _userRepository;
+    private readonly CentralDiwanRouting _centralDiwanRouting;
     private readonly IUnitOfWork _unitOfWork;
 
     public RedirectMovementCommandHandler(
         IDocumentMovementRepository movementRepository,
         IDepartmentRepository departmentRepository,
         IUserRepository userRepository,
+        CentralDiwanRouting centralDiwanRouting,
         IUnitOfWork unitOfWork)
     {
         _movementRepository = movementRepository;
         _departmentRepository = departmentRepository;
         _userRepository = userRepository;
+        _centralDiwanRouting = centralDiwanRouting;
         _unitOfWork = unitOfWork;
     }
 
@@ -40,6 +43,11 @@ internal sealed class RedirectMovementCommandHandler
 
         if (!destination.IsActive)
             return Result.Failure<MovementResponse>(DomainErrors.Department.Inactive);
+
+        var routeResult = await _centralDiwanRouting.ValidateRouteAsync(
+            movement.DestinationDepartmentId, destination.DepartmentId, cancellationToken);
+        if (routeResult.IsFailure)
+            return Result.Failure<MovementResponse>(routeResult.Error);
 
         if (request.AssignedToUserId is { } assignedToUserId)
         {

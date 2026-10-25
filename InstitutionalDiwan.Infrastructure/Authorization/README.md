@@ -31,11 +31,14 @@ Combines, in order: an active unexpired `DocumentAccessGrant` at or above the re
 level → authorship (the creator always keeps access) → confidentiality gate (`SECRET` and
 `TOP_SECRET` are never reachable through scope alone) → department scope over the document's owning
 department (scope grants up to `DOWNLOAD`; `FORWARD` and `MANAGE` additionally require an
-institution-wide scope type). A document that does not exist is reported as “not allowed”, so
-callers do not leak existence.
+institution-wide scope type) → movement participation. A document that does not exist is reported as
+“not allowed”, so callers do not leak existence.
 
-Movement participation (Module 05) is not part of the rule yet — it is added when document
-movements become reachable through their own use cases.
+Movement participation (Module 05) reads the document's active movement through
+`IDocumentMovementRepository.GetActiveByDocumentIdAsync`. If the caller's organizational scope covers
+either side of the current dispatched step (sender or receiver), the document is readable and
+downloadable even outside the owning department. Participation never grants `FORWARD` or `MANAGE`,
+and it does not bypass the confidentiality gate; a draft step (not yet sent) grants nothing.
 
 ## How it maps to the domain
 
@@ -47,6 +50,7 @@ movements become reachable through their own use cases.
 | `Role` / `RolePermission` / `UserRole` | Permission resolution (RBAC tier, token claims) |
 | `DocumentAccessGrant.AccessLevel` (`VIEW|DOWNLOAD|FORWARD|MANAGE`) and `IsCurrentlyValid` | Document-level exceptions |
 | `Document.ConfidentialityLevel` | Additional restriction |
+| `DocumentMovement` current step (`From`/`To` department, dispatched status) | Movement participation (VIEW/DOWNLOAD) |
 | `Document.CreatedByUserId` | Authorship bypass |
 
 ## Implementation status
@@ -55,7 +59,7 @@ movements become reachable through their own use cases.
 | --- | --- |
 | Permission handler + one-policy-per-code | ✅ Implemented in `Server/Authorization/PermissionAuthorizationHandler` (registered by `AddInstitutionalAuthentication`) |
 | `DepartmentScopeEvaluator` | ✅ Implemented |
-| `DocumentAccessEvaluator` | ✅ Implemented (movement participation pending with Module 05) |
+| `DocumentAccessEvaluator` | ✅ Implemented (including Module 05 movement participation) |
 | Dynamic policy provider / `HasPermissionAttribute` | ❌ Not implemented (the explicit `AddPolicy` loop covers the same codes) |
 
 Both evaluators are registered as scoped services in `Infrastructure/DependencyInjection.cs` and
@@ -65,4 +69,5 @@ depend on `IUserContext` rather than on `HttpContext` directly.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-25 | opencode | Added Module 05 movement participation to `DocumentAccessEvaluator`: sender/receiver on the active movement's current dispatched step gains VIEW/DOWNLOAD, still bounded by confidentiality and never FORWARD/MANAGE. |
 | 2026-10-19 | Buffy | Implemented `DepartmentScopeEvaluator` (primary department, persisted assignments with subtree expansion, institution-wide scope) and `DocumentAccessEvaluator` (grants → authorship → confidentiality → scope, with FORWARD/MANAGE requiring institution-wide scope); both registered in DI behind the new `Application/Abstractions/Authorization` contracts. |
