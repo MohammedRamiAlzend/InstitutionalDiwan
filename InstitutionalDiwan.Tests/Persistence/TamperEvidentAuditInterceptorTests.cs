@@ -112,6 +112,32 @@ public sealed class TamperEvidentAuditInterceptorTests
     }
 
     [Fact]
+    public async Task SaveChanges_MapsLoginToALoginAuditRow()
+    {
+        using var db = TestContextFactory.Create(
+            new TamperEvidentAuditInterceptor(Accessor(authenticated: false), TestClock.Instance));
+        TestContextFactory.SeedAuditLookups(db);
+
+        db.DepartmentTypes.Add(DepartmentType.Create(5, "Central Diwan", "الديوان المركزي", 0).Value);
+        var department = Department.Create("DIWAN", "الديوان", 5).Value;
+        db.Departments.Add(department);
+        db.UserScopeTypes.Add(UserScopeType.Create(1, "Department", "دائرة").Value);
+        var user = User.Create("employee", "hash", department.DepartmentId).Value;
+        db.Users.Add(user);
+        await db.SaveChangesAsync();
+
+        user.RecordLogin(TestClock.Instance.UtcNow);
+        await db.SaveChangesAsync();
+
+        var log = await db.AuditLogs.OrderBy(item => item.AuditLogId).LastAsync();
+
+        Assert.Equal("IDENTITY", log.ModuleName);
+        Assert.Equal(AuditActionType.LoginId, log.ActionTypeId);
+        Assert.Equal(AuditEntityType.UserId, log.EntityTypeId);
+        Assert.Equal(user.UserId, log.ActorUserId);
+    }
+
+    [Fact]
     public async Task SaveChanges_OutsideAnHttpRequest_DoesNotWriteAuditRows()
     {
         var accessor = Accessor();

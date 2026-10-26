@@ -1,10 +1,10 @@
 # InstitutionalDiwan.Application — Application Layer
 
 > **Status:** Implemented — `DependencyInjection.cs`, `Abstractions/` (messaging, authentication,
-> authorization, storage, time, request context, transactions), `Behaviors/` (validation, logging,
-> transactions), and the live feature slices under `Features/` (Lookups, Organization, Identity,
-> Correspondence, Numbering, Movements routing workflow + inbox/outbox, Attachments, and Audit) are in
-> place.
+> authorization, storage, time, request context, transactions, audit), `Behaviors/` (validation,
+> logging, transactions), and the live feature slices under `Features/` (Lookups, Organization,
+> Identity, Correspondence, Numbering, Movements routing workflow + inbox/outbox, Attachments, and
+> Audit) are in place.
 
 ## Purpose
 
@@ -46,7 +46,7 @@ alongside `AddInfrastructure()`.
 | --- | --- |
 | Commands / Queries / Validators / DTOs | ✅ Implemented (Lookups, Organization/Departments, Identity/Users·Roles·Permissions·Employees·AccessGrants·Login·Register·ChangePassword, Correspondence/Documents, Movements, Attachments, Audit) |
 | Pipeline behaviors | ✅ Validation, logging, and transaction implemented; caching planned |
-| Abstractions | ✅ `Messaging/`, `Authentication/`, `Authorization/`, `Storage/`, `Time/`, `Context/`, and `Persistence/` implemented; data/caching planned |
+| Abstractions | ✅ `Messaging/`, `Authentication/`, `Authorization/`, `Storage/`, `Time/`, `Context/`, `Persistence/`, and `Audit/` implemented; data/caching planned |
 | `DependencyInjection.cs` | ✅ Implemented (`AddApplication`) |
 | `Common/PagedResult<T>` | ✅ Implemented (paged list wire shape) |
 | `Class1.cs` placeholder | 🗑️ Removed |
@@ -58,6 +58,7 @@ See each subfolder's README for the full design and per-folder status tables.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-26 | Qoder | Added `AuditActionRecorder` and the `Abstractions/Audit` contract so every authenticated controller action can be recorded as an `Operation` audit row through an isolated scope, independent of the request's tracked changes. |
 | 2026-10-25 | opencode | Added the Module 09 Audit slice (`GetAuditLogsQuery`, checkpoint/integrity commands and reports, `AuditLogAppender`), plus logging/transaction pipeline behaviors and the time, request-context, and transaction abstractions. |
 | 2026-10-25 | opencode | Added the Module 06 Attachments slice and the `Abstractions/Storage` contracts; every operation checks document access (VIEW/DOWNLOAD/MANAGE) and uploads carry a streamed SHA-256 checksum. |
 | 2026-10-22 | Buffy | Added `Identity/Login/GetUserProfileQuery` (the `/api/auth/me` use case) and `Correspondence/Documents/ListDepartmentDocumentsQuery`; every mutating handler now passes `IUnitOfWork.UtcNow` to the aggregate it touches. |

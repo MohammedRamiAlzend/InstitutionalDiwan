@@ -37,6 +37,10 @@ else
 await app.InitializeDatabaseAsync();
 
 app.UseAuthentication();
+
+// Wraps every authenticated /api action, including reads and authorization failures, so the
+// action itself is recorded even when it changes no entity.
+app.UseMiddleware<AuditActionMiddleware>();
 app.UseAuthorization();
 
 app.MapControllers();

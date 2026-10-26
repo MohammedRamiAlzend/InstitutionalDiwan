@@ -1,7 +1,7 @@
 # InstitutionalDiwan.Server — Web API / Presentation Layer
 
-> **Status:** Implemented — `Program.cs` wires DI, auth, MediatR, request-context logging, and the
-> exception middleware; the `Auth`, `Documents`, `DocumentNumbers`, `ExternalOrganizations`,
+> **Status:** Implemented — `Program.cs` wires DI, auth, MediatR, request-context logging, action
+> auditing, and the exception middleware; the `Auth`, `Documents`, `DocumentNumbers`, `ExternalOrganizations`,
 > `InstitutionSettings`, `Users`, `Roles`, `Permissions`, `Departments`, `Employees`,
 > `DocumentAccessGrants`, `NumberingRegistries`, `DepartmentRegisters`, `Movements` (routing workflow
 > + inbox/outbox), `DocumentFiles` (Module 06 attachments), `AuditLogs` (Module 09), and `Lookups`
@@ -23,7 +23,7 @@ Earlier design notes called the project `NewDiwan.Presentation`; the actual asse
 | --- | --- | --- |
 | [`Controllers/`](Controllers/README.md) | REST controllers, one per module (plus the generic lookups controller) | ✅ 17 controllers live |
 | [`Contracts/`](Contracts/README.md) | HTTP request/response DTO records grouped by module | ✅ Correspondence, Organization, Identity, Numbering, Movements, Attachments, Audit, Lookups |
-| [`Middleware/`](Middleware/README.md) | Global exception handling, correlation-id tracking, audit IP capture | ✅ `RequestContextLoggingMiddleware` + `GlobalExceptionHandlingMiddleware` live |
+| [`Middleware/`](Middleware/README.md) | Global exception handling, correlation-id tracking, action-level audit | ✅ `RequestContextLoggingMiddleware` + `GlobalExceptionHandlingMiddleware` + `AuditActionMiddleware` live |
 | [`Extensions/`](Extensions/README.md) | `Result` → HTTP mapping, DI registration, OpenAPI/Scalar, auth setup | ✅ `ResultExtensions`, `DatabaseExtensions`, `AuthenticationExtensions`, `OpenApiExtensions` |
 
 ## Current `Program.cs`
@@ -58,6 +58,7 @@ else
 await app.InitializeDatabaseAsync();   // migrate (Development) + ordered, environment-gated seeding
 
 app.UseAuthentication();
+app.UseMiddleware<AuditActionMiddleware>();   // one Operation audit row per authenticated /api action
 app.UseAuthorization();
 app.MapControllers();
 app.MapFallbackToFile("/index.html");  // SPA fallback
@@ -65,8 +66,8 @@ app.Run();
 ```
 
 Wired today: authentication/authorization policies, request-context logging, the global exception
-middleware, MediatR, FluentValidation, the `DbContext`, and the Application/Infrastructure DI entry
-points. Not yet wired: CORS and SignalR.
+middleware, action-level auditing, MediatR, FluentValidation, the `DbContext`, and the
+Application/Infrastructure DI entry points. Not yet wired: CORS and SignalR.
 
 ## Hosting & the SPA
 
@@ -86,7 +87,7 @@ and `Scalar.AspNetCore`, and project-references Application, Infrastructure, and
 
 | Item | State |
 | --- | --- |
-| `Program.cs` | ✅ Wired (DI, MediatR, FluentValidation, auth, exception middleware, startup seeding, SPA host) |
+| `Program.cs` | ✅ Wired (DI, MediatR, FluentValidation, auth, action auditing, exception middleware, startup seeding, SPA host) |
 | Controllers | ✅ `Auth`, `Documents` (drafts, update, register, participants, cancel, details, timeline, plus create with official number), `DocumentNumbers` (issue/cancel/replace/history + department register entries), `DepartmentRegisters` (register book), `Movements` (routing workflow — open/send/receive/complete/reject/return/redirect/close/cancel — plus the movement reads and the department inbox/outbox), `ExternalOrganizations` (CRUD), `InstitutionSettings` (GET/PUT), `Users` (CRUD + roles + department-assignments + effective-permissions), `Roles` (CRUD + activate + grant/revoke permission), `Permissions` (catalog), `Departments` (CRUD + reparent + tree, soft delete), `Employees` (CRUD + deactivate/activate), `DocumentAccessGrants` (list/grant/revoke per document), `NumberingRegistries` (CRUD + activate/deactivate), `DocumentFiles` (Module 06: create/upload/archive/list/download/verify), `AuditLogs` (Module 09: search/checkpoint/integrity), `Lookups` (generic reference catalogs) |
 | Contracts / Middleware / Extensions | ✅ Contracts complete for the live modules; request-context + global exception middleware in place; extensions implemented |
 | DI for Application/Infrastructure | ✅ Wired |
@@ -98,6 +99,7 @@ and `Scalar.AspNetCore`, and project-references Application, Infrastructure, and
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-26 | Qoder | Registered `AuditActionMiddleware` between authentication and authorization so every authenticated `/api` call (reads included) writes an `Operation` audit row via `IAuditActionRecorder`; updated the `Program.cs` excerpt and status tables. |
 | 2026-10-25 | Buffy | Replaced the leftover template `weatherforecast` sample request with a real `GET /api/audit-logs` request. |
 | 2026-10-25 | opencode | Added the Module 09 `AuditLogsController`, audit contracts, and `RequestContextLoggingMiddleware`; updated the `Program.cs` excerpt and status tables. |
 | 2026-10-25 | opencode | Added `DocumentFilesController` and the Attachments contracts, exposing Module 06: create file, upload a validated version with streamed SHA-256, archive, list by document, download, and checksum verification. |

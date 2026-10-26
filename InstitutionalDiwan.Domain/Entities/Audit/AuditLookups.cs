@@ -14,6 +14,9 @@ public sealed class AuditActionType : LookupEntity
     public const int LogoutId = 6;
     public const int ApproveId = 7;
 
+    /// <summary>An action without a CRUD verb, such as a workflow run or a maintenance command.</summary>
+    public const int ExecuteId = 8;
+
     private AuditActionType()
     {
     }
@@ -52,6 +55,9 @@ public sealed class AuditEntityType : LookupEntity
     public const int DocumentNumberId = 10;
     public const int DocumentRelationId = 11;
     public const int ExternalOrganizationId = 12;
+
+    /// <summary>An API action that is not tied to one business entity (entity id = controller.action).</summary>
+    public const int OperationId = 13;
 
     private AuditEntityType()
     {

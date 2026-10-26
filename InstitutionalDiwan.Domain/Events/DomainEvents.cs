@@ -7,6 +7,7 @@ public sealed record DepartmentDeactivatedEvent(Guid DepartmentId) : DomainEvent
 
 // Module 02: Identity & Access
 public sealed record UserCreatedEvent(Guid UserId, string Username, Guid PrimaryDepartmentId) : DomainEventBase;
+public sealed record UserLoggedInEvent(Guid UserId, string Username) : DomainEventBase;
 public sealed record UserDeactivatedEvent(Guid UserId) : DomainEventBase;
 public sealed record UserRoleAssignedEvent(Guid UserId, Guid RoleId, Guid? AssignedByUserId) : DomainEventBase;
 public sealed record UserRoleRevokedEvent(Guid UserId, Guid RoleId) : DomainEventBase;

@@ -1,11 +1,12 @@
 # InstitutionalDiwan.Tests — xUnit test suite
 
-> **Status:** Implemented — 375 tests covering domain handlers, department register numbering, the
+> **Status:** Implemented — 386 tests covering domain handlers, department register numbering, the
 > receipt gate, the movement routing workflow (including the Central Diwan hub and rejection routing),
 > the department inbox/outbox, attachments (atomic first upload, versions, SHA-256 streaming, magic
 > bytes), movement participation, the tamper-evident audit chain (hashing, projections, checkpoints,
-> integrity reports, redaction), seeding, authorization, paging/search/filtering, the caller profile,
-> deterministic time, and the generic lookups API.
+> integrity reports, redaction, composition-root wiring, real document create/update auditing,
+> action-level recording and middleware), seeding, authorization, paging/search/filtering, the caller
+> profile, deterministic time, and the generic lookups API.
 
 ## Purpose
 
@@ -20,8 +21,8 @@ indexes) runs against a private SQLite in-memory database through `Support/TestC
 | `Application/` | Handler/validator tests per slice — Identity (users, roles, permissions, employees, access grants, login/register/change password, `GetUserProfileQueryHandlerTests`), Organization/Departments + `InstitutionSettingsHandlerTests`, Correspondence/`Documents` (`DocumentLifecycleHandlerTests`, `ListDepartmentDocumentsQueryHandlerTests`) + `ExternalOrganizationsHandlerTests`, Numbering (`OfficialNumberLifecycleHandlerTests`, `DepartmentRegisterNumberingTests`), Movements (`MovementWorkflowHandlerTests`), Attachments (`AttachmentHandlerTests`), Audit (`AuditDomainTests`, `AuditHandlerTests`), `UnitOfWorkClockTests` (handler-stamped times come from `IUnitOfWork.UtcNow`), and `LookupHandlerTests.cs`. |
 | `Storage/` | `LocalFileStorageServiceTests` (layout, streamed checksum, read-back, root-escape guard) and `FileSignatureValidatorTests` (PDF/PNG/JPEG/TIFF/ZIP/OLE/SVG magic bytes, extension allow-list, size limit). |
 | `Authorization/` | `PermissionAuthorizationHandlerTests` (policy handler + `Permissions.All` integrity), `DepartmentScopeEvaluatorTests` (primary department, institution/dept-tree scope, temporal assignments incl. `IncludeSubtree` and ended assignments), `DocumentAccessEvaluatorTests` (authorship, grants incl. revoked, scope, confidentiality, movement participation, anonymous). |
-| `Persistence/` | `DocumentMovementRepositoryTests` — the inbox/outbox queries against a real SQLite database; `AuditLogRepositoryTests` — filtered search, range reads, checkpoint/integrity persistence; `TamperEvidentAuditInterceptorTests` — domain-event projection, sensitive-field redaction, and request-only writes against SQLite. |
-| `Server/` | `OpenApiDocumentationTests` — every controller endpoint must carry an `[EndpointSummary]`, an `[EndpointDescription]`, and a `<param>` description with an example. |
+| `Persistence/` | `DocumentMovementRepositoryTests` — the inbox/outbox queries against a real SQLite database; `AuditLogRepositoryTests` — filtered search, range reads, checkpoint/integrity persistence; `TamperEvidentAuditInterceptorTests` — domain-event projection (including login), sensitive-field redaction, and request-only writes against SQLite; `AuditActionRecorderTests` — the isolated-scope recorder writes one valid chain row without flushing the caller's pending changes; `CorrespondenceAuditIntegrationTests` — real `CreateDocumentCommand`/`UpdateDraftMetadataCommand` handlers through repositories + DbContext + interceptor produce entity audit rows with old/new values. |
+| `Server/` | `OpenApiDocumentationTests` — every controller endpoint must carry an `[EndpointSummary]`, an `[EndpointDescription]`, and a `<param>` description with an example. `Module09DependencyInjectionTests` — the audit repository, appender, action recorder, EF interceptor, hosted jobs, permission policies, and MediatR handlers resolve from the real `AddApplication` + `AddInfrastructure` + `AddInstitutionalAuthentication` composition root. `AuditActionMiddlewareTests` — action-level rows for authenticated calls (create/view), skipping anonymous and non-`/api` requests, and failure recording + rethrow. |
 | `Seed/` | Seeder and pipeline tests — `PermissionSeederTests`, `RoleSeederTests`, `UserSeederTests`, `DepartmentTypeSeederTests`, `SeederRunnerTests`, `SeedingPipelineTests`. |
 | `Support/` | Shared test doubles: `TestContextFactory` (SQLite in-memory `DiwanDbContext`), fake repositories/unit-of-work, fake hasher and JWT provider. |
 
@@ -78,7 +79,25 @@ indexes) runs against a private SQLite in-memory database through `Support/TestC
   against SQLite.
 - `TamperEvidentAuditInterceptorTests` proves domain events become audit rows with request metadata,
   multiple entries chain in order, password/secret fields never reach `OldValuesJson`/`NewValuesJson`,
-  writes outside an HTTP request produce no automatic audit row, and audit rows are not re-audited.
+  writes outside an HTTP request produce no automatic audit row, audit rows are not re-audited, and a
+  login produces a `Login` row attributed to the user.
+- `CorrespondenceAuditIntegrationTests` is the end-to-end proof that ordinary writes are audited: the
+  real create-document handler (document Created + Update + official-number Create rows) and the real
+  update-draft handler (an Update row with parseable old/new Title) run through the actual
+  repositories, `DiwanDbContext`, and `TamperEvidentAuditInterceptor`, stamped with actor, department,
+  IP, and correlation id, over an intact chain.
+- `AuditActionRecorderTests` builds the recorder over a real SQLite context and proves it commits from
+  an isolated scope: a pending unsaved `Role` in the request scope is not persisted, and exactly one
+  valid chain row is written with actor/department/IP/correlation.
+- `AuditActionMiddlewareTests` covers action-level auditing: an authenticated POST maps to
+  `CORRESPONDENCE`/`Create`/`Operation` with actor, department, and request metadata; a GET maps to
+  `View`; anonymous `/api/auth/login` and non-`/api` paths are skipped; an exception records status 500
+  plus the error type and is rethrown.
+- `Module09DependencyInjectionTests` locks the Module 09 composition root: `IAuditLogRepository`,
+  `AuditLogAppender`, `IAuditActionRecorder`, `IRequestContext`, `ITransactionManager`,
+  `IDateTimeProvider`, and `TamperEvidentAuditInterceptor` resolve; the interceptor is attached to
+  `DiwanDbContext`; both audit hosted services are registered; `AUDIT_VIEW` / `AUDIT_MANAGE` policies
+  exist; and all four audit MediatR handlers resolve.
 - `SeedingPipelineTests` runs the full ordered seeder set per environment and asserts the resulting
   permission/role/lookup counts, including idempotency on repeated runs.
 
@@ -86,6 +105,8 @@ indexes) runs against a private SQLite in-memory database through `Support/TestC
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-26 | Qoder | Added `Persistence/CorrespondenceAuditIntegrationTests` (real document create/update commands write entity audit rows), `Persistence/AuditActionRecorderTests` (isolated scope), and `Server/AuditActionMiddlewareTests` (create/view/skip/failure rows); extended the interceptor login case, the composition-root test, lookup seeding (8 action / 13 entity types), and the seeding counts. 378 → 386 tests. |
+| 2026-10-26 | Qoder | Added `Server/Module09DependencyInjectionTests` to prove Module 09 is injected through the production composition root (audit repository/appender, EF interceptor, hosted jobs, permission policies, MediatR handlers). 375 → 378 tests. |
 | 2026-10-25 | Buffy | Added the `AuditDomainTests.Reseal` case after audit appends were serialized under a chain lock. 374 → 375 tests. |
 | 2026-10-25 | opencode | Added Module 09 coverage: `AuditDomainTests`, `AuditHandlerTests`, `AuditLogRepositoryTests`, and `TamperEvidentAuditInterceptorTests`, plus audit fakes and lookup seeding. 348 → 374 tests. |
 | 2026-10-25 | opencode | Added coverage for the missing Module 02/05/06 gaps: Central Diwan routing, rejection routing to the hub, stale-step refusal, movement participation, and the atomic first upload. 338 → 348 tests. |

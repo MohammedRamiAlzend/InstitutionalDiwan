@@ -89,7 +89,7 @@ npm run lint
 | 06 — Attachments | File metadata, version chain, upload/download, checksum verification | ✅ Implemented |
 | 07 — Archiving | Domain entities and lookups only | ❌ Not implemented |
 | 08 — Relations | Domain entities and lookups only | ❌ Not implemented |
-| 09 — Audit | Append-only SHA-256 chain, search, checkpoints, integrity checks/reports, scheduled maintenance | ✅ Implemented |
+| 09 — Audit | Entity-level audit chain (creates/updates/deletes), action-level logging for every authenticated call (reads included), logins, search, checkpoints, integrity checks/reports, scheduled maintenance | ✅ Implemented |
 | 10 — Notifications | Domain entities and lookups only | ❌ Not implemented |
 
 ## Conventions
@@ -137,6 +137,7 @@ have no `README.md` of their own yet — their content is documented in the encl
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-26 | Qoder | Extended Module 09 beyond entity changes: a middleware now records every authenticated `/api` action (reads and failures included) as an `Operation` row, and logins produce a `Login` row; documented the two audit layers and the new integration tests. |
 | 2026-10-25 | Cursor | Noted that client docs now track Modules 01–06 + 09 (endpoints, permissions, UI contract) while SPA code remains the Vite template. |
 | 2026-10-25 | Buffy | Serialized audit-chain appends so concurrent reads, writes, and scheduled audit jobs cannot collide on the chain head; the suite now has 375 tests. |
 | 2026-10-25 | opencode | Marked Modules 06 (Attachments) and 09 (Audit) implemented; documented the audit chain, scheduled checkpoint/integrity jobs, and the current 374-test suite. |

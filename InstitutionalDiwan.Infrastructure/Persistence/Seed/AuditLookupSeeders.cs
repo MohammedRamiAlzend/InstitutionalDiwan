@@ -16,6 +16,7 @@ public sealed class AuditActionTypeSeeder : LookupSeederBase<AuditActionType>
         (AuditActionType.LoginId, "Login", "تسجيل دخول"),
         (AuditActionType.LogoutId, "Logout", "تسجيل خروج"),
         (AuditActionType.ApproveId, "Approve", "اعتماد"),
+        (AuditActionType.ExecuteId, "Execute", "تنفيذ"),
     };
 
     protected override AuditActionType BuildItem(int id, string desc, string descAr) =>
@@ -41,6 +42,7 @@ public sealed class AuditEntityTypeSeeder : LookupSeederBase<AuditEntityType>
         (AuditEntityType.DocumentNumberId, "Official number", "رقم رسمي"),
         (AuditEntityType.DocumentRelationId, "Document relation", "ربط وثيقة"),
         (AuditEntityType.ExternalOrganizationId, "External organization", "جهة خارجية"),
+        (AuditEntityType.OperationId, "Operation", "عملية"),
     };
 
     protected override AuditEntityType BuildItem(int id, string desc, string descAr) =>

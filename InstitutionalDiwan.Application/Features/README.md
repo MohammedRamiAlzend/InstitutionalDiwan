@@ -121,13 +121,14 @@ registries, per-document grants/movements) still returns a plain collection on p
 | Numbering/`Registries` + `Numbers` (registry CRUD, issue/cancel/replace, history, department register entries, register book) | ✅ Implemented |
 | Movements (routing workflow + inbox/outbox + Central Diwan hub) | ✅ Implemented |
 | Attachments (Module 06: create/upload/archive, list/download/verify) | ✅ Implemented |
-| Audit (Module 09: search, checkpoints, integrity checks/reports) | ✅ Implemented |
+| Audit (Module 09: search, checkpoints, integrity checks/reports, action recorder) | ✅ Implemented |
 | Archiving, Relations, Notifications | ❌ Not implemented |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-26 | Qoder | Added `Audit/AuditActionRecorder` (implementing `IAuditActionRecorder`) so the web host can record every authenticated action as an `Operation` audit row through an isolated scope. |
 | 2026-10-25 | opencode | Implemented the Module 09 Audit slice: `GetAuditLogsQuery` (self-auditing filtered search), `CreateAuditCheckpointCommand` (verify-then-seal), `RunAuditIntegrityCheckCommand`, and `GetAuditIntegrityReportsQuery`; added `AuditLogAppender` for explicit chain appends. |
 | 2026-10-25 | opencode | Closed the Module 05 gaps (mandatory Central Diwan hub, rejection routing to the hub, step-scoped route support) and added the atomic Module 06 initial upload (`CreateDocumentFileWithVersionCommand`). |
 | 2026-10-25 | opencode | Completed the Module 06 Attachments slice: create file, upload version (extension/size/magic-byte validation + streamed SHA-256), archive, list, download, and checksum verification, all guarded by `IDocumentAccessEvaluator`. |

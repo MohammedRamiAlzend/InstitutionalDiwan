@@ -4,8 +4,9 @@
 > `Authentication/` (`IJwtProvider`, `IPasswordHasher`, `IUserContext`), `Authorization/`
 > (`IDepartmentScopeEvaluator`, `IDocumentAccessEvaluator`), `Storage/` (`IFileStorageService`,
 > `IFileSignatureValidator`, `StoredFile`), `Time/` (`IDateTimeProvider`), `Context/`
-> (`IRequestContext`), and `Persistence/` (`ITransactionManager`) are live; the data/caching
-> contracts are still target design.
+> (`IRequestContext`), `Persistence/` (`ITransactionManager`), and `Audit/`
+> (`IAuditActionRecorder`, `AuditActionRecord`) are live; the data/caching contracts are still
+> target design.
 
 ## Purpose
 
@@ -79,6 +80,13 @@ technology choices swappable.
 | `ITransactionManager` | `Task<ITransactionScope> BeginTransactionAsync(CancellationToken)` | Opens an explicit database transaction so one command's writes, outbox work, and audit rows commit together. ✅ Implemented by `Infrastructure/Persistence/Transactions/EfTransactionManager`. |
 | `ITransactionScope` | `CommitAsync`, `DisposeAsync` | Disposing without commit rolls back. |
 
+### `Audit/`
+
+| Type | Shape | Notes |
+| --- | --- | --- |
+| `IAuditActionRecorder` | `Task RecordAsync(AuditActionRecord record, CancellationToken)` | Appends one action-level audit row (module, action/entity type, entity id, actor, department, new-values JSON). ✅ Implemented by `Application/Features/Audit/AuditActionRecorder` with an isolated service scope, so it commits independently of the caller's tracked changes and never fails the action it describes. |
+| `AuditActionRecord` | `record(ModuleName, ActionTypeId, EntityTypeId, EntityId, ActorUserId, ActorDepartmentId, NewValuesJson)` | Transport shape for the recorder; the entity id is a free-form correlation label such as `Controller.Action`. |
+
 ## Contents
 
 | File | Purpose |
@@ -98,6 +106,7 @@ technology choices swappable.
 | `Time/IDateTimeProvider.cs` | UTC now plus institution-local conversion and numbering-year helpers; implemented by Infrastructure `DateTimeProvider` over `IClock`. |
 | `Context/IRequestContext.cs` | Correlation id and client IP for the current request, kept host-agnostic; implemented by Infrastructure `HttpRequestContext`. |
 | `Persistence/ITransactionManager.cs` | `BeginTransactionAsync` returns an `ITransactionScope`; commit on success and roll back on a failed `Result` or exception. |
+| `Audit/IAuditActionRecorder.cs` | `IAuditActionRecorder` + `AuditActionRecord`: the write contract behind action-level audit rows, implemented with an isolated scope so request state cannot leak into the audit commit. |
 
 ## Implementation status
 
@@ -112,6 +121,7 @@ technology choices swappable.
 | `Clock/` | ✅ Implemented (`IDateTimeProvider` + Infrastructure `DateTimeProvider`) |
 | `Context/` | ✅ Implemented (`IRequestContext` + Infrastructure `HttpRequestContext`) |
 | `Persistence/` | ✅ Implemented (`ITransactionManager` + Infrastructure `EfTransactionManager`) |
+| `Audit/` | ✅ Implemented (`IAuditActionRecorder` + Application `AuditActionRecorder`) |
 
 > The Infrastructure `Authentication/`, `Storage/`, `Time/`, `Context/`, and `Persistence/` folders
 > implement these contracts; `Data/` and `Caching/` remain target design. See their READMEs for details.
@@ -120,6 +130,7 @@ technology choices swappable.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-26 | Qoder | Added the `Audit/` group (`IAuditActionRecorder`, `AuditActionRecord`) so the web host can append action-level audit rows without depending on persistence, and marked it implemented by `AuditActionRecorder`. |
 | 2026-10-25 | opencode | Added `Context/IRequestContext` and `Persistence/ITransactionManager`, and marked `IDateTimeProvider` implemented by Infrastructure `DateTimeProvider` for Module 09. |
 | 2026-10-25 | opencode | Added the `Storage/` contracts (`IFileStorageService`, `IFileSignatureValidator`, `StoredFile`) so the Module 06 Attachments handlers depend on abstractions instead of the file system or ASP.NET upload types. |
 | 2026-10-22 | Buffy | Extended `IUserContext` with `Username` and `Roles` so `GetUserProfileQuery` can project the caller's profile (`GET /api/auth/me`) without reading claims in the controller. |

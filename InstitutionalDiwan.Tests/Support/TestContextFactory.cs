@@ -32,10 +32,10 @@ internal static class TestContextFactory
     /// <summary>Seeds the audit lookup FKs required before an AUDIT_LOGS row can be inserted.</summary>
     public static void SeedAuditLookups(DiwanDbContext context)
     {
-        for (var id = 1; id <= 7; id++)
+        for (var id = 1; id <= 8; id++)
             context.AuditActionTypes.Add(AuditActionType.Create(id, $"Action {id}", $"إجراء {id}").Value);
 
-        for (var id = 1; id <= 12; id++)
+        for (var id = 1; id <= 13; id++)
             context.AuditEntityTypes.Add(AuditEntityType.Create(id, $"Entity {id}", $"كيان {id}").Value);
 
         context.SaveChanges();

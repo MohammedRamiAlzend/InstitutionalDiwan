@@ -97,12 +97,12 @@ deterministically.
 
 ### `Events/DomainEvents.cs`
 
-34 immutable `record` domain events (the older notes claimed 22, which is out of date). Grouped by module:
+35 immutable `record` domain events (the older notes claimed 22, which is out of date). Grouped by module:
 
 | Module | Events |
 | --- | --- |
 | Organization (3) | `DepartmentCreated`, `DepartmentMoved`, `DepartmentDeactivated` |
-| Identity (6) | `UserCreated`, `UserDeactivated`, `UserRoleAssigned`, `UserRoleRevoked`, `DocumentAccessGranted`, `DocumentAccessRevoked` |
+| Identity (7) | `UserCreated`, `UserLoggedIn`, `UserDeactivated`, `UserRoleAssigned`, `UserRoleRevoked`, `DocumentAccessGranted`, `DocumentAccessRevoked` |
 | Correspondence / Archiving (6) | `DocumentCreated`, `DocumentRegistered`, `DocumentArchived`, `DocumentUnarchived`, `DocumentCanceled`, `DocumentParticipantAdded` |
 | Numbering (3) | `OfficialNumberIssued`, `OfficialNumberCancelled`, `OfficialNumberReplaced` |
 | Movements (9) | `MovementCreated`, `MovementSent`, `MovementReceived`, `MovementCompleted`, `MovementRejected`, `MovementReturned`, `MovementRedirected`, `MovementClosed`, `MovementCancelled` |
@@ -312,7 +312,7 @@ them, while listing, relabelling and (de)activation keep working.
 | `Common/` | ✅ Implemented (`Result`, `Error`, `Entity`, `AggregateRoot`, `ValueObject`, `IDomainEvent`, `DomainException`, `IClock`, `IUnitOfWork`, `PageRequest`, `PagedList<T>`) |
 | `ValueObjects/` | ✅ Implemented (4 value objects) |
 | `Errors/` | ✅ Implemented (`DomainErrors` catalog) |
-| `Events/` | ✅ Implemented (34 events) |
+| `Events/` | ✅ Implemented (35 events) |
 | `Repositories/` | ✅ Implemented (21 interfaces) |
 | `Entities/` | ✅ Implemented (64 entities across 10 modules, including reference/lookup tables) |
 
@@ -331,6 +331,7 @@ them, while listing, relabelling and (de)activation keep working.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-26 | Qoder | Added `UserLoggedInEvent` (raised by `User.RecordLogin`, 34 → 35 events) so logins become attributable audit rows, and the action-level audit lookup ids `AuditActionType.ExecuteId = 8` / `AuditEntityType.OperationId = 13`. |
 | 2026-10-25 | Buffy | Added `AuditLog.Reseal(previousHash)` so an unpersisted audit row can be re-chained onto the current predecessor after the persistence layer serializes appends. |
 | 2026-10-25 | opencode | Strengthened the Module 09 audit domain: `AuditLog.GenesisHash`, UTC/millisecond normalization, a hash payload covering every stored field, the expanded `IAuditLogRepository` (range/checkpoint/integrity queries), audit entity-type ids, and the `Audit.*` error catalog. |
 | 2026-10-25 | opencode | Added the Central Diwan routing errors (`CentralDiwanRoutingRequired`, `CentralDiwanNotConfigured`, `StepNotCurrent`), `IDocumentMovementRepository.GetActiveByDocumentIdAsync`, and rejection routing back to the Central Diwan as a new sent step. |

@@ -81,7 +81,7 @@ Persistence/Configurations/
 | Seed | ✅ Ordered, environment-aware seeders (33 lookup seeders, `InstitutionSettingSeeder`, `PermissionSeeder`, `RoleSeeder`, `UserSeeder`) |
 | Authentication | ✅ `PasswordHasher` (PBKDF2) + `JwtProvider` + `UserContext` (reads `sub`/`dept_id`/`scope_type`/`permission` claims) |
 | Migrations | ✅ 8 written (`InitialCreate`, `AddUniqueOfficialNumber`, `Refactor_DepartmentTypes_ToLookup`, `Refactor_CorrespondenceNumbering_ToLookups`, `Refactor_AllRemaining_ToLookups`, `InitialCreate2`, `Add_Department_Register_Numbers`, `Add_Audit_Chain_Uniqueness`) |
-| Interceptors | ✅ `TamperEvidentAuditInterceptor` (domain events + generic old/new snapshots, SHA-256 chain, sensitive-field redaction, no writes outside an HTTP request) |
+| Interceptors | ✅ `TamperEvidentAuditInterceptor` (domain events incl. `UserLoggedIn`, generic old/new snapshots, SHA-256 chain, sensitive-field redaction, no writes outside an HTTP request) |
 | Authorization | ✅ `DepartmentScopeEvaluator` + `DocumentAccessEvaluator` implementing the Application contracts |
 | Storage | ✅ `LocalFileStorageService` + `FileSignatureValidator` |
 | BackgroundJobs | 🟡 `AuditChainIntegrityVerificationJob` + `DailyAuditCheckpointJob` (configurable, idempotent) |
@@ -91,6 +91,7 @@ Persistence/Configurations/
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-26 | Qoder | Mapped the new `UserLoggedInEvent` to a `Login` audit row and seeded the `Execute` action type / `Operation` entity type used by the new action-level audit trail; the interceptor continues to own all entity-level rows. |
 | 2026-10-25 | Buffy | Serialized audit-chain appends with a transaction-scoped SQL Server application lock and a locking head read, after concurrent audit reads and the two scheduled jobs collided on `UX_AUDIT_LOGS_PREVIOUS_HASH`; explicit job rows now share the same path. |
 | 2026-10-25 | opencode | Implemented Module 09 infrastructure: `AuditLogRepository` (paged search, range reads, checkpoints, integrity reports), `TamperEvidentAuditInterceptor` (hash chain, domain-event projection, sensitive-field redaction), `DateTimeProvider`, `HttpRequestContext`, `EfTransactionManager`, the `Add_Audit_Chain_Uniqueness` migration, and the scheduled `AuditChainIntegrityVerificationJob` / `DailyAuditCheckpointJob` (configurable via the `AuditJobs` section, actor resolved from `ActorUserId` or the first active user). |
 | 2026-10-25 | opencode | Implemented Module 06 persistence and storage: `DocumentFileRepository` (file + versions), `DocumentFileTypeRepository`, `FileStorageProviderRepository`, `LocalFileStorageService` (streamed SHA-256, safe path resolution), and `FileSignatureValidator`; all registered in `DependencyInjection`. |

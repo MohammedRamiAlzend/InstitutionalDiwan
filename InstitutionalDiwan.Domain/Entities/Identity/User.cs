@@ -151,6 +151,7 @@ public sealed class User : AggregateRoot<Guid>
     public Result RecordLogin(DateTime? utcNow = null)
     {
         LastLoginAt = utcNow ?? DateTime.UtcNow;
+        RaiseDomainEvent(new UserLoggedInEvent(UserId, Username));
         return Result.Success();
     }
 
