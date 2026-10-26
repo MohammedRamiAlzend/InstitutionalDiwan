@@ -42,8 +42,6 @@ var app = builder.Build();
 
 app.UseMiddleware<RequestContextLoggingMiddleware>();   // correlation id + IP + logging scope
 app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
-app.UseDefaultFiles();
-app.MapStaticAssets();
 
 if (app.Environment.IsDevelopment())
 {
@@ -61,7 +59,6 @@ app.UseAuthentication();
 app.UseMiddleware<AuditActionMiddleware>();   // one Operation audit row per authenticated /api action
 app.UseAuthorization();
 app.MapControllers();
-app.MapFallbackToFile("/index.html");  // SPA fallback
 app.Run();
 ```
 
@@ -69,25 +66,24 @@ Wired today: authentication/authorization policies, request-context logging, the
 middleware, action-level auditing, MediatR, FluentValidation, the `DbContext`, and the
 Application/Infrastructure DI entry points. Not yet wired: CORS and SignalR.
 
-## Hosting & the SPA
+## Hosting
 
-The project is an ASP.NET Core SPA host: `SpaProxyServerUrl` is `https://localhost:61325`, launched
-with `npm run dev` from `../institutionaldiwan.client`, which is skipped only when the front end is
-built. HTTP profiles listen on `http://localhost:5028` and `https://localhost:7126`.
-
-> The front-end client is **out of scope** for the current backend work.
+The project is an API-only host. HTTP profiles listen on `http://localhost:5028` and
+`https://localhost:7126`. There is no SPA proxy, no static-file middleware, and no
+`index.html` fallback: the server does not serve the front end, which lives in the separate
+`institutionaldiwan.front` project. Cross-origin access for that front end is not configured yet.
 
 ## Package footprint
 
 `InstitutionalDiwan.Server.csproj` references `Microsoft.AspNetCore.Authentication.JwtBearer`,
-`Microsoft.AspNetCore.OpenApi`, `Microsoft.AspNetCore.SpaProxy`, `Microsoft.EntityFrameworkCore.Design`,
-and `Scalar.AspNetCore`, and project-references Application, Infrastructure, and the client `.esproj`.
+`Microsoft.AspNetCore.OpenApi`, `Microsoft.EntityFrameworkCore.Design`, and `Scalar.AspNetCore`, and
+project-references Application and Infrastructure.
 
 ## Implementation status
 
 | Item | State |
 | --- | --- |
-| `Program.cs` | ✅ Wired (DI, MediatR, FluentValidation, auth, action auditing, exception middleware, startup seeding, SPA host) |
+| `Program.cs` | ✅ Wired (DI, MediatR, FluentValidation, auth, action auditing, exception middleware, startup seeding, API host) |
 | Controllers | ✅ `Auth`, `Documents` (drafts, update, register, participants, cancel, details, timeline, plus create with official number), `DocumentNumbers` (issue/cancel/replace/history + department register entries), `DepartmentRegisters` (register book), `Movements` (routing workflow — open/send/receive/complete/reject/return/redirect/close/cancel — plus the movement reads and the department inbox/outbox), `ExternalOrganizations` (CRUD), `InstitutionSettings` (GET/PUT), `Users` (CRUD + roles + department-assignments + effective-permissions), `Roles` (CRUD + activate + grant/revoke permission), `Permissions` (catalog), `Departments` (CRUD + reparent + tree, soft delete), `Employees` (CRUD + deactivate/activate), `DocumentAccessGrants` (list/grant/revoke per document), `NumberingRegistries` (CRUD + activate/deactivate), `DocumentFiles` (Module 06: create/upload/archive/list/download/verify), `AuditLogs` (Module 09: search/checkpoint/integrity), `Lookups` (generic reference catalogs) |
 | Contracts / Middleware / Extensions | ✅ Contracts complete for the live modules; request-context + global exception middleware in place; extensions implemented |
 | DI for Application/Infrastructure | ✅ Wired |
@@ -99,7 +95,7 @@ and `Scalar.AspNetCore`, and project-references Application, Infrastructure, and
 
 | Date | Author | Change |
 | --- | --- | --- |
-| 2026-10-26 | Qoder | Registered `AuditActionMiddleware` between authentication and authorization so every authenticated `/api` call (reads included) writes an `Operation` audit row via `IAuditActionRecorder`; updated the `Program.cs` excerpt and status tables. |
+| 2026-10-26 | Qoder | Removed the SPA integration: dropped `SpaRoot`/`SpaProxy` and the client project reference from the csproj, removed the SPA proxy hosting startup from the launch profiles, and deleted `UseDefaultFiles`, `MapStaticAssets`, and `MapFallbackToFile` from `Program.cs`. The project is now an API-only host; the front end lives in the standalone `institutionaldiwan.front` project. |
 | 2026-10-25 | Buffy | Replaced the leftover template `weatherforecast` sample request with a real `GET /api/audit-logs` request. |
 | 2026-10-25 | opencode | Added the Module 09 `AuditLogsController`, audit contracts, and `RequestContextLoggingMiddleware`; updated the `Program.cs` excerpt and status tables. |
 | 2026-10-25 | opencode | Added `DocumentFilesController` and the Attachments contracts, exposing Module 06: create file, upload a validated version with streamed SHA-256, archive, list by document, download, and checksum verification. |

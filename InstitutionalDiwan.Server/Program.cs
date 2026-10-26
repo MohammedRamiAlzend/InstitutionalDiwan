@@ -20,9 +20,6 @@ var app = builder.Build();
 app.UseMiddleware<RequestContextLoggingMiddleware>();
 app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
 
-app.UseDefaultFiles();
-app.MapStaticAssets();
-
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
@@ -44,6 +41,5 @@ app.UseMiddleware<AuditActionMiddleware>();
 app.UseAuthorization();
 
 app.MapControllers();
-app.MapFallbackToFile("/index.html");
 
 app.Run();

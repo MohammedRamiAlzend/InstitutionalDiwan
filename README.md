@@ -1,12 +1,13 @@
 # Institutional Diwan — نظام الديوان المؤسساتي الموحد
 
 > **Status:** Backend implemented for Modules 01–06 and 09 (Organization, Identity, Correspondence,
-> Numbering, Movements, Attachments, Audit) plus the cross-module reference catalogs. The React client
-> is documented and scaffolded but has no application code yet.
+> Numbering, Movements, Attachments, Audit) plus the cross-module reference catalogs. The React front
+> end lives in the standalone `institutionaldiwan.front/` project, which is documented but still
+> holds only the stock Vite template.
 
 The unified institutional correspondence system: a clean-architecture ASP.NET Core 10 API that
 registers documents, allocates official numbers, routes them between departments, and keeps an
-auditable trail — with an Arabic-first React 19 front end planned on top.
+auditable trail — with an Arabic-first React 19 front end developed separately on top.
 
 ## Repository layout
 
@@ -17,7 +18,7 @@ auditable trail — with an Arabic-first React 19 front end planned on top.
 | `InstitutionalDiwan.Infrastructure/` | Infrastructure | EF Core persistence and migrations, JWT auth, authorization evaluators, seeding, storage, outbox, background jobs, clock. |
 | `InstitutionalDiwan.Server/` | Server | ASP.NET Core presentation — controllers, HTTP contracts, middleware, DI/OpenAPI extensions. |
 | `InstitutionalDiwan.Tests/` | Tests | xUnit unit and integration tests for every layer. |
-| `institutionaldiwan.client/` | Client | React 19 + TypeScript 6 + Vite 8 SPA on Feature-Sliced Design. |
+| `institutionaldiwan.front/` | Front end | Standalone React 19 + TypeScript + Vite SPA on Feature-Sliced Design; not part of the solution. |
 | `plans/` | Docs | Implementation plans that are not yet executed. |
 
 Dependency direction is one-way: **Domain → nothing**, **Application → Domain**,
@@ -26,7 +27,7 @@ Dependency direction is one-way: **Domain → nothing**, **Application → Domai
 Every layer has a `README.md` that lists the files it contains, the conventions that apply there,
 and a change log. `AGENT.md` prescribes that structure for *every* folder that holds code; the
 Server's `Controllers/`, `Contracts/`, `Middleware/`, and `Extensions/`, the Application's
-`Features/` slices, and every client slice already follow it. The Domain and Infrastructure
+`Features/` slices, and every front-end slice already follow it. The Domain and Infrastructure
 layers are currently documented folder-by-folder inside their layer-level `README.md` rather than
 in a `README.md` per subfolder — see the "Known gap" note below.
 
@@ -36,12 +37,12 @@ in a `README.md` per subfolder — see the "Known gap" note below.
 | --- | --- | --- |
 | .NET SDK | 10.0 | Building and running the API and the tests |
 | SQL Server | 2019+ / LocalDB | The `InstitutionalDiwan` database (`Server=.;Trusted_Connection=True`) |
-| Node.js | 20+ (24 recommended) | The Vite dev server and the client build |
+| Node.js | 20+ (24 recommended) | The standalone front end and the `add-endpoint-docs.mjs` script; not needed to build or run the API |
 
 ## Working with the code
 
 ```bash
-# Build the whole solution (server + client project file)
+# Build the solution (the five .NET projects)
 dotnet build InstitutionalDiwan.slnx
 # or, on Windows
 build.cmd
@@ -62,20 +63,21 @@ The database is migrated and seeded on startup in the Development environment. S
 accounts: `admin` / `12345678` (system scope) and `user` / `12345678` (department scope).
 
 ```bash
-# Client
-cd institutionaldiwan.client
+# Front end — standalone Vite project, not part of the solution
+cd institutionaldiwan.front
 npm install
-npm run dev     # Vite on https://localhost:61325, proxying /api and /hubs to the API
+npm run dev     # Vite dev server on http://localhost:5173 (no API proxy configured yet)
 npm run build   # tsc -b && vite build
 npm run lint
 ```
 
-> The client currently contains only the Vite template's `App.tsx` and `main.tsx`. Its
+> The front end currently contains only the Vite template's `App.tsx` and `main.tsx`. Its
 > architecture, planned slices (incl. Attachments + Audit), 16 permissions, UI/design contract, and
 > live endpoint catalog are documented in
-> [`institutionaldiwan.client/README.md`](institutionaldiwan.client/README.md),
-> [`AGENTS.md`](institutionaldiwan.client/AGENTS.md), and
-> [`knowledge.md`](institutionaldiwan.client/knowledge.md) (current as of 2026-10-25).
+> [`institutionaldiwan.front/README.md`](institutionaldiwan.front/README.md),
+> [`AGENTS.md`](institutionaldiwan.front/AGENTS.md), and
+> [`knowledge.md`](institutionaldiwan.front/knowledge.md) (current as of 2026-10-26). The API is an
+> external service from that project's point of view.
 
 ## Module status
 
@@ -111,7 +113,7 @@ npm run lint
 | File | Purpose |
 | --- | --- |
 | `AGENT.md` | The repository rules every agent and contributor must follow, including the mandatory README structure. |
-| `InstitutionalDiwan.slnx` | The solution file: five .NET projects plus the client `.esproj`. |
+| `InstitutionalDiwan.slnx` | The solution file: the five .NET projects (the React front end is not part of it). |
 | `build.cmd` | Windows convenience wrapper around `dotnet build`. |
 | `add-endpoint-docs.mjs` | Node script that fills in the OpenAPI summary, description, and parameter examples of a new endpoint; idempotent, run it with Node. |
 | `plans/` | Implementation plans that have not been executed yet. |
@@ -137,6 +139,7 @@ have no `README.md` of their own yet — their content is documented in the encl
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-26 | Qoder | Removed the old `institutionaldiwan.client` project from the solution and deleted it: the server csproj no longer carries `SpaRoot`/`SpaProxy` or a client project reference, launch profiles no longer start the SPA proxy, and the API no longer serves static files or the SPA fallback. The React front end now lives in the standalone `institutionaldiwan.front` project, which is documented but holds only the Vite template. |
 | 2026-10-26 | Qoder | Extended Module 09 beyond entity changes: a middleware now records every authenticated `/api` action (reads and failures included) as an `Operation` row, and logins produce a `Login` row; documented the two audit layers and the new integration tests. |
 | 2026-10-25 | Cursor | Noted that client docs now track Modules 01–06 + 09 (endpoints, permissions, UI contract) while SPA code remains the Vite template. |
 | 2026-10-25 | Buffy | Serialized audit-chain appends so concurrent reads, writes, and scheduled audit jobs cannot collide on the chain head; the suite now has 375 tests. |

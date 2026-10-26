@@ -4,18 +4,12 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <SpaRoot>..\institutionaldiwan.client</SpaRoot>
-    <SpaProxyLaunchCommand>npm run dev</SpaProxyLaunchCommand>
-    <SpaProxyServerUrl>https://localhost:61325</SpaProxyServerUrl>
     <UserSecretsId>58f8f568-ec12-4c6d-9371-fd09952c2250</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.13" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.13" />
-    <PackageReference Include="Microsoft.AspNetCore.SpaProxy">
-      <Version>10.0.0-preview.1.25120.3</Version>
-    </PackageReference>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.13">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
@@ -25,9 +19,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\InstitutionalDiwan.Application\InstitutionalDiwan.Application.csproj" />
-    <ProjectReference Include="..\institutionaldiwan.client\institutionaldiwan.client.esproj">
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-    </ProjectReference>
     <ProjectReference Include="..\InstitutionalDiwan.Infrastructure\InstitutionalDiwan.Infrastructure.csproj" />
   </ItemGroup>
 

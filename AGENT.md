@@ -88,12 +88,12 @@ Every folder that contains code MUST have a `README.md` with at least these sect
 | `InstitutionalDiwan.Infrastructure/` | EF Core persistence, auth, storage, outbox, background jobs, clock. | `README.md` |
 | `InstitutionalDiwan.Server/` | ASP.NET Core presentation — controllers, contracts, middleware, extensions. | `README.md` |
 | `InstitutionalDiwan.Tests/` | Unit/integration tests (xUnit) for all layers. | `README.md` |
-| `institutionaldiwan.client/` | React SPA front end (Feature-Sliced Design; has its own `AGENTS.md`). | `README.md` |
+| `institutionaldiwan.front/` | Standalone React SPA front end (Feature-Sliced Design; has its own `AGENTS.md`). Not part of the solution. | `README.md` |
 
 Subfolders with their own `README.md` (e.g. `Abstractions/`, `Behaviors/`, `Features/`,
 `Persistence/`, `Controllers/`, `Contracts/`, `Middleware/`, `Extensions/`, …) follow the same
-structure and the same update rule. The client's slices follow the same rule, described in
-`institutionaldiwan.client/AGENTS.md`.
+structure and the same update rule. The front-end project is separate from the .NET solution and
+follows its own rules, described in `institutionaldiwan.front/AGENTS.md`.
 
 ## Housekeeping rules
 

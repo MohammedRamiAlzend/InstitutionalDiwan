@@ -1,9 +1,5 @@
 <Solution>
   <Project Path="InstitutionalDiwan.Application/InstitutionalDiwan.Application.csproj" />
-  <Project Path="institutionaldiwan.client/institutionaldiwan.client.esproj">
-    <Build />
-    <Deploy />
-  </Project>
   <Project Path="InstitutionalDiwan.Domain/InstitutionalDiwan.Domain.csproj" />
   <Project Path="InstitutionalDiwan.Infrastructure/InstitutionalDiwan.Infrastructure.csproj" />
   <Project Path="InstitutionalDiwan.Server/InstitutionalDiwan.Server.csproj" />
