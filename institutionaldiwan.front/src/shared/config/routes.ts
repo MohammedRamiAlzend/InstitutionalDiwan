@@ -1,0 +1,17 @@
+/** Typed route builders — no magic strings in guards, links, or redirects. */
+export const ROUTES = {
+  LOGIN: '/login',
+  CHANGE_PASSWORD: '/change-password',
+  DASHBOARD: '/',
+  DOCUMENTS: '/documents',
+  DOCUMENT_DETAIL: (id: string) => `/documents/${id}`,
+  MOVEMENTS: '/movements',
+  DEPARTMENTS: '/departments',
+  USERS: '/users',
+  ROLES: '/roles',
+  EMPLOYEES: '/employees',
+  NUMBERING: '/numbering',
+  AUDIT: '/audit',
+} as const
+
+export type RoutePath = (typeof ROUTES)[keyof typeof ROUTES] | string

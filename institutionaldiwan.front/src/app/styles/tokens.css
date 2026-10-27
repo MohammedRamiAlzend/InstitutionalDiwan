@@ -1,0 +1,72 @@
+/* tokens.css — single source of color for the SPA (see this folder's README.md).
+   Only this file may contain hex color values. Components consume the semantic
+   `--color-*` variables (or Tailwind utilities mapped to them in index.css). */
+
+:root {
+  /* Forest */
+  --forest-500: #428177;
+  --forest-700: #054239;
+  --forest-900: #002623;
+
+  /* Golden Wheat */
+  --wheat-100: #edebe0;
+  --wheat-400: #b9a779;
+  --wheat-600: #988561;
+
+  /* Charcoal */
+  --charcoal-0: #ffffff;
+  --charcoal-500: #3d3a3b;
+  --charcoal-900: #161616;
+
+  /* Functional status colors (not part of the brand palette) */
+  --status-danger: #b3261e;
+  --status-success: #2e7d32;
+  --status-warning: #b26a00;
+}
+
+/* Semantic light theme (default / explicit `data-theme="light"`) */
+:root,
+[data-theme='light'] {
+  color-scheme: light;
+
+  --color-bg: var(--wheat-100);
+  --color-surface: var(--charcoal-0);
+  --color-surface-muted: color-mix(in srgb, var(--wheat-400) 22%, var(--charcoal-0));
+  --color-text: var(--charcoal-900);
+  --color-text-muted: var(--charcoal-500);
+  --color-border: color-mix(in srgb, var(--wheat-600) 45%, var(--charcoal-0));
+
+  --color-accent: var(--forest-700);
+  --color-accent-hover: var(--forest-900);
+  --color-accent-contrast: var(--wheat-100);
+  --color-highlight: var(--forest-500);
+  --color-gold: var(--wheat-600);
+  --color-focus-ring: var(--forest-500);
+
+  --color-danger: var(--status-danger);
+  --color-success: var(--status-success);
+  --color-warning: var(--status-warning);
+}
+
+/* Semantic dark theme (`data-theme="dark"`) */
+[data-theme='dark'] {
+  color-scheme: dark;
+
+  --color-bg: var(--charcoal-900);
+  --color-surface: var(--charcoal-500);
+  --color-surface-muted: var(--forest-900);
+  --color-text: var(--wheat-100);
+  --color-text-muted: var(--wheat-400);
+  --color-border: var(--forest-700);
+
+  --color-accent: var(--wheat-400);
+  --color-accent-hover: var(--wheat-600);
+  --color-accent-contrast: var(--charcoal-900);
+  --color-highlight: var(--forest-500);
+  --color-gold: var(--wheat-400);
+  --color-focus-ring: var(--wheat-400);
+
+  --color-danger: var(--status-danger);
+  --color-success: var(--status-success);
+  --color-warning: var(--status-warning);
+}

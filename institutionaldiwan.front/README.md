@@ -1,9 +1,11 @@
 # institutionaldiwan.front — Institutional Diwan React 19 + TypeScript 6 + Vite 8 SPA (Feature-Sliced Design)
 
-> **Status:** Documentation kit complete (2026-10-26), ported from the previous client project.
-> `src/` still holds only the stock Vite React-TS template; every FSD
-> layer and slice folder is documentation-only. Planned npm packages are **not** installed, and the
-> `@` alias, dev proxy, `.env`, and HTTPS dev certificate are **not configured yet**.
+> **Status:** Identity module (Module 01) vertical slice implemented (2026-10-27): shared
+> foundation (`api`/`config`/`lib`/`types`/core `ui` primitives), `entities/user` session slice,
+> `features/auth` (login/logout/permission guard), `app` providers + router + theme tokens, and the
+> `pages/login` + `pages/dashboard` routes — Arabic-first RTL with light/dark themes, verified
+> against the live API. The `@` alias, dev proxy, and `.env.example` are configured; the HTTPS dev
+> certificate is still to-be.
 >
 > **Standalone by design:** this project is intended to live outside the `InstitutionalDiwan.slnx`
 > solution. The ASP.NET Core API is an external service; there is no Visual Studio `.esproj` and no
@@ -23,11 +25,11 @@ developers can implement slices predictably without spaghetti imports.
 
 | Item | As-is | To-be |
 | --- | --- | --- |
-| Runtime deps in `package.json` | `react`, `react-dom` only | Full stack in “Required Packages” below |
-| FSD folders | ✅ README scaffolds for all six layers (`app`, `pages`, `widgets`, `features`, `entities`, `shared`) | Slice code implemented per those docs |
-| `vite.config.ts` | Stock template — no `@` alias, proxy, or HTTPS certificate | `@` → `./src`, env-driven `/api` + `/hubs` proxy, optional local HTTPS |
-| Dev configuration | No `.env` / `.env.example` | `.env` created for the env-driven proxy; kept out of git |
-| UI | Vite welcome page | RTL app shell + module pages |
+| Runtime deps in `package.json` | React stack + Module 01 slice packages (see “Required Packages” history in the Change Log) | Remaining planned packages per slice (Radix primitives, `@tanstack/react-table`, SignalR, Mermaid) as their slices land |
+| FSD folders | ✅ README scaffolds for all six layers; Module 01 slices implemented (`shared` foundation, `entities/user`, `features/auth`, `pages/login` + `dashboard`, `app`) | Remaining slice code implemented per those docs |
+| `vite.config.ts` | ✅ `@` → `./src` alias + env-driven `/api` + `/hubs` proxy | Optional local HTTPS certificate |
+| Dev configuration | ✅ `.env.example` committed (`DEV_PROXY_TARGET`, `VITE_API_BASE_URL`); create local `.env` as needed | — |
+| UI | ✅ Arabic RTL login + minimal dashboard, light/dark themes from `tokens.css` | Full app shell + module pages |
 | Backend coverage docs | `knowledge.md` describes the external API | Modules 01–06, 09 live; 07/08/10 deferred |
 
 Always treat **as-is** as the truth for “what runs today,” and **to-be** as the install/implement
@@ -35,8 +37,9 @@ checklist before coding features.
 
 ## Required Packages & One-Command Installation
 
-> These packages are **required for feature work** but are **not installed yet**. Run the commands
-> inside `institutionaldiwan.front/` before implementing the first slice.
+> The Module 01 slice packages are **installed** (React Router, TanStack Query, Zustand, Axios,
+> react-hook-form, Zod, resolvers, lucide-react, clsx, tailwind-merge, CVA, sonner, Tailwind v4,
+> devtools). The groups below remain the checklist for the remaining slices.
 
 ```bash
 # 1. Core runtime packages (Routing, Server/Client State, HTTP, Forms, Validation, Icons, UI, SignalR, Mermaid)
@@ -49,38 +52,17 @@ npm install @radix-ui/react-dialog @radix-ui/react-dropdown-menu @radix-ui/react
 npm install -D tailwindcss @tailwindcss/vite @tanstack/react-query-devtools
 ```
 
-### API Target & Vite Proxy (to-be)
+### API Target & Vite Proxy
 
-`vite.config.ts` is currently the stock Vite template. Before the first API-backed slice, add:
+`vite.config.ts` ships the `@` → `./src` alias and an env-driven dev proxy for `/api` (HTTP) and
+`/hubs` (WebSocket upgrade). The proxy target resolves in this order:
 
-- the `@` → `./src` alias used by every FSD import;
-- `server.proxy` entries for `^/api` (HTTP) and `^/hubs` (WebSocket upgrade);
-- an env-driven target, for example `DEV_PROXY_TARGET`, with a sensible fallback to the API's
-  development origin;
-- optionally, the local HTTPS certificate for parity with the deployed origin.
+1. `DEV_PROXY_TARGET` from `.env` (see `.env.example`);
+2. `ASPNETCORE_HTTPS_PORT` from the shell;
+3. `https://localhost:7126` (the API's usual development origin).
 
-Target shape (not yet present in the file):
-
-```ts
-server: {
-  proxy: {
-    '^/api': { target, secure: false, changeOrigin: true },
-    '^/hubs': { target, secure: false, changeOrigin: true, ws: true },
-  },
-}
-```
-
-Configuration keys to create in `.env` when the proxy lands:
-
-| Key | Purpose |
-| --- | --- |
-| `DEV_PROXY_TARGET` | Absolute backend origin for local development (`http://192.168.1.20:5028`, `https://localhost:7126`). |
-| `VITE_API_BASE_URL` | Public base URL baked into the build (`/api` for same-origin deployments, absolute only for a cross-origin API + CORS). |
-| `DEV_SERVER_PORT` | Dev-server port for the planned HTTPS proxy setup (stock Vite uses `5173`). |
-| `DEV_HOST` / `DEV_ALLOWED_HOSTS` | Interface/hostname binding and allowed host headers. |
-
-There is no `.env` or `.env.example` yet. When you add them, keep `.env` out of git — the stock
-`.gitignore` ignores `*.local` but not `.env`.
+The local HTTPS **dev certificate** is still to-be (optional; only needed for parity with a
+deployed HTTPS origin during development).
 
 **Changing the API host, publishing the SPA, and wiring a new endpoint end to end are covered in
 [`DEPLOYMENT.md`](DEPLOYMENT.md).**

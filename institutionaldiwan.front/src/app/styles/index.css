@@ -1,0 +1,76 @@
+@import 'tailwindcss';
+@import './tokens.css';
+
+/* Map the semantic tokens to Tailwind v4 color utilities
+   (bg-background, bg-surface, text-foreground, border-border, bg-accent, …). */
+@theme inline {
+  --color-background: var(--color-bg);
+  --color-surface: var(--color-surface);
+  --color-surface-muted: var(--color-surface-muted);
+  --color-foreground: var(--color-text);
+  --color-muted: var(--color-text-muted);
+  --color-border: var(--color-border);
+  --color-accent: var(--color-accent);
+  --color-accent-hover: var(--color-accent-hover);
+  --color-accent-contrast: var(--color-accent-contrast);
+  --color-highlight: var(--color-highlight);
+  --color-gold: var(--color-gold);
+  --color-focus-ring: var(--color-focus-ring);
+  --color-danger: var(--color-danger);
+  --color-success: var(--color-success);
+  --color-warning: var(--color-warning);
+
+  --font-sans: 'Readex Pro', 'Cairo', 'Segoe UI', Tahoma, Arial, sans-serif;
+  --font-heading: 'Cairo', 'Readex Pro', 'Segoe UI', Tahoma, Arial, sans-serif;
+}
+
+@layer base {
+  html {
+    font-family: var(--font-sans);
+  }
+
+  body {
+    background-color: var(--color-bg);
+    color: var(--color-text);
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-heading);
+  }
+
+  /* Visible focus rings on every surface, both themes. */
+  :focus-visible {
+    outline: 2px solid var(--color-focus-ring);
+    outline-offset: 2px;
+  }
+
+  /* Codes, official numbers, hashes, and ISO dates stay LTR inside RTL pages. */
+  [dir='ltr'],
+  .ltr-island {
+    direction: ltr;
+    unicode-bidi: isolate;
+  }
+
+  @media print {
+    /* Force the light token set and hide app chrome for official extracts. */
+    :root,
+    [data-theme='dark'] {
+      color-scheme: light;
+      --color-bg: var(--wheat-100);
+      --color-surface: var(--charcoal-0);
+      --color-surface-muted: color-mix(in srgb, var(--wheat-400) 22%, var(--charcoal-0));
+      --color-text: var(--charcoal-900);
+      --color-text-muted: var(--charcoal-500);
+      --color-border: color-mix(in srgb, var(--wheat-600) 45%, var(--charcoal-0));
+      --color-accent: var(--forest-700);
+      --color-accent-hover: var(--forest-900);
+      --color-accent-contrast: var(--wheat-100);
+      --color-highlight: var(--forest-500);
+      --color-gold: var(--wheat-600);
+      --color-focus-ring: var(--forest-500);
+    }
+  }
+}
