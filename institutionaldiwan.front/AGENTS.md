@@ -106,9 +106,10 @@ ships light and dark themes from one token file — see the non-negotiable secti
   (see [Desktop-grade interaction contract](#desktop-grade-interaction-contract)).
 - **Server state is React Query's job.** Do not copy server data into `useState`; use the entity
   hooks. Local `useState` is for view state only.
-- **Errors come from the API.** The backend answers RFC 7807 `ProblemDetails`; surface
-  `error.detail` to the user and branch on `error.code` (the domain error code), never on the
-  HTTP status alone. Exception: `POST /api/audit-logs/integrity-checks` returns **200** with
+- **Errors come from the API, but the UI is Arabic-only.** The backend answers RFC 7807
+  `ProblemDetails`; branch on `error.code` (the domain error code), never on the HTTP status
+  alone, and render `toArabicErrorMessage(error)` from `shared/api/errorMessages.ts` — never the
+  server's English `detail`. Extend that catalog with each module's codes as slices land. Exception: `POST /api/audit-logs/integrity-checks` returns **200** with
   `isValid: false` when the chain is broken — read the body, do not treat it as a transport error.
 - **Permissions are exact strings.** The codes in `src/shared/config/permissions.ts` must match
   the API's `InstitutionalDiwan.Domain/Common/Permissions.cs` exactly (the API is a separate

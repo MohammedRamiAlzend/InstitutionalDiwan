@@ -1,6 +1,6 @@
 # institutionaldiwan.front / src/features — User Interactions & Business Mutations Layer
 
-> **Status:** Scaffolding & Rules — FSD feature slices mapped to backend CQRS Commands; code pending.
+> **Status:** Partially implemented — `auth/` is live; the remaining feature slices are documented and pending.
 > Movement, attachment, and audit write slices are now mapped to **live** APIs.
 
 ## Purpose
@@ -21,7 +21,7 @@ error handling, and form/dialog UI.
 
 | Slice Folder | Backend Endpoints & CQRS Commands | Key Domain Rules & Error Handling | State |
 | --- | --- | --- | --- |
-| `auth/` | `POST /api/auth/login`, `register`, `change-password` | JWT storage; `Identity.InvalidCredentials` / `Identity.UserInactive` | ❌ Planned |
+| `auth/` | `POST /api/auth/login` (+ `register` / `change-password` pending) | JWT storage; `Identity.InvalidCredentials` / `Identity.UserInactive` rendered via the Arabic error catalog | ✅ Implemented (login/logout/guard) |
 | `document-create/` | `POST /api/documents` (+ drafts/register) | `409 Numbering.OfficialNumberTaken` on official number field | ❌ Planned |
 | `document-access-grant/` | grants POST/DELETE | `ACCESS_GRANT_MANAGE`; access levels VIEW/DOWNLOAD/FORWARD/MANAGE | ❌ Planned |
 | `department-manage/` | departments CRUD/reparent/activate | `Department.CodeAlreadyExists`, `CyclicHierarchy`, `HasActiveChildren` | ❌ Planned |
@@ -44,13 +44,15 @@ error handling, and form/dialog UI.
 
 | Feature Slice | State |
 | --- | --- |
-| `auth/`, `document-create/`, `document-access-grant/`, `department-manage/`, `user-manage/`, `role-manage/` | ❌ Not implemented (backend live) |
+| `auth/` | ✅ Implemented (Identity Module 01) |
+| `document-create/`, `document-access-grant/`, `department-manage/`, `user-manage/`, `role-manage/` | ❌ Not implemented (backend live) |
 | `movement-routing/`, `attachment-upload/`, `audit-manage/` | ❌ Not implemented (backend live; docs ready) |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-27 | agent | Marked `auth/` as implemented (login, logout, permission guard, Arabic error catalog); register and change-password forms remain pending. |
 | 2026-10-25 | Buffy | Clarified that features expose handlers/mutations while the mounting widget owns permission-filtered context-menu item definitions. |
 | 2026-10-25 | Cursor | Marked movement/attachment/audit feature slices as backend-ready; added `audit-manage` mapping and integrity HTTP 200 semantics. |
 | 2026-10-22 | opencode | Converted this folder's `README.md` from the Word document it was authored in to markdown. |

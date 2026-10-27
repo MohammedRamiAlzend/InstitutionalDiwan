@@ -1,6 +1,6 @@
 # institutionaldiwan.front / src/shared/config — Permissions, Routes & Environment Configuration
 
-> **Status:** Scaffolding & Rules — Config rules and permission constants defined; code pending.
+> **Status:** Implemented (permissions, routes, env).
 
 ## Purpose
 
@@ -8,7 +8,7 @@ Centralizes application constants, route paths, and the canonical permission cod
 `InstitutionalDiwan.Domain/Common/Permissions.cs` so route guards, sidebar items, and action buttons
 never use magic strings.
 
-## Contents (planned)
+## Contents
 
 | File | Purpose |
 | --- | --- |
@@ -40,12 +40,13 @@ export const ROUTES = {
 
 | Item | State |
 | --- | --- |
-| `permissions.ts`, `routes.ts`, `env.ts` | ❌ Not implemented |
+| `permissions.ts`, `routes.ts`, `env.ts`, `index.ts` | ✅ Implemented |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-27 | agent | Implemented the segment exactly per the root `AGENTS.md` contracts (16 permissions, typed routes, relative API base URL). |
 | 2026-10-25 | Cursor | Updated to 16 permissions (added audit); expanded routes for movements/audit; deferred archive route; linked AGENTS.md contract. |
 | 2026-10-22 | opencode | Converted this folder's `README.md` from the Word document it was authored in to markdown. |
 | 2026-10-19 | agent | Initialized `src/shared/config` segment and documented canonical permission and route constants. |

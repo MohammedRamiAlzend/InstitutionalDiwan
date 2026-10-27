@@ -1,8 +1,10 @@
 # Institutional Diwan React Front End — Agent Knowledge
 
-> **Status:** Current as of **2026-10-26** — the external API's Modules **01–06** and **09** are
+> **Status:** Current as of **2026-10-27** — the external API's Modules **01–06** and **09** are
 > live (Organization, Identity, Correspondence, Numbering, Movements, Attachments, Audit) plus the
-> generic Lookups API. This standalone SPA is still scaffolding only (Vite template + FSD docs).
+> generic Lookups API. The SPA now implements the Identity (Module 01) vertical slice: login,
+> session hydration, logout, route guards, Arabic error messages, and light/dark themes. Remaining
+> slices are documented but not yet coded.
 >
 > **Standalone boundary:** this project is not part of the API solution. Server paths below refer to
 > the external `InstitutionalDiwan.Server` repository; the front end talks to it only over `/api`
@@ -12,10 +14,10 @@
 
 | Area | As-is (today) | To-be (before feature work) |
 | --- | --- | --- |
-| Application code | Vite `App.tsx` / `main.tsx` only | FSD slices under `src/{app,pages,widgets,features,entities,shared}` |
-| `package.json` | `react` + `react-dom` (+ Vite/TS/ESLint) | Install the packages listed in [`README.md`](README.md) |
-| `vite.config.ts` proxy | ❌ Stock template — no `@` alias, proxy, or HTTPS certificate | `@` alias + `^/api` and `^/hubs` proxies behind the production reverse proxy ([`DEPLOYMENT.md`](DEPLOYMENT.md)) |
-| Dev configuration | ❌ No `.env` / `.env.example` | `.env` with `DEV_PROXY_TARGET`; kept out of git |
+| Application code | FSD slices for Module 01 (`shared` core, `entities/user`, `features/auth`, `pages/login` + `dashboard`, `app`) | Remaining slices under `src/{pages,widgets,features,entities}` |
+| `package.json` | React stack + Module 01 packages (router, query, zustand, axios, RHF, zod, sonner, Tailwind v4) | Remaining packages per slice (see [`README.md`](README.md)) |
+| `vite.config.ts` proxy | ✅ `@` alias + env-driven `/api` and `/hubs` proxies (`DEV_PROXY_TARGET` → `ASPNETCORE_HTTPS_PORT` → `https://localhost:7126`) | Optional local HTTPS certificate; production uses the reverse proxy ([`DEPLOYMENT.md`](DEPLOYMENT.md)) |
+| Dev configuration | ✅ `.env.example` committed; `.env` is git-ignored | — |
 | Backend | External API: 17 controllers, ~112 endpoints | Front end consumes relative `/api/...` URLs |
 | Modules without API | 07 Archiving, 08 Relations, 10 Notifications | Do **not** call them; domain/lookups exist only |
 
@@ -293,8 +295,13 @@ create/update/deactivate/activate — `DOCUMENT_EDIT`.
 
 Every failure returns `{ type, title, status, detail }` where `title` is the domain error code
 (e.g. `Numbering.OfficialNumberTaken`, `Department.CyclicHierarchy`, `Audit.NothingToCheckpoint`)
-and `detail` is the human message. `shared/api/httpClient.ts` must normalize this into an
+and `detail` is the human message. `shared/api/httpClient.ts` normalizes this into an
 `ApiError` exposing `.code` (= `title`), `.detail`, and `.status`.
+
+**The UI is Arabic-only:** the server's `detail` is English, so surfaces render
+`toArabicErrorMessage(error)` from `shared/api/errorMessages.ts`, which maps the domain code to an
+Arabic message (full Identity set today) with Arabic HTTP-status fallbacks. Extend the catalog per
+module as slices land; never render the raw `detail` to the user.
 
 Branch UI on `.code`, never on HTTP status alone. Exception: audit integrity **command** returns
 **200** with `isValid: false` — treat as a successful RPC whose payload reports failure.

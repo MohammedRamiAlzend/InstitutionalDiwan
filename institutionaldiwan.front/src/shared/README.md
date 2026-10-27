@@ -1,7 +1,10 @@
 # institutionaldiwan.front / src/shared — Shared Infrastructure, UI Kit & Utilities Layer
 
-> **Status:** Scaffolding & Rules — FSD shared segments, HTTP client contract, and UI kit rules
-> defined; code pending. Packages listed below are **to-be** (not in `package.json` yet).
+> **Status:** Core implemented for Identity Module 01 — `api` (axios client, ProblemDetails →
+> `ApiError`, Arabic error catalog, token storage), `config` (16 permissions, routes, env), `lib`
+> (`cn`, theme store), `types` (ProblemDetails, PagedResult), and the core `ui` primitives
+> (`button`, `input`, `form-field`, `theme-toggle`). The data grid, context menu, and Mermaid
+> renderer land with their slices.
 
 ## Purpose
 
@@ -15,15 +18,16 @@ No business logic; no imports from upper layers.
 - Forbidden: entities / features / widgets / pages / app.
 - Segments: `api/`, `ui/`, `lib/`, `config/`, `types/` — each with `index.ts` + `README.md`.
 
-## Required Packages (to-be)
+## Required Packages
 
-| Package | Used for |
-| --- | --- |
-| `axios` | `shared/api/httpClient.ts` |
-| `clsx` + `tailwind-merge` + `class-variance-authority` | `cn()` + UI variants |
-| `@radix-ui/*` + `lucide-react` | RTL primitives, including `@radix-ui/react-context-menu` for right-click menus |
-| `mermaid` | Lazy-loaded diagram / chart / tree rendering in `ui/mermaid-view` |
-| `@microsoft/signalr` | Hub helper (only after server hubs exist) |
+| Package | Used for | State |
+| --- | --- | --- |
+| `axios` | `shared/api/httpClient.ts` | ✅ Installed |
+| `clsx` + `tailwind-merge` + `class-variance-authority` | `cn()` + UI variants | ✅ Installed |
+| `lucide-react` | Icons | ✅ Installed |
+| `@radix-ui/*` + `@radix-ui/react-context-menu` | RTL primitives, right-click menus | ❌ To-be with the data-grid slice |
+| `mermaid` | Lazy-loaded diagram / chart / tree rendering in `ui/mermaid-view` | ❌ To-be with the visualization slice |
+| `@microsoft/signalr` | Hub helper (only after server hubs exist) | ❌ Deferred |
 
 ## Planned Segments
 
@@ -53,12 +57,17 @@ No business logic; no imports from upper layers.
 
 | Segment | State |
 | --- | --- |
-| `api/`, `ui/`, `lib/`, `config/`, `types/` | ❌ Not implemented |
+| `api/` | ✅ Core — `httpClient.ts`, `problemDetails.ts`, `tokenStorage.ts`; `signalrClient.ts` deferred |
+| `config/` | ✅ `permissions.ts`, `routes.ts`, `env.ts` |
+| `lib/` | ✅ `cn.ts`, `theme.ts`; `date`, `crypto`, `arabic`, `columnPreferences` pending their slices |
+| `types/` | ✅ `api.ts` (ProblemDetails, PagedResult); `lookup.ts` pending the lookups slice |
+| `ui/` | ✅ `button`, `input`, `form-field`, `theme-toggle`; `data-table`, `context-menu`, `mermaid-view` pending |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-27 | agent | Implemented the shared foundation for Identity Module 01, including the Arabic `errorMessages` catalog (domain-code → Arabic, status fallbacks) so no English server detail reaches the UI. |
 | 2026-10-25 | Buffy | Documented the shared interaction primitives: `ui/context-menu`, `ui/data-table` with `lib/columnPreferences` (localStorage), and lazy `ui/mermaid-view`; added `mermaid` and `@radix-ui/react-context-menu` to the package list. |
 | 2026-10-25 | Cursor | Clarified as-is vs to-be packages; noted 16 permissions and PagedResult shared type; pointed at AGENTS.md contracts. |
 | 2026-10-22 | opencode | Converted this folder's `README.md` from the Word document it was authored in to markdown. |

@@ -22,7 +22,7 @@ read-only presentational UI. Entities never perform write mutations.
 | `document/` | Documents + access grants | `useDocuments`, `DocumentStatusBadge`, `OfficialNumberTag` | ❌ Planned |
 | `document-file/` | Module 06 file + version responses (`GET /api/documents/{id}/files`, verify) | `useDocumentFiles`, `ChecksumBadge`, version list | ❌ Planned (API live) |
 | `department/` | Departments + tree | `useDepartments`, `useDepartmentTree` | ❌ Planned |
-| `user/` | `MeResponse`, users, employees | `useCurrentUser`, `UserScopeBadge` | ❌ Planned |
+| `user/` | `MeResponse`, users, employees | `useMeQuery` (session), `UserScopeBadge` | ⚠️ Session implemented; user/employee lists pending |
 | `role/` | Roles + permissions catalog | `useRoles`, `PermissionCodeChip` | ❌ Planned |
 | `numbering-registry/` | Registries + counters | `useNumberingRegistries` | ❌ Planned |
 | `movement/` | Module 05 movements, inbox/outbox, by-document | `useInbox`, `useOutbox`, `MovementStepBadge` | ❌ Planned (API live) |
@@ -44,13 +44,15 @@ read-only presentational UI. Entities never perform write mutations.
 
 | Entity Slice | State |
 | --- | --- |
-| `document/`, `department/`, `user/`, `role/`, `numbering-registry/`, `lookup/` | ❌ Not implemented |
+| `user/` (session parts) | ✅ Implemented |
+| `document/`, `department/`, `role/`, `numbering-registry/`, `lookup/` | ❌ Not implemented |
 | `document-file/`, `movement/`, `audit-log/` | ❌ Not implemented (backend live; docs ready) |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-27 | agent | Marked the `user/` session parts (`useMeQuery`, session store, `UserScopeBadge`) as implemented; user/employee list hooks remain pending. |
 | 2026-10-25 | Buffy | Documented pure `model/` builders (`toTree`, `toMermaid`) so entity read models feed the shared tree/Mermaid visualization without owning UI. |
 | 2026-10-25 | Cursor | Added `document-file`, `movement`, and `audit-log` entity slices mapped to live Modules 05/06/09 APIs. |
 | 2026-10-22 | opencode | Converted this folder's `README.md` from the Word document it was authored in to markdown. |

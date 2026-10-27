@@ -1,31 +1,27 @@
 # institutionaldiwan.front / src — Front-End Source Root
 
-> **Status:** Docs ported from the previous client project on 2026-10-26 and aligned with the
-> external API's Modules 01–06 + 09. Only the Vite template's entry files exist as code. Every FSD
-> layer folder below is documented; no feature application code yet.
+> **Status:** Identity Module 01 implemented (2026-10-27): the `app` layer boots the SPA, `shared`
+> provides the HTTP client, tokens and core UI primitives, `entities/user` holds the session,
+> `features/auth` owns login/logout, and `pages/login` + `pages/dashboard` are live routes.
+> Remaining slices are documented but not yet coded.
 
 ## Purpose
 
 The root of the front end's source tree. It holds the Vite entry point that boots the React
-application, plus the six Feature-Sliced Design layers the SPA is built from. When the `app`
-layer is implemented, `main.tsx` will mount that layer's root component instead of the placeholder
-`App` component, and this file will describe the two.
+application, plus the six Feature-Sliced Design layers the SPA is built from.
 
 ## Contents
 
 | File / Folder | Purpose |
 | --- | --- |
-| `main.tsx` | Vite entry point: creates the React root and mounts `<App />`; will mount the `app` layer's providers and router. |
-| `App.tsx` | Vite template placeholder that renders a welcome heading; replaced by the `app` layer's root component. |
-| `App.css` | Vite template stylesheet for the placeholder `App`; removed with the placeholder. |
-| `index.css` | Vite template global stylesheet; replaced by the `app/styles` Tailwind v4 entry point. |
+| `main.tsx` | Vite entry point: imports `app/styles/index.css` and mounts the `app` layer root. |
+| `app/` | FSD layer 1 — global providers, router and permission guards, theme tokens and global styles. |
+| `pages/` | FSD layer 2 — one route page per slice (`login`, `dashboard` implemented). |
+| `widgets/` | FSD layer 3 — composite page sections (documented, not implemented). |
+| `features/` | FSD layer 4 — write mutations, Zod schemas, interactive forms (`auth` implemented). |
+| `entities/` | FSD layer 5 — read models, query key factories, `useQuery` hooks (`user` implemented). |
+| `shared/` | FSD layer 6 — HTTP client, RFC 7807 → Arabic message catalog, RTL UI kit, constants. |
 | `assets/` | Vite template images (`hero.png`, `react.svg`, `vite.svg`); replaced by the institution's own artwork. |
-| `app/` | FSD layer 1 — global providers, router and permission guards, global styles. |
-| `pages/` | FSD layer 2 — one route page per slice. |
-| `widgets/` | FSD layer 3 — composite page sections. |
-| `features/` | FSD layer 4 — write mutations, Zod schemas, interactive forms and dialogs. |
-| `entities/` | FSD layer 5 — read models, query key factories, `useQuery` hooks, read-only badges. |
-| `shared/` | FSD layer 6 — HTTP client, RFC 7807 adapter, RTL UI kit, utilities, constants. |
 
 ## Conventions / Notes
 
@@ -33,8 +29,8 @@ layer is implemented, `main.tsx` will mount that layer's root component instead 
   `shared`. Never import upward and never import across sibling slices on the same layer.
 - Every slice and `shared` segment exposes its public interface through its own `index.ts`
   barrel; deep imports are forbidden.
-- The `@` path alias must point at this folder (`./src`), so an import of `@/shared` resolves to
-  `src/shared`. It is not configured in the stock `vite.config.ts` yet.
+- The `@` path alias points at this folder (`./src`), configured in `vite.config.ts` and
+  `tsconfig.app.json`.
 - Each layer folder has its own `README.md` describing its rules, its planned slices, and its
   change log.
 
@@ -42,18 +38,19 @@ layer is implemented, `main.tsx` will mount that layer's root component instead 
 
 | Item | State |
 | --- | --- |
-| `main.tsx`, `App.tsx`, `App.css`, `index.css` | ⚠️ Vite template placeholders |
-| `app/` | ❌ Not implemented |
-| `pages/` | ❌ Not implemented |
+| `main.tsx` | ✅ Mounts `@/app` + global stylesheet; template `App.tsx` / `App.css` / `index.css` removed |
+| `app/` | ✅ Implemented |
+| `pages/` | ✅ `login`, `dashboard` (minimal); remaining slices pending |
 | `widgets/` | ❌ Not implemented |
-| `features/` | ❌ Not implemented |
-| `entities/` | ❌ Not implemented |
-| `shared/` | ❌ Not implemented |
+| `features/` | ✅ `auth`; remaining slices pending |
+| `entities/` | ✅ `user`; remaining slices pending |
+| `shared/` | ✅ Core (`api`, `config`, `lib`, `types`, `ui` primitives) |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-27 | agent | Rewired `main.tsx` to the `app` layer; deleted the Vite template `App.tsx`, `App.css`, and `index.css` now that `app/styles` owns the global stylesheet. |
 | 2026-10-26 | agent | Ported this README into the standalone project; renamed the source root, noted the external API, and marked the `@` alias as not configured yet. |
 | 2026-10-25 | Cursor | Noted docs are current for Modules 01–06 + 09 while application code remains the Vite template only. |
 | 2026-10-22 | opencode | Added the missing `src/README.md`: the entry files the Vite template left behind, the six FSD layer folders, the import-direction rule, and the `@` path alias. |

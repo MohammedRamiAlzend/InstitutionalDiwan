@@ -1,5 +1,5 @@
 # institutionaldiwan.front / src/app — Application Initialization & Global Providers Layer
-> **Status:** Scaffolding & Rules — FSD layer rules, segments, and required packages defined; code pending.
+> **Status:** Implemented for Identity Module 01 — `index.tsx` composes `AppProviders` + `AppRouter`; theme, query, and session hydration are wired; `/login` and the protected `/` route are live.
 ## Purpose
 `src/app/` is the top-most layer in Feature-Sliced Design (FSD). It initializes the Institutional Diwan React SPA, wires global providers (TanStack Query, React Router, Auth/Session hydration, RTL/Theme direction, Toast notifications, SignalR connection lifecycle), defines route trees and permission guards, and loads global stylesheets. It contains no domain-specific business forms or tables—only application-wide wiring.
 ## Layer & Import Rules (FSD Strict Hierarchy)
@@ -36,12 +36,15 @@
 ## Implementation status
 | Item | State |
 | --- | --- |
-| `providers/` (`AppProviders`, `QueryProvider`, `AuthSessionLoader`) | ❌ Not implemented |
-| `router/` (`AppRouter`, `ProtectedRoute`, `RequirePermission`) | ❌ Not implemented |
-| `styles/` (Tailwind v4, `tokens.css`, RTL + light/dark theme tokens) | ❌ Not implemented |
+| `index.tsx` | ✅ Implemented — composes `AppProviders` and `AppRouter`; mounted by `src/main.tsx` |
+| `providers/` (`AppProviders`, `ThemeProvider`, `QueryProvider`, `AuthSessionLoader`) | ✅ Implemented |
+| `router/` (`AppRouter`, `ProtectedRoute`, `RequirePermission`) | ✅ Implemented — `/login` public, `/` protected; remaining route entries land with their slices |
+| `styles/` (Tailwind v4, `tokens.css`, RTL + light/dark theme tokens) | ✅ Implemented |
+| Forced `/change-password` redirect when `mustChangePassword` | ❌ Pending — the flag is captured at login but no page exists yet |
 ## Change Log
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-27 | agent | Implemented the layer for Identity Module 01: `index.tsx`, `providers` (theme/query/session loader + Toaster), `router` (login + protected dashboard, permission guard re-export), and `styles` (tokens + Tailwind v4 entry). The `mustChangePassword` redirect is deferred until the change-password page exists. |
 | 2026-10-25 | Buffy | Added `ThemeProvider` and `styles/tokens.css` to the planned wiring; documented that every screen supports light/dark with colors only from the token file. |
 | 2026-10-25 | Cursor | Wired route map to live modules (audit in, archive deferred); RequirePermission covers all 16 permission codes. |
 | 2026-10-22 | opencode | Converted this folder's `README.md` from the Word document it was authored in to markdown, so the `README.md`-per-folder rule in `AGENT.md` holds and the content is diffable and agent-editable. |

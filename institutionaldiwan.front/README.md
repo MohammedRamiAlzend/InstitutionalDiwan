@@ -157,16 +157,13 @@ Full endpoint tables: [`knowledge.md`](knowledge.md).
 
 | File / Folder | Purpose |
 | --- | --- |
-| `src/app/` | Application providers, router guards, and Tailwind v4 RTL global styles (`README.md` inside; docs-only). |
-| `src/pages/` | Route-level page slices mapped to Institutional Diwan modules (`README.md` inside; docs-only). |
+| `src/app/` | Implemented application root (`index.tsx`), providers (theme, query, session loader), router + guards, and the Tailwind v4 global styles with `tokens.css`. |
+| `src/pages/` | Route-level page slices; `login` and `dashboard` implemented, the rest documented. |
 | `src/widgets/` | Composite page sections combining entities and features (`README.md` inside; docs-only). |
-| `src/features/` | CQRS Command mutations, Zod forms, and interactive workflows (`README.md` inside; docs-only). |
-| `src/entities/` | Domain read models, query key factories, `useQuery` hooks, and status badges (`README.md` inside; docs-only). |
-| `src/shared/` | Axios client + RFC 7807 adapter, RTL UI kit, utilities, and constants (`README.md` inside; docs-only). |
-| `src/App.tsx` | Vite template placeholder root; replaced by the `app` layer once built. |
-| `src/App.css` | Vite template stylesheet for the placeholder; removed with it. |
-| `src/index.css` | Vite template global stylesheet; replaced by the `app/styles` Tailwind v4 entry point. |
-| `src/main.tsx` | Vite entry that mounts `<App />`; will mount `app` providers instead. |
+| `src/features/` | CQRS Command mutations, Zod forms, and interactive workflows; `auth` implemented, the rest documented. |
+| `src/entities/` | Domain read models, query key factories, `useQuery` hooks, and status badges; `user` (session) implemented, the rest documented. |
+| `src/shared/` | Axios client + RFC 7807 adapter + Arabic error catalog, config, utilities, core UI primitives. |
+| `src/main.tsx` | Vite entry: mounts the `app` layer root and the global stylesheet. |
 | `src/assets/` | Vite template images (`hero.png`, `react.svg`, `vite.svg`); replaced by the institution's own artwork. |
 | `public/` | Vite template favicon and icon sprite. |
 | `AGENTS.md` | Agent rules, desktop-grade interaction contract, 16 permissions, first-slice TypeScript contracts, UI state checklist. |
@@ -174,40 +171,41 @@ Full endpoint tables: [`knowledge.md`](knowledge.md).
 | `knowledge.md` | As-is/to-be, live endpoints (incl. Attachments + Audit), lookups, errors, build order. |
 | `CHANGELOG.md` | Creation notes for this project. |
 | `README.vite-template.md` | Stock Vite README kept for toolchain reference. |
-| `vite.config.ts` | Stock Vite configuration (no `@` alias, proxy, or HTTPS certificate yet). |
-| `package.json` | Scripts + current deps (React only until the install commands above are run). |
+| `vite.config.ts` | `@` → `./src` alias and env-driven `/api` + `/hubs` dev proxy. |
+| `.env.example` | Documents `DEV_PROXY_TARGET` and `VITE_API_BASE_URL`; copy to `.env` locally (`.env` is git-ignored). |
+| `package.json` | Scripts + installed Module 01 dependency stack. |
 | `package-lock.json` | Locked dependency tree. |
 | `eslint.config.js` | Flat ESLint config. |
-| `index.html` | Vite HTML host; currently `lang="en"` — RTL `lang`/`dir` and the theme boot script are to-be. |
-| `tsconfig.json` / `tsconfig.app.json` / `tsconfig.node.json` | TypeScript project references. |
-| `.gitignore` | Node/Vite ignores; add `.env` when you create it. |
+| `index.html` | Arabic RTL document root (`lang="ar" dir="rtl"`), Arabic fonts, and the pre-paint theme boot script. |
+| `tsconfig.json` / `tsconfig.app.json` / `tsconfig.node.json` | TypeScript project references (`@/*` → `./src/*`). |
+| `.gitignore` | Node/Vite ignores plus `.env` / `.env.*` (keeping `.env.example` tracked). |
 
 ## Implementation status
 
 | Layer / Area | State |
 | --- | --- |
 | FSD folder structure & layer `README.md` rules | ✅ Documented |
-| Agent docs (`AGENTS.md`, `knowledge.md`) aligned to Modules 01–06 + 09 | ✅ Current (ported 2026-10-26) |
-| Per-slice docs (`entities/*`, `features/*`, `pages/*`, `widgets/*` READMEs) | ✅ Documented — code still pending |
+| Agent docs (`AGENTS.md`, `knowledge.md`) aligned to Modules 01–06 + 09 | ✅ Current |
+| Per-slice docs (`entities/*`, `features/*`, `pages/*`, `widgets/*` READMEs) | ✅ Documented |
 | UI / design contract documented | ✅ Documented |
 | Interaction contract (context menus, data-grid preferences, Mermaid visualization) | ✅ Documented |
 | Standalone framing (external API, no `.esproj`, no solution references) | ✅ Documented |
-| Required npm packages installed | ❌ Not installed — React/Vite only |
-| `@` → `./src` alias | ❌ Not configured (stock `vite.config.ts`) |
-| Dev proxy + `.env` | ❌ Not configured |
-| HTTPS dev certificate | ❌ Not configured |
-| `index.html` RTL / document title / theme boot script | ❌ Still the stock `lang="en"` template |
-| `src/shared/` (`api`, `ui`, `lib`, `config`, `types`) | ❌ Not implemented |
-| `src/entities/` (document, document-file, department, user, role, numbering-registry, movement, audit-log, lookup) | ❌ Not implemented |
-| `src/features/` (auth, document-*, department-*, user-*, role-*, movement-routing, attachment-upload, audit-manage) | ❌ Not implemented |
+| Module 01 dependency stack installed | ✅ Installed |
+| `@` → `./src` alias | ✅ Configured (`vite.config.ts` + `tsconfig.app.json`) |
+| Dev proxy + `.env.example` | ✅ Configured (HTTPS dev certificate still to-be) |
+| `index.html` RTL / document title / theme boot script | ✅ Configured |
+| `src/shared/` (`api`, `ui`, `lib`, `config`, `types`) | ✅ Core implemented (`data-table`, `context-menu`, `mermaid-view` pending their slices) |
+| `src/entities/` | ✅ `user` (session) implemented; document, document-file, department, role, numbering-registry, movement, audit-log, lookup pending |
+| `src/features/` | ✅ `auth` implemented; document-*, department-*, user-*, role-*, movement-routing, attachment-upload, audit-manage pending |
 | `src/widgets/` (app-shell, registry table, hierarchy tree, movement timeline/inbox, attachments panel, audit table, visualization panel) | ❌ Not implemented |
-| `src/pages/` (login, dashboard, documents, movements, departments, users, numbering, audit; archive deferred) | ❌ Not implemented |
-| `src/app/` (`providers`, `router`, `styles`) | ❌ Not implemented |
-| Publishing & API wiring guide (`DEPLOYMENT.md`) | ✅ Documented (target state) |
+| `src/pages/` | ✅ `login` + minimal `dashboard`; documents, movements, departments, users, numbering, audit pending (archive deferred) |
+| `src/app/` (`providers`, `router`, `styles`) | ✅ Implemented (login-protected routes; `/change-password` pending) |
+| Publishing & API wiring guide (`DEPLOYMENT.md`) | ✅ Documented (proxy section reflects the configured setup) |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-27 | agent | Implemented the Identity Module 01 vertical slice: shared foundation (axios client + Arabic error catalog, config, utils, UI primitives), `entities/user` session, `features/auth` (login/logout/permission guard), `app` providers/router/tokens, and the Arabic RTL `login` + `dashboard` pages; configured the `@` alias, dev proxy, `.env.example`, RTL `index.html` with the theme boot script, and git-ignored `.env`. Verified in-browser (RTL, light/dark, login/logout/401). |
 | 2026-10-26 | agent | Ported the complete FSD documentation kit from the previous client project; renamed project references and recorded the standalone as-is state (stock Vite config, no alias/proxy/env/cert, no `.esproj`). |
 | 2026-10-26 | agent | Added standalone extraction notes, external-API framing, and truthful to-be rows for the tooling that is not configured yet. |

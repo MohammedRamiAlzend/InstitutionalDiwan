@@ -2,18 +2,17 @@
 
 > **Applies to:** `institutionaldiwan.front` (React 19 + TypeScript 6 + Vite 8 SPA), a standalone
 > project outside the `InstitutionalDiwan.slnx` solution.
-> **Last updated:** 2026-10-26.
+> **Last updated:** 2026-10-27.
 >
-> This guide describes the **target** setup. The current project is the stock Vite template: the
-> `@` alias, the dev proxy, the HTTPS dev certificate, and `.env` are **not configured yet**.
+> The `@` alias, the dev proxy, and `.env.example` are **configured** (see `vite.config.ts`). The
+> optional local HTTPS dev certificate is still to-be.
 >
 > This guide covers two things:
 > 1. How to build/publish the SPA and point it at the right API host (including changing an IP).
 > 2. How to wire an external backend endpoint into the front end, end to end.
 >
 > The API is a separate ASP.NET Core service. There is no Visual Studio project file or sibling
-> server dependency. `.env` / `.env.example` do not exist yet; create them when you add the proxy
-> and keep `.env` out of git.
+> server dependency. Copy `.env.example` to `.env` for local overrides; `.env` is git-ignored.
 
 ---
 
@@ -357,5 +356,6 @@ make retries idempotent or clearly resumable.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-27 | agent | Updated the status to reflect the configured `@` alias, dev proxy, and committed `.env.example` (HTTPS dev certificate still optional/to-be). |
 | 2026-10-26 | agent | Ported the guide from the previous client project and adapted it for the standalone front end: marked the proxy/cert/.env as not configured yet, removed Visual Studio assumptions, and removed the server-adjacent copy step now that the API host is API-only. |
 | 2026-10-25 | Buffy | (Inherited from the client docs) Added the publishing/configuration/API-wiring guide; replaced the template sample proxy with env-driven `^/api` and `^/hubs` routes and documented the `.env` keys. |

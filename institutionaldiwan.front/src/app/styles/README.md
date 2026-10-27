@@ -1,18 +1,18 @@
 # institutionaldiwan.front / src/app/styles — Global Styles, Theme Tokens & RTL Typography
 
-> **Status:** Scaffolding & Rules — Styling and RTL rules defined; code pending.
+> **Status:** Implemented — `tokens.css` and the Tailwind v4 entry `index.css` are live; `/login` and the dashboard render in both themes.
 
 ## Purpose
 
 Houses the Tailwind CSS v4 entry stylesheet, CSS variables for the institutional palette, and
 Arabic typography. This is the single source of visual tokens for the SPA.
 
-## Contents (planned)
+## Contents
 
 | File | Purpose |
 | --- | --- |
 | `tokens.css` | **The single source of truth for color**: the raw Forest / Golden Wheat / Charcoal palette, the semantic light and dark theme mappings, and the functional status colors. |
-| `index.css` | `@import "tailwindcss";`, imports `tokens.css`, RTL/LTR base rules (`html[lang="ar"][dir="rtl"]`), Arabic typography, focus rings, and print rules for official extracts. |
+| `index.css` | `@import "tailwindcss";`, imports `tokens.css`, maps the semantic variables to Tailwind utilities via `@theme inline` (e.g. `bg-background`, `text-foreground`, `bg-accent`, `text-accent-contrast`), Arabic font stack (`Readex Pro` / `Cairo`), base focus rings, `dir`-safe base rules, and the print token override. |
 
 ## Design tokens (contract)
 
@@ -93,9 +93,9 @@ those states — never hardcode a status color in a component.
 
 - No `data-theme` attribute (or `data-theme="system"`) → follow `prefers-color-scheme`.
 - `data-theme="light"` / `data-theme="dark"` → explicit user choice.
-- The choice persists in `localStorage` under `diwan.theme`; a planned `ThemeProvider` in
-  `src/app/providers` applies it, listens to `matchMedia` changes for `system`, and exposes the
-  toggle used by `widgets/app-shell`.
+- The choice persists in `localStorage` under `diwan.theme`; the inline boot script in `index.html`
+  applies it before first paint, and `ThemeProvider` in `src/app/providers` re-applies it after
+  mount. The toggle consumed by the login page / app shell is `shared/ui/theme-toggle`.
 - A tiny inline boot script in `index.html` applies the stored/system theme **before first paint** so
   the app never flashes the wrong background.
 - `color-scheme` flips with the theme so native controls, scrollbars, and form widgets match.
@@ -116,13 +116,14 @@ Rules:
 
 | Item | State |
 | --- | --- |
-| `tokens.css` (palette + light/dark semantic tokens) | ❌ Not implemented |
-| `index.css` | ❌ Not implemented |
+| `tokens.css` (palette + light/dark semantic tokens) | ✅ Implemented |
+| `index.css` | ✅ Implemented (Tailwind v4 entry + `@theme inline` mapping) |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-27 | agent | Implemented `tokens.css` exactly per the locked contract and the Tailwind v4 entry `index.css` with semantic-utility mapping, Arabic fonts, focus rings, and print token override. |
 | 2026-10-25 | Buffy | Locked the palette contract: raw Forest / Golden Wheat / Charcoal tokens, full light and dark semantic mappings, `data-theme` + `diwan.theme` switching, and `tokens.css` as the only place hex colors may appear. |
 | 2026-10-25 | Cursor | Added concrete design-token contract, RTL/print rules, and anti-patterns for institutional UI. |
 | 2026-10-22 | opencode | Converted this folder's `README.md` from the Word document it was authored in to markdown. |
