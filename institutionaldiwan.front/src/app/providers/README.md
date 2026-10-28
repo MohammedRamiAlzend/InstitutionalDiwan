@@ -17,6 +17,7 @@ Composes all application-level React context providers (`ThemeProvider`, `QueryP
 ## Change Log
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-28 | agent | Documented the forced-change interaction: `/api/auth/me` still omits `mustChangePassword`, so `ProtectedRoute` re-reads the `must_change_password` claim from the stored JWT when the in-memory session does not carry it. |
 | 2026-10-27 | agent | Implemented the providers for Identity Module 01; devtools are dev-only lazy chunks so they stay out of the production bundle. `mustChangePassword` is not re-derived from `/api/auth/me` (that response carries no flag) — it is set at login only. |
 | 2026-10-25 | Buffy | Added the planned `ThemeProvider` for light/dark/system themes persisted in `diwan.theme`. |
 | 2026-10-22 | opencode | Converted this folder's `README.md` from the Word document it was authored in to markdown, so the `README.md`-per-folder rule in `AGENT.md` holds and the content is diffable and agent-editable. |

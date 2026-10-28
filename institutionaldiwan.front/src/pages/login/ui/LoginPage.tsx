@@ -1,7 +1,7 @@
 import { useLocation, useNavigate } from 'react-router-dom'
 import { ClipboardList, History, Landmark, ShieldCheck } from 'lucide-react'
 import { ROUTES } from '@/shared/config'
-import { LoginForm } from '@/features/auth'
+import { LoginForm, type LoginResponse } from '@/features/auth'
 import { ThemeToggle } from '@/shared/ui'
 
 const features = [
@@ -28,8 +28,13 @@ export function LoginPage() {
   const from = (location.state as { from?: { pathname: string } } | null)?.from
     ?.pathname
 
-  const handleSuccess = () => {
-    navigate(from ?? ROUTES.DASHBOARD, { replace: true })
+  const handleSuccess = (session: LoginResponse) => {
+    navigate(
+      session.mustChangePassword
+        ? ROUTES.CHANGE_PASSWORD
+        : (from ?? ROUTES.DASHBOARD),
+      { replace: true },
+    )
   }
 
   return (

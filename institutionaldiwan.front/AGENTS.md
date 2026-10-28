@@ -12,9 +12,9 @@
 build-time dependency on a sibling server folder. The ASP.NET Core API is an external service:
 configure its origin through Vite's dev proxy or `VITE_API_BASE_URL`, never by hardcoding it.
 
-> **Current as-is:** `vite.config.ts` is the stock template — the `@` → `src` alias, the `/api` and
-> `/hubs` proxy, and the HTTPS dev certificate described below are **not configured yet**. Add the
-> alias before creating the first slice.
+> **Current as-is:** `vite.config.ts` ships the `@` → `src` alias and the env-driven `/api` and
+> `/hubs` dev proxy (`.env.example` documents `DEV_PROXY_TARGET` / `VITE_API_BASE_URL`). Only the
+> optional local HTTPS certificate described below remains to-be.
 
 ## The one rule everything else follows
 
@@ -91,9 +91,9 @@ key factory, never a hand-written string.
 
 ## Conventions
 
-- **Workspace config is not installed yet.** The stock `vite.config.ts` has no `@` alias, proxy, or
-  HTTPS certificate, and there is no `.env` file. Add them (see [`DEPLOYMENT.md`](DEPLOYMENT.md))
-  before writing imports that rely on `@/...` or calling the API.
+- **Workspace config is in place.** `vite.config.ts` has the `@` alias and env-driven proxy, and
+  `.env.example` is committed (copy to `.env` locally). See [`DEPLOYMENT.md`](DEPLOYMENT.md) before
+  changing the API origin.
 - **Arabic first.** The document root is `lang="ar" dir="rtl"`. Latin-only content (codes, ids,
 official numbers, dates, hash hex) is rendered `dir="ltr"` inside an RTL page. Use logical CSS
 properties (`ps-*`/`pe-*`, `ms-*`/`me-*`) so a single stylesheet serves both directions. The app also

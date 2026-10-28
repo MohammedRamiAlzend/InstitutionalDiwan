@@ -1,27 +1,34 @@
 # `src/widgets/app-shell` — RTL Application Shell, Sidebar & Header Widget
+> **Status:** Implemented (Phase 1, 2026-10-27) — wraps every shell route (the standalone `/change-password` page is outside it): permission-filtered sidebar, sticky header, mobile drawer, shell/user/item context menus, and the display-settings dialog (theme + density).
 ## 1. Purpose
-Composes the main authenticated Arabic RTL application layout, including the collapsible navigation sidebar (filtered by user permissions), top header bar, active department badge, and logout trigger.
+Composes the authenticated Arabic RTL workspace chrome around `<Outlet />`: a collapsible navigation sidebar filtered by the session's effective permissions, a sticky top bar with shell actions, theme toggle, and account menu, a mobile overlay drawer, and the global right-click surface.
 
-The shell owns the desktop-style chrome: a right-click menu on empty chrome (refresh the active view, toggle table density, open settings) and context menus on sidebar entries (open, copy link, collapse group). All shell actions are also keyboard reachable through the shared context-menu primitive.
-
-The header also hosts the **theme toggle** (light / dark / system), persisted as `diwan.theme` through the app `ThemeProvider`. The shell must render correctly in Arabic RTL and LTR, in both themes, using only `styles/tokens.css` variables.
+The shell owns the desktop-style chrome: a context menu on page content (refresh queries, toggle density, open display settings) and context menus on sidebar entries (open, copy link, collapse/expand group). All shell actions are also keyboard reachable through the shared context-menu primitive.
 ## 2. Strict FSD Rules
-- Allowed Imports: `src/features/auth`, `src/entities/user`, `src/entities/department`, and `src/shared/*`.
+- Allowed Imports: `src/features/auth`, `src/entities/user`, and `src/shared/*`.
 - Forbidden Imports: NEVER import from `src/app`, `src/pages`, or sibling `src/widgets/*` slices.
-- Public API: Export `AppShell`, `AppSidebar`, and `AppHeader` only via `src/widgets/app-shell/index.ts`.
-## 3. Planned Contents & Segments
-- `ui/AppShell.tsx` — Root `<div dir="rtl">` layout wrapper with `<Outlet />`.
-- `ui/AppSidebar.tsx` — Permission-aware RTL navigation menu using `lucide-react` icons.
-- `ui/AppHeader.tsx` — User profile summary, department badge, theme toggle, and `LogoutButton` from `features/auth`.
-- `ui/ThemeToggle.tsx` — Light / dark / system switch backed by the app `ThemeProvider` (`diwan.theme`).
-- `model/shell-menu.ts` — Permission-filtered menu item groups for empty chrome and sidebar entries.
+- Public API: exports `AppShell`, `AppSidebar`, and `AppHeader` via `src/widgets/app-shell/index.ts`; `AppRouter` mounts only `<AppShell />`.
+- Logout is not reimplemented here: the account menu calls `useLogout` from `features/auth`, which owns token/session/query-cache teardown.
+## 3. Contents & Segments
+- `ui/AppShell.tsx` — Layout wrapper: desktop sticky sidebar, mobile overlay drawer (Escape + body scroll lock), `AppHeader`, the page `<main>` wrapped in a shell `ContextMenu` (keyboard `Shift+F10` / `ContextMenu` dispatch), `SettingsDialog`, and the density effect that applies `html[data-density]` and persists `diwan.density` (attribute removed on unmount so `/login` keeps default density).
+- `ui/AppSidebar.tsx` — Brand block, collapse toggle, permission-filtered nav groups (`filterNavGroups`), active `NavLink` styling, disabled entries with the Arabic «قريبًا» badge for slices that have not landed, per-item `ContextMenu` (فتح / نسخ الرابط / طي المجموعة) with clipboard success/error toasts, and `Shift+F10` support on links.
+- `ui/AppHeader.tsx` — Mobile menu trigger, current-route title, shell-actions `DropdownMenu`, `ThemeToggle`, and the account `DropdownMenu` (avatar initial, username, roles; تغيير كلمة المرور، إعدادات العرض، then danger تسجيل الخروج).
+- `ui/SettingsDialog.tsx` — Display settings dialog: theme choice (فاتح / داكن / حسب النظام through the app `ThemeProvider`) and density choice (مريح / مضغوط) with `aria-pressed` state.
+- `model/shell-nav.ts` — `SHELL_NAV_GROUPS` (نظرة عامة، المراسلات، التنظيم، إدارة الوصول، الرقابة والتدقيق), each item carrying its permission code and an `available` flag; لوحة التحكم، المستخدمون، الأدوار والصلاحيات، and الموظفون are available today, the rest show «قريبًا». `filterNavGroups` hides unpermitted items and empty groups; `findNavItem` drives the header title (prefix-aware for detail routes).
+- `model/density.ts` — `Density`, `getStoredDensity`, `applyDensity` (`html[data-density]`), `persistDensity` (`diwan.density`).
 - `index.ts` — Public API barrel file.
 ## 4. Required Packages
-- `react-router-dom`, `lucide-react`, `clsx`, `tailwind-merge`
+- `react-router-dom`, `lucide-react`, `sonner`, `clsx`, `tailwind-merge` — ✅ installed
 ## 5. Implementation Status
-- Slice folder and FSD rules established
-- Implement `AppShell`, `AppSidebar`, and `AppHeader`
+- ✅ `AppShell`, `AppSidebar`, `AppHeader`, `SettingsDialog`, and shell models implemented and verified in-browser (RTL, light/dark, mobile drawer, menus, keyboard context menu, density persistence, logout redirect).
+- ✅ Router nests every shell page under `<AppShell />`; dashboard, users, roles, and employees are live children (`/change-password` stays standalone).
+- ✅ Account menu links to `/change-password` (verified in-browser); department badge and SignalR bell remain pending their slices.
 ## 6. Change Log
+- 2026-10-28: Added the account-menu «تغيير كلمة المرور» entry now that `/change-password` is live.
+- 2026-10-28: Enabled the الموظفون navigation entry now that the `/employees` page is live (Phase 5).
+- 2026-10-28: Enabled the الأدوار والصلاحيات navigation entry now that the `/roles` page is live (Phase 4).
+- 2026-10-28: Enabled the المستخدمون navigation entry now that the `/users` page is live (Phase 3).
+- 2026-10-27: Implemented Phase 1 — shell layout, permission-filtered collapsible sidebar with «قريبًا» states, header with shell/account menus, mobile drawer, display-settings dialog (theme + density), shell and item context menus with keyboard dispatch, and the shared `useLogout` wiring. Verified in-browser; build and lint pass.
 - 2026-10-25: Added the header theme toggle and documented RTL/LTR + light/dark expectations for the shell.
 - 2026-10-25: Documented the app-shell right-click menus (empty chrome, sidebar) required by the interaction contract.
 - 2026-10-22: Converted this `README.md` from the Word document it was authored in to markdown, so the `README.md`-per-folder rule in `AGENT.md` holds and the content is diffable and agent-editable.

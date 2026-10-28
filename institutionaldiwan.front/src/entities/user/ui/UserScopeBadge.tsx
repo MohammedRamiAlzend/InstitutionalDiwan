@@ -1,30 +1,38 @@
-import { Globe2, Network, Building2 } from 'lucide-react'
+import { Building2, Globe2, Landmark, Network } from 'lucide-react'
 import { cn } from '@/shared/lib'
-import type { UserScope } from '../model/types'
 
-const scopeMeta: Record<UserScope, { label: string; icon: typeof Globe2 }> = {
-  System: { label: 'نطاق النظام', icon: Globe2 },
-  Department: { label: 'نطاق القسم', icon: Building2 },
-  Subtree: { label: 'شجرة الأقسام', icon: Network },
+const scopeMeta: Record<number, { label: string; icon: typeof Globe2 }> = {
+  1: { label: 'الدائرة', icon: Building2 },
+  2: { label: 'الدائرة والفروع', icon: Network },
+  3: { label: 'المؤسسة', icon: Landmark },
+  4: { label: 'النظام', icon: Globe2 },
 }
 
 interface UserScopeBadgeProps {
-  scope: UserScope
+  /** Backend `ScopeTypeId` (1–4). */
+  scopeTypeId: number
   className?: string
 }
 
-export function UserScopeBadge({ scope, className }: UserScopeBadgeProps) {
-  const { label, icon: Icon } = scopeMeta[scope]
+export function UserScopeBadge({ scopeTypeId, className }: UserScopeBadgeProps) {
+  const meta = scopeMeta[scopeTypeId]
+  const Icon = meta?.icon
 
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1 rounded-full bg-surface-muted px-2.5 py-0.5 text-xs font-medium text-muted',
+        'inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-surface-muted px-2.5 py-0.5 text-xs font-medium text-muted',
         className,
       )}
     >
-      <Icon className="size-3.5" aria-hidden />
-      {label}
+      {meta && Icon ? (
+        <>
+          <Icon className="size-3.5" aria-hidden />
+          {meta.label}
+        </>
+      ) : (
+        `نطاق #${scopeTypeId}`
+      )}
     </span>
   )
 }

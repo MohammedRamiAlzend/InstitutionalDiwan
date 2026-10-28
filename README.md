@@ -2,8 +2,10 @@
 
 > **Status:** Backend implemented for Modules 01–06 and 09 (Organization, Identity, Correspondence,
 > Numbering, Movements, Attachments, Audit) plus the cross-module reference catalogs. The React front
-> end lives in the standalone `institutionaldiwan.front/` project, which is documented but still
-> holds only the stock Vite template.
+> end lives in the standalone `institutionaldiwan.front/` project; it implements Identity Module 01
+> plus the complete Module 02 Identity admin front end (Phases 0–6: shared admin foundation, app
+> shell, supporting reads, users admin, roles admin + permission matrix, employees admin, and
+> change-password), verified against the live API.
 
 The unified institutional correspondence system: a clean-architecture ASP.NET Core 10 API that
 registers documents, allocates official numbers, routes them between departments, and keeps an
@@ -66,17 +68,16 @@ accounts: `admin` / `12345678` (system scope) and `user` / `12345678` (departmen
 # Front end — standalone Vite project, not part of the solution
 cd institutionaldiwan.front
 npm install
-npm run dev     # Vite dev server on http://localhost:5173 (no API proxy configured yet)
+npm run dev     # Vite dev server on http://localhost:5173 (proxies /api via DEV_PROXY_TARGET)
 npm run build   # tsc -b && vite build
 npm run lint
 ```
 
-> The front end currently contains only the Vite template's `App.tsx` and `main.tsx`. Its
-> architecture, planned slices (incl. Attachments + Audit), 16 permissions, UI/design contract, and
-> live endpoint catalog are documented in
+> The front end's architecture, implemented slices, 16 permissions, UI/design contract, and live
+> endpoint catalog are documented in
 > [`institutionaldiwan.front/README.md`](institutionaldiwan.front/README.md),
 > [`AGENTS.md`](institutionaldiwan.front/AGENTS.md), and
-> [`knowledge.md`](institutionaldiwan.front/knowledge.md) (current as of 2026-10-26). The API is an
+> [`knowledge.md`](institutionaldiwan.front/knowledge.md) (current as of 2026-10-28). The API is an
 > external service from that project's point of view.
 
 ## Module status
@@ -139,6 +140,7 @@ have no `README.md` of their own yet — their content is documented in the encl
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-28 | agent | Refreshed the root status: the SPA now implements Identity Module 01 plus the complete Module 02 Identity admin front end (Phases 0–6: shared admin foundation, app shell, supporting reads, users, roles + permission matrix, employees, and change-password), uses the configured `/api` dev proxy, and is no longer the Vite template. |
 | 2026-10-26 | Qoder | Removed the old `institutionaldiwan.client` project from the solution and deleted it: the server csproj no longer carries `SpaRoot`/`SpaProxy` or a client project reference, launch profiles no longer start the SPA proxy, and the API no longer serves static files or the SPA fallback. The React front end now lives in the standalone `institutionaldiwan.front` project, which is documented but holds only the Vite template. |
 | 2026-10-26 | Qoder | Extended Module 09 beyond entity changes: a middleware now records every authenticated `/api` action (reads and failures included) as an `Operation` row, and logins produce a `Login` row; documented the two audit layers and the new integration tests. |
 | 2026-10-25 | Cursor | Noted that client docs now track Modules 01–06 + 09 (endpoints, permissions, UI contract) while SPA code remains the Vite template. |

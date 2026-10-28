@@ -19,14 +19,46 @@
   --color-danger: var(--color-danger);
   --color-success: var(--color-success);
   --color-warning: var(--color-warning);
+  --color-overlay: var(--color-overlay);
 
   --font-sans: 'Readex Pro', 'Cairo', 'Segoe UI', Tahoma, Arial, sans-serif;
   --font-heading: 'Cairo', 'Readex Pro', 'Segoe UI', Tahoma, Arial, sans-serif;
 }
 
+/* Overlay and popover entrances shared by dialog, menu, and select surfaces. */
+@theme {
+  --animate-overlay-in: overlay-in 150ms ease-out;
+  --animate-content-in: content-in 180ms ease-out;
+
+  @keyframes overlay-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes content-in {
+    from {
+      opacity: 0;
+      transform: translateY(0.25rem) scale(0.98);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+}
+
 @layer base {
   html {
     font-family: var(--font-sans);
+  }
+
+  /* Compact workspace density (shell settings); rem-based spacing scales with it. */
+  html[data-density='compact'] {
+    font-size: 15px;
   }
 
   body {

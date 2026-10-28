@@ -1,11 +1,17 @@
 # institutionaldiwan.front — Institutional Diwan React 19 + TypeScript 6 + Vite 8 SPA (Feature-Sliced Design)
 
-> **Status:** Identity module (Module 01) vertical slice implemented (2026-10-27): shared
-> foundation (`api`/`config`/`lib`/`types`/core `ui` primitives), `entities/user` session slice,
-> `features/auth` (login/logout/permission guard), `app` providers + router + theme tokens, and the
-> `pages/login` + `pages/dashboard` routes — Arabic-first RTL with light/dark themes, verified
-> against the live API. The `@` alias, dev proxy, and `.env.example` are configured; the HTTPS dev
-> certificate is still to-be.
+> **Status:** Identity module (Module 01) plus the Module 02 Identity admin front end (Phases 0–6,
+> 2026-10-28) implemented: shared foundation (`api`/`config`/`lib`/`types`/`ui` kit),
+> `entities/user` session and admin reads, supporting `entities/{department,role,employee,lookup}`
+> reads, `features/auth` (login/logout/permission guard/password change), `features/user-manage`
+> (user writes), `features/role-manage` (role writes + permission matrix),
+> `features/employee-manage` (employee writes + activation),
+> `app` providers + router + theme tokens, `widgets/app-shell` (permission-filtered sidebar, header,
+> mobile drawer, display settings, shell/item context menus),
+> `widgets/{users-table,roles-table,employees-table}`, and
+> the `pages/{login,change-password,dashboard,users,roles,employees}` routes — Arabic-first RTL with
+> light/dark themes, verified against the live API. The `@` alias, dev proxy, and `.env.example` are
+> configured; the HTTPS dev certificate is still to-be.
 >
 > **Standalone by design:** this project is intended to live outside the `InstitutionalDiwan.slnx`
 > solution. The ASP.NET Core API is an external service; there is no Visual Studio `.esproj` and no
@@ -25,11 +31,11 @@ developers can implement slices predictably without spaghetti imports.
 
 | Item | As-is | To-be |
 | --- | --- | --- |
-| Runtime deps in `package.json` | React stack + Module 01 slice packages (see “Required Packages” history in the Change Log) | Remaining planned packages per slice (Radix primitives, `@tanstack/react-table`, SignalR, Mermaid) as their slices land |
-| FSD folders | ✅ README scaffolds for all six layers; Module 01 slices implemented (`shared` foundation, `entities/user`, `features/auth`, `pages/login` + `dashboard`, `app`) | Remaining slice code implemented per those docs |
+| Runtime deps in `package.json` | React stack + Module 01 slice packages + Radix `dialog`/`dropdown-menu`/`context-menu`/`select`/`checkbox` (see “Required Packages”) | Remaining planned packages per slice (SignalR, Mermaid, extra Radix primitives) as their slices land; `@tanstack/react-table` is intentionally omitted because the shared grid owns its URL/localStorage state model |
+| FSD folders | ✅ README scaffolds for all six layers; Module 01 slices implemented (`shared` foundation, `entities/user`, `features/auth`, `pages/login` + `dashboard`, `app`), the Module 02 `widgets/app-shell` + `widgets/{users-table,roles-table,employees-table}`, the shared data-grid/menu foundation, the Phase 2 read entities (`department`, `role`, `employee`, `lookup`), the Phase 3 user administration slices (`features/user-manage`, `pages/users`), the Phase 4 role administration slices (`features/role-manage`, `pages/roles`), and the Phase 5 employee administration slices (`features/employee-manage`, `pages/employees`) | Remaining slice code implemented per those docs |
 | `vite.config.ts` | ✅ `@` → `./src` alias + env-driven `/api` + `/hubs` proxy | Optional local HTTPS certificate |
 | Dev configuration | ✅ `.env.example` committed (`DEV_PROXY_TARGET`, `VITE_API_BASE_URL`); create local `.env` as needed | — |
-| UI | ✅ Arabic RTL login + minimal dashboard, light/dark themes from `tokens.css` | Full app shell + module pages |
+| UI | ✅ Arabic RTL login, password change, shell-framed dashboard, and the `/users`, `/roles`, and `/employees` administration screens, light/dark themes from `tokens.css`, compact density | Remaining module pages |
 | Backend coverage docs | `knowledge.md` describes the external API | Modules 01–06, 09 live; 07/08/10 deferred |
 
 Always treat **as-is** as the truth for “what runs today,” and **to-be** as the install/implement
@@ -39,7 +45,9 @@ checklist before coding features.
 
 > The Module 01 slice packages are **installed** (React Router, TanStack Query, Zustand, Axios,
 > react-hook-form, Zod, resolvers, lucide-react, clsx, tailwind-merge, CVA, sonner, Tailwind v4,
-> devtools). The groups below remain the checklist for the remaining slices.
+> devtools) together with the Radix primitives used by the shared UI kit (`dialog`, `dropdown-menu`,
+> `context-menu`, `select`, `checkbox`). The groups below remain the checklist for the remaining
+> slices.
 
 ```bash
 # 1. Core runtime packages (Routing, Server/Client State, HTTP, Forms, Validation, Icons, UI, SignalR, Mermaid)
@@ -131,12 +139,15 @@ Summary:
 
 | Route | Page slice | Backend module | Notes |
 | --- | --- | --- | --- |
-| `/login`, `/change-password` | `pages/login` | 02 Identity | Public login |
+| `/login` | `pages/login` | 02 Identity | Public login |
+| `/change-password` | `pages/change-password` | 02 Identity | ✅ Signed-in password change (forced after reset) |
 | `/` | `pages/dashboard` | — | Recent docs + inbox counts |
 | `/documents`, `/documents/:id` | `pages/documents` | 03 + 06 | Detail hosts attachments panel |
 | `/movements` | `pages/movements` | 05 | Inbox / outbox tabs via search params |
 | `/departments` | `pages/departments` | 01 | Hierarchy + settings entry |
-| `/users`, `/roles`, `/employees` | `pages/users` | 02 | Admin |
+| `/users` | `pages/users` | 02 | ✅ Users admin |
+| `/roles` | `pages/roles` | 02 | ✅ Roles + permission matrix |
+| `/employees` | `pages/employees` | 02 | ✅ Employees admin (department-linked) |
 | `/numbering` | `pages/numbering` | 04 | Registries |
 | `/audit` | `pages/audit` | 09 | Search + integrity (self-auditing reads) |
 | `/archive` | `pages/archive` | 07 | **Blocked** until Module 07 API exists |
@@ -158,11 +169,11 @@ Full endpoint tables: [`knowledge.md`](knowledge.md).
 | File / Folder | Purpose |
 | --- | --- |
 | `src/app/` | Implemented application root (`index.tsx`), providers (theme, query, session loader), router + guards, and the Tailwind v4 global styles with `tokens.css`. |
-| `src/pages/` | Route-level page slices; `login` and `dashboard` implemented, the rest documented. |
-| `src/widgets/` | Composite page sections combining entities and features (`README.md` inside; docs-only). |
-| `src/features/` | CQRS Command mutations, Zod forms, and interactive workflows; `auth` implemented, the rest documented. |
-| `src/entities/` | Domain read models, query key factories, `useQuery` hooks, and status badges; `user` (session) implemented, the rest documented. |
-| `src/shared/` | Axios client + RFC 7807 adapter + Arabic error catalog, config, utilities, core UI primitives. |
+| `src/pages/` | Route-level page slices; `login`, `change-password`, `dashboard`, `users`, `roles`, and `employees` implemented, the rest documented. |
+| `src/widgets/` | Composite page sections combining entities and features; `app-shell`, `users-table`, `roles-table`, and `employees-table` implemented, the rest documented. |
+| `src/features/` | CQRS Command mutations, Zod forms, and interactive workflows; `auth`, `user-manage`, `role-manage`, and `employee-manage` implemented, the rest documented. |
+| `src/entities/` | Domain read models, query key factories, `useQuery` hooks, and status badges; `user` (session + admin reads), `department`, `role`, `employee`, `lookup` implemented, the rest documented. |
+| `src/shared/` | Axios client + RFC 7807 adapter + Arabic error catalog, config, utilities (table state, column preferences, dates, JWT hints), and the RTL UI kit including the shared data grid, context/dropdown menus, dialogs, select, and checkbox. |
 | `src/main.tsx` | Vite entry: mounts the `app` layer root and the global stylesheet. |
 | `src/assets/` | Vite template images (`hero.png`, `react.svg`, `vite.svg`); replaced by the institution's own artwork. |
 | `public/` | Vite template favicon and icon sprite. |
@@ -194,18 +205,25 @@ Full endpoint tables: [`knowledge.md`](knowledge.md).
 | `@` → `./src` alias | ✅ Configured (`vite.config.ts` + `tsconfig.app.json`) |
 | Dev proxy + `.env.example` | ✅ Configured (HTTPS dev certificate still to-be) |
 | `index.html` RTL / document title / theme boot script | ✅ Configured |
-| `src/shared/` (`api`, `ui`, `lib`, `config`, `types`) | ✅ Core implemented (`data-table`, `context-menu`, `mermaid-view` pending their slices) |
-| `src/entities/` | ✅ `user` (session) implemented; document, document-file, department, role, numbering-registry, movement, audit-log, lookup pending |
-| `src/features/` | ✅ `auth` implemented; document-*, department-*, user-*, role-*, movement-routing, attachment-upload, audit-manage pending |
-| `src/widgets/` (app-shell, registry table, hierarchy tree, movement timeline/inbox, attachments panel, audit table, visualization panel) | ❌ Not implemented |
-| `src/pages/` | ✅ `login` + minimal `dashboard`; documents, movements, departments, users, numbering, audit pending (archive deferred) |
-| `src/app/` (`providers`, `router`, `styles`) | ✅ Implemented (login-protected routes; `/change-password` pending) |
+| `src/shared/` (`api`, `ui`, `lib`, `config`, `types`) | ✅ Core implemented including `data-table`, `context-menu`, dialogs, menus, select/checkbox, URL table state, persisted columns, and the expanded Arabic error catalog (`mermaid-view` pending its slice) |
+| `src/entities/` | ✅ `user` (session + admin reads), `department` (reads), `role`, `employee` (reads), `lookup` implemented; document, document-file, numbering-registry, movement, audit-log pending |
+| `src/features/` | ✅ `auth`, `user-manage`, `role-manage`, `employee-manage` implemented; document-*, department-*, movement-routing, attachment-upload, audit-manage pending |
+| `src/widgets/` | ✅ `app-shell` (sidebar, header, drawer, settings, shell/item context menus), `users-table`, `roles-table`, and `employees-table`; registry table, hierarchy tree, movement timeline/inbox, attachments panel, audit table, visualization panel pending |
+| `src/pages/` | ✅ `login`, standalone `change-password`, shell-framed `dashboard`, `users`, `roles`, and `employees`; documents, movements, departments, numbering, audit pending (archive deferred) |
+| `src/app/` (`providers`, `router`, `styles`) | ✅ Implemented (login-protected routes incl. `/change-password`, `/users`, `/roles`, `/employees`; forced reset redirect) |
 | Publishing & API wiring guide (`DEPLOYMENT.md`) | ✅ Documented (proxy section reflects the configured setup) |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-28 | agent | Completed Phase 6 of Module 02 (final): implemented `/change-password` (Zod form + mutation + standalone page), forced the reset redirect from the JWT `must_change_password` claim so it survives a reload, routed reset logins there, added the account-menu entry, and mapped `Identity.NewPasswordSameAsOld`. Re-verified all protected routes, RTL, and both themes; build and lint pass. This closes the Identity admin front end. |
+| 2026-10-28 | agent | Completed Phase 5 of Module 02: implemented `features/employee-manage` (Zod form + create/update, activate/deactivate, department selector sourced from `entities/department`), `widgets/employees-table` (server-side search/paging, department badges, row actions), and the `/employees` page behind `EMPLOYEE_MANAGE`; enabled its sidebar entry and added the employee validation error codes to the Arabic catalog. Verified in-browser (create validation, department load, create/edit, invalid email, deactivation, light/dark); build and lint pass. |
+| 2026-10-28 | agent | Completed Phase 4 of Module 02: implemented `features/role-manage` (role create/edit, activate/deactivate, and a grouped permission-matrix dialog that saves only the grant/revoke diff), `widgets/roles-table`, and the `/roles` page behind `ROLE_MANAGE`; moved permission module labels into `entities/role` and reused them in the user access dialog. Verified in-browser (search, sorting, dialogs, matrix toggles, system-role protection, light/dark); build and lint pass. |
+| 2026-10-28 | agent | Completed Phase 3 of Module 02: implemented `features/user-manage` (Zod request models + create/update, activate/deactivate, role assign/revoke, department-assignment add/end), `widgets/users-table`, and the `/users` page behind `USER_MANAGE`; enabled its sidebar entry and added the Phase 3 Arabic identity error codes. Verified in-browser (search, dialogs, validation, permissions, light/dark); build and lint pass. |
+| 2026-10-27 | agent | Completed Phase 2 of Module 02: implemented the supporting entity reads (`department` list/tree/detail, `role`+permission catalog, `employee` paged list/detail, generic `lookup` catalogs with Arabic fallbacks), extended `entities/user` with paged user/detail/effective-permission hooks, and moved deterministic lookup ids to `shared/config`. All seven read endpoints were exercised against the live API (200, matching DTO shapes); build and lint pass. |
+| 2026-10-27 | agent | Completed Phase 1 of Module 02: implemented `widgets/app-shell` (permission-filtered collapsible sidebar with «قريبًا» states, sticky header with shell/account menus, mobile drawer, display-settings dialog for theme + density, shell and item context menus with `Shift+F10`), added shared `useLogout`, nested protected routes under the shell, and slimmed the dashboard to content. Verified in-browser (RTL, dark/light, drawer, menus, density persistence, logout); build and lint pass. |
+| 2026-10-27 | agent | Completed Phase 0 of the Module 02 (Identity admin) work: installed Radix primitives; added URL table state, column preferences, debounce, Damascus date/number, and JWT hint helpers; built dialogs/menus/select/checkbox/badges/skeletons and the shared `data-table`; extended the Arabic error catalog with Department/Lookup codes; added overlay + entrance-animation tokens; `npm run build` and `npm run lint` pass. |
 | 2026-10-27 | agent | Implemented the Identity Module 01 vertical slice: shared foundation (axios client + Arabic error catalog, config, utils, UI primitives), `entities/user` session, `features/auth` (login/logout/permission guard), `app` providers/router/tokens, and the Arabic RTL `login` + `dashboard` pages; configured the `@` alias, dev proxy, `.env.example`, RTL `index.html` with the theme boot script, and git-ignored `.env`. Verified in-browser (RTL, light/dark, login/logout/401). |
 | 2026-10-26 | agent | Ported the complete FSD documentation kit from the previous client project; renamed project references and recorded the standalone as-is state (stock Vite config, no alias/proxy/env/cert, no `.esproj`). |
 | 2026-10-26 | agent | Added standalone extraction notes, external-API framing, and truthful to-be rows for the tooling that is not configured yet. |

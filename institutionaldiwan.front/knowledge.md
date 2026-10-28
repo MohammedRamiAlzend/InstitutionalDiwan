@@ -1,10 +1,19 @@
 # Institutional Diwan React Front End — Agent Knowledge
 
-> **Status:** Current as of **2026-10-27** — the external API's Modules **01–06** and **09** are
+> **Status:** Current as of **2026-10-28** — the external API's Modules **01–06** and **09** are
 > live (Organization, Identity, Correspondence, Numbering, Movements, Attachments, Audit) plus the
-> generic Lookups API. The SPA now implements the Identity (Module 01) vertical slice: login,
-> session hydration, logout, route guards, Arabic error messages, and light/dark themes. Remaining
-> slices are documented but not yet coded.
+> generic Lookups API. The SPA implements the Identity (Module 01) vertical slice: login, session
+> hydration, logout, route guards, Arabic error messages, and light/dark themes. The shared admin
+> foundation for Module 02 (data grid, context/dropdown menus, dialogs, select/checkbox, URL table
+> state, persisted column chooser, extended Arabic catalog), the authenticated `widgets/app-shell`
+> (permission-filtered sidebar, header, mobile drawer, display settings, shell/item context menus),
+> the Module 02 Phase 2 supporting reads (`entities/{department,role,employee,lookup}` plus user
+> list/detail/effective-permission hooks), the Phase 3 users administration (`features/user-manage`,
+> `widgets/users-table`, `pages/users`), the Phase 4 roles administration (`features/role-manage`,
+> `widgets/roles-table`, `pages/roles`, including the grouped permission matrix), the Phase 5
+> employees administration (`features/employee-manage`, `widgets/employees-table`, `pages/employees`),
+> and the Phase 6 change-password flow (`features/auth` form + `pages/change-password`, forced from
+> the JWT claim) are implemented. The Module 02 Identity admin front end is complete.
 >
 > **Standalone boundary:** this project is not part of the API solution. Server paths below refer to
 > the external `InstitutionalDiwan.Server` repository; the front end talks to it only over `/api`
@@ -14,7 +23,7 @@
 
 | Area | As-is (today) | To-be (before feature work) |
 | --- | --- | --- |
-| Application code | FSD slices for Module 01 (`shared` core, `entities/user`, `features/auth`, `pages/login` + `dashboard`, `app`) | Remaining slices under `src/{pages,widgets,features,entities}` |
+| Application code | FSD slices for Module 01 (`shared` core, `entities/user`, `features/auth`, `pages/login` + `dashboard`, `app`), the Module 02 shared admin foundation (`data-table`, menus, dialogs, table-state/column-preference libs), the authenticated `widgets/app-shell`, the Phase 2 read entities (`department`, `role`, `employee`, `lookup`; `user` extended with admin reads), the Phase 3 users administration (`features/user-manage`, `widgets/users-table`, `pages/users`), the Phase 4 roles administration (`features/role-manage`, `widgets/roles-table`, `pages/roles`, shared permission-module labels), the Phase 5 employees administration (`features/employee-manage`, `widgets/employees-table`, `pages/employees`), and the Phase 6 password change (`ChangePasswordForm`, `pages/change-password`, forced redirect from the JWT claim) | Remaining slices under `src/{pages,widgets,features,entities}` (documents, departments, movements, numbering, audit) |
 | `package.json` | React stack + Module 01 packages (router, query, zustand, axios, RHF, zod, sonner, Tailwind v4) | Remaining packages per slice (see [`README.md`](README.md)) |
 | `vite.config.ts` proxy | ✅ `@` alias + env-driven `/api` and `/hubs` proxies (`DEV_PROXY_TARGET` → `ASPNETCORE_HTTPS_PORT` → `https://localhost:7126`) | Optional local HTTPS certificate; production uses the reverse proxy ([`DEPLOYMENT.md`](DEPLOYMENT.md)) |
 | Dev configuration | ✅ `.env.example` committed; `.env` is git-ignored | — |
@@ -45,7 +54,7 @@
 ## Canonical permissions (16)
 
 Must match the external API's `InstitutionalDiwan.Domain/Common/Permissions.cs` exactly. Front-end
-source of truth: `src/shared/config/permissions.ts` (planned).
+source of truth: `src/shared/config/permissions.ts`.
 
 | Code | Typical use |
 | --- | --- |
@@ -105,7 +114,7 @@ required for every table.
 | `POST` | `/api/auth/login` | — (public) | Returns a JWT access token. |
 | `POST` | `/api/auth/register` | — (public) | Self-registration. |
 | `GET` | `/api/auth/me` | `DOCUMENT_VIEW` | Caller profile. |
-| `POST` | `/api/auth/change-password` | `DOCUMENT_VIEW` | |
+| `POST` | `/api/auth/change-password` | `DOCUMENT_VIEW` | Payload `{ oldPassword, newPassword }`; returns a fresh `LoginResponse` (JWT + identity). New password 8–200 chars and different from the old one (`Identity.CurrentPasswordIncorrect`, `Identity.NewPasswordSameAsOld`). |
 
 ### Documents — `/api/documents`
 
@@ -260,12 +269,34 @@ Notable codes: `Department.CyclicHierarchy`, `Department.HasActiveChildren`.
 
 ### Roles & permissions — `/api/roles`, `/api/permissions`
 
-`GET /api/permissions` — `ROLE_MANAGE`.
-Roles: list/get/create/update/delete/activate + grant/revoke permission — `ROLE_MANAGE`.
+`GET /api/permissions` — `ROLE_MANAGE`. Returns the flat 16-code catalog with `code`, `nameAr`,
+`nameEn`, `moduleName`, and `description`; the SPA groups it by `moduleName` through
+`permissionModuleLabel`.
+Roles: `GET /api/roles` (plain array), `GET /api/roles/{id}`, `POST /api/roles`
+(`code`/`nameAr`/`nameEn`/`description`), `PUT /api/roles/{id}` (name/description only — `code` is
+immutable), `DELETE /api/roles/{id}` (deactivate), `POST /api/roles/{id}/activate`,
+`POST /api/roles/{id}/permissions` (`{ permissionCode }`), and
+`DELETE /api/roles/{id}/permissions/{permissionCode}` — all `ROLE_MANAGE`. The matrix dialog sends
+sequential grants then revokes and invalidates the role queries in `onSettled`. System roles cannot
+be deactivated (`Identity.SystemRoleProtected`); EF limits are code 100, names 150, description 500.
 
 ### Employees — `/api/employees`
 
-Paged list + CRUD + activate — all `EMPLOYEE_MANAGE`.
+All endpoints require `EMPLOYEE_MANAGE`.
+
+- `GET /api/employees?page&pageSize&search` — paged result; `search` matches the Arabic name,
+  English name, and employee number.
+- `GET /api/employees/{id}` — single employee.
+- `POST /api/employees` / `PUT /api/employees/{id}` — body
+  `{ fullNameAr, departmentId, employeeNumber?, fullNameEn?, jobTitleAr?, email?, phone? }`;
+  `departmentId` must be an existing department (the SPA loads it from `GET /api/departments`,
+  which itself needs `DEPARTMENT_MANAGE`). EF limits: names 200, employee number 50, job title 150,
+  email 150, phone 50.
+- `DELETE /api/employees/{id}` — deactivate; `POST /api/employees/{id}/activate` — reactivate.
+
+Error codes: `Identity.EmployeeNameEmpty`, `Identity.EmployeeDepartmentEmpty`,
+`Identity.EmployeeEmailInvalid`, `Identity.EmployeeNotFound`, `Department.NotFound` — all mapped in
+`shared/api/errorMessages.ts`.
 
 ### External organizations — `/api/external-organizations`
 
@@ -322,7 +353,8 @@ Every page/widget that loads server data must define:
 
 1. **Loading** — skeleton or spinner in the content region (not a blank page).
 2. **Empty** — Arabic-first empty copy + optional primary CTA when the list is empty by design.
-3. **Error** — toast or inline alert showing `ApiError.detail`; retry when safe.
+3. **Error** — toast or inline alert showing `toArabicErrorMessage(error)` (never the raw English
+   `detail`); retry when safe.
 4. **Forbidden** — when the caller lacks the route permission, show a dedicated state (do not loop
    redirect forever).
 5. **URL state** — filters, search, sorting, pagination, and tabs live in `useSearchParams`.
@@ -348,12 +380,15 @@ See [`README.md`](README.md) “UI / design contract” and [`src/app/styles/REA
 
 1. `shared/` (`api`, `config/permissions`, `types`, `ui/context-menu`, `ui/data-table`,
    `ui/mermaid-view`, `lib/columnPreferences`) + `vite` proxy + Tailwind entry
-2. `features/auth` + `entities/user` + `app/router` + `pages/login`
-3. `widgets/app-shell` + `pages/dashboard`
-4. `entities/document` + `pages/documents` (+ attachments panel via `entities/document-file`)
-5. `pages/movements` (inbox/outbox)
-6. `pages/audit` (search + integrity; respect self-audit side effect)
-7. `widgets/visualization-panel` + department/employee tree and Mermaid views
+2. `features/auth` + `entities/user` + `app/router` + `pages/login` — ✅ done
+3. `widgets/app-shell` + `pages/dashboard` — ✅ done (Phase 1)
+4. `entities/{department,role,employee,lookup}` + user admin reads — ✅ done (Phase 2)
+5. Module 02 admin pages/features: users ✅ (Phase 3) → roles ✅ (Phase 4) → employees ✅ (Phase 5)
+   → change-password ✅ (Phase 6) — Identity admin front end complete
+6. `entities/document` + `pages/documents` (+ attachments panel via `entities/document-file`)
+7. `pages/movements` (inbox/outbox)
+8. `pages/audit` (search + integrity; respect self-audit side effect)
+9. `widgets/visualization-panel` + department/employee tree and Mermaid views
 
 ## Mandatory Documentation Rule (`AGENTS.md`)
 

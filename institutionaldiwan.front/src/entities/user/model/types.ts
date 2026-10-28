@@ -9,7 +9,7 @@ export interface MeResponse {
 }
 
 /** Account visibility scope (Module 02 `ScopeTypeId` rendered semantically). */
-export type UserScope = 'System' | 'Department' | 'Subtree'
+export type UserScope = 'Department' | 'DepartmentTree' | 'Institution' | 'System'
 
 /** `UserResponse` from `/api/users` (camelCase JSON). */
 export interface UserResponse {
@@ -26,19 +26,33 @@ export interface UserResponse {
   roles: string[]
 }
 
-/** `EmployeeResponse` from `/api/employees` (camelCase JSON). */
-export interface EmployeeResponse {
-  employeeId: string
-  employeeNumber: string | null
-  fullNameAr: string
-  fullNameEn: string | null
+/** Server-side paging + username search for the user list. */
+export interface UserListParams {
+  page: number
+  pageSize: number
+  search?: string
+}
+
+/** One temporal department assignment held by a user. */
+export interface UserDepartmentAssignmentResponse {
+  assignmentId: string
   departmentId: string
-  jobTitleAr: string | null
-  email: string | null
-  phone: string | null
+  assignmentTypeId: number
+  includeSubtree: boolean
+  startDate: string
+  endDate: string | null
   isActive: boolean
-  createdAt: string
-  updatedAt: string | null
+}
+
+/** `GET /api/users/{id}/effective-permissions` — same set the access token carries. */
+export interface UserEffectivePermissionsResponse {
+  userId: string
+  username: string
+  scopeTypeId: number
+  primaryDepartmentId: string
+  roleCodes: string[]
+  permissions: PermissionCode[]
+  departmentAssignments: UserDepartmentAssignmentResponse[]
 }
 
 /** The authenticated caller as held by the session store. */

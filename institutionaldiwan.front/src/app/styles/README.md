@@ -12,7 +12,7 @@ Arabic typography. This is the single source of visual tokens for the SPA.
 | File | Purpose |
 | --- | --- |
 | `tokens.css` | **The single source of truth for color**: the raw Forest / Golden Wheat / Charcoal palette, the semantic light and dark theme mappings, and the functional status colors. |
-| `index.css` | `@import "tailwindcss";`, imports `tokens.css`, maps the semantic variables to Tailwind utilities via `@theme inline` (e.g. `bg-background`, `text-foreground`, `bg-accent`, `text-accent-contrast`), Arabic font stack (`Readex Pro` / `Cairo`), base focus rings, `dir`-safe base rules, and the print token override. |
+| `index.css` | `@import "tailwindcss";`, imports `tokens.css`, maps the semantic variables to Tailwind utilities via `@theme inline` (e.g. `bg-background`, `text-foreground`, `bg-accent`, `text-accent-contrast`, `bg-overlay`), Arabic font stack (`Readex Pro` / `Cairo`), base focus rings, `dir`-safe base rules, shared overlay/popover entrance animations, the `html[data-density='compact']` scale, and the print token override. |
 
 ## Design tokens (contract)
 
@@ -60,6 +60,8 @@ semantic variables below. Editing a value in `tokens.css` changes both themes ev
   --color-highlight: var(--forest-500);
   --color-gold: var(--wheat-600);
   --color-focus-ring: var(--forest-500);
+
+  --color-overlay: color-mix(in srgb, var(--charcoal-900) 45%, transparent);
 }
 ```
 
@@ -82,12 +84,42 @@ semantic variables below. Editing a value in `tokens.css` changes both themes ev
   --color-highlight: var(--forest-500);
   --color-gold: var(--wheat-400);
   --color-focus-ring: var(--wheat-400);
+
+  --color-overlay: color-mix(in srgb, var(--charcoal-900) 70%, transparent);
 }
 ```
 
 Functional status tokens (`--color-danger`, `--color-success`, `--color-warning`) are declared in the
 same `tokens.css`. They are not part of the nine-color brand palette, but they are the only source for
 those states — never hardcode a status color in a component.
+
+Modal overlays use `--color-overlay` (45% charcoal over light surfaces, 70% in dark) so dialogs never
+hardcode a translucent black.
+
+### Motion
+
+`index.css` declares two shared entrance animations in `@theme`:
+
+| Utility | Used by |
+| --- | --- |
+| `animate-overlay-in` | Dialog / modal backdrop fade-in (150 ms). |
+| `animate-content-in` | Dialog, dropdown, context menu, and select content entrance (180 ms). |
+
+Both respect the existing design tokens and are the only motion primitives shared components may
+assume; feature code does not define its own keyframes.
+
+### Density
+
+The shell toggles a single density scale on the document element:
+
+```css
+html[data-density='comfortable'] { /* default 16px root */ }
+html[data-density='compact'] { font-size: 15px; }
+```
+
+All spacing uses `rem`-based Tailwind utilities, so flipping the attribute tightens the whole shell
+and every table without per-component classes. The preference persists as `diwan.density`; the app
+shell removes the attribute when it unmounts so public pages (`/login`) stay at the default scale.
 
 ### Theme switching
 
@@ -117,12 +149,14 @@ Rules:
 | Item | State |
 | --- | --- |
 | `tokens.css` (palette + light/dark semantic tokens) | ✅ Implemented |
-| `index.css` | ✅ Implemented (Tailwind v4 entry + `@theme inline` mapping) |
+| `index.css` | ✅ Implemented (Tailwind v4 entry + `@theme inline` mapping + overlay/content entrance animations + compact density scale) |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-27 | agent | Added the `html[data-density='compact']` root-scale rule backing the shell's `diwan.density` preference. |
+| 2026-10-27 | agent | Added the `--color-overlay` semantic token (light/dark) and shared overlay/content entrance animations used by dialogs, menus, and selects. |
 | 2026-10-27 | agent | Implemented `tokens.css` exactly per the locked contract and the Tailwind v4 entry `index.css` with semantic-utility mapping, Arabic fonts, focus rings, and print token override. |
 | 2026-10-25 | Buffy | Locked the palette contract: raw Forest / Golden Wheat / Charcoal tokens, full light and dark semantic mappings, `data-theme` + `diwan.theme` switching, and `tokens.css` as the only place hex colors may appear. |
 | 2026-10-25 | Cursor | Added concrete design-token contract, RTL/print rules, and anti-patterns for institutional UI. |

@@ -1,6 +1,6 @@
 # institutionaldiwan.front / src/shared/api — HTTP Client, Auth Interceptors & ProblemDetails Adapter
 
-> **Status:** Implemented for Identity Module 01.
+> **Status:** Implemented for Identity Module 01 and the Module 02 admin foundation.
 
 ## Purpose
 
@@ -15,7 +15,7 @@ the UI never renders the server's English `detail`.
 | --- | --- |
 | `httpClient.ts` | Axios instance with base URL from `ENV.API_BASE_URL` (`/api`), JWT request interceptor, and an error interceptor that clears the token and redirects to `/login` on `401`. |
 | `problemDetails.ts` | `ApiError` (`code`/`detail`/`status`), `toApiError` normalizer, and `isConflictError`. |
-| `errorMessages.ts` | Arabic message catalog keyed by domain error code (Identity codes today), with Arabic HTTP-status fallbacks and a generic fallback — `toArabicErrorMessage(error)`. |
+| `errorMessages.ts` | Arabic message catalog keyed by domain error code (all Identity codes — including the user, role, and employee validation codes — plus the Department and Lookup codes used by identity pickers), with Arabic HTTP-status fallbacks and a generic fallback — `toArabicErrorMessage(error)`. |
 | `tokenStorage.ts` | Read/write/clear helpers for the JWT access token in `localStorage` (`diwan.token`). |
 | `signalrClient.ts` | HubConnection factory — **implement only after** the server exposes hubs (not implemented). |
 | `index.ts` | Barrel exporting `httpClient`, `ApiError`, `toApiError`, `isConflictError`, `toArabicErrorMessage`, `tokenStorage`. |
@@ -55,6 +55,10 @@ Used by documents, users, employees, external organizations, audit logs, and int
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-28 | agent | Added `Identity.NewPasswordSameAsOld` for the change-password form. |
+| 2026-10-28 | agent | Added the user-create/update validation codes (`Identity.UsernameTooShort`, `Identity.PasswordEmpty`, `Identity.PasswordTooShort`, `Identity.UserScopeTypeInvalid`) used by the Phase 3 dialogs. |
+| 2026-10-28 | agent | Added the employee validation codes (`Identity.EmployeeEmailInvalid`, `Identity.EmployeeDepartmentEmpty`) to the Arabic catalog for the `/employees` admin surface. |
+| 2026-10-27 | agent | Extended the Arabic catalog with the remaining Identity validation codes plus Department and Lookup codes so user/role/employee screens never surface English server detail. |
 | 2026-10-27 | agent | Implemented the client for Identity Module 01 and added `errorMessages.ts`: the UI renders Arabic messages from the domain-code catalog, never the English server `detail`. |
 | 2026-10-25 | Cursor | Documented `PagedResult`, multipart upload rule, audit integrity 200 semantics, and deferred SignalR. |
 | 2026-10-22 | opencode | Converted this folder's `README.md` from the Word document it was authored in to markdown. |

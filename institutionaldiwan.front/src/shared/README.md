@@ -1,10 +1,10 @@
 # institutionaldiwan.front / src/shared — Shared Infrastructure, UI Kit & Utilities Layer
 
-> **Status:** Core implemented for Identity Module 01 — `api` (axios client, ProblemDetails →
-> `ApiError`, Arabic error catalog, token storage), `config` (16 permissions, routes, env), `lib`
-> (`cn`, theme store), `types` (ProblemDetails, PagedResult), and the core `ui` primitives
-> (`button`, `input`, `form-field`, `theme-toggle`). The data grid, context menu, and Mermaid
-> renderer land with their slices.
+> **Status:** Implemented for Identity Module 01 and the Module 02 admin foundation — `api` (axios
+> client, ProblemDetails → `ApiError`, expanded Arabic error catalog, token storage), `config` (16
+> permissions, routes, env), `lib` (`cn`, theme store, URL table state, column preferences, date and
+> JWT helpers), `types` (ProblemDetails, PagedResult), and the `ui` kit including dialogs, menus,
+> select/checkbox, and the shared data grid. The Mermaid renderer lands with its slice.
 
 ## Purpose
 
@@ -25,7 +25,7 @@ No business logic; no imports from upper layers.
 | `axios` | `shared/api/httpClient.ts` | ✅ Installed |
 | `clsx` + `tailwind-merge` + `class-variance-authority` | `cn()` + UI variants | ✅ Installed |
 | `lucide-react` | Icons | ✅ Installed |
-| `@radix-ui/*` + `@radix-ui/react-context-menu` | RTL primitives, right-click menus | ❌ To-be with the data-grid slice |
+| `@radix-ui/*` + `@radix-ui/react-context-menu` | Dialog, dropdown, context menu, select, checkbox primitives | ✅ Installed (`dialog`, `dropdown-menu`, `context-menu`, `select`, `checkbox`) |
 | `mermaid` | Lazy-loaded diagram / chart / tree rendering in `ui/mermaid-view` | ❌ To-be with the visualization slice |
 | `@microsoft/signalr` | Hub helper (only after server hubs exist) | ❌ Deferred |
 
@@ -35,7 +35,7 @@ No business logic; no imports from upper layers.
 | --- | --- | --- |
 | `api/` | HTTP client, token storage, `ApiError`, optional SignalR | `httpClient.ts`, `problemDetails.ts`, `tokenStorage.ts` |
 | `ui/` | Atomic RTL primitives, the shared data grid, the right-click menu primitive, and the Mermaid renderer | `button`, `input`, `dialog`, `data-table`, `context-menu`, `mermaid-view`, `skeleton`, … |
-| `lib/` | `cn()`, Damascus dates, Web Crypto SHA-256, and per-table column preferences | `cn.ts`, `date.ts`, `crypto.ts`, `columnPreferences.ts` |
+| `lib/` | `cn()`, theme store, URL table state, Damascus dates, column preferences, JWT hints | `cn.ts`, `theme.ts`, `useTableState.ts`, `date.ts`, `columnPreferences.ts`, `jwt.ts` |
 | `config/` | `Permissions` (16), `ROUTES`, `ENV` | `permissions.ts`, `routes.ts`, `env.ts` |
 | `types/` | `ProblemDetails`, `PagedResult<T>`, `LookupItem` | `api.ts`, `lookup.ts` |
 
@@ -57,16 +57,17 @@ No business logic; no imports from upper layers.
 
 | Segment | State |
 | --- | --- |
-| `api/` | ✅ Core — `httpClient.ts`, `problemDetails.ts`, `tokenStorage.ts`; `signalrClient.ts` deferred |
+| `api/` | ✅ Core — `httpClient.ts`, `problemDetails.ts`, `tokenStorage.ts`, `errorMessages.ts` (Identity + Department/Lookup); `signalrClient.ts` deferred |
 | `config/` | ✅ `permissions.ts`, `routes.ts`, `env.ts` |
-| `lib/` | ✅ `cn.ts`, `theme.ts`; `date`, `crypto`, `arabic`, `columnPreferences` pending their slices |
+| `lib/` | ✅ `cn.ts`, `theme.ts`, `useTableState.ts`, `useDebouncedValue.ts`, `columnPreferences.ts`, `date.ts`, `format.ts`, `jwt.ts`; `crypto`/`arabic` pending |
 | `types/` | ✅ `api.ts` (ProblemDetails, PagedResult); `lookup.ts` pending the lookups slice |
-| `ui/` | ✅ `button`, `input`, `form-field`, `theme-toggle`; `data-table`, `context-menu`, `mermaid-view` pending |
+| `ui/` | ✅ Form primitives, overlays, menus, `data-table`; `mermaid-view` pending |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-27 | agent | Lifted the shared foundation to the Module 02 admin phase: installed Radix primitives, added table-state/column-preference/date/JWT utilities, built dialogs/menus/select/checkbox/badges/skeletons and the shared `data-table`, and expanded the Arabic error catalog. |
 | 2026-10-27 | agent | Implemented the shared foundation for Identity Module 01, including the Arabic `errorMessages` catalog (domain-code → Arabic, status fallbacks) so no English server detail reaches the UI. |
 | 2026-10-25 | Buffy | Documented the shared interaction primitives: `ui/context-menu`, `ui/data-table` with `lib/columnPreferences` (localStorage), and lazy `ui/mermaid-view`; added `mermaid` and `@radix-ui/react-context-menu` to the package list. |
 | 2026-10-25 | Cursor | Clarified as-is vs to-be packages; noted 16 permissions and PagedResult shared type; pointed at AGENTS.md contracts. |

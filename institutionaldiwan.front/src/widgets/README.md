@@ -1,6 +1,6 @@
 # institutionaldiwan.front / src/widgets — Composite UI Widgets Layer
 
-> **Status:** Scaffolding & Rules — FSD widget slices and composition rules defined; code pending.
+> **Status:** `app-shell` (Phase 1), `users-table` (Phase 3), `roles-table` (Phase 4), and `employees-table` (Phase 5) are implemented — every shell route renders inside the shell (the standalone `/change-password` page is outside it); the remaining widget slices are documented and pending.
 
 ## Purpose
 
@@ -18,7 +18,10 @@ browser.
 
 | Slice Folder | Purpose | Composes | State |
 | --- | --- | --- | --- |
-| `app-shell/` | RTL layout: permission-filtered sidebar, top bar, logout | `entities/user` + `features/auth` | ❌ Planned |
+| `app-shell/` | RTL layout: permission-filtered sidebar, top bar, shell/user menus, display settings, logout | `entities/user` + `features/auth` | ✅ Implemented |
+| `users-table/` | Users administration grid with create/edit/roles/access dialogs and status confirmation | `entities/{user,department,role}` + `features/user-manage` | ✅ Implemented |
+| `roles-table/` | Roles administration grid with create/edit, permission matrix, and status confirmation | `entities/role` + `features/role-manage` | ✅ Implemented |
+| `employees-table/` | Employees administration grid with create/edit and status confirmation | `entities/{employee,department}` + `features/employee-manage` | ✅ Implemented |
 | `document-registry-table/` | Correspondence grid + actions | `entities/document` + `features/document-create` + access-grant | ❌ Planned |
 | `document-attachments-panel/` | File list, upload, download, verify checksum, archive | `entities/document-file` + `features/attachment-upload` | ❌ Planned (API live) |
 | `department-hierarchy-tree/` | Org tree with node context menus, inline manage actions, and a tree / Mermaid / chart switcher | `entities/department` + `features/department-manage` | ❌ Planned |
@@ -39,12 +42,18 @@ browser.
   context menu through `shared/ui/context-menu`, mirrored by an always-visible overflow trigger.
 - Visualization widgets compose `shared/ui/mermaid-view`; data → Mermaid/tree builders stay in the
   owning entity's `model/`.
+- The shell is the only widget mounted by the router; slices with no page yet appear in its sidebar
+  with `available: false` and the Arabic «قريبًا» badge instead of linking to 404.
 
 ## Implementation status
 
 | Widget Slice | State |
 | --- | --- |
-| `app-shell/`, `document-registry-table/`, `department-hierarchy-tree/` | ❌ Not implemented |
+| `app-shell/` | ✅ Implemented and verified in-browser (Phase 1) |
+| `users-table/` | ✅ Implemented and verified in-browser (Phase 3) |
+| `roles-table/` | ✅ Implemented and verified in-browser (Phase 4) |
+| `employees-table/` | ✅ Implemented and verified in-browser (Phase 5) |
+| `document-registry-table/`, `department-hierarchy-tree/` | ❌ Not implemented |
 | `document-attachments-panel/`, `movement-inbox/`, `movement-timeline/`, `audit-log-table/` | ❌ Not implemented (backend live) |
 | `visualization-panel/` | ❌ Not implemented (depends on `shared/ui/mermaid-view`) |
 | `notification-center/` | ❌ Blocked on Module 10 / SignalR |
@@ -53,6 +62,10 @@ browser.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-28 | agent | Implemented `employees-table` for Phase 5 (server search/paging, department resolution/fallback, permission-filtered menus, status confirmation, create/edit dialog) and documented the slice. |
+| 2026-10-28 | agent | Implemented `roles-table` for Phase 4 (client search/sort/paging, permission-filtered row/header/empty menus, role and permission-matrix dialogs, system-role protection) and documented the slice. |
+| 2026-10-28 | agent | Implemented `users-table` for Phase 3 (users grid, permission-filtered row/header/empty menus, status confirmation) and documented the slice. |
+| 2026-10-27 | agent | Implemented `app-shell` for Phase 1 (permission-filtered sidebar, header/account menus, mobile drawer, shell/item context menus, settings dialog with theme + density) and documented the «قريبًا» convention for unavailable slices. |
 | 2026-10-25 | Buffy | Documented the mandatory table/context-menu conventions and added the `visualization-panel` widget (Mermaid + data-derived tree/chart views); upgraded the department tree with node menus and a view switcher. |
 | 2026-10-25 | Cursor | Added attachments panel, movement inbox, and audit-log table widgets; marked notification-center blocked. |
 | 2026-10-22 | opencode | Converted this folder's `README.md` from the Word document it was authored in to markdown. |

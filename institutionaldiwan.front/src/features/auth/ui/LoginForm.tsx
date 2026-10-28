@@ -4,11 +4,15 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { Eye, EyeOff, LogIn, User } from 'lucide-react'
 import { toArabicErrorMessage } from '@/shared/api'
 import { Button, FormField, Input } from '@/shared/ui'
-import { loginSchema, type LoginFormValues } from '../model/login.schema'
+import {
+  loginSchema,
+  type LoginFormValues,
+  type LoginResponse,
+} from '../model/login.schema'
 import { useLoginMutation } from '../api/use-login'
 
 interface LoginFormProps {
-  onSuccess?: () => void
+  onSuccess?: (session: LoginResponse) => void
 }
 
 export function LoginForm({ onSuccess }: LoginFormProps) {
@@ -25,8 +29,8 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
   })
 
   const onSubmit = handleSubmit(async (values) => {
-    await loginMutation.mutateAsync(values)
-    onSuccess?.()
+    const session = await loginMutation.mutateAsync(values)
+    onSuccess?.(session)
   })
 
   return (

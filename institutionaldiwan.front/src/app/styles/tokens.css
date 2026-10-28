@@ -43,6 +43,8 @@
   --color-gold: var(--wheat-600);
   --color-focus-ring: var(--forest-500);
 
+  --color-overlay: color-mix(in srgb, var(--charcoal-900) 45%, transparent);
+
   --color-danger: var(--status-danger);
   --color-success: var(--status-success);
   --color-warning: var(--status-warning);
@@ -65,6 +67,8 @@
   --color-highlight: var(--forest-500);
   --color-gold: var(--wheat-400);
   --color-focus-ring: var(--wheat-400);
+
+  --color-overlay: color-mix(in srgb, var(--charcoal-900) 70%, transparent);
 
   --color-danger: var(--status-danger);
   --color-success: var(--status-success);
