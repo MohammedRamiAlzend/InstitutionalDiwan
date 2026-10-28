@@ -23,7 +23,11 @@ const sizeClasses: Record<DialogSize, string> = {
   lg: 'max-w-2xl',
 }
 
-/** Centered modal for create/edit/confirm flows; closes on overlay click and Esc. */
+/**
+ * Centered modal for create/edit/confirm flows; closes on overlay click and Esc.
+ * Height is capped at the viewport and only the body scrolls, so the title and
+ * footer stay pinned no matter how long the content is.
+ */
 export function Dialog({
   open,
   onOpenChange,
@@ -41,13 +45,13 @@ export function Dialog({
         <DialogPrimitive.Overlay className="fixed inset-0 z-40 bg-overlay animate-overlay-in" />
         <DialogPrimitive.Content
           className={cn(
-            'fixed start-1/2 top-1/2 z-50 w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 rounded-xl border border-border bg-surface p-6 text-foreground shadow-xl animate-content-in',
+            'fixed start-1/2 top-1/2 z-50 flex max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-xl border border-border bg-surface p-6 text-foreground shadow-xl animate-content-in',
             'rtl:translate-x-1/2',
             sizeClasses[size],
             className,
           )}
         >
-          <div className="flex flex-col gap-1 pe-8">
+          <div className="flex shrink-0 flex-col gap-1 pe-8">
             <DialogPrimitive.Title className="text-lg font-semibold">
               {title}
             </DialogPrimitive.Title>
@@ -62,10 +66,16 @@ export function Dialog({
             )}
           </div>
 
-          {children && <div className="mt-4 flex flex-col gap-4">{children}</div>}
+          {children && (
+            <div className="mt-4 flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overscroll-contain pe-1">
+              {children}
+            </div>
+          )}
 
           {footer && (
-            <div className="mt-6 flex flex-wrap items-center justify-end gap-2">{footer}</div>
+            <div className="mt-6 flex shrink-0 flex-wrap items-center justify-end gap-2">
+              {footer}
+            </div>
           )}
 
           <DialogPrimitive.Close

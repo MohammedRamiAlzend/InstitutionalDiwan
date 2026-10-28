@@ -12,7 +12,7 @@ Holds reusable, domain-agnostic UI primitives (Tailwind CSS v4 + Radix UI where 
 | `textarea.tsx` | Multi-line input matching `input.tsx` spacing, border, focus ring, and invalid state. |
 | `select.tsx` | Radix Select with RTL-aware positioning, token-only styling, and an Arabic placeholder. |
 | `checkbox.tsx` | Radix checkbox (checked / indeterminate) with an Arabic label and helper text. |
-| `dialog.tsx` | Accessible centered modal with title, description, footer, size variants, overlay token, and entrance animation. |
+| `dialog.tsx` | Accessible centered modal with title, description, footer, size variants, overlay token, and entrance animation. Height is capped at the viewport (`max-h-[calc(100dvh-2rem)]`) with the title/footer pinned and a scrollable body, so long content never overflows the screen. |
 | `confirm-dialog.tsx` | Confirmation gate for destructive commands built on `dialog` + `button`. |
 | `dropdown-menu.tsx` | Radix dropdown wrapper sharing permission-filtered `MenuEntry` items; used for row overflow and the column chooser. |
 | `context-menu.tsx` | The single right-click primitive: opens at the pointer, inherits direction, returns focus, and honors `Shift+F10` / `ContextMenu` dispatch from the grid. |
@@ -40,6 +40,7 @@ Holds reusable, domain-agnostic UI primitives (Tailwind CSS v4 + Radix UI where 
 ## Change Log
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-28 | agent | Bounded the dialog to the viewport height and moved scrolling into a flex body with a pinned header/footer, so long panels (permission matrices, access + assignment views) scroll internally instead of spilling off screen; the role permission matrix now uses that single scroll area. |
 | 2026-10-27 | agent | Exported the keyboard context-menu helpers (`isContextMenuShortcut`, `dispatchContextMenu`) through the barrel so the app shell can reuse the grid's `Shift+F10` / `ContextMenu` behavior. |
 | 2026-10-27 | agent | Implemented the Identity admin primitives (`textarea`, `select`, `checkbox`, `dialog`, `confirm-dialog`, `badge`, `skeleton`, `page-header`, `menu`, `dropdown-menu`, `context-menu`) and the shared `data-table` with URL state, both paging modes, persisted column chooser, permission-filtered row/header/empty menus, keyboard `Shift+F10`, and Arabic empty/error states. |
 | 2026-10-27 | agent | Implemented the core primitives required by the login slice, all consuming semantic tokens only (no hex) and logical properties (no physical `ml-*`/`left-*`). |

@@ -75,6 +75,7 @@ Public barrel for the request/form types, the seven mutation hooks, and the thre
 
 ## 6. Change Log
 
+- 2026-10-28: The access/assignment dialog now relies on the dialog primitive's bounded body: title and footer stay pinned, the permissions and assignments regions scroll together inside a viewport-capped panel.
 - 2026-10-28: Reused the shared `permissionModuleLabel` helper from `entities/role` instead of a local module-label map (Phase 4 consolidation).
 - 2026-10-28: Implemented Phase 3 — request models, Zod schemas, and user/role/department-assignment mutations, plus the create/edit, roles, and access dialogs. Verified in-browser; build and lint pass.
 - 2026-10-22: Converted this `README.md` from the Word document it was authored in to markdown, so the `README.md`-per-folder rule in `AGENT.md` holds and the content is diffable and agent-editable.

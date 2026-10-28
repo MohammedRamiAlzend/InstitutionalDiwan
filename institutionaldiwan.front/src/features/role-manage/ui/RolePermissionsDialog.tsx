@@ -146,40 +146,38 @@ export function RolePermissionsDialog({
           </Button>
         </div>
       ) : (
-        <div className="max-h-[52vh] overflow-y-auto pe-1">
-          <div className="flex flex-col gap-4">
-            {groups.map((group) => (
-              <section key={group.module} className="flex flex-col gap-2">
-                <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                  <KeyRound className="size-4 text-accent" aria-hidden />
-                  {group.label}
-                </h3>
-                <ul className="grid gap-2 sm:grid-cols-2">
-                  {group.items.map((permission) => (
-                    <li
-                      key={permission.code}
-                      className="flex items-start justify-between gap-3 rounded-lg border border-border px-3 py-2"
+        <div className="flex flex-col gap-4">
+          {groups.map((group) => (
+            <section key={group.module} className="flex flex-col gap-2">
+              <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                <KeyRound className="size-4 text-accent" aria-hidden />
+                {group.label}
+              </h3>
+              <ul className="grid gap-2 sm:grid-cols-2">
+                {group.items.map((permission) => (
+                  <li
+                    key={permission.code}
+                    className="flex items-start justify-between gap-3 rounded-lg border border-border px-3 py-2"
+                  >
+                    <Checkbox
+                      checked={draft.has(permission.code)}
+                      onCheckedChange={(checked) =>
+                        toggle(permission.code, checked)
+                      }
+                      disabled={mutation.isPending}
+                      label={permission.nameAr}
+                    />
+                    <span
+                      dir="ltr"
+                      className="mt-0.5 shrink-0 rounded border border-border px-1.5 py-0.5 font-mono text-[10px] leading-none text-muted"
                     >
-                      <Checkbox
-                        checked={draft.has(permission.code)}
-                        onCheckedChange={(checked) =>
-                          toggle(permission.code, checked)
-                        }
-                        disabled={mutation.isPending}
-                        label={permission.nameAr}
-                      />
-                      <span
-                        dir="ltr"
-                        className="mt-0.5 shrink-0 rounded border border-border px-1.5 py-0.5 font-mono text-[10px] leading-none text-muted"
-                      >
-                        {permission.code}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            ))}
-          </div>
+                      {permission.code}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ))}
         </div>
       )}
 

@@ -39,6 +39,7 @@ deactivating them, and granting/revoking permissions from the catalog. The dialo
 
 ## 6. Change Log
 
+- 2026-10-28: Dropped the permission matrix's own `max-h`/scroll wrapper so the dialog primitive's single body scroll area owns scrolling (fixed dialog height, pinned title and footer, no nested scrollbars).
 - 2026-10-28: Implemented Phase 4 — role request types, Zod schema, four mutations, the create/edit dialog, and the grouped permission-matrix dialog; rewrote this README to match the code.
 - 2026-10-22: Converted this `README.md` from the Word document it was authored in to markdown, so the `README.md`-per-folder rule in `AGENT.md` holds and the content is diffable and agent-editable.
 - 2026-10-19: Created `features/role-manage` slice folder and `README.md`.
