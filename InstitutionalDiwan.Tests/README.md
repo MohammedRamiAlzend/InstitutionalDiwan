@@ -1,6 +1,6 @@
 # InstitutionalDiwan.Tests — xUnit test suite
 
-> **Status:** Implemented — 386 tests covering domain handlers, department register numbering, the
+> **Status:** Implemented — 393 tests covering domain handlers, department register numbering, the
 > receipt gate, the movement routing workflow (including the Central Diwan hub and rejection routing),
 > the department inbox/outbox, attachments (atomic first upload, versions, SHA-256 streaming, magic
 > bytes), movement participation, the tamper-evident audit chain (hashing, projections, checkpoints,
@@ -18,7 +18,7 @@ indexes) runs against a private SQLite in-memory database through `Support/TestC
 
 | Folder | Contents |
 | --- | --- |
-| `Application/` | Handler/validator tests per slice — Identity (users, roles, permissions, employees, access grants, login/register/change password, `GetUserProfileQueryHandlerTests`), Organization/Departments + `InstitutionSettingsHandlerTests`, Correspondence/`Documents` (`DocumentLifecycleHandlerTests`, `ListDepartmentDocumentsQueryHandlerTests`) + `ExternalOrganizationsHandlerTests`, Numbering (`OfficialNumberLifecycleHandlerTests`, `DepartmentRegisterNumberingTests`), Movements (`MovementWorkflowHandlerTests`), Attachments (`AttachmentHandlerTests`), Audit (`AuditDomainTests`, `AuditHandlerTests`), `UnitOfWorkClockTests` (handler-stamped times come from `IUnitOfWork.UtcNow`), and `LookupHandlerTests.cs`. |
+| `Application/` | Handler/validator tests per slice — Identity (users, roles, permissions, employees, access grants, login/register/change password, admin password reset, `GetUserProfileQueryHandlerTests`), Organization/Departments + `InstitutionSettingsHandlerTests`, Correspondence/`Documents` (`DocumentLifecycleHandlerTests`, `ListDepartmentDocumentsQueryHandlerTests`) + `ExternalOrganizationsHandlerTests`, Numbering (`OfficialNumberLifecycleHandlerTests`, `DepartmentRegisterNumberingTests`), Movements (`MovementWorkflowHandlerTests`), Attachments (`AttachmentHandlerTests`), Audit (`AuditDomainTests`, `AuditHandlerTests`), `UnitOfWorkClockTests` (handler-stamped times come from `IUnitOfWork.UtcNow`), and `LookupHandlerTests.cs`. |
 | `Storage/` | `LocalFileStorageServiceTests` (layout, streamed checksum, read-back, root-escape guard) and `FileSignatureValidatorTests` (PDF/PNG/JPEG/TIFF/ZIP/OLE/SVG magic bytes, extension allow-list, size limit). |
 | `Authorization/` | `PermissionAuthorizationHandlerTests` (policy handler + `Permissions.All` integrity), `DepartmentScopeEvaluatorTests` (primary department, institution/dept-tree scope, temporal assignments incl. `IncludeSubtree` and ended assignments), `DocumentAccessEvaluatorTests` (authorship, grants incl. revoked, scope, confidentiality, movement participation, anonymous). |
 | `Persistence/` | `DocumentMovementRepositoryTests` — the inbox/outbox queries against a real SQLite database; `AuditLogRepositoryTests` — filtered search, range reads, checkpoint/integrity persistence; `TamperEvidentAuditInterceptorTests` — domain-event projection (including login), sensitive-field redaction, and request-only writes against SQLite; `AuditActionRecorderTests` — the isolated-scope recorder writes one valid chain row without flushing the caller's pending changes; `CorrespondenceAuditIntegrationTests` — real `CreateDocumentCommand`/`UpdateDraftMetadataCommand` handlers through repositories + DbContext + interceptor produce entity audit rows with old/new values. |
@@ -105,6 +105,7 @@ indexes) runs against a private SQLite in-memory database through `Support/TestC
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-28 | agent | Added `Application/ResetUserPasswordCommandHandlerTests` (hash replaced, old password no longer verifies, `MustChangePassword` forced, single save, missing user → `Identity.UserNotFound`) and `ResetUserPasswordCommandValidatorTests` (empty id, blank password, too-short password). 386 → 393 tests. |
 | 2026-10-26 | Qoder | Added `Persistence/CorrespondenceAuditIntegrationTests` (real document create/update commands write entity audit rows), `Persistence/AuditActionRecorderTests` (isolated scope), and `Server/AuditActionMiddlewareTests` (create/view/skip/failure rows); extended the interceptor login case, the composition-root test, lookup seeding (8 action / 13 entity types), and the seeding counts. 378 → 386 tests. |
 | 2026-10-26 | Qoder | Added `Server/Module09DependencyInjectionTests` to prove Module 09 is injected through the production composition root (audit repository/appender, EF interceptor, hosted jobs, permission policies, MediatR handlers). 375 → 378 tests. |
 | 2026-10-25 | Buffy | Added the `AuditDomainTests.Reseal` case after audit appends were serialized under a chain lock. 374 → 375 tests. |

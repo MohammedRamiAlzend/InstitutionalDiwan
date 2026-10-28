@@ -431,6 +431,9 @@ internal sealed class TamperEvidentAuditInterceptor : SaveChangesInterceptor
             NewJson(new { e.Username }), ActorUserId: e.UserId),
         UserDeactivatedEvent e => new(
             "IDENTITY", AuditActionType.DeleteId, AuditEntityType.UserId, e.UserId),
+        UserPasswordResetEvent e => new(
+            "IDENTITY", AuditActionType.UpdateId, AuditEntityType.UserId, e.UserId,
+            NewJson(new { MustChangePassword = true }), ActorUserId: e.ResetByUserId),
         UserRoleAssignedEvent e => new(
             "IDENTITY", AuditActionType.UpdateId, AuditEntityType.UserId, e.UserId,
             NewJson(new { e.RoleId }), ActorUserId: e.AssignedByUserId),

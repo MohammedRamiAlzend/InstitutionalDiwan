@@ -21,6 +21,7 @@ set their access token carries.
 | `GetUserByIdQuery.cs` / `GetUserByIdQueryHandler.cs` | Fetches one account by id (404 when missing). |
 | `CreateUserCommand.cs` / `CreateUserCommandHandler.cs` / `CreateUserCommandValidator.cs` | Hashes the raw password, rejects duplicate usernames (409), validates the primary department and optional employee. |
 | `UpdateUserCommand.cs` / `UpdateUserCommandHandler.cs` / `UpdateUserCommandValidator.cs` | Updates department, employee link, scope type, and must-change-password flag. |
+| `ResetUserPasswordCommand.cs` / `ResetUserPasswordCommandHandler.cs` / `ResetUserPasswordCommandValidator.cs` | Administrative reset for a forgotten password: hashes the temporary password, sets `MustChangePassword`, and passes the calling administrator into `User.ResetPassword` so the audit row names them (404 `Identity.UserNotFound`). |
 | `DeactivateUserCommand.cs` / `DeactivateUserCommandHandler.cs` | Soft delete via `User.Deactivate`. |
 | `ActivateUserCommand.cs` / `ActivateUserCommandHandler.cs` | Reactivates a soft-deleted account. |
 | `AssignUserRoleCommand.cs` / `AssignUserRoleCommandHandler.cs` / `AssignUserRoleCommandValidator.cs` | Grants a role and records the grantor (409 `Identity.RoleAlreadyAssigned`). |
@@ -45,6 +46,7 @@ set their access token carries.
 | Item | State |
 | --- | --- |
 | CRUD + activation + role grant/revoke | ✅ |
+| `ResetUserPasswordCommand` (admin reset, forced change) | ✅ |
 | `ListUsersQuery` (paged + username search) | ✅ |
 | `AssignUserDepartmentScopeCommand`, `EndUserDepartmentScopeCommand` | ✅ |
 | `GetUserEffectivePermissionsQuery` | ✅ |
@@ -53,6 +55,7 @@ set their access token carries.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-28 | agent | Added `ResetUserPasswordCommand` for administrators to reset a forgotten password: the handler hashes the temporary password and forces a change at the next sign-in, without re-issuing a token. |
 | 2026-10-22 | Buffy | Every handler in this slice now passes `IUnitOfWork.UtcNow` into the `User` behavior it calls (create, role grant/revoke, department-scope assign/end, profile update, activation), so a write is stamped with the transaction's instant rather than the system clock. |
 | 2026-10-22 | opencode | `ListUsersQuery` now returns `PagedResult<UserResponse>` with `page`, `pageSize`, and a username `search`; `UserRepository.ListPagedAsync` pages in SQL and the handler resolves roles for the requested page only. |
 | 2026-10-19 | Buffy | Added the department-scope use cases (`AssignUserDepartmentScopeCommand`, `EndUserDepartmentScopeCommand`) and `GetUserEffectivePermissionsQuery`, plus `User.AssignDepartmentScope` duplicate guard and `User.EndDepartmentScope`; endpoints added to `UsersController`. |

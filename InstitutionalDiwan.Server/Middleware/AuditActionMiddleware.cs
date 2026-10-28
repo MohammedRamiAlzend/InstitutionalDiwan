@@ -154,7 +154,7 @@ public sealed class AuditActionMiddleware
                 actionName,
                 "Update", "Change", "Move", "Assign", "Set", "Activate", "Deactivate", "End",
                 "Send", "Receive", "Complete", "Redirect", "Close", "Return", "Reject", "Cancel",
-                "Archive", "Relabel", "Record"))
+                "Archive", "Relabel", "Record", "Reset"))
         {
             return AuditActionType.UpdateId;
         }

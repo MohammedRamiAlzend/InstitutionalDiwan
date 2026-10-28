@@ -3,6 +3,7 @@ import {
   Copy,
   Hash,
   KeyRound,
+  LockKeyhole,
   Pencil,
   Plus,
   RefreshCw,
@@ -20,6 +21,7 @@ import {
   type UserResponse,
 } from '@/entities/user'
 import {
+  ResetPasswordDialog,
   useSetUserActiveMutation,
   UserAccessDialog,
   UserFormDialog,
@@ -79,6 +81,7 @@ export function UsersTable() {
   const [formUser, setFormUser] = useState<UserResponse | null>(null)
   const [rolesUser, setRolesUser] = useState<UserResponse | null>(null)
   const [accessUser, setAccessUser] = useState<UserResponse | null>(null)
+  const [resetUser, setResetUser] = useState<UserResponse | null>(null)
   const [statusUser, setStatusUser] = useState<UserResponse | null>(null)
 
   const statusMutation = useSetUserActiveMutation()
@@ -267,6 +270,13 @@ export function UsersTable() {
         icon: <KeyRound className="size-4" aria-hidden />,
         onSelect: () => setAccessUser(user),
       },
+      {
+        id: 'reset-password',
+        label: 'إعادة تعيين كلمة المرور',
+        icon: <LockKeyhole className="size-4" aria-hidden />,
+        disabled: isSelf,
+        onSelect: () => setResetUser(user),
+      },
       { type: 'separator' },
       {
         id: 'toggle-active',
@@ -403,6 +413,16 @@ export function UsersTable() {
             if (!open) setAccessUser(null)
           }}
           user={accessUser}
+        />
+      )}
+
+      {resetUser && (
+        <ResetPasswordDialog
+          open
+          onOpenChange={(open) => {
+            if (!open) setResetUser(null)
+          }}
+          user={resetUser}
         />
       )}
 

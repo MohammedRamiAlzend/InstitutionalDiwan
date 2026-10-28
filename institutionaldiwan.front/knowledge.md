@@ -12,8 +12,10 @@
 > `widgets/users-table`, `pages/users`), the Phase 4 roles administration (`features/role-manage`,
 > `widgets/roles-table`, `pages/roles`, including the grouped permission matrix), the Phase 5
 > employees administration (`features/employee-manage`, `widgets/employees-table`, `pages/employees`),
-> and the Phase 6 change-password flow (`features/auth` form + `pages/change-password`, forced from
-> the JWT claim) are implemented. The Module 02 Identity admin front end is complete.
+> the Phase 6 change-password flow (`features/auth` form + `pages/change-password`, forced from
+> the JWT claim), and the administrator password reset (`ResetPasswordDialog` in
+> `features/user-manage`, mounted from the `users-table` row menu; forces a password change at the
+> next sign-in) are implemented. The Module 02 Identity admin front end is complete.
 >
 > **Standalone boundary:** this project is not part of the API solution. Server paths below refer to
 > the external `InstitutionalDiwan.Server` repository; the front end talks to it only over `/api`
@@ -27,7 +29,7 @@
 | `package.json` | React stack + Module 01 packages (router, query, zustand, axios, RHF, zod, sonner, Tailwind v4) | Remaining packages per slice (see [`README.md`](README.md)) |
 | `vite.config.ts` proxy | ✅ `@` alias + env-driven `/api` and `/hubs` proxies (`DEV_PROXY_TARGET` → `ASPNETCORE_HTTPS_PORT` → `https://localhost:7126`) | Optional local HTTPS certificate; production uses the reverse proxy ([`DEPLOYMENT.md`](DEPLOYMENT.md)) |
 | Dev configuration | ✅ `.env.example` committed; `.env` is git-ignored | — |
-| Backend | External API: 17 controllers, ~112 endpoints | Front end consumes relative `/api/...` URLs |
+| Backend | External API: 17 controllers, ~113 endpoints | Front end consumes relative `/api/...` URLs |
 | Modules without API | 07 Archiving, 08 Relations, 10 Notifications | Do **not** call them; domain/lookups exist only |
 
 ## Commands
@@ -262,7 +264,9 @@ Notable codes: `Department.CyclicHierarchy`, `Department.HasActiveChildren`.
 ### Users — `/api/users`
 
 `GET` (paged list), `GET /{userId}`, `POST`, `PUT /{userId}`, `DELETE /{userId}`,
-`POST /{userId}/activate`, `POST /{userId}/roles`, `DELETE /{userId}/roles/{roleId}`,
+`POST /{userId}/activate`, `POST /{userId}/reset-password` (payload `{ newPassword }`, 8–200 chars;
+sets a temporary password and flags `MustChangePassword`, the caller is recorded as the resetting
+administrator), `POST /{userId}/roles`, `DELETE /{userId}/roles/{roleId}`,
 `POST /{userId}/department-assignments`,
 `DELETE /{userId}/department-assignments/{assignmentId}`,
 `GET /{userId}/effective-permissions` — all `USER_MANAGE`.

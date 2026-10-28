@@ -1,6 +1,6 @@
 # `src/features/user-manage` — User Account, Role & Department Assignment Feature Slice
 
-> **Status:** Implemented (Module 02 Phase 3, 2026-10-28) — create/edit users, toggle account status, assign/revoke roles, and add/end department assignments. The dialogs degrade with Arabic warnings when the caller lacks the supporting catalog permission.
+> **Status:** Implemented (Module 02 Phase 3, 2026-10-28; admin password reset added 2026-10-28) — create/edit users, toggle account status, assign/revoke roles, add/end department assignments, and reset a forgotten password. The dialogs degrade with Arabic warnings when the caller lacks the supporting catalog permission.
 
 ## 1. Purpose
 
@@ -10,7 +10,7 @@ Owns the write side of Identity user administration: Zod-validated forms, `useMu
 
 - Allowed Imports: `@/entities/user`, `@/entities/department`, `@/entities/role`, `@/entities/employee`, `@/entities/lookup`, and `@/shared/*`.
 - Forbidden Imports: NEVER import from `@/app`, `@/pages`, `@/widgets`, or sibling `@/features/*` slices.
-- Public API: export the request types, form value types, mutation hooks, and the three dialogs via `src/features/user-manage/index.ts`.
+- Public API: export the request types, form value types, mutation hooks, and the four dialogs via `src/features/user-manage/index.ts`.
 - Menu entries, confirmations, and toolbar buttons belong to the mounting widget; this slice exports dialogs and mutations only.
 
 ## 3. Contents & Segments
@@ -19,13 +19,15 @@ Owns the write side of Identity user administration: Zod-validated forms, `useMu
 
 - `CreateUserRequest` — `username`, `password`, `primaryDepartmentId`, `employeeId`, `scopeTypeId`, `mustChangePassword`.
 - `UpdateUserRequest` — `primaryDepartmentId`, `employeeId`, `scopeTypeId`, `mustChangePassword` (username is immutable).
+- `ResetUserPasswordRequest` — `newPassword` (temporary password handed to the owner).
 - `AssignDepartmentScopeRequest` — `departmentId`, `assignmentTypeId`, `includeSubtree`, `startDate`, `endDate`.
 
 ### `model/schemas.ts`
 
 - `createUserFormSchema` / `updateUserFormSchema` share the username, department, employee, scope, and must-change-password rules; password is required (8–200 chars) only on create.
 - `departmentAssignmentSchema` requires a department and assignment type and rejects an end date earlier than the start date.
-- Exported inferred types: `UserFormValues`, `DepartmentAssignmentFormValues`.
+- `resetUserPasswordSchema` requires a temporary password of 8–200 characters plus a matching confirmation.
+- Exported inferred types: `UserFormValues`, `DepartmentAssignmentFormValues`, `ResetUserPasswordFormValues`.
 
 ### `api/userMutations.ts`
 
@@ -34,6 +36,7 @@ Owns the write side of Identity user administration: Zod-validated forms, `useMu
 | `useCreateUserMutation` | `POST /api/users` |
 | `useUpdateUserMutation` | `PUT /api/users/{id}` |
 | `useSetUserActiveMutation` | `POST /api/users/{id}/activate` / `DELETE /api/users/{id}` |
+| `useResetUserPasswordMutation` | `POST /api/users/{id}/reset-password` |
 | `useAssignUserRoleMutation` | `POST /api/users/{id}/roles` |
 | `useRevokeUserRoleMutation` | `DELETE /api/users/{id}/roles/{roleId}` |
 | `useAssignDepartmentScopeMutation` | `POST /api/users/{id}/department-assignments` |
@@ -58,9 +61,13 @@ Read-only effective access plus department-assignment management:
 - add-assignment form (department, assignment type from `assignment-types`, `includeSubtree`, start/end dates).
 Department and permission catalogs are permission-gated; missing catalogs show Arabic warnings rather than empty selects.
 
+### `ui/ResetPasswordDialog.tsx`
+
+Administrative reset for a forgotten password: a warning explains that the old password stops working immediately, a «توليد كلمة مرور مؤقتة» action fills both fields with a random 12-character password (`crypto.getRandomValues`, ambiguous characters excluded), and two shared `PasswordField`s capture and confirm the temporary password. On success the dialog toasts that the user must choose a new password at the next sign-in and closes; failures render through the Arabic error catalog.
+
 ### `index.ts`
 
-Public barrel for the request/form types, the seven mutation hooks, and the three dialogs.
+Public barrel for the request/form types, the eight mutation hooks, and the four dialogs.
 
 ## 4. Required Packages
 
@@ -68,13 +75,15 @@ Public barrel for the request/form types, the seven mutation hooks, and the thre
 
 ## 5. Implementation Status
 
-- ✅ Request types, Zod schemas, and all seven mutations implemented.
-- ✅ Create/edit, roles, and access dialogs implemented with permission-aware degradation and Arabic validation/errors.
+- ✅ Request types, Zod schemas, and all eight mutations implemented.
+- ✅ Create/edit, roles, access, and password-reset dialogs implemented with permission-aware degradation and Arabic validation/errors.
 - ✅ Verified in-browser against the live API (edit prefill, Arabic validation on submit, role resolution, grouped effective permissions, assignment form).
-- ❌ Password reset/force-change command is not exposed by the API; the temporary password is only set at creation.
+- ✅ Admin password reset implemented against `POST /api/users/{id}/reset-password`; the reset flags the account for a forced change at the next sign-in.
+- ✅ Verified in-browser: the row action is disabled for the signed-in account, empty submit shows Arabic field errors, the generator fills both fields with the same 12-character password, success closes the dialog with a toast, and the reset user's next sign-in lands on `/change-password`.
 
 ## 6. Change Log
 
+- 2026-10-28: Added the administrator password reset (`ResetPasswordDialog`, `resetUserPasswordSchema`, `useResetUserPasswordMutation`) against the new `POST /api/users/{id}/reset-password`; passwords use the new shared `PasswordField`. Verified in-browser end to end (API 200/400/401 responses, Arabic validation, forced change on next login, dialog bounded in both themes).
 - 2026-10-28: The access/assignment dialog now relies on the dialog primitive's bounded body: title and footer stay pinned, the permissions and assignments regions scroll together inside a viewport-capped panel.
 - 2026-10-28: Reused the shared `permissionModuleLabel` helper from `entities/role` instead of a local module-label map (Phase 4 consolidation).
 - 2026-10-28: Implemented Phase 3 — request models, Zod schemas, and user/role/department-assignment mutations, plus the create/edit, roles, and access dialogs. Verified in-browser; build and lint pass.

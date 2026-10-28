@@ -4,7 +4,7 @@
 > 2026-10-28) implemented: shared foundation (`api`/`config`/`lib`/`types`/`ui` kit),
 > `entities/user` session and admin reads, supporting `entities/{department,role,employee,lookup}`
 > reads, `features/auth` (login/logout/permission guard/password change), `features/user-manage`
-> (user writes), `features/role-manage` (role writes + permission matrix),
+> (user writes + administrator password reset), `features/role-manage` (role writes + permission matrix),
 > `features/employee-manage` (employee writes + activation),
 > `app` providers + router + theme tokens, `widgets/app-shell` (permission-filtered sidebar, header,
 > mobile drawer, display settings, shell/item context menus),
@@ -207,7 +207,7 @@ Full endpoint tables: [`knowledge.md`](knowledge.md).
 | `index.html` RTL / document title / theme boot script | ✅ Configured |
 | `src/shared/` (`api`, `ui`, `lib`, `config`, `types`) | ✅ Core implemented including `data-table`, `context-menu`, dialogs, menus, select/checkbox, URL table state, persisted columns, and the expanded Arabic error catalog (`mermaid-view` pending its slice) |
 | `src/entities/` | ✅ `user` (session + admin reads), `department` (reads), `role`, `employee` (reads), `lookup` implemented; document, document-file, numbering-registry, movement, audit-log pending |
-| `src/features/` | ✅ `auth`, `user-manage`, `role-manage`, `employee-manage` implemented; document-*, department-*, movement-routing, attachment-upload, audit-manage pending |
+| `src/features/` | ✅ `auth`, `user-manage` (incl. administrator password reset), `role-manage`, `employee-manage` implemented; document-*, department-*, movement-routing, attachment-upload, audit-manage pending |
 | `src/widgets/` | ✅ `app-shell` (sidebar, header, drawer, settings, shell/item context menus), `users-table`, `roles-table`, and `employees-table`; registry table, hierarchy tree, movement timeline/inbox, attachments panel, audit table, visualization panel pending |
 | `src/pages/` | ✅ `login`, standalone `change-password`, shell-framed `dashboard`, `users`, `roles`, and `employees`; documents, movements, departments, numbering, audit pending (archive deferred) |
 | `src/app/` (`providers`, `router`, `styles`) | ✅ Implemented (login-protected routes incl. `/change-password`, `/users`, `/roles`, `/employees`; forced reset redirect) |
@@ -217,6 +217,7 @@ Full endpoint tables: [`knowledge.md`](knowledge.md).
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-28 | agent | Added the administrator password reset (`POST /api/users/{userId}/reset-password`): a «إعادة تعيين كلمة المرور» row action (disabled for the signed-in account) opens `ResetPasswordDialog`, which warns the admin, can generate a 12-character temporary password, and forces the user to set a new password at the next sign-in. Extracted the shared `PasswordField` (login, change-password, reset) and kept the dialog footer/body bounded. Build and lint pass. |
 | 2026-10-28 | agent | Completed Phase 6 of Module 02 (final): implemented `/change-password` (Zod form + mutation + standalone page), forced the reset redirect from the JWT `must_change_password` claim so it survives a reload, routed reset logins there, added the account-menu entry, and mapped `Identity.NewPasswordSameAsOld`. Re-verified all protected routes, RTL, and both themes; build and lint pass. This closes the Identity admin front end. |
 | 2026-10-28 | agent | Completed Phase 5 of Module 02: implemented `features/employee-manage` (Zod form + create/update, activate/deactivate, department selector sourced from `entities/department`), `widgets/employees-table` (server-side search/paging, department badges, row actions), and the `/employees` page behind `EMPLOYEE_MANAGE`; enabled its sidebar entry and added the employee validation error codes to the Arabic catalog. Verified in-browser (create validation, department load, create/edit, invalid email, deactivation, light/dark); build and lint pass. |
 | 2026-10-28 | agent | Completed Phase 4 of Module 02: implemented `features/role-manage` (role create/edit, activate/deactivate, and a grouped permission-matrix dialog that saves only the grant/revoke diff), `widgets/roles-table`, and the `/roles` page behind `ROLE_MANAGE`; moved permission module labels into `entities/role` and reused them in the user access dialog. Verified in-browser (search, sorting, dialogs, matrix toggles, system-role protection, light/dark); build and lint pass. |

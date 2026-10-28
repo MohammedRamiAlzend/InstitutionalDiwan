@@ -1,9 +1,8 @@
-import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Eye, EyeOff, LogIn, User } from 'lucide-react'
+import { LogIn, User } from 'lucide-react'
 import { toArabicErrorMessage } from '@/shared/api'
-import { Button, FormField, Input } from '@/shared/ui'
+import { Button, FormField, Input, PasswordField } from '@/shared/ui'
 import {
   loginSchema,
   type LoginFormValues,
@@ -16,7 +15,6 @@ interface LoginFormProps {
 }
 
 export function LoginForm({ onSuccess }: LoginFormProps) {
-  const [showPassword, setShowPassword] = useState(false)
   const loginMutation = useLoginMutation()
 
   const {
@@ -50,36 +48,14 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
         />
       </FormField>
 
-      <FormField
+      <PasswordField
+        id="password"
         label="كلمة المرور"
-        required
+        autoComplete="current-password"
+        placeholder="كلمة المرور"
         error={errors.password?.message}
-      >
-        <Input
-          id="password"
-          type={showPassword ? 'text' : 'password'}
-          autoComplete="current-password"
-          placeholder="كلمة المرور"
-          invalid={Boolean(errors.password)}
-          endIcon={
-            <button
-              type="button"
-              onClick={() => setShowPassword((value) => !value)}
-              className="cursor-pointer p-1 hover:text-foreground"
-              aria-label={
-                showPassword ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور'
-              }
-            >
-              {showPassword ? (
-                <EyeOff className="size-4" aria-hidden />
-              ) : (
-                <Eye className="size-4" aria-hidden />
-              )}
-            </button>
-          }
-          {...register('password')}
-        />
-      </FormField>
+        registration={register('password')}
+      />
 
       {loginMutation.isError && (
         <p role="alert" className="rounded-lg bg-danger/10 px-3 py-2 text-sm text-danger">

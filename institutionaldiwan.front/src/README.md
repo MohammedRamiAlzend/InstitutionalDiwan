@@ -5,7 +5,7 @@
 > provides the HTTP client, tokens and UI kit, `entities/user` holds the session and user admin
 > reads, `entities/{department,role,employee,lookup}` provide the supporting admin reads,
 > `features/{auth,user-manage,role-manage,employee-manage}` own login/logout/password changes,
-> user writes, role/permission writes, and employee writes,
+> user writes (including the administrator password reset), role/permission writes, and employee writes,
 > `widgets/{app-shell,users-table,roles-table,employees-table}` wrap every shell route and
 > render the admin grids, and `pages/{login,change-password,dashboard,users,roles,employees}` are
 > live routes (`/change-password` is standalone). Remaining module pages are documented but not yet coded.
@@ -55,6 +55,7 @@ application, plus the six Feature-Sliced Design layers the SPA is built from.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-28 | agent | Added the administrator password reset: `ResetPasswordDialog` + `useResetUserPasswordMutation` in `features/user-manage`, the «إعادة تعيين كلمة المرور» row action in `widgets/users-table`, the shared `shared/ui` `PasswordField`, and the `POST /api/users/{userId}/reset-password` contract (forces a password change at the next sign-in). Build and lint pass. |
 | 2026-10-28 | agent | Completed Module 02 Phase 6: implemented `/change-password` (`features/auth` schema/mutation/form + `pages/change-password`), forced the redirect from the JWT claim so it survives reloads, routed reset logins there, added the account-menu entry and `Identity.NewPasswordSameAsOld`, and verified the full Identity admin flow end to end. Build and lint pass. |
 | 2026-10-28 | agent | Implemented Module 02 Phase 5: `features/employee-manage` (create/edit form, activate/deactivate, department selector), `widgets/employees-table` (server-side search and paging, row actions, status), the `/employees` page behind `EMPLOYEE_MANAGE`, and the two employee error codes in the Arabic catalog; enabled its sidebar entry. Verified in-browser; build and lint pass. |
 | 2026-10-28 | agent | Implemented Module 02 Phase 4: `features/role-manage` (create/edit, activate/deactivate, permission matrix with staged diff), `widgets/roles-table`, the `/roles` page behind `ROLE_MANAGE`, and the shared permission-module labels in `entities/role`; enabled its sidebar entry. Verified in-browser; build and lint pass. |

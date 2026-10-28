@@ -167,6 +167,24 @@ public sealed class User : AggregateRoot<Guid>
         return Result.Success();
     }
 
+    /// <summary>
+    /// Administrative reset of a forgotten password. Unlike <see cref="ChangePasswordHash"/> the owner
+    /// never typed the new password, so the must-change flag is set and the reset is recorded with the
+    /// administrator who performed it.
+    /// </summary>
+    public Result ResetPassword(string? newPasswordHash, Guid? resetByUserId = null, DateTime? utcNow = null)
+    {
+        var now = utcNow ?? DateTime.UtcNow;
+        if (string.IsNullOrWhiteSpace(newPasswordHash))
+            return Result.Failure(DomainErrors.Identity.PasswordHashEmpty);
+
+        PasswordHash = newPasswordHash;
+        MustChangePassword = true;
+        UpdatedAt = now;
+        RaiseDomainEvent(new UserPasswordResetEvent(UserId, resetByUserId));
+        return Result.Success();
+    }
+
     public Result UpdateProfile(
         Guid primaryDepartmentId,
         Guid? employeeId,

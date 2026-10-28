@@ -29,6 +29,23 @@ export const updateUserFormSchema = z.object({
 
 export type UserFormValues = z.infer<typeof createUserFormSchema>
 
+/** `POST /api/users/{id}/reset-password` — the owner must change it at the next sign-in. */
+export const resetUserPasswordSchema = z
+  .object({
+    newPassword: z
+      .string()
+      .min(1, 'كلمة المرور المؤقتة مطلوبة.')
+      .min(8, 'كلمة المرور المؤقتة قصيرة جدًا، الحد الأدنى 8 أحرف.')
+      .max(200, 'كلمة المرور المؤقتة تتجاوز الحد الأقصى للأحرف.'),
+    confirmPassword: z.string().min(1, 'تأكيد كلمة المرور مطلوب.'),
+  })
+  .refine((values) => values.newPassword === values.confirmPassword, {
+    path: ['confirmPassword'],
+    message: 'كلمتا المرور غير متطابقتين.',
+  })
+
+export type ResetUserPasswordFormValues = z.infer<typeof resetUserPasswordSchema>
+
 export const departmentAssignmentSchema = z
   .object({
     departmentId: z.string().min(1, 'اختر القسم.'),

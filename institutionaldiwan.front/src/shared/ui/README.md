@@ -8,6 +8,7 @@ Holds reusable, domain-agnostic UI primitives (Tailwind CSS v4 + Radix UI where 
 | `button.tsx` | Accessible button (CVA variants `primary`, `secondary`, `outline`, `ghost`, `destructive`; sizes `sm`/`md`/`lg`/`icon`) with a loading spinner state. |
 | `input.tsx` | Form input with logical `ps-*`/`pe-*` spacing, start/end icons (mirrors in RTL automatically), and an invalid state. |
 | `form-field.tsx` | Label + required marker + control + Arabic error message wrapper integrating with `react-hook-form`. |
+| `password-field.tsx` | Password input built on `form-field` + `input` with its own show/hide toggle (`Eye`/`EyeOff`, Arabic `aria-label`); shared by the login, change-password, and admin reset forms. |
 | `theme-toggle.tsx` | Light/dark toggle persisted in `diwan.theme`; used by the login page and future app shell. |
 | `textarea.tsx` | Multi-line input matching `input.tsx` spacing, border, focus ring, and invalid state. |
 | `select.tsx` | Radix Select with RTL-aware positioning, token-only styling, and an Arabic placeholder. |
@@ -32,7 +33,7 @@ Holds reusable, domain-agnostic UI primitives (Tailwind CSS v4 + Radix UI where 
 ## Implementation status
 | Item | State |
 | --- | --- |
-| Core primitives (`button`, `input`, `form-field`, `theme-toggle`, `textarea`, `badge`, `skeleton`, `page-header`) | ✅ Implemented |
+| Core primitives (`button`, `input`, `form-field`, `password-field`, `theme-toggle`, `textarea`, `badge`, `skeleton`, `page-header`) | ✅ Implemented |
 | Overlays (`dialog`, `confirm-dialog`, `select`, `checkbox`) | ✅ Implemented |
 | Menus (`menu`, `context-menu`, `dropdown-menu`) | ✅ Implemented |
 | Data grid (`data-table` with URL state and persisted columns) | ✅ Implemented (server + client modes) |
@@ -40,6 +41,7 @@ Holds reusable, domain-agnostic UI primitives (Tailwind CSS v4 + Radix UI where 
 ## Change Log
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-28 | agent | Added `password-field` (form-field + input + visibility toggle) and moved `ChangePasswordForm` onto it, so the login, change-password, and admin reset forms share one password control. |
 | 2026-10-28 | agent | Bounded the dialog to the viewport height and moved scrolling into a flex body with a pinned header/footer, so long panels (permission matrices, access + assignment views) scroll internally instead of spilling off screen; the role permission matrix now uses that single scroll area. |
 | 2026-10-27 | agent | Exported the keyboard context-menu helpers (`isContextMenuShortcut`, `dispatchContextMenu`) through the barrel so the app shell can reuse the grid's `Shift+F10` / `ContextMenu` behavior. |
 | 2026-10-27 | agent | Implemented the Identity admin primitives (`textarea`, `select`, `checkbox`, `dialog`, `confirm-dialog`, `badge`, `skeleton`, `page-header`, `menu`, `dropdown-menu`, `context-menu`) and the shared `data-table` with URL state, both paging modes, persisted column chooser, permission-filtered row/header/empty menus, keyboard `Shift+F10`, and Arabic empty/error states. |

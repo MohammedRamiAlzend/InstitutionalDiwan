@@ -1,59 +1,14 @@
-import { useState } from 'react'
-import { useForm, type UseFormRegisterReturn } from 'react-hook-form'
+import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Eye, EyeOff, KeyRound } from 'lucide-react'
+import { KeyRound } from 'lucide-react'
 import { toast } from 'sonner'
 import { toArabicErrorMessage } from '@/shared/api'
-import { Button, FormField, Input } from '@/shared/ui'
+import { Button, PasswordField } from '@/shared/ui'
 import {
   changePasswordSchema,
   type ChangePasswordFormValues,
 } from '../model/change-password.schema'
 import { useChangePasswordMutation } from '../api/use-change-password'
-
-interface PasswordFieldProps {
-  id: string
-  label: string
-  autoComplete: string
-  error?: string
-  registration: UseFormRegisterReturn
-}
-
-function PasswordField({
-  id,
-  label,
-  autoComplete,
-  error,
-  registration,
-}: PasswordFieldProps) {
-  const [visible, setVisible] = useState(false)
-
-  return (
-    <FormField label={label} required htmlFor={id} error={error}>
-      <Input
-        id={id}
-        type={visible ? 'text' : 'password'}
-        autoComplete={autoComplete}
-        invalid={Boolean(error)}
-        endIcon={
-          <button
-            type="button"
-            onClick={() => setVisible((value) => !value)}
-            className="cursor-pointer p-1 hover:text-foreground"
-            aria-label={visible ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور'}
-          >
-            {visible ? (
-              <EyeOff className="size-4" aria-hidden />
-            ) : (
-              <Eye className="size-4" aria-hidden />
-            )}
-          </button>
-        }
-        {...registration}
-      />
-    </FormField>
-  )
-}
 
 interface ChangePasswordFormProps {
   onSuccess?: () => void

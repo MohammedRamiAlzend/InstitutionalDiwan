@@ -144,6 +144,39 @@ public sealed class UsersController : ControllerBase
         return result.ToActionResult();
     }
 
+    /// <summary>Resets a forgotten password and forces the user to change it at the next sign-in.</summary>
+    /// <param name="userId">User unique identifier (GUID, route). Example: <c>5f8b32a7-c941-4e62-bd07-2c86ea754921</c>.</param>
+    /// <param name="request">
+    /// The request payload with the following fields:
+    /// <list type="bullet">
+    /// <item><term>newPassword</term><description>Temporary password handed to the owner (string, 8-200 characters). Example: <c>TempP@ss123!</c>.</description></item>
+    /// </list>
+    /// </param>
+    /// <param name="cancellationToken">Request cancellation token (optional).</param>
+    /// <response code="200">The updated user, now flagged to change the password.</response>
+    /// <response code="400">The payload was invalid.</response>
+    /// <response code="404">No user with that id exists.</response>
+    [HttpPost("{userId:guid}/reset-password")]
+    [EndpointSummary("Resets a forgotten password and forces the user to change it at the next sign-in.")]
+    [EndpointDescription("Resets a forgotten password and forces the user to change it at the next sign-in. Requires the USER_MANAGE permission; the caller is recorded as the resetting administrator. Responses: 200 (The updated user, now flagged to change the password.), 400 (The payload was invalid.), 404 (No user with that id exists.)")]
+    [ProducesResponseType<UserResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> ResetPassword(
+        [Description("User unique identifier (GUID, route). Example: 5f8b32a7-c941-4e62-bd07-2c86ea754921.")] Guid userId,
+        [FromBody] ResetUserPasswordRequest request,
+        CancellationToken cancellationToken)
+    {
+        var resetByUserId = CurrentUserId;
+        if (resetByUserId is null)
+            return Unauthorized();
+
+        var result = await _sender.Send(
+            new ResetUserPasswordCommand(userId, request.NewPassword, resetByUserId), cancellationToken);
+
+        return result.ToActionResult();
+    }
+
     /// <summary>Soft-deletes a user account by deactivating it.</summary>
     /// <param name="userId">User unique identifier (GUID, route). Example: <c>5f8b32a7-c941-4e62-bd07-2c86ea754921</c>.</param>
     /// <param name="cancellationToken">Request cancellation token (optional).</param>

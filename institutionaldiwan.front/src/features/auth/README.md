@@ -6,8 +6,8 @@ Implements user login, signed-in password change, session bootstrapping (`/api/a
 - Forbidden Imports: NEVER import from `src/app`, `src/pages`, `src/widgets`, or any sibling `src/features/*` slice.
 - Public API: Export `LoginForm`, `ChangePasswordForm`, `LogoutButton`, `useLoginMutation`, `useChangePasswordMutation`, `useLogout`, `useCurrentUserQuery` (alias of `useMeQuery`), and `RequirePermission` only via `src/features/auth/index.ts`.
 ## 3. Contents & Segments
-- `ui/LoginForm.tsx` — Validated Arabic RTL login form (`react-hook-form` + `zod`), password visibility toggle, inline Arabic error from the API; reports the `LoginResponse` so the page can route a forced password change.
-- `ui/ChangePasswordForm.tsx` — Current/new/confirm password fields with per-field visibility toggles, Arabic Zod validation (8–200 chars, differing from the current password, matching confirmation), inline Arabic API error, and a success toast.
+- `ui/LoginForm.tsx` — Validated Arabic RTL login form (`react-hook-form` + `zod`), password visibility toggle via the shared `PasswordField`, inline Arabic error from the API; reports the `LoginResponse` so the page can route a forced password change.
+- `ui/ChangePasswordForm.tsx` — Current/new/confirm password fields built on the shared `PasswordField`, Arabic Zod validation (8–200 chars, differing from the current password, matching confirmation), inline Arabic API error, and a success toast.
 - `model/change-password.schema.ts` — `changePasswordSchema`, `ChangePasswordFormValues`, and the server-shaped `ChangePasswordRequest` (`oldPassword` / `newPassword`).
 - `api/use-change-password.ts` — `POST /api/auth/change-password`; the server returns a fresh JWT, so the token and session are replaced on success.
 - `ui/LogoutButton.tsx` — Thin button over `useLogout`; used by the login/dashboard surfaces.
@@ -23,6 +23,7 @@ Implements user login, signed-in password change, session bootstrapping (`/api/a
 - ✅ `ChangePasswordForm`, `useChangePasswordMutation`, and the forced/voluntary change-password flow are implemented and verified in-browser (client rules, wrong current password, success with token refresh, dark theme).
 - ❌ The register form remains out of scope for the Identity admin module.
 ## 6. Change Log
+- 2026-10-28: Both password forms now use the shared `shared/ui` `PasswordField` (visibility toggle was duplicated in `LoginForm` and `ChangePasswordForm`); added the password reset flow that forces `ChangePasswordForm` on the next sign-in.
 - 2026-10-28: Implemented the signed-in password change (Zod schema, mutation, form) and made `LoginForm` hand the session payload to the page so reset logins route to `/change-password`.
 - 2026-10-27: Extracted `use-logout.ts` so the shell and `LogoutButton` share one session teardown; exported `useLogout` from the slice barrel.
 - 2026-10-27: Implemented the login slice (form, mutation, logout, permission guard) with Arabic error messages via the shared `toArabicErrorMessage` catalog.

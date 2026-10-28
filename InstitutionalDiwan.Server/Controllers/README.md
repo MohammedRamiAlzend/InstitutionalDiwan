@@ -21,7 +21,7 @@ access live here.
 | `DocumentFilesController.cs` | `api/document-files` (plus planned `/api/documents/{documentId}/files` aliases) | `DOCUMENT_VIEW` reads; `DOCUMENT_EDIT` writes | Module 06 attachments: create a file's version chain (metadata-only or atomic first-version upload), upload the next version (multipart; extension/size/magic-byte validation), archive, list by document, download a version, and verify its SHA-256. |
 | `ExternalOrganizationsController.cs` | `api/external-organizations` | `DOCUMENT_VIEW` reads; `DOCUMENT_EDIT` writes | External correspondent CRUD: paged/searchable list (incl. `includeInactive`), get, create, update, deactivate, activate. |
 | `InstitutionSettingsController.cs` | `api/institution-settings` | `DEPARTMENT_MANAGE` | Reads and replaces the singleton institution settings (Central Diwan guards). |
-| `UsersController.cs` | `api/users` | `USER_MANAGE` | User CRUD (paged/searchable list), activate/deactivate, assign/revoke roles, `POST {id}/department-assignments`, `DELETE {id}/department-assignments/{assignmentId}`, `GET {id}/effective-permissions`. |
+| `UsersController.cs` | `api/users` | `USER_MANAGE` | User CRUD (paged/searchable list), activate/deactivate, assign/revoke roles, `POST {id}/reset-password` (forced change at next sign-in), `POST {id}/department-assignments`, `DELETE {id}/department-assignments/{assignmentId}`, `GET {id}/effective-permissions`. |
 | `RolesController.cs` | `api/roles` | `ROLE_MANAGE` | Role CRUD, activate, grant/revoke permissions. |
 | `PermissionsController.cs` | `api/permissions` | `ROLE_MANAGE` | The permission catalog. |
 | `DepartmentsController.cs` | `api/departments` | `DEPARTMENT_MANAGE` | Department CRUD, tree, reparent, soft delete + activate. |
@@ -125,6 +125,7 @@ plain JSON array.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-28 | agent | Added `POST /api/users/{userId}/reset-password` so an administrator holding `USER_MANAGE` can reset a forgotten password; the account is flagged to change it at the next sign-in and the caller is recorded for auditing. |
 | 2026-10-25 | opencode | Added `AuditLogsController` for Module 09 (`AUDIT_VIEW` search/reports, `AUDIT_MANAGE` checkpoint/integrity check); reading the log appends a self-audit entry. |
 | 2026-10-25 | opencode | Added the planned route aliases: document-scoped movement history, department-scoped inbox/outbox, step-scoped receive/complete/reject/return, and atomic `POST /api/documents/{documentId}/files`. Rejections now route to the Central Diwan and ordinary → ordinary movements are refused. |
 | 2026-10-25 | opencode | Added `DocumentFilesController` for Module 06: create, upload version (multipart), archive, list by document, download, and checksum verification. |

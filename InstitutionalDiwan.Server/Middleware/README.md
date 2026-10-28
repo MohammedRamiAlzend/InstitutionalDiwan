@@ -32,7 +32,8 @@ line and `AUDIT_LOGS.CorrelationId` can therefore be tied back to one request.
 Wraps every **authenticated** `/api` controller action and appends one action-level audit row through
 `IAuditActionRecorder`: module derived from the controller (`Documents` → `CORRESPONDENCE`,
 `DocumentFiles` → `ATTACHMENTS`, `Movements` → `MOVEMENTS`, …), action derived from the route
-(`Create`/`Update`/`View`/`Delete`/`Execute`), entity type `Operation`, entity id
+(`Create`/`Update`/`View`/`Delete`/`Execute` — `Reset*` actions such as
+`Users.ResetPassword` count as `Update`), entity type `Operation`, entity id
 `{Controller}.{Action}`, actor user/department, and new-values JSON with HTTP method, path, status
 code, duration, and the error type when the action threw. This is what makes reads, rejected calls
 (403/404/409), and exceptions visible in the audit table. It skips OPTIONS, non-`/api` paths,

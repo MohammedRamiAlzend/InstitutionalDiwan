@@ -15,6 +15,11 @@ export interface UpdateUserRequest {
   mustChangePassword: boolean
 }
 
+/** `POST /api/users/{id}/reset-password` — temporary password set by the administrator. */
+export interface ResetUserPasswordRequest {
+  newPassword: string
+}
+
 export interface AssignDepartmentScopeRequest {
   departmentId: string
   assignmentTypeId: number

@@ -9,6 +9,7 @@ public sealed record DepartmentDeactivatedEvent(Guid DepartmentId) : DomainEvent
 public sealed record UserCreatedEvent(Guid UserId, string Username, Guid PrimaryDepartmentId) : DomainEventBase;
 public sealed record UserLoggedInEvent(Guid UserId, string Username) : DomainEventBase;
 public sealed record UserDeactivatedEvent(Guid UserId) : DomainEventBase;
+public sealed record UserPasswordResetEvent(Guid UserId, Guid? ResetByUserId) : DomainEventBase;
 public sealed record UserRoleAssignedEvent(Guid UserId, Guid RoleId, Guid? AssignedByUserId) : DomainEventBase;
 public sealed record UserRoleRevokedEvent(Guid UserId, Guid RoleId) : DomainEventBase;
 public sealed record DocumentAccessGrantedEvent(Guid GrantId, Guid DocumentId, Guid UserId, int AccessLevelId) : DomainEventBase;

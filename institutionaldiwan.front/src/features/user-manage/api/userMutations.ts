@@ -4,6 +4,7 @@ import { userKeys, type UserResponse } from '@/entities/user'
 import type {
   AssignDepartmentScopeRequest,
   CreateUserRequest,
+  ResetUserPasswordRequest,
   UpdateUserRequest,
 } from '../model/types'
 
@@ -43,6 +44,28 @@ export function useUpdateUserMutation() {
       request: UpdateUserRequest
     }): Promise<UserResponse> => {
       const { data } = await httpClient.put<UserResponse>(`/users/${userId}`, request)
+      return data
+    },
+    onSuccess: (_data, variables) => invalidateUsers(queryClient, variables.userId),
+  })
+}
+
+/** `POST /api/users/{id}/reset-password` — temporary password, forced change at next sign-in. */
+export function useResetUserPasswordMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({
+      userId,
+      request,
+    }: {
+      userId: string
+      request: ResetUserPasswordRequest
+    }): Promise<UserResponse> => {
+      const { data } = await httpClient.post<UserResponse>(
+        `/users/${userId}/reset-password`,
+        request,
+      )
       return data
     },
     onSuccess: (_data, variables) => invalidateUsers(queryClient, variables.userId),

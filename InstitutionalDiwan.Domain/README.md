@@ -97,12 +97,12 @@ deterministically.
 
 ### `Events/DomainEvents.cs`
 
-35 immutable `record` domain events (the older notes claimed 22, which is out of date). Grouped by module:
+36 immutable `record` domain events (the older notes claimed 22, which is out of date). Grouped by module:
 
 | Module | Events |
 | --- | --- |
 | Organization (3) | `DepartmentCreated`, `DepartmentMoved`, `DepartmentDeactivated` |
-| Identity (7) | `UserCreated`, `UserLoggedIn`, `UserDeactivated`, `UserRoleAssigned`, `UserRoleRevoked`, `DocumentAccessGranted`, `DocumentAccessRevoked` |
+| Identity (8) | `UserCreated`, `UserLoggedIn`, `UserDeactivated`, `UserPasswordReset`, `UserRoleAssigned`, `UserRoleRevoked`, `DocumentAccessGranted`, `DocumentAccessRevoked` |
 | Correspondence / Archiving (6) | `DocumentCreated`, `DocumentRegistered`, `DocumentArchived`, `DocumentUnarchived`, `DocumentCanceled`, `DocumentParticipantAdded` |
 | Numbering (3) | `OfficialNumberIssued`, `OfficialNumberCancelled`, `OfficialNumberReplaced` |
 | Movements (9) | `MovementCreated`, `MovementSent`, `MovementReceived`, `MovementCompleted`, `MovementRejected`, `MovementReturned`, `MovementRedirected`, `MovementClosed`, `MovementCancelled` |
@@ -166,6 +166,7 @@ integrity reports have their own add/list/latest methods; no update or delete is
   movement opens and closes; `RowVersion` exposed for optimistic concurrency.
 - **`User`** — username required and lower-cased; duplicate role assignment rejected; role revoke when absent returns NotFound;
   department scope assignment validates the date range; password change clears `MustChangePassword`;
+  an administrator's `ResetPassword` replaces the hash and sets `MustChangePassword`, recording who reset it;
   `UpdateProfile` edits the primary department, employee link, scope, and password-change flag; `Activate`
   reverses `Deactivate`.
 - **`Role`** — code/name required; duplicate permission rejected; system roles are protected from deactivation.
@@ -331,6 +332,7 @@ them, while listing, relabelling and (de)activation keep working.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-28 | agent | Added `User.ResetPassword` and `UserPasswordResetEvent`: an administrative reset replaces the hash, sets `MustChangePassword`, and carries the resetting administrator (35 → 36 events). |
 | 2026-10-26 | Qoder | Added `UserLoggedInEvent` (raised by `User.RecordLogin`, 34 → 35 events) so logins become attributable audit rows, and the action-level audit lookup ids `AuditActionType.ExecuteId = 8` / `AuditEntityType.OperationId = 13`. |
 | 2026-10-25 | Buffy | Added `AuditLog.Reseal(previousHash)` so an unpersisted audit row can be re-chained onto the current predecessor after the persistence layer serializes appends. |
 | 2026-10-25 | opencode | Strengthened the Module 09 audit domain: `AuditLog.GenesisHash`, UTC/millisecond normalization, a hash payload covering every stored field, the expanded `IAuditLogRepository` (range/checkpoint/integrity queries), audit entity-type ids, and the `Audit.*` error catalog. |

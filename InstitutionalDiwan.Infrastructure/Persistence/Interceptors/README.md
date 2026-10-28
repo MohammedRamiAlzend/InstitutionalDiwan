@@ -83,5 +83,6 @@ scoped-interceptor lifetime issues with `AddDbContext`.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-28 | agent | Mapped `UserPasswordResetEvent` to an `Update` audit row on the user, attributed to the administrator who performed the reset. |
 | 2026-10-26 | Qoder | Mapped `UserLoggedInEvent` to a `Login` audit row attributed to the user who logged in (login requests are still anonymous while the interceptor runs), and documented the split between entity audit rows and action-level `Operation` rows. |
 | 2026-10-25 | Buffy | Serialized audit-chain appends with a transaction-scoped `sp_getapplock` plus a locking head read (`UPDLOCK, HOLDLOCK`) after concurrent reads/writes collided on `UX_AUDIT_LOGS_PREVIOUS_HASH`; added `AuditLog.Reseal` so explicit rows are re-chained under the lock, and made jobs' explicit rows go through the same path. |
