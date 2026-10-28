@@ -25,7 +25,7 @@ access live here.
 | `RolesController.cs` | `api/roles` | `ROLE_MANAGE` | Role CRUD, activate, grant/revoke permissions. |
 | `PermissionsController.cs` | `api/permissions` | `ROLE_MANAGE` | The permission catalog. |
 | `DepartmentsController.cs` | `api/departments` | `DEPARTMENT_MANAGE` | Department CRUD, tree, reparent, soft delete + activate. |
-| `EmployeesController.cs` | `api/employees` | `EMPLOYEE_MANAGE` | Employee CRUD (paged/searchable list), deactivate/activate. |
+| `EmployeesController.cs` | `api/employees` | `EMPLOYEE_MANAGE` | Employee CRUD (paged/searchable list, optional `departmentId` + `includeSubDepartments` filter), deactivate/activate. |
 | `DocumentAccessGrantsController.cs` | `api/documents/{documentId}/access-grants` | `ACCESS_GRANT_MANAGE` | Per-document access grants: list/grant/revoke. |
 | `NumberingRegistriesController.cs` | `api/numbering/registries` | `NUMBERING_VIEW` reads; `NUMBERING_MANAGE` writes | Numbering registry list/by-id + create, update, deactivate, activate. |
 | `LookupsController.cs` | `api/lookups/{lookup}` | `[Authorize]` reads; `LOOKUP_MANAGE` writes | Generic reference-catalog API over all 33 seeded lookups. |
@@ -125,6 +125,8 @@ plain JSON array.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-28 | agent | `GET /api/employees` gained `departmentId` (GUID) and `includeSubDepartments` (bool, default false) so the department card can list the people of one unit and, optionally, its descendants. |
+
 | 2026-10-28 | agent | Added `POST /api/users/{userId}/reset-password` so an administrator holding `USER_MANAGE` can reset a forgotten password; the account is flagged to change it at the next sign-in and the caller is recorded for auditing. |
 | 2026-10-25 | opencode | Added `AuditLogsController` for Module 09 (`AUDIT_VIEW` search/reports, `AUDIT_MANAGE` checkpoint/integrity check); reading the log appends a self-audit entry. |
 | 2026-10-25 | opencode | Added the planned route aliases: document-scoped movement history, department-scoped inbox/outbox, step-scoped receive/complete/reject/return, and atomic `POST /api/documents/{documentId}/files`. Rejections now route to the Central Diwan and ordinary → ordinary movements are refused. |

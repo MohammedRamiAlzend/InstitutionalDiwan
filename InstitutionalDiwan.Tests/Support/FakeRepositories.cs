@@ -83,9 +83,13 @@ internal sealed class FakeEmployeeRepository : IEmployeeRepository
 
     public Task<PagedList<Employee>> ListPagedAsync(
         PageRequest page,
+        IReadOnlyCollection<Guid>? departmentIds = null,
         CancellationToken cancellationToken = default)
     {
         var query = Employees.AsEnumerable();
+
+        if (departmentIds is not null)
+            query = query.Where(employee => departmentIds.Contains(employee.DepartmentId));
 
         if (page.NormalizedSearch is { } search)
             query = query.Where(employee =>

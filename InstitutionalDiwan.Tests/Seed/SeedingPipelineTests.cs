@@ -1,3 +1,4 @@
+using InstitutionalDiwan.Domain.Entities.Organization;
 using InstitutionalDiwan.Infrastructure.Persistence;
 using InstitutionalDiwan.Infrastructure.Persistence.Seed;
 using InstitutionalDiwan.Tests.Support;
@@ -47,6 +48,8 @@ public sealed class SeedingPipelineTests
         new PermissionSeeder(),
         new RoleSeeder(),
         new InstitutionSettingSeeder(),
+        new DepartmentSeeder(),
+        new EmployeeSeeder(),
         new UserSeeder(),
     };
 
@@ -70,7 +73,7 @@ public sealed class SeedingPipelineTests
 
         var executed = await RunAsync(db, SeedingEnvironments.Development);
 
-        Assert.Equal(38, executed);
+        Assert.Equal(40, executed);
 
         // Reference lookups
         Assert.Equal(4, await db.UserScopeTypes.CountAsync());
@@ -113,9 +116,14 @@ public sealed class SeedingPipelineTests
         Assert.Equal(2, await db.Roles.CountAsync());
         Assert.Equal(19, await db.RolePermissions.CountAsync());
 
-        // Institution settings singleton, including the Central Diwan department it designates
+        // Institution settings singleton, including the Central Diwan department it designates,
+        // plus the 14 demo departments seeded across four levels in Development/Staging
         Assert.Equal(1, await db.InstitutionSettings.CountAsync());
-        Assert.Equal(1, await db.Departments.CountAsync());
+        Assert.Equal(15, await db.Departments.CountAsync());
+        Assert.Equal(4, await db.Departments.CountAsync(d => d.DepartmentTypeId == DepartmentType.DirectorateId));
+        Assert.Equal(7, await db.Departments.CountAsync(d => d.DepartmentTypeId == DepartmentType.DepartmentId));
+        Assert.Equal(3, await db.Departments.CountAsync(d => d.DepartmentTypeId == DepartmentType.SectionId));
+        Assert.Equal(28, await db.Employees.CountAsync());
         Assert.Equal(2, await db.Users.CountAsync());
         Assert.Equal(2, await db.UserRoles.CountAsync());
     }
@@ -137,6 +145,8 @@ public sealed class SeedingPipelineTests
         Assert.Equal(16, await db.Permissions.CountAsync());
         Assert.Equal(2, await db.Roles.CountAsync());
         Assert.Equal(19, await db.RolePermissions.CountAsync());
+        Assert.Equal(1, await db.Departments.CountAsync());
+        Assert.Equal(0, await db.Employees.CountAsync());
         Assert.Equal(0, await db.Users.CountAsync());
     }
 
@@ -149,7 +159,7 @@ public sealed class SeedingPipelineTests
 
         var executed = await RunAsync(db, SeedingEnvironments.Development);
 
-        Assert.Equal(38, executed);
+        Assert.Equal(40, executed);
         Assert.Equal(2, await db.Users.CountAsync());
         Assert.Equal(5, await db.DepartmentTypes.CountAsync());
         Assert.Equal(4, await db.UserScopeTypes.CountAsync());
@@ -158,6 +168,8 @@ public sealed class SeedingPipelineTests
         Assert.Equal(16, await db.Permissions.CountAsync());
         Assert.Equal(19, await db.RolePermissions.CountAsync());
         Assert.Equal(1, await db.InstitutionSettings.CountAsync());
+        Assert.Equal(15, await db.Departments.CountAsync());
+        Assert.Equal(28, await db.Employees.CountAsync());
         Assert.Equal(usersAfterFirstRun, await db.Users.Select(u => u.UserId).OrderBy(id => id).ToListAsync());
     }
 }

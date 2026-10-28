@@ -1,5 +1,5 @@
 # institutionaldiwan.front / src/shared/ui — RTL-First Design System & UI Kit Primitives
-> **Status:** Implemented for the Identity admin foundation — core form primitives, dialogs, menus, select/checkbox, badges, skeletons, page headers, and the shared data grid. The Mermaid renderer lands with the visualization slice.
+> **Status:** Implemented for the Identity admin foundation — core form primitives, dialogs, menus, select/checkbox, badges, skeletons, page headers, the shared data grid, and the lazy Mermaid renderer.
 ## Purpose
 Holds reusable, domain-agnostic UI primitives (Tailwind CSS v4 + Radix UI where a primitive needs behavioral accessibility) built for Arabic-first (`dir="rtl"`) and bilingual (`ltr`) institutional interfaces. Components here know nothing about documents, departments, or users.
 ## Contents
@@ -22,7 +22,7 @@ Holds reusable, domain-agnostic UI primitives (Tailwind CSS v4 + Radix UI where 
 | `skeleton.tsx` | Pulse placeholder used for table and region loading states. |
 | `page-header.tsx` | Page title, optional description/actions, and badge cluster. |
 | `data-table.tsx` | The only real table: URL-driven filters/search/sort/pagination via `useTableState`, server and client modes, column chooser persisted per table in `localStorage` via `@/shared/lib/columnPreferences`, row/header/empty context menus, overflow row trigger, keyboard access, and Arabic loading/empty/error states. |
-| `mermaid-view.tsx` | Lazy-loaded Mermaid renderer with a diagram / chart / tree view switcher and an Arabic-first invalid-syntax state. (❌ pending) |
+| `mermaid-view.tsx` | The only `mermaid` importer: lazily loads the package, renders sanitized SVG (`securityLevel: 'strict'`, HTML labels off, 20,000-character source cap), reads theme tokens as `themeVariables` and re-renders on light/dark change, keeps geometric layout LTR, and shows Arabic loading / empty / invalid-syntax states (parser detail in an LTR `<pre>`). Optional `onNodeClick` marks flowchart nodes activatable (click, `Enter`, `Space`, focusable with the node label as its accessible name) and reports the Mermaid node id — never Mermaid `click` directives, which `securityLevel: 'strict'` strips. The owning widget supplies the diagram / chart / tree switcher. |
 | `index.ts` | Public barrel exporting the implemented primitives. |
 ## Conventions / Notes
 - Use logical CSS properties exclusively: Use `ms-*`, `me-*`, `ps-*`, `pe-*`, `start-*`, `end-*`, `text-start`, `text-end`, `rounded-s-*`, `rounded-e-*`—never `ml-*`, `mr-*`, `pl-*`, `pr-*`, `left-*`, `right-*`, or `text-left`/`text-right`.
@@ -37,10 +37,12 @@ Holds reusable, domain-agnostic UI primitives (Tailwind CSS v4 + Radix UI where 
 | Overlays (`dialog`, `confirm-dialog`, `select`, `checkbox`) | ✅ Implemented |
 | Menus (`menu`, `context-menu`, `dropdown-menu`) | ✅ Implemented |
 | Data grid (`data-table` with URL state and persisted columns) | ✅ Implemented (server + client modes) |
-| `mermaid-view` | ❌ Pending the visualization slice |
+| `mermaid-view` (lazy, strict, theme-aware, Arabic error states, optional activatable nodes) | ✅ Implemented |
 ## Change Log
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-28 | agent | `mermaid-view` gained optional `onNodeClick`: flowchart nodes become focusable `role="button"` targets (click / `Enter` / `Space`, pointer cursor, label as accessible name) and the handler receives the Mermaid node id, so a hierarchy widget can open the node's record without Mermaid `click` directives. |
+| 2026-10-28 | agent | Implemented `mermaid-view`: lazy `import('mermaid')`, `securityLevel: 'strict'` with HTML labels off, a capped source length, semantic theme tokens fed as `themeVariables` with a re-render on light/dark change, unique render ids with cleanup, and Arabic loading / empty / invalid-syntax states. Exported it through the barrel for the Module 01 hierarchy widget. |
 | 2026-10-28 | agent | Added `password-field` (form-field + input + visibility toggle) and moved `ChangePasswordForm` onto it, so the login, change-password, and admin reset forms share one password control. |
 | 2026-10-28 | agent | Bounded the dialog to the viewport height and moved scrolling into a flex body with a pinned header/footer, so long panels (permission matrices, access + assignment views) scroll internally instead of spilling off screen; the role permission matrix now uses that single scroll area. |
 | 2026-10-27 | agent | Exported the keyboard context-menu helpers (`isContextMenuShortcut`, `dispatchContextMenu`) through the barrel so the app shell can reuse the grid's `Shift+F10` / `ContextMenu` behavior. |

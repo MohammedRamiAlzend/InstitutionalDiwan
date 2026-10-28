@@ -19,9 +19,18 @@ internal sealed class EmployeeRepository : IEmployeeRepository
 
     public async Task<PagedList<Employee>> ListPagedAsync(
         PageRequest page,
+        IReadOnlyCollection<Guid>? departmentIds = null,
         CancellationToken cancellationToken = default)
     {
         var query = _context.Employees.AsNoTracking();
+
+        if (departmentIds is not null)
+        {
+            if (departmentIds.Count == 0)
+                return new PagedList<Employee>(Array.Empty<Employee>(), 0);
+
+            query = query.Where(employee => departmentIds.Contains(employee.DepartmentId));
+        }
 
         if (page.NormalizedSearch is { } search)
         {

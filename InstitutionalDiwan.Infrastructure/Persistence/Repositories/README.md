@@ -29,7 +29,7 @@ Concrete EF Core implementations of the repository interfaces declared in
 | `DocumentRepository.cs` | Loads `Document` with `Participants` and `StatusHistory`; `GetWithNumbersAsync` adds the central + department numbers (with their history) for the record/receive flows, `GetByIdsAsync` batches the register-book join, and `ListPagedAsync` backs the listing with its status/department/direction/type filters, free-text search, sort keys, and `Skip`/`Take`. |
 | `NumberingRegistryRepository.cs` | Loads `NumberingRegistry` with its per-year `Counters`; `GetActiveForScopeAsync` picks the most specific active registry matching department/type/direction (null fields act as wildcards), while `GetActiveDepartmentRegistryAsync` returns only the registry owned by that department (no shared-default fallback). |
 | `DocumentNumberRepository.cs` | Loads `DocumentNumber` rows (by id / active central number per document) and answers `ExistsByNumberAndYearAsync` and the scope-aware `ExistsInScopeAsync`; `GetDepartmentEntryAsync` and `ListByDepartmentAsync` serve the register book. Department rows are excluded from the central lifecycle and from `AnyByRegistryAsync`, which decides the registry template lock. |
-| `EmployeeRepository.cs` | Loads `Employee` records by id and listing for the employee-management endpoints; `ListPagedAsync` orders by Arabic name and pages with a name/employee-number search. |
+| `EmployeeRepository.cs` | Loads `Employee` records by id and listing for the employee-management endpoints; `ListPagedAsync` orders by Arabic name and pages with a name/employee-number search and an optional department-id set (the handler supplies one id, or the id plus descendants, for the department roster). |
 | `DocumentAccessGrantRepository.cs` | Loads per-document `DocumentAccessGrant` rows by id and by document, for grant/revoke/list. |
 | `LookupRepository.cs` | The one generic repository: resolves a kebab-case lookup slug to its `DbSet<TLookup>` through `LookupCatalog`, then lists/fetches/creates/relabels/(de)activates entries and answers `IsInUseAsync` from EF foreign-key metadata. Backs `/api/lookups/{lookup}`. |
 | `InstitutionSettingRepository.cs` | Loads the single `InstitutionSetting` row (table is a singleton by convention; the seeder owns the first insert) and attaches updates. |
@@ -82,6 +82,8 @@ Concrete EF Core implementations of the repository interfaces declared in
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-28 | agent | `EmployeeRepository.ListPagedAsync` gained an optional `departmentIds` set; an empty set returns an empty page, a null set keeps the old behavior, so `/api/employees?departmentId=…` can list one unit's roster. |
+
 | 2026-10-25 | opencode | Added `AuditLogRepository` (latest/range reads, filtered paging, checkpoints and integrity reports; append-only) for Module 09. |
 | 2026-10-25 | opencode | Added `DocumentMovementRepository.GetActiveByDocumentIdAsync` for the access evaluator's movement participation, and documented that the queues follow the current step after a rejection routed to the Central Diwan. |
 | 2026-10-25 | opencode | Added `DocumentFileRepository` (file + versions by id and per document), `DocumentFileTypeRepository`, and `FileStorageProviderRepository` (by id / active default) for the Module 06 Attachments slice. |

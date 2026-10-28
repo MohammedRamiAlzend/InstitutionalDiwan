@@ -12,6 +12,10 @@ export const employeeApi = {
           page: params.page,
           pageSize: params.pageSize,
           search: params.search?.trim() || undefined,
+          departmentId: params.departmentId || undefined,
+          includeSubDepartments: params.departmentId
+            ? (params.includeSubDepartments ?? false)
+            : undefined,
         },
       },
     )

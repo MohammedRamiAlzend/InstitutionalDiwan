@@ -5,13 +5,16 @@ Models Module 02 `Employee` (`EmployeeResponse`) as its own entity slice (struct
 ## Contents
 | File | Purpose |
 | --- | --- |
-| `model/types.ts` | `EmployeeResponse` and `EmployeeListParams` (`page`, `pageSize`, optional `search`). |
-| `api/employeeApi.ts` | Paged `GET /api/employees` (trims `search`, omits it when empty) and `GET /api/employees/{id}`. |
+| `model/types.ts` | `EmployeeResponse` and `EmployeeListParams` (`page`, `pageSize`, optional `search`, optional `departmentId`, optional `includeSubDepartments`). |
+| `api/employeeApi.ts` | Paged `GET /api/employees` (trims `search`, omits it when empty; forwards `departmentId` and `includeSubDepartments` only when a department is selected) and `GET /api/employees/{id}`. |
 | `model/queries.ts` | `employeeKeys` (`all`/`lists`/`list(params)`/`detail`), `useEmployees` (keeps previous page via `placeholderData`, 60 s stale time), and `useEmployeeById` (disabled without an id). |
 | `index.ts` | Public barrel exporting types, query keys, and hooks. |
 ## Notes
 - `EmployeeResponse` previously lived in `entities/user`; it moved here so `entities/user` no longer owns employee records and no sibling entity import is needed.
-- Listing and reading require `EMPLOYEE_MANAGE`; `pages/employees` owns the permission gate.
+- Listing and reading require `EMPLOYEE_MANAGE`; `pages/employees` owns the permission gate, and the
+  department roster in `widgets/department-hierarchy-tree` hides itself without that permission.
+- `departmentId` + `includeSubDepartments` are the server-side department filter: the widget sends
+  `true` by default so a directorate lists everyone under it.
 ## Implementation status
 | Item | State |
 | --- | --- |
@@ -20,5 +23,7 @@ Models Module 02 `Employee` (`EmployeeResponse`) as its own entity slice (struct
 ## Change Log
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-28 | agent | `EmployeeListParams` gained `departmentId` and `includeSubDepartments`, forwarded by `employeeApi.list`, so the department dialog can request one unit's roster (optionally including descendants). |
+
 | 2026-10-28 | agent | Phase 5 landed `features/employee-manage` and the `/employees` page on top of these reads; the slice itself is unchanged. |
 | 2026-10-27 | agent | Created the slice for Module 02 Phase 2 (structure B) with paged list/detail reads moved out of `entities/user`; live API shape verified. |

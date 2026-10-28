@@ -78,7 +78,7 @@ Persistence/Configurations/
 | `DiwanDbContext` | ✅ Written and compiling |
 | Entity configurations | ✅ Written for all 67 entities (10 configuration files) |
 | Repositories | 🟡 19 of 21 implemented — `UserRepository`, `RoleRepository`, `PermissionRepository`, `DepartmentRepository`, `DepartmentTypeRepository`, `DocumentRepository`, `DocumentTypeRepository`, `NumberingRegistryRepository`, `DocumentNumberRepository`, `EmployeeRepository`, `DocumentAccessGrantRepository`, `LookupRepository`, `InstitutionSettingRepository`, `ExternalOrganizationRepository`, `DocumentMovementRepository`, `DocumentFileRepository`, `DocumentFileTypeRepository`, `FileStorageProviderRepository`, `AuditLogRepository`; relation and notification repositories pending |
-| Seed | ✅ Ordered, environment-aware seeders (33 lookup seeders, `InstitutionSettingSeeder`, `PermissionSeeder`, `RoleSeeder`, `UserSeeder`) |
+| Seed | ✅ Ordered, environment-aware seeders (33 lookup seeders, `InstitutionSettingSeeder`, `DepartmentSeeder` demo tree, `EmployeeSeeder` demo personnel, `PermissionSeeder`, `RoleSeeder`, `UserSeeder`) |
 | Authentication | ✅ `PasswordHasher` (PBKDF2) + `JwtProvider` + `UserContext` (reads `sub`/`dept_id`/`scope_type`/`permission` claims) |
 | Migrations | ✅ 8 written (`InitialCreate`, `AddUniqueOfficialNumber`, `Refactor_DepartmentTypes_ToLookup`, `Refactor_CorrespondenceNumbering_ToLookups`, `Refactor_AllRemaining_ToLookups`, `InitialCreate2`, `Add_Department_Register_Numbers`, `Add_Audit_Chain_Uniqueness`) |
 | Interceptors | ✅ `TamperEvidentAuditInterceptor` (domain events incl. `UserLoggedIn`, generic old/new snapshots, SHA-256 chain, sensitive-field redaction, no writes outside an HTTP request) |
@@ -91,6 +91,8 @@ Persistence/Configurations/
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-28 | Qoder | Added `Seed/EmployeeSeeder` (Order 97, Development/Staging) seeding 28 demo employees across the department tree, and extended `EmployeeRepository.ListPagedAsync` with an optional department-id set so `/api/employees` can list one department's roster (optionally including its descendants). |
+| 2026-10-28 | Qoder | Added `Seed/DepartmentSeeder` (Order 96, Development/Staging) that builds a 15-department demo tree under the seeded Central Diwan root — 4 directorates, 7 departments, 3 sections — inserting level by level because EF cannot infer the insert order of the self-referencing parent FK; registered it in `DependencyInjection` after `InstitutionSettingSeeder`. |
 | 2026-10-26 | Qoder | Mapped the new `UserLoggedInEvent` to a `Login` audit row and seeded the `Execute` action type / `Operation` entity type used by the new action-level audit trail; the interceptor continues to own all entity-level rows. |
 | 2026-10-25 | Buffy | Serialized audit-chain appends with a transaction-scoped SQL Server application lock and a locking head read, after concurrent audit reads and the two scheduled jobs collided on `UX_AUDIT_LOGS_PREVIOUS_HASH`; explicit job rows now share the same path. |
 | 2026-10-25 | opencode | Implemented Module 09 infrastructure: `AuditLogRepository` (paged search, range reads, checkpoints, integrity reports), `TamperEvidentAuditInterceptor` (hash chain, domain-event projection, sensitive-field redaction), `DateTimeProvider`, `HttpRequestContext`, `EfTransactionManager`, the `Add_Audit_Chain_Uniqueness` migration, and the scheduled `AuditChainIntegrityVerificationJob` / `DailyAuditCheckpointJob` (configurable via the `AuditJobs` section, actor resolved from `ActorUserId` or the first active user). |

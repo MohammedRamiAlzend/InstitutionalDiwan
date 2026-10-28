@@ -75,7 +75,7 @@ export const SHELL_NAV_GROUPS: readonly ShellNavGroup[] = [
         to: ROUTES.DEPARTMENTS,
         icon: Building2,
         permission: Permissions.DepartmentManage,
-        available: false,
+        available: true,
       },
     ],
   },

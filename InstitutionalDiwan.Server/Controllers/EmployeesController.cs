@@ -22,19 +22,22 @@ public sealed class EmployeesController : ControllerBase
 
     /// <summary>Lists a page of employee records ordered by Arabic name.</summary>
     /// <remarks>
-    /// Supports server-side paging and a search across the Arabic name, English name, and employee
-    /// number. Requires the <c>EMPLOYEE_MANAGE</c> permission.
+    /// Supports server-side paging, a search across the Arabic name, English name, and employee
+    /// number, and an optional department filter that can include the department's descendants.
+    /// Requires the <c>EMPLOYEE_MANAGE</c> permission.
     /// </remarks>
     /// <param name="page">Page number (integer, optional, 1-based). Example: <c>2</c>.</param>
     /// <param name="pageSize">Rows per page (integer, optional, 1-100). Example: <c>20</c>.</param>
     /// <param name="search">Name or employee-number search term (string, optional). Example: <c>Ali</c>.</param>
+    /// <param name="departmentId">Restricts the page to one department (GUID, optional). Example: <c>e7a62f43-9b82-4d01-8c2e-7ab91e506d42</c>.</param>
+    /// <param name="includeSubDepartments">When true, the department filter also covers every descendant (boolean, optional, default false). Example: <c>true</c>.</param>
     /// <param name="cancellationToken">Request cancellation token (optional).</param>
     /// <response code="200">One page of employees with the paging counters.</response>
     /// <response code="401">The token is missing, expired, or invalid.</response>
     /// <response code="403">The token does not carry the EMPLOYEE_MANAGE permission.</response>
     [HttpGet]
     [EndpointSummary("Lists a page of employee records ordered by Arabic name.")]
-    [EndpointDescription("Lists a page of employee records ordered by Arabic name. Supports server-side paging and a search across the Arabic name, English name, and employee number. Requires the EMPLOYEE_MANAGE permission. Responses: 200 (One page of employees with the paging counters.), 401 (The token is missing, expired, or invalid.), 403 (The token does not carry the EMPLOYEE_MANAGE permission.)")]
+    [EndpointDescription("Lists a page of employee records ordered by Arabic name. Supports server-side paging, a search across the Arabic name, English name, and employee number, and an optional department filter that can include the department's descendants. Requires the EMPLOYEE_MANAGE permission. Responses: 200 (One page of employees with the paging counters.), 401 (The token is missing, expired, or invalid.), 403 (The token does not carry the EMPLOYEE_MANAGE permission.)")]
     [Produces("application/json", Type = typeof(PagedResult<EmployeeResponse>))]
     [ProducesResponseType<PagedResult<EmployeeResponse>>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
@@ -43,10 +46,13 @@ public sealed class EmployeesController : ControllerBase
         [Description("Page number (integer, optional, 1-based). Example: 2.")] [FromQuery] int page = 1,
         [Description("Rows per page (integer, optional, 1-100). Example: 20.")] [FromQuery] int pageSize = 20,
         [Description("Name or employee-number search term (string, optional). Example: Ali.")] [FromQuery] string? search = null,
+        [Description("Restricts the page to one department (GUID, optional). Example: e7a62f43-9b82-4d01-8c2e-7ab91e506d42.")] [FromQuery] Guid? departmentId = null,
+        [Description("When true, the department filter also covers every descendant (boolean, optional, default false). Example: true.")] [FromQuery] bool includeSubDepartments = false,
         CancellationToken cancellationToken = default)
     {
         var result = await _sender.Send(
-            new ListEmployeesQuery(page, pageSize, search), cancellationToken);
+            new ListEmployeesQuery(page, pageSize, search, departmentId, includeSubDepartments),
+            cancellationToken);
 
         return result.ToActionResult();
     }

@@ -13,9 +13,13 @@
 > `widgets/roles-table`, `pages/roles`, including the grouped permission matrix), the Phase 5
 > employees administration (`features/employee-manage`, `widgets/employees-table`, `pages/employees`),
 > the Phase 6 change-password flow (`features/auth` form + `pages/change-password`, forced from
-> the JWT claim), and the administrator password reset (`ResetPasswordDialog` in
+> the JWT claim), the administrator password reset (`ResetPasswordDialog` in
 > `features/user-manage`, mounted from the `users-table` row menu; forces a password change at the
-> next sign-in) are implemented. The Module 02 Identity admin front end is complete.
+> next sign-in), and Module 01 Phase 1 — the read-only organizational hierarchy (`shared/ui/mermaid-view`,
+> `entities/department/model/toMermaid`, `widgets/department-hierarchy-tree` with tree / Mermaid /
+> table views and a detail dialog listing the department's employees, opened from tree nodes,
+> activated diagram nodes, and grid rows, and `pages/departments`) are
+> implemented. The Module 02 Identity admin front end is complete.
 >
 > **Standalone boundary:** this project is not part of the API solution. Server paths below refer to
 > the external `InstitutionalDiwan.Server` repository; the front end talks to it only over `/api`
@@ -25,7 +29,7 @@
 
 | Area | As-is (today) | To-be (before feature work) |
 | --- | --- | --- |
-| Application code | FSD slices for Module 01 (`shared` core, `entities/user`, `features/auth`, `pages/login` + `dashboard`, `app`), the Module 02 shared admin foundation (`data-table`, menus, dialogs, table-state/column-preference libs), the authenticated `widgets/app-shell`, the Phase 2 read entities (`department`, `role`, `employee`, `lookup`; `user` extended with admin reads), the Phase 3 users administration (`features/user-manage`, `widgets/users-table`, `pages/users`), the Phase 4 roles administration (`features/role-manage`, `widgets/roles-table`, `pages/roles`, shared permission-module labels), the Phase 5 employees administration (`features/employee-manage`, `widgets/employees-table`, `pages/employees`), and the Phase 6 password change (`ChangePasswordForm`, `pages/change-password`, forced redirect from the JWT claim) | Remaining slices under `src/{pages,widgets,features,entities}` (documents, departments, movements, numbering, audit) |
+| Application code | FSD slices for Module 01 (`shared` core, `entities/user`, `features/auth`, `pages/login` + `dashboard`, `app`), the Module 02 shared admin foundation (`data-table`, menus, dialogs, table-state/column-preference libs), the authenticated `widgets/app-shell`, the Phase 2 read entities (`department`, `role`, `employee`, `lookup`; `user` extended with admin reads), the Phase 3 users administration (`features/user-manage`, `widgets/users-table`, `pages/users`), the Phase 4 roles administration (`features/role-manage`, `widgets/roles-table`, `pages/roles`, shared permission-module labels), the Phase 5 employees administration (`features/employee-manage`, `widgets/employees-table`, `pages/employees`), the Phase 6 password change (`ChangePasswordForm`, `pages/change-password`, forced redirect from the JWT claim), and Module 01 Phase 1 (`shared/ui/mermaid-view`, `entities/department` `toMermaid`, `widgets/department-hierarchy-tree` incl. the department-employee roster in its detail dialog, `pages/departments`) | Remaining slices under `src/{pages,widgets,features,entities}` (documents, movements, numbering, audit) and the Module 01 write/hierarchy extras (department manage actions, employee nodes inside the tree, chart view) |
 | `package.json` | React stack + Module 01 packages (router, query, zustand, axios, RHF, zod, sonner, Tailwind v4) | Remaining packages per slice (see [`README.md`](README.md)) |
 | `vite.config.ts` proxy | ✅ `@` alias + env-driven `/api` and `/hubs` proxies (`DEV_PROXY_TARGET` → `ASPNETCORE_HTTPS_PORT` → `https://localhost:7126`) | Optional local HTTPS certificate; production uses the reverse proxy ([`DEPLOYMENT.md`](DEPLOYMENT.md)) |
 | Dev configuration | ✅ `.env.example` committed; `.env` is git-ignored | — |
@@ -288,8 +292,10 @@ be deactivated (`Identity.SystemRoleProtected`); EF limits are code 100, names 1
 
 All endpoints require `EMPLOYEE_MANAGE`.
 
-- `GET /api/employees?page&pageSize&search` — paged result; `search` matches the Arabic name,
-  English name, and employee number.
+- `GET /api/employees?page&pageSize&search&departmentId&includeSubDepartments` — paged result;
+  `search` matches the Arabic name, English name, and employee number; `departmentId` restricts the
+  page to that department's employees, and `includeSubDepartments=true` widens it to every descendant
+  department (unknown department → empty page, not 404).
 - `GET /api/employees/{id}` — single employee.
 - `POST /api/employees` / `PUT /api/employees/{id}` — body
   `{ fullNameAr, departmentId, employeeNumber?, fullNameEn?, jobTitleAr?, email?, phone? }`;
@@ -369,9 +375,17 @@ Every page/widget that loads server data must define:
    sorting, pagination, and a column chooser. Column visibility is saved per table per browser in
    `localStorage` under `diwan.table.<tableId>.columns.v1`, with reset-to-default; it is never sent
    to the server or put in the URL.
-8. **Visualization** — Mermaid source renders through the lazy-loaded `shared/ui/mermaid-view` with
-   a diagram / chart / tree switcher. Hierarchy trees are built from API data (for example
-   `GET /api/departments/tree` plus employees) and can be exported to Mermaid (`flowchart TD`).
+8. **Visualization** — Mermaid source renders through the lazy-loaded `shared/ui/mermaid-view`
+   (strict security, token-derived `themeVariables`, Arabic-first error state). Hierarchy trees are
+   built from API data (`GET /api/departments/tree`; the department's employees are listed in the
+   detail dialog via `GET /api/employees?departmentId=&includeSubDepartments=`, while employee
+   *nodes* inside the tree remain pending) with the pure
+   builder in `entities/department/model/toMermaid.ts` (`flowchart TD`). Flowchart nodes are
+   activatable and open the same detail dialog (the builder returns the node-id → department-id
+   map; activation goes through `onNodeClick`, never Mermaid `click` directives, which strict
+   security strips). The
+   `widgets/department-hierarchy-tree` slice owns the tree / Mermaid / table switcher today; the
+   cross-module `widgets/visualization-panel` remains planned.
    Invalid Mermaid shows an Arabic-first error state with the parser message.
 9. **Arabic/RTL and theme** — every screen is built for Arabic `dir="rtl"` first and verified in
    LTR as well, and in both light and dark themes. Colors come only from
@@ -383,16 +397,21 @@ See [`README.md`](README.md) “UI / design contract” and [`src/app/styles/REA
 ## Recommended build order (first vertical slices)
 
 1. `shared/` (`api`, `config/permissions`, `types`, `ui/context-menu`, `ui/data-table`,
-   `ui/mermaid-view`, `lib/columnPreferences`) + `vite` proxy + Tailwind entry
+   `ui/mermaid-view`, `lib/columnPreferences`) + `vite` proxy + Tailwind entry — ✅ done
 2. `features/auth` + `entities/user` + `app/router` + `pages/login` — ✅ done
 3. `widgets/app-shell` + `pages/dashboard` — ✅ done (Phase 1)
 4. `entities/{department,role,employee,lookup}` + user admin reads — ✅ done (Phase 2)
 5. Module 02 admin pages/features: users ✅ (Phase 3) → roles ✅ (Phase 4) → employees ✅ (Phase 5)
    → change-password ✅ (Phase 6) — Identity admin front end complete
-6. `entities/document` + `pages/documents` (+ attachments panel via `entities/document-file`)
-7. `pages/movements` (inbox/outbox)
-8. `pages/audit` (search + integrity; respect self-audit side effect)
-9. `widgets/visualization-panel` + department/employee tree and Mermaid views
+6. Module 01 Phase 1: department hierarchy read-only (tree / Mermaid / table) — ✅ done
+   (`shared/ui/mermaid-view`, `entities/department` `toMermaid`, `widgets/department-hierarchy-tree`,
+   `pages/departments`), plus the detail dialog's employee roster
+   (`GET /api/employees?departmentId=&includeSubDepartments=`); write actions and employee nodes
+   inside the tree pending
+7. `entities/document` + `pages/documents` (+ attachments panel via `entities/document-file`)
+8. `pages/movements` (inbox/outbox)
+9. `pages/audit` (search + integrity; respect self-audit side effect)
+10. `widgets/visualization-panel` (cross-module Mermaid/chart switcher) + department/employee tree extras
 
 ## Mandatory Documentation Rule (`AGENTS.md`)
 

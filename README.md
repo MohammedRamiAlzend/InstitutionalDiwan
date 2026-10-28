@@ -6,7 +6,8 @@
 > plus the complete Module 02 Identity admin front end (Phases 0–6: shared admin foundation, app
 > shell, supporting reads, users admin, roles admin + permission matrix, employees admin, and
 > change-password), the administrator password reset (`POST /api/users/{userId}/reset-password`),
-> verified against the live API.
+> and Module 01 Phase 1 — the read-only organizational hierarchy (`/departments`: native tree,
+> Mermaid diagram, and table) — verified against the live API.
 
 The unified institutional correspondence system: a clean-architecture ASP.NET Core 10 API that
 registers documents, allocates official numbers, routes them between departments, and keeps an
@@ -141,6 +142,10 @@ have no `README.md` of their own yet — their content is documented in the encl
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-28 | agent | Clicking a department in the Mermaid hierarchy view now opens its details: `shared/ui/mermaid-view` accepts an optional `onNodeClick` that turns flowchart nodes into focusable, activatable targets, and `departmentTreeToMermaid` returns the node-id → department-id map. View-only change; front build and lint pass. |
+| 2026-10-28 | agent | Clicking a department now shows its employees: `GET /api/employees` accepts `departmentId` and `includeSubDepartments` (resolved through `IDepartmentRepository.GetDescendantIdsAsync`), the hierarchy detail dialog renders the roster with a sub-departments toggle, and `EmployeeSeeder` (Order 97, Development/Staging) seeds 28 demo employees across the 15-department tree. 406 tests pass; front build and lint pass. |
+| 2026-10-28 | agent | Added `DepartmentSeeder` (Order 96, Development/Staging) so the organization hierarchy is demonstrable: 15 departments in four levels (Central Diwan → 4 directorates → 7 departments → 3 sections) seeded idempotently by code under the existing root, with unit/pipeline tests. |
+| 2026-10-28 | agent | Front-end Module 01 Phase 1 (read-only): `/departments` now renders the organizational hierarchy as a native tree, a Mermaid diagram, or a table with search and a detail dialog (`shared/ui/mermaid-view`, `entities/department/model/toMermaid`, `widgets/department-hierarchy-tree`). Department write actions and employee nodes inside the tree remain pending. |
 | 2026-10-28 | agent | Added administrator password reset end to end: `User.ResetPassword` + `UserPasswordResetEvent`, the `ResetUserPasswordCommand` handler/validator, `POST /api/users/{userId}/reset-password` (USER_MANAGE; forces `MustChangePassword`, records the resetting admin in the audit chain), unit tests, and the front-end `ResetPasswordDialog` reachable from the users grid row menu. Docs and both builds updated. |
 | 2026-10-28 | agent | Refreshed the root status: the SPA now implements Identity Module 01 plus the complete Module 02 Identity admin front end (Phases 0–6: shared admin foundation, app shell, supporting reads, users, roles + permission matrix, employees, and change-password), uses the configured `/api` dev proxy, and is no longer the Vite template. |
 | 2026-10-26 | Qoder | Removed the old `institutionaldiwan.client` project from the solution and deleted it: the server csproj no longer carries `SpaRoot`/`SpaProxy` or a client project reference, launch profiles no longer start the SPA proxy, and the API no longer serves static files or the SPA fallback. The React front end now lives in the standalone `institutionaldiwan.front` project, which is documented but holds only the Vite template. |

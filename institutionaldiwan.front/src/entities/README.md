@@ -1,8 +1,9 @@
 # institutionaldiwan.front / src/entities — Business Domain Entities Layer
 
-> **Status:** Module 01 session plus the Module 02 supporting reads (Phase 2, 2026-10-27):
-> `user` (session + admin reads), `department`, `role`, `employee`, and `lookup` are implemented;
-> the remaining slices are documented but not coded.
+> **Status:** Module 01 session plus the Module 02 supporting reads (Phase 2, 2026-10-27), and the
+> `department/model/toMermaid` builder (Module 01 Phase 1, 2026-10-28): `user` (session + admin reads),
+> `department`, `role`, `employee`, and `lookup` are implemented; the remaining slices are documented
+> but not coded.
 
 ## Purpose
 
@@ -23,7 +24,7 @@ read-only presentational UI. Entities never perform write mutations.
 | Slice Folder | Backend DTOs & `GET` Endpoints | Key Read Components & Hooks | State |
 | --- | --- | --- | --- |
 | `user/` | `MeResponse`, `UserResponse`, effective permissions | `useMeQuery` (session), `useUsers`, `useUserById`, `useUserEffectivePermissions`, `UserScopeBadge` | ✅ Implemented |
-| `department/` | `DepartmentResponse`, `DepartmentTreeNodeResponse` (`/departments`, `/tree`, `/{id}`) | `useDepartments`, `useDepartmentTree`, `useDepartmentById`, `DepartmentBadge` | ✅ Reads implemented; `toTree`/`toMermaid` pending |
+| `department/` | `DepartmentResponse`, `DepartmentTreeNodeResponse` (`/departments`, `/tree`, `/{id}`) | `useDepartments`, `useDepartmentTree`, `useDepartmentById`, `DepartmentBadge`, `departmentTreeToMermaid` | ✅ Reads + `toMermaid` implemented; `toTree` pending employee augmentation |
 | `role/` | `RoleResponse`, `PermissionResponse` (`/roles`, `/permissions`) | `useRoles`, `useRoleById`, `usePermissionsCatalog`, `RoleBadge` | ✅ Implemented |
 | `employee/` | `EmployeeResponse` (paged `/employees`, `/{id}`) | `useEmployees`, `useEmployeeById` | ✅ Reads implemented |
 | `lookup/` | `LookupEntryResponse` (`/lookups/{lookup}`) | `useLookupEntries`, `LookupLabel`, seeded fallbacks | ✅ Implemented (four Module 02 catalogs + generic client) |
@@ -40,8 +41,9 @@ read-only presentational UI. Entities never perform write mutations.
 - Every slice exports a typed query key factory for feature invalidation.
 - Audit list reads are side-effecting on the server (self-audit row) — treat refetch as costly.
 - Hierarchy and diagram builders live in the owning entity's `model/` — for example
-  `department/model/toMermaid.ts` and `department/model/toTree.ts` for the departments → employees
-  tree, or `movement/model/toMermaid.ts` for the document step chain. They are pure functions over
+  `department/model/toMermaid.ts` for the department hierarchy (implemented) and
+  `department/model/toTree.ts` for the departments → employees tree (pending), or
+  `movement/model/toMermaid.ts` for the document step chain. They are pure functions over
   the entity's read models so widgets can render the same data as a tree, a Mermaid diagram, or a
   chart. Rendering itself belongs to `shared/ui/mermaid-view`, never to an entity.
 
@@ -50,7 +52,7 @@ read-only presentational UI. Entities never perform write mutations.
 | Entity Slice | State |
 | --- | --- |
 | `user/`, `role/`, `employee/`, `lookup/` | ✅ Implemented |
-| `department/` | ✅ Reads implemented; tree/diagram builders pending |
+| `department/` | ✅ Reads + `toMermaid` implemented; `toTree` pending employee augmentation |
 | `document/`, `numbering-registry/` | ❌ Not implemented |
 | `document-file/`, `movement/`, `audit-log/` | ❌ Not implemented (backend live; docs ready) |
 
@@ -58,6 +60,7 @@ read-only presentational UI. Entities never perform write mutations.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-28 | agent | Added `department/model/toMermaid.ts` (pure `DepartmentTreeNodeResponse[]` → Mermaid `flowchart TD`, label sanitizing, inactive marker) for the Module 01 hierarchy widget; `toTree` still waits on employee data. |
 | 2026-10-27 | agent | Completed Phase 2: implemented `department`, `role`, `employee`, and `lookup` reads and extended `user` with admin list/detail/effective-permission hooks; all shapes verified against the live API. Moved deterministic lookup ids to `shared/config`. |
 | 2026-10-27 | agent | Marked the `user/` session parts (`useMeQuery`, session store, `UserScopeBadge`) as implemented; user/employee list hooks remain pending. |
 | 2026-10-25 | Buffy | Documented pure `model/` builders (`toTree`, `toMermaid`) so entity read models feed the shared tree/Mermaid visualization without owning UI. |

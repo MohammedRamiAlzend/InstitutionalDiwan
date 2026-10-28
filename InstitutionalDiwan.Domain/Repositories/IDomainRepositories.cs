@@ -43,9 +43,13 @@ public interface IEmployeeRepository
     Task<IReadOnlyList<Employee>> ListAllAsync(CancellationToken cancellationToken = default);
     /// <summary>
     /// A page of employees ordered by Arabic name, optionally filtered by a name or employee-number
-    /// search term.
+    /// search term and restricted to the given departments. A null set means no department filter;
+    /// an empty set means nothing can match.
     /// </summary>
-    Task<PagedList<Employee>> ListPagedAsync(PageRequest page, CancellationToken cancellationToken = default);
+    Task<PagedList<Employee>> ListPagedAsync(
+        PageRequest page,
+        IReadOnlyCollection<Guid>? departmentIds = null,
+        CancellationToken cancellationToken = default);
     void Add(Employee employee);
 }
 

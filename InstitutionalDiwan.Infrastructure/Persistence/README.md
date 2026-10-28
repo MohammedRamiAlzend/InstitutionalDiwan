@@ -20,7 +20,7 @@ without knowing which provider is underneath.
 | `Interceptors/` | 🟡 Partial | `TamperEvidentAuditInterceptor` is registered; domain-event/outbox dispatch is pending. |
 | `Transactions/` | ✅ Written | `EfTransactionManager` / `EfTransactionScope` — commit on success, rollback on dispose. |
 | `Migrations/` | ✅ Written (7) | `InitialCreate`, `AddUniqueOfficialNumber` (unique official-number + year index), three lookup refactors (`Refactor_DepartmentTypes_ToLookup`, `Refactor_CorrespondenceNumbering_ToLookups`, `Refactor_AllRemaining_ToLookups`), `InitialCreate2`, and `Add_Department_Register_Numbers` (department registers + `ScopeId`-filtered uniqueness). |
-| `Seed/` | ✅ Written | `ISeeder` + `SeederRunner` (ordering + environment gating); 34 `LookupSeederBase<T>` seeders, `PermissionSeeder` (100), `RoleSeeder` (200), `UserSeeder` (300). |
+| `Seed/` | ✅ Written | `ISeeder` + `SeederRunner` (ordering + environment gating); 34 `LookupSeederBase<T>` seeders, `InstitutionSettingSeeder` (95), `DepartmentSeeder` (96, demo tree), `EmployeeSeeder` (97, demo personnel), `PermissionSeeder` (100), `RoleSeeder` (200), `UserSeeder` (300). |
 
 ## `DiwanDbContext` design
 
@@ -57,12 +57,13 @@ without knowing which provider is underneath.
 | Repository implementations | 🟡 19 of 21 (files, audit, lookups, institution settings, external organizations, movements included; relations/notifications pending) |
 | Interceptors | 🟡 `TamperEvidentAuditInterceptor` implemented; outbox interceptor pending |
 | Migrations | ✅ 8 written (`InitialCreate`, `AddUniqueOfficialNumber`, three lookup refactors, `InitialCreate2`, `Add_Department_Register_Numbers`, `Add_Audit_Chain_Uniqueness`) |
-| Seed data | ✅ 33 reference catalogs + permissions + system roles + demo users (`Seed/` — ordered + environment-gated) |
+| Seed data | ✅ 33 reference catalogs + institution settings + a 15-department demo tree + 28 demo employees + permissions + system roles + demo users (`Seed/` — ordered + environment-gated) |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-28 | agent | Added `Seed/EmployeeSeeder.cs` (Order 97, Development/Staging) — 28 demo employees attached to the seeded department tree, idempotent by employee number; `EmployeeRepository.ListPagedAsync` now accepts an optional department-id set so the roster can be filtered by department and descendants. |
 | 2026-10-25 | opencode | Added `AuditLogRepository` and registered `TamperEvidentAuditInterceptor`; refreshed repository/interceptor/migration counts. |
 | 2026-10-20 | Buffy | Added `DOCUMENT_NUMBER_SCOPES` (`DiwanDbContext`, configuration, migration) and the department-register columns/indexes; `DocumentNumberRepository` queries are now scope-aware and the repository gained `ExistsInScopeAsync`, `GetDepartmentEntryAsync`, and `ListByDepartmentAsync`, while `DocumentRepository` gained `GetWithNumbersAsync` + `GetByIdsAsync`. |
 | 2026-10-19 | Buffy | Added `Repositories/InstitutionSettingRepository.cs`, `Repositories/ExternalOrganizationRepository.cs`, `Repositories/DocumentMovementRepository.cs`, and `Seed/InstitutionSettingSeeder.cs` (singleton settings + its Central Diwan department); repository count 12 → 14 of 17. |

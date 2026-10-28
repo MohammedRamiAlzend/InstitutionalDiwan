@@ -1,6 +1,9 @@
 # institutionaldiwan.front / src/widgets — Composite UI Widgets Layer
 
-> **Status:** `app-shell` (Phase 1), `users-table` (Phase 3), `roles-table` (Phase 4), and `employees-table` (Phase 5) are implemented — every shell route renders inside the shell (the standalone `/change-password` page is outside it); the remaining widget slices are documented and pending.
+> **Status:** `app-shell` (Phase 1), `users-table` (Phase 3), `roles-table` (Phase 4),
+> `employees-table` (Phase 5), and `department-hierarchy-tree` (Module 01 Phase 1, read-only) are
+> implemented — every shell route renders inside the shell (the standalone `/change-password` page is
+> outside it); the remaining widget slices are documented and pending.
 
 ## Purpose
 
@@ -24,7 +27,7 @@ browser.
 | `employees-table/` | Employees administration grid with create/edit and status confirmation | `entities/{employee,department}` + `features/employee-manage` | ✅ Implemented |
 | `document-registry-table/` | Correspondence grid + actions | `entities/document` + `features/document-create` + access-grant | ❌ Planned |
 | `document-attachments-panel/` | File list, upload, download, verify checksum, archive | `entities/document-file` + `features/attachment-upload` | ❌ Planned (API live) |
-| `department-hierarchy-tree/` | Org tree with node context menus, inline manage actions, and a tree / Mermaid / chart switcher | `entities/department` + `features/department-manage` | ❌ Planned |
+| `department-hierarchy-tree/` | Org hierarchy as an interactive tree, a Mermaid diagram, or a table, with search, node context menus, and a detail dialog (opened from tree nodes, diagram nodes, and grid rows) that lists the department's employees | `entities/department`, `entities/employee` (+ `entities/lookup`) | ✅ Read-only implemented; manage actions, employee nodes inside the tree, and chart view pending |
 | `movement-inbox/` | Inbox/outbox table with routing action menu | `entities/movement` + `features/movement-routing` | ❌ Planned (API live) |
 | `movement-timeline/` | Vertical step chain for one document | `entities/movement` + `features/movement-routing` | ❌ Planned |
 | `audit-log-table/` | Filterable audit grid + hash columns + integrity toolbar | `entities/audit-log` + `features/audit-manage` | ❌ Planned (API live) |
@@ -53,15 +56,19 @@ browser.
 | `users-table/` | ✅ Implemented and verified in-browser (Phase 3) |
 | `roles-table/` | ✅ Implemented and verified in-browser (Phase 4) |
 | `employees-table/` | ✅ Implemented and verified in-browser (Phase 5) |
-| `document-registry-table/`, `department-hierarchy-tree/` | ❌ Not implemented |
+| `department-hierarchy-tree/` | ✅ Implemented read-only and verified in-browser (Module 01 Phase 1); the detail dialog lists the department's employees with a sub-departments toggle |
+| `document-registry-table/` | ❌ Not implemented |
 | `document-attachments-panel/`, `movement-inbox/`, `movement-timeline/`, `audit-log-table/` | ❌ Not implemented (backend live) |
-| `visualization-panel/` | ❌ Not implemented (depends on `shared/ui/mermaid-view`) |
+| `visualization-panel/` | ❌ Not implemented (`shared/ui/mermaid-view` is now live, so the cross-module switcher can follow) |
 | `notification-center/` | ❌ Blocked on Module 10 / SignalR |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-28 | agent | Diagram nodes in `department-hierarchy-tree` are now activatable (click / `Enter` / `Space` via `shared/ui/mermaid-view`'s `onNodeClick`) and open the department's detail dialog, alongside the existing tree-node and grid-row paths. |
+| 2026-10-28 | agent | `department-hierarchy-tree` detail dialog now lists the department's employees (`DepartmentEmployeesSection`, `entities/employee`) with a «تضمين الأقسام الفرعية» toggle, permission gate, and loading/error/empty states; employee nodes inside the tree and the chart view stay pending. |
+| 2026-10-28 | agent | Implemented `department-hierarchy-tree` for Module 01 Phase 1 (read-only tree / Mermaid / table with URL-driven search and view, node context menus, collapse-all, and a detail dialog) and documented the slice. |
 | 2026-10-28 | agent | Implemented `employees-table` for Phase 5 (server search/paging, department resolution/fallback, permission-filtered menus, status confirmation, create/edit dialog) and documented the slice. |
 | 2026-10-28 | agent | Implemented `roles-table` for Phase 4 (client search/sort/paging, permission-filtered row/header/empty menus, role and permission-matrix dialogs, system-role protection) and documented the slice. |
 | 2026-10-28 | agent | Implemented `users-table` for Phase 3 (users grid, permission-filtered row/header/empty menus, status confirmation) and documented the slice. |

@@ -5,19 +5,20 @@ Defines the React Router v7 route tree, the authentication guard (`ProtectedRout
 ## Contents
 | File | Purpose |
 | --- | --- |
-| `AppRouter.tsx` | Declares `/login` (public), `/change-password` (protected, standalone), and nests `ProtectedRoute` → `AppShell` → page routes (`/` dashboard, `/users`, `/roles`, `/employees`); further module pages mount beside them as their slices land. Includes a catch-all redirect. |
+| `AppRouter.tsx` | Declares `/login` (public), `/change-password` (protected, standalone), and nests `ProtectedRoute` → `AppShell` → page routes (`/` dashboard, `/departments`, `/users`, `/roles`, `/employees`); further module pages mount beside them as their slices land. Includes a catch-all redirect. |
 | `ProtectedRoute.tsx` | Redirects visitors without a token to `/login` (remembering the requested location), shows a spinner while `AuthSessionLoader` hydrates the session, and forces `/change-password` when the session flag or the `must_change_password` JWT claim is true. |
 | `RequirePermission.tsx` | Re-exports the `features/auth` guard so route-level checks and component-level checks share one implementation (Arabic 403 state). |
 | `index.ts` | Public barrel exporting `AppRouter`, `ProtectedRoute`, and `RequirePermission`. |
 ## Implementation status
 | Item | State |
 | --- | --- |
-| `AppRouter.tsx`, `ProtectedRoute.tsx`, `RequirePermission.tsx` | ✅ Implemented (login, `/change-password`, shell-nested dashboard, `/users`, `/roles`, `/employees`) |
+| `AppRouter.tsx`, `ProtectedRoute.tsx`, `RequirePermission.tsx` | ✅ Implemented (login, `/change-password`, shell-nested dashboard, `/departments`, `/users`, `/roles`, `/employees`) |
 | Forced `/change-password` redirect | ✅ Implemented — session flag or JWT claim, so the redirect survives a reload |
 | Full module route map (`/documents`, `/movements`, …) | ❌ Pending their page slices; the shell already exposes their navigation entries as «قريبًا» |
 ## Change Log
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-28 | agent | Added the `/departments` route (Module 01 Phase 1) inside the shell, before `/users`; the page performs its own `DEPARTMENT_MANAGE` guard. |
 | 2026-10-28 | agent | Added the standalone `/change-password` route and forced it from the JWT claim (in addition to the session flag) inside `ProtectedRoute`; verified direct-URL access to `/users` redirects back after a reload. |
 | 2026-10-28 | agent | Added the `/employees` route (Phase 5) inside the shell; the page performs its own `EMPLOYEE_MANAGE` guard. |
 | 2026-10-28 | agent | Added the `/roles` route (Phase 4) inside the shell; the page performs its own `ROLE_MANAGE` guard. |

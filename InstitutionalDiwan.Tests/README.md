@@ -1,6 +1,6 @@
 # InstitutionalDiwan.Tests — xUnit test suite
 
-> **Status:** Implemented — 393 tests covering domain handlers, department register numbering, the
+> **Status:** Implemented — 406 tests covering domain handlers, department register numbering, the
 > receipt gate, the movement routing workflow (including the Central Diwan hub and rejection routing),
 > the department inbox/outbox, attachments (atomic first upload, versions, SHA-256 streaming, magic
 > bytes), movement participation, the tamper-evident audit chain (hashing, projections, checkpoints,
@@ -23,7 +23,7 @@ indexes) runs against a private SQLite in-memory database through `Support/TestC
 | `Authorization/` | `PermissionAuthorizationHandlerTests` (policy handler + `Permissions.All` integrity), `DepartmentScopeEvaluatorTests` (primary department, institution/dept-tree scope, temporal assignments incl. `IncludeSubtree` and ended assignments), `DocumentAccessEvaluatorTests` (authorship, grants incl. revoked, scope, confidentiality, movement participation, anonymous). |
 | `Persistence/` | `DocumentMovementRepositoryTests` — the inbox/outbox queries against a real SQLite database; `AuditLogRepositoryTests` — filtered search, range reads, checkpoint/integrity persistence; `TamperEvidentAuditInterceptorTests` — domain-event projection (including login), sensitive-field redaction, and request-only writes against SQLite; `AuditActionRecorderTests` — the isolated-scope recorder writes one valid chain row without flushing the caller's pending changes; `CorrespondenceAuditIntegrationTests` — real `CreateDocumentCommand`/`UpdateDraftMetadataCommand` handlers through repositories + DbContext + interceptor produce entity audit rows with old/new values. |
 | `Server/` | `OpenApiDocumentationTests` — every controller endpoint must carry an `[EndpointSummary]`, an `[EndpointDescription]`, and a `<param>` description with an example. `Module09DependencyInjectionTests` — the audit repository, appender, action recorder, EF interceptor, hosted jobs, permission policies, and MediatR handlers resolve from the real `AddApplication` + `AddInfrastructure` + `AddInstitutionalAuthentication` composition root. `AuditActionMiddlewareTests` — action-level rows for authenticated calls (create/view), skipping anonymous and non-`/api` requests, and failure recording + rethrow. |
-| `Seed/` | Seeder and pipeline tests — `PermissionSeederTests`, `RoleSeederTests`, `UserSeederTests`, `DepartmentTypeSeederTests`, `SeederRunnerTests`, `SeedingPipelineTests`. |
+| `Seed/` | Seeder and pipeline tests — `PermissionSeederTests`, `RoleSeederTests`, `UserSeederTests`, `DepartmentTypeSeederTests`, `DepartmentSeederTests`, `EmployeeSeederTests`, `SeederRunnerTests`, `SeedingPipelineTests`. |
 | `Support/` | Shared test doubles: `TestContextFactory` (SQLite in-memory `DiwanDbContext`), fake repositories/unit-of-work, fake hasher and JWT provider. |
 
 ## Conventions
@@ -105,6 +105,8 @@ indexes) runs against a private SQLite in-memory database through `Support/TestC
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-28 | Qoder | Added `Seed/EmployeeSeederTests` (28 demo employees attached to every department, idempotency, existing numbers kept, missing-tree failure, environment gating), extended `ListEmployeesQueryHandlerTests` with the department filter (exact, descendants, unknown department), and wired `EmployeeSeeder` into `SeedingPipelineTests`. 398 → 406 tests. |
+| 2026-10-28 | Qoder | Added `Seed/DepartmentSeederTests` (four-level demo tree under the Central Diwan root, depth assertion, environment gating, idempotency, existing rows untouched, missing-root failure) and wired `DepartmentSeeder` into `SeedingPipelineTests`. 393 → 398 tests. |
 | 2026-10-28 | agent | Added `Application/ResetUserPasswordCommandHandlerTests` (hash replaced, old password no longer verifies, `MustChangePassword` forced, single save, missing user → `Identity.UserNotFound`) and `ResetUserPasswordCommandValidatorTests` (empty id, blank password, too-short password). 386 → 393 tests. |
 | 2026-10-26 | Qoder | Added `Persistence/CorrespondenceAuditIntegrationTests` (real document create/update commands write entity audit rows), `Persistence/AuditActionRecorderTests` (isolated scope), and `Server/AuditActionMiddlewareTests` (create/view/skip/failure rows); extended the interceptor login case, the composition-root test, lookup seeding (8 action / 13 entity types), and the seeding counts. 378 → 386 tests. |
 | 2026-10-26 | Qoder | Added `Server/Module09DependencyInjectionTests` to prove Module 09 is injected through the production composition root (audit repository/appender, EF interceptor, hosted jobs, permission policies, MediatR handlers). 375 → 378 tests. |

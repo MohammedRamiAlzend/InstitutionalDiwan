@@ -1,6 +1,9 @@
 # institutionaldiwan.front / src/pages — Route Pages Layer
 
-> **Status:** Partially implemented — `login/`, `change-password/`, the `dashboard/` landing, and the `/users`, `/roles`, and `/employees` administration pages are live; every protected page except `/change-password` renders inside `widgets/app-shell`. The remaining slices are documented and pending.
+> **Status:** Partially implemented — `login/`, `change-password/`, the `dashboard/` landing, the
+> `/users`, `/roles`, and `/employees` administration pages, and the `/departments` hierarchy page are
+> live; every protected page except `/change-password` renders inside `widgets/app-shell`. The
+> remaining slices are documented and pending.
 > Backend-ready pages include Modules 01–06 and 09; archive stays blocked on Module 07.
 
 ## Purpose
@@ -34,7 +37,7 @@ complex business mutations, raw `axios`/`fetch` calls, or reusable domain models
 | `dashboard/` | `/` | Recent `GET /api/documents` + inbox summary `GET /api/movements/inbox` | ⚠️ Shell-owned content landing implemented; KPI/activity grid pending |
 | `documents/` | `/documents`, `/documents/:documentId` | 03 + 06 — documents CRUD/details + `GET/POST /api/documents/{id}/files` attachments panel | ❌ Planned |
 | `movements/` | `/movements` | 05 — inbox/outbox (`?tab=inbox\|outbox`) + document routing actions | ❌ Planned |
-| `departments/` | `/departments` | 01 — departments tree/CRUD + institution settings entry | ❌ Planned |
+| `departments/` | `/departments` | 01 — `GET /api/departments/tree` hierarchy (tree / Mermaid / table reads) | ✅ Implemented (read-only) |
 | `users/` | `/users` | 02 — users list/CRUD, role assignment, department assignments, effective permissions | ✅ Implemented |
 | `roles/` | `/roles` | 02 — roles CRUD, activate/deactivate, permission matrix | ✅ Implemented |
 | `employees/` | `/employees` | 02 — employees list/CRUD, activate/deactivate | ✅ Implemented |
@@ -49,8 +52,9 @@ search, sorting, pagination, and tabs belong in URL search params.
 
 Data pages mount `widgets/*-table` / `widgets/*-inbox` (the shared data grid) rather than rendering
 tables directly, so the column chooser, pagination, and row/header context menus are identical
-everywhere. Pages with hierarchy or diagram content mount `widgets/visualization-panel`, which
-offers the Mermaid diagram / chart / tree switcher.
+everywhere. Pages with hierarchy or diagram content mount the owning widget (for example
+`widgets/department-hierarchy-tree`), which composes `shared/ui/mermaid-view` for the diagram view;
+the cross-module `widgets/visualization-panel` remains planned.
 
 ## Implementation status
 
@@ -58,7 +62,8 @@ offers the Mermaid diagram / chart / tree switcher.
 | --- | --- |
 | `login/`, `change-password/`, `dashboard/` | ✅ Implemented (dashboard renders inside the app shell; change-password is standalone) |
 | `users/`, `roles/`, `employees/` | ✅ Implemented (`/users`, `/roles`, `/employees`) |
-| `documents/`, `departments/`, `numbering/` | ❌ Not implemented (backend APIs live) |
+| `departments/` | ✅ Implemented read-only (tree / Mermaid / table); manage actions pending |
+| `documents/`, `numbering/` | ❌ Not implemented (backend APIs live) |
 | `movements/`, `audit/` | ❌ Not implemented (backend live; slice folders documented) |
 | `archive/` | ❌ Blocked on Module 07 backend |
 
@@ -66,6 +71,7 @@ offers the Mermaid diagram / chart / tree switcher.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-28 | agent | Module 01 Phase 1: implemented `departments/` (read-only) — the `/departments` page gates on `DEPARTMENT_MANAGE` and mounts `widgets/department-hierarchy-tree` (tree / Mermaid / table, search, detail dialog). |
 | 2026-10-28 | agent | Phase 6: implemented `change-password/` — the standalone `/change-password` page mounts `features/auth`'s form, shows the forced-change notice, and redirects to the dashboard after a fresh token is applied. |
 | 2026-10-28 | agent | Phase 5: implemented `employees/` — the `/employees` page gates on `EMPLOYEE_MANAGE` and mounts `widgets/employees-table`. |
 | 2026-10-28 | agent | Phase 4: implemented `roles/` — the `/roles` page gates on `ROLE_MANAGE` and mounts `widgets/roles-table`; employees stay on their own future route. |

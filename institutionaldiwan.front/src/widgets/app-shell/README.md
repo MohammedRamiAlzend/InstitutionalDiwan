@@ -14,16 +14,17 @@ The shell owns the desktop-style chrome: a context menu on page content (refresh
 - `ui/AppSidebar.tsx` — Brand block, collapse toggle, permission-filtered nav groups (`filterNavGroups`), active `NavLink` styling, disabled entries with the Arabic «قريبًا» badge for slices that have not landed, per-item `ContextMenu` (فتح / نسخ الرابط / طي المجموعة) with clipboard success/error toasts, and `Shift+F10` support on links. Each entry renders as one inline row (18px icon + label, `flex items-center gap-3`); the `NavLink` itself keeps a static `className` and hands its active state to an inner `<span>` render prop, because the context-menu trigger clones the link through Radix `Slot`, which stringifies a function `className` and silently drops all styling.
 - `ui/AppHeader.tsx` — Mobile menu trigger, current-route title, shell-actions `DropdownMenu`, `ThemeToggle`, and the account `DropdownMenu` (avatar initial, username, roles; تغيير كلمة المرور، إعدادات العرض، then danger تسجيل الخروج).
 - `ui/SettingsDialog.tsx` — Display settings dialog: theme choice (فاتح / داكن / حسب النظام through the app `ThemeProvider`) and density choice (مريح / مضغوط) with `aria-pressed` state.
-- `model/shell-nav.ts` — `SHELL_NAV_GROUPS` (نظرة عامة، المراسلات، التنظيم، إدارة الوصول، الرقابة والتدقيق), each item carrying its permission code and an `available` flag; لوحة التحكم، المستخدمون، الأدوار والصلاحيات، and الموظفون are available today, the rest show «قريبًا». `filterNavGroups` hides unpermitted items and empty groups; `findNavItem` drives the header title (prefix-aware for detail routes).
+- `model/shell-nav.ts` — `SHELL_NAV_GROUPS` (نظرة عامة، المراسلات، التنظيم، إدارة الوصول، الرقابة والتدقيق), each item carrying its permission code and an `available` flag; لوحة التحكم، الأقسام التنظيمية، المستخدمون، الأدوار والصلاحيات، and الموظفون are available today, the rest show «قريبًا». `filterNavGroups` hides unpermitted items and empty groups; `findNavItem` drives the header title (prefix-aware for detail routes).
 - `model/density.ts` — `Density`, `getStoredDensity`, `applyDensity` (`html[data-density]`), `persistDensity` (`diwan.density`).
 - `index.ts` — Public API barrel file.
 ## 4. Required Packages
 - `react-router-dom`, `lucide-react`, `sonner`, `clsx`, `tailwind-merge` — ✅ installed
 ## 5. Implementation Status
 - ✅ `AppShell`, `AppSidebar`, `AppHeader`, `SettingsDialog`, and shell models implemented and verified in-browser (RTL, light/dark, mobile drawer, menus, keyboard context menu, density persistence, logout redirect).
-- ✅ Router nests every shell page under `<AppShell />`; dashboard, users, roles, and employees are live children (`/change-password` stays standalone).
+- ✅ Router nests every shell page under `<AppShell />`; dashboard, departments, users, roles, and employees are live children (`/change-password` stays standalone).
 - ✅ Account menu links to `/change-password` (verified in-browser); department badge and SignalR bell remain pending their slices.
 ## 6. Change Log
+- 2026-10-28: Enabled the الأقسام التنظيمية navigation entry now that the `/departments` page is live (Module 01 Phase 1).
 - 2026-10-28: Fixed the sidebar entry layout: the `NavLink` now uses a static `className` with an inner flex row (icon + label on one line) instead of a function `className`, which the context-menu trigger's Radix `Slot` stringified and dropped — that left every entry unstyled and stacked the icon above its label. The nav icon is now 18px (`size-4.5`) instead of 20px. Verified in the mobile drawer (row centers align, active background, right-click menu, navigation).
 - 2026-10-28: Added the account-menu «تغيير كلمة المرور» entry now that `/change-password` is live.
 - 2026-10-28: Enabled the الموظفون navigation entry now that the `/employees` page is live (Phase 5).

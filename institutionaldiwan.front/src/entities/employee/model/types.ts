@@ -18,4 +18,8 @@ export interface EmployeeListParams {
   page: number
   pageSize: number
   search?: string
+  /** Restricts the page to one department. */
+  departmentId?: string
+  /** Widens `departmentId` to every descendant department. */
+  includeSubDepartments?: boolean
 }

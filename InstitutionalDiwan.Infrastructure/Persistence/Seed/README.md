@@ -2,8 +2,9 @@
 
 Ordered, environment-aware database seeding.
 
-> **Status:** Implemented — 33 reference-catalog seeders, the institution-settings singleton,
-> 16 permissions, system roles with 19 grants, and demo users.
+> **Status:** Implemented — 33 reference-catalog seeders, the institution-settings singleton, a
+> 15-department demo organization tree (Development/Staging), 28 demo employees attached to that
+> tree (Development/Staging), 16 permissions, system roles with 19 grants, and demo users.
 
 ## How it works
 
@@ -26,13 +27,18 @@ Development, Production, etc.
 | --- | --- | --- | --- |
 | 41–90 | 34 `LookupSeederBase<T>` subclasses (`IdentityLookupSeeders.cs`, `ParticipantLookupSeeders.cs`, `MovementsLookupSeeders.cs`, `AttachmentsLookupSeeders.cs`, `RelationsLookupSeeders.cs`, `ArchivingLookupSeeders.cs`, `CorrespondenceLookupSeeders.cs`, `AuditLookupSeeders.cs`, `NotificationsLookupSeeders.cs`, `NumberingLookupSeeders.cs`, `OrganizationLookupSeeders.cs`, `DepartmentTypeSeeder.cs`) | All | Every reference catalog: scope/assignment/access levels, participant roles + target types, movement types/statuses/step statuses/event types, storage provider types + file types + the default local provider, relation types + action types, archive event types + locations, document directions/types/statuses/confidentiality/priority, audit action types (8, including `Execute`) + audit entity types (13, including `Operation`), notification types/priorities/channels/outbox statuses, numbering modes/statuses/event types/scopes (central vs department register)/reset policies, department types. |
 | 95 | `InstitutionSettingSeeder` | All | The singleton `InstitutionSetting` row (automatic numbering, yearly reset) plus the `CENTRAL_DIWAN` root department it designates; runs after the numbering lookups and department types it references. |
+| 96 | `DepartmentSeeder` | Development, Staging | A demo organization tree of 15 departments across four levels: the `CENTRAL_DIWAN` root (reused from Order 95), four directorates, seven departments, and three sections (e.g. `DIR-ADMIN` → `DEP-HR` → `SEC-PAYROLL`), so the departments screen has a realistic hierarchy to display. Idempotent by `Code`. |
+| 97 | `EmployeeSeeder` | Development, Staging | 28 demo employees attached by department code — the Central Diwan office, every directorate, department, and section — so a department card can list the people who belong to it. Includes Arabic/English names, employee numbers (`EMP-0001`…), job titles, and a few contact details. Idempotent by `EmployeeNumber`. |
 | 100 | `PermissionSeeder` | All | Permission catalog — the 16 codes in `Permissions.All`, including `LOOKUP_MANAGE`, `NUMBERING_MANAGE`, `AUDIT_VIEW`, and `AUDIT_MANAGE`. |
 | 200 | `RoleSeeder` | All | `ADMIN` / `USER` roles plus their permission grants (ADMIN receives all 16, USER the three document permissions; 19 grants total). |
 | 300 | `UserSeeder` | Development, Staging | Demo accounts `admin` / `user` (password `12345678`) with role assignments. |
 
 Order matters: the lookup catalogs are seeded before permissions/roles so business tables can
 reference them, roles grant permission codes that the catalog defines first, and demo users are
-assigned roles that must already exist.
+assigned roles that must already exist. The demo department tree reuses the Central Diwan root that
+`InstitutionSettingSeeder` creates, so it runs immediately after it and before permissions/roles;
+`EmployeeSeeder` runs right after the tree because every demo employee is attached by department
+code.
 
 All seeders are idempotent — they only insert what is missing and are safe to run on every
 startup. Demo credentials are deliberately gated to Development/Staging; seeding users in
@@ -43,6 +49,8 @@ Production requires opting in by adding `SeedingEnvironments.Production` to
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-28 | agent | Added `EmployeeSeeder` (Order 97, Development/Staging): 28 demo employees spread across the seeded tree (including the Central Diwan office), idempotent by `EmployeeNumber`, so the department detail card can list real people. |
+| 2026-10-28 | agent | Added `DepartmentSeeder` (Order 96, Development/Staging): a 15-department demo organization tree across four levels (Central Diwan → 4 directorates → 7 departments → 3 sections) so the departments screen has a realistic hierarchy; reuses the Central Diwan root, idempotent by `Code`, gated away from Production. |
 | 2026-10-26 | Qoder | Extended the audit lookups to 8 action types (`Execute` = 8) and 13 entity types (`Operation` = 13) so action-level audit rows can reference them; startup seeding inserts the new ids idempotently in every environment. |
 | 2026-10-25 | opencode | Added `AUDIT_VIEW` and `AUDIT_MANAGE` to the catalog (14 → 16) and granted both to `ADMIN` (17 → 19 grants); extended the audit entity-type lookup to 12 types. |
 | 2026-10-20 | Buffy | Added `DocumentNumberScopeSeeder` (Order 88, `DOCUMENT_NUMBER_SCOPES`: central register / department register) and two department event types (`RegisteredInDepartment`, `ReRegisteredInDepartment`) to `DocumentNumberEventTypeSeeder`; registered the new seeder in `Infrastructure/DependencyInjection.cs` (34 lookup seeders). |

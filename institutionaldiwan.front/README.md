@@ -1,16 +1,18 @@
 # institutionaldiwan.front — Institutional Diwan React 19 + TypeScript 6 + Vite 8 SPA (Feature-Sliced Design)
 
 > **Status:** Identity module (Module 01) plus the Module 02 Identity admin front end (Phases 0–6,
-> 2026-10-28) implemented: shared foundation (`api`/`config`/`lib`/`types`/`ui` kit),
+> 2026-10-28) implemented, plus Module 01 Phase 1 — the read-only organizational hierarchy:
+> shared foundation (`api`/`config`/`lib`/`types`/`ui` kit incl. the lazy Mermaid renderer),
 > `entities/user` session and admin reads, supporting `entities/{department,role,employee,lookup}`
 > reads, `features/auth` (login/logout/permission guard/password change), `features/user-manage`
 > (user writes + administrator password reset), `features/role-manage` (role writes + permission matrix),
 > `features/employee-manage` (employee writes + activation),
 > `app` providers + router + theme tokens, `widgets/app-shell` (permission-filtered sidebar, header,
 > mobile drawer, display settings, shell/item context menus),
-> `widgets/{users-table,roles-table,employees-table}`, and
-> the `pages/{login,change-password,dashboard,users,roles,employees}` routes — Arabic-first RTL with
-> light/dark themes, verified against the live API. The `@` alias, dev proxy, and `.env.example` are
+> `widgets/{users-table,roles-table,employees-table,department-hierarchy-tree}` (the hierarchy
+> detail dialog also lists a department's employees), and
+> the `pages/{login,change-password,dashboard,departments,users,roles,employees}` routes — Arabic-first
+> RTL with light/dark themes, verified against the live API. The `@` alias, dev proxy, and `.env.example` are
 > configured; the HTTPS dev certificate is still to-be.
 >
 > **Standalone by design:** this project is intended to live outside the `InstitutionalDiwan.slnx`
@@ -31,11 +33,11 @@ developers can implement slices predictably without spaghetti imports.
 
 | Item | As-is | To-be |
 | --- | --- | --- |
-| Runtime deps in `package.json` | React stack + Module 01 slice packages + Radix `dialog`/`dropdown-menu`/`context-menu`/`select`/`checkbox` (see “Required Packages”) | Remaining planned packages per slice (SignalR, Mermaid, extra Radix primitives) as their slices land; `@tanstack/react-table` is intentionally omitted because the shared grid owns its URL/localStorage state model |
-| FSD folders | ✅ README scaffolds for all six layers; Module 01 slices implemented (`shared` foundation, `entities/user`, `features/auth`, `pages/login` + `dashboard`, `app`), the Module 02 `widgets/app-shell` + `widgets/{users-table,roles-table,employees-table}`, the shared data-grid/menu foundation, the Phase 2 read entities (`department`, `role`, `employee`, `lookup`), the Phase 3 user administration slices (`features/user-manage`, `pages/users`), the Phase 4 role administration slices (`features/role-manage`, `pages/roles`), and the Phase 5 employee administration slices (`features/employee-manage`, `pages/employees`) | Remaining slice code implemented per those docs |
+| Runtime deps in `package.json` | React stack + Module 01 slice packages + Radix `dialog`/`dropdown-menu`/`context-menu`/`select`/`checkbox` + `mermaid` (lazy, hierarchy view) (see “Required Packages”) | Remaining planned packages per slice (SignalR, extra Radix primitives) as their slices land; `@tanstack/react-table` is intentionally omitted because the shared grid owns its URL/localStorage state model |
+| FSD folders | ✅ README scaffolds for all six layers; Module 01 slices implemented (`shared` foundation, `entities/user`, `features/auth`, `pages/login` + `dashboard`, `app`), the Module 02 `widgets/app-shell` + `widgets/{users-table,roles-table,employees-table}`, the shared data-grid/menu foundation, the Phase 2 read entities (`department`, `role`, `employee`, `lookup`), the Phase 3 user administration slices (`features/user-manage`, `pages/users`), the Phase 4 role administration slices (`features/role-manage`, `pages/roles`), the Phase 5 employee administration slices (`features/employee-manage`, `pages/employees`), and Module 01 Phase 1 (`shared/ui/mermaid-view`, `entities/department` `toMermaid`, `widgets/department-hierarchy-tree`, `pages/departments`) | Remaining slice code implemented per those docs |
 | `vite.config.ts` | ✅ `@` → `./src` alias + env-driven `/api` + `/hubs` proxy | Optional local HTTPS certificate |
 | Dev configuration | ✅ `.env.example` committed (`DEV_PROXY_TARGET`, `VITE_API_BASE_URL`); create local `.env` as needed | — |
-| UI | ✅ Arabic RTL login, password change, shell-framed dashboard, and the `/users`, `/roles`, and `/employees` administration screens, light/dark themes from `tokens.css`, compact density | Remaining module pages |
+| UI | ✅ Arabic RTL login, password change, shell-framed dashboard, the `/users`, `/roles`, and `/employees` administration screens, and the `/departments` hierarchy (tree / Mermaid / table, with the department's employees in the detail dialog), light/dark themes from `tokens.css`, compact density | Remaining module pages |
 | Backend coverage docs | `knowledge.md` describes the external API | Modules 01–06, 09 live; 07/08/10 deferred |
 
 Always treat **as-is** as the truth for “what runs today,” and **to-be** as the install/implement
@@ -45,9 +47,9 @@ checklist before coding features.
 
 > The Module 01 slice packages are **installed** (React Router, TanStack Query, Zustand, Axios,
 > react-hook-form, Zod, resolvers, lucide-react, clsx, tailwind-merge, CVA, sonner, Tailwind v4,
-> devtools) together with the Radix primitives used by the shared UI kit (`dialog`, `dropdown-menu`,
-> `context-menu`, `select`, `checkbox`). The groups below remain the checklist for the remaining
-> slices.
+> devtools, `mermaid`) together with the Radix primitives used by the shared UI kit (`dialog`,
+> `dropdown-menu`, `context-menu`, `select`, `checkbox`). The groups below remain the checklist for
+> the remaining slices.
 
 ```bash
 # 1. Core runtime packages (Routing, Server/Client State, HTTP, Forms, Validation, Icons, UI, SignalR, Mermaid)
@@ -130,10 +132,11 @@ Summary:
 - **Data grids:** filters, search, sorting, and pagination are URL state; column visibility is
   view state persisted per table under `diwan.table.<tableId>.columns.v1` (versioned, with a
   reset-to-default action). Bounded arrays paginate client-side with the same pager.
-- **Mermaid visualization:** lazy-loaded `shared/ui/mermaid-view` (`securityLevel: 'strict'`)
-  with a diagram / chart / tree switcher; entity `model/` builders turn API hierarchies into
-  Mermaid or tree data (for example departments → employees), and invalid Mermaid shows an
-  Arabic-first error state.
+- **Mermaid visualization:** lazy-loaded `shared/ui/mermaid-view` (`securityLevel: 'strict'`,
+  token-derived `themeVariables` that follow light/dark, no external links) with a diagram / chart /
+  tree switcher owned by the hierarchy widget; entity `model/` builders turn API hierarchies into
+  Mermaid or tree data (today `entities/department/model/toMermaid.ts`), and invalid Mermaid shows an
+  Arabic-first error state with the parser message.
 
 ## Planned routes (backend-ready first)
 
@@ -144,7 +147,7 @@ Summary:
 | `/` | `pages/dashboard` | — | Recent docs + inbox counts |
 | `/documents`, `/documents/:id` | `pages/documents` | 03 + 06 | Detail hosts attachments panel |
 | `/movements` | `pages/movements` | 05 | Inbox / outbox tabs via search params |
-| `/departments` | `pages/departments` | 01 | Hierarchy + settings entry |
+| `/departments` | `pages/departments` | 01 | ✅ Hierarchy (tree / Mermaid / table) + department employees in the detail dialog; settings entry pending |
 | `/users` | `pages/users` | 02 | ✅ Users admin |
 | `/roles` | `pages/roles` | 02 | ✅ Roles + permission matrix |
 | `/employees` | `pages/employees` | 02 | ✅ Employees admin (department-linked) |
@@ -169,11 +172,11 @@ Full endpoint tables: [`knowledge.md`](knowledge.md).
 | File / Folder | Purpose |
 | --- | --- |
 | `src/app/` | Implemented application root (`index.tsx`), providers (theme, query, session loader), router + guards, and the Tailwind v4 global styles with `tokens.css`. |
-| `src/pages/` | Route-level page slices; `login`, `change-password`, `dashboard`, `users`, `roles`, and `employees` implemented, the rest documented. |
-| `src/widgets/` | Composite page sections combining entities and features; `app-shell`, `users-table`, `roles-table`, and `employees-table` implemented, the rest documented. |
+| `src/pages/` | Route-level page slices; `login`, `change-password`, `dashboard`, `departments`, `users`, `roles`, and `employees` implemented, the rest documented. |
+| `src/widgets/` | Composite page sections combining entities and features; `app-shell`, `users-table`, `roles-table`, `employees-table`, and `department-hierarchy-tree` implemented, the rest documented. |
 | `src/features/` | CQRS Command mutations, Zod forms, and interactive workflows; `auth`, `user-manage`, `role-manage`, and `employee-manage` implemented, the rest documented. |
-| `src/entities/` | Domain read models, query key factories, `useQuery` hooks, and status badges; `user` (session + admin reads), `department`, `role`, `employee`, `lookup` implemented, the rest documented. |
-| `src/shared/` | Axios client + RFC 7807 adapter + Arabic error catalog, config, utilities (table state, column preferences, dates, JWT hints), and the RTL UI kit including the shared data grid, context/dropdown menus, dialogs, select, and checkbox. |
+| `src/entities/` | Domain read models, query key factories, `useQuery` hooks, and status badges; `user` (session + admin reads), `department`, `role`, `employee` (paged list with department/sub-department filters), `lookup` implemented, the rest documented. |
+| `src/shared/` | Axios client + RFC 7807 adapter + Arabic error catalog, config, utilities (table state, column preferences, dates, JWT hints), and the RTL UI kit including the shared data grid, context/dropdown menus, dialogs, select, checkbox, and the lazy Mermaid renderer. |
 | `src/main.tsx` | Vite entry: mounts the `app` layer root and the global stylesheet. |
 | `src/assets/` | Vite template images (`hero.png`, `react.svg`, `vite.svg`); replaced by the institution's own artwork. |
 | `public/` | Vite template favicon and icon sprite. |
@@ -205,18 +208,21 @@ Full endpoint tables: [`knowledge.md`](knowledge.md).
 | `@` → `./src` alias | ✅ Configured (`vite.config.ts` + `tsconfig.app.json`) |
 | Dev proxy + `.env.example` | ✅ Configured (HTTPS dev certificate still to-be) |
 | `index.html` RTL / document title / theme boot script | ✅ Configured |
-| `src/shared/` (`api`, `ui`, `lib`, `config`, `types`) | ✅ Core implemented including `data-table`, `context-menu`, dialogs, menus, select/checkbox, URL table state, persisted columns, and the expanded Arabic error catalog (`mermaid-view` pending its slice) |
-| `src/entities/` | ✅ `user` (session + admin reads), `department` (reads), `role`, `employee` (reads), `lookup` implemented; document, document-file, numbering-registry, movement, audit-log pending |
+| `src/shared/` (`api`, `ui`, `lib`, `config`, `types`) | ✅ Core implemented including `data-table`, `context-menu`, dialogs, menus, select/checkbox, URL table state, persisted columns, the lazy `mermaid-view`, and the expanded Arabic error catalog |
+| `src/entities/` | ✅ `user` (session + admin reads), `department` (reads + `toMermaid`), `role`, `employee` (reads), `lookup` implemented; document, document-file, numbering-registry, movement, audit-log pending |
 | `src/features/` | ✅ `auth`, `user-manage` (incl. administrator password reset), `role-manage`, `employee-manage` implemented; document-*, department-*, movement-routing, attachment-upload, audit-manage pending |
-| `src/widgets/` | ✅ `app-shell` (sidebar, header, drawer, settings, shell/item context menus), `users-table`, `roles-table`, and `employees-table`; registry table, hierarchy tree, movement timeline/inbox, attachments panel, audit table, visualization panel pending |
-| `src/pages/` | ✅ `login`, standalone `change-password`, shell-framed `dashboard`, `users`, `roles`, and `employees`; documents, movements, departments, numbering, audit pending (archive deferred) |
-| `src/app/` (`providers`, `router`, `styles`) | ✅ Implemented (login-protected routes incl. `/change-password`, `/users`, `/roles`, `/employees`; forced reset redirect) |
+| `src/widgets/` | ✅ `app-shell` (sidebar, header, drawer, settings, shell/item context menus), `users-table`, `roles-table`, `employees-table`, and `department-hierarchy-tree` (tree / Mermaid / table + a detail dialog with the department's employees); registry table, movement timeline/inbox, attachments panel, audit table, visualization panel pending |
+| `src/pages/` | ✅ `login`, standalone `change-password`, shell-framed `dashboard`, `departments`, `users`, `roles`, and `employees`; documents, movements, numbering, audit pending (archive deferred) |
+| `src/app/` (`providers`, `router`, `styles`) | ✅ Implemented (login-protected routes incl. `/change-password`, `/departments`, `/users`, `/roles`, `/employees`; forced reset redirect) |
 | Publishing & API wiring guide (`DEPLOYMENT.md`) | ✅ Documented (proxy section reflects the configured setup) |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-28 | agent | Clicking a department now works in the «مخطط» view too: `shared/ui/mermaid-view` gained an optional `onNodeClick` (activatable flowchart nodes, `Enter`/`Space`, label as accessible name) and `departmentTreeToMermaid` returns a node-id → department-id map, so a diagram node opens the same detail dialog with the employee roster. Verified in-browser (click and keyboard, filtered diagram). Build and lint pass. |
+| 2026-10-28 | agent | Clicking a department now shows its employees: new `DepartmentEmployeesSection` in the hierarchy detail dialog (count badge, «تضمين الأقسام الفرعية» toggle on by default, permission gate on `EMPLOYEE_MANAGE`, skeleton/error/empty states, first-50 footer), fed by the new `departmentId` + `includeSubDepartments` filters on `GET /api/employees`. Verified in-browser (directorate 13 → toggle off 2). Build and lint pass. |
+| 2026-10-28 | agent | Completed Module 01 Phase 1 (read-only hierarchy): added `shared/ui/mermaid-view` (lazy `mermaid`, strict security, token-driven theme variables, Arabic error state), `entities/department/model/toMermaid`, `widgets/department-hierarchy-tree` (interactive tree, Mermaid diagram, table, URL-driven search and view, node context menus, collapse/expand, detail dialog), and the `/departments` page + route + enabled sidebar entry behind `DEPARTMENT_MANAGE`. Verified in-browser (tree, theme-aware Mermaid, table search, dialog, keyboard menus); screenshots were unavailable. Build and lint pass. |
 | 2026-10-28 | agent | Added the administrator password reset (`POST /api/users/{userId}/reset-password`): a «إعادة تعيين كلمة المرور» row action (disabled for the signed-in account) opens `ResetPasswordDialog`, which warns the admin, can generate a 12-character temporary password, and forces the user to set a new password at the next sign-in. Extracted the shared `PasswordField` (login, change-password, reset) and kept the dialog footer/body bounded. Build and lint pass. |
 | 2026-10-28 | agent | Completed Phase 6 of Module 02 (final): implemented `/change-password` (Zod form + mutation + standalone page), forced the reset redirect from the JWT `must_change_password` claim so it survives a reload, routed reset logins there, added the account-menu entry, and mapped `Identity.NewPasswordSameAsOld`. Re-verified all protected routes, RTL, and both themes; build and lint pass. This closes the Identity admin front end. |
 | 2026-10-28 | agent | Completed Phase 5 of Module 02: implemented `features/employee-manage` (Zod form + create/update, activate/deactivate, department selector sourced from `entities/department`), `widgets/employees-table` (server-side search/paging, department badges, row actions), and the `/employees` page behind `EMPLOYEE_MANAGE`; enabled its sidebar entry and added the employee validation error codes to the Arabic catalog. Verified in-browser (create validation, department load, create/edit, invalid email, deactivation, light/dark); build and lint pass. |

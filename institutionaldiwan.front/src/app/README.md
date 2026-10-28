@@ -23,7 +23,7 @@
 | `providers/ThemeProvider.tsx` | Applies `data-theme` (`light` / `dark` / `system`), persists `diwan.theme`, listens to `prefers-color-scheme`, and exposes the theme toggle. |
 | `providers/QueryProvider.tsx` | Configures singleton `QueryClient` and wraps children in `QueryClientProvider`. |
 | `providers/AuthSessionLoader.tsx` | Hydrates current user session on startup via `GET /api/auth/me` when a JWT exists in storage. |
-| `router/AppRouter.tsx` | Declares the public `/login` route, the standalone `/change-password` route, and nests `ProtectedRoute` → `AppShell` around the dashboard and admin pages (`/users`, `/roles`, `/employees`); remaining module pages land as children of the shell route. `/archive` stays out until Module 07 exists. |
+| `router/AppRouter.tsx` | Declares the public `/login` route, the standalone `/change-password` route, and nests `ProtectedRoute` → `AppShell` around the dashboard and admin pages (`/departments`, `/users`, `/roles`, `/employees`); remaining module pages land as children of the shell route. `/archive` stays out until Module 07 exists. |
 | `router/ProtectedRoute.tsx` | Redirects unauthenticated users to `/login` and forces `/change-password` when the session flag or the `must_change_password` JWT claim is true (the claim survives a reload, since `/auth/me` carries no flag). |
 | `router/RequirePermission.tsx` | Route/component guard using the full 16-code `Permissions` set (incl. `AUDIT_VIEW` / `AUDIT_MANAGE`). |
 | `styles/tokens.css` | **Single source of color**: raw Forest / Golden Wheat / Charcoal palette, semantic light/dark tokens, and functional status colors. |
@@ -38,12 +38,13 @@
 | --- | --- |
 | `index.tsx` | ✅ Implemented — composes `AppProviders` and `AppRouter`; mounted by `src/main.tsx` |
 | `providers/` (`AppProviders`, `ThemeProvider`, `QueryProvider`, `AuthSessionLoader`) | ✅ Implemented |
-| `router/AppRouter` | ✅ Implemented — `/login` public; `/change-password` standalone under `ProtectedRoute`; `/`, `/users`, `/roles`, `/employees` render inside `AppShell`; remaining routes land with their slices |
+| `router/AppRouter` | ✅ Implemented — `/login` public; `/change-password` standalone under `ProtectedRoute`; `/`, `/departments`, `/users`, `/roles`, `/employees` render inside `AppShell`; remaining routes land with their slices |
 | `styles/` (Tailwind v4, `tokens.css`, RTL + light/dark theme tokens, density scale) | ✅ Implemented |
 | Forced `/change-password` redirect when `mustChangePassword` | ✅ Implemented — session flag or JWT claim; verified after a reload |
 ## Change Log
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-28 | agent | Registered the `/departments` route (Module 01 Phase 1) as a shell child ahead of the identity admin routes. |
 | 2026-10-28 | agent | Added the standalone `/change-password` route and made `ProtectedRoute` force it from the JWT claim as well as the session flag, closing the reload bypass; reset logins now land there directly. |
 | 2026-10-28 | agent | Registered the `/users`, `/roles`, and `/employees` admin routes (Phases 3–5) as shell children. |
 | 2026-10-27 | agent | Nested protected routes under the implemented `widgets/app-shell` (Phase 1): the dashboard is now a shell child and receives sidebar/header/settings chrome; documented the shell's ownership of density and theme controls. |
