@@ -173,6 +173,8 @@ export function AppSidebar({
                     const entries = itemEntries(item, group.id, open)
 
                     const content = item.available ? (
+                      // NavLink keeps a static className because the ContextMenu trigger clones it
+                      // through Radix Slot, which stringifies a function className and drops styling.
                       <NavLink
                         to={item.to}
                         end={item.to === '/'}
@@ -184,18 +186,22 @@ export function AppSidebar({
                         }}
                         aria-label={collapsed ? item.label : undefined}
                         title={collapsed ? item.label : undefined}
-                        className={({ isActive }) =>
-                          cn(
-                            'flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
-                            isActive
-                              ? 'bg-accent text-accent-contrast'
-                              : 'text-foreground hover:bg-surface-muted',
-                            collapsed && 'justify-center px-2',
-                          )
-                        }
+                        className="block rounded-lg"
                       >
-                        <Icon className="size-5 shrink-0" aria-hidden />
-                        {!collapsed && <span className="truncate">{item.label}</span>}
+                        {({ isActive }) => (
+                          <span
+                            className={cn(
+                              'flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                              isActive
+                                ? 'bg-accent text-accent-contrast'
+                                : 'text-foreground hover:bg-surface-muted',
+                              collapsed && 'justify-center px-2',
+                            )}
+                          >
+                            <Icon className="size-4.5 shrink-0" aria-hidden />
+                            {!collapsed && <span className="truncate">{item.label}</span>}
+                          </span>
+                        )}
                       </NavLink>
                     ) : (
                       <span
@@ -207,7 +213,7 @@ export function AppSidebar({
                           collapsed && 'justify-center px-2',
                         )}
                       >
-                        <Icon className="size-5 shrink-0" aria-hidden />
+                        <Icon className="size-4.5 shrink-0" aria-hidden />
                         {!collapsed && (
                           <>
                             <span className="flex-1 truncate">{item.label}</span>
