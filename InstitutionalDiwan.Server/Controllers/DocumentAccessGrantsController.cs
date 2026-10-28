@@ -100,7 +100,7 @@ public sealed class DocumentAccessGrantsController : ControllerBase
             return Unauthorized();
 
         var result = await _sender.Send(
-            new RevokeDocumentAccessCommand(grantId, revokedByUserId), cancellationToken);
+            new RevokeDocumentAccessCommand(documentId, grantId, revokedByUserId), cancellationToken);
 
         return result.ToActionResult();
     }

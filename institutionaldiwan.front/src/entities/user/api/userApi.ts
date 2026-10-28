@@ -20,6 +20,8 @@ export const userApi = {
         page: params.page,
         pageSize: params.pageSize,
         search: params.search?.trim() || undefined,
+        sortBy: params.sortBy,
+        sortDescending: params.sortDescending,
       },
     })
     return data

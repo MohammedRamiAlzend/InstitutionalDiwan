@@ -24,7 +24,7 @@ internal sealed class RevokeDocumentAccessCommandHandler
         CancellationToken cancellationToken)
     {
         var grant = await _grantRepository.GetByIdAsync(request.GrantId, cancellationToken);
-        if (grant is null)
+        if (grant is null || grant.DocumentId != request.DocumentId)
             return Result.Failure<DocumentAccessGrantResponse>(DomainErrors.Identity.AccessGrantNotFound);
 
         var revokeResult = grant.Revoke(request.RevokedByUserId, _unitOfWork.UtcNow);

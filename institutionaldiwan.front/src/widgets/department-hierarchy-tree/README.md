@@ -1,37 +1,58 @@
 # `src/widgets/department-hierarchy-tree` — Department Hierarchy Widget
-> **Status:** ✅ Read-only Phase 1 implemented (2026-10-28) — native RTL tree with node context menus, Mermaid `flowchart TD` view with activatable nodes, flat grid, URL-driven search/view, a read-only detail dialog, and the department's employee roster inside that dialog. Manage actions land with `features/department-manage`.
-## 1. Purpose
-Renders the Module 01 organizational hierarchy (`entities/department`) as an interactive, collapsible RTL tree, a Mermaid diagram, or a flat grid. All three views share the same URL search term (`?search=`) and the same data; the selected view is `?view=tree|mermaid|table` (tree is the default, so the parameter is omitted for it).
+> **Status:** Module 01 hierarchy UI implemented: native department/employee hierarchy, Mermaid department diagram, department-type distribution chart, flat department grid, department management integration, and paged employee rosters with read-only employee details. Browser verification remains pending.
 
-Phase 1 is read-only: create, edit, reparent, and deactivate actions belong to `features/department-manage` and are intentionally absent here. Opening a department shows its data and the employees who belong to it.
+## 1. Purpose
+Renders the Module 01 organizational hierarchy (`entities/department`) as a collapsible native list tree, a Mermaid diagram, a department-type distribution chart, or a flat grid. Department search stays in `?search=` and the selected view is `?view=tree|mermaid|chart|table` (tree is the default). The tree, diagram, and chart use the same filtered tree, including the ancestors retained for search hits.
+
+Existing create/edit/parent-change and activation actions are composed from `features/department-manage`; this completion preserves those pending integrations. Opening a department shows its data and an employee roster. Employee actions in this slice are read-only: details and copying name, number, or id; employee administration remains outside this widget.
+
 ## 2. Strict FSD Rules
-- Allowed Imports: `src/entities/department`, `src/entities/employee`, `src/entities/user` (session/permission check), `src/entities/lookup`, and `src/shared/*`.
-- Forbidden Imports: NEVER import from `src/app`, `src/pages`, `src/features`, or sibling `src/widgets/*` slices.
-- Public API: exports `DepartmentHierarchyTree` via `src/widgets/department-hierarchy-tree/index.ts`.
-- The Mermaid source is built by the entity (`departmentTreeToMermaid`), never here; the widget only composes views.
+- Allowed imports: `features/department-manage`, `entities/department`, `entities/employee`, `entities/user` (session/permission check), `entities/lookup`, and `shared/*`, through their public barrels.
+- Forbidden imports: `app`, `pages`, and sibling `widgets/*` slices.
+- Public API: exports `DepartmentHierarchyTree` via the slice's `index.ts`; internal composing components are not public exports.
+- Mermaid source is built by `departmentTreeToMermaid` in the department entity. The diagram contains departments only; lazily loaded employee pages are not exported to Mermaid.
+- Logical spacing, mirrored directional icons, shared menu/dialog primitives, and semantic color tokens support Arabic/RTL, LTR, light, and dark layouts. This update does not claim browser verification of those modes.
+
 ## 3. Contents & Segments
 | File | Purpose |
 | --- | --- |
-| `ui/DepartmentHierarchyTree.tsx` | Surface: view switcher (شجرة / مخطط / جدول), tree/mermaid search, expand-all/collapse-all, refresh, loading skeleton, Arabic error + retry, empty and no-match states, and the detail dialog state. Diagram nodes open the same detail dialog (the entity's `departmentIdByNodeId` resolves the clicked Mermaid node back to its department). |
-| `ui/DepartmentTreeNodeRow.tsx` | Recursive tree row: expand/collapse trigger, department badge with LTR code, type label, «الديوان المركزي» badge, direct-child count, click-to-details, and a permission-filtered context menu reachable with `Shift+F10` / the context-menu key. |
-| `ui/DepartmentTable.tsx` | Flat client-paged grid on the shared `DataTable` (stable `tableId="departments"`): sortable columns (name, type, parent, status, created), hidden-by-default external flags/manager/notes/timestamps, column chooser, row/header/empty menus. |
-| `ui/DepartmentDetailDialog.tsx` | Read-only details from `GET /api/departments/{id}`: code, both names, type lookup label, parent, manager, status, external send/receive, notes, and timestamps, plus copy-code/copy-id actions and the employee roster. |
-| `ui/DepartmentEmployeesSection.tsx` | The department's roster from `GET /api/employees?departmentId=…&includeSubDepartments=…`: count badge, «تضمين الأقسام الفرعية» checkbox (default on), rows with name/job title/number/status, and loading/error/empty states. Hidden without `EMPLOYEE_MANAGE` because the endpoint is gated on it. |
-| `ui/DepartmentSearch.tsx` | Debounced (300 ms) search input used by the tree and Mermaid views; the committed term stays in the URL. |
-| `model/departmentTree.ts` | `DepartmentView`, `isDepartmentView`, `matchesDepartment`, `filterDepartmentTree` (keeps ancestors of hits), `collectDepartmentIds`, and `countDepartments`. |
-| `model/clipboard.ts` | Arabic-toast clipboard helper for department codes and ids. |
-| `index.ts` | Public API barrel file. |
-## 4. Required Packages
-- `@tanstack/react-query`, `lucide-react`, `clsx`, `sonner` — ✅ installed
-- `mermaid` — arrives only through `shared/ui/mermaid-view` (lazy-loaded) — ✅ installed
+| `ui/DepartmentHierarchyTree.tsx` | Tree/Mermaid/chart/table switcher, department search, expansion controls, optional employee branches, shared hierarchy loading/error/retry/empty/no-match handling, department details, and existing create/edit/activation dialog orchestration. |
+| `ui/DepartmentTreeNodeRow.tsx` | Recursive native list row with expansion controls, department badge/type/child count, detail access, identical context/overflow menus, and lazily opened direct-employee branches. |
+| `ui/DepartmentTypeChart.tsx` | Dependency-free distribution of visible departments by type, with textual counts/percentages and decorative token-styled bars; uses only the loaded filtered hierarchy. |
+| `ui/DepartmentTable.tsx` | Flat client-paged `DataTable` (`tableId="departments"`): sorting, column chooser, row/header/empty menus, and department manage callbacks. |
+| `ui/DepartmentDetailDialog.tsx` | Department details from `GET /api/departments/{id}`, edit access, copy actions, manager lookup, and the employee roster. |
+| `ui/DepartmentEmployeesSection.tsx` | Permission-gated roster and optional tree branch: department-scoped employee reads, namespaced URL search/paging/descendant state, refresh/retry, context/overflow row actions, and employee-detail selection. |
+| `ui/DepartmentEmployeeDetailDialog.tsx` | Read-only employee details from `useEmployeeById` / `GET /api/employees/{id}`, gated by `EMPLOYEE_MANAGE`, with loading/error/retry handling. |
+| `ui/DepartmentSearch.tsx` | Reusable 300 ms debounced department/employee search; committed terms stay in the URL and external URL changes cancel pending drafts. |
+| `model/departmentTree.ts` | View validation (including `chart`), department matching/filtering, ancestor retention, id collection, and counting. |
+| `model/clipboard.ts` | Arabic-toast clipboard helper used for department and employee values. |
+| `index.ts` | Public widget barrel. |
+
+## 4. Data Loading & Dependencies
+- Employee endpoints require `EMPLOYEE_MANAGE`. Without it, neither employee branches nor rosters/details are rendered or requested.
+- Native employee branches are optional: enable «إظهار فروع الموظفين», then open «الموظفون المباشرون» under an expanded department. Merely enabling the option or expanding all departments does not request employee lists. Closing the employee/department branch unmounts its roster.
+- Tree employee requests always use `departmentId`, `includeSubDepartments=false`, `page`, and `pageSize=20`. No organization-wide employee request or automatic fetch-all loop is used.
+- Dialog rosters also send `departmentId` and page in groups of 20; descendants are included by default and can be excluded. Previous/next controls reach every server page, removing the former first-50 truncation. Search is server-side name/number search; filters reset that roster's page.
+- Roster URL keys are `employees.roster.<departmentId>.search|page|descendants`; tree keys use `employees.tree.<departmentId>.search|page`. They do not overwrite the main department search or paging. Default values are omitted. Tree branch visibility is local view state.
+- Previous-page placeholder data is hidden while a new page/filter loads. Successful responses clamp out-of-range pages; errors offer retry and a first-page recovery action when applicable.
+- Chart counts include visible search ancestors and do not represent employee totals. The caption states this scope. Tree, Mermaid, and chart share loading, API-error/retry, empty, and no-match states, so a failed hierarchy request cannot render an empty diagram.
+- Existing packages only: React Query, React Router, Lucide, shared Radix primitives, Sonner, and the shared lazy Mermaid renderer. No dependencies or entity APIs were added.
+
 ## 5. Implementation Status
-- ✅ Tree view with collapse state (paused during search so every matching path stays visible), expand-all/collapse-all, per-node context menus, and keyboard access.
-- ✅ Mermaid view fed by `departmentTreeToMermaid(filteredTree)`; theme re-render and invalid-syntax handling come from `shared/ui/mermaid-view`. Each flowchart node is activatable (click, `Enter`, `Space`) and opens the department's detail dialog, header and employee roster included; a hint above the diagram states this.
-- ✅ Detail dialog lists the department's employees through `entities/employee` with a «تضمين الأقسام الفرعية» toggle (on by default), a count badge, and loading/error/empty states.
-- ✅ Table view with URL paging/sort/search and persisted column preferences (`diwan.table.departments.columns.v1`).
-- ✅ Read-only detail dialog with query error retry and the department's employee roster (first 50, optional descendants).
-- ❌ Manage actions (add child, rename, reparent, deactivate), employee nodes inside the tree itself, and the chart view remain future work.
+| Item | State |
+| --- | --- |
+| Native department hierarchy and identical context/overflow actions | Implemented; department collapse controls are disabled while search forces matching paths open. |
+| Optional direct-employee branches | Implemented with permission gating, explicit lazy expansion, search, paging, menus, and details. |
+| Mermaid department diagram | Implemented with activatable department nodes; syntax/theme handling remains in the shared renderer. |
+| Department-type chart (`view=chart`) | Implemented from the loaded filtered tree, with accessible textual values and semantic tokens. |
+| Shared tree/diagram/chart request states | Implemented. |
+| Department detail employee roster beyond 50 results | Implemented with server search/paging and optional descendants. |
+| Existing department create/edit/activation integration | Preserved; mutations and forms remain in `features/department-manage`. |
+| Department grid paging/sort/search/column preferences | Existing implementation preserved. |
+| Browser interaction, RTL/LTR, and light/dark verification | Pending main-agent browser validation; not claimed by this update. |
+
 ## 6. Change Log
+- 2026-10-28: Complete scoped hierarchy UI with explicitly lazy, permission-gated employee branches; scoped roster search/paging and employee detail/context/overflow actions; token-based department-type chart; shared hierarchy request states; and department overflow parity. Preserve pending department manage actions. `npm run build` passed with chunk-size warnings; `npm run lint` passed with one out-of-scope settings-form warning. Browser validation is pending.
 - 2026-10-28: Diagram nodes are now activatable: clicking (or `Enter` / `Space` on) a department in the Mermaid view opens the same detail dialog with its employee roster, resolved through the entity's new `departmentIdByNodeId` map; a hint line above the diagram announces it.
 - 2026-10-28: Added `DepartmentEmployeesSection` to the detail dialog — clicking a department now lists the people assigned to it, with an «تضمين الأقسام الفرعية» toggle backed by the new `departmentId`/`includeSubDepartments` employee filters.
 - 2026-10-28: Implemented Phase 1 (read-only): tree/mermaid/table switcher, shared URL search, node and row context menus, detail dialog, tree model helpers, and docs. Build and lint pass.

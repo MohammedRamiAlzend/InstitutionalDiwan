@@ -22,4 +22,6 @@ export interface EmployeeListParams {
   departmentId?: string
   /** Widens `departmentId` to every descendant department. */
   includeSubDepartments?: boolean
+  sortBy?: string
+  sortDescending?: boolean
 }

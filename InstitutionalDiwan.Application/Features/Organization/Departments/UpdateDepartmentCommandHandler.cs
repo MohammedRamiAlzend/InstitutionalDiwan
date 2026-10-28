@@ -9,13 +9,19 @@ internal sealed class UpdateDepartmentCommandHandler
     : ICommandHandler<UpdateDepartmentCommand, DepartmentResponse>
 {
     private readonly IDepartmentRepository _departmentRepository;
+    private readonly IEmployeeRepository _employeeRepository;
+    private readonly IInstitutionSettingRepository _settingRepository;
     private readonly IUnitOfWork _unitOfWork;
 
     public UpdateDepartmentCommandHandler(
         IDepartmentRepository departmentRepository,
+        IEmployeeRepository employeeRepository,
+        IInstitutionSettingRepository settingRepository,
         IUnitOfWork unitOfWork)
     {
         _departmentRepository = departmentRepository;
+        _employeeRepository = employeeRepository;
+        _settingRepository = settingRepository;
         _unitOfWork = unitOfWork;
     }
 
@@ -26,6 +32,14 @@ internal sealed class UpdateDepartmentCommandHandler
         var department = await _departmentRepository.GetByIdAsync(request.DepartmentId, cancellationToken);
         if (department is null)
             return Result.Failure<DepartmentResponse>(DomainErrors.Department.NotFound);
+
+        if (request.ParentDepartmentId is not null &&
+            department.ParentDepartmentId != request.ParentDepartmentId)
+        {
+            var setting = await _settingRepository.GetSingletonAsync(cancellationToken);
+            if (setting?.CentralDiwanDepartmentId == department.DepartmentId)
+                return Result.Failure<DepartmentResponse>(DomainErrors.Department.CentralDiwanProtected);
+        }
 
         var renameResult = department.Rename(request.NameAr, request.NameEn, _unitOfWork.UtcNow);
         if (renameResult.IsFailure)
@@ -53,6 +67,15 @@ internal sealed class UpdateDepartmentCommandHandler
                 return Result.Failure<DepartmentResponse>(moveResult.Error);
         }
 
+        if (request.ManagerEmployeeId is { } managerEmployeeId)
+        {
+            var manager = await _employeeRepository.GetByIdAsync(managerEmployeeId, cancellationToken);
+            if (manager is null)
+                return Result.Failure<DepartmentResponse>(DomainErrors.Department.ManagerNotFound);
+        }
+
+        department.AssignManager(request.ManagerEmployeeId, _unitOfWork.UtcNow);
+        department.UpdateNotes(request.Notes, _unitOfWork.UtcNow);
         department.UpdateExternalCorrespondencePolicy(
             request.CanSendExternal, request.CanReceiveExternal, _unitOfWork.UtcNow);
 

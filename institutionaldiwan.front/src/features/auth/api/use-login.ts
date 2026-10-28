@@ -1,4 +1,4 @@
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { httpClient, tokenStorage } from '@/shared/api'
 import { useSessionStore } from '@/entities/user'
 import type { LoginRequest, LoginResponse } from '../model/login.schema'
@@ -14,10 +14,20 @@ async function login(request: LoginRequest): Promise<LoginResponse> {
  */
 export function useLoginMutation() {
   const setSession = useSessionStore((state) => state.setSession)
+  const clearSession = useSessionStore((state) => state.clear)
+  const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: login,
-    onSuccess: (data) => {
+    onMutate: async () => {
+      tokenStorage.clear()
+      clearSession()
+      await queryClient.cancelQueries()
+      queryClient.clear()
+    },
+    onSuccess: async (data) => {
+      await queryClient.cancelQueries()
+      queryClient.clear()
       tokenStorage.set(data.accessToken)
       setSession(
         {

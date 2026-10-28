@@ -11,18 +11,24 @@ RBAC**, **organizational/department scope**, and **per-document exceptions**. Th
 second and third tiers; the first tier is enforced by ASP.NET Core policies generated from
 `Permissions.All`.
 
+## Contents
+
+| File | Purpose |
+| --- | --- |
+| `DepartmentScopeEvaluator.cs` | Loads the active persisted user before granting primary/global/tree scope or currently effective temporal assignments; ignores token scope and department fast paths. |
+| `DocumentAccessEvaluator.cs` | Combines document grants, authorship, confidentiality, department scope, and movement participation. |
+
 ## Components
 
 ### `DepartmentScopeEvaluator.cs` (`: IDepartmentScopeEvaluator`)
 Decides whether a target `DepartmentId` falls within the caller's scope, in this order:
-1. an institution-wide scope on the token (`INSTITUTION` / `SYSTEM`) or a matching primary
-   department → allow immediately;
-2. re-reads the user record (assignments are managed after the token was issued) and allows again if
-   the persisted profile is institution-wide or its primary department matches;
+1. re-reads the user record and rejects missing/inactive accounts before any allow decision;
+2. allows an institution-wide persisted scope (`INSTITUTION` / `SYSTEM`) or the persisted primary
+   department; token scope and department claims never shortcut the live check;
 3. `DEPARTMENT_TREE` scope → `IDepartmentRepository.GetDescendantIdsAsync` over the primary
    department;
 4. any active `UserDepartmentAssignment` — the department itself, plus its subtree when the
-   assignment has `IncludeSubtree = true`, respecting `StartDate`/`EndDate`.
+   assignment has `IncludeSubtree = true`, respecting the half-open `[StartDate, EndDate)` window.
 
 Unauthenticated callers, empty department ids, and deactivated users are denied.
 
@@ -57,6 +63,7 @@ and it does not bypass the confidentiality gate; a draft step (not yet sent) gra
 
 | Component | State |
 | --- | --- |
+| Live user/scope verification before every allow path | Implemented; token scope/department cannot bypass deactivation or profile edits. |
 | Permission handler + one-policy-per-code | ✅ Implemented in `Server/Authorization/PermissionAuthorizationHandler` (registered by `AddInstitutionalAuthentication`) |
 | `DepartmentScopeEvaluator` | ✅ Implemented |
 | `DocumentAccessEvaluator` | ✅ Implemented (including Module 05 movement participation) |
@@ -69,5 +76,6 @@ depend on `IUserContext` rather than on `HttpContext` directly.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-28 | Qoder | Read the active persisted account before all department-scope grants, remove token primary/global fast paths, and preserve half-open temporal assignment/subtree semantics. |
 | 2026-10-25 | opencode | Added Module 05 movement participation to `DocumentAccessEvaluator`: sender/receiver on the active movement's current dispatched step gains VIEW/DOWNLOAD, still bounded by confidentiality and never FORWARD/MANAGE. |
 | 2026-10-19 | Buffy | Implemented `DepartmentScopeEvaluator` (primary department, persisted assignments with subtree expansion, institution-wide scope) and `DocumentAccessEvaluator` (grants → authorship → confidentiality → scope, with FORWARD/MANAGE requiring institution-wide scope); both registered in DI behind the new `Application/Abstractions/Authorization` contracts. |

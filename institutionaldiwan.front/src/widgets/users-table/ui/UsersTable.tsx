@@ -12,8 +12,8 @@ import {
   UserX,
 } from 'lucide-react'
 import { toast } from 'sonner'
-import { DepartmentBadge, useDepartments } from '@/entities/department'
-import { useRoles } from '@/entities/role'
+import { DepartmentBadge, useDepartmentOptions } from '@/entities/department'
+import { useRoleOptions } from '@/entities/role'
 import {
   useSessionStore,
   useUsers,
@@ -46,20 +46,21 @@ import {
 
 /** Module 02 users administration grid (search, paging, row actions). */
 export function UsersTable() {
-  const table = useTableState()
+  const table = useTableState({ defaultSortKey: 'username', defaultSortDirection: 'asc' })
   const usersQuery = useUsers({
     page: table.page,
     pageSize: table.pageSize,
     search: table.search || undefined,
+    sortBy: table.sortKey ?? 'username',
+    sortDescending: table.sortDirection === 'desc',
   })
 
   const currentUserId = useSessionStore((state) => state.user?.userId)
   const hasPermission = useSessionStore((state) => state.hasPermission)
-  const canManageRoles = hasPermission(Permissions.RoleManage)
-  const canManageDepartments = hasPermission(Permissions.DepartmentManage)
+  const canManageUsers = hasPermission(Permissions.UserManage)
 
-  const departmentsQuery = useDepartments({ enabled: canManageDepartments })
-  const rolesQuery = useRoles({ enabled: canManageRoles })
+  const departmentsQuery = useDepartmentOptions({ enabled: canManageUsers })
+  const rolesQuery = useRoleOptions({ enabled: canManageUsers })
 
   const departmentById = useMemo(
     () =>
@@ -124,6 +125,7 @@ export function UsersTable() {
       {
         id: 'username',
         header: 'اسم المستخدم',
+        sortable: true,
         hideable: false,
         cell: (user) => (
           <div className="flex items-center gap-2">
@@ -180,6 +182,8 @@ export function UsersTable() {
       {
         id: 'status',
         header: 'الحالة',
+        sortable: true,
+        sortKey: 'isActive',
         cell: (user) => (
           <Badge variant={user.isActive ? 'success' : 'danger'}>
             {user.isActive ? 'نشط' : 'موقوف'}
@@ -217,6 +221,7 @@ export function UsersTable() {
       {
         id: 'lastLoginAt',
         header: 'آخر دخول',
+        sortable: true,
         cell: (user) => (
           <span dir="ltr" className="whitespace-nowrap text-xs text-muted">
             {formatDateTime(user.lastLoginAt)}
@@ -226,6 +231,7 @@ export function UsersTable() {
       {
         id: 'createdAt',
         header: 'تاريخ الإنشاء',
+        sortable: true,
         defaultHidden: true,
         cell: (user) => (
           <span dir="ltr" className="whitespace-nowrap text-xs text-muted">
@@ -261,7 +267,7 @@ export function UsersTable() {
         id: 'roles',
         label: 'إدارة الأدوار',
         icon: <ShieldCheck className="size-4" aria-hidden />,
-        disabled: !canManageRoles,
+        disabled: !canManageUsers,
         onSelect: () => setRolesUser(user),
       },
       {
@@ -356,6 +362,9 @@ export function UsersTable() {
         onPageSizeChange={table.setPageSize}
         search={table.search}
         onSearchChange={table.setSearch}
+        sortKey={table.sortKey}
+        sortDirection={table.sortDirection}
+        onSortChange={table.setSort}
         searchPlaceholder="ابحث باسم المستخدم…"
         rowMenu={buildRowMenu}
         headerMenu={headerMenu}

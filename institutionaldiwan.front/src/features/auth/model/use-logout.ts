@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { tokenStorage } from '@/shared/api'
 import { ROUTES } from '@/shared/config'
-import { useSessionStore, userKeys } from '@/entities/user'
+import { useSessionStore } from '@/entities/user'
 
 /**
  * Clears the JWT, session store, and cached user data, then returns to `/login`.
@@ -14,10 +14,11 @@ export function useLogout() {
   const queryClient = useQueryClient()
   const clear = useSessionStore((state) => state.clear)
 
-  return useCallback(() => {
+  return useCallback(async () => {
     tokenStorage.clear()
     clear()
-    queryClient.removeQueries({ queryKey: userKeys.all })
+    await queryClient.cancelQueries()
+    queryClient.clear()
     navigate(ROUTES.LOGIN, { replace: true })
   }, [clear, navigate, queryClient])
 }

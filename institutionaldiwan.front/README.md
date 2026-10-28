@@ -1,19 +1,20 @@
 # institutionaldiwan.front — Institutional Diwan React 19 + TypeScript 6 + Vite 8 SPA (Feature-Sliced Design)
 
-> **Status:** Identity module (Module 01) plus the Module 02 Identity admin front end (Phases 0–6,
-> 2026-10-28) implemented, plus Module 01 Phase 1 — the read-only organizational hierarchy:
-> shared foundation (`api`/`config`/`lib`/`types`/`ui` kit incl. the lazy Mermaid renderer),
-> `entities/user` session and admin reads, supporting `entities/{department,role,employee,lookup}`
-> reads, `features/auth` (login/logout/permission guard/password change), `features/user-manage`
-> (user writes + administrator password reset), `features/role-manage` (role writes + permission matrix),
-> `features/employee-manage` (employee writes + activation),
-> `app` providers + router + theme tokens, `widgets/app-shell` (permission-filtered sidebar, header,
-> mobile drawer, display settings, shell/item context menus),
-> `widgets/{users-table,roles-table,employees-table,department-hierarchy-tree}` (the hierarchy
-> detail dialog also lists a department's employees), and
-> the `pages/{login,change-password,dashboard,departments,users,roles,employees}` routes — Arabic-first
-> RTL with light/dark themes, verified against the live API. The `@` alias, dev proxy, and `.env.example` are
-> configured; the HTTPS dev certificate is still to-be.
+> **Status:** Module 01 Organization UI is implemented and verified: department create/edit/reparent,
+> managers, notes and external-correspondence policy, activate/deactivate, tree/Mermaid/chart/grid
+> views, optional lazy employee branches, paged/searchable rosters with details/menus, and the guarded
+> `/institution-settings` form. Shared employee picking and numbering lookup catalogs support the forms.
+> Module 02 Identity auth/admin screens are implemented and verified, including permission-scoped
+> `identity-options` reads, temporal department assignments, server-enforced forced password change,
+> and full query-cache teardown on login/logout. Module 03 Correspondence has started: Phase 0 added
+> the document-facing picker reads on the API, Phase 1 implemented the `document` entity reads and the
+> Arabic Correspondence/Numbering/Movements error catalog, and Phase 2 shipped the `/documents`
+> registry with document/draft creation plus its active sidebar entry. Document details, numbering,
+> and movement pages remain pending.
+> `npm run build` and `npm run lint` pass; the live API was used for login, session invalidation,
+> department, settings, and picker checks.
+> The Arabic-first RTL/light-dark foundation, `@` alias, dev proxy, and `.env.example` are configured;
+> the optional HTTPS dev certificate remains to-be.
 >
 > **Standalone by design:** this project is intended to live outside the `InstitutionalDiwan.slnx`
 > solution. The ASP.NET Core API is an external service; there is no Visual Studio `.esproj` and no
@@ -33,11 +34,11 @@ developers can implement slices predictably without spaghetti imports.
 
 | Item | As-is | To-be |
 | --- | --- | --- |
-| Runtime deps in `package.json` | React stack + Module 01 slice packages + Radix `dialog`/`dropdown-menu`/`context-menu`/`select`/`checkbox` + `mermaid` (lazy, hierarchy view) (see “Required Packages”) | Remaining planned packages per slice (SignalR, extra Radix primitives) as their slices land; `@tanstack/react-table` is intentionally omitted because the shared grid owns its URL/localStorage state model |
-| FSD folders | ✅ README scaffolds for all six layers; Module 01 slices implemented (`shared` foundation, `entities/user`, `features/auth`, `pages/login` + `dashboard`, `app`), the Module 02 `widgets/app-shell` + `widgets/{users-table,roles-table,employees-table}`, the shared data-grid/menu foundation, the Phase 2 read entities (`department`, `role`, `employee`, `lookup`), the Phase 3 user administration slices (`features/user-manage`, `pages/users`), the Phase 4 role administration slices (`features/role-manage`, `pages/roles`), the Phase 5 employee administration slices (`features/employee-manage`, `pages/employees`), and Module 01 Phase 1 (`shared/ui/mermaid-view`, `entities/department` `toMermaid`, `widgets/department-hierarchy-tree`, `pages/departments`) | Remaining slice code implemented per those docs |
+| Runtime deps in `package.json` | React/shared/auth stack, Radix UI primitives, and lazy `mermaid` (see “Required Packages”) | Remaining packages as their slices land; shared grid owns its URL/localStorage state model |
+| FSD folders | Six documented layers; shared/app foundation, Module 02 auth/admin slices, Module 01 department/hierarchy/settings slices, and the Module 03 `document` entity + `document-create` feature + `document-registry-table` widget implemented, including `entities/institution-setting`, `features/{department-manage,institution-settings-manage}`, and reusable `EmployeePicker` | Remaining module frontends and Module 03 detail/numbering/movement slices |
 | `vite.config.ts` | ✅ `@` → `./src` alias + env-driven `/api` + `/hubs` proxy | Optional local HTTPS certificate |
 | Dev configuration | ✅ `.env.example` committed (`DEV_PROXY_TARGET`, `VITE_API_BASE_URL`); create local `.env` as needed | — |
-| UI | ✅ Arabic RTL login, password change, shell-framed dashboard, the `/users`, `/roles`, and `/employees` administration screens, and the `/departments` hierarchy (tree / Mermaid / table, with the department's employees in the detail dialog), light/dark themes from `tokens.css`, compact density | Remaining module pages |
+| UI | Arabic-first login/password change/dashboard/Identity admin plus `/departments` management and tree/Mermaid/chart/grid, optional lazy employee branches and paged rosters, `/institution-settings`, and the `/documents` registry (filters, search, sort, create draft/registered); shared theme/density tokens | Remaining module pages (document details, movements, numbering, audit) |
 | Backend coverage docs | `knowledge.md` describes the external API | Modules 01–06, 09 live; 07/08/10 deferred |
 
 Always treat **as-is** as the truth for “what runs today,” and **to-be** as the install/implement
@@ -45,7 +46,7 @@ checklist before coding features.
 
 ## Required Packages & One-Command Installation
 
-> The Module 01 slice packages are **installed** (React Router, TanStack Query, Zustand, Axios,
+> The shared/auth and hierarchy packages are **installed** (React Router, TanStack Query, Zustand, Axios,
 > react-hook-form, Zod, resolvers, lucide-react, clsx, tailwind-merge, CVA, sonner, Tailwind v4,
 > devtools, `mermaid`) together with the Radix primitives used by the shared UI kit (`dialog`,
 > `dropdown-menu`, `context-menu`, `select`, `checkbox`). The groups below remain the checklist for
@@ -145,7 +146,7 @@ Summary:
 | `/login` | `pages/login` | 02 Identity | Public login |
 | `/change-password` | `pages/change-password` | 02 Identity | ✅ Signed-in password change (forced after reset) |
 | `/` | `pages/dashboard` | — | Recent docs + inbox counts |
-| `/documents`, `/documents/:id` | `pages/documents` | 03 + 06 | Detail hosts attachments panel |
+| `/documents`, `/documents/:id` | `pages/documents` | 03 + 06 | ✅ Registry (list/filter/search/sort + create draft/registered); detail hosts attachments panel (Phase 3) |
 | `/movements` | `pages/movements` | 05 | Inbox / outbox tabs via search params |
 | `/departments` | `pages/departments` | 01 | ✅ Hierarchy (tree / Mermaid / table) + department employees in the detail dialog; settings entry pending |
 | `/users` | `pages/users` | 02 | ✅ Users admin |
@@ -209,17 +210,18 @@ Full endpoint tables: [`knowledge.md`](knowledge.md).
 | Dev proxy + `.env.example` | ✅ Configured (HTTPS dev certificate still to-be) |
 | `index.html` RTL / document title / theme boot script | ✅ Configured |
 | `src/shared/` (`api`, `ui`, `lib`, `config`, `types`) | ✅ Core implemented including `data-table`, `context-menu`, dialogs, menus, select/checkbox, URL table state, persisted columns, the lazy `mermaid-view`, and the expanded Arabic error catalog |
-| `src/entities/` | ✅ `user` (session + admin reads), `department` (reads + `toMermaid`), `role`, `employee` (reads), `lookup` implemented; document, document-file, numbering-registry, movement, audit-log pending |
-| `src/features/` | ✅ `auth`, `user-manage` (incl. administrator password reset), `role-manage`, `employee-manage` implemented; document-*, department-*, movement-routing, attachment-upload, audit-manage pending |
-| `src/widgets/` | ✅ `app-shell` (sidebar, header, drawer, settings, shell/item context menus), `users-table`, `roles-table`, `employees-table`, and `department-hierarchy-tree` (tree / Mermaid / table + a detail dialog with the department's employees); registry table, movement timeline/inbox, attachments panel, audit table, visualization panel pending |
-| `src/pages/` | ✅ `login`, standalone `change-password`, shell-framed `dashboard`, `departments`, `users`, `roles`, and `employees`; documents, movements, numbering, audit pending (archive deferred) |
-| `src/app/` (`providers`, `router`, `styles`) | ✅ Implemented (login-protected routes incl. `/change-password`, `/departments`, `/users`, `/roles`, `/employees`; forced reset redirect) |
+| `src/entities/` | ✅ `user` (session + admin reads), `department` (reads + `toMermaid`), `role`, `employee` (reads), `lookup` (incl. the five document catalogs), and `document` implemented; document-file, numbering-registry, movement, audit-log pending |
+| `src/features/` | ✅ `auth`, `user-manage` (incl. administrator password reset), `role-manage`, `employee-manage`, and `document-create` (registered + draft) implemented; document-details/access-grant, department-*, movement-routing, attachment-upload, audit-manage pending |
+| `src/widgets/` | ✅ `app-shell` (sidebar, header, drawer, settings, shell/item context menus), `users-table`, `roles-table`, `employees-table`, `department-hierarchy-tree` (tree / Mermaid / table + a detail dialog with the department's employees), and `document-registry-table` (URL filters/sort/paging + create entry points); movement timeline/inbox, attachments panel, audit table, visualization panel pending |
+| `src/pages/` | ✅ `login`, standalone `change-password`, shell-framed `dashboard`, `departments`, `users`, `roles`, `employees`, and the `documents` registry; document details, movements, numbering, audit pending (archive deferred) |
+| `src/app/` (`providers`, `router`, `styles`) | ✅ Implemented (login-protected routes incl. `/change-password`, `/departments`, `/users`, `/roles`, `/employees`, `/documents`; forced reset redirect) |
 | Publishing & API wiring guide (`DEPLOYMENT.md`) | ✅ Documented (proxy section reflects the configured setup) |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-28 | agent | Completed Module 03 Phase 2: added `features/document-create` (mode cards for registered vs draft, lookup-driven type/direction/confidentiality/priority, Arabic validation, `Numbering.OfficialNumberTaken` field error) and `widgets/document-registry-table` (server paging/search/sort, status/direction/type/owning-department filters, copy actions, permission-filtered create menu), mounted `/documents` behind `DOCUMENT_VIEW`, registered the route, and activated the sidebar entry. Opened the department picker read to `DOCUMENT_VIEW` on the API so read-only users resolve department labels. Build and lint pass. |
 | 2026-10-28 | agent | Clicking a department now works in the «مخطط» view too: `shared/ui/mermaid-view` gained an optional `onNodeClick` (activatable flowchart nodes, `Enter`/`Space`, label as accessible name) and `departmentTreeToMermaid` returns a node-id → department-id map, so a diagram node opens the same detail dialog with the employee roster. Verified in-browser (click and keyboard, filtered diagram). Build and lint pass. |
 | 2026-10-28 | agent | Clicking a department now shows its employees: new `DepartmentEmployeesSection` in the hierarchy detail dialog (count badge, «تضمين الأقسام الفرعية» toggle on by default, permission gate on `EMPLOYEE_MANAGE`, skeleton/error/empty states, first-50 footer), fed by the new `departmentId` + `includeSubDepartments` filters on `GET /api/employees`. Verified in-browser (directorate 13 → toggle off 2). Build and lint pass. |
 | 2026-10-28 | agent | Completed Module 01 Phase 1 (read-only hierarchy): added `shared/ui/mermaid-view` (lazy `mermaid`, strict security, token-driven theme variables, Arabic error state), `entities/department/model/toMermaid`, `widgets/department-hierarchy-tree` (interactive tree, Mermaid diagram, table, URL-driven search and view, node context menus, collapse/expand, detail dialog), and the `/departments` page + route + enabled sidebar entry behind `DEPARTMENT_MANAGE`. Verified in-browser (tree, theme-aware Mermaid, table search, dialog, keyboard menus); screenshots were unavailable. Build and lint pass. |

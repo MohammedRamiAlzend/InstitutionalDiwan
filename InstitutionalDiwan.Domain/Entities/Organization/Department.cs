@@ -141,6 +141,14 @@ public sealed class Department : AggregateRoot<Guid>
         return Result.Success();
     }
 
+    public Result UpdateNotes(string? notes, DateTime? utcNow = null)
+    {
+        var now = utcNow ?? DateTime.UtcNow;
+        Notes = string.IsNullOrWhiteSpace(notes) ? null : notes.Trim();
+        UpdatedAt = now;
+        return Result.Success();
+    }
+
     public Result UpdateExternalCorrespondencePolicy(bool canSendExternal, bool canReceiveExternal, DateTime? utcNow = null)
     {
         var now = utcNow ?? DateTime.UtcNow;

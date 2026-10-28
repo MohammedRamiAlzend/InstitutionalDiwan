@@ -6,6 +6,7 @@ export {
   useRoleById,
   usePermissionsCatalog,
 } from './model/queries'
+export { useRoleOptions, type RoleOption } from './model/options'
 export { RoleBadge } from './ui/RoleBadge'
 export {
   PERMISSION_MODULE_LABELS,

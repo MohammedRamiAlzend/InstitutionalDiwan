@@ -1,10 +1,9 @@
 # institutionaldiwan.front / src/shared — Shared Infrastructure, UI Kit & Utilities Layer
 
-> **Status:** Implemented for Identity Module 01, the Module 02 admin foundation, and the Module 01
-> hierarchy slice — `api` (axios client, ProblemDetails → `ApiError`, expanded Arabic error catalog,
-> token storage), `config` (16 permissions, routes, env), `lib` (`cn`, theme store, URL table state,
-> column preferences, date and JWT helpers), `types` (ProblemDetails, PagedResult), and the `ui` kit
-> including dialogs, menus, select/checkbox, the shared data grid, and the lazy Mermaid renderer.
+> **Status:** Foundation implemented for Module 01 Organization and Module 02 Identity: HTTP/error
+> adapters, Arabic Department/InstitutionSetting/Identity/Lookup messages, routes and seeded IDs
+> (including numbering modes/reset policies), state/date utilities, and shared RTL UI/grid/Mermaid
+> primitives. Final integration verification remains pending.
 
 ## Purpose
 
@@ -29,14 +28,14 @@ No business logic; no imports from upper layers.
 | `mermaid` | Lazy-loaded diagram rendering in `ui/mermaid-view` | ✅ Installed |
 | `@microsoft/signalr` | Hub helper (only after server hubs exist) | ❌ Deferred |
 
-## Planned Segments
+## Contents — Shared Segments
 
 | Segment | Purpose | Key files |
 | --- | --- | --- |
-| `api/` | HTTP client, token storage, `ApiError`, optional SignalR | `httpClient.ts`, `problemDetails.ts`, `tokenStorage.ts` |
+| `api/` | HTTP client, token storage, `ApiError`, Arabic domain-error catalog; SignalR deferred | `httpClient.ts`, `problemDetails.ts`, `tokenStorage.ts`, `errorMessages.ts` |
 | `ui/` | Atomic RTL primitives, the shared data grid, the right-click menu primitive, and the Mermaid renderer | `button`, `input`, `dialog`, `data-table`, `context-menu`, `mermaid-view`, `skeleton`, … |
 | `lib/` | `cn()`, theme store, URL table state, Damascus dates, column preferences, JWT hints | `cn.ts`, `theme.ts`, `useTableState.ts`, `date.ts`, `columnPreferences.ts`, `jwt.ts` |
-| `config/` | `Permissions` (16), `ROUTES`, `ENV` | `permissions.ts`, `routes.ts`, `env.ts` |
+| `config/` | `Permissions` (16), `ROUTES` including institution settings, `ENV`, seeded scope/department/numbering/document IDs | `permissions.ts`, `routes.ts`, `env.ts`, `lookupIds.ts` |
 | `types/` | `ProblemDetails`, `PagedResult<T>`, `LookupItem` | `api.ts`, `lookup.ts` |
 
 ## Conventions
@@ -58,8 +57,8 @@ No business logic; no imports from upper layers.
 
 | Segment | State |
 | --- | --- |
-| `api/` | ✅ Core — `httpClient.ts`, `problemDetails.ts`, `tokenStorage.ts`, `errorMessages.ts` (Identity + Department/Lookup); `signalrClient.ts` deferred |
-| `config/` | ✅ `permissions.ts`, `routes.ts`, `env.ts` |
+| `api/` | Core implemented, including InstitutionSetting and central-hub Department errors alongside Identity/Lookup; SignalR deferred; final verification pending. |
+| `config/` | Permissions, routes (including institution settings), environment, and seeded IDs (including numbering modes/reset policies) implemented. |
 | `lib/` | ✅ `cn.ts`, `theme.ts`, `useTableState.ts`, `useDebouncedValue.ts`, `columnPreferences.ts`, `date.ts`, `format.ts`, `jwt.ts`; `crypto`/`arabic` pending |
 | `types/` | ✅ `api.ts` (ProblemDetails, PagedResult); `lookup.ts` pending the lookups slice |
 | `ui/` | ✅ Form primitives, overlays, menus, `data-table`, and the lazy `mermaid-view` |
@@ -68,6 +67,8 @@ No business logic; no imports from upper layers.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-28 | agent | Module 03 Phase 2: `config/lookupIds.ts` gained the document direction/type/status/confidentiality/priority IDs and `DOCUMENT_TYPE_DIRECTION`, re-exported through the barrel. |
+| 2026-10-28 | agent | Align shared-layer documentation with Module 01 Organization settings routes, numbering IDs, and Department/InstitutionSetting errors, using canonical Module 02 Identity numbering. |
 | 2026-10-28 | agent | Added `ui/mermaid-view` and installed `mermaid` for the Module 01 hierarchy slice (lazy load, strict security, token-derived theme variables, Arabic error state); corrected the proxy note now that `vite.config.ts` forwards `/api` and `/hubs`. |
 | 2026-10-27 | agent | Lifted the shared foundation to the Module 02 admin phase: installed Radix primitives, added table-state/column-preference/date/JWT utilities, built dialogs/menus/select/checkbox/badges/skeletons and the shared `data-table`, and expanded the Arabic error catalog. |
 | 2026-10-27 | agent | Implemented the shared foundation for Identity Module 01, including the Arabic `errorMessages` catalog (domain-code → Arabic, status fallbacks) so no English server detail reaches the UI. |

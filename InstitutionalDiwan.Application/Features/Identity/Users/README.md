@@ -24,7 +24,7 @@ set their access token carries.
 | `ResetUserPasswordCommand.cs` / `ResetUserPasswordCommandHandler.cs` / `ResetUserPasswordCommandValidator.cs` | Administrative reset for a forgotten password: hashes the temporary password, sets `MustChangePassword`, and passes the calling administrator into `User.ResetPassword` so the audit row names them (404 `Identity.UserNotFound`). |
 | `DeactivateUserCommand.cs` / `DeactivateUserCommandHandler.cs` | Soft delete via `User.Deactivate`. |
 | `ActivateUserCommand.cs` / `ActivateUserCommandHandler.cs` | Reactivates a soft-deleted account. |
-| `AssignUserRoleCommand.cs` / `AssignUserRoleCommandHandler.cs` / `AssignUserRoleCommandValidator.cs` | Grants a role and records the grantor (409 `Identity.RoleAlreadyAssigned`). |
+| `AssignUserRoleCommand.cs` / `AssignUserRoleCommandHandler.cs` / `AssignUserRoleCommandValidator.cs` | Grants an active role and records the grantor; rejects inactive roles before mutation/save (409 `Identity.RoleInactive`) and duplicates (409 `Identity.RoleAlreadyAssigned`). |
 | `RevokeUserRoleCommand.cs` / `RevokeUserRoleCommandHandler.cs` / `RevokeUserRoleCommandValidator.cs` | Revokes a role (404 `Identity.RoleNotAssigned`). |
 | `AssignUserDepartmentScopeCommand.cs` | CQRS command starting a temporal department assignment (department, type, `IncludeSubtree`, start/end dates). |
 | `AssignUserDepartmentScopeCommandHandler.cs` | Validates user (404), department exists + active, assignment type lookup active, then `User.AssignDepartmentScope` — which rejects a department already assigned (409 `Identity.DepartmentAlreadyAssigned`). |
@@ -45,6 +45,7 @@ set their access token carries.
 
 | Item | State |
 | --- | --- |
+| Inactive-role assignment guard | Implemented; `Identity.RoleInactive` / 409 without mutation or save. |
 | CRUD + activation + role grant/revoke | ✅ |
 | `ResetUserPasswordCommand` (admin reset, forced change) | ✅ |
 | `ListUsersQuery` (paged + username search) | ✅ |
@@ -55,6 +56,7 @@ set their access token carries.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-28 | Qoder | Reject inactive role assignments with Identity.RoleInactive (409) before mutation or persistence. |
 | 2026-10-28 | agent | Added `ResetUserPasswordCommand` for administrators to reset a forgotten password: the handler hashes the temporary password and forces a change at the next sign-in, without re-issuing a token. |
 | 2026-10-22 | Buffy | Every handler in this slice now passes `IUnitOfWork.UtcNow` into the `User` behavior it calls (create, role grant/revoke, department-scope assign/end, profile update, activation), so a write is stamped with the transaction's instant rather than the system clock. |
 | 2026-10-22 | opencode | `ListUsersQuery` now returns `PagedResult<UserResponse>` with `page`, `pageSize`, and a username `search`; `UserRepository.ListPagedAsync` pages in SQL and the handler resolves roles for the requested page only. |

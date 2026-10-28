@@ -110,26 +110,28 @@ public sealed class DepartmentsController : ControllerBase
         return result.ToActionResult();
     }
 
-    /// <summary>Updates a department's name, parent, and external-correspondence policy.</summary>
+    /// <summary>Updates a department's name, parent, manager, notes, and external-correspondence policy.</summary>
     /// <param name="departmentId">Department unique identifier (GUID, route). Example: <c>e7a62f43-9b82-4d01-8c2e-7ab91e506d42</c>.</param>
     /// <param name="request">
     /// The request payload with the following fields:
     /// <list type="bullet">
     /// <item><term>nameAr</term><description>Name in Arabic (string, required). Example: <c>الإدارة المالية</c>.</description></item>
-    /// <item><term>parentDepartmentId</term><description>Parent department unique identifier (GUID, optional). Example: <c>8b4d1f70-6c93-42a5-b18e-4d7a3c5f9e12</c>.</description></item>
+    /// <item><term>parentDepartmentId</term><description>Parent department unique identifier (GUID, optional; <c>null</c> promotes the department to a root). Example: <c>8b4d1f70-6c93-42a5-b18e-4d7a3c5f9e12</c>.</description></item>
     /// <item><term>canSendExternal</term><description>Can send external (boolean, optional, default <c>false</c>). Example: <c>true</c>.</description></item>
     /// <item><term>canReceiveExternal</term><description>Can receive external (boolean, optional, default <c>false</c>). Example: <c>true</c>.</description></item>
     /// <item><term>nameEn</term><description>Name in English (string, optional). Example: <c>Finance Department</c>.</description></item>
+    /// <item><term>managerEmployeeId</term><description>Manager employee unique identifier (GUID, optional; <c>null</c> clears the manager). Example: <c>3f0c9a52-1d47-4b6e-9a08-2c5d7e81f034</c>.</description></item>
+    /// <item><term>notes</term><description>Notes (string, optional, maximum 500 characters). Example: <c>يعاد تقييم الهيكل التنظيمي سنويًا.</c>.</description></item>
     /// </list>
     /// </param>
     /// <param name="cancellationToken">Request cancellation token (optional).</param>
     /// <response code="200">The updated department.</response>
-    /// <response code="400">The payload failed validation or referenced an unknown parent.</response>
+    /// <response code="400">The payload failed validation or referenced an unknown parent or manager employee.</response>
     /// <response code="404">No department with that id exists.</response>
     /// <response code="409">The move would create a cycle or target an inactive parent.</response>
     [HttpPut("{departmentId:guid}")]
-    [EndpointSummary("Updates a department's name, parent, and external-correspondence policy.")]
-    [EndpointDescription("Updates a department's name, parent, and external-correspondence policy. Requires the DEPARTMENT_MANAGE permission. Responses: 200 (The updated department.), 400 (The payload failed validation or referenced an unknown parent.), 404 (No department with that id exists.), 409 (The move would create a cycle or target an inactive parent.)")]
+    [EndpointSummary("Updates a department's name, parent, manager, notes, and external-correspondence policy.")]
+    [EndpointDescription("Updates a department's name, parent, manager, notes, and external-correspondence policy. Requires the DEPARTMENT_MANAGE permission. Responses: 200 (The updated department.), 400 (The payload failed validation or referenced an unknown parent or manager employee.), 404 (No department with that id exists.), 409 (The move would create a cycle or target an inactive parent.)")]
     [ProducesResponseType<DepartmentResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
@@ -145,7 +147,9 @@ public sealed class DepartmentsController : ControllerBase
             request.ParentDepartmentId,
             request.CanSendExternal,
             request.CanReceiveExternal,
-            request.NameEn), cancellationToken);
+            request.NameEn,
+            request.ManagerEmployeeId,
+            request.Notes), cancellationToken);
 
         return result.ToActionResult();
     }

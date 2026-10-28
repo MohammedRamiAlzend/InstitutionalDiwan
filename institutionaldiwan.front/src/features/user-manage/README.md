@@ -46,20 +46,20 @@ Owns the write side of Identity user administration: Zod-validated forms, `useMu
 
 ### `ui/UserFormDialog.tsx`
 
-Create/edit form. Username is editable only on create; the temporary password field appears only on create. Department and employee pickers use `useDepartments` and `useEmployees({ page: 1, pageSize: 100 })`; the employee select uses a `none` sentinel because Radix forbids empty-string values. Scope options come from the `user-scope-types` lookup with Arabic fallbacks. Without `DEPARTMENT_MANAGE` the department picker is unavailable, a warning explains why, and submit is disabled.
+Create/edit form. Username is editable only on create; the temporary password field appears only on create. The department picker uses `useDepartmentOptions` (`/api/identity-options/departments`) and the employee link uses the shared paged `EmployeePicker` (`/api/identity-options/employees`, `none` = no employee), so neither read requires a permission the user administrator does not hold. Scope options come from the `user-scope-types` lookup with Arabic fallbacks; both option reads start only while the dialog is open.
 
 ### `ui/UserRolesDialog.tsx`
 
-Lists the user's current role codes resolved to Arabic names via `useRoles`, allows revoking a role, and assigns an active unassigned role. The role catalog is gated on `ROLE_MANAGE`; without it the dialog keeps the current roles visible and shows an Arabic warning instead of the assign form.
+Reads the current roles from a fresh `GET /api/users/{id}` each time it opens (never the possibly stale table row), resolves them via the minimal `useRoleOptions` catalog, allows revoking a role, and assigns an active unassigned role. Gated on `USER_MANAGE`, matching the server policy on `/api/users/{id}/roles`.
 
 ### `ui/UserAccessDialog.tsx`
 
 Read-only effective access plus department-assignment management:
 - scope badge and role codes;
 - effective permissions from `GET /api/users/{id}/effective-permissions`, grouped by module through the shared `permissionModuleLabel` from `entities/role`;
-- active/ended assignments with type, subtree flag, dates, and an end action;
+- the assignment history from a fresh `GET /api/users/{id}` (scheduled / active / ended / manually ended, type, subtree flag, dates, end action);
 - add-assignment form (department, assignment type from `assignment-types`, `includeSubtree`, start/end dates).
-Department and permission catalogs are permission-gated; missing catalogs show Arabic warnings rather than empty selects.
+The department catalog comes from the minimal `useDepartmentOptions`; unsupported or inactive scope/type inputs are rejected server-side with `Identity.UserScopeTypeInvalid`.
 
 ### `ui/ResetPasswordDialog.tsx`
 
@@ -80,8 +80,11 @@ Public barrel for the request/form types, the eight mutation hooks, and the four
 - ✅ Verified in-browser against the live API (edit prefill, Arabic validation on submit, role resolution, grouped effective permissions, assignment form).
 - ✅ Admin password reset implemented against `POST /api/users/{id}/reset-password`; the reset flags the account for a forced change at the next sign-in.
 - ✅ Verified in-browser: the row action is disabled for the signed-in account, empty submit shows Arabic field errors, the generator fills both fields with the same 12-character password, success closes the dialog with a toast, and the reset user's next sign-in lands on `/change-password`.
+- ✅ Authorization alignment: the roles/access dialogs and the users grid gate on `USER_MANAGE` (the server policy) instead of the unrelated `ROLE_MANAGE`/`DEPARTMENT_MANAGE`, and reads go through the minimal `identity-options` catalog.
 
 ## 6. Change Log
+
+- 2026-10-28: Replaced list-based pickers with `useDepartmentOptions`/`EmployeePicker`; the roles and access dialogs now refetch the user on open instead of trusting the table row; assignment rows distinguish scheduled, active, ended-by-date, and manually ended states; all user actions gate on `USER_MANAGE`.
 
 - 2026-10-28: Added the administrator password reset (`ResetPasswordDialog`, `resetUserPasswordSchema`, `useResetUserPasswordMutation`) against the new `POST /api/users/{id}/reset-password`; passwords use the new shared `PasswordField`. Verified in-browser end to end (API 200/400/401 responses, Arabic validation, forced change on next login, dialog bounded in both themes).
 - 2026-10-28: The access/assignment dialog now relies on the dialog primitive's bounded body: title and footer stay pinned, the permissions and assignments regions scroll together inside a viewport-capped panel.

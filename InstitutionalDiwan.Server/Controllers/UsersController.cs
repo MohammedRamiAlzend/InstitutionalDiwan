@@ -47,10 +47,12 @@ public sealed class UsersController : ControllerBase
         [Description("Page number (integer, optional, 1-based). Example: 2.")] [FromQuery] int page = 1,
         [Description("Rows per page (integer, optional, 1-100). Example: 20.")] [FromQuery] int pageSize = 20,
         [Description("Username search term (string, optional). Example: admin.")] [FromQuery] string? search = null,
+        [Description("Sort column: username (default), createdAt, lastLoginAt, isActive. Example: createdAt.")] [FromQuery] string? sortBy = null,
+        [Description("Sort descending instead of ascending. Example: true.")] [FromQuery] bool sortDescending = false,
         CancellationToken cancellationToken = default)
     {
         var result = await _sender.Send(
-            new ListUsersQuery(page, pageSize, search), cancellationToken);
+            new ListUsersQuery(page, pageSize, search, sortBy, sortDescending), cancellationToken);
 
         return result.ToActionResult();
     }

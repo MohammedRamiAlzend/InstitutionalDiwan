@@ -23,7 +23,7 @@ internal sealed class ListEmployeesQueryHandler
         ListEmployeesQuery request,
         CancellationToken cancellationToken)
     {
-        var page = new PageRequest(request.Page, request.PageSize, request.Search);
+        var page = new PageRequest(request.Page, request.PageSize, request.Search, request.SortBy, request.SortDescending);
         var departmentIds = await ResolveDepartmentIdsAsync(request, cancellationToken);
         var employees = await _employeeRepository.ListPagedAsync(page, departmentIds, cancellationToken);
 

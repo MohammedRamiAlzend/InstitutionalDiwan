@@ -68,6 +68,15 @@ A single static catalog nested by module (`DomainErrors.Department`, `.Identity`
 `.InstitutionSetting`, `.Lookup`). Each entry is a strongly-typed `Error` with a stable code such as
 `Correspondence.OnlyDraftEditable` so the API can produce deterministic ProblemDetails.
 
+`Department.CentralDiwanProtected` (Conflict / 409) prevents department handlers from reparenting or
+deactivating the currently designated Central Diwan; transfer the designation through institution
+settings first. This cross-aggregate guard uses the settings repository, while reactivation reuses
+`Department.ParentNotFound` (Validation) and `Department.InactiveParent` (Conflict).
+
+The `.Identity` group includes `RoleInactive` (Conflict / 409), rejecting new inactive-role grants,
+and `PasswordChangeRequired` (Forbidden / 403), restricting forced-change sessions to recovery
+and anonymous endpoints. No schema or signing-key configuration changes are required.
+
 The `.Lookup` group drives the generic lookups API: `InvalidId` / `LabelEmpty` (validation),
 `UnknownCatalog` and `EntryNotFound` (NotFound), plus `IdAlreadyExists`, `EntryInUse` (Conflict)
 and `CatalogReadOnly` (validation) — the last one marks catalogs that need more than a label before
@@ -312,7 +321,7 @@ them, while listing, relabelling and (de)activation keep working.
 | --- | --- |
 | `Common/` | ✅ Implemented (`Result`, `Error`, `Entity`, `AggregateRoot`, `ValueObject`, `IDomainEvent`, `DomainException`, `IClock`, `IUnitOfWork`, `PageRequest`, `PagedList<T>`) |
 | `ValueObjects/` | ✅ Implemented (4 value objects) |
-| `Errors/` | ✅ Implemented (`DomainErrors` catalog) |
+| `Errors/` | Implemented (`DomainErrors` catalog, including `Department.CentralDiwanProtected`, `Identity.RoleInactive`, and `Identity.PasswordChangeRequired`) |
 | `Events/` | ✅ Implemented (35 events) |
 | `Repositories/` | ✅ Implemented (21 interfaces) |
 | `Entities/` | ✅ Implemented (64 entities across 10 modules, including reference/lookup tables) |
@@ -332,6 +341,8 @@ them, while listing, relabelling and (de)activation keep working.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-28 | Qoder | Add Identity.RoleInactive (409) and Identity.PasswordChangeRequired (403) for inactive-role grant rejection and server-enforced forced-password recovery. |
+| 2026-10-28 | Qoder | Add `Department.CentralDiwanProtected` (Conflict) so department writes require a settings transfer before reparenting or deactivating the designated hub. |
 | 2026-10-28 | agent | Added `User.ResetPassword` and `UserPasswordResetEvent`: an administrative reset replaces the hash, sets `MustChangePassword`, and carries the resetting administrator (35 → 36 events). |
 | 2026-10-26 | Qoder | Added `UserLoggedInEvent` (raised by `User.RecordLogin`, 34 → 35 events) so logins become attributable audit rows, and the action-level audit lookup ids `AuditActionType.ExecuteId = 8` / `AuditEntityType.OperationId = 13`. |
 | 2026-10-25 | Buffy | Added `AuditLog.Reseal(previousHash)` so an unpersisted audit row can be re-chained onto the current predecessor after the persistence layer serializes appends. |

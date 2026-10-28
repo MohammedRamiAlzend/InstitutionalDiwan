@@ -12,6 +12,8 @@ export const employeeApi = {
           page: params.page,
           pageSize: params.pageSize,
           search: params.search?.trim() || undefined,
+          sortBy: params.sortBy,
+          sortDescending: params.sortDescending,
           departmentId: params.departmentId || undefined,
           includeSubDepartments: params.departmentId
             ? (params.includeSubDepartments ?? false)

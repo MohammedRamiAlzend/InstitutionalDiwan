@@ -1,6 +1,6 @@
 # InstitutionalDiwan.Tests — xUnit test suite
 
-> **Status:** Implemented — 406 tests covering domain handlers, department register numbering, the
+> **Status:** Implemented — tests covering domain handlers, department register numbering, the
 > receipt gate, the movement routing workflow (including the Central Diwan hub and rejection routing),
 > the department inbox/outbox, attachments (atomic first upload, versions, SHA-256 streaming, magic
 > bytes), movement participation, the tamper-evident audit chain (hashing, projections, checkpoints,
@@ -25,6 +25,27 @@ indexes) runs against a private SQLite in-memory database through `Support/TestC
 | `Server/` | `OpenApiDocumentationTests` — every controller endpoint must carry an `[EndpointSummary]`, an `[EndpointDescription]`, and a `<param>` description with an example. `Module09DependencyInjectionTests` — the audit repository, appender, action recorder, EF interceptor, hosted jobs, permission policies, and MediatR handlers resolve from the real `AddApplication` + `AddInfrastructure` + `AddInstitutionalAuthentication` composition root. `AuditActionMiddlewareTests` — action-level rows for authenticated calls (create/view), skipping anonymous and non-`/api` requests, and failure recording + rethrow. |
 | `Seed/` | Seeder and pipeline tests — `PermissionSeederTests`, `RoleSeederTests`, `UserSeederTests`, `DepartmentTypeSeederTests`, `DepartmentSeederTests`, `EmployeeSeederTests`, `SeederRunnerTests`, `SeedingPipelineTests`. |
 | `Support/` | Shared test doubles: `TestContextFactory` (SQLite in-memory `DiwanDbContext`), fake repositories/unit-of-work, fake hasher and JWT provider. |
+
+### Module 01 regression files
+
+| File | Purpose |
+| --- | --- |
+| `Application/UpdateDepartmentCommandHandlerTests.cs` | Tests department updates, manager/notes behavior, root-preserving edits of the designated hub, and nullable/empty/500/501-character notes validation. |
+| `Application/MoveDepartmentCommandHandlerTests.cs` | Tests hierarchy guards and no-op root moves of the designated hub; supplies the settings repository dependency. |
+| `Application/DeleteDepartmentCommandHandlerTests.cs` | Tests deactivation and active-child guards with the settings repository dependency. |
+| `Application/ActivateDepartmentCommandHandlerTests.cs` | Tests missing/inactive parents without mutation or saving, parent-first activation, root activation, and already-active behavior. |
+| `Application/InstitutionSettingsHandlerTests.cs` | Tests hub update/move/delete protection before and after a real settings transfer, inactive/null hub and invalid lookup/employee branches, and logo-length/required-hub validation. |
+
+### Module 02 security regression files
+
+| File | Purpose |
+| --- | --- |
+| `Server/JwtSecurityPipelineTests.cs` | Runs real JWT bearer authentication, MVC auth/lookup/identity-options endpoints, identity handlers, and scoped repositories over private SQLite + loopback Kestrel; covers stale-session revocation, forced-change recovery, inactive-role filtering, mandatory stamps, credential non-disclosure, concurrent-login compatibility, and the exact picker-permission matrix for department and user options. |
+| `Authorization/DepartmentScopeEvaluatorTests.cs` | Verifies live account/scope checks before primary/global grants and half-open temporal assignment windows. |
+| `Application/UserRoleCommandHandlerTests.cs` | Verifies inactive role assignment fails without mutation or save, alongside existing grant/revoke behavior. |
+| `Application/IdentityAdminCorrectnessTests.cs` | Covers department-assignment overlap rejection (including shared inclusive endpoints and open-ended intervals), ended rows retained as history, admin history vs. effective-permission semantics (inclusive dates, active roles only), and scope-type validation/handler rejection before saving. |
+| `Application/RevokeDocumentAccessCommandHandlerTests.cs` | Grant revocation, missing/revoked conflicts, and rejection without mutation when the route document does not own the grant. |
+| `Application/IdentityOptionQueryHandlerTests.cs` | Username search/paging for the user picker, inactive rows retained for labelling, and minimal `userId`/`username`/`isActive` projection. |
 
 ## Conventions
 
@@ -101,10 +122,19 @@ indexes) runs against a private SQLite in-memory database through `Support/TestC
 - `SeedingPipelineTests` runs the full ordered seeder set per environment and asserts the resulting
   permission/role/lookup counts, including idempotency on repeated runs.
 
+## Implementation status
+
+| Item | State |
+| --- | --- |
+| Module 01 correctness regressions | 24 cases added; build/test execution deferred while the API is running. |
+
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-28 | Qoder | Module 03 Phase 2: the picker matrix now expects `DOCUMENT_VIEW` to read department options (users stay restricted), matching the server change that lets read-only registry users resolve owning-department labels; 487 tests pass. |
+| 2026-10-28 | Qoder | Module 03 Phase 0: added `IdentityOptionQueryHandlerTests` and a real-pipeline picker-permission matrix (departments open to document permissions, users limited to `USER_MANAGE`/`ACCESS_GRANT_MANAGE`/`DOCUMENT_EDIT`); 480 → 487 tests. |
+| 2026-10-28 | Qoder | Add designated-hub protection/transfer regressions for update, move, and delete; preserve root edits and no-op moves; cover parent-first activation, logo/notes boundaries, and missing settings-validation branches. Update handler constructor call sites; defer build/test until the running API is stopped. |
 | 2026-10-28 | Qoder | Added `Seed/EmployeeSeederTests` (28 demo employees attached to every department, idempotency, existing numbers kept, missing-tree failure, environment gating), extended `ListEmployeesQueryHandlerTests` with the department filter (exact, descendants, unknown department), and wired `EmployeeSeeder` into `SeedingPipelineTests`. 398 → 406 tests. |
 | 2026-10-28 | Qoder | Added `Seed/DepartmentSeederTests` (four-level demo tree under the Central Diwan root, depth assertion, environment gating, idempotency, existing rows untouched, missing-root failure) and wired `DepartmentSeeder` into `SeedingPipelineTests`. 393 → 398 tests. |
 | 2026-10-28 | agent | Added `Application/ResetUserPasswordCommandHandlerTests` (hash replaced, old password no longer verifies, `MustChangePassword` forced, single save, missing user → `Identity.UserNotFound`) and `ResetUserPasswordCommandValidatorTests` (empty id, blank password, too-short password). 386 → 393 tests. |

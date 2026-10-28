@@ -29,7 +29,18 @@ internal sealed class UserRepository : IUserRepository
         if (page.NormalizedSearch is { } search)
             query = query.Where(user => user.Username.Contains(search));
 
-        query = query.OrderBy(user => user.Username);
+        var ordered = (page.SortBy?.ToLowerInvariant(), page.SortDescending) switch
+        {
+            ("createdat", false) => query.OrderBy(user => user.CreatedAt),
+            ("createdat", true) => query.OrderByDescending(user => user.CreatedAt),
+            ("lastloginat", false) => query.OrderBy(user => user.LastLoginAt),
+            ("lastloginat", true) => query.OrderByDescending(user => user.LastLoginAt),
+            ("isactive", false) => query.OrderBy(user => user.IsActive),
+            ("isactive", true) => query.OrderByDescending(user => user.IsActive),
+            (_, true) => query.OrderByDescending(user => user.Username),
+            _ => query.OrderBy(user => user.Username)
+        };
+        query = ordered.ThenBy(user => user.UserId);
 
         var totalCount = await query.CountAsync(cancellationToken);
         var items = await query

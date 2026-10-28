@@ -4,6 +4,8 @@ import { LoginPage } from '@/pages/login'
 import { ChangePasswordPage } from '@/pages/change-password'
 import { DashboardPage } from '@/pages/dashboard'
 import { DepartmentsPage } from '@/pages/departments'
+import { DocumentsPage } from '@/pages/documents'
+import { InstitutionSettingsPage } from '@/pages/institution-settings'
 import { UsersPage } from '@/pages/users'
 import { RolesPage } from '@/pages/roles'
 import { EmployeesPage } from '@/pages/employees'
@@ -19,7 +21,9 @@ export function AppRouter() {
           <Route path={ROUTES.CHANGE_PASSWORD} element={<ChangePasswordPage />} />
           <Route element={<AppShell />}>
             <Route path={ROUTES.DASHBOARD} element={<DashboardPage />} />
+            <Route path={ROUTES.DOCUMENTS} element={<DocumentsPage />} />
             <Route path={ROUTES.DEPARTMENTS} element={<DepartmentsPage />} />
+            <Route path={ROUTES.INSTITUTION_SETTINGS} element={<InstitutionSettingsPage />} />
             <Route path={ROUTES.USERS} element={<UsersPage />} />
             <Route path={ROUTES.ROLES} element={<RolesPage />} />
             <Route path={ROUTES.EMPLOYEES} element={<EmployeesPage />} />

@@ -25,7 +25,7 @@ public sealed class DeleteDepartmentCommandHandlerTests
         departments.Add(department);
         var unitOfWork = new FakeUnitOfWork();
 
-        var result = await new DeleteDepartmentCommandHandler(departments, unitOfWork).Handle(
+        var result = await new DeleteDepartmentCommandHandler(departments, new FakeInstitutionSettingRepository(), unitOfWork).Handle(
             new DeleteDepartmentCommand(department.DepartmentId),
             CancellationToken.None);
 
@@ -37,7 +37,8 @@ public sealed class DeleteDepartmentCommandHandlerTests
     [Fact]
     public async Task Handle_WhenDepartmentIsMissing_ReturnsNotFound()
     {
-        var result = await new DeleteDepartmentCommandHandler(new FakeDepartmentRepository(), new FakeUnitOfWork())
+        var result = await new DeleteDepartmentCommandHandler(
+                new FakeDepartmentRepository(), new FakeInstitutionSettingRepository(), new FakeUnitOfWork())
             .Handle(new DeleteDepartmentCommand(Guid.NewGuid()), CancellationToken.None);
 
         Assert.True(result.IsFailure);
@@ -53,7 +54,7 @@ public sealed class DeleteDepartmentCommandHandlerTests
         departments.Add(parent);
         departments.Add(CreateDepartment("CHILD", parent.DepartmentId));
 
-        var result = await new DeleteDepartmentCommandHandler(departments, new FakeUnitOfWork()).Handle(
+        var result = await new DeleteDepartmentCommandHandler(departments, new FakeInstitutionSettingRepository(), new FakeUnitOfWork()).Handle(
             new DeleteDepartmentCommand(parent.DepartmentId),
             CancellationToken.None);
 
@@ -72,7 +73,7 @@ public sealed class DeleteDepartmentCommandHandlerTests
         departments.Add(parent);
         departments.Add(child);
 
-        var result = await new DeleteDepartmentCommandHandler(departments, new FakeUnitOfWork()).Handle(
+        var result = await new DeleteDepartmentCommandHandler(departments, new FakeInstitutionSettingRepository(), new FakeUnitOfWork()).Handle(
             new DeleteDepartmentCommand(parent.DepartmentId),
             CancellationToken.None);
 

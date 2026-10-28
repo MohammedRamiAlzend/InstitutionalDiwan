@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react'
 import { Plus, ShieldCheck, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
-import { RoleBadge, useRoles } from '@/entities/role'
-import { useSessionStore, type UserResponse } from '@/entities/user'
+import { RoleBadge, useRoleOptions } from '@/entities/role'
+import { useSessionStore, useUserById, type UserResponse } from '@/entities/user'
 import { toArabicErrorMessage } from '@/shared/api'
 import { Permissions } from '@/shared/config'
 import { Button, Dialog, Select } from '@/shared/ui'
@@ -20,9 +20,10 @@ interface UserRolesDialogProps {
 /** Grants and revokes roles through `/api/users/{id}/roles`. */
 export function UserRolesDialog({ open, onOpenChange, user }: UserRolesDialogProps) {
   const hasPermission = useSessionStore((state) => state.hasPermission)
-  const canManageRoles = hasPermission(Permissions.RoleManage)
+  const canManageRoles = hasPermission(Permissions.UserManage)
 
-  const rolesQuery = useRoles({ enabled: canManageRoles })
+  const userQuery = useUserById(user.userId, { enabled: open })
+  const rolesQuery = useRoleOptions({ enabled: open && canManageRoles })
   const assignMutation = useAssignUserRoleMutation()
   const revokeMutation = useRevokeUserRoleMutation()
 
@@ -36,7 +37,7 @@ export function UserRolesDialog({ open, onOpenChange, user }: UserRolesDialogPro
 
   const assignedRoles = useMemo(
     () =>
-      user.roles
+      (userQuery.data?.roles ?? [])
         .map((code) => ({ code, role: roleByCode.get(code) }))
         .sort((left, right) =>
           (left.role?.nameAr ?? left.code).localeCompare(
@@ -44,18 +45,18 @@ export function UserRolesDialog({ open, onOpenChange, user }: UserRolesDialogPro
             'ar',
           ),
         ),
-    [roleByCode, user.roles],
+    [roleByCode, userQuery.data?.roles],
   )
 
   const availableRoles = useMemo(
     () =>
       (rolesQuery.data ?? [])
-        .filter((role) => role.isActive && !user.roles.includes(role.code))
+        .filter((role) => role.isActive && userQuery.data && !userQuery.data.roles.includes(role.code))
         .map((role) => ({
           value: role.roleId,
           label: `${role.nameAr} (${role.code})`,
         })),
-    [rolesQuery.data, user.roles],
+    [rolesQuery.data, userQuery.data],
   )
 
   const effectiveSelection = availableRoles.some(
@@ -105,7 +106,14 @@ export function UserRolesDialog({ open, onOpenChange, user }: UserRolesDialogPro
           الأدوار الحالية
         </h3>
 
-        {assignedRoles.length === 0 ? (
+        {userQuery.isError ? (
+          <div role="alert" className="text-sm text-danger">
+            {toArabicErrorMessage(userQuery.error)}
+            <Button type="button" variant="outline" onClick={() => void userQuery.refetch()}>إعادة المحاولة</Button>
+          </div>
+        ) : userQuery.isLoading ? (
+          <p role="status" className="text-sm text-muted">جارٍ تحميل أدوار المستخدم…</p>
+        ) : assignedRoles.length === 0 ? (
           <p className="rounded-lg bg-surface-muted px-3 py-2 text-sm text-muted">
             لا توجد أدوار مسندة إلى هذا المستخدم.
           </p>
@@ -120,7 +128,6 @@ export function UserRolesDialog({ open, onOpenChange, user }: UserRolesDialogPro
                   <RoleBadge
                     nameAr={role.nameAr}
                     code={role.code}
-                    isSystemRole={role.isSystemRole}
                   />
                 ) : (
                   <span
@@ -137,7 +144,7 @@ export function UserRolesDialog({ open, onOpenChange, user }: UserRolesDialogPro
                     variant="ghost"
                     size="sm"
                     className="text-danger"
-                    disabled={revokeMutation.isPending}
+                    disabled={!canManageRoles || userQuery.isFetching || assignMutation.isPending || revokeMutation.isPending}
                     onClick={() => handleRevoke(role.roleId)}
                   >
                     <Trash2 className="size-4" aria-hidden />
@@ -155,7 +162,7 @@ export function UserRolesDialog({ open, onOpenChange, user }: UserRolesDialogPro
 
         {!canManageRoles ? (
           <p role="status" className="rounded-lg bg-warning/10 px-3 py-2 text-xs text-warning">
-            تحتاج صلاحية إدارة الأدوار لعرض قائمة الأدوار وإسنادها.
+            تحتاج صلاحية إدارة المستخدمين لإسناد الأدوار وسحبها.
           </p>
         ) : rolesQuery.isError ? (
           <div className="flex flex-col gap-2 rounded-lg bg-danger/10 px-3 py-2 text-xs text-danger">
@@ -188,7 +195,7 @@ export function UserRolesDialog({ open, onOpenChange, user }: UserRolesDialogPro
             <Button
               type="button"
               loading={assignMutation.isPending}
-              disabled={!effectiveSelection}
+              disabled={!effectiveSelection || userQuery.isFetching || userQuery.isError || revokeMutation.isPending}
               onClick={handleAssign}
             >
               <Plus className="size-4" aria-hidden />

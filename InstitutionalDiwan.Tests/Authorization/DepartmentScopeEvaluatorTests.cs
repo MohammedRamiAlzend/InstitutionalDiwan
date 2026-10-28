@@ -52,10 +52,11 @@ public sealed class DepartmentScopeEvaluatorTests
         var (evaluator, context, users, _) = CreateEvaluator();
         var department = CreateDepartment("HR");
 
+        var user = CreateUser(department.DepartmentId, context.ScopeTypeId);
         context.IsAuthenticated = true;
-        context.UserId = Guid.NewGuid();
+        context.UserId = user.UserId;
         context.PrimaryDepartmentId = department.DepartmentId;
-        users.Add(CreateUser(department.DepartmentId, context.ScopeTypeId));
+        users.Add(user);
 
         Assert.True(await evaluator.CanAccessDepartmentAsync(department.DepartmentId));
     }
@@ -170,6 +171,75 @@ public sealed class DepartmentScopeEvaluatorTests
         users.Add(user);
 
         Assert.False(await evaluator.CanAccessDepartmentAsync(assigned.DepartmentId));
+    }
+
+    [Theory]
+    [InlineData(UserScopeType.DepartmentId)]
+    [InlineData(UserScopeType.InstitutionId)]
+    [InlineData(UserScopeType.SystemId)]
+    public async Task CanAccessDepartment_WhenInactive_DeniesEvenPrimaryAndGlobalFastPaths(int scope)
+    {
+        var (evaluator, context, users, _) = CreateEvaluator();
+        var user = CreateUser(Guid.NewGuid(), scope);
+        user.Deactivate();
+        users.Add(user);
+        context.IsAuthenticated = true;
+        context.UserId = user.UserId;
+        context.PrimaryDepartmentId = user.PrimaryDepartmentId;
+        context.ScopeTypeId = scope;
+
+        Assert.False(await evaluator.CanAccessDepartmentAsync(user.PrimaryDepartmentId));
+        Assert.False(await evaluator.CanAccessDepartmentAsync(Guid.NewGuid()));
+    }
+
+    [Fact]
+    public async Task CanAccessDepartment_WhenUserMissing_DeniesTokenSystemAndPrimaryScope()
+    {
+        var (evaluator, context, _, _) = CreateEvaluator();
+        context.IsAuthenticated = true;
+        context.UserId = Guid.NewGuid();
+        context.PrimaryDepartmentId = Guid.NewGuid();
+        context.ScopeTypeId = UserScopeType.SystemId;
+
+        Assert.False(await evaluator.CanAccessDepartmentAsync(context.PrimaryDepartmentId));
+        Assert.False(await evaluator.CanAccessDepartmentAsync(Guid.NewGuid()));
+    }
+
+    [Fact]
+    public async Task CanAccessDepartment_IgnoresStaleTokenScopeAndPrimaryDepartment()
+    {
+        var (evaluator, context, users, _) = CreateEvaluator();
+        var user = CreateUser(Guid.NewGuid());
+        users.Add(user);
+        context.IsAuthenticated = true;
+        context.UserId = user.UserId;
+        context.PrimaryDepartmentId = Guid.NewGuid();
+        context.ScopeTypeId = UserScopeType.SystemId;
+
+        Assert.False(await evaluator.CanAccessDepartmentAsync(context.PrimaryDepartmentId));
+        Assert.False(await evaluator.CanAccessDepartmentAsync(Guid.NewGuid()));
+        Assert.True(await evaluator.CanAccessDepartmentAsync(user.PrimaryDepartmentId));
+    }
+
+    [Theory]
+    [InlineData(-1, 1, true)]
+    [InlineData(0, 1, true)]
+    [InlineData(1, 2, false)]
+    [InlineData(-2, -1, false)]
+    [InlineData(-1, 0, false)]
+    public async Task CanAccessDepartment_UsesHalfOpenAssignmentWindow(int start, int end, bool expected)
+    {
+        var (evaluator, context, users, _) = CreateEvaluator();
+        var user = CreateUser(Guid.NewGuid());
+        var assignedDepartmentId = Guid.NewGuid();
+        var now = TestClock.Instance.UtcNow;
+        Assert.True(user.AssignDepartmentScope(assignedDepartmentId,
+            startDate: now.AddHours(start), endDate: now.AddHours(end), utcNow: now).IsSuccess);
+        users.Add(user);
+        context.IsAuthenticated = true;
+        context.UserId = user.UserId;
+
+        Assert.Equal(expected, await evaluator.CanAccessDepartmentAsync(assignedDepartmentId));
     }
 
     [Fact]

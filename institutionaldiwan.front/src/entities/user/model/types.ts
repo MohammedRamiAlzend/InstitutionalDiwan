@@ -24,6 +24,7 @@ export interface UserResponse {
   createdAt: string
   updatedAt: string | null
   roles: string[]
+  departmentAssignments: UserDepartmentAssignmentResponse[]
 }
 
 /** Server-side paging + username search for the user list. */
@@ -31,6 +32,8 @@ export interface UserListParams {
   page: number
   pageSize: number
   search?: string
+  sortBy?: string
+  sortDescending?: boolean
 }
 
 /** One temporal department assignment held by a user. */

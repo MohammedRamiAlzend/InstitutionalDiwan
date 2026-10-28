@@ -17,12 +17,16 @@ debounced server search, paging, a column chooser, and row/header/empty context 
 ## 3. Contents & Segments
 
 - `ui/EmployeesTable.tsx`
-  - `useEmployees` driven by `useTableState` (`page`, `pageSize`, `search` in the URL); the API
+  - `useEmployees` driven by `useTableState` (`page`, `pageSize`, `search`, `sortKey`,
+    `sortDirection`, and a `departmentId` filter in the URL; default `fullNameAr` ascending); the API
     searches the Arabic name, English name, and employee number.
   - Columns: employee (Arabic name with the English name underneath), employee number (LTR mono),
-    department (`DepartmentBadge` when `DEPARTMENT_MANAGE` is available, otherwise a shortened GUID
+    department (`DepartmentBadge` when the department catalog is available, otherwise a shortened GUID
     with the full value in `title`), job title, email/phone (hidden by default, LTR), status, and
-    hidden created/updated timestamps.
+    hidden created/updated timestamps. Employee name, employee number, status, and creation time are
+    sortable through the server; the toolbar filters by department (including all departments).
+  - Department labels come from `useDepartmentOptions` (`/api/identity-options/departments`, enabled
+    by `EMPLOYEE_MANAGE`), with an Arabic retry action when that read fails.
   - Row menu: edit, activate/deactivate, copy employee number (disabled when absent), copy id.
     Header/empty menus and the toolbar offer create + refresh; rows, headers, and the grid surface
     also open the menu on right-click / `Shift+F10`.
@@ -39,9 +43,13 @@ debounced server search, paging, a column chooser, and row/header/empty context 
 - ✅ Create/edit dialog mounted from the toolbar and row/header menus.
 - ✅ Verified in-browser against the live API (RTL, light/dark, create, search, edit prefill,
   status toggle).
-- ❌ No server-side sorting — `GET /api/employees` exposes only `page`/`pageSize`/`search`.
+- ✅ Server-side sorting (name, employee number, status, creation time) and a department filter are
+  wired through the grid toolbar and `GET /api/employees?sortBy=…&sortDescending=…&departmentId=…`.
 
 ## 6. Change Log
+
+- 2026-10-28: Added server sorting and a department filter, and switched department labels to the
+  minimal `useDepartmentOptions` catalog so the grid works with `EMPLOYEE_MANAGE` alone.
 
 - 2026-10-28: Implemented Phase 5 — the employees grid with department resolution/fallback,
   permission-aware row actions, status confirmation, and the create/edit dialog; created this README.

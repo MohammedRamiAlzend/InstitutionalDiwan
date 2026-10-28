@@ -3,12 +3,11 @@ import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Lock, User } from 'lucide-react'
 import { toast } from 'sonner'
-import { useDepartments } from '@/entities/department'
-import { useEmployees } from '@/entities/employee'
+import { useDepartmentOptions } from '@/entities/department'
+import { EmployeePicker } from '@/entities/employee'
 import { LOOKUP_SLUGS, useLookupEntries } from '@/entities/lookup'
-import { useSessionStore, type UserResponse } from '@/entities/user'
+import { type UserResponse } from '@/entities/user'
 import { toArabicErrorMessage } from '@/shared/api'
-import { Permissions } from '@/shared/config'
 import { formatShortId } from '@/shared/lib'
 import { Button, Checkbox, Dialog, FormField, Input, Select } from '@/shared/ui'
 import {
@@ -30,15 +29,7 @@ interface UserFormDialogProps {
 /** Create/edit form for `POST /api/users` and `PUT /api/users/{id}`. */
 export function UserFormDialog({ open, onOpenChange, user }: UserFormDialogProps) {
   const isEdit = user !== null
-  const hasPermission = useSessionStore((state) => state.hasPermission)
-  const canManageDepartments = hasPermission(Permissions.DepartmentManage)
-  const canManageEmployees = hasPermission(Permissions.EmployeeManage)
-
-  const departmentsQuery = useDepartments({ enabled: canManageDepartments })
-  const employeesQuery = useEmployees(
-    { page: 1, pageSize: 100 },
-    { enabled: canManageEmployees },
-  )
+  const departmentsQuery = useDepartmentOptions({ enabled: open })
   const scopeQuery = useLookupEntries(LOOKUP_SLUGS.UserScopeTypes)
 
   const createMutation = useCreateUserMutation()
@@ -59,28 +50,6 @@ export function UserFormDialog({ open, onOpenChange, user }: UserFormDialogProps
     }
     return options
   }, [departmentsQuery.data, user])
-
-  const employeeOptions = useMemo(() => {
-    const options = [
-      { value: NO_EMPLOYEE, label: 'بدون ربط بموظف' },
-      ...(employeesQuery.data?.items ?? []).map((employee) => ({
-        value: employee.employeeId,
-        label: employee.employeeNumber
-          ? `${employee.fullNameAr} (${employee.employeeNumber})`
-          : employee.fullNameAr,
-      })),
-    ]
-    if (
-      user?.employeeId &&
-      !options.some((option) => option.value === user.employeeId)
-    ) {
-      options.push({
-        value: user.employeeId,
-        label: `الموظف المرتبط حاليًا (${formatShortId(user.employeeId)})`,
-      })
-    }
-    return options
-  }, [employeesQuery.data, user])
 
   const scopeOptions = useMemo(
     () =>
@@ -232,9 +201,7 @@ export function UserFormDialog({ open, onOpenChange, user }: UserFormDialogProps
                 value={field.value || undefined}
                 onValueChange={field.onChange}
                 options={departmentOptions}
-                disabled={
-                  pending || departmentsQuery.isLoading || !canManageDepartments
-                }
+                disabled={pending || departmentsQuery.isLoading}
                 invalid={Boolean(errors.primaryDepartmentId)}
                 placeholder={
                   departmentsQuery.isLoading ? 'جارٍ تحميل الأقسام…' : 'اختر القسم…'
@@ -250,17 +217,13 @@ export function UserFormDialog({ open, onOpenChange, user }: UserFormDialogProps
             control={control}
             name="employeeId"
             render={({ field }) => (
-              <Select
-                value={field.value || NO_EMPLOYEE}
-                onValueChange={field.onChange}
-                options={employeeOptions}
-                disabled={
-                  pending || employeesQuery.isLoading || !canManageEmployees
-                }
-                placeholder={
-                  employeesQuery.isLoading ? 'جارٍ تحميل الموظفين…' : 'بدون ربط بموظف'
-                }
-                aria-label="الموظف المرتبط"
+              <EmployeePicker
+                value={field.value === NO_EMPLOYEE ? null : field.value || null}
+                onValueChange={(id) => field.onChange(id ?? NO_EMPLOYEE)}
+                disabled={pending}
+                invalid={Boolean(errors.employeeId)}
+                label="الموظف المرتبط"
+                noneLabel="بدون ربط بموظف"
               />
             )}
           />
@@ -302,15 +265,6 @@ export function UserFormDialog({ open, onOpenChange, user }: UserFormDialogProps
           />
         </div>
 
-        {!canManageDepartments && (
-          <p
-            role="status"
-            className="sm:col-span-2 rounded-lg bg-warning/10 px-3 py-2 text-xs text-warning"
-          >
-            لا تملك صلاحية استعراض الأقسام، لذلك لا يمكنك تغيير القسم الأساسي.
-          </p>
-        )}
-
         {departmentsQuery.isError && (
           <p
             role="alert"
@@ -320,12 +274,9 @@ export function UserFormDialog({ open, onOpenChange, user }: UserFormDialogProps
           </p>
         )}
 
-        {employeesQuery.isError && canManageEmployees && (
-          <p
-            role="status"
-            className="sm:col-span-2 rounded-lg bg-warning/10 px-3 py-2 text-xs text-warning"
-          >
-            تعذّر تحميل قائمة الموظفين، ويمكنك حفظ بيانات المستخدم دون ربط موظف.
+        {scopeQuery.isError && (
+          <p role="alert" className="sm:col-span-2 text-sm text-danger">
+            {toArabicErrorMessage(scopeQuery.error)}
           </p>
         )}
 

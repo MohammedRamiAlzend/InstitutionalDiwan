@@ -12,14 +12,17 @@ internal sealed class UpdateUserCommandHandler : ICommandHandler<UpdateUserComma
     private readonly IEmployeeRepository _employeeRepository;
     private readonly IRoleRepository _roleRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ILookupRepository _lookupRepository;
 
     public UpdateUserCommandHandler(
         IUserRepository userRepository,
         IDepartmentRepository departmentRepository,
         IEmployeeRepository employeeRepository,
         IRoleRepository roleRepository,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        ILookupRepository lookupRepository)
     {
+        _lookupRepository = lookupRepository;
         _userRepository = userRepository;
         _departmentRepository = departmentRepository;
         _employeeRepository = employeeRepository;
@@ -41,6 +44,10 @@ internal sealed class UpdateUserCommandHandler : ICommandHandler<UpdateUserComma
         if (request.EmployeeId is { } employeeId &&
             await _employeeRepository.GetByIdAsync(employeeId, cancellationToken) is null)
             return Result.Failure<UserResponse>(DomainErrors.Identity.EmployeeNotFound);
+
+        var scope = await _lookupRepository.GetByIdAsync("user-scope-types", request.ScopeTypeId, cancellationToken);
+        if (request.ScopeTypeId is < 1 or > 4 || scope is not { IsActive: true })
+            return Result.Failure<UserResponse>(Error.Validation("Identity.UserScopeTypeInvalid", "Select an active supported user scope type."));
 
         var updateResult = user.UpdateProfile(
             request.PrimaryDepartmentId,

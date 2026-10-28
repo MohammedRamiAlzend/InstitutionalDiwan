@@ -23,7 +23,7 @@ Earlier design notes called the project `NewDiwan.Presentation`; the actual asse
 | --- | --- | --- |
 | [`Controllers/`](Controllers/README.md) | REST controllers, one per module (plus the generic lookups controller) | ✅ 17 controllers live |
 | [`Contracts/`](Contracts/README.md) | HTTP request/response DTO records grouped by module | ✅ Correspondence, Organization, Identity, Numbering, Movements, Attachments, Audit, Lookups |
-| [`Middleware/`](Middleware/README.md) | Global exception handling, correlation-id tracking, action-level audit | ✅ `RequestContextLoggingMiddleware` + `GlobalExceptionHandlingMiddleware` + `AuditActionMiddleware` live |
+| [`Middleware/`](Middleware/README.md) | Global exception handling, correlation-id tracking, action-level audit, forced-password recovery gate | Implemented: request context, global exceptions, action auditing, and `ForcedPasswordChangeMiddleware`. |
 | [`Extensions/`](Extensions/README.md) | `Result` → HTTP mapping, DI registration, OpenAPI/Scalar, auth setup | ✅ `ResultExtensions`, `DatabaseExtensions`, `AuthenticationExtensions`, `OpenApiExtensions` |
 
 ## Current `Program.cs`
@@ -57,6 +57,7 @@ await app.InitializeDatabaseAsync();   // migrate (Development) + ordered, envir
 
 app.UseAuthentication();
 app.UseMiddleware<AuditActionMiddleware>();   // one Operation audit row per authenticated /api action
+app.UseMiddleware<ForcedPasswordChangeMiddleware>();   // only me/change-password or anonymous while forced
 app.UseAuthorization();
 app.MapControllers();
 app.Run();
@@ -87,7 +88,7 @@ project-references Application and Infrastructure.
 | Controllers | ✅ `Auth`, `Documents` (drafts, update, register, participants, cancel, details, timeline, plus create with official number), `DocumentNumbers` (issue/cancel/replace/history + department register entries), `DepartmentRegisters` (register book), `Movements` (routing workflow — open/send/receive/complete/reject/return/redirect/close/cancel — plus the movement reads and the department inbox/outbox), `ExternalOrganizations` (CRUD), `InstitutionSettings` (GET/PUT), `Users` (CRUD + roles + department-assignments + effective-permissions), `Roles` (CRUD + activate + grant/revoke permission), `Permissions` (catalog), `Departments` (CRUD + reparent + tree, soft delete), `Employees` (CRUD + deactivate/activate), `DocumentAccessGrants` (list/grant/revoke per document), `NumberingRegistries` (CRUD + activate/deactivate), `DocumentFiles` (Module 06: create/upload/archive/list/download/verify), `AuditLogs` (Module 09: search/checkpoint/integrity), `Lookups` (generic reference catalogs) |
 | Contracts / Middleware / Extensions | ✅ Contracts complete for the live modules; request-context + global exception middleware in place; extensions implemented |
 | DI for Application/Infrastructure | ✅ Wired |
-| Authentication / Authorization setup | ✅ JWT + permission policies |
+| Authentication / Authorization setup | Implemented: live JWT account/session-stamp validation, permission policies, and endpoint-aware forced-password recovery enforcement. |
 | SignalR | ❌ Not wired |
 | `InstitutionalDiwan.Server.http` | ✅ Sample `GET /api/audit-logs` request (replace `@token` with a valid JWT) |
 
@@ -95,6 +96,7 @@ project-references Application and Infrastructure.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-28 | Qoder | Wire forced-password enforcement between action auditing and authorization; add live JWT session revocation with no legacy stamp fallback, migrations, or signing-key configuration edits. |
 | 2026-10-26 | Qoder | Removed the SPA integration: dropped `SpaRoot`/`SpaProxy` and the client project reference from the csproj, removed the SPA proxy hosting startup from the launch profiles, and deleted `UseDefaultFiles`, `MapStaticAssets`, and `MapFallbackToFile` from `Program.cs`. The project is now an API-only host; the front end lives in the standalone `institutionaldiwan.front` project. |
 | 2026-10-25 | Buffy | Replaced the leftover template `weatherforecast` sample request with a real `GET /api/audit-logs` request. |
 | 2026-10-25 | opencode | Added the Module 09 `AuditLogsController`, audit contracts, and `RequestContextLoggingMiddleware`; updated the `Program.cs` excerpt and status tables. |

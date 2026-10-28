@@ -15,6 +15,7 @@ internal sealed class CreateUserCommandHandler : ICommandHandler<CreateUserComma
     private readonly IRoleRepository _roleRepository;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ILookupRepository _lookupRepository;
 
     public CreateUserCommandHandler(
         IUserRepository userRepository,
@@ -22,8 +23,10 @@ internal sealed class CreateUserCommandHandler : ICommandHandler<CreateUserComma
         IEmployeeRepository employeeRepository,
         IRoleRepository roleRepository,
         IPasswordHasher passwordHasher,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        ILookupRepository lookupRepository)
     {
+        _lookupRepository = lookupRepository;
         _userRepository = userRepository;
         _departmentRepository = departmentRepository;
         _employeeRepository = employeeRepository;
@@ -47,6 +50,10 @@ internal sealed class CreateUserCommandHandler : ICommandHandler<CreateUserComma
         if (request.EmployeeId is { } employeeId &&
             await _employeeRepository.GetByIdAsync(employeeId, cancellationToken) is null)
             return Result.Failure<UserResponse>(DomainErrors.Identity.EmployeeNotFound);
+
+        var scope = await _lookupRepository.GetByIdAsync("user-scope-types", request.ScopeTypeId, cancellationToken);
+        if (request.ScopeTypeId is < 1 or > 4 || scope is not { IsActive: true })
+            return Result.Failure<UserResponse>(Error.Validation("Identity.UserScopeTypeInvalid", "Select an active supported user scope type."));
 
         var passwordHash = _passwordHasher.Hash(request.Password);
         var userResult = User.Create(

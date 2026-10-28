@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState, type ReactNode } from 'react'
 import {
+  BarChart3,
   Building2,
   ChevronDown,
   ChevronsDownUp,
@@ -8,11 +9,21 @@ import {
   Eye,
   Hash,
   ListTree,
+  Pencil,
+  Plus,
+  Power,
+  PowerOff,
   RefreshCw,
   Table2,
   Workflow,
   type LucideIcon,
 } from 'lucide-react'
+import { toast } from 'sonner'
+import {
+  DepartmentFormDialog,
+  useSetDepartmentActiveMutation,
+  type DepartmentFormTarget,
+} from '@/features/department-manage'
 import {
   departmentTreeToMermaid,
   useDepartments,
@@ -20,9 +31,11 @@ import {
   type DepartmentTreeNodeResponse,
 } from '@/entities/department'
 import { findLookupFallback, LOOKUP_SLUGS, useLookupEntries } from '@/entities/lookup'
+import { useSessionStore } from '@/entities/user'
 import { toArabicErrorMessage } from '@/shared/api'
+import { Permissions } from '@/shared/config'
 import { cn, formatNumber, useTableState } from '@/shared/lib'
-import { Button, MermaidView, Skeleton, type MenuEntry } from '@/shared/ui'
+import { Button, Checkbox, ConfirmDialog, MermaidView, Skeleton, type MenuEntry } from '@/shared/ui'
 import { copyDepartmentValue } from '../model/clipboard'
 import {
   collectDepartmentIds,
@@ -35,10 +48,12 @@ import { DepartmentDetailDialog } from './DepartmentDetailDialog'
 import { DepartmentSearch } from './DepartmentSearch'
 import { DepartmentTable } from './DepartmentTable'
 import { DepartmentTreeNodeRow } from './DepartmentTreeNodeRow'
+import { DepartmentTypeChart } from './DepartmentTypeChart'
 
 const VIEW_OPTIONS: readonly { value: DepartmentView; label: string; icon: LucideIcon }[] = [
   { value: 'tree', label: 'شجرة', icon: ListTree },
   { value: 'mermaid', label: 'مخطط', icon: Workflow },
+  { value: 'chart', label: 'إحصاء', icon: BarChart3 },
   { value: 'table', label: 'جدول', icon: Table2 },
 ]
 
@@ -62,6 +77,9 @@ export function DepartmentHierarchyTree() {
   const treeQuery = useDepartmentTree()
   const listQuery = useDepartments({ enabled: view === 'table' })
   const { data: departmentTypes } = useLookupEntries(LOOKUP_SLUGS.DepartmentTypes)
+  const canViewEmployees = useSessionStore((state) => state.hasPermission(Permissions.EmployeeManage))
+  const [employeesVisible, setEmployeesVisible] = useState(false)
+  const showEmployees = canViewEmployees && employeesVisible
 
   const typeLabel = useCallback(
     (departmentTypeId: number) =>
@@ -126,6 +144,33 @@ export function DepartmentHierarchyTree() {
   }, [treeQuery.data])
 
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [formTarget, setFormTarget] = useState<DepartmentFormTarget | null>(null)
+  const [activeTarget, setActiveTarget] = useState<{
+    departmentId: string
+    nameAr: string
+    active: boolean
+  } | null>(null)
+  const setActiveMutation = useSetDepartmentActiveMutation()
+
+  const openEditFormById = useCallback((departmentId: string) => {
+    setSelectedId(null)
+    setFormTarget({ mode: 'edit', departmentId })
+  }, [])
+
+  const confirmActiveChange = async () => {
+    if (!activeTarget) return
+
+    try {
+      await setActiveMutation.mutateAsync({
+        departmentId: activeTarget.departmentId,
+        active: activeTarget.active,
+      })
+      toast.success(activeTarget.active ? 'تم تفعيل القسم.' : 'تم إيقاف القسم.')
+      setActiveTarget(null)
+    } catch (error) {
+      toast.error(toArabicErrorMessage(error))
+    }
+  }
 
   const openDiagramNode = useCallback(
     (nodeId: string) => {
@@ -146,6 +191,35 @@ export function DepartmentHierarchyTree() {
         },
         { type: 'separator' },
         {
+          id: 'add-child',
+          label: 'إضافة قسم فرعي',
+          icon: <Plus className="size-4" aria-hidden />,
+          onSelect: () =>
+            setFormTarget({ mode: 'create', parentDepartmentId: node.departmentId }),
+        },
+        {
+          id: 'edit',
+          label: 'تعديل القسم',
+          icon: <Pencil className="size-4" aria-hidden />,
+          onSelect: () => openEditFormById(node.departmentId),
+        },
+        {
+          id: 'toggle-active',
+          label: node.isActive ? 'إيقاف القسم' : 'تفعيل القسم',
+          icon: node.isActive ? (
+            <PowerOff className="size-4" aria-hidden />
+          ) : (
+            <Power className="size-4" aria-hidden />
+          ),
+          onSelect: () =>
+            setActiveTarget({
+              departmentId: node.departmentId,
+              nameAr: node.nameAr,
+              active: !node.isActive,
+            }),
+        },
+        { type: 'separator' },
+        {
           id: 'copy-code',
           label: 'نسخ رمز القسم',
           icon: <Copy className="size-4" aria-hidden />,
@@ -159,13 +233,14 @@ export function DepartmentHierarchyTree() {
         },
       ]
 
-      if (node.children.length > 0) {
+      if (node.children.length > 0 || showEmployees) {
         entries.push(
           { type: 'separator' },
           {
             id: 'toggle-branch',
             label: effectiveCollapsedIds.has(node.departmentId) ? 'توسيع الفرع' : 'طي الفرع',
             icon: <ChevronDown className="size-4" aria-hidden />,
+            disabled: searching,
             onSelect: () => toggleCollapsed(node.departmentId),
           },
         )
@@ -173,12 +248,20 @@ export function DepartmentHierarchyTree() {
 
       return entries
     },
-    [effectiveCollapsedIds, toggleCollapsed],
+    [effectiveCollapsedIds, openEditFormById, searching, showEmployees, toggleCollapsed],
   )
 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center gap-2">
+        <Button
+          type="button"
+          onClick={() => setFormTarget({ mode: 'create', parentDepartmentId: null })}
+        >
+          <Plus className="size-4" aria-hidden />
+          قسم جديد
+        </Button>
+
         <div
           role="group"
           aria-label="طريقة عرض الأقسام"
@@ -210,6 +293,9 @@ export function DepartmentHierarchyTree() {
         <div className="ms-auto flex flex-wrap items-center gap-2">
           {view === 'tree' && (
             <>
+              {canViewEmployees && (
+                <Checkbox checked={employeesVisible} onCheckedChange={setEmployeesVisible} label="إظهار فروع الموظفين" />
+              )}
               <Button
                 type="button"
                 variant="outline"
@@ -259,28 +345,24 @@ export function DepartmentHierarchyTree() {
           typeLabel={typeLabel}
           resolveName={resolveName}
           onOpen={setSelectedId}
+          onCreate={() => setFormTarget({ mode: 'create', parentDepartmentId: null })}
+          onCreateChild={(parentDepartmentId) =>
+            setFormTarget({ mode: 'create', parentDepartmentId })
+          }
+          onEdit={openEditFormById}
+          onToggleActive={(department) =>
+            setActiveTarget({
+              departmentId: department.departmentId,
+              nameAr: department.nameAr,
+              active: !department.isActive,
+            })
+          }
         />
       )}
 
-      {view === 'mermaid' && (
-        <div className="flex flex-col gap-2">
-          {matchCount > 0 && (
-            <p className="text-xs text-muted">
-              اضغط على أي قسم في المخطط لعرض تفاصيله والموظفين التابعين له.
-            </p>
-          )}
-          <MermaidView
-            source={mermaidDiagram.source}
-            ariaLabel="المخطط التنظيمي للأقسام"
-            onNodeClick={openDiagramNode}
-            className="min-h-40"
-          />
-        </div>
-      )}
-
-      {view === 'tree' &&
+      {view !== 'table' &&
         (treeQuery.isLoading ? (
-          <div className="flex flex-col gap-2 rounded-xl border border-border bg-surface p-4">
+          <div role="status" aria-label="جارٍ تحميل الهيكل التنظيمي" className="flex flex-col gap-2 rounded-xl border border-border bg-surface p-4">
             {Array.from({ length: 6 }, (_, index) => (
               <Skeleton key={index} className="h-9 w-full" />
             ))}
@@ -320,6 +402,15 @@ export function DepartmentHierarchyTree() {
               </Button>
             }
           />
+        ) : view === 'mermaid' ? (
+          <div className="flex flex-col gap-2">
+            <p className="text-xs text-muted">
+              اضغط على أي قسم في المخطط لعرض تفاصيله والموظفين التابعين له.
+            </p>
+            <MermaidView source={mermaidDiagram.source} ariaLabel="المخطط التنظيمي للأقسام" onNodeClick={openDiagramNode} className="min-h-40" />
+          </div>
+        ) : view === 'chart' ? (
+          <DepartmentTypeChart nodes={filteredTree} typeLabel={typeLabel} />
         ) : (
           <div className="rounded-xl border border-border bg-surface">
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-3 py-2 text-xs text-muted">
@@ -332,12 +423,17 @@ export function DepartmentHierarchyTree() {
                 </span>
               )}
             </div>
-            <ul className="flex flex-col gap-0.5 p-2">
+            {showEmployees && (
+              <p className="px-3 pt-2 text-xs text-muted">افتح «الموظفون المباشرون» داخل أي قسم لتحميل موظفيه فقط. بحث الأقسام لا يبحث في الموظفين.</p>
+            )}
+            <ul aria-label="الهيكل التنظيمي للأقسام" className="flex flex-col gap-0.5 p-2">
               {filteredTree.map((node) => (
                 <DepartmentTreeNodeRow
                   key={node.departmentId}
                   node={node}
                   collapsedIds={effectiveCollapsedIds}
+                  collapseDisabled={searching}
+                  showEmployees={showEmployees}
                   onToggle={toggleCollapsed}
                   onOpen={setSelectedId}
                   menu={nodeMenu}
@@ -354,6 +450,31 @@ export function DepartmentHierarchyTree() {
           if (!open) setSelectedId(null)
         }}
         resolveName={resolveName}
+        onEdit={openEditFormById}
+      />
+
+      <DepartmentFormDialog
+        target={formTarget}
+        onOpenChange={(open) => {
+          if (!open) setFormTarget(null)
+        }}
+      />
+
+      <ConfirmDialog
+        open={activeTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) setActiveTarget(null)
+        }}
+        title={activeTarget?.active ? 'تفعيل القسم' : 'إيقاف القسم'}
+        description={
+          activeTarget?.active
+            ? `سيتم إعادة تفعيل «${activeTarget?.nameAr}» وإتاحته في الهيكل التنظيمي.`
+            : `سيتم إيقاف «${activeTarget?.nameAr}». لا يمكن إيقاف قسم لديه أقسام فرعية فعّالة.`
+        }
+        confirmLabel={activeTarget?.active ? 'تفعيل القسم' : 'إيقاف القسم'}
+        destructive={activeTarget ? !activeTarget.active : false}
+        loading={setActiveMutation.isPending}
+        onConfirm={() => void confirmActiveChange()}
       />
     </div>
   )

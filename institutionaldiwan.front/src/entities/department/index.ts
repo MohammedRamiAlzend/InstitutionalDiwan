@@ -5,5 +5,6 @@ export {
   useDepartmentTree,
   useDepartmentById,
 } from './model/queries'
+export { useDepartmentOptions, type DepartmentOption } from './model/options'
 export { departmentTreeToMermaid } from './model/toMermaid'
 export { DepartmentBadge } from './ui/DepartmentBadge'

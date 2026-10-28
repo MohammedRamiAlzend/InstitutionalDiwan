@@ -29,8 +29,11 @@ internal sealed class AssignUserRoleCommandHandler : ICommandHandler<AssignUserR
         if (user is null)
             return Result.Failure<UserResponse>(DomainErrors.Identity.UserNotFound);
 
-        if (await _roleRepository.GetByIdAsync(request.RoleId, cancellationToken) is null)
+        var role = await _roleRepository.GetByIdAsync(request.RoleId, cancellationToken);
+        if (role is null)
             return Result.Failure<UserResponse>(DomainErrors.Identity.RoleNotFound);
+        if (!role.IsActive)
+            return Result.Failure<UserResponse>(DomainErrors.Identity.RoleInactive);
 
         var assignResult = user.AssignRole(
             request.RoleId, request.AssignedByUserId, _unitOfWork.UtcNow);

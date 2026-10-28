@@ -7,6 +7,7 @@ export const ROUTES = {
   DOCUMENT_DETAIL: (id: string) => `/documents/${id}`,
   MOVEMENTS: '/movements',
   DEPARTMENTS: '/departments',
+  INSTITUTION_SETTINGS: '/institution-settings',
   USERS: '/users',
   ROLES: '/roles',
   EMPLOYEES: '/employees',

@@ -7,15 +7,15 @@ using InstitutionalDiwan.Domain.Repositories;
 namespace InstitutionalDiwan.Infrastructure.Authorization;
 
 /// <summary>
-/// Resolves organizational scope from the caller's token plus their persisted profile:
+/// Resolves organizational scope from the caller's live persisted profile:
 /// <list type="bullet">
 ///   <item><c>DEPARTMENT</c> — the primary department and any active department assignment.</item>
 ///   <item><c>DEPARTMENT_TREE</c> — the primary department's subtree, plus assignments
 ///   (assignments expand descendants when their <c>IncludeSubtree</c> flag is set).</item>
 ///   <item><c>INSTITUTION</c> / <c>SYSTEM</c> — every department.</item>
 /// </list>
-/// The scope is re-read from the user record because assignments are managed after the token was
-/// issued; the token contributes the identity and its scope type.
+/// The active account, primary department, scope type, and assignments are re-read before any
+/// access is granted; the token contributes only the caller's identity.
 /// </summary>
 public sealed class DepartmentScopeEvaluator : IDepartmentScopeEvaluator
 {
@@ -42,9 +42,6 @@ public sealed class DepartmentScopeEvaluator : IDepartmentScopeEvaluator
     {
         if (!_userContext.IsAuthenticated || departmentId == Guid.Empty)
             return false;
-
-        if (IsInstitutionWide(_userContext.ScopeTypeId) || _userContext.PrimaryDepartmentId == departmentId)
-            return true;
 
         var user = await _userRepository.GetByIdAsync(_userContext.UserId, cancellationToken);
         if (user is null || !user.IsActive)

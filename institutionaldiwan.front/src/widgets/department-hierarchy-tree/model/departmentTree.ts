@@ -1,8 +1,8 @@
 import type { DepartmentTreeNodeResponse } from '@/entities/department'
 
-export type DepartmentView = 'tree' | 'mermaid' | 'table'
+export type DepartmentView = 'tree' | 'mermaid' | 'chart' | 'table'
 
-const VIEWS: readonly DepartmentView[] = ['tree', 'mermaid', 'table']
+const VIEWS: readonly DepartmentView[] = ['tree', 'mermaid', 'chart', 'table']
 
 export function isDepartmentView(value: string | undefined): value is DepartmentView {
   return value !== undefined && VIEWS.includes(value as DepartmentView)

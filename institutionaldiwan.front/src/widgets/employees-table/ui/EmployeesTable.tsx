@@ -9,7 +9,7 @@ import {
   UserX,
 } from 'lucide-react'
 import { toast } from 'sonner'
-import { DepartmentBadge, useDepartments } from '@/entities/department'
+import { DepartmentBadge, useDepartmentOptions } from '@/entities/department'
 import { useEmployees, type EmployeeResponse } from '@/entities/employee'
 import { useSessionStore } from '@/entities/user'
 import {
@@ -29,23 +29,27 @@ import {
   Button,
   ConfirmDialog,
   DataTable,
+  Select,
   type DataTableColumn,
   type MenuEntry,
 } from '@/shared/ui'
 
 /** Module 02 employees administration grid (server search + paging). */
 export function EmployeesTable() {
-  const table = useTableState()
+  const table = useTableState({ defaultSortKey: 'fullNameAr', defaultSortDirection: 'asc', filterKeys: ['departmentId'] })
   const employeesQuery = useEmployees({
     page: table.page,
     pageSize: table.pageSize,
     search: table.search || undefined,
+    departmentId: table.filters.departmentId || undefined,
+    sortBy: table.sortKey ?? 'fullNameAr',
+    sortDescending: table.sortDirection === 'desc',
   })
 
   const hasPermission = useSessionStore((state) => state.hasPermission)
-  const canManageDepartments = hasPermission(Permissions.DepartmentManage)
+  const canManageEmployees = hasPermission(Permissions.EmployeeManage)
 
-  const departmentsQuery = useDepartments({ enabled: canManageDepartments })
+  const departmentsQuery = useDepartmentOptions({ enabled: canManageEmployees })
 
   const departmentById = useMemo(
     () =>
@@ -104,6 +108,8 @@ export function EmployeesTable() {
       {
         id: 'employee',
         header: 'الموظف',
+        sortable: true,
+        sortKey: 'fullNameAr',
         hideable: false,
         cell: (employee) => (
           <div className="flex flex-col gap-0.5">
@@ -121,6 +127,7 @@ export function EmployeesTable() {
       {
         id: 'employeeNumber',
         header: 'الرقم الوظيفي',
+        sortable: true,
         cell: (employee) =>
           employee.employeeNumber ? (
             <span dir="ltr" className="font-mono text-xs text-foreground">
@@ -195,6 +202,8 @@ export function EmployeesTable() {
       {
         id: 'status',
         header: 'الحالة',
+        sortable: true,
+        sortKey: 'isActive',
         cell: (employee) => (
           <Badge variant={employee.isActive ? 'success' : 'danger'}>
             {employee.isActive ? 'نشط' : 'موقوف'}
@@ -204,6 +213,7 @@ export function EmployeesTable() {
       {
         id: 'createdAt',
         header: 'تاريخ الإنشاء',
+        sortable: true,
         defaultHidden: true,
         cell: (employee) => (
           <span dir="ltr" className="whitespace-nowrap text-xs text-muted">
@@ -296,6 +306,26 @@ export function EmployeesTable() {
         onPageSizeChange={table.setPageSize}
         search={table.search}
         onSearchChange={table.setSearch}
+        sortKey={table.sortKey}
+        sortDirection={table.sortDirection}
+        onSortChange={table.setSort}
+        filters={
+          <div className="flex flex-wrap items-center gap-2">
+            <Select
+              aria-label="تصفية حسب القسم"
+              value={table.filters.departmentId || 'all'}
+              onValueChange={(id) => table.setFilter('departmentId', id === 'all' ? null : id)}
+              options={[
+                { value: 'all', label: 'كل الأقسام' },
+                ...(departmentsQuery.data ?? []).map((department) => ({ value: department.departmentId, label: department.nameAr })),
+              ]}
+              disabled={departmentsQuery.isLoading}
+            />
+            {departmentsQuery.error && (
+              <Button type="button" variant="outline" onClick={() => void departmentsQuery.refetch()}>إعادة تحميل الأقسام</Button>
+            )}
+          </div>
+        }
         searchPlaceholder="ابحث باسم الموظف أو رقمه الوظيفي…"
         rowMenu={buildRowMenu}
         headerMenu={headerMenu}

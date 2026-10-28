@@ -28,7 +28,7 @@ public sealed class RevokeDocumentAccessCommandHandlerTests
         var revokedBy = Guid.NewGuid();
 
         var result = await new RevokeDocumentAccessCommandHandler(grants, unitOfWork).Handle(
-            new RevokeDocumentAccessCommand(grant.GrantId, revokedBy),
+            new RevokeDocumentAccessCommand(grant.DocumentId, grant.GrantId, revokedBy),
             CancellationToken.None);
 
         Assert.True(result.IsSuccess);
@@ -42,12 +42,26 @@ public sealed class RevokeDocumentAccessCommandHandlerTests
     {
         var result = await new RevokeDocumentAccessCommandHandler(
             new FakeDocumentAccessGrantRepository(), new FakeUnitOfWork()).Handle(
-            new RevokeDocumentAccessCommand(Guid.NewGuid(), Guid.NewGuid()),
+            new RevokeDocumentAccessCommand(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid()),
             CancellationToken.None);
 
         Assert.True(result.IsFailure);
         Assert.Equal(DomainErrors.Identity.AccessGrantNotFound.Code, result.Error.Code);
         Assert.Equal(ErrorType.NotFound, result.Error.Type);
+    }
+
+    [Fact]
+    public async Task Handle_WhenRouteDocumentDoesNotOwnGrant_DoesNotRevokeOrSave()
+    {
+        var (grants, grant) = Setup();
+        var unitOfWork = new FakeUnitOfWork();
+        var result = await new RevokeDocumentAccessCommandHandler(grants, unitOfWork).Handle(
+            new RevokeDocumentAccessCommand(Guid.NewGuid(), grant.GrantId, Guid.NewGuid()), CancellationToken.None);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(DomainErrors.Identity.AccessGrantNotFound, result.Error);
+        Assert.False(grant.IsRevoked);
+        Assert.Equal(0, unitOfWork.SaveChangesCallCount);
     }
 
     [Fact]
@@ -57,7 +71,7 @@ public sealed class RevokeDocumentAccessCommandHandlerTests
         Assert.True(grant.Revoke(Guid.NewGuid()).IsSuccess);
 
         var result = await new RevokeDocumentAccessCommandHandler(grants, new FakeUnitOfWork()).Handle(
-            new RevokeDocumentAccessCommand(grant.GrantId, Guid.NewGuid()),
+            new RevokeDocumentAccessCommand(grant.DocumentId, grant.GrantId, Guid.NewGuid()),
             CancellationToken.None);
 
         Assert.True(result.IsFailure);

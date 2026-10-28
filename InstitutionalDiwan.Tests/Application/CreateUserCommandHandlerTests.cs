@@ -26,7 +26,15 @@ public sealed class CreateUserCommandHandlerTests
         FakeUnitOfWork unitOfWork,
         FakeEmployeeRepository? employees = null) =>
         new(users, departments, employees ?? new FakeEmployeeRepository(),
-            roles, new FakePasswordHasher(), unitOfWork);
+            roles, new FakePasswordHasher(), unitOfWork, Scopes());
+
+    private static FakeLookupRepository Scopes()
+    {
+        var lookups = new FakeLookupRepository();
+        for (var id = 1; id <= 4; id++)
+            lookups.Add("user-scope-types", UserScopeType.Create(id, $"Scope {id}", $"نطاق {id}").Value);
+        return lookups;
+    }
 
     [Fact]
     public async Task Handle_WithValidRequest_CreatesHashedUserAndSaves()

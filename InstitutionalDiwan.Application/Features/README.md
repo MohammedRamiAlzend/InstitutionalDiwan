@@ -36,9 +36,29 @@ grouping by technical type, so a slice can be read top-to-bottom.
 - **Commands:** `CreateDepartmentCommand` ✅ (creates under an optional active parent; validates the department type exists and is active; rejects duplicate codes with `Department.CodeAlreadyExists`), `UpdateDepartmentCommand` ✅ (renames, moves parent with self/cycle/inactive guards, updates the external-correspondence policy), `MoveDepartmentCommand` ✅ (dedicated reparent with full-subtree cycle validation → `Department.CyclicHierarchy`), `DeleteDepartmentCommand` ✅ (soft delete via `Deactivate`, blocked by `Department.HasActiveChildren`), `ActivateDepartmentCommand` ✅, `UpdateInstitutionSettingsCommand` ✅ (validates the Central Diwan department is an active root of type `CENTRAL_DIWAN`; moving it requires a transfer reason; numbering mode/reset policy checked against their lookups — see [`Organization/InstitutionSettings/README.md`](Organization/InstitutionSettings/README.md))
 - **Queries:** `GetDepartmentTreeQuery` ✅ (root nodes with nested children), `GetDepartmentByIdQuery` ✅, `ListDepartmentsQuery` ✅; `GetInstitutionSettingsQuery` ✅
 
+Department writes protect the department currently designated by institution settings, not every
+`CENTRAL_DIWAN`-typed department. Transfer the designation through settings before reparenting or
+deactivating the current hub; otherwise the handlers return `Department.CentralDiwanProtected` (409).
+
+| Department write handler | Purpose |
+| --- | --- |
+| `Organization/Departments/UpdateDepartmentCommandHandler.cs` | Updates names, manager, notes, and external policy; validates hierarchy changes and prevents assigning the designated hub a non-null parent while allowing root-preserving edits. |
+| `Organization/Departments/MoveDepartmentCommandHandler.cs` | Reparents with parent/activity/cycle checks and designated-hub protection; an unchanged root is a no-op. |
+| `Organization/Departments/DeleteDepartmentCommandHandler.cs` | Deactivates only non-designated departments without active children. |
+| `Organization/Departments/ActivateDepartmentCommandHandler.cs` | Requires an existing active parent before reactivating an inactive child; returns `Department.ParentNotFound` or `Department.InactiveParent` otherwise. |
+
 ### Identity (Module 02)
 - **Commands:** `LoginCommand` ✅, `RegisterCommand` ✅, `ChangePasswordCommand` ✅, `CreateRoleCommand` ✅ (rejects duplicate codes with `Identity.RoleCodeAlreadyExists`), `UpdateRoleCommand` ✅ (names + description; the code is immutable), `DeleteRoleCommand` ✅ (soft delete via `Deactivate`, system roles rejected with `Identity.SystemRoleProtected`), `ActivateRoleCommand` ✅, `GrantRolePermissionCommand` ✅ (validates the code against the permission catalog, 409 `Identity.PermissionAlreadyGranted`), `RevokeRolePermissionCommand` ✅ (idempotent), `CreateEmployeeCommand` ✅, `UpdateEmployeeCommand` ✅, `DeactivateEmployeeCommand` ✅, `ActivateEmployeeCommand` ✅, `GrantDocumentAccessCommand` ✅, `RevokeDocumentAccessCommand` ✅, `CreateUserCommand` ✅ (hashes the raw password, rejects duplicate usernames with `Identity.UsernameTaken`, validates the primary department and optional employee), `UpdateUserCommand` ✅, `DeactivateUserCommand` ✅, `ActivateUserCommand` ✅, `AssignUserRoleCommand` ✅ (records the grantor; 409 `Identity.RoleAlreadyAssigned`), `RevokeUserRoleCommand` ✅, `AssignUserDepartmentScopeCommand` ✅ (starts a temporal assignment; 409 when the department is already assigned), `EndUserDepartmentScopeCommand` ✅ (keeps the row with its end date)
-- **Queries:** `ListUsersQuery` ✅ (paged + username search), `GetUserByIdQuery` ✅, `ListRolesQuery` ✅, `GetRoleByIdQuery` ✅, `ListPermissionsQuery` ✅ (permission catalog), `ListEmployeesQuery` ✅ (paged + name/number search), `GetEmployeeByIdQuery` ✅, `ListDocumentAccessGrantsQuery` ✅, `GetUserEffectivePermissionsQuery` ✅ (role codes + permission claims + active assignments, mirroring the token), `GetUserProfileQuery` ✅ (the caller's own profile behind `GET /api/auth/me`, projected from the ambient `IUserContext` — see [`Identity/Login/README.md`](Identity/Login/README.md))
+- **Queries:** `ListUsersQuery` ✅ (paged + username search + sorting), `GetUserByIdQuery` ✅, `ListRolesQuery` ✅, `GetRoleByIdQuery` ✅, `ListPermissionsQuery` ✅ (permission catalog), `ListEmployeesQuery` ✅ (paged + name/number search + sorting), `GetEmployeeByIdQuery` ✅, `ListDocumentAccessGrantsQuery` ✅, `GetUserEffectivePermissionsQuery` ✅ (role codes + permission claims + active assignments, mirroring the token), `GetUserProfileQuery` ✅ (the caller's own profile behind `GET /api/auth/me`, projected from the ambient `IUserContext` — see [`Identity/Login/README.md`](Identity/Login/README.md)), and `Identity/IdentityOptionsQueries.cs` ✅ (minimal department/role/employee/user picker reads used by administrative and document forms)
+
+| Shared Identity file | Purpose |
+| --- | --- |
+| `Identity/IdentityTokenIssuer.cs` | Resolves only active assigned roles and their permission union for both login and password-change responses, then delegates signed token issuance to `IJwtProvider`. |
+| `Identity/IdentityOptionsQueries.cs` | `DepartmentOptionResponse`, `RoleOptionResponse`, `EmployeeOptionResponse`, `UserOptionResponse` and their handlers; expose labels/ids/isActive only (no contact data, roles, or role permissions) behind the OR-of-exact-permissions controller policy. The user lookup is paged and username-searchable. |
+
+Inactive roles never appear in fresh tokens, and `AssignUserRoleCommand` rejects them with
+`Identity.RoleInactive` (409) before modifying the user. The host validates each token's session
+stamp against live identity/role/permission state and restricts forced-change sessions server-side.
 
 ### Correspondence (Module 03)
 - **Commands:** `CreateDocumentCommand` ✅ (single-step create with an explicit official number: validates the number + numbering year, rejects with `Numbering.OfficialNumberTaken` (409) when the pair is taken, issues a `DocumentNumber`, saves as `REGISTERED`), `CreateDraftDocumentCommand` ✅ (DRAFT, no number consumed), `UpdateDraftMetadataCommand` ✅ (only DRAFT editable → `Correspondence.OnlyDraftEditable`), `RegisterDocumentCommand` ✅ (DRAFT → REGISTERED with a registry-allocated number), `AddDocumentParticipantCommand` ✅ (exactly-one target; one external organization max), `CancelDocumentCommand` ✅ (reason required; blocked by active movements), `CreateExternalOrganizationCommand` ✅, `UpdateExternalOrganizationCommand` ✅, `DeactivateExternalOrganizationCommand` ✅, `ActivateExternalOrganizationCommand` ✅ (see [`Correspondence/ExternalOrganizations/README.md`](Correspondence/ExternalOrganizations/README.md))
@@ -107,6 +127,7 @@ registries, per-document grants/movements) still returns a plain collection on p
 
 | Module slice | State |
 | --- | --- |
+| Identity token/role security | Implemented; login/password-change tokens exclude inactive roles and new inactive-role assignments are rejected. |
 | Identity (`Login`, `Register`, `ChangePassword`) | ✅ Implemented |
 | Identity/`Users` (list, get by id, create, update, deactivate/activate, assign/revoke role) | ✅ Implemented |
 | Identity/`Roles` (create, update, soft delete, activate, get by id, list, grant/revoke permission) + Identity/`Permissions` catalog | ✅ Implemented |
@@ -116,8 +137,8 @@ registries, per-document grants/movements) still returns a plain collection on p
 | Correspondence/`Documents` (immediate create, draft, update, register, participants, cancel, details, timeline, list) | ✅ Implemented |
 | Correspondence/`ExternalOrganizations` (create, update, list, get, deactivate, activate) | ✅ Implemented |
 | `Lookups` (list, get by id, create, relabel, deactivate, activate over all 33 catalogs) | ✅ Implemented |
-| Organization/`Departments` (create, update, soft delete, activate, get by id, list, tree) | ✅ Implemented |
-| Organization/`InstitutionSettings` (get, update incl. Central Diwan guards) | ✅ Implemented |
+| Organization/`Departments` (create, update, soft delete, activate, get by id, list, tree) | Implemented; designated-hub protection and parent-first reactivation |
+| Organization/`InstitutionSettings` (get, update incl. Central Diwan guards) | Implemented; `LogoPath` limited to 500 characters |
 | Numbering/`Registries` + `Numbers` (registry CRUD, issue/cancel/replace, history, department register entries, register book) | ✅ Implemented |
 | Movements (routing workflow + inbox/outbox + Central Diwan hub) | ✅ Implemented |
 | Attachments (Module 06: create/upload/archive, list/download/verify) | ✅ Implemented |
@@ -128,6 +149,10 @@ registries, per-document grants/movements) still returns a plain collection on p
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-28 | Qoder | Added the paged `ListUserOptionsQuery` (`userId`, `username`, `isActive`) for document access-grant and movement-assignment pickers; department options now also serve `DOCUMENT_CREATE`/`DOCUMENT_EDIT` holders. |
+| 2026-10-28 | Qoder | Added `Identity/IdentityOptionsQueries.cs` for permission-scoped, minimal department/role/employee picker reads, plus user/employee list sorting. |
+| 2026-10-28 | Qoder | Filter inactive roles from shared login/password-change issuance and reject new inactive-role grants; document host-side session revocation and forced-password enforcement. |
+| 2026-10-28 | Qoder | Protect the designated Central Diwan from reparenting/deactivation until settings transfer, require an active existing parent for child reactivation, and bound settings `LogoPath` to 500 characters. |
 | 2026-10-26 | Qoder | Added `Audit/AuditActionRecorder` (implementing `IAuditActionRecorder`) so the web host can record every authenticated action as an `Operation` audit row through an isolated scope. |
 | 2026-10-25 | opencode | Implemented the Module 09 Audit slice: `GetAuditLogsQuery` (self-auditing filtered search), `CreateAuditCheckpointCommand` (verify-then-seal), `RunAuditIntegrityCheckCommand`, and `GetAuditIntegrityReportsQuery`; added `AuditLogAppender` for explicit chain appends. |
 | 2026-10-25 | opencode | Closed the Module 05 gaps (mandatory Central Diwan hub, rejection routing to the hub, step-scoped route support) and added the atomic Module 06 initial upload (`CreateDocumentFileWithVersionCommand`). |

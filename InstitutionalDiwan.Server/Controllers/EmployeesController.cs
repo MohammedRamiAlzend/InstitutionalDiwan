@@ -48,10 +48,12 @@ public sealed class EmployeesController : ControllerBase
         [Description("Name or employee-number search term (string, optional). Example: Ali.")] [FromQuery] string? search = null,
         [Description("Restricts the page to one department (GUID, optional). Example: e7a62f43-9b82-4d01-8c2e-7ab91e506d42.")] [FromQuery] Guid? departmentId = null,
         [Description("When true, the department filter also covers every descendant (boolean, optional, default false). Example: true.")] [FromQuery] bool includeSubDepartments = false,
+        [Description("Sort column: fullNameAr (default), employeeNumber, createdAt, isActive. Example: employeeNumber.")] [FromQuery] string? sortBy = null,
+        [Description("Sort descending instead of ascending. Example: true.")] [FromQuery] bool sortDescending = false,
         CancellationToken cancellationToken = default)
     {
         var result = await _sender.Send(
-            new ListEmployeesQuery(page, pageSize, search, departmentId, includeSubDepartments),
+            new ListEmployeesQuery(page, pageSize, search, departmentId, includeSubDepartments, sortBy, sortDescending),
             cancellationToken);
 
         return result.ToActionResult();

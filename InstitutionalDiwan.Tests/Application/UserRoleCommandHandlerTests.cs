@@ -71,6 +71,25 @@ public sealed class UserRoleCommandHandlerTests
     }
 
     [Fact]
+    public async Task Assign_WhenRoleInactive_ReturnsConflictWithoutMutationOrSave()
+    {
+        var (users, roles, user, role) = Setup();
+        Assert.True(role.Deactivate().IsSuccess);
+        var unitOfWork = new FakeUnitOfWork();
+        var updatedAt = user.UpdatedAt;
+
+        var result = await new AssignUserRoleCommandHandler(users, roles, unitOfWork).Handle(
+            new AssignUserRoleCommand(user.UserId, role.RoleId), CancellationToken.None);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(DomainErrors.Identity.RoleInactive, result.Error);
+        Assert.Equal(ErrorType.Conflict, result.Error.Type);
+        Assert.Empty(user.UserRoles);
+        Assert.Equal(updatedAt, user.UpdatedAt);
+        Assert.Equal(0, unitOfWork.SaveChangesCallCount);
+    }
+
+    [Fact]
     public async Task Revoke_WithAssignedRole_RemovesRoleAndSaves()
     {
         var (users, roles, user, _) = Setup();

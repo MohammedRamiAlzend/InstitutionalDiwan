@@ -15,10 +15,10 @@ Composes the user reads (`entities/user`) with the user writes (`features/user-m
 ## 3. Contents & Segments
 
 - `ui/UsersTable.tsx`
-  - `useUsers` paged query driven by `useTableState` (`page`, `pageSize`, `search` in the URL).
-  - Columns: username (marked «أنت» for the signed-in account), primary department, scope, roles, status, and optional hidden columns (must-change-password, linked employee, created/updated timestamps).
-  - Department names resolve through `useDepartments` (enabled by `DEPARTMENT_MANAGE`); unknown or stale department ids fall back to a shortened GUID with the full value in `title`. Role codes resolve to Arabic names through `useRoles` (enabled by `ROLE_MANAGE`), falling back to the code.
-  - Row menu: edit, manage roles (disabled without `ROLE_MANAGE`), permissions & assignments, reset password (disabled for the current account), activate/deactivate (disabled for the current account), copy username, copy id.
+  - `useUsers` paged query driven by `useTableState` (`page`, `pageSize`, `search`, `sortKey`, `sortDirection` in the URL; default `username` ascending).
+  - Columns: username (marked «أنت» for the signed-in account), primary department, scope, roles, status, and optional hidden columns (must-change-password, linked employee, created/updated timestamps). Username, status, last login, and creation time are sortable through the server.
+  - Department names resolve through `useDepartmentOptions` (`/api/identity-options/departments`, enabled by `USER_MANAGE`); unknown or stale department ids fall back to a shortened GUID with the full value in `title`. Role codes resolve to Arabic names through `useRoleOptions`, falling back to the code.
+  - Row menu: edit, manage roles, permissions & assignments, reset password (disabled for the current account), activate/deactivate (disabled for the current account), copy username, copy id. All management actions gate on `USER_MANAGE`.
   - Header/empty menus: create user and refresh. Rows and the grid surface also open the same menu on right-click / `Shift+F10`.
   - Status changes go through `ConfirmDialog` with an Arabic description; success and failure surface as toasts.
 - `index.ts` — Public API barrel file.
@@ -33,9 +33,11 @@ Composes the user reads (`entities/user`) with the user writes (`features/user-m
 - ✅ Create/edit/roles/access dialogs mounted from the row menu; self-deactivation blocked.
 - ✅ «إعادة تعيين كلمة المرور» opens the admin reset dialog (blocked for the signed-in account).
 - ✅ Verified in-browser against the live API (RTL, light/dark, search, dialogs, Arabic validation, reset flow with a forced change on next login).
-- ❌ No server-side sorting yet — the API exposes `page`/`pageSize`/`search` only for users.
+- ✅ Server-side sorting (username, status, last login, creation time) is wired through the grid header and `GET /api/users?sortBy=…&sortDescending=…`.
 
 ## 6. Change Log
+
+- 2026-10-28: Added server sorting, switched the supporting catalogs to `useRoleOptions`/`useDepartmentOptions`, and aligned every management action with `USER_MANAGE`.
 
 - 2026-10-28: Added the «إعادة تعيين كلمة المرور» row action (disabled for self) that mounts `ResetPasswordDialog` from `features/user-manage`.
 - 2026-10-28: Implemented Phase 3 — the users grid with permission-filtered actions, stale-department fallback, status confirmation, and the three feature dialogs; created this slice README.

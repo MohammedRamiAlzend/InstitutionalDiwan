@@ -1,6 +1,6 @@
 # Presentation / Controllers
 
-> **Status:** Implemented — seventeen thin controllers, one per module plus the generic lookups controller.
+> **Status:** Implemented — eighteen thin controllers, one per module plus the generic lookups controller and the administrative picker reads.
 
 ## Purpose
 
@@ -25,7 +25,8 @@ access live here.
 | `RolesController.cs` | `api/roles` | `ROLE_MANAGE` | Role CRUD, activate, grant/revoke permissions. |
 | `PermissionsController.cs` | `api/permissions` | `ROLE_MANAGE` | The permission catalog. |
 | `DepartmentsController.cs` | `api/departments` | `DEPARTMENT_MANAGE` | Department CRUD, tree, reparent, soft delete + activate. |
-| `EmployeesController.cs` | `api/employees` | `EMPLOYEE_MANAGE` | Employee CRUD (paged/searchable list, optional `departmentId` + `includeSubDepartments` filter), deactivate/activate. |
+| `EmployeesController.cs` | `api/employees` | `EMPLOYEE_MANAGE` | Employee CRUD (paged/searchable/sortable list, optional `departmentId` + `includeSubDepartments` filter), deactivate/activate. |
+| `IdentityOptionsController.cs` | `api/identity-options` | OR of exact policies: departments (`USER_MANAGE`/`EMPLOYEE_MANAGE`/`DEPARTMENT_MANAGE`/`DOCUMENT_VIEW`/`DOCUMENT_CREATE`/`DOCUMENT_EDIT`), roles (`USER_MANAGE`/`ROLE_MANAGE`), employees (`USER_MANAGE`/`DEPARTMENT_MANAGE`/`EMPLOYEE_MANAGE`), users (`USER_MANAGE`/`ACCESS_GRANT_MANAGE`/`DOCUMENT_EDIT`) | Minimal picker reads for administrative and document forms: ids, Arabic labels/usernames, and active flags only — no contact data, roles, or management rights. |
 | `DocumentAccessGrantsController.cs` | `api/documents/{documentId}/access-grants` | `ACCESS_GRANT_MANAGE` | Per-document access grants: list/grant/revoke. |
 | `NumberingRegistriesController.cs` | `api/numbering/registries` | `NUMBERING_VIEW` reads; `NUMBERING_MANAGE` writes | Numbering registry list/by-id + create, update, deactivate, activate. |
 | `LookupsController.cs` | `api/lookups/{lookup}` | `[Authorize]` reads; `LOOKUP_MANAGE` writes | Generic reference-catalog API over all 33 seeded lookups. |
@@ -125,6 +126,9 @@ plain JSON array.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-28 | Qoder | Module 03 Phase 2: department options now also accept `DOCUMENT_VIEW`, so read-only document registry users can resolve owning-department names and drive the department filter. |
+| 2026-10-28 | Qoder | Module 03 Phase 0: `GET /api/identity-options/users` (paged username search; `USER_MANAGE`, `ACCESS_GRANT_MANAGE`, or `DOCUMENT_EDIT`) and department options opened to `DOCUMENT_CREATE`/`DOCUMENT_EDIT` so document, participant, grant, and movement forms can pick parties without broader administration rights. |
+| 2026-10-28 | agent | Added `IdentityOptionsController` (`api/identity-options/{departments,roles,employees}`) for minimal, OR-of-exact-permissions picker reads; documented user/employee `sortBy`/`sortDescending` and the document-scoped grant revoke route. |
 | 2026-10-28 | agent | `GET /api/employees` gained `departmentId` (GUID) and `includeSubDepartments` (bool, default false) so the department card can list the people of one unit and, optionally, its descendants. |
 
 | 2026-10-28 | agent | Added `POST /api/users/{userId}/reset-password` so an administrator holding `USER_MANAGE` can reset a forgotten password; the account is flagged to change it at the next sign-in and the caller is recorded for auditing. |

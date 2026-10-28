@@ -1,5 +1,6 @@
 using InstitutionalDiwan.Application.Features.Organization.Departments;
 using InstitutionalDiwan.Domain.Common;
+using InstitutionalDiwan.Domain.Entities.Numbering;
 using InstitutionalDiwan.Domain.Entities.Organization;
 using InstitutionalDiwan.Domain.Errors;
 using InstitutionalDiwan.Tests.Support;
@@ -27,7 +28,7 @@ public sealed class MoveDepartmentCommandHandlerTests
         departments.Add(department);
         var unitOfWork = new FakeUnitOfWork();
 
-        var result = await new MoveDepartmentCommandHandler(departments, unitOfWork).Handle(
+        var result = await new MoveDepartmentCommandHandler(departments, new FakeInstitutionSettingRepository(), unitOfWork).Handle(
             new MoveDepartmentCommand(department.DepartmentId, target.DepartmentId),
             CancellationToken.None);
 
@@ -45,7 +46,7 @@ public sealed class MoveDepartmentCommandHandlerTests
         departments.Add(parent);
         departments.Add(department);
 
-        var result = await new MoveDepartmentCommandHandler(departments, new FakeUnitOfWork()).Handle(
+        var result = await new MoveDepartmentCommandHandler(departments, new FakeInstitutionSettingRepository(), new FakeUnitOfWork()).Handle(
             new MoveDepartmentCommand(department.DepartmentId, null),
             CancellationToken.None);
 
@@ -63,7 +64,7 @@ public sealed class MoveDepartmentCommandHandlerTests
         departments.Add(department);
         var unitOfWork = new FakeUnitOfWork();
 
-        var result = await new MoveDepartmentCommandHandler(departments, unitOfWork).Handle(
+        var result = await new MoveDepartmentCommandHandler(departments, new FakeInstitutionSettingRepository(), unitOfWork).Handle(
             new MoveDepartmentCommand(department.DepartmentId, parent.DepartmentId),
             CancellationToken.None);
 
@@ -75,7 +76,8 @@ public sealed class MoveDepartmentCommandHandlerTests
     [Fact]
     public async Task Handle_WhenDepartmentIsMissing_ReturnsNotFound()
     {
-        var result = await new MoveDepartmentCommandHandler(new FakeDepartmentRepository(), new FakeUnitOfWork())
+        var result = await new MoveDepartmentCommandHandler(
+                new FakeDepartmentRepository(), new FakeInstitutionSettingRepository(), new FakeUnitOfWork())
             .Handle(new MoveDepartmentCommand(Guid.NewGuid(), null), CancellationToken.None);
 
         Assert.True(result.IsFailure);
@@ -90,7 +92,7 @@ public sealed class MoveDepartmentCommandHandlerTests
         var department = CreateDepartment("HR");
         departments.Add(department);
 
-        var result = await new MoveDepartmentCommandHandler(departments, new FakeUnitOfWork()).Handle(
+        var result = await new MoveDepartmentCommandHandler(departments, new FakeInstitutionSettingRepository(), new FakeUnitOfWork()).Handle(
             new MoveDepartmentCommand(department.DepartmentId, Guid.NewGuid()),
             CancellationToken.None);
 
@@ -110,7 +112,7 @@ public sealed class MoveDepartmentCommandHandlerTests
         departments.Add(child);
         departments.Add(grandChild);
 
-        var result = await new MoveDepartmentCommandHandler(departments, new FakeUnitOfWork()).Handle(
+        var result = await new MoveDepartmentCommandHandler(departments, new FakeInstitutionSettingRepository(), new FakeUnitOfWork()).Handle(
             new MoveDepartmentCommand(root.DepartmentId, grandChild.DepartmentId),
             CancellationToken.None);
 
@@ -126,7 +128,7 @@ public sealed class MoveDepartmentCommandHandlerTests
         var department = CreateDepartment("HR");
         departments.Add(department);
 
-        var result = await new MoveDepartmentCommandHandler(departments, new FakeUnitOfWork()).Handle(
+        var result = await new MoveDepartmentCommandHandler(departments, new FakeInstitutionSettingRepository(), new FakeUnitOfWork()).Handle(
             new MoveDepartmentCommand(department.DepartmentId, department.DepartmentId),
             CancellationToken.None);
 
@@ -145,12 +147,35 @@ public sealed class MoveDepartmentCommandHandlerTests
         departments.Add(parent);
         departments.Add(department);
 
-        var result = await new MoveDepartmentCommandHandler(departments, new FakeUnitOfWork()).Handle(
+        var result = await new MoveDepartmentCommandHandler(departments, new FakeInstitutionSettingRepository(), new FakeUnitOfWork()).Handle(
             new MoveDepartmentCommand(department.DepartmentId, parent.DepartmentId),
             CancellationToken.None);
 
         Assert.True(result.IsFailure);
         Assert.Equal(DomainErrors.Department.InactiveParent.Code, result.Error.Code);
         Assert.Equal(ErrorType.Conflict, result.Error.Type);
+    }
+
+    [Fact]
+    public async Task Handle_WhenDesignatedCentralDiwanStaysRoot_ReturnsWithoutSaving()
+    {
+        var departments = new FakeDepartmentRepository();
+        var centralDiwan = Department.Create("CENTRAL", "الديوان", DepartmentType.CentralDiwanId).Value;
+        centralDiwan.ClearDomainEvents();
+        departments.Add(centralDiwan);
+        var settings = new FakeInstitutionSettingRepository();
+        settings.Add(InstitutionSetting.Create(
+            "المؤسسة", NumberingMode.AutomaticId, NumberingResetPolicy.YearlyId,
+            centralDiwanDepartmentId: centralDiwan.DepartmentId).Value);
+        var unitOfWork = new FakeUnitOfWork();
+
+        var result = await new MoveDepartmentCommandHandler(departments, settings, unitOfWork).Handle(
+            new MoveDepartmentCommand(centralDiwan.DepartmentId, null), CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Null(result.Value.ParentDepartmentId);
+        Assert.Null(centralDiwan.UpdatedAt);
+        Assert.Empty(centralDiwan.DomainEvents);
+        Assert.Equal(0, unitOfWork.SaveChangesCallCount);
     }
 }

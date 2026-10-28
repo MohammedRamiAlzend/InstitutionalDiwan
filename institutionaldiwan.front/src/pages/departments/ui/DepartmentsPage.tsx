@@ -10,7 +10,7 @@ export function DepartmentsPage() {
       <div className="flex flex-col gap-6">
         <PageHeader
           title="الأقسام التنظيمية"
-          description="استعرض الهيكل التنظيمي كشجرة تفاعلية أو مخطط أو جدول، وافتح أي قسم لعرض بياناته الكاملة."
+          description="إدارة الهيكل التنظيمي والأقسام ومديريها، مع عرض الموظفين والشجرة والمخططات والجدول."
         />
         <DepartmentHierarchyTree />
       </div>

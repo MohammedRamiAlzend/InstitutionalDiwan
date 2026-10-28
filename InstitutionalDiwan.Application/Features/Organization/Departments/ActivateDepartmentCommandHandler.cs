@@ -27,6 +27,16 @@ internal sealed class ActivateDepartmentCommandHandler
         if (department is null)
             return Result.Failure<DepartmentResponse>(DomainErrors.Department.NotFound);
 
+        if (!department.IsActive && department.ParentDepartmentId is { } parentDepartmentId)
+        {
+            var parent = await _departmentRepository.GetByIdAsync(parentDepartmentId, cancellationToken);
+            if (parent is null)
+                return Result.Failure<DepartmentResponse>(DomainErrors.Department.ParentNotFound);
+
+            if (!parent.IsActive)
+                return Result.Failure<DepartmentResponse>(DomainErrors.Department.InactiveParent);
+        }
+
         var activateResult = department.Activate(_unitOfWork.UtcNow);
         if (activateResult.IsFailure)
             return Result.Failure<DepartmentResponse>(activateResult.Error);

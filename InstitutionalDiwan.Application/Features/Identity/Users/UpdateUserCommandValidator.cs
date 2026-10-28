@@ -13,6 +13,6 @@ public sealed class UpdateUserCommandValidator : AbstractValidator<UpdateUserCom
             .NotEmpty().WithErrorCode("Department.NotFound");
 
         RuleFor(command => command.ScopeTypeId)
-            .GreaterThan(0).WithErrorCode("Identity.UserScopeTypeInvalid");
+            .InclusiveBetween(1, 4).WithErrorCode("Identity.UserScopeTypeInvalid");
     }
 }

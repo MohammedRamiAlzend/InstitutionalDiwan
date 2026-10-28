@@ -3,7 +3,7 @@ import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Briefcase, Hash, Mail, Phone, UserRound } from 'lucide-react'
 import { toast } from 'sonner'
-import { useDepartments } from '@/entities/department'
+import { useDepartmentOptions } from '@/entities/department'
 import type { EmployeeResponse } from '@/entities/employee'
 import { useSessionStore } from '@/entities/user'
 import { toArabicErrorMessage } from '@/shared/api'
@@ -31,9 +31,9 @@ export function EmployeeFormDialog({
 }: EmployeeFormDialogProps) {
   const isEdit = employee !== null
   const hasPermission = useSessionStore((state) => state.hasPermission)
-  const canManageDepartments = hasPermission(Permissions.DepartmentManage)
+  const canManageDepartments = hasPermission(Permissions.EmployeeManage)
 
-  const departmentsQuery = useDepartments({ enabled: canManageDepartments })
+  const departmentsQuery = useDepartmentOptions({ enabled: open && canManageDepartments })
 
   const createMutation = useCreateEmployeeMutation()
   const updateMutation = useUpdateEmployeeMutation()

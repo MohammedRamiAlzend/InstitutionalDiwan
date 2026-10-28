@@ -1,6 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Search, X } from 'lucide-react'
-import { useDebouncedValue } from '@/shared/lib'
 import { Input } from '@/shared/ui'
 
 interface DepartmentSearchProps {
@@ -12,26 +11,22 @@ interface DepartmentSearchProps {
 
 const SEARCH_DEBOUNCE_MS = 300
 
-/** Debounced tree/mermaid search; the committed term stays in the URL. */
+/** Debounced hierarchy/employee search; URL changes cancel any pending draft commit. */
 export function DepartmentSearch({ value, onChange, placeholder }: DepartmentSearchProps) {
   const [draft, setDraft] = useState(value)
-  const debounced = useDebouncedValue(draft, SEARCH_DEBOUNCE_MS)
-  const lastEmitted = useRef<string | undefined>(undefined)
-
-  useEffect(() => {
-    const next = debounced.trim()
-    if (next === value.trim()) return
-    lastEmitted.current = next
-    onChange(debounced)
-  }, [debounced, onChange, value])
-
-  useEffect(() => {
-    if (lastEmitted.current !== undefined && value === lastEmitted.current) {
-      lastEmitted.current = undefined
-      return
-    }
+  const [previousValue, setPreviousValue] = useState(value)
+  // Sync external URL navigation before committing children/effects, without a cascading effect.
+  if (previousValue !== value) {
+    setPreviousValue(value)
     setDraft(value)
-  }, [value])
+  }
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      if (draft.trim() !== value.trim()) onChange(draft)
+    }, SEARCH_DEBOUNCE_MS)
+    return () => window.clearTimeout(timer)
+  }, [draft, onChange, value])
 
   return (
     <Input

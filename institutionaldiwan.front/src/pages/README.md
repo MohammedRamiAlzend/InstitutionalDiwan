@@ -1,10 +1,11 @@
 # institutionaldiwan.front / src/pages — Route Pages Layer
 
-> **Status:** Partially implemented — `login/`, `change-password/`, the `dashboard/` landing, the
-> `/users`, `/roles`, and `/employees` administration pages, and the `/departments` hierarchy page are
-> live; every protected page except `/change-password` renders inside `widgets/app-shell`. The
-> remaining slices are documented and pending.
-> Backend-ready pages include Modules 01–06 and 09; archive stays blocked on Module 07.
+> **Status:** Module 01 Organization has department management/hierarchy and institution-settings
+> pages. Module 02 Identity pages are implemented, but auth/admin audit fixes and final verification
+> are in progress. Protected pages except `/change-password` render inside `widgets/app-shell`.
+> Module 03 Correspondence has a live registry page (`/documents`, Phase 2); its details page,
+> movements, and numbering pages remain planned. Other backend-ready modules remain pending;
+> archive is blocked on Module 07.
 
 ## Purpose
 
@@ -28,16 +29,17 @@ complex business mutations, raw `axios`/`fetch` calls, or reusable domain models
 | `react-router-dom` | `useParams`, `useSearchParams`, `useNavigate`, `<Link>`, `<Outlet>` |
 | `lucide-react` | Page header icons and empty-state illustrations |
 
-## Planned Slices & Backend Endpoint Mapping
+## Contents — Slices & Backend Endpoint Mapping
 
 | Slice Folder | Route(s) | Module & Live Backend Endpoints Used | State |
 | --- | --- | --- | --- |
 | `login/` | `/login` | 02 — `POST /api/auth/login` | ✅ Implemented |
 | `change-password/` | `/change-password` | 02 — `POST /api/auth/change-password` | ✅ Implemented (forced after reset + voluntary) |
 | `dashboard/` | `/` | Recent `GET /api/documents` + inbox summary `GET /api/movements/inbox` | ⚠️ Shell-owned content landing implemented; KPI/activity grid pending |
-| `documents/` | `/documents`, `/documents/:documentId` | 03 + 06 — documents CRUD/details + `GET/POST /api/documents/{id}/files` attachments panel | ❌ Planned |
+| `documents/` | `/documents`, `/documents/:documentId` | 03 + 06 — `GET/POST /api/documents` registry + create/draft, details and attachments panel | Registry ✅ Implemented (Phase 2); details ⏳ Phase 3 |
 | `movements/` | `/movements` | 05 — inbox/outbox (`?tab=inbox\|outbox`) + document routing actions | ❌ Planned |
-| `departments/` | `/departments` | 01 — `GET /api/departments/tree` hierarchy (tree / Mermaid / table reads) | ✅ Implemented (read-only) |
+| `departments/` | `/departments` | 01 — department reads/create/update/reparent/activate/deactivate; scoped employee reads | Implemented: tree/Mermaid/chart/grid, management, lazy employee branches and paged rosters. |
+| `institution-settings/` | `/institution-settings` | 01 — `GET/PUT /api/institution-settings`, department/numbering choices and employee picker | Implemented behind `DEPARTMENT_MANAGE`; no automatic missing-settings creation. |
 | `users/` | `/users` | 02 — users list/CRUD, role assignment, department assignments, effective permissions | ✅ Implemented |
 | `roles/` | `/roles` | 02 — roles CRUD, activate/deactivate, permission matrix | ✅ Implemented |
 | `employees/` | `/employees` | 02 — employees list/CRUD, activate/deactivate | ✅ Implemented |
@@ -62,15 +64,20 @@ the cross-module `widgets/visualization-panel` remains planned.
 | --- | --- |
 | `login/`, `change-password/`, `dashboard/` | ✅ Implemented (dashboard renders inside the app shell; change-password is standalone) |
 | `users/`, `roles/`, `employees/` | ✅ Implemented (`/users`, `/roles`, `/employees`) |
-| `departments/` | ✅ Implemented read-only (tree / Mermaid / table); manage actions pending |
-| `documents/`, `numbering/` | ❌ Not implemented (backend APIs live) |
-| `movements/`, `audit/` | ❌ Not implemented (backend live; slice folders documented) |
-| `archive/` | ❌ Blocked on Module 07 backend |
+| `departments/` | Implemented: hierarchy views, department management, lazy employee branches and paged rosters. |
+| `institution-settings/` | Implemented: guarded singleton settings form. |
+| `documents/` | Registry ✅ Implemented (Phase 2: list/filter/search/sort + create draft/registered); details ⏳ Phase 3. |
+| `numbering/` | Planned frontend only (backend APIs implemented). |
+| `movements/`, `audit/` | Not implemented (backend live; slice folders documented). |
+| `archive/` | Blocked on Module 07 backend. |
+| Final browser/build/test verification | Pending; Module 02 auth/admin audit fixes remain in progress. |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-28 | agent | Module 03 Phase 2: implemented `documents/` registry — `/documents` gates on `DOCUMENT_VIEW`, mounts `widgets/document-registry-table` and `features/document-create`; the detail route stays Phase 3 so no dead route is registered. |
+| 2026-10-28 | agent | Update Module 01 page coverage for department writes, employee exploration, chart, and the new institution-settings route; distinguish Module 03 plans from executable pages. |
 | 2026-10-28 | agent | Module 01 Phase 1: implemented `departments/` (read-only) — the `/departments` page gates on `DEPARTMENT_MANAGE` and mounts `widgets/department-hierarchy-tree` (tree / Mermaid / table, search, detail dialog). |
 | 2026-10-28 | agent | Phase 6: implemented `change-password/` — the standalone `/change-password` page mounts `features/auth`'s form, shows the forced-change notice, and redirects to the dashboard after a fresh token is applied. |
 | 2026-10-28 | agent | Phase 5: implemented `employees/` — the `/employees` page gates on `EMPLOYEE_MANAGE` and mounts `widgets/employees-table`. |

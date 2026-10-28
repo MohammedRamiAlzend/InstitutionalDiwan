@@ -7,6 +7,7 @@ import {
   Inbox,
   LayoutDashboard,
   ScrollText,
+  Settings2,
   ShieldCheck,
   Users,
 } from 'lucide-react'
@@ -53,7 +54,7 @@ export const SHELL_NAV_GROUPS: readonly ShellNavGroup[] = [
         to: ROUTES.DOCUMENTS,
         icon: FileText,
         permission: Permissions.DocumentView,
-        available: false,
+        available: true,
       },
       {
         id: 'movements',
@@ -74,6 +75,14 @@ export const SHELL_NAV_GROUPS: readonly ShellNavGroup[] = [
         label: 'الأقسام',
         to: ROUTES.DEPARTMENTS,
         icon: Building2,
+        permission: Permissions.DepartmentManage,
+        available: true,
+      },
+      {
+        id: 'institution-settings',
+        label: 'إعدادات المؤسسة',
+        to: ROUTES.INSTITUTION_SETTINGS,
+        icon: Settings2,
         permission: Permissions.DepartmentManage,
         available: true,
       },

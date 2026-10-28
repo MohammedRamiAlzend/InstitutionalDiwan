@@ -7,4 +7,6 @@ namespace InstitutionalDiwan.Application.Features.Identity.Users;
 public sealed record ListUsersQuery(
     int Page = 1,
     int PageSize = 20,
-    string? Search = null) : IQuery<PagedResult<UserResponse>>;
+    string? Search = null,
+    string? SortBy = null,
+    bool SortDescending = false) : IQuery<PagedResult<UserResponse>>;

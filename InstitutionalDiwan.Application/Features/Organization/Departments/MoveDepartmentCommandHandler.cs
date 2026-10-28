@@ -9,13 +9,16 @@ internal sealed class MoveDepartmentCommandHandler
     : ICommandHandler<MoveDepartmentCommand, DepartmentResponse>
 {
     private readonly IDepartmentRepository _departmentRepository;
+    private readonly IInstitutionSettingRepository _settingRepository;
     private readonly IUnitOfWork _unitOfWork;
 
     public MoveDepartmentCommandHandler(
         IDepartmentRepository departmentRepository,
+        IInstitutionSettingRepository settingRepository,
         IUnitOfWork unitOfWork)
     {
         _departmentRepository = departmentRepository;
+        _settingRepository = settingRepository;
         _unitOfWork = unitOfWork;
     }
 
@@ -35,6 +38,10 @@ internal sealed class MoveDepartmentCommandHandler
 
         if (request.NewParentDepartmentId is { } newParentId)
         {
+            var setting = await _settingRepository.GetSingletonAsync(cancellationToken);
+            if (setting?.CentralDiwanDepartmentId == department.DepartmentId)
+                return Result.Failure<DepartmentResponse>(DomainErrors.Department.CentralDiwanProtected);
+
             var parent = await _departmentRepository.GetByIdAsync(newParentId, cancellationToken);
             if (parent is null)
                 return Result.Failure<DepartmentResponse>(DomainErrors.Department.ParentNotFound);

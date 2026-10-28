@@ -9,7 +9,23 @@
 
 ASP.NET Core HTTP pipeline middleware that applies request-wide concerns before controllers run.
 
+## Contents
+
+| File | Purpose |
+| --- | --- |
+| `RequestContextLoggingMiddleware.cs` | Adds correlation-id, client-IP, and caller logging context. |
+| `GlobalExceptionHandlingMiddleware.cs` | Maps unexpected failures to safe ProblemDetails responses. |
+| `AuditActionMiddleware.cs` | Audits authenticated API actions, including authorization failures. |
+| `ForcedPasswordChangeMiddleware.cs` | Blocks forced-change sessions before endpoints execute; only anonymous endpoints and the selected authenticated GET `Auth.Me` / POST `Auth.ChangePassword` actions are exempt. |
+
 ## Components
+
+### `ForcedPasswordChangeMiddleware.cs`
+Runs after routing/authentication and inside action auditing, before authorization. A forced-change
+session receives `403` / `Identity.PasswordChangeRequired` on every other matched endpoint, including
+plain `[Authorize]` lookup reads and named permission policies. Recovery exemptions use the selected
+MVC action and HTTP method, not path prefixes; `me` and `change-password` still require a valid JWT.
+Anonymous endpoint metadata remains effective (including login/register).
 
 ### `GlobalExceptionHandlingMiddleware.cs`
 Catches any unhandled exception (such as a database connectivity failure), logs it, and returns a
@@ -45,10 +61,10 @@ produces the response.
 ## Pipeline position
 
 Register request-context logging **outermost**, then exception handling, then authentication, then
-the audit action middleware, then authorization, then controllers:
+the audit action middleware, forced-password-change gate, authorization, then controllers:
 
 ```
-RequestContextLogging → GlobalExceptionHandling → Authentication → AuditActionMiddleware → Authorization → Endpoints
+RequestContextLogging → GlobalExceptionHandling → Authentication → AuditActionMiddleware → ForcedPasswordChange → Authorization → Endpoints
 ```
 
 Request-context logging must come first so the correlation id is already in the logging scope when
@@ -61,6 +77,7 @@ the exception, record the failure, and rethrow.
 
 | Middleware | State |
 | --- | --- |
+| `ForcedPasswordChangeMiddleware` | Implemented; endpoint/action-aware 403 gate covering ordinary and named-policy authorization. |
 | `GlobalExceptionHandlingMiddleware` | ✅ Implemented (500 fallback + 409 for unique-key violations) |
 | `RequestContextLoggingMiddleware` | ✅ Implemented (correlation id, IP, user id, response header) |
 | `AuditActionMiddleware` | ✅ Implemented (one `Operation` row per authenticated `/api` action, including reads and failures) |
@@ -69,6 +86,7 @@ the exception, record the failure, and rethrow.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-28 | Qoder | Add the endpoint-aware forced-password gate inside auditing and before authorization; permit only authenticated me/change-password actions and anonymous endpoints until recovery completes. |
 | 2026-10-26 | Qoder | Added `AuditActionMiddleware` between authentication and authorization so every authenticated `/api` action — including reads, 4xx/5xx results, and exceptions — is recorded as an `Operation` row; the recorder uses an isolated scope and never alters the response. |
 | 2026-10-25 | opencode | Implemented `RequestContextLoggingMiddleware` for Module 09 and corrected the pipeline order (request context outermost, then exception handling). |
 | 2026-10-18 | opencode | `GlobalExceptionHandlingMiddleware` now maps SQL Server unique-key violations (`DbUpdateException`, errors 2601/2627) to `409 Conflict` — concurrent duplicate official numbers return 409 instead of 500. |

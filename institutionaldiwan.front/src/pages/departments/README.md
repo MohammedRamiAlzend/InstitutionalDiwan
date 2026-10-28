@@ -1,47 +1,50 @@
 # `src/pages/departments` — Organizational Hierarchy Page Slice (`/departments`)
 
-> **Status:** Implemented (Module 01 Phase 1, 2026-10-28) — read-only. The `/departments` screen gates
-> on `DEPARTMENT_MANAGE` and mounts the department hierarchy widget (tree / Mermaid / table), whose
-> detail dialog lists the employees of the selected department.
+> **Status:** Module 01 Organization UI implemented; final browser/build/test verification is pending.
 
 ## 1. Purpose
 
-Renders the organizational hierarchy route. The page is a thin composition unit: it owns the
-route-level permission gate and the Arabic page header, and delegates the hierarchy tree, the Mermaid
-diagram, the tabular view, the search box, and the detail dialog (department data plus its roster)
-to `widgets/department-hierarchy-tree`.
+Thin route composition for department administration under `DEPARTMENT_MANAGE`. The page owns
+its Arabic header and permission gate; `widgets/department-hierarchy-tree` owns tree / Mermaid /
+chart / table views, department management dialogs, and read-only employee exploration.
 
-## 2. Strict FSD Rules
+## 2. Contents
 
-- Allowed Imports: `src/widgets/*`, `src/features/*`, `src/entities/*`, and `src/shared/*`.
-- Forbidden Imports: NEVER import from `src/app` or sibling `src/pages/*` slices.
-- Public API: Export `DepartmentsPage` only via `src/pages/departments/index.ts`.
+| File | Purpose |
+| --- | --- |
+| `ui/DepartmentsPage.tsx` | Composes `RequirePermission(DEPARTMENT_MANAGE)`, the organization-management header, and `DepartmentHierarchyTree`. |
+| `index.ts` | Public `DepartmentsPage` export for the router. |
 
-## 3. Contents & Segments
+## 3. Conventions / Notes
 
-- `ui/DepartmentsPage.tsx` — `RequirePermission(DEPARTMENT_MANAGE)` wrapper, page header
-  («الأقسام التنظيمية»), and `<DepartmentHierarchyTree />`. The view switcher (`view=tree|mermaid|table`)
-  and the search term live in URL search params, owned by the widget's `useTableState`.
-- `index.ts` — Public API barrel file.
+- Import lower-layer public barrels only, never `app` or sibling pages. No HTTP calls or mutations here.
+- View (`view=tree|mermaid|chart|table`), department search, and grid state are URL-driven in the widget.
+- Create/edit/reparent, manager assignment, notes, external policy, and active-status actions compose
+  `features/department-manage`. The backend protects the configured central Diwan and inactive parents.
+- Employee branches are optional and lazy: enabling them does not fetch all employees. Each opened
+  branch loads only direct employees; the detail roster optionally includes descendants (default on).
+  Both have server search/paging, read-only details, and context/overflow menus behind `EMPLOYEE_MANAGE`.
+- The chart counts visible departments by type, including retained search ancestors, not employees.
+  Tree, Mermaid, and chart share loading/error/retry/empty/no-match states.
+- Institution configuration is a separate `/institution-settings` route, not a tab on this page.
 
 ## 4. Required Packages
 
-- `@tanstack/react-query` (through the widget), `lucide-react` (header and widget icons),
-  `mermaid` (lazy, only when the diagram view is opened)
+- React Query and React Router through the widget; shared UI primitives and lazy `mermaid` rendering.
 
-## 5. Implementation Status
+## 5. Implementation status
 
-- ✅ `/departments` route mounted inside the app shell and gated on `DEPARTMENT_MANAGE` (Arabic
-  forbidden state otherwise).
-- ✅ Read-only hierarchy: interactive tree, Mermaid diagram (clicking a node opens the details),
-  tabular view, search, node detail dialog, and the department's employee roster (optional
-  sub-departments) — verified in-browser.
-- ❌ Manage actions (create / edit / reparent / deactivate) belong to `features/department-manage`
-  and `DepartmentFormDialog`, which land with the Module 01 write phase.
-- ❌ Employee nodes inside the tree and the chart view remain pending.
+| Item | State |
+| --- | --- |
+| Shell route, page header, permission gate | Implemented. |
+| Tree, Mermaid, chart, grid, search, department details | Implemented in the hierarchy widget. |
+| Department write actions and manager picker | Implemented through the department-manage feature. |
+| Lazy employee branches and paged/searchable detail roster | Implemented; employee reads require `EMPLOYEE_MANAGE`. |
+| Final interaction, RTL/LTR, light/dark, build/test verification | Pending main-agent verification. |
 
 ## 6. Change Log
 
+- 2026-10-28: Refresh Module 01 documentation for department management, lazy employee branches, paged roster/details/menus, the department-type chart, and shared request states; leave final verification pending.
 - 2026-10-28: Diagram nodes in the Mermaid view are now clickable (and keyboard-activatable) and open
   the same detail dialog as the tree and table; verified in-browser with a filtered diagram.
 - 2026-10-28: The detail dialog now lists the department's employees, sourced from

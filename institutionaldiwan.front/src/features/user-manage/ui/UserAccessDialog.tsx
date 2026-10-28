@@ -3,7 +3,7 @@ import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { CalendarDays, KeyRound, Network } from 'lucide-react'
 import { toast } from 'sonner'
-import { useDepartments } from '@/entities/department'
+import { useDepartmentOptions } from '@/entities/department'
 import {
   ASSIGNMENT_TYPE,
   LOOKUP_SLUGS,
@@ -12,6 +12,7 @@ import {
 import { permissionModuleLabel, usePermissionsCatalog } from '@/entities/role'
 import {
   useSessionStore,
+  useUserById,
   useUserEffectivePermissions,
   UserScopeBadge,
   type UserResponse,
@@ -66,11 +67,12 @@ interface UserAccessDialogProps {
  */
 export function UserAccessDialog({ open, onOpenChange, user }: UserAccessDialogProps) {
   const hasPermission = useSessionStore((state) => state.hasPermission)
-  const canManageDepartments = hasPermission(Permissions.DepartmentManage)
+  const canManageDepartments = hasPermission(Permissions.UserManage)
   const canManageRoles = hasPermission(Permissions.RoleManage)
 
-  const effectiveQuery = useUserEffectivePermissions(user.userId)
-  const departmentsQuery = useDepartments({ enabled: canManageDepartments })
+  const userQuery = useUserById(user.userId, { enabled: open })
+  const effectiveQuery = useUserEffectivePermissions(user.userId, { enabled: open })
+  const departmentsQuery = useDepartmentOptions({ enabled: open && canManageDepartments })
   const assignmentTypesQuery = useLookupEntries(LOOKUP_SLUGS.AssignmentTypes)
   const permissionsQuery = usePermissionsCatalog({ enabled: canManageRoles })
 
@@ -79,6 +81,8 @@ export function UserAccessDialog({ open, onOpenChange, user }: UserAccessDialogP
 
   const [endingId, setEndingId] = useState<string | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
+  // Captured once per mount so assignment status is stable across re-renders.
+  const [now] = useState(() => Date.now())
 
   const effective = effectiveQuery.data
 
@@ -146,13 +150,13 @@ export function UserAccessDialog({ open, onOpenChange, user }: UserAccessDialogP
   }, [effective, permissionsQuery.data])
 
   const assignments = useMemo(() => {
-    const rows = [...(effective?.departmentAssignments ?? [])]
+    const rows = [...(userQuery.data?.departmentAssignments ?? [])]
     rows.sort((left, right) => {
       if (left.isActive !== right.isActive) return left.isActive ? -1 : 1
       return right.startDate.localeCompare(left.startDate)
     })
     return rows
-  }, [effective])
+  }, [userQuery.data])
 
   const {
     register,
@@ -290,7 +294,14 @@ export function UserAccessDialog({ open, onOpenChange, user }: UserAccessDialogP
               إسنادات الأقسام
             </h3>
 
-            {assignments.length === 0 ? (
+            {userQuery.isError ? (
+              <div role="alert" className="text-sm text-danger">
+                {toArabicErrorMessage(userQuery.error)}
+                <Button type="button" variant="outline" onClick={() => void userQuery.refetch()}>إعادة المحاولة</Button>
+              </div>
+            ) : userQuery.isLoading ? (
+              <p role="status" className="text-sm text-muted">جارٍ تحميل سجل الإسنادات…</p>
+            ) : assignments.length === 0 ? (
               <p className="rounded-lg bg-surface-muted px-3 py-2 text-sm text-muted">
                 لا توجد إسنادات أقسام لهذا المستخدم.
               </p>
@@ -329,8 +340,11 @@ export function UserAccessDialog({ open, onOpenChange, user }: UserAccessDialogP
                           {assignment.includeSubtree && (
                             <Badge variant="accent">يشمل الفروع</Badge>
                           )}
-                          <Badge variant={assignment.isActive ? 'success' : 'outline'}>
-                            {assignment.isActive ? 'فعّال' : 'منتهٍ'}
+                          <Badge variant="outline">
+                            {!assignment.isActive ? 'منتهٍ يدويًا'
+                              : new Date(assignment.startDate).getTime() > now ? 'مجدول'
+                              : assignment.endDate && new Date(assignment.endDate).getTime() < now ? 'انتهت مدته'
+                              : 'فعّال حاليًا'}
                           </Badge>
                         </span>
                         <span className="flex items-center gap-1 text-xs text-muted">
@@ -369,7 +383,7 @@ export function UserAccessDialog({ open, onOpenChange, user }: UserAccessDialogP
                 role="status"
                 className="rounded-lg bg-warning/10 px-3 py-2 text-xs text-warning"
               >
-                تحتاج صلاحية إدارة الأقسام لعرض قائمة الأقسام وإدارتها.
+                تحتاج صلاحية إدارة المستخدمين لإضافة الإسنادات وإنهائها.
               </p>
             ) : (
               <form

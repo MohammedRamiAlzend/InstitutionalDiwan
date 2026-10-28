@@ -12,7 +12,7 @@ Contains pure, framework-independent helper functions for class merging, `Asia/D
 | `crypto.ts` | Computes lowercase 64-character hex SHA-256 checksums via `crypto.subtle.digest('SHA-256', buffer)` for attachment uploads. (❌ pending) |
 | `arabic.ts` | Normalizes Arabic search strings (unified hamzas, taa marbuta, and Eastern/Western numerals). (❌ pending) |
 | `columnPreferences.ts` | Reads/writes the per-table column visibility selection in `localStorage` under `diwan.table.<tableId>.columns.v1`; parses defensively, merges with the table's default columns, and exposes a reset to defaults. View state only — never sent to the API. |
-| `useTableState.ts` | Table view state in URL search params (`page`, `pageSize`, `search`, `sort`, `dir`, plus caller-declared filter keys); resets to page 1 when search, filters, sort, or size change. |
+| `useTableState.ts` | Table view state in URL search params (`page`, `pageSize`, `search`, `sort`, `dir`, plus caller-declared filter keys); resets to page 1 when search, filters, sort, or size change. `clearQuery()` removes the search and every filter in one URL write, because two sequential setters would each rebuild from the same stale params and restore what the other cleared. |
 | `useDebouncedValue.ts` | Generic debounce hook used by table search inputs. |
 | `jwt.ts` | Decodes the JWT payload (no signature verification) and exposes the `must_change_password` UX hint the `/api/auth/me` response omits. |
 | `index.ts` | Public barrel exporting the implemented helpers. |
@@ -25,6 +25,7 @@ Contains pure, framework-independent helper functions for class merging, `Asia/D
 ## Change Log
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-28 | agent | Added `useTableState().clearQuery()` after the document registry's «مسح البحث والمرشحات» button cleared filters but kept the search; both setters ran in one tick from the same URL snapshot. |
 | 2026-10-28 | agent | Added `formatShortId` for compact GUID display in the users grid fallback cells. |
 | 2026-10-27 | agent | Implemented the table-state foundation (`useTableState`, `useDebouncedValue`, `columnPreferences`), Damascus `date`/`format` helpers, and `jwt` claim decoding for the forced password-change hint. |
 | 2026-10-27 | agent | Implemented `cn.ts` and the `theme.ts` store (light/dark/system + `prefers-color-scheme`) used by the theme toggle and `ThemeProvider`. |

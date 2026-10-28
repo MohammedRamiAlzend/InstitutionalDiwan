@@ -21,7 +21,7 @@ internal static class IdentityTokenIssuer
         foreach (var userRole in user.UserRoles)
         {
             var role = await roleRepository.GetByIdAsync(userRole.RoleId, cancellationToken);
-            if (role is not null)
+            if (role is { IsActive: true })
                 roles.Add(role);
         }
 

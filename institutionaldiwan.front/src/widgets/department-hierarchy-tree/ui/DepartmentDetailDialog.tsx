@@ -1,8 +1,11 @@
 import type { ReactNode } from 'react'
-import { Copy, Hash } from 'lucide-react'
+import { Copy, Hash, Pencil } from 'lucide-react'
 import { useDepartmentById } from '@/entities/department'
+import { useEmployeeById } from '@/entities/employee'
 import { LookupLabel, LOOKUP_SLUGS } from '@/entities/lookup'
+import { useSessionStore } from '@/entities/user'
 import { toArabicErrorMessage } from '@/shared/api'
+import { Permissions } from '@/shared/config'
 import { formatDate, formatDateTime, formatShortId } from '@/shared/lib'
 import { Badge, Button, Dialog, Skeleton } from '@/shared/ui'
 import { copyDepartmentValue } from '../model/clipboard'
@@ -13,19 +16,29 @@ interface DepartmentDetailDialogProps {
   departmentId: string | null
   onOpenChange: (open: boolean) => void
   resolveName: (departmentId: string) => string | undefined
+  onEdit?: (departmentId: string) => void
 }
 
-/** Read-only department card sourced from `GET /api/departments/{id}`. */
+/** Department card sourced from `GET /api/departments/{id}`. */
 export function DepartmentDetailDialog({
   departmentId,
   onOpenChange,
   resolveName,
+  onEdit,
 }: DepartmentDetailDialogProps) {
   const query = useDepartmentById(departmentId)
   const department = query.data
   const parentName = department?.parentDepartmentId
     ? resolveName(department.parentDepartmentId)
     : undefined
+
+  const hasPermission = useSessionStore((state) => state.hasPermission)
+  const canViewEmployees = hasPermission(Permissions.EmployeeManage)
+  const managerQuery = useEmployeeById(department?.managerEmployeeId ?? null, {
+    enabled: canViewEmployees && Boolean(department?.managerEmployeeId),
+  })
+  const managerName = managerQuery.data?.fullNameAr
+  const managerJobTitle = managerQuery.data?.jobTitleAr
 
   return (
     <Dialog
@@ -37,6 +50,15 @@ export function DepartmentDetailDialog({
       footer={
         department ? (
           <>
+            {onEdit && (
+              <Button
+                type="button"
+                onClick={() => onEdit(department.departmentId)}
+              >
+                <Pencil className="size-4" aria-hidden />
+                تعديل القسم
+              </Button>
+            )}
             <Button
               type="button"
               variant="outline"
@@ -125,13 +147,22 @@ export function DepartmentDetailDialog({
             </DetailItem>
             <DetailItem label="مدير القسم">
               {department.managerEmployeeId ? (
-                <span
-                  dir="ltr"
-                  title={department.managerEmployeeId}
-                  className="font-mono text-xs"
-                >
-                  {formatShortId(department.managerEmployeeId)}
-                </span>
+                managerName ? (
+                  <span className="flex flex-col">
+                    <span>{managerName}</span>
+                    {managerJobTitle && (
+                      <span className="text-xs text-muted">{managerJobTitle}</span>
+                    )}
+                  </span>
+                ) : (
+                  <span
+                    dir="ltr"
+                    title={department.managerEmployeeId}
+                    className="font-mono text-xs"
+                  >
+                    {formatShortId(department.managerEmployeeId)}
+                  </span>
+                )
               ) : (
                 <span className="text-muted">غير محدد</span>
               )}

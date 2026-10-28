@@ -14,5 +14,7 @@ public sealed class UpdateDepartmentCommandValidator : AbstractValidator<UpdateD
             .MaximumLength(200);
 
         RuleFor(command => command.NameEn).MaximumLength(200);
+
+        RuleFor(command => command.Notes).MaximumLength(500);
     }
 }

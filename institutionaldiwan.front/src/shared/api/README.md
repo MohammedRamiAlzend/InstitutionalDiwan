@@ -1,6 +1,8 @@
 # institutionaldiwan.front / src/shared/api — HTTP Client, Auth Interceptors & ProblemDetails Adapter
 
-> **Status:** Implemented for Identity Module 01 and the Module 02 admin foundation.
+> **Status:** Implemented for Module 01 Organization, Module 02 Identity, and the Module 03
+> Correspondence error catalog (documents, numbering, movements). Attachment codes arrive with
+> Module 06.
 
 ## Purpose
 
@@ -15,7 +17,7 @@ the UI never renders the server's English `detail`.
 | --- | --- |
 | `httpClient.ts` | Axios instance with base URL from `ENV.API_BASE_URL` (`/api`), JWT request interceptor, and an error interceptor that clears the token and redirects to `/login` on `401`. |
 | `problemDetails.ts` | `ApiError` (`code`/`detail`/`status`), `toApiError` normalizer, and `isConflictError`. |
-| `errorMessages.ts` | Arabic message catalog keyed by domain error code (all Identity codes — including the user, role, and employee validation codes — plus the Department and Lookup codes used by identity pickers), with Arabic HTTP-status fallbacks and a generic fallback — `toArabicErrorMessage(error)`. |
+| `errorMessages.ts` | `toArabicErrorMessage(error)` maps Identity, Department (including `CentralDiwanProtected`), InstitutionSetting, Lookup, Correspondence, Numbering, and Movements codes to Arabic, with HTTP/network/generic fallbacks. |
 | `tokenStorage.ts` | Read/write/clear helpers for the JWT access token in `localStorage` (`diwan.token`). |
 | `signalrClient.ts` | HubConnection factory — **implement only after** the server exposes hubs (not implemented). |
 | `index.ts` | Barrel exporting `httpClient`, `ApiError`, `toApiError`, `isConflictError`, `toArabicErrorMessage`, `tokenStorage`. |
@@ -48,13 +50,16 @@ Used by documents, users, employees, external organizations, audit logs, and int
 
 | Item | State |
 | --- | --- |
-| `httpClient.ts`, `problemDetails.ts`, `tokenStorage.ts`, `errorMessages.ts` | ✅ Implemented |
-| `signalrClient.ts` | ❌ Deferred until hubs exist |
+| `httpClient.ts`, `problemDetails.ts`, `tokenStorage.ts`, `errorMessages.ts` | Implemented; Organization errors cover central-hub protection, settings missing data, central-department validity/transfer reason, numbering lookups, and responsible employee. Identity adds inactive-role assignment and server-enforced forced-password-change (`403` `Identity.PasswordChangeRequired`) messages; `401` clears the session and redirects to login. Module 03 adds every Correspondence, Numbering, and Movements domain code the registry/details/numbering/routing screens can surface (attachments deferred to Module 06). |
+| `signalrClient.ts` | Deferred until hubs exist. |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-28 | Qoder | Module 03 Phase 1: added the full Arabic catalog for `Correspondence.*`, `Numbering.*`, and `Movements.*` so document and routing screens never surface English server detail. |
+| 2026-10-28 | agent | Added `Identity.RoleInactive` and `Identity.PasswordChangeRequired` Arabic messages for inactive-role assignment and the server-enforced forced-password-change gate. |
+| 2026-10-28 | agent | Document Module 01 Department/InstitutionSetting Arabic errors alongside Module 02 Identity; missing settings remain an error, not an automatic create/update trigger. |
 | 2026-10-28 | agent | Added `Identity.NewPasswordSameAsOld` for the change-password form. |
 | 2026-10-28 | agent | Added the user-create/update validation codes (`Identity.UsernameTooShort`, `Identity.PasswordEmpty`, `Identity.PasswordTooShort`, `Identity.UserScopeTypeInvalid`) used by the Phase 3 dialogs. |
 | 2026-10-28 | agent | Added the employee validation codes (`Identity.EmployeeEmailInvalid`, `Identity.EmployeeDepartmentEmpty`) to the Arabic catalog for the `/employees` admin surface. |

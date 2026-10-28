@@ -104,8 +104,12 @@ public sealed class User : AggregateRoot<Guid>
         DateTime? utcNow = null)
     {
         var now = utcNow ?? DateTime.UtcNow;
+        var effectiveStart = startDate ?? now;
+        // Both endpoints are inclusive. Ended rows are history, not reservations.
         if (_departmentAssignments.Any(assignment =>
-                assignment.IsActive && assignment.DepartmentId == departmentId))
+                assignment.IsActive && assignment.DepartmentId == departmentId &&
+                (assignment.EndDate is null || assignment.EndDate >= effectiveStart) &&
+                (endDate is null || assignment.StartDate <= endDate)))
         {
             return Result.Failure(DomainErrors.Identity.DepartmentAlreadyAssigned);
         }

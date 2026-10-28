@@ -1,7 +1,10 @@
 # institutionaldiwan.front / src/features — User Interactions & Business Mutations Layer
 
-> **Status:** Partially implemented — `auth/`, `user-manage/`, `role-manage/`, and `employee-manage/` are live; the remaining feature slices are documented and pending.
-> Movement, attachment, and audit write slices are now mapped to **live** APIs.
+> **Status:** Module 01 `department-manage/` and `institution-settings-manage/` are implemented,
+> alongside Module 02 `auth/`, `user-manage/`, `role-manage/`, and `employee-manage/`. Module 02 audit
+> fixes and final integration verification remain in progress. Module 03 `document-create/` now
+> creates drafts and registered documents; grant, movement, attachment, and audit writes remain
+> planned frontend slices mapped to implemented backend APIs.
 
 ## Purpose
 
@@ -17,14 +20,15 @@ error handling, and form/dialog UI.
 - Forbidden: `@/app/*`, `@/pages/*`, `@/widgets/*`, sibling `@/features/*`.
 - Layout per slice: `ui/`, `model/`, `api/`, `index.ts`.
 
-## Planned Feature Slices & Backend Command Mapping
+## Contents — Feature Slices & Backend Command Mapping
 
 | Slice Folder | Backend Endpoints & CQRS Commands | Key Domain Rules & Error Handling | State |
 | --- | --- | --- | --- |
 | `auth/` | `POST /api/auth/login`, `POST /api/auth/change-password` (+ `register` out of scope) | JWT storage and replacement; `Identity.InvalidCredentials`, `Identity.UserInactive`, `Identity.CurrentPasswordIncorrect`, `Identity.NewPasswordSameAsOld` rendered via the Arabic error catalog | ✅ Implemented (login/logout/guard/change-password) |
-| `document-create/` | `POST /api/documents` (+ drafts/register) | `409 Numbering.OfficialNumberTaken` on official number field | ❌ Planned |
+| `document-create/` | `POST /api/documents`, `POST /api/documents/drafts` | Mode-aware form: draft or registered with official number + numbering year; `409 Numbering.OfficialNumberTaken` attaches to the official-number field; `Correspondence.TitleEmpty`/`TypeCodeEmpty` are Arabic-validated client-side | ✅ Implemented (Phase 2) |
 | `document-access-grant/` | grants POST/DELETE | `ACCESS_GRANT_MANAGE`; access levels VIEW/DOWNLOAD/FORWARD/MANAGE | ❌ Planned |
-| `department-manage/` | departments CRUD/reparent/activate | `Department.CodeAlreadyExists`, `CyclicHierarchy`, `HasActiveChildren` | ❌ Planned |
+| `department-manage/` | departments create/update (including parent), deactivate/activate | Immutable code/type on edit; self/descendant exclusion; configured central Diwan protection; inactive-parent activation guard | Implemented with manager picker, notes, and external policies. |
+| `institution-settings-manage/` | `PUT /api/institution-settings` | Existing singleton only; active root central Diwan, transfer reason on designation change, active numbering lookups | Implemented; failed/missing reads never initialize or overwrite settings. |
 | `user-manage/` | users + employees mutations | `USER_MANAGE` / `EMPLOYEE_MANAGE` | ✅ Implemented (users; employee picker only) |
 | `employee-manage/` | employees create/update/activate/deactivate | `EMPLOYEE_MANAGE`; department must exist and be valid | ✅ Implemented |
 | `role-manage/` | roles create/update/activate + grant/revoke permission | `ROLE_MANAGE`; system roles protected; code immutable after creation | ✅ Implemented |
@@ -49,13 +53,19 @@ error handling, and form/dialog UI.
 | `user-manage/` | ✅ Implemented for users (create/edit, status, roles, department assignments); the employee selector is read-only |
 | `role-manage/` | ✅ Implemented (create/edit, activate/deactivate, permission matrix with staged grant/revoke diff) |
 | `employee-manage/` | ✅ Implemented (create/edit, activate/deactivate, department-aware form) |
-| `document-create/`, `document-access-grant/`, `department-manage/` | ❌ Not implemented (backend live) |
-| `movement-routing/`, `attachment-upload/`, `audit-manage/` | ❌ Not implemented (backend live; docs ready) |
+| `department-manage/` | Implemented: create/edit/reparent/manager/notes/external policy and active-status writes. |
+| `institution-settings-manage/` | Implemented: explicit singleton update with central Diwan/numbering/responsible-employee fields. |
+| `document-create/` | ✅ Implemented (draft + immediate registration dialog with lookup-driven fields) |
+| `document-access-grant/` | Planned only; no frontend code (backend implemented). |
+| `movement-routing/`, `attachment-upload/`, `audit-manage/` | Not implemented (backend live; docs ready). |
+| Final integration verification | Pending; Module 02 audit fixes still in progress. |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-28 | Qoder | Module 03 Phase 2: implemented `document-create` (shared draft/register schema, two mutations, and the create dialog wired to seeded document lookups and `documentKeys.lists()` invalidation). |
+| 2026-10-28 | agent | Record the implemented Module 01 department and institution-settings write slices, their invariants, and the remaining final verification boundary. |
 | 2026-10-28 | agent | Extended `auth` with the signed-in password change (schema, mutation, form) and exposed the login response to pages so reset accounts route to `/change-password`. |
 | 2026-10-28 | agent | Implemented `employee-manage` for Phase 5: employee request types/schema, create/update/activate mutations, and the department-aware create/edit dialog. |
 | 2026-10-28 | agent | Implemented `role-manage` for Phase 4: role request types/schema, create/update/activate/deactivate mutations, and the grouped permission-matrix dialog that saves only the grant/revoke diff. |

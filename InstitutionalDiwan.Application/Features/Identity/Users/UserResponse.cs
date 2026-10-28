@@ -12,4 +12,5 @@ public sealed record UserResponse(
     DateTime? LastLoginAt,
     DateTime CreatedAt,
     DateTime? UpdatedAt,
-    IReadOnlyCollection<string> Roles);
+    IReadOnlyCollection<string> Roles,
+    IReadOnlyCollection<UserDepartmentAssignmentResponse> DepartmentAssignments);

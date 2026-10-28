@@ -36,7 +36,7 @@ internal sealed class GetUserEffectivePermissionsQueryHandler
         foreach (var userRole in user.UserRoles)
         {
             var role = await _roleRepository.GetByIdAsync(userRole.RoleId, cancellationToken);
-            if (role is not null)
+            if (user.IsActive && role is { IsActive: true })
                 roles.Add(role);
         }
 
@@ -73,5 +73,5 @@ internal sealed class GetUserEffectivePermissionsQueryHandler
     private static bool IsCurrentlyActive(UserDepartmentAssignment assignment, DateTime utcNow) =>
         assignment.IsActive &&
         assignment.StartDate <= utcNow &&
-        (assignment.EndDate is null || assignment.EndDate.Value > utcNow);
+        (assignment.EndDate is null || assignment.EndDate.Value >= utcNow);
 }

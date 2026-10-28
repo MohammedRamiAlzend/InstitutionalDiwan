@@ -15,6 +15,9 @@ public sealed class UpdateInstitutionSettingsCommandValidator
         RuleFor(command => command.InstitutionNameEn)
             .MaximumLength(200);
 
+        RuleFor(command => command.LogoPath)
+            .MaximumLength(500);
+
         RuleFor(command => command.NumberingModeId)
             .GreaterThan(0).WithErrorCode("InstitutionSetting.NumberingModeEmpty");
 

@@ -21,7 +21,7 @@ transfer reason — lives in `InstitutionSetting.Update` and is surfaced as
 | `GetInstitutionSettingsQueryHandler.cs` | Loads the singleton through `IInstitutionSettingRepository.GetSingletonAsync` and maps it to the response. |
 | `UpdateInstitutionSettingsCommand.cs` | CQRS command carrying names, numbering mode/policy, Central Diwan department, optional responsible employee, timezone, and the transfer reason. |
 | `UpdateInstitutionSettingsCommandHandler.cs` | Validates Central Diwan existence/type/root/activity, numbering mode + reset policy against the `numbering-modes` / `numbering-reset-policies` lookups, and the optional employee, then applies `InstitutionSetting.Update` and saves. |
-| `UpdateInstitutionSettingsCommandValidator.cs` | FluentValidation rules: non-blank Arabic name, numbering mode + reset policy > 0, Central Diwan department required, bounded lengths. |
+| `UpdateInstitutionSettingsCommandValidator.cs` | FluentValidation rules: non-blank Arabic name, numbering mode + reset policy > 0, Central Diwan department required, and bounded lengths including `LogoPath` at 500 characters. |
 
 ## Conventions / Notes
 
@@ -30,18 +30,21 @@ transfer reason — lives in `InstitutionSetting.Update` and is surfaced as
 - Lookup ids are validated through `ILookupRepository` (`numbering-modes`, `numbering-reset-policies`)
   so an inactive or unknown entry is rejected instead of corrupting the configuration.
 - Changing the Central Diwan is a structural act: the endpoint sits behind `DEPARTMENT_MANAGE`.
+  Department update/move/deactivate commands reject structural changes to the current hub with
+  `Department.CentralDiwanProtected` (409); transfer here first to release the former hub.
 
 ## Implementation status
 
 | Item | State |
 | --- | --- |
 | `GetInstitutionSettingsQuery` (+ handler) | ✅ |
-| `UpdateInstitutionSettingsCommand` (+ handler, validator) | ✅ |
+| `UpdateInstitutionSettingsCommand` (+ handler, validator) | Implemented; `LogoPath` maximum 500 characters |
 | `InstitutionSettingsController` (`GET`/`PUT /api/institution-settings`) | ✅ |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-28 | Qoder | Limit `LogoPath` to 500 characters before persistence and document that department writes require a settings transfer before changing the current hub's hierarchy or active state. |
 | 2026-10-22 | Buffy | `UpdateInstitutionSettingsCommandHandler` now passes `IUnitOfWork.UtcNow` so `InstitutionSetting.UpdatedAt` comes from the transaction, not the system clock. |
 | 2026-10-19 | Buffy | Added the Module 01 institution-settings slice (query + full update command) with Central Diwan root/type/activity validation, lookup validation for numbering mode and reset policy, optional responsible-employee check, and the transfer-reason rule from the domain. |

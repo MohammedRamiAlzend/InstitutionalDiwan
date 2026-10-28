@@ -1,25 +1,19 @@
 # Institutional Diwan React Front End — Agent Knowledge
 
-> **Status:** Current as of **2026-10-28** — the external API's Modules **01–06** and **09** are
-> live (Organization, Identity, Correspondence, Numbering, Movements, Attachments, Audit) plus the
-> generic Lookups API. The SPA implements the Identity (Module 01) vertical slice: login, session
-> hydration, logout, route guards, Arabic error messages, and light/dark themes. The shared admin
-> foundation for Module 02 (data grid, context/dropdown menus, dialogs, select/checkbox, URL table
-> state, persisted column chooser, extended Arabic catalog), the authenticated `widgets/app-shell`
-> (permission-filtered sidebar, header, mobile drawer, display settings, shell/item context menus),
-> the Module 02 Phase 2 supporting reads (`entities/{department,role,employee,lookup}` plus user
-> list/detail/effective-permission hooks), the Phase 3 users administration (`features/user-manage`,
-> `widgets/users-table`, `pages/users`), the Phase 4 roles administration (`features/role-manage`,
-> `widgets/roles-table`, `pages/roles`, including the grouped permission matrix), the Phase 5
-> employees administration (`features/employee-manage`, `widgets/employees-table`, `pages/employees`),
-> the Phase 6 change-password flow (`features/auth` form + `pages/change-password`, forced from
-> the JWT claim), the administrator password reset (`ResetPasswordDialog` in
-> `features/user-manage`, mounted from the `users-table` row menu; forces a password change at the
-> next sign-in), and Module 01 Phase 1 — the read-only organizational hierarchy (`shared/ui/mermaid-view`,
-> `entities/department/model/toMermaid`, `widgets/department-hierarchy-tree` with tree / Mermaid /
-> table views and a detail dialog listing the department's employees, opened from tree nodes,
-> activated diagram nodes, and grid rows, and `pages/departments`) are
-> implemented. The Module 02 Identity admin front end is complete.
+> **Status:** Current as of **2026-10-28**. Backend Modules **01–06** and **09** plus Lookups are
+> implemented. Canonical numbering is **01 Organization / 02 Identity / 03 Correspondence**;
+> older references to “Identity Module 01” mean the initial auth slice, not the domain module number.
+> Module 01 frontend now includes department create/edit/reparent/manager/notes/external policy,
+> activate/deactivate, tree/Mermaid/chart/grid views, optional lazy employee branches, paged searchable
+> rosters/details/menus, and `/institution-settings` through new settings entity/feature/page slices.
+> Module 02 auth/admin code is implemented and verified, including permission-scoped
+> `identity-options` reads, temporal department assignments, live session invalidation, and the
+> server-enforced forced-password-change gate. Module 03 Correspondence has started: Phase 0 added
+> document-facing picker reads on the API, Phase 1 implemented `entities/document` reads plus the Arabic
+> Correspondence/Numbering/Movements error catalog, and Phase 2 shipped the `/documents` registry with
+> document/draft creation and nav activation. Detail, numbering, and movement pages remain pending.
+> `npm run build`/`npm run lint` pass and the API was exercised live (login, stale-token rejection,
+> department edit, settings, pickers).
 >
 > **Standalone boundary:** this project is not part of the API solution. Server paths below refer to
 > the external `InstitutionalDiwan.Server` repository; the front end talks to it only over `/api`
@@ -29,11 +23,11 @@
 
 | Area | As-is (today) | To-be (before feature work) |
 | --- | --- | --- |
-| Application code | FSD slices for Module 01 (`shared` core, `entities/user`, `features/auth`, `pages/login` + `dashboard`, `app`), the Module 02 shared admin foundation (`data-table`, menus, dialogs, table-state/column-preference libs), the authenticated `widgets/app-shell`, the Phase 2 read entities (`department`, `role`, `employee`, `lookup`; `user` extended with admin reads), the Phase 3 users administration (`features/user-manage`, `widgets/users-table`, `pages/users`), the Phase 4 roles administration (`features/role-manage`, `widgets/roles-table`, `pages/roles`, shared permission-module labels), the Phase 5 employees administration (`features/employee-manage`, `widgets/employees-table`, `pages/employees`), the Phase 6 password change (`ChangePasswordForm`, `pages/change-password`, forced redirect from the JWT claim), and Module 01 Phase 1 (`shared/ui/mermaid-view`, `entities/department` `toMermaid`, `widgets/department-hierarchy-tree` incl. the department-employee roster in its detail dialog, `pages/departments`) | Remaining slices under `src/{pages,widgets,features,entities}` (documents, movements, numbering, audit) and the Module 01 write/hierarchy extras (department manage actions, employee nodes inside the tree, chart view) |
-| `package.json` | React stack + Module 01 packages (router, query, zustand, axios, RHF, zod, sonner, Tailwind v4) | Remaining packages per slice (see [`README.md`](README.md)) |
+| Application code | Module 01 department management/hierarchy/settings; Module 02 auth/admin pages; Module 03 document entity reads, Arabic errors, `/documents` registry, and create draft/registered; shared/app foundation, employee picker, and lookup catalogs (incl. the five document catalogs) | Module 03 detail/numbering/movement pages and access grants; other module pages pending |
+| `package.json` | React/shared/auth stack (router, query, zustand, axios, RHF, zod, sonner, Tailwind v4) plus shared UI/Mermaid dependencies | Remaining packages per slice (see [`README.md`](README.md)) |
 | `vite.config.ts` proxy | ✅ `@` alias + env-driven `/api` and `/hubs` proxies (`DEV_PROXY_TARGET` → `ASPNETCORE_HTTPS_PORT` → `https://localhost:7126`) | Optional local HTTPS certificate; production uses the reverse proxy ([`DEPLOYMENT.md`](DEPLOYMENT.md)) |
 | Dev configuration | ✅ `.env.example` committed; `.env` is git-ignored | — |
-| Backend | External API: 17 controllers, ~113 endpoints | Front end consumes relative `/api/...` URLs |
+| Backend | External API Modules 01–06 and 09 implemented, including `identity-options` picker reads and live JWT session validation | Frontend consumes relative `/api/...` URLs; refresh endpoint counts when Module 03 work starts |
 | Modules without API | 07 Archiving, 08 Relations, 10 Notifications | Do **not** call them; domain/lookups exist only |
 
 ## Commands
@@ -82,9 +76,11 @@ source of truth: `src/shared/config/permissions.ts`.
 
 ## Live Backend Endpoints (external `InstitutionalDiwan.Server`)
 
-**17 controllers**, ~**112** endpoints. Every route except `POST /api/auth/login`,
-`POST /api/auth/register`, and the read paths under `/api/lookups` that the server marks public
-requires a bearer token; the permission column is the policy that guards it.
+The catalog below records the module APIs, including the `identity-options` picker reads. Every route
+except `POST /api/auth/login`, `POST /api/auth/register`, and lookup reads marked public by the server
+requires a bearer token. Bearer tokens are also bound to the account and its effective active
+role/permission set: deactivation, password change, and role or permission changes invalidate an
+already-issued token. The permission column describes the route policy.
 
 Demo credentials: `admin` / `12345678` (system scope), `user` / `12345678` (department scope).
 
@@ -93,7 +89,7 @@ Demo credentials: `admin` / `12345678` (system scope), `user` / `12345678` (depa
 These endpoints return the shared `PagedResult<T>` envelope:
 
 `GET /api/documents`, `/api/users`, `/api/employees`, `/api/external-organizations`,
-`GET /api/audit-logs`, `GET /api/audit-logs/integrity-checks`.
+`GET /api/identity-options/users`, `GET /api/audit-logs`, `GET /api/audit-logs/integrity-checks`.
 
 ```json
 {
@@ -273,7 +269,27 @@ sets a temporary password and flags `MustChangePassword`, the caller is recorded
 administrator), `POST /{userId}/roles`, `DELETE /{userId}/roles/{roleId}`,
 `POST /{userId}/department-assignments`,
 `DELETE /{userId}/department-assignments/{assignmentId}`,
-`GET /{userId}/effective-permissions` — all `USER_MANAGE`.
+`GET /{userId}/effective-permissions` — all `USER_MANAGE`. The list accepts `page`, `pageSize`,
+`search`, `sortBy` (`username` default, `createdAt`, `lastLoginAt`, `isActive`), and
+`sortDescending`; every user response includes its `departmentAssignments` history.
+
+### Identity options — `/api/identity-options`
+
+Minimal picker reads; each requires **one** of the listed exact permission policies and never
+exposes full contact data, role permissions, or management rights:
+
+- `GET /api/identity-options/departments` → `{ departmentId, code, nameAr, isActive }`;
+  `USER_MANAGE` **or** `EMPLOYEE_MANAGE` **or** `DEPARTMENT_MANAGE` **or** `DOCUMENT_CREATE`
+  **or** `DOCUMENT_EDIT`.
+- `GET /api/identity-options/roles` → `{ roleId, code, nameAr, isActive }` (inactive included);
+  `USER_MANAGE` **or** `ROLE_MANAGE`.
+- `GET /api/identity-options/employees?page&pageSize&search` and
+  `GET /api/identity-options/employees/{employeeId}` → `{ employeeId, fullNameAr, employeeNumber, isActive }`;
+  `USER_MANAGE` **or** `DEPARTMENT_MANAGE` **or** `EMPLOYEE_MANAGE`.
+- `GET /api/identity-options/users?page&pageSize&search` →
+  `{ userId, username, isActive }` (paged envelope; inactive included for labelling);
+  `USER_MANAGE` **or** `ACCESS_GRANT_MANAGE` **or** `DOCUMENT_EDIT`. It is the picker for document
+  access grants and movement assignees and returns no contact data, roles, or department history.
 
 ### Roles & permissions — `/api/roles`, `/api/permissions`
 
@@ -292,10 +308,11 @@ be deactivated (`Identity.SystemRoleProtected`); EF limits are code 100, names 1
 
 All endpoints require `EMPLOYEE_MANAGE`.
 
-- `GET /api/employees?page&pageSize&search&departmentId&includeSubDepartments` — paged result;
-  `search` matches the Arabic name, English name, and employee number; `departmentId` restricts the
-  page to that department's employees, and `includeSubDepartments=true` widens it to every descendant
-  department (unknown department → empty page, not 404).
+- `GET /api/employees?page&pageSize&search&departmentId&includeSubDepartments&sortBy&sortDescending`
+  — paged result; `search` matches the Arabic name, English name, and employee number;
+  `departmentId` restricts the page to that department's employees, and
+  `includeSubDepartments=true` widens it to every descendant department (unknown department → empty
+  page, not 404). `sortBy` accepts `fullNameAr` (default), `employeeNumber`, `createdAt`, `isActive`.
 - `GET /api/employees/{id}` — single employee.
 - `POST /api/employees` / `PUT /api/employees/{id}` — body
   `{ fullNameAr, departmentId, employeeNumber?, fullNameEn?, jobTitleAr?, email?, phone? }`;
@@ -408,7 +425,9 @@ See [`README.md`](README.md) “UI / design contract” and [`src/app/styles/REA
    `pages/departments`), plus the detail dialog's employee roster
    (`GET /api/employees?departmentId=&includeSubDepartments=`); write actions and employee nodes
    inside the tree pending
-7. `entities/document` + `pages/documents` (+ attachments panel via `entities/document-file`)
+7. `entities/document` — ✅ done (Phase 1); `pages/documents` registry + `document-create` — ✅ done
+   (Phase 2); document details/timeline, access grants, and the attachments panel
+   (`entities/document-file`) pending
 8. `pages/movements` (inbox/outbox)
 9. `pages/audit` (search + integrity; respect self-audit side effect)
 10. `widgets/visualization-panel` (cross-module Mermaid/chart switcher) + department/employee tree extras

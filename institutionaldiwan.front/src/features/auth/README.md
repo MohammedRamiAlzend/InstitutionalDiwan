@@ -11,18 +11,19 @@ Implements user login, signed-in password change, session bootstrapping (`/api/a
 - `model/change-password.schema.ts` — `changePasswordSchema`, `ChangePasswordFormValues`, and the server-shaped `ChangePasswordRequest` (`oldPassword` / `newPassword`).
 - `api/use-change-password.ts` — `POST /api/auth/change-password`; the server returns a fresh JWT, so the token and session are replaced on success.
 - `ui/LogoutButton.tsx` — Thin button over `useLogout`; used by the login/dashboard surfaces.
-- `model/use-logout.ts` — Single teardown path shared by `LogoutButton` and the shell account menu: clears the token and session store, removes cached user queries, and redirects to `/login` (replace).
+- `model/use-logout.ts` — Single teardown path shared by `LogoutButton` and the shell account menu: clears the token and session store, cancels in-flight queries, clears the whole query cache, and redirects to `/login` (replace).
 - `ui/RequirePermission.tsx` — Renders children only when the session holds the permission; otherwise an Arabic 403 state (`ForbiddenState`).
 - `model/login.schema.ts` — Zod schema plus `LoginRequest` / `LoginResponse` contracts.
-- `api/use-login.ts` — TanStack Query `useMutation` calling `POST /api/auth/login`, persisting the token and hydrating the session store.
+- `api/use-login.ts` — TanStack Query `useMutation` calling `POST /api/auth/login`; discards the prior session/cache before authenticating so another account's data is never reused, then persists the new token and hydrates the session store.
 - `index.ts` — Public API barrel file.
 ## 4. Required Packages
 - `@tanstack/react-query`, `react-hook-form`, `zod`, `@hookform/resolvers`, `zustand`, `lucide-react` — ✅ installed
 ## 5. Implementation Status
 - ✅ `LoginForm`, `useLoginMutation`, `useLogout`, `LogoutButton`, `RequirePermission` implemented and verified against the live API; the app-shell account menu consumes `useLogout`.
-- ✅ `ChangePasswordForm`, `useChangePasswordMutation`, and the forced/voluntary change-password flow are implemented and verified in-browser (client rules, wrong current password, success with token refresh, dark theme).
+- ✅ `ChangePasswordForm`, `useChangePasswordMutation`, and the forced/voluntary change-password flow are implemented and verified in-browser (client rules, wrong current password, success with token refresh, dark theme). The server now enforces the forced change (`403 Identity.PasswordChangeRequired`) for every protected route except `GET /api/auth/me` and `POST /api/auth/change-password`.
 - ❌ The register form remains out of scope for the Identity admin module.
 ## 6. Change Log
+- 2026-10-28: Login and logout now cancel in-flight queries and clear the whole query cache (instead of only user keys), so a different account never sees the previous session's cached data. Documented the server-side forced-password-change gate.
 - 2026-10-28: Both password forms now use the shared `shared/ui` `PasswordField` (visibility toggle was duplicated in `LoginForm` and `ChangePasswordForm`); added the password reset flow that forces `ChangePasswordForm` on the next sign-in.
 - 2026-10-28: Implemented the signed-in password change (Zod schema, mutation, form) and made `LoginForm` hand the session payload to the page so reset logins route to `/change-password`.
 - 2026-10-27: Extracted `use-logout.ts` so the shell and `LogoutButton` share one session teardown; exported `useLogout` from the slice barrel.

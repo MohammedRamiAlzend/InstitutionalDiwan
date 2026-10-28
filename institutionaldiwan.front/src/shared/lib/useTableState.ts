@@ -25,6 +25,7 @@ export interface TableState {
   setSort: (sortKey: string | null, sortDirection?: SortDirection) => void
   setFilter: (key: string, value: string | null) => void
   clearFilters: () => void
+  clearQuery: () => void
 }
 
 const MIN_PAGE_SIZE = 1
@@ -149,6 +150,15 @@ export function useTableState(options: TableStateOptions = {}): TableState {
     }, true)
   }, [filterKeys, update])
 
+  // One URL write: two sequential setters would each start from the same stale
+  // search params, so the second would restore what the first removed.
+  const clearQuery = useCallback(() => {
+    update((next) => {
+      next.delete('search')
+      for (const key of filterKeys) next.delete(key)
+    }, true)
+  }, [filterKeys, update])
+
   return {
     page,
     pageSize,
@@ -163,5 +173,6 @@ export function useTableState(options: TableStateOptions = {}): TableState {
     setSort,
     setFilter,
     clearFilters,
+    clearQuery,
   }
 }

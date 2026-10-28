@@ -41,7 +41,18 @@ internal sealed class EmployeeRepository : IEmployeeRepository
                 (employee.EmployeeNumber != null && EF.Functions.Like(employee.EmployeeNumber, pattern)));
         }
 
-        query = query.OrderBy(employee => employee.FullNameAr);
+        var ordered = (page.SortBy?.ToLowerInvariant(), page.SortDescending) switch
+        {
+            ("employeenumber", false) => query.OrderBy(employee => employee.EmployeeNumber),
+            ("employeenumber", true) => query.OrderByDescending(employee => employee.EmployeeNumber),
+            ("createdat", false) => query.OrderBy(employee => employee.CreatedAt),
+            ("createdat", true) => query.OrderByDescending(employee => employee.CreatedAt),
+            ("isactive", false) => query.OrderBy(employee => employee.IsActive),
+            ("isactive", true) => query.OrderByDescending(employee => employee.IsActive),
+            (_, true) => query.OrderByDescending(employee => employee.FullNameAr),
+            _ => query.OrderBy(employee => employee.FullNameAr)
+        };
+        query = ordered.ThenBy(employee => employee.EmployeeId);
 
         var totalCount = await query.CountAsync(cancellationToken);
         var items = await query

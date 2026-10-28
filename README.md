@@ -1,13 +1,14 @@
 # Institutional Diwan — نظام الديوان المؤسساتي الموحد
 
-> **Status:** Backend implemented for Modules 01–06 and 09 (Organization, Identity, Correspondence,
-> Numbering, Movements, Attachments, Audit) plus the cross-module reference catalogs. The React front
-> end lives in the standalone `institutionaldiwan.front/` project; it implements Identity Module 01
-> plus the complete Module 02 Identity admin front end (Phases 0–6: shared admin foundation, app
-> shell, supporting reads, users admin, roles admin + permission matrix, employees admin, and
-> change-password), the administrator password reset (`POST /api/users/{userId}/reset-password`),
-> and Module 01 Phase 1 — the read-only organizational hierarchy (`/departments`: native tree,
-> Mermaid diagram, and table) — verified against the live API.
+> **Status:** Backend implemented for Modules 01–06 and 09 plus reference catalogs; `dotnet build`
+> succeeds and 487 tests pass. Frontend Module 01 Organization includes department management,
+> tree/Mermaid/chart/grid views, lazy employee branches, paged rosters, and `/institution-settings`.
+> Module 02 Identity has auth and administration screens with live-server-enforced session/forced
+> password-change rules; `npm run build` and `npm run lint` pass. Both modules were exercised against
+> the live API (login, session invalidation, department create/edit/reparent/manager/notes, settings,
+> identity options). Module 03 Correspondence has started (Phase 0 picker access, Phase 1 document
+> entity reads/Arabic errors, Phase 2 `/documents` registry with document and draft creation);
+> detail, numbering, and movement pages are still pending.
 
 The unified institutional correspondence system: a clean-architecture ASP.NET Core 10 API that
 registers documents, allocates official numbers, routes them between departments, and keeps an
@@ -84,18 +85,24 @@ npm run lint
 
 ## Module status
 
-| Module | Slice | State |
-| --- | --- | --- |
-| 01 — Organization | Departments, institution settings, reference catalogs | ✅ Implemented |
-| 02 — Identity | Login, register, change password, users, roles, permissions, employees, document access grants, department scope | ✅ Implemented |
-| 03 — Correspondence | Documents (create, draft, update, register, participants, cancel, details, timeline), external organizations | ✅ Implemented |
-| 04 — Numbering | Registries, central official numbers, department register books | ✅ Implemented |
-| 05 — Movements | Routing workflow (open, send, receive, complete, reject, return, redirect, close, cancel) + department inbox/outbox | ✅ Implemented |
-| 06 — Attachments | File metadata, version chain, upload/download, checksum verification | ✅ Implemented |
-| 07 — Archiving | Domain entities and lookups only | ❌ Not implemented |
-| 08 — Relations | Domain entities and lookups only | ❌ Not implemented |
-| 09 — Audit | Entity-level audit chain (creates/updates/deletes), action-level logging for every authenticated call (reads included), logins, search, checkpoints, integrity checks/reports, scheduled maintenance | ✅ Implemented |
-| 10 — Notifications | Domain entities and lookups only | ❌ Not implemented |
+| Module | Slice | Backend state | Frontend state |
+| --- | --- | --- | --- |
+| 01 — Organization | Departments, institution settings, reference catalogs | Implemented, including configured central-hub protection and inactive-parent activation guard. | Department management, tree/Mermaid/chart/grid, lazy employee branches, paged rosters/details/menus, and institution settings implemented and verified. Generic lookup administration is not implemented. |
+| 02 — Identity | Auth, users, roles, permissions, employees, access grants, department scope | Implemented, including live session-stamp validation, inactive-role guards, and server-enforced forced password change. | Auth and users/roles/employees administration implemented and verified, including temporal department assignments and permission-scoped pickers. Document access-grant UI remains planned with Module 03. |
+| 03 — Correspondence | Documents (create/draft/update/register/participants/cancel/details/timeline), external organizations | Implemented. | Phases 0–1 done: picker access, document entity reads, Arabic error catalog, badges. Registry page/detail route pending. |
+| 04 — Numbering | Registries, central official numbers, department register books | Implemented. | Planned; Module 01 settings exposes numbering policy only, not registry administration. |
+| 05 — Movements | Routing workflow and department inbox/outbox | Implemented. | Planned. |
+| 06 — Attachments | Metadata, versions, upload/download, checksum verification | Implemented. | Planned. |
+| 07 — Archiving | Domain entities and lookups | Application/API not implemented. | Blocked on backend. |
+| 08 — Relations | Domain entities and lookups | Application/API not implemented. | Blocked on backend. |
+| 09 — Audit | Entity/action audit chain, search, checkpoints, integrity reports, scheduled maintenance | Implemented. | Planned. |
+| 10 — Notifications | Domain entities and lookups | Application/API not implemented. | Blocked on backend/hubs. |
+
+“Implemented and verified” means the code is present and was exercised against the live API;
+`dotnet test` (487 tests), `npm run build`, and `npm run lint` pass. Module 01 settings loads the
+existing singleton: read errors, including missing settings, show Arabic feedback and retry rather
+than creating or overwriting a record. Frontend Module 03 is in progress: the registry and creation
+flow are live, while details, numbering, and movements remain planned.
 
 ## Conventions
 
@@ -142,6 +149,11 @@ have no `README.md` of their own yet — their content is documented in the encl
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-28 | Qoder | Module 03 Phase 2 (registry): added `features/document-create` (registered vs draft, lookup-driven selects, Arabic validation, `Numbering.OfficialNumberTaken` field error) and `widgets/document-registry-table`, mounted `/documents` behind `DOCUMENT_VIEW`, registered the route, activated the sidebar item, and opened `identity-options/departments` to `DOCUMENT_VIEW`; 487 tests pass and the front build/lint pass. |
+| 2026-10-28 | Qoder | Module 03 Phase 1 (foundation): implemented `entities/document` (typed DTOs, query keys, list/by-id/details/timeline/grants hooks, status/direction badges, LTR official-number tag) and added the full Arabic catalog for `Correspondence.*`, `Numbering.*`, and `Movements.*`. No page or route yet; nav items stay disabled until their phases. Front build and lint pass. |
+| 2026-10-28 | Qoder | Module 03 Phase 0 (picker access): `GET /api/identity-options/users` returns a paged, username-searchable `{ userId, username, isActive }` list behind `USER_MANAGE`, `ACCESS_GRANT_MANAGE`, or `DOCUMENT_EDIT`, and department options now also accept `DOCUMENT_CREATE`/`DOCUMENT_EDIT`. No document frontend code yet; 487 tests pass. |
+| 2026-10-28 | agent | Closed the Module 01/02 audit: live session-stamp validation (deactivation, password, role and permission changes invalidate issued tokens), server-enforced forced password change, inactive-role guard and scope-type validation, document-scoped grant revocation, temporal assignment overlap rules, permission-scoped `identity-options` picker reads, user/employee sorting, department update manager/notes, `/institution-settings` UI, and the full Arabic error catalog. `dotnet build`/480 tests, `npm run build`/`npm run lint` pass; Module 03 frontend remains planned. |
+| 2026-10-28 | agent | Refresh Module 01 department/settings/hierarchy coverage and split backend implementation from frontend status; use canonical 01 Organization / 02 Identity numbering, keep Module 02 audit fixes open and Module 03 frontend planned, and defer final verification results/counts. |
 | 2026-10-28 | agent | Clicking a department in the Mermaid hierarchy view now opens its details: `shared/ui/mermaid-view` accepts an optional `onNodeClick` that turns flowchart nodes into focusable, activatable targets, and `departmentTreeToMermaid` returns the node-id → department-id map. View-only change; front build and lint pass. |
 | 2026-10-28 | agent | Clicking a department now shows its employees: `GET /api/employees` accepts `departmentId` and `includeSubDepartments` (resolved through `IDepartmentRepository.GetDescendantIdsAsync`), the hierarchy detail dialog renders the roster with a sub-departments toggle, and `EmployeeSeeder` (Order 97, Development/Staging) seeds 28 demo employees across the 15-department tree. 406 tests pass; front build and lint pass. |
 | 2026-10-28 | agent | Added `DepartmentSeeder` (Order 96, Development/Staging) so the organization hierarchy is demonstrable: 15 departments in four levels (Central Diwan → 4 directorates → 7 departments → 3 sections) seeded idempotently by code under the existing root, with unit/pipeline tests. |

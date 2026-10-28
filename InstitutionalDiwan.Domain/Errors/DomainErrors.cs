@@ -36,11 +36,13 @@ public static class DomainErrors
         public static readonly Error CyclicHierarchy = Error.Conflict("Department.CyclicHierarchy", "Cannot move department under one of its own descendants.");
         public static readonly Error InactiveParent = Error.Conflict("Department.InactiveParent", "Cannot move department under an inactive parent department.");
         public static readonly Error HasActiveChildren = Error.Conflict("Department.HasActiveChildren", "Cannot deactivate a department that still has active child departments.");
+        public static readonly Error CentralDiwanProtected = Error.Conflict("Department.CentralDiwanProtected", "Cannot reparent or deactivate the designated Central Diwan department. Transfer the Central Diwan through institution settings first.");
         public static readonly Error NotFound = Error.NotFound("Department.NotFound", "The department was not found.");
         public static readonly Error CodeAlreadyExists = Error.Conflict("Department.CodeAlreadyExists", "A department with this code already exists.");
         public static readonly Error TypeNotFound = Error.Validation("Department.TypeNotFound", "The specified department type does not exist.");
         public static readonly Error TypeInactive = Error.Conflict("Department.TypeInactive", "Cannot assign an inactive department type.");
         public static readonly Error ParentNotFound = Error.Validation("Department.ParentNotFound", "The specified parent department does not exist.");
+        public static readonly Error ManagerNotFound = Error.Validation("Department.ManagerNotFound", "The specified manager employee does not exist.");
         public static readonly Error Inactive = Error.Conflict("Department.Inactive", "The department is inactive and cannot take part in a document movement.");
     }
 
@@ -85,6 +87,8 @@ public static class DomainErrors
         public static readonly Error UserInactive = Error.Forbidden("Identity.UserInactive", "The user account is inactive.");
         public static readonly Error UsernameTaken = Error.Conflict("Identity.UsernameTaken", "The username is already taken.");
         public static readonly Error RoleNotFound = Error.NotFound("Identity.RoleNotFound", "The specified role was not found.");
+        public static readonly Error RoleInactive = Error.Conflict("Identity.RoleInactive", "Cannot assign an inactive role.");
+        public static readonly Error PasswordChangeRequired = Error.Forbidden("Identity.PasswordChangeRequired", "Change your password before accessing this endpoint.");
         public static readonly Error RoleCodeAlreadyExists = Error.Conflict("Identity.RoleCodeAlreadyExists", "A role with this code already exists.");
         public static readonly Error PermissionNotFound = Error.Validation("Identity.PermissionNotFound", "The specified permission does not exist.");
         public static readonly Error UserNotFound = Error.NotFound("Identity.UserNotFound", "The user account was not found.");

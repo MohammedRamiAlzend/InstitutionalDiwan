@@ -20,7 +20,7 @@ internal sealed class ListUsersQueryHandler : IQueryHandler<ListUsersQuery, Page
         ListUsersQuery request,
         CancellationToken cancellationToken)
     {
-        var page = new PageRequest(request.Page, request.PageSize, request.Search);
+        var page = new PageRequest(request.Page, request.PageSize, request.Search, request.SortBy, request.SortDescending);
         var users = await _userRepository.ListPagedAsync(page, cancellationToken);
 
         var responses = new List<UserResponse>(users.Items.Count);

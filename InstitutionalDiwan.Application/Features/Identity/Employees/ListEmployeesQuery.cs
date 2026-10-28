@@ -13,4 +13,6 @@ public sealed record ListEmployeesQuery(
     int PageSize = 20,
     string? Search = null,
     Guid? DepartmentId = null,
-    bool IncludeSubDepartments = false) : IQuery<PagedResult<EmployeeResponse>>;
+    bool IncludeSubDepartments = false,
+    string? SortBy = null,
+    bool SortDescending = false) : IQuery<PagedResult<EmployeeResponse>>;

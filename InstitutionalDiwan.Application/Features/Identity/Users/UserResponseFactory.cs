@@ -37,6 +37,11 @@ internal static class UserResponseFactory
             user.LastLoginAt,
             user.CreatedAt,
             user.UpdatedAt,
-            roles);
+            roles,
+            user.DepartmentAssignments
+                .OrderByDescending(assignment => assignment.StartDate)
+                .ThenBy(assignment => assignment.AssignmentId)
+                .Select(UserDepartmentAssignmentResponse.From)
+                .ToList());
     }
 }

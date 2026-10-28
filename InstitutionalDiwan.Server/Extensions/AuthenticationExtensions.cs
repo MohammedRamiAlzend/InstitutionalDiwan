@@ -1,9 +1,12 @@
 using InstitutionalDiwan.Domain.Common;
+using InstitutionalDiwan.Domain.Entities.Identity;
+using InstitutionalDiwan.Domain.Repositories;
 using InstitutionalDiwan.Infrastructure.Authentication;
 using InstitutionalDiwan.Server.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
+using System.Security.Claims;
 using System.Text;
 
 namespace InstitutionalDiwan.Server.Extensions;
@@ -43,6 +46,10 @@ public static class AuthenticationExtensions
                     ValidateLifetime = true,
                     ClockSkew = TimeSpan.FromSeconds(30)
                 };
+                options.Events = new JwtBearerEvents
+                {
+                    OnTokenValidated = context => ValidateSessionAsync(context, jwt.SecretKey)
+                };
             });
 
         // One policy per permission code: the policy name must equal the "permission" claim value
@@ -59,5 +66,47 @@ public static class AuthenticationExtensions
         services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
 
         return services;
+    }
+
+    private static async Task ValidateSessionAsync(TokenValidatedContext context, string signingKey)
+    {
+        var principal = context.Principal;
+        var stamps = principal?.FindAll(JwtSessionStamp.ClaimType).ToArray();
+        if (stamps is not { Length: 1 } ||
+            !Guid.TryParse(principal?.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var userId))
+        {
+            context.Fail("Invalid session.");
+            return;
+        }
+
+        var services = context.HttpContext.RequestServices;
+        var cancellationToken = context.HttpContext.RequestAborted;
+        var user = await services.GetRequiredService<IUserRepository>()
+            .GetByIdAsync(userId, cancellationToken);
+        if (user is null || !user.IsActive)
+        {
+            context.Fail("Invalid session.");
+            return;
+        }
+
+        var roleRepository = services.GetRequiredService<IRoleRepository>();
+        var roles = new List<Role>();
+        foreach (var assignment in user.UserRoles)
+        {
+            var role = await roleRepository.GetByIdAsync(assignment.RoleId, cancellationToken);
+            if (role is { IsActive: true })
+                roles.Add(role);
+        }
+
+        if (!JwtSessionStamp.IsValid(
+                stamps[0].Value,
+                user,
+                roles.Select(role => role.Code),
+                roles.SelectMany(role => role.RolePermissions).Select(permission => permission.PermissionCode),
+                signingKey))
+        {
+            // Do not include credentials, tokens, stamps, or account details in failures/logs.
+            context.Fail("Invalid session.");
+        }
     }
 }

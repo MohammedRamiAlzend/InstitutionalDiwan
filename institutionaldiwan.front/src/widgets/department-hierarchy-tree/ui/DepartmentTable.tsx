@@ -1,5 +1,14 @@
 import { useMemo } from 'react'
-import { Copy, Eye, Hash, RefreshCw } from 'lucide-react'
+import {
+  Copy,
+  Eye,
+  Hash,
+  Pencil,
+  Plus,
+  Power,
+  PowerOff,
+  RefreshCw,
+} from 'lucide-react'
 import {
   DepartmentBadge,
   useDepartments,
@@ -26,6 +35,10 @@ interface DepartmentTableProps {
   typeLabel: (departmentTypeId: number) => string
   resolveName: (departmentId: string) => string | undefined
   onOpen: (departmentId: string) => void
+  onCreate: () => void
+  onCreateChild: (parentDepartmentId: string) => void
+  onEdit: (departmentId: string) => void
+  onToggleActive: (department: DepartmentResponse) => void
 }
 
 /** Flat client-paged grid of every department (same URL search/paging as the tree). */
@@ -35,6 +48,10 @@ export function DepartmentTable({
   typeLabel,
   resolveName,
   onOpen,
+  onCreate,
+  onCreateChild,
+  onEdit,
+  onToggleActive,
 }: DepartmentTableProps) {
   const columns = useMemo<DataTableColumn<DepartmentResponse>[]>(
     () => [
@@ -184,6 +201,29 @@ export function DepartmentTable({
     },
     { type: 'separator' },
     {
+      id: 'add-child',
+      label: 'إضافة قسم فرعي',
+      icon: <Plus className="size-4" aria-hidden />,
+      onSelect: () => onCreateChild(department.departmentId),
+    },
+    {
+      id: 'edit',
+      label: 'تعديل القسم',
+      icon: <Pencil className="size-4" aria-hidden />,
+      onSelect: () => onEdit(department.departmentId),
+    },
+    {
+      id: 'toggle-active',
+      label: department.isActive ? 'إيقاف القسم' : 'تفعيل القسم',
+      icon: department.isActive ? (
+        <PowerOff className="size-4" aria-hidden />
+      ) : (
+        <Power className="size-4" aria-hidden />
+      ),
+      onSelect: () => onToggleActive(department),
+    },
+    { type: 'separator' },
+    {
       id: 'copy-code',
       label: 'نسخ رمز القسم',
       icon: <Copy className="size-4" aria-hidden />,
@@ -198,6 +238,13 @@ export function DepartmentTable({
   ]
 
   const headerMenu: MenuEntry[] = [
+    {
+      id: 'create',
+      label: 'قسم جديد',
+      icon: <Plus className="size-4" aria-hidden />,
+      onSelect: onCreate,
+    },
+    { type: 'separator' },
     {
       id: 'refresh',
       label: 'تحديث البيانات',

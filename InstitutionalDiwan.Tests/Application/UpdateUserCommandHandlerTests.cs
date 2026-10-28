@@ -9,6 +9,14 @@ namespace InstitutionalDiwan.Tests.Application;
 
 public sealed class UpdateUserCommandHandlerTests
 {
+    private static FakeLookupRepository Scopes()
+    {
+        var lookups = new FakeLookupRepository();
+        for (var id = 1; id <= 4; id++)
+            lookups.Add("user-scope-types", UserScopeType.Create(id, $"Scope {id}", $"نطاق {id}").Value);
+        return lookups;
+    }
+
     private static (FakeUserRepository Users, FakeDepartmentRepository Departments, User User) Setup()
     {
         var departments = new FakeDepartmentRepository();
@@ -32,7 +40,7 @@ public sealed class UpdateUserCommandHandlerTests
         var unitOfWork = new FakeUnitOfWork();
 
         var result = await new UpdateUserCommandHandler(
-            users, departments, new FakeEmployeeRepository(), new FakeRoleRepository(), unitOfWork).Handle(
+            users, departments, new FakeEmployeeRepository(), new FakeRoleRepository(), unitOfWork, Scopes()).Handle(
             new UpdateUserCommand(user.UserId, user.PrimaryDepartmentId, EmployeeId: null,
                 ScopeTypeId: UserScopeType.InstitutionId, MustChangePassword: true),
             CancellationToken.None);
@@ -48,7 +56,7 @@ public sealed class UpdateUserCommandHandlerTests
     {
         var result = await new UpdateUserCommandHandler(
             new FakeUserRepository(), new FakeDepartmentRepository(),
-            new FakeEmployeeRepository(), new FakeRoleRepository(), new FakeUnitOfWork()).Handle(
+            new FakeEmployeeRepository(), new FakeRoleRepository(), new FakeUnitOfWork(), Scopes()).Handle(
             new UpdateUserCommand(Guid.NewGuid(), Guid.NewGuid(), null, UserScopeType.DepartmentId, true),
             CancellationToken.None);
 
@@ -64,7 +72,7 @@ public sealed class UpdateUserCommandHandlerTests
 
         var result = await new UpdateUserCommandHandler(
             users, new FakeDepartmentRepository(),
-            new FakeEmployeeRepository(), new FakeRoleRepository(), new FakeUnitOfWork()).Handle(
+            new FakeEmployeeRepository(), new FakeRoleRepository(), new FakeUnitOfWork(), Scopes()).Handle(
             new UpdateUserCommand(user.UserId, Guid.NewGuid(), null, UserScopeType.DepartmentId, true),
             CancellationToken.None);
 
