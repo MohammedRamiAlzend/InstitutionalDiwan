@@ -114,6 +114,10 @@ export function CreateDocumentDialog({ open, onOpenChange }: CreateDocumentDialo
 
   const mode = useWatch({ control, name: 'mode' })
   const mutationError = mode === 'register' ? createMutation.error : draftMutation.error
+  // The conflict is surfaced on the official-number field; repeating it in the
+  // form-level banner would show the same message twice.
+  const officialNumberConflict =
+    mutationError instanceof ApiError && mutationError.code === 'Numbering.OfficialNumberTaken'
 
   const changeMode = (nextMode: CreateDocumentMode) => {
     setValue('mode', nextMode)
@@ -413,7 +417,7 @@ export function CreateDocumentDialog({ open, onOpenChange }: CreateDocumentDialo
           </>
         )}
 
-        {mutationError && (
+        {mutationError && !officialNumberConflict && (
           <p
             role="alert"
             className="sm:col-span-2 rounded-lg bg-danger/10 px-3 py-2 text-sm text-danger"

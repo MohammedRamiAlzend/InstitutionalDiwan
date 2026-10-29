@@ -4,11 +4,13 @@ import { LoginPage } from '@/pages/login'
 import { ChangePasswordPage } from '@/pages/change-password'
 import { DashboardPage } from '@/pages/dashboard'
 import { DepartmentsPage } from '@/pages/departments'
-import { DocumentsPage } from '@/pages/documents'
+import { DocumentsPage, DocumentDetailsPage } from '@/pages/documents'
+import { MovementsPage } from '@/pages/movements'
 import { InstitutionSettingsPage } from '@/pages/institution-settings'
 import { UsersPage } from '@/pages/users'
 import { RolesPage } from '@/pages/roles'
 import { EmployeesPage } from '@/pages/employees'
+import { NumberingPage } from '@/pages/numbering'
 import { AppShell } from '@/widgets/app-shell'
 import { ProtectedRoute } from './ProtectedRoute'
 
@@ -22,11 +24,14 @@ export function AppRouter() {
           <Route element={<AppShell />}>
             <Route path={ROUTES.DASHBOARD} element={<DashboardPage />} />
             <Route path={ROUTES.DOCUMENTS} element={<DocumentsPage />} />
+            <Route path={ROUTES.DOCUMENT_DETAIL_PATTERN} element={<DocumentDetailsPage />} />
+            <Route path={ROUTES.MOVEMENTS} element={<MovementsPage />} />
             <Route path={ROUTES.DEPARTMENTS} element={<DepartmentsPage />} />
             <Route path={ROUTES.INSTITUTION_SETTINGS} element={<InstitutionSettingsPage />} />
             <Route path={ROUTES.USERS} element={<UsersPage />} />
             <Route path={ROUTES.ROLES} element={<RolesPage />} />
             <Route path={ROUTES.EMPLOYEES} element={<EmployeesPage />} />
+            <Route path={ROUTES.NUMBERING} element={<NumberingPage />} />
           </Route>
         </Route>
         <Route path="*" element={<Navigate to={ROUTES.DASHBOARD} replace />} />

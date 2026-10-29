@@ -2,6 +2,8 @@ export type {
   MeResponse,
   UserResponse,
   UserListParams,
+  UserOption,
+  UserOptionParams,
   UserScope,
   UserDepartmentAssignmentResponse,
   UserEffectivePermissionsResponse,
@@ -15,5 +17,6 @@ export {
   useUsers,
   useUserById,
   useUserEffectivePermissions,
+  useUserOptions,
 } from './model/queries'
 export { UserScopeBadge } from './ui/UserScopeBadge'

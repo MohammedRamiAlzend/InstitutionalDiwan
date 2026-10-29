@@ -8,9 +8,17 @@
 > `identity-options` reads, temporal department assignments, server-enforced forced password change,
 > and full query-cache teardown on login/logout. Module 03 Correspondence has started: Phase 0 added
 > the document-facing picker reads on the API, Phase 1 implemented the `document` entity reads and the
-> Arabic Correspondence/Numbering/Movements error catalog, and Phase 2 shipped the `/documents`
-> registry with document/draft creation plus its active sidebar entry. Document details, numbering,
-> and movement pages remain pending.
+> Arabic Correspondence/Numbering/Movements error catalog, Phase 2 shipped the `/documents` registry
+> with document/draft creation plus its active sidebar entry, and Phase 3 added the document details
+> page (`/documents/:documentId`) with participants, status history, the audit timeline, and the
+> draft-edit/register/participant/cancel actions, and Phase 4 added the access-grants tab (grant a
+> user a level with optional expiry, revoke while keeping the record) behind `ACCESS_GRANT_MANAGE`.
+> Phase 5 added the `/numbering` registry administration page, the read-only department register book,
+> and the document-details numbers tab (issue, department registration, replace with reason, cancel
+> with reason, full number history) behind `NUMBERING_VIEW`/`NUMBERING_MANAGE`. Phase 6 added the
+> movement workflow: `entities/movement`, `features/movement-routing`, `widgets/movement-inbox`, the
+> `/movements` inbox/outbox page, and the document-details movements tab with the status/permission-
+> filtered timeline, steps, and events.
 > `npm run build` and `npm run lint` pass; the live API was used for login, session invalidation,
 > department, settings, and picker checks.
 > The Arabic-first RTL/light-dark foundation, `@` alias, dev proxy, and `.env.example` are configured;
@@ -35,10 +43,10 @@ developers can implement slices predictably without spaghetti imports.
 | Item | As-is | To-be |
 | --- | --- | --- |
 | Runtime deps in `package.json` | React/shared/auth stack, Radix UI primitives, and lazy `mermaid` (see “Required Packages”) | Remaining packages as their slices land; shared grid owns its URL/localStorage state model |
-| FSD folders | Six documented layers; shared/app foundation, Module 02 auth/admin slices, Module 01 department/hierarchy/settings slices, and the Module 03 `document` entity + `document-create` feature + `document-registry-table` widget implemented, including `entities/institution-setting`, `features/{department-manage,institution-settings-manage}`, and reusable `EmployeePicker` | Remaining module frontends and Module 03 detail/numbering/movement slices |
+| FSD folders | Six documented layers; shared/app foundation, Module 02 auth/admin slices, Module 01 department/hierarchy/settings slices, and the Module 03 `document`/`external-organization`/`numbering-registry`/`movement` entities + `document-create`/`document-manage`/`document-access-grant`/`numbering-manage`/`movement-routing` features + `document-registry-table`/`numbering-registry-table`/`movement-inbox` widgets + registry/details/numbering/movements pages implemented, including `entities/institution-setting`, `features/{department-manage,institution-settings-manage}`, and reusable `EmployeePicker` | Remaining module frontends |
 | `vite.config.ts` | ✅ `@` → `./src` alias + env-driven `/api` + `/hubs` proxy | Optional local HTTPS certificate |
 | Dev configuration | ✅ `.env.example` committed (`DEV_PROXY_TARGET`, `VITE_API_BASE_URL`); create local `.env` as needed | — |
-| UI | Arabic-first login/password change/dashboard/Identity admin plus `/departments` management and tree/Mermaid/chart/grid, optional lazy employee branches and paged rosters, `/institution-settings`, and the `/documents` registry (filters, search, sort, create draft/registered); shared theme/density tokens | Remaining module pages (document details, movements, numbering, audit) |
+| UI | Arabic-first login/password change/dashboard/Identity admin plus `/departments` management and tree/Mermaid/chart/grid, optional lazy employee branches and paged rosters, `/institution-settings`, the `/documents` registry (filters, search, sort, create draft/registered), the document details page (participants, access grants, numbers, movements, status history, timeline, draft-edit/register/participant/cancel/number/routing lifecycle), `/numbering` (registry grid + department register book), and `/movements` (department inbox/outbox with routing menus); shared theme/density tokens | Remaining module pages (audit) |
 | Backend coverage docs | `knowledge.md` describes the external API | Modules 01–06, 09 live; 07/08/10 deferred |
 
 Always treat **as-is** as the truth for “what runs today,” and **to-be** as the install/implement
@@ -146,13 +154,13 @@ Summary:
 | `/login` | `pages/login` | 02 Identity | Public login |
 | `/change-password` | `pages/change-password` | 02 Identity | ✅ Signed-in password change (forced after reset) |
 | `/` | `pages/dashboard` | — | Recent docs + inbox counts |
-| `/documents`, `/documents/:id` | `pages/documents` | 03 + 06 | ✅ Registry (list/filter/search/sort + create draft/registered); detail hosts attachments panel (Phase 3) |
-| `/movements` | `pages/movements` | 05 | Inbox / outbox tabs via search params |
+| `/documents`, `/documents/:id` | `pages/documents` | 03 + 06 | ✅ Registry (list/filter/search/sort + create draft/registered); ✅ detail page with participants, access grants, numbers (issue/cancel/replace/department registration/history), movements (open/send/receive/complete/reject/return/redirect/close/cancel + step timeline and event log), status history, timeline, and lifecycle actions; files tab pending |
+| `/movements` | `pages/movements` | 03 | ✅ Department inbox/outbox (URL tabs, client filters/sort/paging, routing menus) |
 | `/departments` | `pages/departments` | 01 | ✅ Hierarchy (tree / Mermaid / table) + department employees in the detail dialog; settings entry pending |
 | `/users` | `pages/users` | 02 | ✅ Users admin |
 | `/roles` | `pages/roles` | 02 | ✅ Roles + permission matrix |
 | `/employees` | `pages/employees` | 02 | ✅ Employees admin (department-linked) |
-| `/numbering` | `pages/numbering` | 04 | Registries |
+| `/numbering` | `pages/numbering` | 04 | ✅ Registry administration + department register book |
 | `/audit` | `pages/audit` | 09 | Search + integrity (self-auditing reads) |
 | `/archive` | `pages/archive` | 07 | **Blocked** until Module 07 API exists |
 
@@ -173,10 +181,10 @@ Full endpoint tables: [`knowledge.md`](knowledge.md).
 | File / Folder | Purpose |
 | --- | --- |
 | `src/app/` | Implemented application root (`index.tsx`), providers (theme, query, session loader), router + guards, and the Tailwind v4 global styles with `tokens.css`. |
-| `src/pages/` | Route-level page slices; `login`, `change-password`, `dashboard`, `departments`, `users`, `roles`, and `employees` implemented, the rest documented. |
-| `src/widgets/` | Composite page sections combining entities and features; `app-shell`, `users-table`, `roles-table`, `employees-table`, and `department-hierarchy-tree` implemented, the rest documented. |
-| `src/features/` | CQRS Command mutations, Zod forms, and interactive workflows; `auth`, `user-manage`, `role-manage`, and `employee-manage` implemented, the rest documented. |
-| `src/entities/` | Domain read models, query key factories, `useQuery` hooks, and status badges; `user` (session + admin reads), `department`, `role`, `employee` (paged list with department/sub-department filters), `lookup` implemented, the rest documented. |
+| `src/pages/` | Route-level page slices; `login`, `change-password`, `dashboard`, `departments`, `users`, `roles`, `employees`, `documents` (registry + details), and `numbering` implemented, the rest documented. |
+| `src/widgets/` | Composite page sections combining entities and features; `app-shell`, `users-table`, `roles-table`, `employees-table`, `department-hierarchy-tree`, `document-registry-table`, and `numbering-registry-table` implemented, the rest documented. |
+| `src/features/` | CQRS Command mutations, Zod forms, and interactive workflows; `auth`, `user-manage`, `role-manage`, `employee-manage`, `document-create`, `document-manage`, `document-access-grant`, and `numbering-manage` implemented, the rest documented. |
+| `src/entities/` | Domain read models, query key factories, `useQuery` hooks, and status badges; `user` (session + admin reads), `department`, `role`, `employee` (paged list with department/sub-department filters), `lookup`, `document`, `external-organization`, and `numbering-registry` implemented, the rest documented. |
 | `src/shared/` | Axios client + RFC 7807 adapter + Arabic error catalog, config, utilities (table state, column preferences, dates, JWT hints), and the RTL UI kit including the shared data grid, context/dropdown menus, dialogs, select, checkbox, and the lazy Mermaid renderer. |
 | `src/main.tsx` | Vite entry: mounts the `app` layer root and the global stylesheet. |
 | `src/assets/` | Vite template images (`hero.png`, `react.svg`, `vite.svg`); replaced by the institution's own artwork. |
@@ -210,17 +218,22 @@ Full endpoint tables: [`knowledge.md`](knowledge.md).
 | Dev proxy + `.env.example` | ✅ Configured (HTTPS dev certificate still to-be) |
 | `index.html` RTL / document title / theme boot script | ✅ Configured |
 | `src/shared/` (`api`, `ui`, `lib`, `config`, `types`) | ✅ Core implemented including `data-table`, `context-menu`, dialogs, menus, select/checkbox, URL table state, persisted columns, the lazy `mermaid-view`, and the expanded Arabic error catalog |
-| `src/entities/` | ✅ `user` (session + admin reads), `department` (reads + `toMermaid`), `role`, `employee` (reads), `lookup` (incl. the five document catalogs), and `document` implemented; document-file, numbering-registry, movement, audit-log pending |
-| `src/features/` | ✅ `auth`, `user-manage` (incl. administrator password reset), `role-manage`, `employee-manage`, and `document-create` (registered + draft) implemented; document-details/access-grant, department-*, movement-routing, attachment-upload, audit-manage pending |
-| `src/widgets/` | ✅ `app-shell` (sidebar, header, drawer, settings, shell/item context menus), `users-table`, `roles-table`, `employees-table`, `department-hierarchy-tree` (tree / Mermaid / table + a detail dialog with the department's employees), and `document-registry-table` (URL filters/sort/paging + create entry points); movement timeline/inbox, attachments panel, audit table, visualization panel pending |
-| `src/pages/` | ✅ `login`, standalone `change-password`, shell-framed `dashboard`, `departments`, `users`, `roles`, `employees`, and the `documents` registry; document details, movements, numbering, audit pending (archive deferred) |
-| `src/app/` (`providers`, `router`, `styles`) | ✅ Implemented (login-protected routes incl. `/change-password`, `/departments`, `/users`, `/roles`, `/employees`, `/documents`; forced reset redirect) |
+| `src/entities/` | ✅ `user` (session + admin reads), `department` (reads + `toMermaid`), `role`, `employee` (reads), `lookup` (incl. participant role/target catalogs), `document` (reads + details/timeline + number history), `external-organization`, `numbering-registry`, and `movement` (queues, by-document, actions rules, badges) implemented; document-file and audit-log pending |
+| `src/features/` | ✅ `auth`, `user-manage` (incl. administrator password reset), `role-manage`, `employee-manage`, `document-create` (registered + draft), `document-manage` (draft edit/register, add participant, cancel with reason), `document-access-grant` (grant a user an access level with optional expiry; revoke), `numbering-manage` (registries; issue/cancel/replace/department registration), and `movement-routing` (open/send/receive/complete/reject/return/redirect/close/cancel) implemented; department-*, attachment-upload, audit-manage pending |
+| `src/widgets/` | ✅ `app-shell` (sidebar, header, drawer, settings, shell/item context menus), `users-table`, `roles-table`, `employees-table`, `department-hierarchy-tree` (tree / Mermaid / table + a detail dialog with the department's employees), `document-registry-table` (URL filters/sort/paging + create entry points + details link), `numbering-registry-table` (scope/format/reset/counters/status + create/edit/activate), and `movement-inbox` (inbox/outbox queue + routing menus); movement timeline panel, attachments panel, audit table, visualization panel pending |
+| `src/pages/` | ✅ `login`, standalone `change-password`, shell-framed `dashboard`, `departments`, `users`, `roles`, `employees`, `documents` registry, `documents/:id` details (participants, access grants, numbers, movements, status history, timeline, lifecycle actions), `numbering`, and `movements`; audit pending (archive deferred) |
+| `src/app/` (`providers`, `router`, `styles`) | ✅ Implemented (login-protected routes incl. `/change-password`, `/departments`, `/users`, `/roles`, `/employees`, `/documents`, `/documents/:documentId`, `/numbering`, `/movements`; forced reset redirect) |
 | Publishing & API wiring guide (`DEPLOYMENT.md`) | ✅ Documented (proxy section reflects the configured setup) |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-29 | agent | Completed and verified Module 03 Phase 6: added `entities/movement` (queues/by-document reads, query keys, transition rules, badges), `features/movement-routing` (open + nine routing commands with notes/reason/redirect forms), `widgets/movement-inbox`, the `/movements` inbox/outbox page, and the document-details movements tab (status/permission-filtered actions, step timeline, Arabic event log). Activated the «الحركات» sidebar entry. In-browser: opened and sent a movement from the Central Diwan to `DEP-HR`, the HR user received it against department number `HR-2026-118`, rejected it with a reason (auto-rerouted to the Central Diwan as step 2), the Central Diwan registered `CEN-2026-1000` and received, then closed — the document returned to «مسجل», both queues and the timeline refreshed. Fixed a stale Vite transform that crashed the queue table, mistranslated rejected step timestamps, and untranslated `Rejected:` step notes. Build, lint, and 487 backend tests pass. |
+| 2026-10-29 | agent | Completed and verified Module 03 Phase 5: added `entities/numbering-registry` (registries/counters/department register), document number reads in `entities/document`, `features/numbering-manage` (registry CRUD/activate; issue/cancel/replace/department registration), `widgets/numbering-registry-table`, the `/numbering` page, and the document-details numbers tab; activated the «الترقيم» sidebar entry. In-browser: registry CRUD/status/counters, department register, draft issue → registered `2026/000005`, department registration `DEP-2026-001`, duplicate `2026/000007` rejected in Arabic with the dialog retained, replace `2026/000008` → `2026/000009`, cancel with reason, and a `USER`-role login with no numbers tab/registry page whose direct writes returned 403. Build, lint, and 487 backend tests pass. |
+| 2026-10-28 | agent | Completed and verified Module 03 Phase 4: extended `entities/user` with the `identity-options/users` option read, added `features/document-access-grant` (grant a user an access level with optional future expiry and reason; revoke while keeping the record), and the `grants` tab in the document details page — visible only with `ACCESS_GRANT_MANAGE`, with `?tab=grants` falling back to details otherwise. In-browser: required-field and past-expiry Arabic validation, a grant to `user` appearing immediately with grantor/expiry and counts, a revoked grant staying as «ملغى» with timestamp + revoker, and a `USER`-role login seeing no tab (endpoint 403). The API accepts no revocation reason, so the revoke dialog confirms without one. Build and lint pass. |
+| 2026-10-28 | agent | Completed Module 03 Phase 3: added `entities/external-organization` (paged/searchable reads), `features/document-manage` (edit draft, register draft into the numbering registry, add participant by external organization / internal department / named person, cancel with a reason), and the `/documents/:documentId` details page with participants, status history, and an Arabic-built audit timeline. Every transition is gated on both status and permission, registry rows link to details, and the participant role/target catalogs joined `entities/lookup`. Verified in-browser against the live API: draft actions, `?tab=participants`, person + department participants, draft edit, registration `2026/000004`, cancel with an Arabic reason, status history, timeline, and canceled-document gating. Build and lint pass. |
+| 2026-10-28 | agent | Finished the Module 03 Phase 2 interactive pass against the live API: searched/filtered/sorted the registry, cleared the query in one URL write, saved a draft, hit `409 Numbering.OfficialNumberTaken` (Arabic field error, dialog stays open), and registered `999/2026` (toast + immediate row). Fixed the 409 message being rendered twice by suppressing the form-level alert for that code. Build and lint pass. |
 | 2026-10-28 | agent | Completed Module 03 Phase 2: added `features/document-create` (mode cards for registered vs draft, lookup-driven type/direction/confidentiality/priority, Arabic validation, `Numbering.OfficialNumberTaken` field error) and `widgets/document-registry-table` (server paging/search/sort, status/direction/type/owning-department filters, copy actions, permission-filtered create menu), mounted `/documents` behind `DOCUMENT_VIEW`, registered the route, and activated the sidebar entry. Opened the department picker read to `DOCUMENT_VIEW` on the API so read-only users resolve department labels. Build and lint pass. |
 | 2026-10-28 | agent | Clicking a department now works in the «مخطط» view too: `shared/ui/mermaid-view` gained an optional `onNodeClick` (activatable flowchart nodes, `Enter`/`Space`, label as accessible name) and `departmentTreeToMermaid` returns a node-id → department-id map, so a diagram node opens the same detail dialog with the employee roster. Verified in-browser (click and keyboard, filtered diagram). Build and lint pass. |
 | 2026-10-28 | agent | Clicking a department now shows its employees: new `DepartmentEmployeesSection` in the hierarchy detail dialog (count badge, «تضمين الأقسام الفرعية» toggle on by default, permission gate on `EMPLOYEE_MANAGE`, skeleton/error/empty states, first-50 footer), fed by the new `departmentId` + `includeSubDepartments` filters on `GET /api/employees`. Verified in-browser (directorate 13 → toggle off 2). Build and lint pass. |

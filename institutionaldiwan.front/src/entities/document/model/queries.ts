@@ -5,6 +5,8 @@ import type {
   DocumentAccessGrantResponse,
   DocumentDetailResponse,
   DocumentListParams,
+  DocumentNumberResponse,
+  DocumentRegistryNumbersResponse,
   DocumentResponse,
   DocumentTimelineEntryResponse,
 } from './types'
@@ -18,6 +20,10 @@ export const documentKeys = {
   full: (documentId: string) => [...documentKeys.detail(documentId), 'full'] as const,
   timeline: (documentId: string) => [...documentKeys.detail(documentId), 'timeline'] as const,
   grants: (documentId: string) => [...documentKeys.detail(documentId), 'grants'] as const,
+  numbers: (documentId: string) =>
+    [...documentKeys.detail(documentId), 'numbers'] as const,
+  registryEntries: (documentId: string) =>
+    [...documentKeys.detail(documentId), 'registry-entries'] as const,
 }
 
 type EnabledOptions<T> = Partial<Pick<UseQueryOptions<T>, 'enabled'>>
@@ -84,6 +90,34 @@ export function useDocumentAccessGrants(
   return useQuery({
     queryKey: documentKeys.grants(documentId ?? ''),
     queryFn: () => documentApi.accessGrants(documentId as string),
+    staleTime: 30 * 1000,
+    ...options,
+    enabled: Boolean(documentId) && (options?.enabled ?? true),
+  })
+}
+
+/** Every official number issued for the document, oldest first (`NUMBERING_VIEW`). */
+export function useDocumentNumberHistory(
+  documentId: string | null | undefined,
+  options?: EnabledOptions<DocumentNumberResponse[]>,
+) {
+  return useQuery({
+    queryKey: documentKeys.numbers(documentId ?? ''),
+    queryFn: () => documentApi.numberHistory(documentId as string),
+    staleTime: 30 * 1000,
+    ...options,
+    enabled: Boolean(documentId) && (options?.enabled ?? true),
+  })
+}
+
+/** Central number plus department register lines (`NUMBERING_VIEW`). */
+export function useDocumentRegistryNumbers(
+  documentId: string | null | undefined,
+  options?: EnabledOptions<DocumentRegistryNumbersResponse>,
+) {
+  return useQuery({
+    queryKey: documentKeys.registryEntries(documentId ?? ''),
+    queryFn: () => documentApi.registryEntries(documentId as string),
     staleTime: 30 * 1000,
     ...options,
     enabled: Boolean(documentId) && (options?.enabled ?? true),

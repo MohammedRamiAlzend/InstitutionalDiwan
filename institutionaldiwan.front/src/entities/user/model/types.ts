@@ -36,6 +36,20 @@ export interface UserListParams {
   sortDescending?: boolean
 }
 
+/** `GET /api/identity-options/users` — minimal picker row (no contact details, roles, or scope). */
+export interface UserOption {
+  userId: string
+  username: string
+  isActive: boolean
+}
+
+/** Paging + username search for the minimal user picker. */
+export interface UserOptionParams {
+  page: number
+  pageSize: number
+  search?: string
+}
+
 /** One temporal department assignment held by a user. */
 export interface UserDepartmentAssignmentResponse {
   assignmentId: string

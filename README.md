@@ -7,8 +7,12 @@
 > password-change rules; `npm run build` and `npm run lint` pass. Both modules were exercised against
 > the live API (login, session invalidation, department create/edit/reparent/manager/notes, settings,
 > identity options). Module 03 Correspondence has started (Phase 0 picker access, Phase 1 document
-> entity reads/Arabic errors, Phase 2 `/documents` registry with document and draft creation);
-> detail, numbering, and movement pages are still pending.
+> entity reads/Arabic errors, Phase 2 `/documents` registry with document and draft creation,
+> Phase 3 document details with participants, status history, audit timeline, and draft-edit /
+> register / add-participant / cancel actions, Phase 4 access grants with the `grants` tab and
+> grant/revoke behind `ACCESS_GRANT_MANAGE`, Phase 5 numbering registries, the `/numbering` page,
+> and the document numbers tab with issue/cancel/replace/department registration behind
+> `NUMBERING_VIEW`/`NUMBERING_MANAGE`); movement pages are still pending.
 
 The unified institutional correspondence system: a clean-architecture ASP.NET Core 10 API that
 registers documents, allocates official numbers, routes them between departments, and keeps an
@@ -88,9 +92,9 @@ npm run lint
 | Module | Slice | Backend state | Frontend state |
 | --- | --- | --- | --- |
 | 01 — Organization | Departments, institution settings, reference catalogs | Implemented, including configured central-hub protection and inactive-parent activation guard. | Department management, tree/Mermaid/chart/grid, lazy employee branches, paged rosters/details/menus, and institution settings implemented and verified. Generic lookup administration is not implemented. |
-| 02 — Identity | Auth, users, roles, permissions, employees, access grants, department scope | Implemented, including live session-stamp validation, inactive-role guards, and server-enforced forced password change. | Auth and users/roles/employees administration implemented and verified, including temporal department assignments and permission-scoped pickers. Document access-grant UI remains planned with Module 03. |
-| 03 — Correspondence | Documents (create/draft/update/register/participants/cancel/details/timeline), external organizations | Implemented. | Phases 0–1 done: picker access, document entity reads, Arabic error catalog, badges. Registry page/detail route pending. |
-| 04 — Numbering | Registries, central official numbers, department register books | Implemented. | Planned; Module 01 settings exposes numbering policy only, not registry administration. |
+| 02 — Identity | Auth, users, roles, permissions, employees, access grants, department scope | Implemented, including live session-stamp validation, inactive-role guards, and server-enforced forced password change. | Auth and users/roles/employees administration implemented and verified, including temporal department assignments and permission-scoped pickers. The document access-grant UI is implemented with Module 03 Phase 4. |
+| 03 — Correspondence | Documents (create/draft/update/register/participants/cancel/details/timeline), external organizations, access grants | Implemented. | Phases 0–5 done: picker access, document entity reads, Arabic error catalog, badges, the `/documents` registry with document/draft creation, the `/documents/:documentId` details page (participants, status history, timeline, draft-edit/register/add-participant/cancel), the `grants` tab, and the numbers tab (issue/cancel/replace/department registration/history). Movement pages pending. |
+| 04 — Numbering | Registries, central official numbers, department register books | Implemented. | Registry administration, the read-only department register book (`/numbering`), and the document numbers tab implemented with Module 03 Phase 5. |
 | 05 — Movements | Routing workflow and department inbox/outbox | Implemented. | Planned. |
 | 06 — Attachments | Metadata, versions, upload/download, checksum verification | Implemented. | Planned. |
 | 07 — Archiving | Domain entities and lookups | Application/API not implemented. | Blocked on backend. |
@@ -101,8 +105,9 @@ npm run lint
 “Implemented and verified” means the code is present and was exercised against the live API;
 `dotnet test` (487 tests), `npm run build`, and `npm run lint` pass. Module 01 settings loads the
 existing singleton: read errors, including missing settings, show Arabic feedback and retry rather
-than creating or overwriting a record. Frontend Module 03 is in progress: the registry and creation
-flow are live, while details, numbering, and movements remain planned.
+than creating or overwriting a record. Frontend Module 03 is in progress: the registry, creation
+flow, document details/lifecycle page, access grants, and numbering surfaces are live, while
+movements remain planned.
 
 ## Conventions
 
@@ -149,6 +154,10 @@ have no `README.md` of their own yet — their content is documented in the encl
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-29 | Qoder | Module 03 Phase 5 (numbering): added `entities/numbering-registry` (registries/counters/department register), document number history/registry reads with `NumberStatusBadge`, `features/numbering-manage` (registry CRUD/activate; issue/cancel/replace/department registration), `widgets/numbering-registry-table`, the `/numbering` page, and the document-details numbers tab; activated the «الترقيم» nav item. Verified in-browser (registry lifecycle/counters, department register, issue `2026/000005`, department registration `DEP-2026-001`, duplicate `2026/000007` rejected in Arabic, replace `2026/000008`→`2026/000009`, cancel with reason, `USER`-role denial with 403 on direct writes). 487 tests pass and the front build/lint pass. |
+| 2026-10-28 | Qoder | Module 03 Phase 4: added the `identity-options/users` option read to `entities/user`, the `features/document-access-grant` slice (grant a user an access level with optional future expiry and reason; revoke while keeping the record), and the document-details `grants` tab, shown only to `ACCESS_GRANT_MANAGE` holders. Verified in-browser (required-field and past-expiry Arabic validation, immediate grant row with grantor/expiry, revoked grant kept as «ملغى» with timestamp + revoker, tab hidden and endpoint 403 for a `USER`-role caller). The API takes no revocation reason, so the revoke dialog confirms without one; 487 tests pass and the front build/lint pass. |
+| 2026-10-28 | Qoder | Module 03 Phase 3: added `entities/external-organization` reads, `features/document-manage` (draft edit, register into the numbering registry, add participant by organization/department/person, cancel with a reason), and the `/documents/:documentId` details page (participants, status history, Arabic audit timeline) with every transition gated on status + permission; registry rows now open the details page. Verified in-browser (draft actions, participants, edit, registration `2026/000004`, cancel with reason, timeline, canceled-document gating); 487 tests pass and the front build/lint pass. |
+| 2026-10-28 | Qoder | Module 03 Phase 2 verified in-browser against the live API: registry search/filter/sort/empty state, draft and registered (`999/2026`) creation with immediate refresh, and the Arabic `Numbering.OfficialNumberTaken` field error; suppressed the duplicate form-level alert for that code. Front build and lint pass. |
 | 2026-10-28 | Qoder | Module 03 Phase 2 (registry): added `features/document-create` (registered vs draft, lookup-driven selects, Arabic validation, `Numbering.OfficialNumberTaken` field error) and `widgets/document-registry-table`, mounted `/documents` behind `DOCUMENT_VIEW`, registered the route, activated the sidebar item, and opened `identity-options/departments` to `DOCUMENT_VIEW`; 487 tests pass and the front build/lint pass. |
 | 2026-10-28 | Qoder | Module 03 Phase 1 (foundation): implemented `entities/document` (typed DTOs, query keys, list/by-id/details/timeline/grants hooks, status/direction badges, LTR official-number tag) and added the full Arabic catalog for `Correspondence.*`, `Numbering.*`, and `Movements.*`. No page or route yet; nav items stay disabled until their phases. Front build and lint pass. |
 | 2026-10-28 | Qoder | Module 03 Phase 0 (picker access): `GET /api/identity-options/users` returns a paged, username-searchable `{ userId, username, isActive }` list behind `USER_MANAGE`, `ACCESS_GRANT_MANAGE`, or `DOCUMENT_EDIT`, and department options now also accept `DOCUMENT_CREATE`/`DOCUMENT_EDIT`. No document frontend code yet; 487 tests pass. |

@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
-import { Copy, Hash, Plus, RefreshCw } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
+import { Copy, Eye, Hash, Plus, RefreshCw } from 'lucide-react'
 import { toast } from 'sonner'
 import { DepartmentBadge, useDepartmentOptions } from '@/entities/department'
 import {
@@ -18,7 +19,7 @@ import {
 import { useSessionStore } from '@/entities/user'
 import { CreateDocumentDialog } from '@/features/document-create'
 import { toArabicErrorMessage } from '@/shared/api'
-import { Permissions } from '@/shared/config'
+import { Permissions, ROUTES } from '@/shared/config'
 import { formatDate, formatDateTime, formatShortId, useTableState } from '@/shared/lib'
 import {
   Button,
@@ -56,6 +57,7 @@ export function DocumentRegistryTable() {
 
   const hasPermission = useSessionStore((state) => state.hasPermission)
   const canCreate = hasPermission(Permissions.DocumentCreate)
+  const navigate = useNavigate()
 
   const departmentsQuery = useDepartmentOptions()
   const statusQuery = useLookupEntries(LOOKUP_SLUGS.DocumentStatusTypes)
@@ -137,7 +139,12 @@ export function DocumentRegistryTable() {
         hideable: false,
         cell: (document) => (
           <div className="flex min-w-52 flex-col gap-0.5">
-            <span className="text-sm font-medium text-foreground">{document.title}</span>
+            <Link
+              to={ROUTES.DOCUMENT_DETAIL(document.documentId)}
+              className="text-sm font-medium text-foreground hover:text-accent hover:underline"
+            >
+              {document.title}
+            </Link>
             {document.subjectSummary && (
               <span className="line-clamp-2 text-xs text-muted">
                 {document.subjectSummary}
@@ -253,6 +260,12 @@ export function DocumentRegistryTable() {
   )
 
   const buildRowMenu = (document: DocumentResponse): MenuEntry[] => [
+    {
+      id: 'open',
+      label: 'فتح التفاصيل',
+      icon: <Eye className="size-4" aria-hidden />,
+      onSelect: () => navigate(ROUTES.DOCUMENT_DETAIL(document.documentId)),
+    },
     {
       id: 'copy-number',
       label: 'نسخ الرقم الرسمي',

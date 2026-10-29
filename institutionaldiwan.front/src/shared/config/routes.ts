@@ -5,6 +5,8 @@ export const ROUTES = {
   DASHBOARD: '/',
   DOCUMENTS: '/documents',
   DOCUMENT_DETAIL: (id: string) => `/documents/${id}`,
+  /** Route pattern consumed by `AppRouter`; keep in sync with `DOCUMENT_DETAIL`. */
+  DOCUMENT_DETAIL_PATTERN: '/documents/:documentId',
   MOVEMENTS: '/movements',
   DEPARTMENTS: '/departments',
   INSTITUTION_SETTINGS: '/institution-settings',

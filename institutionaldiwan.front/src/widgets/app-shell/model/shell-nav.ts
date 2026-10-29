@@ -62,7 +62,7 @@ export const SHELL_NAV_GROUPS: readonly ShellNavGroup[] = [
         to: ROUTES.MOVEMENTS,
         icon: Inbox,
         permission: Permissions.DocumentView,
-        available: false,
+        available: true,
       },
     ],
   },
@@ -128,7 +128,7 @@ export const SHELL_NAV_GROUPS: readonly ShellNavGroup[] = [
         to: ROUTES.NUMBERING,
         icon: Hash,
         permission: Permissions.NumberingView,
-        available: false,
+        available: true,
       },
       {
         id: 'audit',

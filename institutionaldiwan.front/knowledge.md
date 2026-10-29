@@ -1,6 +1,6 @@
 # Institutional Diwan React Front End — Agent Knowledge
 
-> **Status:** Current as of **2026-10-28**. Backend Modules **01–06** and **09** plus Lookups are
+> **Status:** Current as of **2026-10-29**. Backend Modules **01–06** and **09** plus Lookups are
 > implemented. Canonical numbering is **01 Organization / 02 Identity / 03 Correspondence**;
 > older references to “Identity Module 01” mean the initial auth slice, not the domain module number.
 > Module 01 frontend now includes department create/edit/reparent/manager/notes/external policy,
@@ -10,10 +10,27 @@
 > `identity-options` reads, temporal department assignments, live session invalidation, and the
 > server-enforced forced-password-change gate. Module 03 Correspondence has started: Phase 0 added
 > document-facing picker reads on the API, Phase 1 implemented `entities/document` reads plus the Arabic
-> Correspondence/Numbering/Movements error catalog, and Phase 2 shipped the `/documents` registry with
-> document/draft creation and nav activation. Detail, numbering, and movement pages remain pending.
+> Correspondence/Numbering/Movements error catalog, Phase 2 shipped the `/documents` registry with
+> document/draft creation and nav activation, verified in-browser (search/filter/sort, empty state,
+> draft and registered creation, the Arabic `Numbering.OfficialNumberTaken` field error, and immediate
+> registry refresh), and Phase 3 added `features/document-manage` plus the `/documents/:documentId`
+> details page (participants, status history, audit timeline, and the draft-edit / register /
+> add-participant / cancel transitions gated on status and permission), and Phase 4 added
+> `features/document-access-grant` plus the `grants` tab (grant a user an access level with optional
+> future expiry, revoke while keeping the record as history, both behind `ACCESS_GRANT_MANAGE`),
+> verified in-browser (Arabic required-field/past-expiry validation, immediate grant row with
+> grantor/expiry and counts, revoked rows kept as «ملغى» with timestamp + revoker, and a `USER`-role
+> caller seeing no tab with the endpoint returning 403). Phase 5 added `entities/numbering-registry`,
+> `features/numbering-manage`, `widgets/numbering-registry-table`, the `/numbering` page, and the
+> document-details numbers tab (issue, department registration, replace/cancel with reasons, full
+> history), verified in-browser with a `USER`-role check (no numbering UI; direct writes 403). Phase 6
+> added `entities/movement`, `features/movement-routing`, `widgets/movement-inbox`, the `/movements`
+> inbox/outbox page, and the document-details movements tab (open plus the nine routing commands,
+> movement step chain, Arabic event log), verified in-browser with a full two-department cycle
+> (send → receive → reject with automatic reroute → receive → close) whose queues and timeline
+> refreshed at every step. Attachment slices remain pending.
 > `npm run build`/`npm run lint` pass and the API was exercised live (login, stale-token rejection,
-> department edit, settings, pickers).
+> department edit, settings, pickers, registry creation).
 >
 > **Standalone boundary:** this project is not part of the API solution. Server paths below refer to
 > the external `InstitutionalDiwan.Server` repository; the front end talks to it only over `/api`
@@ -23,7 +40,7 @@
 
 | Area | As-is (today) | To-be (before feature work) |
 | --- | --- | --- |
-| Application code | Module 01 department management/hierarchy/settings; Module 02 auth/admin pages; Module 03 document entity reads, Arabic errors, `/documents` registry, and create draft/registered; shared/app foundation, employee picker, and lookup catalogs (incl. the five document catalogs) | Module 03 detail/numbering/movement pages and access grants; other module pages pending |
+| Application code | Module 01 department management/hierarchy/settings; Module 02 auth/admin pages; Module 03 document entity reads, Arabic errors, `/documents` registry, create draft/registered, the `/documents/:documentId` details page with participants/status history/timeline plus draft-edit/register/participant/cancel, the permission-gated access-grants tab (grant/revoke), the numbers tab (issue/cancel/replace/department registration/history), `/numbering` (registry grid + department register book), and the `/movements` inbox/outbox page with the document-details movements tab (open/send/receive/complete/reject/return/redirect/close/cancel behind `DOCUMENT_EDIT`); shared/app foundation, employee picker, and lookup catalogs (incl. the document, participant, and movement catalogs) | Module 03 attachments tab; other module pages pending |
 | `package.json` | React/shared/auth stack (router, query, zustand, axios, RHF, zod, sonner, Tailwind v4) plus shared UI/Mermaid dependencies | Remaining packages per slice (see [`README.md`](README.md)) |
 | `vite.config.ts` proxy | ✅ `@` alias + env-driven `/api` and `/hubs` proxies (`DEV_PROXY_TARGET` → `ASPNETCORE_HTTPS_PORT` → `https://localhost:7126`) | Optional local HTTPS certificate; production uses the reverse proxy ([`DEPLOYMENT.md`](DEPLOYMENT.md)) |
 | Dev configuration | ✅ `.env.example` committed; `.env` is git-ignored | — |
@@ -426,9 +443,13 @@ See [`README.md`](README.md) “UI / design contract” and [`src/app/styles/REA
    (`GET /api/employees?departmentId=&includeSubDepartments=`); write actions and employee nodes
    inside the tree pending
 7. `entities/document` — ✅ done (Phase 1); `pages/documents` registry + `document-create` — ✅ done
-   (Phase 2); document details/timeline, access grants, and the attachments panel
-   (`entities/document-file`) pending
-8. `pages/movements` (inbox/outbox)
+   (Phase 2); `features/document-manage` + `pages/documents` details (participants, status history,
+   timeline, draft-edit/register/participant/cancel) — ✅ done (Phase 3); `features/document-access-grant`
+   + the `grants` tab — ✅ done (Phase 4); `entities/numbering-registry` + `features/numbering-manage`
+   + `pages/numbering` + the document numbers tab — ✅ done (Phase 5); `entities/movement` +
+   `features/movement-routing` + `widgets/movement-inbox` + `pages/movements` + the document movements
+   tab — ✅ done (Phase 6); the attachments panel (`entities/document-file`) pending
+8. `features/external-organization-manage` (Module 03 Phase 7) — pending
 9. `pages/audit` (search + integrity; respect self-audit side effect)
 10. `widgets/visualization-panel` (cross-module Mermaid/chart switcher) + department/employee tree extras
 

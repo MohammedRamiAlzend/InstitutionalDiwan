@@ -1,15 +1,21 @@
 # institutionaldiwan.front / src — Front-End Source Root
 
 > **Status:** Identity Module 01 and the Module 02 Identity admin front end (Phases 0–6,
-> 2026-10-28) implemented, plus Module 01 Phase 1 — the organizational hierarchy page (read-only):
-> the `app` layer boots the SPA and forces password resets, `shared`
+> 2026-10-28) implemented, plus Module 01 Phase 1 — the organizational hierarchy page (read-only) —
+> and Module 03 Correspondence Phases 0–5: `app` boots the SPA and forces password resets, `shared`
 > provides the HTTP client, tokens, UI kit, and the lazy Mermaid renderer, `entities/user` holds the
-> session and user admin reads, `entities/{department,role,employee,lookup}` provide the supporting
-> admin reads (with `department/model/toMermaid`), `features/{auth,user-manage,role-manage,employee-manage}`
+> session, user admin reads, and the active-user option picker,
+> `entities/{department,role,employee,lookup,document,external-organization,numbering-registry}`
+> provide the supporting reads (with `department/model/toMermaid`),
+> `features/{auth,user-manage,role-manage,employee-manage,document-create,document-manage,document-access-grant,numbering-manage}`
 > own login/logout/password changes, user writes (including the administrator password reset),
-> role/permission writes, and employee writes, `widgets/{app-shell,users-table,roles-table,employees-table,department-hierarchy-tree}`
-> wrap every shell route, render the admin grids, and draw the hierarchy as a tree / Mermaid / table
-> (with the department's employees listed in its detail dialog),
+> role/permission/employee writes, document creation, the draft-edit/register/participant/cancel
+> lifecycle, grant/revoke of document access, and registry/official-number writes,
+> `widgets/{app-shell,users-table,roles-table,employees-table,department-hierarchy-tree,document-registry-table,numbering-registry-table}`
+> wrap every shell route, render the admin grids, draw the hierarchy (with the department's employees
+> in its detail dialog), list the correspondence registry, and administer numbering registries,
+> `pages/documents` adds the details page (participants, access grants, numbers, status history,
+> timeline), `pages/numbering` adds the registry/department-register page,
 > and `pages/{login,change-password,dashboard,departments,users,roles,employees}` are
 > live routes (`/change-password` is standalone). Remaining module pages are documented but not yet coded.
 
@@ -24,10 +30,10 @@ application, plus the six Feature-Sliced Design layers the SPA is built from.
 | --- | --- |
 | `main.tsx` | Vite entry point: imports `app/styles/index.css` and mounts the `app` layer root. |
 | `app/` | FSD layer 1 — global providers, router and permission guards, theme tokens and global styles. |
-| `pages/` | FSD layer 2 — one route page per slice (`login`, `change-password`, `dashboard`, `departments`, `users`, `roles`, `employees` implemented). |
-| `widgets/` | FSD layer 3 — composite page sections (`app-shell`, `users-table`, `roles-table`, `employees-table`, `department-hierarchy-tree` implemented; rest documented). |
-| `features/` | FSD layer 4 — write mutations, Zod schemas, interactive forms (`auth`, `user-manage`, `role-manage`, `employee-manage` implemented). |
-| `entities/` | FSD layer 5 — read models, query key factories, `useQuery` hooks (`user`, `department`, `role`, `employee`, `lookup` implemented). |
+| `pages/` | FSD layer 2 — one route page per slice (`login`, `change-password`, `dashboard`, `departments`, `users`, `roles`, `employees`, `documents`, `numbering` implemented). |
+| `widgets/` | FSD layer 3 — composite page sections (`app-shell`, `users-table`, `roles-table`, `employees-table`, `department-hierarchy-tree`, `document-registry-table`, `numbering-registry-table` implemented; rest documented). |
+| `features/` | FSD layer 4 — write mutations, Zod schemas, interactive forms (`auth`, `user-manage`, `role-manage`, `employee-manage`, `document-create`, `document-manage`, `document-access-grant`, `numbering-manage` implemented). |
+| `entities/` | FSD layer 5 — read models, query key factories, `useQuery` hooks (`user`, `department`, `role`, `employee`, `lookup`, `document`, `external-organization`, `numbering-registry` implemented). |
 | `shared/` | FSD layer 6 — HTTP client, RFC 7807 → Arabic message catalog, RTL UI kit (data grid, menus, dialogs, Mermaid renderer), table-state utilities, constants. |
 | `assets/` | Vite template images (`hero.png`, `react.svg`, `vite.svg`); replaced by the institution's own artwork. |
 
@@ -48,16 +54,20 @@ application, plus the six Feature-Sliced Design layers the SPA is built from.
 | --- | --- |
 | `main.tsx` | ✅ Mounts `@/app` + global stylesheet; template `App.tsx` / `App.css` / `index.css` removed |
 | `app/` | ✅ Implemented |
-| `pages/` | ✅ `login`, `change-password` (standalone), `dashboard` (inside the app shell), `departments`, `users`, `roles`, `employees`; remaining slices pending |
-| `widgets/` | ✅ `app-shell`, `users-table`, `roles-table`, `employees-table`, `department-hierarchy-tree`; remaining widgets pending |
-| `features/` | ✅ `auth`, `user-manage`, `role-manage`, `employee-manage`; remaining slices pending |
-| `entities/` | ✅ `user`, `department`, `role`, `employee`, `lookup`; remaining slices pending |
+| `pages/` | ✅ `login`, `change-password` (standalone), `dashboard` (inside the app shell), `departments`, `users`, `roles`, `employees`, `documents` (registry + details), `numbering`; remaining slices pending |
+| `widgets/` | ✅ `app-shell`, `users-table`, `roles-table`, `employees-table`, `department-hierarchy-tree`, `document-registry-table`, `numbering-registry-table`; remaining widgets pending |
+| `features/` | ✅ `auth`, `user-manage`, `role-manage`, `employee-manage`, `document-create`, `document-manage`, `document-access-grant`, `numbering-manage`; remaining slices pending |
+| `entities/` | ✅ `user`, `department`, `role`, `employee`, `lookup`, `document`, `external-organization`, `numbering-registry`; remaining slices pending |
 | `shared/` | ✅ Core (`api`, `config`, `lib`, `types`, `ui` including the shared data grid, menu primitives, and `mermaid-view`) |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-29 | agent | Module 03 Phase 5 verified in-browser: `entities/numbering-registry`, `entities/document` number reads, `features/numbering-manage`, `widgets/numbering-registry-table`, `pages/numbering`, and the document-details numbers tab. Registry CRUD/status/counters, department register, draft issue, department registration, duplicate rejection, replace, cancel, and permission denial for a `USER`-role caller (403 on writes) all behaved as specified. Build, lint, and 487 backend tests pass. |
+| 2026-10-28 | agent | Module 03 Phase 4 verified in-browser: `entities/user` option reads (`useUserOptions`), `features/document-access-grant` (grant with level/expiry/reason, revoke), and `pages/documents/DocumentGrantsTab` behind `ACCESS_GRANT_MANAGE`. Required-field and past-expiry validation, immediate row + counts after a grant, revoked grants kept with timestamp/revoker, and the tab hidden (with `?tab=grants` falling back to details) for a `USER`-role caller, whose direct API call returned 403. Build and lint pass. |
+| 2026-10-28 | agent | Module 03 Phase 3 verified in-browser: `entities/external-organization` reads, the `features/document-manage` lifecycle slice (edit/register/participant/cancel), `pages/documents/DocumentDetailsPage` with URL tabs and status/permission-gated actions, and the `/documents/:documentId` route linked from the registry. Draft edit, registration `2026/000004`, person + department participants, cancel-with-reason, status history, timeline, and canceled-document gating all behaved as specified. Build and lint pass. |
+| 2026-10-28 | agent | Module 03 Phase 2 verified in-browser: `entities/document` reads, `features/document-create` (draft + registered), `widgets/document-registry-table`, and `/documents` (search/filter/sort/empty state, both creations, Arabic `Numbering.OfficialNumberTaken` field error shown once). Build and lint pass. |
 | 2026-10-28 | agent | Clicking a department now lists its employees: `entities/employee` gained `departmentId`/`includeSubDepartments` list params and the hierarchy detail dialog mounts `DepartmentEmployeesSection` (count, sub-departments toggle, permission gate, loading/error/empty). Build and lint pass. |
 | 2026-10-28 | agent | Implemented Module 01 Phase 1: `shared/ui/mermaid-view` (lazy, strict), `entities/department/model/toMermaid`, `widgets/department-hierarchy-tree` (tree / Mermaid / table, URL-driven search and view, node menus, detail dialog), and the `/departments` page + route + sidebar entry behind `DEPARTMENT_MANAGE`. Verified in-browser; build and lint pass. |
 | 2026-10-28 | agent | Added the administrator password reset: `ResetPasswordDialog` + `useResetUserPasswordMutation` in `features/user-manage`, the «إعادة تعيين كلمة المرور» row action in `widgets/users-table`, the shared `shared/ui` `PasswordField`, and the `POST /api/users/{userId}/reset-password` contract (forces a password change at the next sign-in). Build and lint pass. |

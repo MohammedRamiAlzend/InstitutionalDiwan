@@ -4,6 +4,8 @@ import type {
   DocumentAccessGrantResponse,
   DocumentDetailResponse,
   DocumentListParams,
+  DocumentNumberResponse,
+  DocumentRegistryNumbersResponse,
   DocumentResponse,
   DocumentTimelineEntryResponse,
 } from '../model/types'
@@ -49,6 +51,22 @@ export const documentApi = {
   accessGrants: async (documentId: string): Promise<DocumentAccessGrantResponse[]> => {
     const { data } = await httpClient.get<DocumentAccessGrantResponse[]>(
       `/documents/${documentId}/access-grants`,
+    )
+    return data
+  },
+
+  numberHistory: async (documentId: string): Promise<DocumentNumberResponse[]> => {
+    const { data } = await httpClient.get<DocumentNumberResponse[]>(
+      `/documents/${documentId}/numbers/history`,
+    )
+    return data
+  },
+
+  registryEntries: async (
+    documentId: string,
+  ): Promise<DocumentRegistryNumbersResponse> => {
+    const { data } = await httpClient.get<DocumentRegistryNumbersResponse>(
+      `/documents/${documentId}/numbers/registry-entries`,
     )
     return data
   },

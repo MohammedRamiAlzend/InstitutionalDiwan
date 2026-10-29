@@ -1,10 +1,10 @@
 # institutionaldiwan.front / src/widgets — Composite UI Widgets Layer
 
-> **Status:** `app-shell`, Identity admin tables, the Module 01 department hierarchy, and the
-> Module 03 document registry are implemented. The hierarchy includes department writes, lazy
-> employee branches, paged rosters, and a chart. Final browser verification and Module 02 audit fixes
-> remain in progress. Remaining Module 03 widgets are documentation only. `/change-password` is
-> standalone.
+> **Status:** `app-shell`, Identity admin tables, the Module 01 department hierarchy, the Module 03
+> document registry, numbering registry, and movement inbox are implemented. The hierarchy includes
+> department writes, lazy employee branches, paged rosters, and a chart. The Module 03 widgets are
+> verified in-browser; the hierarchy's final browser verification and Module 02 audit fixes remain in
+> progress. Remaining Module 03 widgets are documentation only. `/change-password` is standalone.
 
 ## Purpose
 
@@ -27,10 +27,11 @@ browser.
 | `roles-table/` | Roles administration grid with create/edit, permission matrix, and status confirmation | `entities/role` + `features/role-manage` | ✅ Implemented |
 | `employees-table/` | Employees administration grid with create/edit and status confirmation | `entities/{employee,department}` + `features/employee-manage` | ✅ Implemented |
 | `document-registry-table/` | Correspondence grid with URL filters (status/direction/type/department), paging/sorting, lookup labels, and create entry points | `entities/document` + `entities/lookup` + `entities/department` + `features/document-create` | ✅ Implemented (Phase 2) |
+| `numbering-registry-table/` | Numbering registry grid (scope/format/reset/counters/status) with create/edit/activate actions and a details dialog | `entities/numbering-registry` + `entities/department` + `entities/lookup` + `features/numbering-manage` | ✅ Implemented (Phase 5) |
 | `document-attachments-panel/` | File list, upload, download, verify checksum, archive | `entities/document-file` + `features/attachment-upload` | ❌ Planned (API live) |
 | `department-hierarchy-tree/` | Tree/Mermaid/chart/grid, department manage actions, lazy direct-employee branches, paged/searchable rosters, employee details and context/overflow menus | `features/department-manage` + department/employee/lookup/user entities | Implemented, including shared tree/diagram/chart request states; final browser verification pending. |
-| `movement-inbox/` | Inbox/outbox table with routing action menu | `entities/movement` + `features/movement-routing` | ❌ Planned (API live) |
-| `movement-timeline/` | Vertical step chain for one document | `entities/movement` + `features/movement-routing` | ❌ Planned |
+| `movement-inbox/` | Inbox/outbox queue with search, status/type filters, overdue highlighting, and routing action menus | `entities/movement` + `features/movement-routing` | ✅ Implemented (Phase 6) |
+| `movement-timeline/` | Vertical step chain for one document | `entities/movement` + `features/movement-routing` | Deferred — the timeline lives in `pages/documents` until Module 05's visualization panel lands |
 | `audit-log-table/` | Filterable audit grid + hash columns + integrity toolbar | `entities/audit-log` + `features/audit-manage` | ❌ Planned (API live) |
 | `visualization-panel/` | Mermaid source viewer plus data-derived diagram / chart / tree switcher with node context menus | `entities/department`, `entities/movement` + `shared/ui/mermaid-view` | ❌ Planned |
 | `notification-center/` | SignalR bell/drawer | Deferred until Module 10 + hubs | ❌ Blocked |
@@ -58,8 +59,11 @@ browser.
 | `roles-table/` | ✅ Implemented and verified in-browser (Phase 4) |
 | `employees-table/` | ✅ Implemented and verified in-browser (Phase 5) |
 | `department-hierarchy-tree/` | Implemented: management, optional lazy employee branches, paged/searchable rosters and read-only details/menus, department-type chart, shared request states; final browser verification pending. |
-| `document-registry-table/` | ✅ Implemented (Phase 2; interactive browser pass pending a signed-in session) |
-| `document-attachments-panel/`, `movement-inbox/`, `movement-timeline/`, `audit-log-table/` | ❌ Not implemented (backend live) |
+| `document-registry-table/` | ✅ Implemented and verified in-browser (Phase 2) |
+| `numbering-registry-table/` | ✅ Implemented and verified in-browser (Phase 5) |
+| `movement-inbox/` | ✅ Implemented and verified in-browser (Phase 6) |
+| `document-attachments-panel/`, `audit-log-table/` | ❌ Not implemented (backend live) |
+| `movement-timeline/` | Deferred (the document movements tab renders the step chain today) |
 | `visualization-panel/` | ❌ Not implemented (`shared/ui/mermaid-view` is now live, so the cross-module switcher can follow) |
 | `notification-center/` | ❌ Blocked on Module 10 / SignalR |
 
@@ -67,6 +71,9 @@ browser.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-29 | agent | Module 03 Phase 6: implemented `movement-inbox` (client-mode queue over the plain-array inbox/outbox APIs, URL search/filters/sort/paging, overdue highlighting, permission-filtered routing menus) and verified it in-browser for both departments. |
+| 2026-10-29 | agent | Module 03 Phase 5: implemented `numbering-registry-table` (client grid with scope/format/reset/counters/status, permission-filtered create/edit/activate menus, copy entries, details dialog) and verified it in-browser. |
+| 2026-10-28 | agent | Verified `document-registry-table` in-browser (Phase 2): seeded labels, search, URL status filter, empty-state «مسح البحث والمرشحات» (now one `clearQuery` URL write), title sorting, and immediate refresh after draft/registered creation. |
 | 2026-10-28 | Qoder | Module 03 Phase 2: implemented `document-registry-table` (server paging/search/sort, status/direction/type/department filters, seeded lookup labels, document/draft creation entry points). |
 | 2026-10-28 | agent | Refresh Module 01 hierarchy coverage for department writes, lazy employee branches, paged rosters/details/menus, chart, and shared request states; final verification remains pending. |
 | 2026-10-28 | agent | Diagram nodes in `department-hierarchy-tree` are now activatable (click / `Enter` / `Space` via `shared/ui/mermaid-view`'s `onNodeClick`) and open the department's detail dialog, alongside the existing tree-node and grid-row paths. |

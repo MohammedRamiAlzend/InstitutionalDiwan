@@ -2,8 +2,8 @@
 
 > **Status:** Module 01 Organization reads (`department`, `institution-setting`), Module 02
 > Identity reads (`user`, `role`, `employee`), lookup catalogs, the reusable employee picker, and
-> Module 03 document reads are implemented. Remaining entity slices (`document-file`, movement,
-> `numbering-registry`, `audit-log`) are documentation only.
+> Module 03 document, external-organization, numbering-registry, and movement reads are implemented.
+> Remaining entity slices (`document-file`, `audit-log`) are documentation only.
 
 ## Purpose
 
@@ -23,16 +23,17 @@ read-only presentational UI. Entities never perform write mutations.
 
 | Slice Folder | Backend DTOs & `GET` Endpoints | Key Read Components & Hooks | State |
 | --- | --- | --- | --- |
-| `user/` | `MeResponse`, `UserResponse`, effective permissions | `useMeQuery` (session), `useUsers`, `useUserById`, `useUserEffectivePermissions`, `UserScopeBadge` | ✅ Implemented |
+| `user/` | `MeResponse`, `UserResponse`, effective permissions, `/identity-options/users` options | `useMeQuery` (session), `useUsers`, `useUserById`, `useUserEffectivePermissions`, `useUserOptions` (active-user picker), `UserScopeBadge` | ✅ Implemented |
 | `department/` | `DepartmentResponse`, `DepartmentTreeNodeResponse` (`/departments`, `/tree`, `/{id}`) | `useDepartments`, `useDepartmentTree`, `useDepartmentById`, `DepartmentBadge`, `departmentTreeToMermaid` | Reads and department-only Mermaid builder implemented; the widget composes lazy employee branches. |
 | `institution-setting/` | `InstitutionSettingResponse` (`/institution-settings`) | `useInstitutionSettings`, `institutionSettingKeys` | Singleton read implemented; missing settings remain an error. |
 | `role/` | `RoleResponse`, `PermissionResponse` (`/roles`, `/permissions`) | `useRoles`, `useRoleById`, `usePermissionsCatalog`, `RoleBadge` | Implemented. |
 | `employee/` | `EmployeeResponse` (paged `/employees`, `/{id}`) | `useEmployees`, `useEmployeeById`, `EmployeePicker` | Reads and reusable paged/searchable picker implemented. |
 | `lookup/` | `LookupEntryResponse` (`/lookups/{lookup}`) | `useLookupEntries`, `LookupLabel`, seeded fallbacks | Named Organization/Identity catalogs (incl. numbering mode/reset policy) plus the five Module 03 document catalogs; generic reads implemented. |
-| `document/` | `DocumentResponse`, `DocumentDetailResponse`, timeline, access grants (`/documents`, `/documents/{id}`) | `useDocuments`, `useDocumentById`, `useDocumentDetails`, `useDocumentTimeline`, `useDocumentAccessGrants`, `DocumentStatusBadge`, `DocumentDirectionBadge`, `OfficialNumberTag` | ✅ Reads and presentational UI implemented; grants UI planned with Phase 4. |
+| `document/` | `DocumentResponse`, `DocumentDetailResponse`, timeline, access grants, number history/registry entries (`/documents`, `/documents/{id}`) | `useDocuments`, `useDocumentById`, `useDocumentDetails`, `useDocumentTimeline`, `useDocumentAccessGrants`, `useDocumentNumberHistory`, `useDocumentRegistryNumbers`, `DocumentStatusBadge`, `DocumentDirectionBadge`, `OfficialNumberTag`, `NumberStatusBadge` | ✅ Reads and presentational UI implemented; the grants/numbers UI lives in the page and writes in `features/document-access-grant` / `features/numbering-manage`. |
+| `external-organization/` | `ExternalOrganizationResponse` (paged `/external-organizations`, `/{id}`) | `useExternalOrganizations`, `useExternalOrganizationById` | ✅ Reads implemented for the participant tab and picker; writes out of Phase 3. |
 | `document-file/` | Module 06 file + version responses (`GET /api/documents/{id}/files`, verify) | `useDocumentFiles`, `ChecksumBadge`, version list | ❌ Planned (API live) |
-| `numbering-registry/` | Registries + counters | `useNumberingRegistries` | ❌ Planned |
-| `movement/` | Module 05 movements, inbox/outbox, by-document | `useInbox`, `useOutbox`, `MovementStepBadge` | ❌ Planned (API live) |
+| `numbering-registry/` | Registry/counter responses, department register book (`/numbering/registries`, `/departments/{id}/register`) | `useNumberingRegistries`, `useNumberingRegistryById`, `useDepartmentRegister`, `RegistryScopeCard` | ✅ Reads implemented (Phase 5). |
+| `movement/` | `MovementQueueItemResponse`, `MovementResponse` (steps/events) (`GET /api/movements/inbox`, `/outbox`, `/by-document/{documentId}`, `/{movementId}`) | `useMovementQueue`, `useMovementInbox`, `useMovementOutbox`, `useDocumentMovements`, `useMovementById`, `getMovementActions`/`hasActiveMovement` rules, `MovementStatusBadge`, `MovementStepStatusBadge`, `MovementTypeBadge` | ✅ Reads, transition rules, and badges implemented (Phase 6). |
 | `audit-log/` | Module 09 paged logs + integrity reports | `useAuditLogs`, `HashChainPill`, `IntegrityStatusBadge` | ❌ Planned (API live) |
 
 ## Conventions
@@ -54,14 +55,20 @@ read-only presentational UI. Entities never perform write mutations.
 | `department/` | Reads and department-only Mermaid builder implemented; lazy employee composition lives in the widget. |
 | `institution-setting/` | Singleton read, query keys, and response type implemented. |
 | `employee/` picker and numbering lookups | Implemented for Module 01 forms; final verification pending. |
-| `document/` | ✅ Read models, query keys/hooks, status/direction badges, and the official-number tag. |
-| `numbering-registry/` | Planned only; no frontend implementation. |
-| `document-file/`, `movement/`, `audit-log/` | Not implemented (backend live; docs ready). |
+| `document/` | ✅ Read models, query keys/hooks, status/direction badges, the official-number tag, number history/registry reads, and `NumberStatusBadge`. |
+| `external-organization/` | ✅ Paged/searchable list and by-id reads for participant names and the external-party picker. |
+| `numbering-registry/` | ✅ Registry/counter and department-register reads, `RegistryScopeCard`. |
+| `movement/` | ✅ Queue/detail reads, mirrored transition rules (`getMovementActions`, `hasActiveMovement`, `translateMovementNote`), and three badges. |
+| `document-file/`, `audit-log/` | Not implemented (backend live; docs ready). |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-29 | agent | Module 03 Phase 6: implemented the `movement` read slice — inbox/outbox/by-document/detail API client, `movementKeys` (15-second queue `staleTime`), the mirrored transition rules, `translateMovementNote` for the API's English system notes, and movement/step/type badges. Mermaid/tree builders stay deferred to Module 05. |
+| 2026-10-29 | agent | Module 03 Phase 5: implemented the `numbering-registry` read slice (registries/counters, department register book, query keys/hooks, `RegistryScopeCard`) and extended `document` with number history/registry-entry reads plus `NumberStatusBadge`. |
+| 2026-10-28 | Qoder | Module 03 Phase 4: extended `user` with the `identity-options/users` option read (`UserOption`, `useUserOptions`, paged/searchable, previous-page placeholder) so the access-grant picker does not need `USER_MANAGE`. |
+| 2026-10-28 | Qoder | Module 03 Phase 3: added the `external-organization` read slice (paged/searchable list, by-id, query keys/hooks) for participant names and the external-party picker. |
 | 2026-10-28 | Qoder | Module 03 Phase 2: extended `lookup` with the document direction/type/status/confidentiality/priority catalogs, their seeded Arabic rows and `DOCUMENT_TYPE_DIRECTION`. |
 | 2026-10-28 | Qoder | Module 03 Phase 1: implemented the `document` entity reads (list/by-id/details/timeline/grants), query keys, status/direction badges, and the official-number tag. |
 | 2026-10-28 | agent | Document institution-setting reads, the reusable employee picker, numbering catalogs, and widget-owned lazy employee composition for Module 01. |

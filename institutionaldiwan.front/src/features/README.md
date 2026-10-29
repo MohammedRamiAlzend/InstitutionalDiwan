@@ -2,9 +2,12 @@
 
 > **Status:** Module 01 `department-manage/` and `institution-settings-manage/` are implemented,
 > alongside Module 02 `auth/`, `user-manage/`, `role-manage/`, and `employee-manage/`. Module 02 audit
-> fixes and final integration verification remain in progress. Module 03 `document-create/` now
-> creates drafts and registered documents; grant, movement, attachment, and audit writes remain
-> planned frontend slices mapped to implemented backend APIs.
+> fixes and final integration verification remain in progress. Module 03 `document-create/` creates
+> drafts and registered documents, `document-manage/` owns the lifecycle commands (edit, register,
+> participant, cancel), `document-access-grant/` owns grant/revoke, `numbering-manage/` owns
+> registry administration plus the official-number lifecycle, and `movement-routing/` owns the
+> routing commands (open, send, receive, complete, reject, return, redirect, close, cancel);
+> attachment and audit writes remain planned frontend slices mapped to implemented backend APIs.
 
 ## Purpose
 
@@ -26,13 +29,15 @@ error handling, and form/dialog UI.
 | --- | --- | --- | --- |
 | `auth/` | `POST /api/auth/login`, `POST /api/auth/change-password` (+ `register` out of scope) | JWT storage and replacement; `Identity.InvalidCredentials`, `Identity.UserInactive`, `Identity.CurrentPasswordIncorrect`, `Identity.NewPasswordSameAsOld` rendered via the Arabic error catalog | ✅ Implemented (login/logout/guard/change-password) |
 | `document-create/` | `POST /api/documents`, `POST /api/documents/drafts` | Mode-aware form: draft or registered with official number + numbering year; `409 Numbering.OfficialNumberTaken` attaches to the official-number field; `Correspondence.TitleEmpty`/`TypeCodeEmpty` are Arabic-validated client-side | ✅ Implemented (Phase 2) |
-| `document-access-grant/` | grants POST/DELETE | `ACCESS_GRANT_MANAGE`; access levels VIEW/DOWNLOAD/FORWARD/MANAGE | ❌ Planned |
+| `document-manage/` | `PUT /api/documents/{id}`, `POST .../register`, `POST .../participants`, `POST .../cancel` | Draft-only edit/register; registry-allocated number; one target per participant and one external party per document; cancel requires a reason and rejects active movements | ✅ Implemented (Phase 3) |
+| `document-access-grant/` | `POST /api/documents/{id}/access-grants`, `DELETE .../access-grants/{grantId}` | `ACCESS_GRANT_MANAGE`; access levels VIEW/DOWNLOAD/FORWARD/MANAGE; picker shows active users only; optional future expiry; grantee label survives search; revoke keeps the record (the DELETE endpoint takes no reason, so the dialog only confirms) | ✅ Implemented (Phase 4) |
+| `numbering-manage/` | `/api/numbering/registries` CRUD + activate; `POST .../numbers/issue`, `.../numbers/{numberId}/cancel\|replace`, `.../numbers/department-registration` | `NUMBERING_MANAGE`; draft-only issue (moves to REGISTERED); `Numbering.OfficialNumberTaken` shown in-dialog; cancel/replace require a reason; department registration requires an active department-scoped registry | ✅ Implemented (Phase 5) |
 | `department-manage/` | departments create/update (including parent), deactivate/activate | Immutable code/type on edit; self/descendant exclusion; configured central Diwan protection; inactive-parent activation guard | Implemented with manager picker, notes, and external policies. |
 | `institution-settings-manage/` | `PUT /api/institution-settings` | Existing singleton only; active root central Diwan, transfer reason on designation change, active numbering lookups | Implemented; failed/missing reads never initialize or overwrite settings. |
 | `user-manage/` | users + employees mutations | `USER_MANAGE` / `EMPLOYEE_MANAGE` | ✅ Implemented (users; employee picker only) |
 | `employee-manage/` | employees create/update/activate/deactivate | `EMPLOYEE_MANAGE`; department must exist and be valid | ✅ Implemented |
 | `role-manage/` | roles create/update/activate + grant/revoke permission | `ROLE_MANAGE`; system roles protected; code immutable after creation | ✅ Implemented |
-| `movement-routing/` | Module 05 send/receive/complete/reject/return/redirect/close/cancel | Central Diwan hub; receive gated on department registration; reasons required on reject/return | ❌ Planned (API live) |
+| `movement-routing/` | `POST /api/movements`; `POST /api/movements/{id}/send\|receive\|complete\|reject\|return\|redirect\|close\|cancel` | `DOCUMENT_EDIT`; draft-only edit fields; opening requires the Central Diwan and a registered document; receive stays blocked until the destination department records a register number (`Numbering.DepartmentRegistrationRequired`); rejection/return require a reason and reroute to the Central Diwan; invalid transitions surface `Movements.InvalidStatusTransition` | ✅ Implemented (Phase 6) |
 | `attachment-upload/` | Module 06 `POST /api/documents/{id}/files`, version upload, archive | Magic bytes + SHA-256; MANAGE access; show checksum after upload | ❌ Planned (API live) |
 | `audit-manage/` | `POST /api/audit-logs/checkpoints`, `POST .../integrity-checks` | `AUDIT_MANAGE`; integrity failure is **200 + `isValid: false`** | ❌ Planned (API live) |
 
@@ -56,14 +61,21 @@ error handling, and form/dialog UI.
 | `department-manage/` | Implemented: create/edit/reparent/manager/notes/external policy and active-status writes. |
 | `institution-settings-manage/` | Implemented: explicit singleton update with central Diwan/numbering/responsible-employee fields. |
 | `document-create/` | ✅ Implemented (draft + immediate registration dialog with lookup-driven fields) |
-| `document-access-grant/` | Planned only; no frontend code (backend implemented). |
-| `movement-routing/`, `attachment-upload/`, `audit-manage/` | Not implemented (backend live; docs ready). |
+| `document-manage/` | ✅ Implemented (Phase 3: draft edit, register from registry, participant insert, cancel with reason) |
+| `document-access-grant/` | ✅ Implemented (Phase 4: add-grant dialog over the identity-options user picker, revoke confirmation, grant-key invalidation) |
+| `numbering-manage/` | ✅ Implemented (Phase 5: registry create/edit/activate and issue/cancel/replace/department-registration dialogs) |
+| `movement-routing/` | ✅ Implemented (Phase 6: open dialog with assignee picker, plus one action dialog covering send, receive, complete, reject, return, redirect, close, and cancel). |
+| `attachment-upload/`, `audit-manage/` | Not implemented (backend live; docs ready). |
 | Final integration verification | Pending; Module 02 audit fixes still in progress. |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-29 | agent | Module 03 Phase 6: implemented `movement-routing` — the open-movement dialog (type, destination department, assignee, due date, instructions) plus a single action dialog covering send, receive, complete, reject, return, redirect, close, and cancel, each invalidating the whole `movementKeys` prefix and surfacing Arabic domain errors. |
+| 2026-10-29 | agent | Module 03 Phase 5: implemented `numbering-manage` — registry create/edit/activate and the official-number lifecycle (issue, cancel with reason, replace with reason, department registration), each invalidating the registry and document number keys, with Arabic domain errors. |
+| 2026-10-28 | Qoder | Module 03 Phase 4: implemented `document-access-grant` — add-grant dialog (debounced `identity-options/users` picker, access-level select, optional future expiry, reason) and a destructive revoke confirmation, both invalidating the document grant keys. |
+| 2026-10-28 | Qoder | Module 03 Phase 3: implemented `document-manage` — draft metadata edit, registry registration, participant insert (external/department/person), and cancel with a required reason, each invalidating the document detail and registry keys. |
 | 2026-10-28 | Qoder | Module 03 Phase 2: implemented `document-create` (shared draft/register schema, two mutations, and the create dialog wired to seeded document lookups and `documentKeys.lists()` invalidation). |
 | 2026-10-28 | agent | Record the implemented Module 01 department and institution-settings write slices, their invariants, and the remaining final verification boundary. |
 | 2026-10-28 | agent | Extended `auth` with the signed-in password change (schema, mutation, form) and exposed the login response to pages so reset accounts route to `/change-password`. |

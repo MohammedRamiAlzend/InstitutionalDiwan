@@ -1,5 +1,5 @@
 # institutionaldiwan.front / src/app — Application Initialization & Global Providers Layer
-> **Status:** Application wiring implemented: public login, standalone protected password change, and shell-nested Organization/Identity pages, including `/institution-settings`. Final verification and Module 02 auth/admin audit fixes remain in progress; Module 03 frontend is planned only.
+> **Status:** Application wiring implemented: public login, standalone protected password change, and shell-nested Organization/Identity/Correspondence pages, including `/institution-settings`, `/documents`, `/documents/:documentId`, `/movements`, and `/numbering`. Final verification and Module 02 auth/admin audit fixes remain in progress; Module 03 attachments (Module 06) remain planned.
 ## Purpose
 `src/app/` is the top-most layer in Feature-Sliced Design (FSD). It initializes the Institutional Diwan React SPA, wires global providers (TanStack Query, React Router, Auth/Session hydration, RTL/Theme direction, Toast notifications, SignalR connection lifecycle), defines route trees and permission guards, and loads global stylesheets. It contains no domain-specific business forms or tables—only application-wide wiring.
 ## Layer & Import Rules (FSD Strict Hierarchy)
@@ -23,7 +23,7 @@
 | `providers/ThemeProvider.tsx` | Applies `data-theme` (`light` / `dark` / `system`), persists `diwan.theme`, listens to `prefers-color-scheme`, and exposes the theme toggle. |
 | `providers/QueryProvider.tsx` | Configures singleton `QueryClient` and wraps children in `QueryClientProvider`. |
 | `providers/AuthSessionLoader.tsx` | Hydrates current user session on startup via `GET /api/auth/me` when a JWT exists in storage. |
-| `router/AppRouter.tsx` | Declares the public `/login` route, the standalone `/change-password` route, and nests `ProtectedRoute` → `AppShell` around the dashboard and admin pages (`/departments`, `/institution-settings`, `/users`, `/roles`, `/employees`); remaining module pages land as children of the shell route. `/archive` stays out until Module 07 exists. |
+| `router/AppRouter.tsx` | Declares the public `/login` route, the standalone `/change-password` route, and nests `ProtectedRoute` → `AppShell` around the dashboard and admin pages (`/departments`, `/institution-settings`, `/users`, `/roles`, `/employees`, `/documents`, `/documents/:documentId`, `/movements`, `/numbering`); remaining module pages land as children of the shell route. `/archive` stays out until Module 07 exists. |
 | `router/ProtectedRoute.tsx` | Redirects unauthenticated users to `/login` and forces `/change-password` when the session flag or the `must_change_password` JWT claim is true (the claim survives a reload, since `/auth/me` carries no flag). |
 | `router/RequirePermission.tsx` | Route/component guard using the full 16-code `Permissions` set (incl. `AUDIT_VIEW` / `AUDIT_MANAGE`). |
 | `styles/tokens.css` | **Single source of color**: raw Forest / Golden Wheat / Charcoal palette, semantic light/dark tokens, and functional status colors. |
@@ -38,12 +38,14 @@
 | --- | --- |
 | `index.tsx` | ✅ Implemented — composes `AppProviders` and `AppRouter`; mounted by `src/main.tsx` |
 | `providers/` (`AppProviders`, `ThemeProvider`, `QueryProvider`, `AuthSessionLoader`) | ✅ Implemented |
-| `router/AppRouter` | Implemented — `/login` public; `/change-password` standalone protected; `/`, `/departments`, `/institution-settings`, `/users`, `/roles`, `/employees` inside `AppShell`; final verification pending. |
+| `router/AppRouter` | Implemented — `/login` public; `/change-password` standalone protected; `/`, `/departments`, `/institution-settings`, `/users`, `/roles`, `/employees`, `/documents`, `/documents/:documentId`, `/movements`, `/numbering` inside `AppShell`; final verification pending. |
 | `styles/` (Tailwind v4, `tokens.css`, RTL + light/dark theme tokens, density scale) | ✅ Implemented |
 | Forced `/change-password` redirect when `mustChangePassword` | ✅ Implemented — session flag or JWT claim; verified after a reload |
 ## Change Log
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-29 | agent | Registered the `/movements` route (Module 03 Phase 6) as a shell child and updated the status line now that every correspondence route except the Module 06 attachments tab is live. |
+| 2026-10-29 | agent | Registered the `/numbering` route (Module 03 Phase 5) as a shell child and updated the route status with the live `/documents`, `/documents/:documentId`, and `/numbering` entries. |
 | 2026-10-28 | agent | Document `/institution-settings` as a Module 01 shell route and separate implemented application wiring from pending final verification and Module 02 audit fixes. |
 | 2026-10-28 | agent | Registered the `/departments` route (Module 01 Phase 1) as a shell child ahead of the identity admin routes. |
 | 2026-10-28 | agent | Added the standalone `/change-password` route and made `ProtectedRoute` force it from the JWT claim as well as the session flag, closing the reload bypass; reset logins now land there directly. |

@@ -43,6 +43,8 @@ not ask for it.
   user's chosen direction because the seeded type allows all directions.
 - The dialog renders `toArabicErrorMessage` for other failures and stays open so the user can correct
   the input.
+- `Numbering.OfficialNumberTaken` is shown once, on the official-number field; the form-level alert is
+  suppressed for that code so the same Arabic message is not printed twice.
 
 ## 6. Implementation Status
 
@@ -51,10 +53,15 @@ not ask for it.
 | Request types + Zod schema | ✅ Implemented |
 | Create/draft mutations with query invalidation | ✅ Implemented |
 | Create dialog (both modes, lookups, Arabic errors) | ✅ Implemented |
-| Browser verification | ⏳ Pending — the open browser has no signed-in session, so draft + registered creation against the live API still needs an interactive pass after sign-in (restart the API first so `identity-options/departments` accepts `DOCUMENT_VIEW`). |
+| Browser verification | ✅ Verified in-browser (2026-10-28) against the live API: draft «مسودة تحقق Phase 2» saved as DRAFT with «بدون رقم»; registering an existing `15/2024` returned `409 Numbering.OfficialNumberTaken` as the Arabic field error «الرقم الرسمي مستخدم مسبقًا في هذه السنة.» with the dialog staying open; registering `999/2026` closed the dialog, showed the toast «تم تسجيل الوثيقة برقم 999/2026.», and the row appeared first in the registry; the numbering-year default rendered `2026` from the browser clock. |
 
 ## 7. Change Log
 
+- 2026-10-28: Fixed a duplicate error: `Numbering.OfficialNumberTaken` is attached to the
+  official-number field by `setError`, and the form-level alert no longer repeats it. Confirmed
+  in-browser that exactly one `role="alert"` remains after a 409.
+- 2026-10-28: Completed the interactive pass for both creation paths (draft and registered) plus the
+  conflict and success paths; no further code changes were needed beyond the duplicate-error fix.
 - 2026-10-28: Module 03 Phase 2 — implemented the request types, mode-aware Zod schema, both
   create mutations, and `CreateDocumentDialog`; replaced the planned `CreateDocumentForm`/`Modal`
   split with one dialog because both paths share the same field set.

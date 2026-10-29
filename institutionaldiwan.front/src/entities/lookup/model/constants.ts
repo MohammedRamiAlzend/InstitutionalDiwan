@@ -6,8 +6,14 @@ import {
   DOCUMENT_PRIORITY,
   DOCUMENT_STATUS,
   DOCUMENT_TYPE,
+  MOVEMENT_EVENT_TYPE,
+  MOVEMENT_STATUS,
+  MOVEMENT_STEP_STATUS,
+  MOVEMENT_TYPE,
   NUMBERING_MODE,
   NUMBERING_RESET_POLICY,
+  PARTICIPANT_ROLE,
+  PARTICIPANT_TARGET_TYPE,
   USER_SCOPE_TYPE,
 } from '@/shared/config'
 import type { LookupCatalogEntry } from './types'
@@ -21,8 +27,14 @@ export {
   DOCUMENT_STATUS,
   DOCUMENT_TYPE,
   DOCUMENT_TYPE_DIRECTION,
+  MOVEMENT_EVENT_TYPE,
+  MOVEMENT_STATUS,
+  MOVEMENT_STEP_STATUS,
+  MOVEMENT_TYPE,
   NUMBERING_MODE,
   NUMBERING_RESET_POLICY,
+  PARTICIPANT_ROLE,
+  PARTICIPANT_TARGET_TYPE,
   USER_SCOPE_TYPE,
 } from '@/shared/config'
 
@@ -39,6 +51,12 @@ export const LOOKUP_SLUGS = {
   DocumentStatusTypes: 'document-status-types',
   DocumentConfidentialityLevels: 'document-confidentiality-levels',
   DocumentPriorityLevels: 'document-priority-levels',
+  ParticipantRoles: 'participant-roles',
+  ParticipantTargetTypes: 'participant-target-types',
+  MovementTypes: 'movement-types',
+  MovementStatuses: 'movement-statuses',
+  MovementStepStatuses: 'movement-step-statuses',
+  MovementEventTypes: 'movement-event-types',
 } as const
 
 export type LookupSlug = (typeof LOOKUP_SLUGS)[keyof typeof LOOKUP_SLUGS]
@@ -111,6 +129,55 @@ export const LOOKUP_FALLBACKS: Record<string, readonly LookupCatalogEntry[]> = {
     { id: DOCUMENT_PRIORITY.Normal, desc: 'Normal', descAr: 'عادي' },
     { id: DOCUMENT_PRIORITY.Urgent, desc: 'Urgent', descAr: 'عاجل' },
     { id: DOCUMENT_PRIORITY.Immediate, desc: 'Immediate', descAr: 'فوري' },
+  ],
+  'participant-roles': [
+    { id: PARTICIPANT_ROLE.Sender, desc: 'Sender', descAr: 'مُرسل' },
+    { id: PARTICIPANT_ROLE.Receiver, desc: 'Receiver', descAr: 'مستلم' },
+    { id: PARTICIPANT_ROLE.Cc, desc: 'CC', descAr: 'نسخة' },
+    { id: PARTICIPANT_ROLE.Signatory, desc: 'Signatory', descAr: 'موقّع' },
+  ],
+  'participant-target-types': [
+    { id: PARTICIPANT_TARGET_TYPE.ExternalOrganization, desc: 'External organization', descAr: 'جهة خارجية' },
+    { id: PARTICIPANT_TARGET_TYPE.InternalDepartment, desc: 'Internal department', descAr: 'قسم داخلي' },
+    { id: PARTICIPANT_TARGET_TYPE.Person, desc: 'Person', descAr: 'شخص' },
+  ],
+  'movement-types': [
+    { id: MOVEMENT_TYPE.Referral, desc: 'Referral', descAr: 'إحالة' },
+    { id: MOVEMENT_TYPE.Transfer, desc: 'Transfer', descAr: 'تحويل' },
+    { id: MOVEMENT_TYPE.Cc, desc: 'CC', descAr: 'نسخة' },
+    { id: MOVEMENT_TYPE.Return, desc: 'Return', descAr: 'إعادة' },
+  ],
+  'movement-statuses': [
+    { id: MOVEMENT_STATUS.Draft, desc: 'Draft', descAr: 'مسودة' },
+    { id: MOVEMENT_STATUS.Sent, desc: 'Sent', descAr: 'مُرسل' },
+    { id: MOVEMENT_STATUS.Received, desc: 'Received', descAr: 'مستلم' },
+    { id: MOVEMENT_STATUS.InProgress, desc: 'In progress', descAr: 'قيد المعالجة' },
+    { id: MOVEMENT_STATUS.Completed, desc: 'Completed', descAr: 'مكتمل' },
+    { id: MOVEMENT_STATUS.Rejected, desc: 'Rejected', descAr: 'مرفوض' },
+    { id: MOVEMENT_STATUS.Returned, desc: 'Returned', descAr: 'مُعاد' },
+    { id: MOVEMENT_STATUS.Redirected, desc: 'Redirected', descAr: 'مُحوّل' },
+    { id: MOVEMENT_STATUS.Closed, desc: 'Closed', descAr: 'مغلق' },
+    { id: MOVEMENT_STATUS.Canceled, desc: 'Canceled', descAr: 'ملغي' },
+  ],
+  'movement-step-statuses': [
+    { id: MOVEMENT_STEP_STATUS.Pending, desc: 'Pending', descAr: 'قيد الانتظار' },
+    { id: MOVEMENT_STEP_STATUS.Sent, desc: 'Sent', descAr: 'مُرسل' },
+    { id: MOVEMENT_STEP_STATUS.Received, desc: 'Received', descAr: 'مستلم' },
+    { id: MOVEMENT_STEP_STATUS.Completed, desc: 'Completed', descAr: 'مكتمل' },
+    { id: MOVEMENT_STEP_STATUS.Rejected, desc: 'Rejected', descAr: 'مرفوض' },
+    { id: MOVEMENT_STEP_STATUS.Returned, desc: 'Returned', descAr: 'مُعاد' },
+    { id: MOVEMENT_STEP_STATUS.Redirected, desc: 'Redirected', descAr: 'مُحوّل' },
+  ],
+  'movement-event-types': [
+    { id: MOVEMENT_EVENT_TYPE.Created, desc: 'Created', descAr: 'إنشاء' },
+    { id: MOVEMENT_EVENT_TYPE.Sent, desc: 'Sent', descAr: 'إرسال' },
+    { id: MOVEMENT_EVENT_TYPE.Received, desc: 'Received', descAr: 'استلام' },
+    { id: MOVEMENT_EVENT_TYPE.Completed, desc: 'Completed', descAr: 'إكمال' },
+    { id: MOVEMENT_EVENT_TYPE.Rejected, desc: 'Rejected', descAr: 'رفض' },
+    { id: MOVEMENT_EVENT_TYPE.Returned, desc: 'Returned', descAr: 'إعادة' },
+    { id: MOVEMENT_EVENT_TYPE.Redirected, desc: 'Redirected', descAr: 'تحويل' },
+    { id: MOVEMENT_EVENT_TYPE.Closed, desc: 'Closed', descAr: 'إغلاق' },
+    { id: MOVEMENT_EVENT_TYPE.Canceled, desc: 'Canceled', descAr: 'إلغاء' },
   ],
 }
 

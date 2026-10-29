@@ -6,6 +6,8 @@ import type {
   MeResponse,
   UserEffectivePermissionsResponse,
   UserListParams,
+  UserOption,
+  UserOptionParams,
   UserResponse,
 } from './types'
 
@@ -14,6 +16,8 @@ export const userKeys = {
   me: () => [...userKeys.all, 'me'] as const,
   lists: () => [...userKeys.all, 'list'] as const,
   list: (params: UserListParams) => [...userKeys.lists(), params] as const,
+  optionLists: () => [...userKeys.all, 'options'] as const,
+  options: (params: UserOptionParams) => [...userKeys.optionLists(), params] as const,
   detail: (userId: string) => [...userKeys.all, 'detail', userId] as const,
   effectivePermissions: (userId: string) =>
     [...userKeys.all, 'effective-permissions', userId] as const,
@@ -75,5 +79,23 @@ export function useUserEffectivePermissions(
     retry: false,
     ...options,
     enabled: Boolean(userId) && (options?.enabled ?? true),
+  })
+}
+
+/**
+ * Minimal user labels for pickers (`USER_MANAGE`, `ACCESS_GRANT_MANAGE`, or
+ * `DOCUMENT_EDIT`). Inactive accounts are returned so existing references still
+ * resolve; filter them out before offering a new selection.
+ */
+export function useUserOptions(
+  params: UserOptionParams,
+  options?: EnabledOptions<PagedResult<UserOption>>,
+) {
+  return useQuery({
+    queryKey: userKeys.options(params),
+    queryFn: () => userApi.options(params),
+    placeholderData: (previous) => previous,
+    staleTime: 5 * 60 * 1000,
+    ...options,
   })
 }

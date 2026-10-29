@@ -25,7 +25,7 @@ Composes the institutional correspondence registry through `shared/ui/data-table
 
 | File | Purpose |
 | --- | --- |
-| `ui/DocumentRegistryTable.tsx` | Data grid: title/summary, official number (`dir="ltr"`), direction and status badges, type/confidentiality/priority lookup labels, owning department, document/registration/creation dates, status/direction/type/department filter bar, copy row actions, and create/refresh menus. |
+| `ui/DocumentRegistryTable.tsx` | Data grid: title link to the details route, summary, official number (`dir="ltr"`), direction and status badges, type/confidentiality/priority lookup labels, owning department, document/registration/creation dates, status/direction/type/department filter bar, open-details/copy row actions, and create/refresh menus. |
 | `index.ts` | Public barrel. |
 
 ## 4. Conventions
@@ -37,7 +37,8 @@ Composes the institutional correspondence registry through `shared/ui/data-table
 - Department labels come from `GET /api/identity-options/departments`, which now also accepts
   `DOCUMENT_VIEW`; unresolved ids fall back to the compact short id.
 - Row actions are permission-aware: only `DOCUMENT_CREATE` sees the create entries.
-- Detail-page navigation is added with `pages/documents`' detail route in Phase 3.
+- Every row opens `/documents/:documentId` from the title link or the «فتح التفاصيل» menu entry
+  (Phase 3).
 
 ## 5. Implementation Status
 
@@ -47,10 +48,15 @@ Composes the institutional correspondence registry through `shared/ui/data-table
 | Column chooser + persisted visibility | ✅ Implemented (`documents`) |
 | Row/header/empty context menus + overflow trigger | ✅ Implemented |
 | Create dialog integration | ✅ Implemented |
-| Browser verification | ⏳ Pending — the open browser has no signed-in session, so the list/filters and both creation modes still need an interactive pass after sign-in. |
+| Browser verification | ✅ Verified in-browser (2026-10-28) against the live API: seeded rows render with Arabic lookup labels and the resolved owning department; search, the status filter via URL, the empty state with «مسح البحث والمرشحات», and title sorting behave as specified; both creations (draft and registered) appear immediately without a reload (7 → 8 rows). |
 
 ## 6. Change Log
 
+- 2026-10-28: Module 03 Phase 3 — the title now links to `/documents/:documentId` and the row menu
+  gained «فتح التفاصيل» (no mutation added; detail writes stay in `features/document-manage`).
+- 2026-10-28: Completed the interactive pass (list, search, filter, sort, empty state, and both
+  create paths) against the live API; the registry picked up each creation through the
+  `documentKeys.lists()` invalidation.
 - 2026-10-28: «مسح البحث والمرشحات» now calls `useTableState().clearQuery()`, so it removes the
   search and the filters together; calling `setSearch('')` and `clearFilters()` back to back left the
   search in the URL.

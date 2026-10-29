@@ -14,7 +14,7 @@ The shell owns the desktop-style chrome: a context menu on page content (refresh
 - `ui/AppSidebar.tsx` — Brand block, collapse toggle, permission-filtered nav groups (`filterNavGroups`), active `NavLink` styling, disabled entries with the Arabic «قريبًا» badge for slices that have not landed, per-item `ContextMenu` (فتح / نسخ الرابط / طي المجموعة) with clipboard success/error toasts, and `Shift+F10` support on links. Each entry renders as one inline row (18px icon + label, `flex items-center gap-3`); the `NavLink` itself keeps a static `className` and hands its active state to an inner `<span>` render prop, because the context-menu trigger clones the link through Radix `Slot`, which stringifies a function `className` and silently drops all styling.
 - `ui/AppHeader.tsx` — Mobile menu trigger, current-route title, shell-actions `DropdownMenu`, `ThemeToggle`, and the account `DropdownMenu` (avatar initial, username, roles; تغيير كلمة المرور، إعدادات العرض، then danger تسجيل الخروج).
 - `ui/SettingsDialog.tsx` — Display settings dialog: theme choice (فاتح / داكن / حسب النظام through the app `ThemeProvider`) and density choice (مريح / مضغوط) with `aria-pressed` state.
-- `model/shell-nav.ts` — `SHELL_NAV_GROUPS` (نظرة عامة، المراسلات، التنظيم، إدارة الوصول، الرقابة والتدقيق), permission codes, and `available` flags. Dashboard, documents, departments, institution settings, users, roles, and employees are available; remaining entries show «قريبًا». Both organization entries require `DEPARTMENT_MANAGE`. `filterNavGroups` hides unpermitted items/empty groups; `findNavItem` drives route titles.
+- `model/shell-nav.ts` — `SHELL_NAV_GROUPS` (نظرة عامة، المراسلات، التنظيم، إدارة الوصول، الرقابة والتدقيق), permission codes, and `available` flags. Dashboard, documents, movements, numbering, departments, institution settings, users, roles, and employees are available; remaining entries show «قريبًا». Both organization entries require `DEPARTMENT_MANAGE`. `filterNavGroups` hides unpermitted items/empty groups; `findNavItem` drives route titles.
 - `model/density.ts` — `Density`, `getStoredDensity`, `applyDensity` (`html[data-density]`), `persistDensity` (`diwan.density`).
 - `index.ts` — Public API barrel file.
 ## 4. Required Packages
@@ -23,11 +23,13 @@ The shell owns the desktop-style chrome: a context menu on page content (refresh
 | Item | State |
 | --- | --- |
 | Shell/sidebar/header, display settings, and menus | Implemented; final regression verification pending. |
-| Shell route children | Dashboard, documents, departments, institution settings, users, roles, and employees; `/change-password` stays standalone. |
+| Shell route children | Dashboard, documents, numbering, departments, institution settings, users, roles, and employees; `/change-password` stays standalone. |
 | Institution settings navigation | Available under organization for `DEPARTMENT_MANAGE`; distinct from `SettingsDialog` (local theme/density only). |
-| Module 03 document navigation | «الوثائق» available under المراسلات for `DOCUMENT_VIEW` (Phase 2); movements and numbering entries stay «قريبًا» until their phases. |
+| Module 03 document navigation | «الوثائق» available under المراسلات for `DOCUMENT_VIEW` (Phase 2); «الحركات» available for `DOCUMENT_VIEW` (Phase 6); «الترقيم» available for `NUMBERING_VIEW` (Phase 5). |
 | Department badge / SignalR bell | Pending their slices. |
 ## 6. Change Log
+- 2026-10-29: Enabled the «الحركات» correspondence navigation entry now that the `/movements` inbox/outbox page is live (Module 03 Phase 6); every correspondence entry now links to a real page.
+- 2026-10-29: Enabled the «الترقيم» correspondence navigation entry now that the `/numbering` page is live (Module 03 Phase 5).
 - 2026-10-28: Enabled the «الوثائق» correspondence navigation entry now that the `/documents` registry is live (Module 03 Phase 2); movements and numbering remain «قريبًا».
 - 2026-10-28: Document the enabled institution-settings organization entry, its permission gate, and separation from local display settings; final browser verification remains pending.
 - 2026-10-28: Enabled the الأقسام التنظيمية navigation entry now that the `/departments` page is live (Module 01 Phase 1).

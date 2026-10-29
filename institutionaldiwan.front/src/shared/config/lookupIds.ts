@@ -69,6 +69,61 @@ export const DOCUMENT_PRIORITY = {
   Immediate: 3,
 } as const
 
+export const PARTICIPANT_ROLE = {
+  Sender: 1,
+  Receiver: 2,
+  Cc: 3,
+  Signatory: 4,
+} as const
+
+export const PARTICIPANT_TARGET_TYPE = {
+  ExternalOrganization: 1,
+  InternalDepartment: 2,
+  Person: 3,
+} as const
+
+export const MOVEMENT_TYPE = {
+  Referral: 1,
+  Transfer: 2,
+  Cc: 3,
+  Return: 4,
+} as const
+
+export const MOVEMENT_STATUS = {
+  Draft: 1,
+  Sent: 2,
+  Received: 3,
+  InProgress: 4,
+  Completed: 5,
+  Rejected: 6,
+  Returned: 7,
+  Redirected: 8,
+  Closed: 9,
+  Canceled: 10,
+} as const
+
+export const MOVEMENT_STEP_STATUS = {
+  Pending: 1,
+  Sent: 2,
+  Received: 3,
+  Completed: 4,
+  Rejected: 5,
+  Returned: 6,
+  Redirected: 7,
+} as const
+
+export const MOVEMENT_EVENT_TYPE = {
+  Created: 1,
+  Sent: 2,
+  Received: 3,
+  Completed: 4,
+  Rejected: 5,
+  Returned: 6,
+  Redirected: 7,
+  Closed: 8,
+  Canceled: 9,
+} as const
+
 /**
  * Seeded document types that imply one direction; circulars and decisions use
  * `All directions`, so the form leaves their direction to the user.

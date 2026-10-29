@@ -4,6 +4,8 @@ import type {
   MeResponse,
   UserEffectivePermissionsResponse,
   UserListParams,
+  UserOption,
+  UserOptionParams,
   UserResponse,
 } from '../model/types'
 
@@ -37,6 +39,20 @@ export const userApi = {
   ): Promise<UserEffectivePermissionsResponse> => {
     const { data } = await httpClient.get<UserEffectivePermissionsResponse>(
       `/users/${userId}/effective-permissions`,
+    )
+    return data
+  },
+
+  options: async (params: UserOptionParams): Promise<PagedResult<UserOption>> => {
+    const { data } = await httpClient.get<PagedResult<UserOption>>(
+      '/identity-options/users',
+      {
+        params: {
+          page: params.page,
+          pageSize: params.pageSize,
+          search: params.search?.trim() || undefined,
+        },
+      },
     )
     return data
   },
