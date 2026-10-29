@@ -11,6 +11,7 @@ import { UsersPage } from '@/pages/users'
 import { RolesPage } from '@/pages/roles'
 import { EmployeesPage } from '@/pages/employees'
 import { NumberingPage } from '@/pages/numbering'
+import { AuditPage } from '@/pages/audit'
 import { AppShell } from '@/widgets/app-shell'
 import { ProtectedRoute } from './ProtectedRoute'
 
@@ -32,6 +33,7 @@ export function AppRouter() {
             <Route path={ROUTES.ROLES} element={<RolesPage />} />
             <Route path={ROUTES.EMPLOYEES} element={<EmployeesPage />} />
             <Route path={ROUTES.NUMBERING} element={<NumberingPage />} />
+            <Route path={ROUTES.AUDIT} element={<AuditPage />} />
           </Route>
         </Route>
         <Route path="*" element={<Navigate to={ROUTES.DASHBOARD} replace />} />

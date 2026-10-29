@@ -1,11 +1,11 @@
 # institutionaldiwan.front / src/widgets — Composite UI Widgets Layer
 
 > **Status:** `app-shell`, Identity admin tables, the Module 01 department hierarchy, the Module 03
-> document registry, numbering registry, movement inbox, and external correspondents grid are
-> implemented. The hierarchy includes
-> department writes, lazy employee branches, paged rosters, and a chart. The Module 03 widgets are
-> verified in-browser; the hierarchy's final browser verification and Module 02 audit fixes remain in
-> progress. Remaining Module 03 widgets are documentation only. `/change-password` is standalone.
+> document registry, numbering registry, movement inbox, and external correspondents grid, and the
+> Module 09 audit log/integrity tables are implemented. The hierarchy includes
+> department writes, lazy employee branches, paged rosters, and a chart. The Module 03 and Module 09
+> widgets are verified in-browser; the hierarchy's final browser verification and Module 02 audit
+> fixes remain in progress. Remaining widgets are documentation only. `/change-password` is standalone.
 
 ## Purpose
 
@@ -34,7 +34,7 @@ browser.
 | `movement-inbox/` | Inbox/outbox queue with search, status/type filters, overdue highlighting, and routing action menus | `entities/movement` + `features/movement-routing` | ✅ Implemented (Phase 6) |
 | `external-organizations-table/` | External correspondents admin grid (server search/paging, active/all filter, status badges, copy actions) | `entities/{external-organization,lookup,user}` + `features/external-organization-manage` | ✅ Implemented (Phase 7) |
 | `movement-timeline/` | Vertical step chain for one document | `entities/movement` + `features/movement-routing` | Deferred — the timeline lives in `pages/documents` until Module 05's visualization panel lands |
-| `audit-log-table/` | Filterable audit grid + hash columns + integrity toolbar | `entities/audit-log` + `features/audit-manage` | ❌ Planned (API live) |
+| `audit-log-table/` | Paged audit search (hash columns, module/action/date filters) plus the integrity-report list, with checkpoint/checks toolbar | `entities/audit-log` + `features/audit-manage` | ✅ Implemented (Module 09) |
 | `visualization-panel/` | Mermaid source viewer plus data-derived diagram / chart / tree switcher with node context menus | `entities/department`, `entities/movement` + `shared/ui/mermaid-view` | ❌ Planned |
 | `notification-center/` | SignalR bell/drawer | Deferred until Module 10 + hubs | ❌ Blocked |
 
@@ -65,7 +65,8 @@ browser.
 | `numbering-registry-table/` | ✅ Implemented and verified in-browser (Phase 5) |
 | `movement-inbox/` | ✅ Implemented and verified in-browser (Phase 6) |
 | `external-organizations-table/` | ✅ Implemented and verified in-browser (Phase 7) |
-| `document-attachments-panel/`, `audit-log-table/` | ❌ Not implemented (backend live) |
+| `audit-log-table/` | ✅ Implemented and verified in-browser (Module 09: `AuditLogTable` + `AuditIntegrityTable`, manager actions hidden for view-only roles) |
+| `document-attachments-panel/` | ❌ Not implemented (backend live) |
 | `movement-timeline/` | Deferred (the document movements tab renders the step chain today) |
 | `visualization-panel/` | ❌ Not implemented (`shared/ui/mermaid-view` is now live, so the cross-module switcher can follow) |
 | `notification-center/` | ❌ Blocked on Module 10 / SignalR |
@@ -74,6 +75,7 @@ browser.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-29 | agent | Module 09: implemented `audit-log-table` — the URL-driven log grid (module/action/date filters, lookup labels, LTR hash pills) and the integrity-report grid, with checkpoint/check toolbar buttons, copy row actions, and `AUDIT_MANAGE`-filtered menus; verified for both the view-only and manager roles. |
 | 2026-10-29 | agent | Module 03 Phase 7: implemented `external-organizations-table` (server paging/search with URL state, active/all status filter, lookup type labels, permission-filtered create/edit/status menus, and copy actions) and verified it in-browser inside the `/documents` organizations tab. |
 | 2026-10-29 | agent | Module 03 Phase 6: implemented `movement-inbox` (client-mode queue over the plain-array inbox/outbox APIs, URL search/filters/sort/paging, overdue highlighting, permission-filtered routing menus) and verified it in-browser for both departments. |
 | 2026-10-29 | agent | Module 03 Phase 5: implemented `numbering-registry-table` (client grid with scope/format/reset/counters/status, permission-filtered create/edit/activate menus, copy entries, details dialog) and verified it in-browser. |

@@ -33,8 +33,15 @@
 > route or nav entry), verified in-browser (create with the Arabic success toast, a duplicate code
 > keeping the dialog open with «توجد جهة خارجية أخرى بنفس الرمز.», edit with the code read-only, the
 > participant picker offering the updated correspondent, and deactivation/activation switching
-> between «موقوف»/«نشط» while toggling the correspondent's presence in that picker). Attachment
-> slices remain pending.
+> between «موقوف»/«نشط» while toggling the correspondent's presence in that picker). Phase 8 closed
+> the module with a role-matrix pass (`DOC-MGR` / `NUM-MGR` / `GRANT-MGR` roles, one user each):
+> navigation, detail chips, and write actions matched each role's permissions in the browser, direct
+> calls to missing routes returned 403, and the draft / canceled / replaced-number / movement states
+> were re-checked; no code changed in that phase. Attachment slices remain pending. Module 09 Audit
+> is implemented: `entities/audit-log` (paged logs + integrity reports, Arabic module labels, hash and
+> verdict badges), `features/audit-manage` (checkpoint + integrity check), `widgets/audit-log-table`
+> (log grid + report list), and `/audit` (`?panel=logs\|integrity`) behind `AUDIT_VIEW` with
+> checkpoint/check behind `AUDIT_MANAGE`; verified in-browser for both a manager and a view-only role.
 > `npm run build`/`npm run lint` pass and the API was exercised live (login, stale-token rejection,
 > department edit, settings, pickers, registry creation).
 >
@@ -467,7 +474,8 @@ See [`README.md`](README.md) “UI / design contract” and [`src/app/styles/REA
    tab — ✅ done (Phase 6); the attachments panel (`entities/document-file`) pending
 8. `features/external-organization-manage` + `widgets/external-organizations-table` + the
    `/documents?tab=organizations` tab (Module 03 Phase 7) — ✅ done
-9. `pages/audit` (search + integrity; respect self-audit side effect)
+9. `entities/audit-log` + `features/audit-manage` + `widgets/audit-log-table` + `pages/audit`
+   (search + integrity; respect self-audit side effect) — ✅ done (Module 09)
 10. `widgets/visualization-panel` (cross-module Mermaid/chart switcher) + department/employee tree extras
 
 ## Mandatory Documentation Rule (`AGENTS.md`)

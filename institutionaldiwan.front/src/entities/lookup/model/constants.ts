@@ -1,5 +1,7 @@
 import {
   ASSIGNMENT_TYPE,
+  AUDIT_ACTION_TYPE,
+  AUDIT_ENTITY_TYPE,
   DEPARTMENT_TYPE,
   DOCUMENT_CONFIDENTIALITY,
   DOCUMENT_DIRECTION,
@@ -21,6 +23,8 @@ import type { LookupCatalogEntry } from './types'
 
 export {
   ASSIGNMENT_TYPE,
+  AUDIT_ACTION_TYPE,
+  AUDIT_ENTITY_TYPE,
   DEPARTMENT_TYPE,
   DOCUMENT_CONFIDENTIALITY,
   DOCUMENT_DIRECTION,
@@ -60,6 +64,8 @@ export const LOOKUP_SLUGS = {
   MovementStatuses: 'movement-statuses',
   MovementStepStatuses: 'movement-step-statuses',
   MovementEventTypes: 'movement-event-types',
+  AuditActionTypes: 'audit-action-types',
+  AuditEntityTypes: 'audit-entity-types',
 } as const
 
 export type LookupSlug = (typeof LOOKUP_SLUGS)[keyof typeof LOOKUP_SLUGS]
@@ -187,6 +193,35 @@ export const LOOKUP_FALLBACKS: Record<string, readonly LookupCatalogEntry[]> = {
     { id: MOVEMENT_EVENT_TYPE.Redirected, desc: 'Redirected', descAr: 'تحويل' },
     { id: MOVEMENT_EVENT_TYPE.Closed, desc: 'Closed', descAr: 'إغلاق' },
     { id: MOVEMENT_EVENT_TYPE.Canceled, desc: 'Canceled', descAr: 'إلغاء' },
+  ],
+  'audit-action-types': [
+    { id: AUDIT_ACTION_TYPE.Create, desc: 'Create', descAr: 'إنشاء' },
+    { id: AUDIT_ACTION_TYPE.Update, desc: 'Update', descAr: 'تعديل' },
+    { id: AUDIT_ACTION_TYPE.Delete, desc: 'Delete', descAr: 'حذف' },
+    { id: AUDIT_ACTION_TYPE.View, desc: 'View', descAr: 'عرض' },
+    { id: AUDIT_ACTION_TYPE.Login, desc: 'Login', descAr: 'تسجيل دخول' },
+    { id: AUDIT_ACTION_TYPE.Logout, desc: 'Logout', descAr: 'تسجيل خروج' },
+    { id: AUDIT_ACTION_TYPE.Approve, desc: 'Approve', descAr: 'اعتماد' },
+    { id: AUDIT_ACTION_TYPE.Execute, desc: 'Execute', descAr: 'تنفيذ' },
+  ],
+  'audit-entity-types': [
+    { id: AUDIT_ENTITY_TYPE.Document, desc: 'Document', descAr: 'وثيقة' },
+    { id: AUDIT_ENTITY_TYPE.Department, desc: 'Department', descAr: 'دائرة' },
+    { id: AUDIT_ENTITY_TYPE.User, desc: 'User', descAr: 'مستخدم' },
+    { id: AUDIT_ENTITY_TYPE.Role, desc: 'Role', descAr: 'دور' },
+    { id: AUDIT_ENTITY_TYPE.Movement, desc: 'Movement', descAr: 'إحالة' },
+    { id: AUDIT_ENTITY_TYPE.File, desc: 'File', descAr: 'ملف' },
+    { id: AUDIT_ENTITY_TYPE.NumberingRegistry, desc: 'Numbering registry', descAr: 'سجل ترقيم' },
+    { id: AUDIT_ENTITY_TYPE.Setting, desc: 'Setting', descAr: 'إعداد' },
+    { id: AUDIT_ENTITY_TYPE.AuditLog, desc: 'Audit log', descAr: 'سجل التدقيق' },
+    { id: AUDIT_ENTITY_TYPE.DocumentNumber, desc: 'Official number', descAr: 'رقم رسمي' },
+    { id: AUDIT_ENTITY_TYPE.DocumentRelation, desc: 'Document relation', descAr: 'ربط وثيقة' },
+    {
+      id: AUDIT_ENTITY_TYPE.ExternalOrganization,
+      desc: 'External organization',
+      descAr: 'جهة خارجية',
+    },
+    { id: AUDIT_ENTITY_TYPE.Operation, desc: 'Operation', descAr: 'عملية' },
   ],
 }
 

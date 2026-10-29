@@ -131,6 +131,33 @@ export const MOVEMENT_EVENT_TYPE = {
   Canceled: 9,
 } as const
 
+export const AUDIT_ACTION_TYPE = {
+  Create: 1,
+  Update: 2,
+  Delete: 3,
+  View: 4,
+  Login: 5,
+  Logout: 6,
+  Approve: 7,
+  Execute: 8,
+} as const
+
+export const AUDIT_ENTITY_TYPE = {
+  Document: 1,
+  Department: 2,
+  User: 3,
+  Role: 4,
+  Movement: 5,
+  File: 6,
+  NumberingRegistry: 7,
+  Setting: 8,
+  AuditLog: 9,
+  DocumentNumber: 10,
+  DocumentRelation: 11,
+  ExternalOrganization: 12,
+  Operation: 13,
+} as const
+
 /**
  * Seeded document types that imply one direction; circulars and decisions use
  * `All directions`, so the form leaves their direction to the user.

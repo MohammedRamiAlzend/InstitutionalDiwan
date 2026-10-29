@@ -7,8 +7,9 @@
 > participant, cancel), `document-access-grant/` owns grant/revoke, `numbering-manage/` owns
 > registry administration plus the official-number lifecycle, `movement-routing/` owns the
 > routing commands (open, send, receive, complete, reject, return, redirect, close, cancel), and
-> `external-organization-manage/` owns correspondent create/update/activate/deactivate; attachment
-> and audit writes remain planned frontend slices mapped to implemented backend APIs.
+> `external-organization-manage/` owns correspondent create/update/activate/deactivate, and Module 09
+> `audit-manage/` owns the checkpoint and integrity-check commands; attachment writes remain a
+> planned frontend slice mapped to the implemented backend API.
 
 ## Purpose
 
@@ -41,7 +42,7 @@ error handling, and form/dialog UI.
 | `movement-routing/` | `POST /api/movements`; `POST /api/movements/{id}/send\|receive\|complete\|reject\|return\|redirect\|close\|cancel` | `DOCUMENT_EDIT`; draft-only edit fields; opening requires the Central Diwan and a registered document; receive stays blocked until the destination department records a register number (`Numbering.DepartmentRegistrationRequired`); rejection/return require a reason and reroute to the Central Diwan; invalid transitions surface `Movements.InvalidStatusTransition` | ✅ Implemented (Phase 6) |
 | `external-organization-manage/` | `POST /api/external-organizations`, `PUT /{id}`, `DELETE /{id}` (deactivate), `POST /{id}/activate` | `DOCUMENT_EDIT`; code immutable after creation; `Correspondence.ExternalOrgCodeAlreadyExists` shown inside the retained dialog; optional text sent as `null`; deactivated rows keep the record but leave the participant picker | ✅ Implemented (Phase 7) |
 | `attachment-upload/` | Module 06 `POST /api/documents/{id}/files`, version upload, archive | Magic bytes + SHA-256; MANAGE access; show checksum after upload | ❌ Planned (API live) |
-| `audit-manage/` | `POST /api/audit-logs/checkpoints`, `POST .../integrity-checks` | `AUDIT_MANAGE`; integrity failure is **200 + `isValid: false`** | ❌ Planned (API live) |
+| `audit-manage/` | `POST /api/audit-logs/checkpoints`, `POST .../integrity-checks` | `AUDIT_MANAGE`; integrity failure is **200 + `isValid: false`** rendered in-dialog; empty checkpoint range → Arabic `Audit.NothingToCheckpoint` / `Audit.ChainBroken` | ✅ Implemented (Module 09) |
 
 ## Conventions
 
@@ -68,13 +69,15 @@ error handling, and form/dialog UI.
 | `numbering-manage/` | ✅ Implemented (Phase 5: registry create/edit/activate and issue/cancel/replace/department-registration dialogs) |
 | `movement-routing/` | ✅ Implemented (Phase 6: open dialog with assignee picker, plus one action dialog covering send, receive, complete, reject, return, redirect, close, and cancel). |
 | `external-organization-manage/` | ✅ Implemented (Phase 7: create/edit dialog over the `organization-types` lookup, duplicate-code Arabic error, staged deactivate/activate via `ConfirmDialog`). |
-| `attachment-upload/`, `audit-manage/` | Not implemented (backend live; docs ready). |
+| `audit-manage/` | ✅ Implemented (Module 09: checkpoint button/dialog with optional target log, integrity-check dialog with optional range and in-place pass/fail panel). |
+| `attachment-upload/` | ❌ Not implemented (backend live; docs ready). |
 | Final integration verification | Pending; Module 02 audit fixes still in progress. |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-29 | agent | Module 09: implemented `audit-manage` — checkpoint and integrity-check mutations, their Zod schemas (optional positive ids, range ordering), and the dialogs that keep the pass/fail result in place and map the 404/409 domain errors through the Arabic catalog. |
 | 2026-10-29 | agent | Module 03 Phase 7: implemented `external-organization-manage` — create/update mutations plus the staged activate/deactivate pair, a Zod schema mirroring the server's contact-info rule, and the create/edit dialog over the `organization-types` lookup that keeps `Correspondence.ExternalOrgCodeAlreadyExists` inside the open dialog. |
 | 2026-10-29 | agent | Module 03 Phase 6: implemented `movement-routing` — the open-movement dialog (type, destination department, assignee, due date, instructions) plus a single action dialog covering send, receive, complete, reject, return, redirect, close, and cancel, each invalidating the whole `movementKeys` prefix and surfacing Arabic domain errors. |
 | 2026-10-29 | agent | Module 03 Phase 5: implemented `numbering-manage` — registry create/edit/activate and the official-number lifecycle (issue, cancel with reason, replace with reason, department registration), each invalidating the registry and document number keys, with Arabic domain errors. |

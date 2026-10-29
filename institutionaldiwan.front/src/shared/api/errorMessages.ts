@@ -159,6 +159,16 @@ const CODE_MESSAGES: Record<string, string> = {
   'Movements.ReasonRequired': 'السبب مطلوب.',
   'Movements.SameSourceAndDestination': 'لا يمكن أن يكون قسم المصدر هو قسم الوجهة.',
   'Movements.StepNotCurrent': 'الخطوة المحددة ليست الخطوة الحالية.',
+
+  // Module 09 — Tamper-evident audit log
+  'Audit.ChainBroken': 'ارتباط سلسلة التدقيق بالسجل السابق مقطوع، تعذّر إنشاء نقطة التحقق.',
+  'Audit.HashMismatch': 'تجزئة أحد سجلات التدقيق لا تطابق قيمته المسجّلة.',
+  'Audit.InvalidCheckpointRange': 'نطاق نقطة التحقق غير صالح؛ يجب ألا يسبق آخر سجل أول نطاق السلسلة.',
+  'Audit.InvalidIntegrityRange': 'نطاق فحص السلامة غير صالح؛ تحقق من تاريخ أو معرّفات النطاق.',
+  'Audit.NoAuditLogs': 'لا توجد سجلات تدقيق متاحة لتنفيذ العملية.',
+  'Audit.NothingToCheckpoint': 'لا توجد سجلات تدقيق جديدة منذ آخر نقطة تحقق.',
+  'Audit.PreviousLogNotFound': 'تعذّر العثور على السجل السابق لنطاق الفحص.',
+  'Audit.RequiredFieldsMissing': 'بيانات سجل التدقيق ناقصة ولا يمكن إضافته إلى السلسلة.',
 }
 
 const STATUS_MESSAGES: Record<number, string> = {

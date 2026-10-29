@@ -136,7 +136,7 @@ export const SHELL_NAV_GROUPS: readonly ShellNavGroup[] = [
         to: ROUTES.AUDIT,
         icon: ScrollText,
         permission: Permissions.AuditView,
-        available: false,
+        available: true,
       },
     ],
   },

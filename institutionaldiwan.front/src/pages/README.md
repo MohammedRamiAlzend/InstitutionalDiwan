@@ -6,6 +6,8 @@
 > Module 03 Correspondence has a live registry page (`/documents`, Phase 2) with an external-
 > organizations admin tab (Phase 7), a live details page (`/documents/:documentId`, Phases 3–6), a
 > live numbering page (`/numbering`, Phase 5), and a live movements page (`/movements`, Phase 6).
+> Module 09 Audit has a live page (`/audit`: log search + integrity reports, read-only for view
+> roles, checkpoint/check for `AUDIT_MANAGE`).
 > Other backend-ready modules remain pending; archive is blocked on Module 07.
 
 ## Purpose
@@ -45,7 +47,7 @@ complex business mutations, raw `axios`/`fetch` calls, or reusable domain models
 | `roles/` | `/roles` | 02 — roles CRUD, activate/deactivate, permission matrix | ✅ Implemented |
 | `employees/` | `/employees` | 02 — employees list/CRUD, activate/deactivate | ✅ Implemented |
 | `numbering/` | `/numbering` | 04 — `GET/POST/PUT/DELETE /api/numbering/registries`, activate, `GET /api/departments/{id}/register` | ✅ Implemented (Phase 5) |
-| `audit/` | `/audit` | 09 — `GET /api/audit-logs`, checkpoints, integrity checks/reports | ❌ Planned |
+| `audit/` | `/audit` | 09 — `GET /api/audit-logs`, checkpoints, integrity checks/reports (`?panel=logs\|integrity`) | ✅ Implemented (Module 09) |
 | `archive/` | `/archive` | 07 — **deferred** until Archiving API exists | ❌ Blocked |
 
 ## Screen acceptance (pages)
@@ -70,14 +72,17 @@ the cross-module `widgets/visualization-panel` remains planned.
 | `documents/` | Registry ✅ (Phase 2); details ✅ (Phase 3: tabs, participants, timeline, lifecycle actions); grants ✅ (Phase 4); numbers ✅ (Phase 5: issue/cancel/replace/department registration/history); movements ✅ (Phase 6: open/routing actions, step timeline, event log); organizations ✅ (Phase 7: registry/organizations tabs, correspondent create/edit/deactivate/activate behind `DOCUMENT_EDIT`). |
 | `numbering/` | ✅ Implemented (Phase 5: registry grid + department register book behind `NUMBERING_VIEW`, writes behind `NUMBERING_MANAGE`). |
 | `movements/` | ✅ Implemented (Phase 6: inbox/outbox tabs behind `DOCUMENT_VIEW`, routing menus behind `DOCUMENT_EDIT`). |
-| `audit/` | Not implemented (backend live; slice folder documented). |
+| `audit/` | ✅ Implemented (Module 09: log/integrity panels behind `AUDIT_VIEW`, checkpoint and integrity-check actions behind `AUDIT_MANAGE`; browser-verified for both roles). |
 | `archive/` | Blocked on Module 07 backend. |
-| Final browser/build/test verification | Pending; Module 02 auth/admin audit fixes remain in progress. |
+| Final browser/build/test verification | ✅ Module 03 Phase 8 (2026-10-29): build, lint, backend build, and 487 tests pass; role-matrix browser pass (document / numbering / grants managers) plus draft, canceled, replaced-number, and movement states. |
+| Module 02 audit items | Still open (tracked outside Module 03). |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-29 | agent | Module 09: implemented `audit/` — `/audit` gated on `AUDIT_VIEW` with the log and integrity-report panels (`?panel=`), enabled the «سجل التدقيق» sidebar entry, and verified both the manager and view-only roles in the browser. |
+| 2026-10-29 | agent | Module 03 Phase 8: recorded the final verification — role-matrix pages access (document/numbering/grants managers) with permission-filtered navigation, chips, and actions; no page code changed. |
 | 2026-10-29 | agent | Module 03 Phase 7: added the external-organizations admin tab to `documents/` (`?tab=registry\|organizations`, page-level `DOCUMENT_VIEW`, writes behind `DOCUMENT_EDIT`) and verified create/duplicate/edit/deactivate/activate plus the participant-picker effect in-browser. No new route or nav entry. |
 | 2026-10-29 | agent | Module 03 Phase 6: implemented `movements/` (`/movements`: inbox/outbox tabs via URL, client filters/sort/paging, routing menus) and the document-details movements tab (`DocumentMovementsTab`: open movement, status/permission-filtered actions, step timeline, Arabic event log); enabled the «الحركات» nav item and verified the full cycle in-browser. |
 | 2026-10-29 | agent | Module 03 Phase 5: implemented `numbering/` (`/numbering`: registry grid + department register book, `NUMBERING_VIEW` gate) and the document-details numbers tab (`DocumentNumbersTab`, issue/cancel/replace/department registration/history behind `NUMBERING_VIEW`/`NUMBERING_MANAGE`); enabled the «الترقيم» nav item and verified both in-browser. |

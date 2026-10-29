@@ -5,20 +5,22 @@ Defines the React Router v7 route tree, the authentication guard (`ProtectedRout
 ## Contents
 | File | Purpose |
 | --- | --- |
-| `AppRouter.tsx` | Declares `/login` (public), `/change-password` (protected, standalone), and nests `ProtectedRoute` → `AppShell` → page routes (`/` dashboard, `/documents`, `/documents/:documentId`, `/movements`, `/numbering`, `/departments`, `/institution-settings`, `/users`, `/roles`, `/employees`); further module pages mount beside them as their slices land. Includes a catch-all redirect. |
+| `AppRouter.tsx` | Declares `/login` (public), `/change-password` (protected, standalone), and nests `ProtectedRoute` → `AppShell` → page routes (`/` dashboard, `/documents`, `/documents/:documentId`, `/movements`, `/numbering`, `/departments`, `/institution-settings`, `/users`, `/roles`, `/employees`, `/audit`); further module pages mount beside them as their slices land. Includes a catch-all redirect. |
 | `ProtectedRoute.tsx` | Redirects visitors without a token to `/login` (remembering the requested location), shows a spinner while `AuthSessionLoader` hydrates the session, and forces `/change-password` when the session flag or the `must_change_password` JWT claim is true. |
 | `RequirePermission.tsx` | Re-exports the `features/auth` guard so route-level checks and component-level checks share one implementation (Arabic 403 state). |
 | `index.ts` | Public barrel exporting `AppRouter`, `ProtectedRoute`, and `RequirePermission`. |
 ## Implementation status
 | Item | State |
 | --- | --- |
-| `AppRouter.tsx`, `ProtectedRoute.tsx`, `RequirePermission.tsx` | Implemented (login, `/change-password`, shell-nested dashboard, `/documents`, `/documents/:documentId`, `/movements`, `/numbering`, `/departments`, `/institution-settings`, `/users`, `/roles`, `/employees`). |
+| `AppRouter.tsx`, `ProtectedRoute.tsx`, `RequirePermission.tsx` | Implemented (login, `/change-password`, shell-nested dashboard, `/documents`, `/documents/:documentId`, `/movements`, `/numbering`, `/departments`, `/institution-settings`, `/users`, `/roles`, `/employees`, `/audit`). |
 | Forced `/change-password` redirect | Implemented; Module 02 auth/admin audit and fixes are in progress. |
 | Organization routes | Both pages enforce `DEPARTMENT_MANAGE`; final browser verification pending. |
 | Module 03 route map | `/documents` ✅, `/documents/:documentId` ✅, `/numbering` ✅, and `/movements` ✅ registered (Phases 2–6); every Module 03 page still pending is a tab inside the details page except the Module 06 files tab. |
+| Module 09 route | `/audit` ✅ registered beside `/numbering`; the page performs its own `AUDIT_VIEW` guard and the checkpoint/check actions are gated on `AUDIT_MANAGE`. |
 ## Change Log
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-29 | agent | Module 09: registered `/audit` (`ROUTES.AUDIT`) beside `/numbering`; the page performs its own `AUDIT_VIEW` guard and audit writes stay behind `AUDIT_MANAGE`. |
 | 2026-10-29 | agent | Module 03 Phase 6: registered `/movements` (`ROUTES.MOVEMENTS`) now that `MovementsPage` exists; the page performs its own `DOCUMENT_VIEW` guard and every routing write is gated on `DOCUMENT_EDIT`. |
 | 2026-10-29 | agent | Module 03 Phase 5: registered `/numbering` (`ROUTES.NUMBERING`) now that `NumberingPage` exists; the page performs its own `NUMBERING_VIEW` guard and registry writes stay behind `NUMBERING_MANAGE`. |
 | 2026-10-28 | agent | Module 03 Phase 3: registered `/documents/:documentId` (`ROUTES.DOCUMENT_DETAIL_PATTERN`) now that `DocumentDetailsPage` exists; the page performs its own `DOCUMENT_VIEW` guard. |

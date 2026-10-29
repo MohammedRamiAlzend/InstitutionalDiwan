@@ -1,9 +1,9 @@
 # institutionaldiwan.front / src/entities — Business Domain Entities Layer
 
 > **Status:** Module 01 Organization reads (`department`, `institution-setting`), Module 02
-> Identity reads (`user`, `role`, `employee`), lookup catalogs, the reusable employee picker, and
-> Module 03 document, external-organization, numbering-registry, and movement reads are implemented.
-> Remaining entity slices (`document-file`, `audit-log`) are documentation only.
+> Identity reads (`user`, `role`, `employee`), lookup catalogs, the reusable employee picker,
+> Module 03 document, external-organization, numbering-registry, and movement reads, and the
+> Module 09 `audit-log` reads are implemented. `document-file` (Module 06) remains documentation only.
 
 ## Purpose
 
@@ -34,7 +34,7 @@ read-only presentational UI. Entities never perform write mutations.
 | `document-file/` | Module 06 file + version responses (`GET /api/documents/{id}/files`, verify) | `useDocumentFiles`, `ChecksumBadge`, version list | ❌ Planned (API live) |
 | `numbering-registry/` | Registry/counter responses, department register book (`/numbering/registries`, `/departments/{id}/register`) | `useNumberingRegistries`, `useNumberingRegistryById`, `useDepartmentRegister`, `RegistryScopeCard` | ✅ Reads implemented (Phase 5). |
 | `movement/` | `MovementQueueItemResponse`, `MovementResponse` (steps/events) (`GET /api/movements/inbox`, `/outbox`, `/by-document/{documentId}`, `/{movementId}`) | `useMovementQueue`, `useMovementInbox`, `useMovementOutbox`, `useDocumentMovements`, `useMovementById`, `getMovementActions`/`hasActiveMovement` rules, `MovementStatusBadge`, `MovementStepStatusBadge`, `MovementTypeBadge` | ✅ Reads, transition rules, and badges implemented (Phase 6). |
-| `audit-log/` | Module 09 paged logs + integrity reports | `useAuditLogs`, `HashChainPill`, `IntegrityStatusBadge` | ❌ Planned (API live) |
+| `audit-log/` | `AuditLogResponse`, `AuditIntegrityCheckResponse` (paged `/audit-logs`, `/audit-logs/integrity-checks`) | `useAuditLogs`, `useAuditIntegrityReports`, `AUDIT_MODULES`/`auditModuleLabel`, `HashChainPill`, `IntegrityStatusBadge` | ✅ Reads, Arabic module labels, and badges implemented; writes live in `features/audit-manage`. |
 
 ## Conventions
 
@@ -59,12 +59,14 @@ read-only presentational UI. Entities never perform write mutations.
 | `external-organization/` | ✅ Paged/searchable list and by-id reads for participant names, the external-party picker, and the Phase 7 admin grid (`includeInactive`, `active`-only default). |
 | `numbering-registry/` | ✅ Registry/counter and department-register reads, `RegistryScopeCard`. |
 | `movement/` | ✅ Queue/detail reads, mirrored transition rules (`getMovementActions`, `hasActiveMovement`, `translateMovementNote`), and three badges. |
-| `document-file/`, `audit-log/` | Not implemented (backend live; docs ready). |
+| `audit-log/` | ✅ Paged log and integrity-report reads, query keys/hooks (five-minute `staleTime`, no focus refetch), module labels, hash pill, integrity badge. |
+| `document-file/` | ❌ Not implemented (backend live; docs ready). |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-29 | agent | Module 09: implemented the `audit-log` read slice — paged log and integrity-report clients, `auditLogKeys`, `useAuditLogs`/`useAuditIntegrityReports` with a five-minute `staleTime` and no focus refetch (each read appends a self-audit row), the Arabic `AUDIT_MODULES` labels, `HashChainPill`, and `IntegrityStatusBadge`. |
 | 2026-10-29 | agent | Module 03 Phase 7: reused the `external-organization` reads for the admin grid (`includeInactive` toggle, active-only picker) and moved the write-side note from "out of Phase 3" to `features/external-organization-manage`. |
 | 2026-10-29 | agent | Module 03 Phase 6: implemented the `movement` read slice — inbox/outbox/by-document/detail API client, `movementKeys` (15-second queue `staleTime`), the mirrored transition rules, `translateMovementNote` for the API's English system notes, and movement/step/type badges. Mermaid/tree builders stay deferred to Module 05. |
 | 2026-10-29 | agent | Module 03 Phase 5: implemented the `numbering-registry` read slice (registries/counters, department register book, query keys/hooks, `RegistryScopeCard`) and extended `document` with number history/registry-entry reads plus `NumberStatusBadge`. |
