@@ -2,14 +2,16 @@
 
 > **Status:** Registry page ✅ implemented (Module 03 Phase 2), document details ✅ implemented
 > (Module 03 Phase 3), the access-grants tab ✅ implemented (Module 03 Phase 4), the numbers tab
-> ✅ implemented (Module 03 Phase 5), and the movements tab ✅ implemented (Module 03 Phase 6).
-> `/documents/:documentId` renders details, participants, access grants, official
-> numbers/department registrations, movement routing with its timeline, status history, and the
-> audit timeline; only the files tab waits on Module 06.
+> ✅ implemented (Module 03 Phase 5), the movements tab ✅ implemented (Module 03 Phase 6), and the
+> external-organizations admin tab ✅ implemented (Module 03 Phase 7).
+> `/documents` now hosts the registry and the correspondent catalog; `/documents/:documentId` renders
+> details, participants, access grants, official numbers/department registrations, movement routing
+> with its timeline, status history, and the audit timeline; only the files tab waits on Module 06.
 
 ## Purpose
 
-Renders the correspondence registry at `/documents` and the document detail at
+Renders the correspondence registry at `/documents` (tabbed with the external-correspondent
+administration tab, Phase 7) and the document detail at
 `/documents/:documentId`. Detail composes Phase 3 metadata/participants/timeline, the Phase 3
 lifecycle actions (draft edit, register, participant, cancel), the Phase 4 access-grant tab
 (grant/revoke behind `ACCESS_GRANT_MANAGE`), the Phase 5 numbers tab (issue, cancel, replace,
@@ -27,7 +29,7 @@ the Phase 6 movements tab (open/send/receive/complete/reject/return/redirect/clo
 
 | File | Purpose |
 | --- | --- |
-| `ui/DocumentsPage.tsx` | Registry page: `RequirePermission DOCUMENT_VIEW`, «سجل الوثائق» header, registry table. |
+| `ui/DocumentsPage.tsx` | Registry page: `RequirePermission DOCUMENT_VIEW`, «الوثائق» header, the `registry`/`organizations` tab switcher (URL-backed), and the matching table. |
 | `ui/DocumentDetailsPage.tsx` | Detail page: fetch details/timeline, header status mutations filtered by status + permission, URL tabs, and the four lifecycle dialogs. |
 | `ui/DocumentOverviewTab.tsx` | Details tab: metadata grid, status history (with cancel/edit reasons), and the audit timeline section. |
 | `ui/DocumentParticipantsTab.tsx` | Participants tab: role, target type, resolved target name, primary flag, notes, and the add action. |
@@ -45,11 +47,14 @@ the Phase 6 movements tab (open/send/receive/complete/reject/return/redirect/clo
 - `features/document-access-grant` ✅ (Phase 4)
 - `features/numbering-manage` ✅ (Phase 5)
 - `features/movement-routing` ✅ (Phase 6)
+- `widgets/external-organizations-table` ✅ + `features/external-organization-manage` ✅ (Phase 7)
 - `features/attachment-upload` (planned, Module 06)
 
 ## URL state
 
-- List: `?page=&pageSize=&search=&statusId=&directionId=&documentTypeId=&owningDepartmentId=&sortBy=&sortDescending=`
+- List: `?tab=registry|organizations` (default `registry`); the registry adds
+  `?page=&pageSize=&search=&statusId=&directionId=&documentTypeId=&owningDepartmentId=&sortBy=&sortDescending=`,
+  and the organizations tab adds `?page=&pageSize=&search=&include=active|all`.
 - Detail: `?tab=details|participants|numbers|movements|files|grants`; unknown, not-yet-available, or
   unauthorized tabs fall back to `details`. `grants` is live behind `ACCESS_GRANT_MANAGE`; `numbers`
   is live behind `NUMBERING_VIEW`; `movements` is live for `DOCUMENT_VIEW`; only the files chip
@@ -75,6 +80,8 @@ the Phase 6 movements tab (open/send/receive/complete/reject/return/redirect/clo
 | فتح حركة | movements tab open, status = REGISTERED, no active movement, caller holds `DOCUMENT_EDIT` |
 | إرسال / إعادة توجيه / إغلاق / إلغاء الحركة | movement status allows it (`getMovementActions`) and caller holds `DOCUMENT_EDIT` |
 | استلام / إكمال / رفض / إرجاع | movement/step status allows it and caller holds `DOCUMENT_EDIT`; receive still needs the destination department's register number |
+| تبويب الجهات الخارجية | caller holds `DOCUMENT_VIEW` (the whole `/documents` route gate) |
+| جهة خارجية جديدة / تعديل البيانات / إيقاف / تفعيل | organizations tab open and caller holds `DOCUMENT_EDIT`; نسخ الرمز/المعرّف stay available to every reader |
 
 Server-side rejections (`Correspondence.OnlyDraftEditable`, `Correspondence.HasActiveMovements`,
 `Correspondence.AlreadyCanceled`, `Numbering.RegistryNotFound`, `Movements.CentralDiwanRoutingRequired`,
@@ -86,18 +93,20 @@ mounted dialog.
 | Item | State |
 | --- | --- |
 | Slice folder + rules | ✅ Documented |
-| `ui/DocumentsPage.tsx` | ✅ Implemented (Module 03 Phase 2) |
+| `ui/DocumentsPage.tsx` | ✅ Implemented (Module 03 Phase 2); organizations tab added in Phase 7 |
+| External-organizations tab | ✅ Implemented (Module 03 Phase 7: registry/organizations switcher, grid, create/edit/status dialogs) |
 | `ui/DocumentDetailsPage.tsx` + tabs | ✅ Implemented (Module 03 Phase 3) |
 | `ui/DocumentGrantsTab.tsx` | ✅ Implemented (Module 03 Phase 4) |
 | `ui/DocumentNumbersTab.tsx` | ✅ Implemented (Module 03 Phase 5) |
 | `ui/DocumentMovementsTab.tsx` | ✅ Implemented (Module 03 Phase 6) |
 | Files tab | Disabled placeholder until Module 06 |
-| Browser verification | Registry ✅ (2026-10-28); details ✅ (2026-10-28): draft actions, `?tab=participants`, person + department participants, draft edit, register (`2026/000004`), cancel with reason, status history, timeline, and canceled-document gating. Grants ✅ (2026-10-28): `?tab=grants` loaded, empty submit and past expiry rejected in Arabic, grant to `user` at «عرض» with expiry/reason appeared immediately with counts, revoke kept the row as «ملغى» with timestamp + revoker, and a `USER`-role login saw no grants chip and fell back to details. Numbers ✅ (2026-10-29): draft issue → registered `2026/000005`, department registration `DEP-2026-001`, duplicate `2026/000007` rejected in Arabic with the dialog retained and the document still draft, replace `2026/000008` → `2026/000009`, and cancel `2026/000009` with an Arabic reason; a `USER`-role login saw no numbers tab and the issue/department/registry endpoints returned 403. Movements ✅ (2026-10-29): the full two-department cycle (open+send from the Central Diwan, receive at HR against `HR-2026-118`, reject with a reason, automatic reroute back to the Central Diwan, receive at the Central Diwan against `CEN-2026-1000`, close) updated the queues and the movements tab at every step; the chain showed the rejected step as «رُفضت» followed by the registered receive, with Arabic notes and the full event log, and the document returned to «مسجل» with «فتح حركة» available again. |
+| Browser verification | Registry ✅ (2026-10-28); details ✅ (2026-10-28): draft actions, `?tab=participants`, person + department participants, draft edit, register (`2026/000004`), cancel with reason, status history, timeline, and canceled-document gating. Grants ✅ (2026-10-28): `?tab=grants` loaded, empty submit and past expiry rejected in Arabic, grant to `user` at «عرض» with expiry/reason appeared immediately with counts, revoke kept the row as «ملغى» with timestamp + revoker, and a `USER`-role login saw no grants chip and fell back to details. Numbers ✅ (2026-10-29): draft issue → registered `2026/000005`, department registration `DEP-2026-001`, duplicate `2026/000007` rejected in Arabic with the dialog retained and the document still draft, replace `2026/000008` → `2026/000009`, and cancel `2026/000009` with an Arabic reason; a `USER`-role login saw no numbers tab and the issue/department/registry endpoints returned 403. Movements ✅ (2026-10-29): the full two-department cycle (open+send from the Central Diwan, receive at HR against `HR-2026-118`, reject with a reason, automatic reroute back to the Central Diwan, receive at the Central Diwan against `CEN-2026-1000`, close) updated the queues and the movements tab at every step; the chain showed the rejected step as «رُفضت» followed by the registered receive, with Arabic notes and the full event log, and the document returned to «مسجل» with «فتح حركة» available again. Organizations ✅ (2026-10-29): `?tab=organizations` loaded from the URL, a new `MOI-01`/«حكومي» correspondent was created («تمت إضافة الجهة الخارجية.»), a second record with the same code kept the dialog open with «توجد جهة خارجية أخرى بنفس الرمز.», editing carried the disabled code and prefilled fields («تم تحديث بيانات الجهة الخارجية.»), and the participant picker offered «وزارة الداخلية — محدَّث · MOI-01»; after «إيقاف الجهة» the row showed «موقوف» under `include=all` and the participant picker listed no external organizations, and «تفعيل الجهة» restored «نشط» and the option. |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-29 | agent | Module 03 Phase 7: added the `organizations` tab to `ui/DocumentsPage.tsx` (URL-backed `?tab=registry\|organizations` switcher with the page-level `DOCUMENT_VIEW` gate, each tab owning its table state) mounting `widgets/external-organizations-table`; verified create/duplicate/edit/deactivate/activate in-browser and the participant-picker effect of deactivation. |
 | 2026-10-29 | agent | Module 03 Phase 6: added the live `ui/DocumentMovementsTab.tsx` (movement cards with type/status badges, status/permission-driven action buttons, the step chain with per-step outcome labels, and the event log) plus the open-movement and action dialogs, and made the `movements` chip available. Server-written English system notes are translated before rendering; the completed-at label follows the step outcome because the API stamps it on every step end. |
 | 2026-10-29 | agent | Verified the Phase 5 numbers tab in-browser: a draft issued `2026/000005` and moved to REGISTERED, the department registration recorded `DEP-2026-001` with event 4, a duplicate manual number produced the Arabic «الرقم الرسمي مستخدم بالفعل…» with the dialog open and the document still draft, replace moved `2026/000008` to «مُستبدل» and created `2026/000009`, cancel marked `2026/000009` «ملغى» with the Arabic reason, and the replacement note rendered as «يستبدل الرقم 2026/000008». A `USER`-role login saw no numbers tab and the registry/issue/department-registration writes returned 403. |
 | 2026-10-28 | agent | Verified the Phase 4 grants tab in-browser: `?tab=grants` opened from the URL for an admin, the grant dialog rejected an empty submit («اختر المستخدم.» / «اختر مستوى الوصول.») and a 2020 expiry («تاريخ الانتهاء يجب أن يكون بعد اليوم.»), granting access to `user` at «عرض» with a 2027 expiry and a reason produced the row and «1 ساري» immediately, and revoking left the same row as «ملغى» with the revocation timestamp and revoker and no revoke button. A `USER`-role login had no grants chip, `?tab=grants` fell back to details, and the endpoint returned 403. |

@@ -28,7 +28,13 @@
 > inbox/outbox page, and the document-details movements tab (open plus the nine routing commands,
 > movement step chain, Arabic event log), verified in-browser with a full two-department cycle
 > (send → receive → reject with automatic reroute → receive → close) whose queues and timeline
-> refreshed at every step. Attachment slices remain pending.
+> refreshed at every step. Phase 7 added `features/external-organization-manage` plus
+> `widgets/external-organizations-table` as the «الجهات الخارجية» tab inside `/documents` (no new
+> route or nav entry), verified in-browser (create with the Arabic success toast, a duplicate code
+> keeping the dialog open with «توجد جهة خارجية أخرى بنفس الرمز.», edit with the code read-only, the
+> participant picker offering the updated correspondent, and deactivation/activation switching
+> between «موقوف»/«نشط» while toggling the correspondent's presence in that picker). Attachment
+> slices remain pending.
 > `npm run build`/`npm run lint` pass and the API was exercised live (login, stale-token rejection,
 > department edit, settings, pickers, registry creation).
 >
@@ -40,7 +46,7 @@
 
 | Area | As-is (today) | To-be (before feature work) |
 | --- | --- | --- |
-| Application code | Module 01 department management/hierarchy/settings; Module 02 auth/admin pages; Module 03 document entity reads, Arabic errors, `/documents` registry, create draft/registered, the `/documents/:documentId` details page with participants/status history/timeline plus draft-edit/register/participant/cancel, the permission-gated access-grants tab (grant/revoke), the numbers tab (issue/cancel/replace/department registration/history), `/numbering` (registry grid + department register book), and the `/movements` inbox/outbox page with the document-details movements tab (open/send/receive/complete/reject/return/redirect/close/cancel behind `DOCUMENT_EDIT`); shared/app foundation, employee picker, and lookup catalogs (incl. the document, participant, and movement catalogs) | Module 03 attachments tab; other module pages pending |
+| Application code | Module 01 department management/hierarchy/settings; Module 02 auth/admin pages; Module 03 document entity reads, Arabic errors, `/documents` registry, create draft/registered, the `/documents/:documentId` details page with participants/status history/timeline plus draft-edit/register/participant/cancel, the permission-gated access-grants tab (grant/revoke), the numbers tab (issue/cancel/replace/department registration/history), `/numbering` (registry grid + department register book), the `/movements` inbox/outbox page with the document-details movements tab (open/send/receive/complete/reject/return/redirect/close/cancel behind `DOCUMENT_EDIT`), and the `/documents?tab=organizations` external-correspondent admin tab (create/edit/deactivate/activate behind `DOCUMENT_EDIT`); shared/app foundation, employee picker, and lookup catalogs (incl. the document, participant, organization, and movement catalogs) | Module 03 attachments tab; other module pages pending |
 | `package.json` | React/shared/auth stack (router, query, zustand, axios, RHF, zod, sonner, Tailwind v4) plus shared UI/Mermaid dependencies | Remaining packages per slice (see [`README.md`](README.md)) |
 | `vite.config.ts` proxy | ✅ `@` alias + env-driven `/api` and `/hubs` proxies (`DEV_PROXY_TARGET` → `ASPNETCORE_HTTPS_PORT` → `https://localhost:7126`) | Optional local HTTPS certificate; production uses the reverse proxy ([`DEPLOYMENT.md`](DEPLOYMENT.md)) |
 | Dev configuration | ✅ `.env.example` committed; `.env` is git-ignored | — |
@@ -344,8 +350,18 @@ Error codes: `Identity.EmployeeNameEmpty`, `Identity.EmployeeDepartmentEmpty`,
 
 ### External organizations — `/api/external-organizations`
 
-Paged list (`?includeInactive=`), get — `DOCUMENT_VIEW`;
-create/update/deactivate/activate — `DOCUMENT_EDIT`.
+Paged list (`page`, `pageSize`, `search`, `?includeInactive=`), get — `DOCUMENT_VIEW`;
+`POST`, `PUT /{id}`, `DELETE /{id}` (deactivate), `POST /{id}/activate` — `DOCUMENT_EDIT`.
+
+The list accepts no sort parameters, so the SPA grid keeps the server's code ordering and its
+headers are not sortable. The code is immutable after creation; `organizationTypeId` uses the
+`organization-types` lookup (Government 1 / Private 2 / International 3 / Individual 4). A duplicate
+code answers `Correspondence.ExternalOrgCodeAlreadyExists` (Arabic
+«توجد جهة خارجية أخرى بنفس الرمز.») and the create dialog stays open. Deactivation is soft: the row
+remains in the catalog (visible with `includeInactive`) but leaves the active-only participant
+picker in `features/document-manage`. The UI is the `/documents?tab=organizations` tab
+(`features/external-organization-manage` + `widgets/external-organizations-table`); there is no
+dedicated route or sidebar entry.
 
 ### Lookups — `/api/lookups/{lookup}`
 
@@ -449,7 +465,8 @@ See [`README.md`](README.md) “UI / design contract” and [`src/app/styles/REA
    + `pages/numbering` + the document numbers tab — ✅ done (Phase 5); `entities/movement` +
    `features/movement-routing` + `widgets/movement-inbox` + `pages/movements` + the document movements
    tab — ✅ done (Phase 6); the attachments panel (`entities/document-file`) pending
-8. `features/external-organization-manage` (Module 03 Phase 7) — pending
+8. `features/external-organization-manage` + `widgets/external-organizations-table` + the
+   `/documents?tab=organizations` tab (Module 03 Phase 7) — ✅ done
 9. `pages/audit` (search + integrity; respect self-audit side effect)
 10. `widgets/visualization-panel` (cross-module Mermaid/chart switcher) + department/employee tree extras
 

@@ -82,6 +82,13 @@ export const PARTICIPANT_TARGET_TYPE = {
   Person: 3,
 } as const
 
+export const ORGANIZATION_TYPE = {
+  Government: 1,
+  Private: 2,
+  International: 3,
+  Individual: 4,
+} as const
+
 export const MOVEMENT_TYPE = {
   Referral: 1,
   Transfer: 2,

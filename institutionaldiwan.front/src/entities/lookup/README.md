@@ -1,7 +1,7 @@
 # institutionaldiwan.front / src/entities/lookup — Reference Lookups Catalog & Deterministic IDs Slice
 > **Status:** ✅ Implemented (2026-10-27) — generic catalog reads, seeded fallbacks, deterministic IDs, and `LookupLabel`.
 ## Purpose
-Reads the seeded reference ("lookup") catalogs through `GET /api/lookups/{lookup}` and resolves `(lookup, id)` pairs to Arabic labels. Named slugs cover `user-scope-types`, `assignment-types`, `department-types`, `access-levels`, `numbering-modes`, `numbering-reset-policies`, (2026-10-28) the five correspondence catalogs `document-directions`, `document-types`, `document-status-types`, `document-confidentiality-levels`, `document-priority-levels`, and the participant catalogs `participant-roles`, `participant-target-types`, and (2026-10-29) the routing catalogs `movement-types`, `movement-statuses`, `movement-step-statuses`, `movement-event-types`. Module 01 institution settings consumes the numbering catalogs, the Module 03 registry/create/participant flows consume the document and participant catalogs, and the movement badges/routing dialogs consume the movement catalogs; the generic client also serves the API's other slugs.
+Reads the seeded reference ("lookup") catalogs through `GET /api/lookups/{lookup}` and resolves `(lookup, id)` pairs to Arabic labels. Named slugs cover `user-scope-types`, `assignment-types`, `department-types`, `access-levels`, `numbering-modes`, `numbering-reset-policies`, (2026-10-28) the five correspondence catalogs `document-directions`, `document-types`, `document-status-types`, `document-confidentiality-levels`, `document-priority-levels`, and the participant catalogs `participant-roles`, `participant-target-types`, (2026-10-29) the routing catalogs `movement-types`, `movement-statuses`, `movement-step-statuses`, `movement-event-types`, and the correspondent catalog `organization-types`. Module 01 institution settings consumes the numbering catalogs, the Module 03 registry/create/participant flows consume the document and participant catalogs, the movement badges/routing dialogs consume the movement catalogs, and the external-organization form/grid consume `organization-types`; the generic client also serves the API's other slugs.
 ## Contents
 | File | Purpose |
 | --- | --- |
@@ -23,9 +23,11 @@ Reads the seeded reference ("lookup") catalogs through `GET /api/lookups/{lookup
 | Document catalogs (directions/types/statuses/confidentiality/priority) | ✅ Implemented for Module 03 Phase 2; browser verification pending. |
 | Participant catalogs (roles/target types) | ✅ Implemented for Module 03 Phase 3. |
 | Movement catalogs (types/statuses/step statuses/event types) | ✅ Implemented for Module 03 Phase 6; browser-verified through the movement badges and queues. |
+| Organization types (`organization-types`) | ✅ Implemented for Module 03 Phase 7; browser-verified in the external-organization grid and form. |
 ## Change Log
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-29 | agent | Module 03 Phase 7: added the `organization-types` slug with the seeded Arabic placeholders (حكومي/خاص/دولي/فرد) and the `ORGANIZATION_TYPE` re-export used by the external-organization form and grid. |
 | 2026-10-29 | agent | Module 03 Phase 6: added the `movement-types`, `movement-statuses`, `movement-step-statuses`, and `movement-event-types` slugs with seeded Arabic placeholders, plus the shared movement ID re-exports used by the movement badges and routing dialogs. |
 | 2026-10-28 | agent | Module 03 Phase 3: added `participant-roles` and `participant-target-types` slugs with deterministic IDs and seeded Arabic placeholders for the participant dialogs. |
 | 2026-10-28 | agent | Module 03 Phase 2: added the five document lookup slugs, their deterministic IDs and seeded Arabic placeholders, `DOCUMENT_TYPE_DIRECTION`, and exported them through the barrel. |

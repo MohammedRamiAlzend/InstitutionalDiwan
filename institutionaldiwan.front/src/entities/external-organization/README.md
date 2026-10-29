@@ -1,7 +1,8 @@
 # institutionaldiwan.front / src/entities/external-organization — External Correspondents Read Slice
 
-> **Status:** ✅ Implemented (2026-10-28) — paged list/search read, by-id read, query keys and hooks.
-> Writes (create/update/activate/deactivate) stay out of Phase 3; the participant dialog only picks existing organizations.
+> **Status:** ✅ Implemented (2026-10-28; admin-grid reads 2026-10-29) — paged list/search read,
+> by-id read, query keys and hooks. Writes live in `features/external-organization-manage` (Module 03
+> Phase 7); the participant dialog only picks existing active organizations.
 
 ## Purpose
 
@@ -30,10 +31,12 @@ the caller can view the document. `organization-types` lookup labels the type id
 | --- | --- |
 | `model/`, `api/`, `index.ts` | ✅ Implemented |
 | Picker UI | Composed in `features/document-manage` (search + active-only list), not in this slice. |
-| External organization writes | Out of Phase 3 scope (API live, no UI yet). |
+| Admin grid | Composed in `widgets/external-organizations-table`, which also reads inactive rows via `includeInactive`. |
+| External organization writes | ✅ Implemented in `features/external-organization-manage` (Module 03 Phase 7). |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-29 | agent | Module 03 Phase 7: the same reads now back the `widgets/external-organizations-table` admin grid (including the `includeInactive` view); writes were implemented in `features/external-organization-manage`. |
 | 2026-10-28 | agent | Module 03 Phase 3: created the slice with the paged/searchable list read, by-id read, query keys, and hooks for participant names and the external-party picker. |

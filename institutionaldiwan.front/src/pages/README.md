@@ -3,10 +3,10 @@
 > **Status:** Module 01 Organization has department management/hierarchy and institution-settings
 > pages. Module 02 Identity pages are implemented, but auth/admin audit fixes and final verification
 > are in progress. Protected pages except `/change-password` render inside `widgets/app-shell`.
-> Module 03 Correspondence has a live registry page (`/documents`, Phase 2), a live details page
-> (`/documents/:documentId`, Phases 3–6), a live numbering page (`/numbering`, Phase 5), and a live
-> movements page (`/movements`, Phase 6). Other backend-ready modules remain pending; archive is
-> blocked on Module 07.
+> Module 03 Correspondence has a live registry page (`/documents`, Phase 2) with an external-
+> organizations admin tab (Phase 7), a live details page (`/documents/:documentId`, Phases 3–6), a
+> live numbering page (`/numbering`, Phase 5), and a live movements page (`/movements`, Phase 6).
+> Other backend-ready modules remain pending; archive is blocked on Module 07.
 
 ## Purpose
 
@@ -37,7 +37,7 @@ complex business mutations, raw `axios`/`fetch` calls, or reusable domain models
 | `login/` | `/login` | 02 — `POST /api/auth/login` | ✅ Implemented |
 | `change-password/` | `/change-password` | 02 — `POST /api/auth/change-password` | ✅ Implemented (forced after reset + voluntary) |
 | `dashboard/` | `/` | Recent `GET /api/documents` + inbox summary `GET /api/movements/inbox` | ⚠️ Shell-owned content landing implemented; KPI/activity grid pending |
-| `documents/` | `/documents`, `/documents/:documentId` | 03 + 06 — `GET/POST /api/documents` registry + create/draft, details/timeline, lifecycle commands, number history/lifecycle/department registration, movements/steps/events + routing commands; attachments panel in a later phase | Registry ✅ (Phase 2); details/participants/timeline/lifecycle ✅ (Phase 3); grants ✅ (Phase 4); numbers ✅ (Phase 5); movements tab ✅ (Phase 6) |
+| `documents/` | `/documents`, `/documents/:documentId` | 03 + 06 — `GET/POST /api/documents` registry + create/draft, details/timeline, lifecycle commands, number history/lifecycle/department registration, movements/steps/events + routing commands, and the external-organizations tab (`GET/POST/PUT/DELETE /api/external-organizations`, `POST .../activate`); attachments panel in a later phase | Registry ✅ (Phase 2); details/participants/timeline/lifecycle ✅ (Phase 3); grants ✅ (Phase 4); numbers ✅ (Phase 5); movements tab ✅ (Phase 6); organizations tab ✅ (Phase 7) |
 | `movements/` | `/movements` | 03 — inbox/outbox (`?tab=inbox\|outbox`) + routing actions | ✅ Implemented (Phase 6) |
 | `departments/` | `/departments` | 01 — department reads/create/update/reparent/activate/deactivate; scoped employee reads | Implemented: tree/Mermaid/chart/grid, management, lazy employee branches and paged rosters. |
 | `institution-settings/` | `/institution-settings` | 01 — `GET/PUT /api/institution-settings`, department/numbering choices and employee picker | Implemented behind `DEPARTMENT_MANAGE`; no automatic missing-settings creation. |
@@ -67,7 +67,7 @@ the cross-module `widgets/visualization-panel` remains planned.
 | `users/`, `roles/`, `employees/` | ✅ Implemented (`/users`, `/roles`, `/employees`) |
 | `departments/` | Implemented: hierarchy views, department management, lazy employee branches and paged rosters. |
 | `institution-settings/` | Implemented: guarded singleton settings form. |
-| `documents/` | Registry ✅ (Phase 2); details ✅ (Phase 3: tabs, participants, timeline, lifecycle actions); grants ✅ (Phase 4); numbers ✅ (Phase 5: issue/cancel/replace/department registration/history); movements ✅ (Phase 6: open/routing actions, step timeline, event log). |
+| `documents/` | Registry ✅ (Phase 2); details ✅ (Phase 3: tabs, participants, timeline, lifecycle actions); grants ✅ (Phase 4); numbers ✅ (Phase 5: issue/cancel/replace/department registration/history); movements ✅ (Phase 6: open/routing actions, step timeline, event log); organizations ✅ (Phase 7: registry/organizations tabs, correspondent create/edit/deactivate/activate behind `DOCUMENT_EDIT`). |
 | `numbering/` | ✅ Implemented (Phase 5: registry grid + department register book behind `NUMBERING_VIEW`, writes behind `NUMBERING_MANAGE`). |
 | `movements/` | ✅ Implemented (Phase 6: inbox/outbox tabs behind `DOCUMENT_VIEW`, routing menus behind `DOCUMENT_EDIT`). |
 | `audit/` | Not implemented (backend live; slice folder documented). |
@@ -78,6 +78,7 @@ the cross-module `widgets/visualization-panel` remains planned.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-29 | agent | Module 03 Phase 7: added the external-organizations admin tab to `documents/` (`?tab=registry\|organizations`, page-level `DOCUMENT_VIEW`, writes behind `DOCUMENT_EDIT`) and verified create/duplicate/edit/deactivate/activate plus the participant-picker effect in-browser. No new route or nav entry. |
 | 2026-10-29 | agent | Module 03 Phase 6: implemented `movements/` (`/movements`: inbox/outbox tabs via URL, client filters/sort/paging, routing menus) and the document-details movements tab (`DocumentMovementsTab`: open movement, status/permission-filtered actions, step timeline, Arabic event log); enabled the «الحركات» nav item and verified the full cycle in-browser. |
 | 2026-10-29 | agent | Module 03 Phase 5: implemented `numbering/` (`/numbering`: registry grid + department register book, `NUMBERING_VIEW` gate) and the document-details numbers tab (`DocumentNumbersTab`, issue/cancel/replace/department registration/history behind `NUMBERING_VIEW`/`NUMBERING_MANAGE`); enabled the «الترقيم» nav item and verified both in-browser. |
 | 2026-10-28 | agent | Module 03 Phase 3: implemented `documents/DocumentDetailsPage` — `/documents/:documentId` with URL tabs, status/permission-gated lifecycle actions, participants, status history, and the structural Arabic timeline. |

@@ -5,9 +5,10 @@
 > fixes and final integration verification remain in progress. Module 03 `document-create/` creates
 > drafts and registered documents, `document-manage/` owns the lifecycle commands (edit, register,
 > participant, cancel), `document-access-grant/` owns grant/revoke, `numbering-manage/` owns
-> registry administration plus the official-number lifecycle, and `movement-routing/` owns the
-> routing commands (open, send, receive, complete, reject, return, redirect, close, cancel);
-> attachment and audit writes remain planned frontend slices mapped to implemented backend APIs.
+> registry administration plus the official-number lifecycle, `movement-routing/` owns the
+> routing commands (open, send, receive, complete, reject, return, redirect, close, cancel), and
+> `external-organization-manage/` owns correspondent create/update/activate/deactivate; attachment
+> and audit writes remain planned frontend slices mapped to implemented backend APIs.
 
 ## Purpose
 
@@ -38,6 +39,7 @@ error handling, and form/dialog UI.
 | `employee-manage/` | employees create/update/activate/deactivate | `EMPLOYEE_MANAGE`; department must exist and be valid | ✅ Implemented |
 | `role-manage/` | roles create/update/activate + grant/revoke permission | `ROLE_MANAGE`; system roles protected; code immutable after creation | ✅ Implemented |
 | `movement-routing/` | `POST /api/movements`; `POST /api/movements/{id}/send\|receive\|complete\|reject\|return\|redirect\|close\|cancel` | `DOCUMENT_EDIT`; draft-only edit fields; opening requires the Central Diwan and a registered document; receive stays blocked until the destination department records a register number (`Numbering.DepartmentRegistrationRequired`); rejection/return require a reason and reroute to the Central Diwan; invalid transitions surface `Movements.InvalidStatusTransition` | ✅ Implemented (Phase 6) |
+| `external-organization-manage/` | `POST /api/external-organizations`, `PUT /{id}`, `DELETE /{id}` (deactivate), `POST /{id}/activate` | `DOCUMENT_EDIT`; code immutable after creation; `Correspondence.ExternalOrgCodeAlreadyExists` shown inside the retained dialog; optional text sent as `null`; deactivated rows keep the record but leave the participant picker | ✅ Implemented (Phase 7) |
 | `attachment-upload/` | Module 06 `POST /api/documents/{id}/files`, version upload, archive | Magic bytes + SHA-256; MANAGE access; show checksum after upload | ❌ Planned (API live) |
 | `audit-manage/` | `POST /api/audit-logs/checkpoints`, `POST .../integrity-checks` | `AUDIT_MANAGE`; integrity failure is **200 + `isValid: false`** | ❌ Planned (API live) |
 
@@ -65,6 +67,7 @@ error handling, and form/dialog UI.
 | `document-access-grant/` | ✅ Implemented (Phase 4: add-grant dialog over the identity-options user picker, revoke confirmation, grant-key invalidation) |
 | `numbering-manage/` | ✅ Implemented (Phase 5: registry create/edit/activate and issue/cancel/replace/department-registration dialogs) |
 | `movement-routing/` | ✅ Implemented (Phase 6: open dialog with assignee picker, plus one action dialog covering send, receive, complete, reject, return, redirect, close, and cancel). |
+| `external-organization-manage/` | ✅ Implemented (Phase 7: create/edit dialog over the `organization-types` lookup, duplicate-code Arabic error, staged deactivate/activate via `ConfirmDialog`). |
 | `attachment-upload/`, `audit-manage/` | Not implemented (backend live; docs ready). |
 | Final integration verification | Pending; Module 02 audit fixes still in progress. |
 
@@ -72,6 +75,7 @@ error handling, and form/dialog UI.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-29 | agent | Module 03 Phase 7: implemented `external-organization-manage` — create/update mutations plus the staged activate/deactivate pair, a Zod schema mirroring the server's contact-info rule, and the create/edit dialog over the `organization-types` lookup that keeps `Correspondence.ExternalOrgCodeAlreadyExists` inside the open dialog. |
 | 2026-10-29 | agent | Module 03 Phase 6: implemented `movement-routing` — the open-movement dialog (type, destination department, assignee, due date, instructions) plus a single action dialog covering send, receive, complete, reject, return, redirect, close, and cancel, each invalidating the whole `movementKeys` prefix and surfacing Arabic domain errors. |
 | 2026-10-29 | agent | Module 03 Phase 5: implemented `numbering-manage` — registry create/edit/activate and the official-number lifecycle (issue, cancel with reason, replace with reason, department registration), each invalidating the registry and document number keys, with Arabic domain errors. |
 | 2026-10-28 | Qoder | Module 03 Phase 4: implemented `document-access-grant` — add-grant dialog (debounced `identity-options/users` picker, access-level select, optional future expiry, reason) and a destructive revoke confirmation, both invalidating the document grant keys. |

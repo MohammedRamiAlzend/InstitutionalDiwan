@@ -1,7 +1,8 @@
 # institutionaldiwan.front / src/widgets — Composite UI Widgets Layer
 
 > **Status:** `app-shell`, Identity admin tables, the Module 01 department hierarchy, the Module 03
-> document registry, numbering registry, and movement inbox are implemented. The hierarchy includes
+> document registry, numbering registry, movement inbox, and external correspondents grid are
+> implemented. The hierarchy includes
 > department writes, lazy employee branches, paged rosters, and a chart. The Module 03 widgets are
 > verified in-browser; the hierarchy's final browser verification and Module 02 audit fixes remain in
 > progress. Remaining Module 03 widgets are documentation only. `/change-password` is standalone.
@@ -31,6 +32,7 @@ browser.
 | `document-attachments-panel/` | File list, upload, download, verify checksum, archive | `entities/document-file` + `features/attachment-upload` | ❌ Planned (API live) |
 | `department-hierarchy-tree/` | Tree/Mermaid/chart/grid, department manage actions, lazy direct-employee branches, paged/searchable rosters, employee details and context/overflow menus | `features/department-manage` + department/employee/lookup/user entities | Implemented, including shared tree/diagram/chart request states; final browser verification pending. |
 | `movement-inbox/` | Inbox/outbox queue with search, status/type filters, overdue highlighting, and routing action menus | `entities/movement` + `features/movement-routing` | ✅ Implemented (Phase 6) |
+| `external-organizations-table/` | External correspondents admin grid (server search/paging, active/all filter, status badges, copy actions) | `entities/{external-organization,lookup,user}` + `features/external-organization-manage` | ✅ Implemented (Phase 7) |
 | `movement-timeline/` | Vertical step chain for one document | `entities/movement` + `features/movement-routing` | Deferred — the timeline lives in `pages/documents` until Module 05's visualization panel lands |
 | `audit-log-table/` | Filterable audit grid + hash columns + integrity toolbar | `entities/audit-log` + `features/audit-manage` | ❌ Planned (API live) |
 | `visualization-panel/` | Mermaid source viewer plus data-derived diagram / chart / tree switcher with node context menus | `entities/department`, `entities/movement` + `shared/ui/mermaid-view` | ❌ Planned |
@@ -62,6 +64,7 @@ browser.
 | `document-registry-table/` | ✅ Implemented and verified in-browser (Phase 2) |
 | `numbering-registry-table/` | ✅ Implemented and verified in-browser (Phase 5) |
 | `movement-inbox/` | ✅ Implemented and verified in-browser (Phase 6) |
+| `external-organizations-table/` | ✅ Implemented and verified in-browser (Phase 7) |
 | `document-attachments-panel/`, `audit-log-table/` | ❌ Not implemented (backend live) |
 | `movement-timeline/` | Deferred (the document movements tab renders the step chain today) |
 | `visualization-panel/` | ❌ Not implemented (`shared/ui/mermaid-view` is now live, so the cross-module switcher can follow) |
@@ -71,6 +74,7 @@ browser.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-29 | agent | Module 03 Phase 7: implemented `external-organizations-table` (server paging/search with URL state, active/all status filter, lookup type labels, permission-filtered create/edit/status menus, and copy actions) and verified it in-browser inside the `/documents` organizations tab. |
 | 2026-10-29 | agent | Module 03 Phase 6: implemented `movement-inbox` (client-mode queue over the plain-array inbox/outbox APIs, URL search/filters/sort/paging, overdue highlighting, permission-filtered routing menus) and verified it in-browser for both departments. |
 | 2026-10-29 | agent | Module 03 Phase 5: implemented `numbering-registry-table` (client grid with scope/format/reset/counters/status, permission-filtered create/edit/activate menus, copy entries, details dialog) and verified it in-browser. |
 | 2026-10-28 | agent | Verified `document-registry-table` in-browser (Phase 2): seeded labels, search, URL status filter, empty-state «مسح البحث والمرشحات» (now one `clearQuery` URL write), title sorting, and immediate refresh after draft/registered creation. |
