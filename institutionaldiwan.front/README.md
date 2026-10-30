@@ -6,7 +6,8 @@
 > `/institution-settings` form. Shared employee picking and numbering lookup catalogs support the forms.
 > Module 02 Identity auth/admin screens are implemented and verified, including permission-scoped
 > `identity-options` reads, temporal department assignments, server-enforced forced password change,
-> and full query-cache teardown on login/logout. Module 03 Correspondence has started: Phase 0 added
+> and full query-cache teardown on login/logout. Module 03 Correspondence is complete (Phases 0–8):
+> Phase 0 added
 > the document-facing picker reads on the API, Phase 1 implemented the `document` entity reads and the
 > Arabic Correspondence/Numbering/Movements error catalog, Phase 2 shipped the `/documents` registry
 > with document/draft creation plus its active sidebar entry, and Phase 3 added the document details
@@ -25,6 +26,13 @@
 > «مدير ترقيم» / «مدير تصاريح» roles each saw only their permitted navigation, tabs, and actions in
 > the browser, while direct calls to the routes they lack returned 403; draft, canceled, replaced-
 > number, and movement states were re-checked.
+> Module 04 Numbering is complete: Phase 1 added the pure template (`renderNumberPattern`) and scope
+> helpers plus the number status/event constants, Phase 2 added `/numbering` tabs with URL-backed
+> status/policy/scope filters, duplicate-scope warnings, and a live template preview with token
+> validation, Phase 3 moved the department register book onto the shared data grid, Phase 4 moved the
+> document numbers history grid onto it and removed the hardcoded status/event numbers, and Phase 5
+> verified the manager and read-only flows (`NUM-VIEW` sees no write UI; direct writes return 403) and
+> fixed the registry form so a deactivated department stays visible, disabled, and labelled «(موقوف)».
 > Module 09 Audit is implemented: `entities/audit-log` (paged log and integrity-report reads),
 > `features/audit-manage` (checkpoint and integrity-check commands with the in-dialog pass/fail
 > result), `widgets/audit-log-table` (log grid + report list), and the `/audit` page with the log and
@@ -240,6 +248,7 @@ Full endpoint tables: [`knowledge.md`](knowledge.md).
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-30 | agent | Closed Module 04 (Phases 1–5): pure template/scope model and number constants, `/numbering` tabs with URL-backed filters and duplicate-scope warnings, department register book and document numbers grids on the shared table, and manager plus read-only verification with a `NUM-VIEW` user (no write UI; direct writes 403). Fixed the registry form so a deactivated department stays visible, disabled, and labelled «(موقوف)». Verified manager flows (create `VER-04-P5-REG`, template lock after issuing, edit name/scope, deactivate/activate, URL filters, next-number preview, duplicate banner) and the register book with an active and an inactive (`VER-04-P5`) department. Build, lint, backend build, and 487 tests pass. |
 | 2026-10-29 | agent | Implemented and verified Module 09: added `entities/audit-log` (paged log and integrity-report reads, `auditLogKeys`, five-minute `staleTime` with no focus refetch because every read appends a self-audit row, Arabic `AUDIT_MODULES`, `HashChainPill`, `IntegrityStatusBadge`), `features/audit-manage` (checkpoint and integrity-check mutations with the pass/fail body rendered in place), `widgets/audit-log-table` (`AuditLogTable` with module/action/date filters and lookup labels, `AuditIntegrityTable`), and `/audit` with `?panel=logs\|integrity` behind `AUDIT_VIEW`; enabled the «سجل التدقيق» sidebar entry. Added the `Audit.*` Arabic error catalog and the `audit-action-types` / `audit-entity-types` lookups. In-browser (manager): grid labels and LTR hashes, filters and debounced search, column chooser pinning the id/date columns, full-chain check «سلسلة سليمة» over 5,097 logs, two checkpoints (168 and 4 rows) with the 409 «لا توجد سجلات تدقيق جديدة» path, and the new integrity report at `?panel=integrity`. In-browser (view-only): no manager buttons or menu items. Fixed a raw `LOOKUPS` module label found in real data. Build, lint, backend build, and 487 tests pass. |
 | 2026-10-29 | agent | Completed Module 03 Phase 8 (final verification, no code changes): created `DOC-MGR` / `NUM-MGR` / `GRANT-MGR` roles and one system-scope user each. The API matrix returned 200 only on the permitted routes (document manager: documents + movements, no numbering/grants; numbering manager: registries + numbers, no document writes/grants; grants manager: grants only) and 403 on the rest. In-browser each role saw exactly its navigation and chips — «مدير وثائق» had the registry/create/participant/cancel actions and both `/documents` tabs with edit menus, «مدير ترقيم» had the «الترقيم» entry and the numbers chip with «إصدار رقم» while document writes were absent, and «مدير تصاريح» had only the grants chip with «منح وصول», with `?tab=numbers` falling back to details. Edge states re-checked: a canceled document exposed no edit/add-participant/cancel actions, and the replaced/canceled number history still rendered «مُستبدل» with «يستبدل الرقم …» and «ملغى». Build, lint, backend build, and 487 tests pass. |
 | 2026-10-29 | agent | Completed and verified Module 03 Phase 7: added `features/external-organization-manage` (create/update, staged deactivate/activate, duplicate-code Arabic error kept inside the retained dialog, optional fields sent as `null`) and `widgets/external-organizations-table` (server search/paging with URL state, `active`/`all` filter, lookup-labeled type, permission-filtered create/edit/status menus), mounted as the «الجهات الخارجية» tab of `/documents` behind the existing `DOCUMENT_VIEW` gate with writes gated on `DOCUMENT_EDIT`; added the `organization-types` lookup and `ORGANIZATION_TYPE` IDs. In-browser: created `MOI-01`, a duplicate code produced «توجد جهة خارجية أخرى بنفس الرمز.» with the dialog open, edit carried the read-only code, the participant picker offered the updated organization, deactivation («إيقاف الجهة») hid it from that picker and showed «موقوف» under `include=all`, and activation restored both. No new route or sidebar entry. Build, lint, and 487 backend tests pass. |

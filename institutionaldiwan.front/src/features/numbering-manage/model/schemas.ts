@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { unknownPatternTokens } from '@/entities/numbering-registry'
 
 const MIN_NUMBERING_YEAR = 1900
 const MAX_NUMBERING_YEAR = 2200
@@ -45,7 +46,18 @@ export const registryFormSchema = z.object({
     .trim()
     .max(100, 'قالب الرقم يتجاوز الحد الأقصى للأحرف.')
     .superRefine((value, ctx) => {
-      if (value && !value.toUpperCase().includes('{SEQ')) {
+      if (!value) return
+
+      const unknown = unknownPatternTokens(value)
+      if (unknown.length > 0) {
+        ctx.addIssue({
+          code: 'custom',
+          message: `رموز غير معروفة في القالب: ${unknown.join('، ')}. المتاح {YEAR} و{SEQ} أو {SEQ:D6}.`,
+        })
+        return
+      }
+
+      if (!value.toUpperCase().includes('{SEQ')) {
         ctx.addIssue({
           code: 'custom',
           message: 'يجب أن يتضمن القالب الرمز {SEQ} حتى لا تتكرر الأرقام.',

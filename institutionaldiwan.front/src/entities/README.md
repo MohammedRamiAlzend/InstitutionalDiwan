@@ -32,7 +32,7 @@ read-only presentational UI. Entities never perform write mutations.
 | `document/` | `DocumentResponse`, `DocumentDetailResponse`, timeline, access grants, number history/registry entries (`/documents`, `/documents/{id}`) | `useDocuments`, `useDocumentById`, `useDocumentDetails`, `useDocumentTimeline`, `useDocumentAccessGrants`, `useDocumentNumberHistory`, `useDocumentRegistryNumbers`, `DocumentStatusBadge`, `DocumentDirectionBadge`, `OfficialNumberTag`, `NumberStatusBadge` | ✅ Reads and presentational UI implemented; the grants/numbers UI lives in the page and writes in `features/document-access-grant` / `features/numbering-manage`. |
 | `external-organization/` | `ExternalOrganizationResponse` (paged `/external-organizations`, `/{id}`) | `useExternalOrganizations`, `useExternalOrganizationById` | ✅ Reads for the participant tab, picker, and admin grid; writes live in `features/external-organization-manage` (Phase 7). |
 | `document-file/` | Module 06 file + version responses (`GET /api/documents/{id}/files`, verify) | `useDocumentFiles`, `ChecksumBadge`, version list | ❌ Planned (API live) |
-| `numbering-registry/` | Registry/counter responses, department register book (`/numbering/registries`, `/departments/{id}/register`) | `useNumberingRegistries`, `useNumberingRegistryById`, `useDepartmentRegister`, `RegistryScopeCard` | ✅ Reads implemented (Phase 5). |
+| `numbering-registry/` | Registry/counter responses, department register book (`/numbering/registries`, `/departments/{id}/register`) | `useNumberingRegistries`, `useNumberingRegistryById`, `useDepartmentRegister`, `RegistryScopeCard`, pure `renderNumberPattern`/scope helpers | ✅ Reads implemented (Phase 5); pure template/scope model added in Module 04 Phase 1. |
 | `movement/` | `MovementQueueItemResponse`, `MovementResponse` (steps/events) (`GET /api/movements/inbox`, `/outbox`, `/by-document/{documentId}`, `/{movementId}`) | `useMovementQueue`, `useMovementInbox`, `useMovementOutbox`, `useDocumentMovements`, `useMovementById`, `getMovementActions`/`hasActiveMovement` rules, `MovementStatusBadge`, `MovementStepStatusBadge`, `MovementTypeBadge` | ✅ Reads, transition rules, and badges implemented (Phase 6). |
 | `audit-log/` | `AuditLogResponse`, `AuditIntegrityCheckResponse` (paged `/audit-logs`, `/audit-logs/integrity-checks`) | `useAuditLogs`, `useAuditIntegrityReports`, `AUDIT_MODULES`/`auditModuleLabel`, `HashChainPill`, `IntegrityStatusBadge` | ✅ Reads, Arabic module labels, and badges implemented; writes live in `features/audit-manage`. |
 
@@ -46,6 +46,9 @@ read-only presentational UI. Entities never perform write mutations.
   `department/model/toMermaid.ts` (departments only). `department/model/toTree.ts` does not exist:
   the hierarchy widget renders API tree nodes and composes lazy employee rosters across entities.
   Movement diagram builders remain planned. Rendering belongs to shared UI/widgets, not data models.
+- Pure formatting/scope helpers follow the same rule: `numbering-registry/model/format.ts` (official
+  number rendering and unknown-token detection) and `numbering-registry/model/scope.ts` (scope
+  rank/key, duplicates, Arabic description) hold no React or API code.
 
 ## Implementation status
 
@@ -57,7 +60,7 @@ read-only presentational UI. Entities never perform write mutations.
 | `employee/` picker and numbering lookups | Implemented for Module 01 forms; final verification pending. |
 | `document/` | ✅ Read models, query keys/hooks, status/direction badges, the official-number tag, number history/registry reads, and `NumberStatusBadge`. |
 | `external-organization/` | ✅ Paged/searchable list and by-id reads for participant names, the external-party picker, and the Phase 7 admin grid (`includeInactive`, `active`-only default). |
-| `numbering-registry/` | ✅ Registry/counter and department-register reads, `RegistryScopeCard`. |
+| `numbering-registry/` | ✅ Registry/counter and department-register reads, `RegistryScopeCard`, and pure `model/format.ts`/`model/scope.ts` helpers (template rendering/validation, scope rank/key, duplicate-scope detection, Arabic scope summary). |
 | `movement/` | ✅ Queue/detail reads, mirrored transition rules (`getMovementActions`, `hasActiveMovement`, `translateMovementNote`), and three badges. |
 | `audit-log/` | ✅ Paged log and integrity-report reads, query keys/hooks (five-minute `staleTime`, no focus refetch), module labels, hash pill, integrity badge. |
 | `document-file/` | ❌ Not implemented (backend live; docs ready). |
@@ -66,6 +69,8 @@ read-only presentational UI. Entities never perform write mutations.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-29 | agent | Module 04 Phase 2: added `unknownPatternTokens` to `numbering-registry/model/format.ts` for form-time template validation. |
+| 2026-10-29 | agent | Module 04 Phase 1: added pure `numbering-registry/model/format.ts` and `model/scope.ts` (template rendering, scope rank/key, duplicate active scopes, Arabic scope summary) through the slice barrel. |
 | 2026-10-29 | agent | Module 09: implemented the `audit-log` read slice — paged log and integrity-report clients, `auditLogKeys`, `useAuditLogs`/`useAuditIntegrityReports` with a five-minute `staleTime` and no focus refetch (each read appends a self-audit row), the Arabic `AUDIT_MODULES` labels, `HashChainPill`, and `IntegrityStatusBadge`. |
 | 2026-10-29 | agent | Module 03 Phase 7: reused the `external-organization` reads for the admin grid (`includeInactive` toggle, active-only picker) and moved the write-side note from "out of Phase 3" to `features/external-organization-manage`. |
 | 2026-10-29 | agent | Module 03 Phase 6: implemented the `movement` read slice — inbox/outbox/by-document/detail API client, `movementKeys` (15-second queue `staleTime`), the mirrored transition rules, `translateMovementNote` for the API's English system notes, and movement/step/type badges. Mermaid/tree builders stay deferred to Module 05. |

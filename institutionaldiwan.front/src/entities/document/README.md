@@ -26,7 +26,7 @@ paging/search/sort/filter params and keeps the previous page visible while the n
 | `ui/DocumentStatusBadge.tsx` | Arabic badges for `Draft`, `Registered`, `InMovement`, `Archived`, `Canceled` with a `#id` fallback. |
 | `ui/DocumentDirectionBadge.tsx` | Arabic badges for `Internal`, `Incoming`, `Outgoing` with direction icons. |
 | `ui/OfficialNumberTag.tsx` | Renders `officialNumberText` (and an optional numbering year) in `dir="ltr"` monospace, or «بدون رقم». |
-| `ui/NumberStatusBadge.tsx` | Arabic badges for number states: نشط / ملغى / مُستبدل, with an id fallback. |
+| `ui/NumberStatusBadge.tsx` | Arabic badges for number states: نشط / ملغى / مُستبدل, keyed by `DOCUMENT_NUMBER_STATUS` from `@/shared/config`, with an id fallback. |
 | `index.ts` | Public barrel exporting types, query keys, hooks, and read-only components. |
 
 ## Query keys
@@ -52,11 +52,13 @@ paging/search/sort/filter params and keeps the previous page visible while the n
 | `model/`, `api/`, `ui/`, `index.ts` | ✅ Implemented |
 | `DocumentStatusBadge` labels | Hard-coded Arabic matching the seeded `document-status-types` catalog; no lookup round-trip. |
 | Number reads | ✅ Implemented (Phase 5): history + registry entries, `NumberStatusBadge`, Arabic event labels in the page |
+| Number badges | ✅ Keyed by `DOCUMENT_NUMBER_STATUS` (Module 04 Phase 4); no local numeric literals remain. |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-29 | agent | Module 04 Phase 4: `NumberStatusBadge` keys its Arabic labels off `DOCUMENT_NUMBER_STATUS` from `@/shared/config` instead of local numeric literals; behaviour and fallback unchanged. |
 | 2026-10-29 | agent | Module 03 Phase 5: added document-number history and registry-entry types, API reads, hooks under `detail(id)`, and `NumberStatusBadge` for the details numbers tab. |
 | 2026-10-28 | Qoder | Module 03 Phase 4: `useDocumentAccessGrants` is now consumed by the document details grants tab, whose grant/revoke writes invalidate `documentKeys.grants(id)`; verified against the live API. |
 | 2026-10-28 | Qoder | Module 03 Phase 1: implemented types, API reads, query keys/hooks (list, by-id, details, timeline, grants), status/direction badges, and the official-number tag. |

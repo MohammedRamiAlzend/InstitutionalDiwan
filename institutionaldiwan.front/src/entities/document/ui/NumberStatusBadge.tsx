@@ -1,9 +1,10 @@
+import { DOCUMENT_NUMBER_STATUS } from '@/shared/config'
 import { Badge, type BadgeVariant } from '@/shared/ui'
 
 const statusMeta: Record<number, { label: string; variant: BadgeVariant }> = {
-  1: { label: 'نشط', variant: 'success' },
-  2: { label: 'ملغى', variant: 'danger' },
-  3: { label: 'مُستبدل', variant: 'warning' },
+  [DOCUMENT_NUMBER_STATUS.Active]: { label: 'نشط', variant: 'success' },
+  [DOCUMENT_NUMBER_STATUS.Cancelled]: { label: 'ملغى', variant: 'danger' },
+  [DOCUMENT_NUMBER_STATUS.Replaced]: { label: 'مُستبدل', variant: 'warning' },
 }
 
 interface NumberStatusBadgeProps {

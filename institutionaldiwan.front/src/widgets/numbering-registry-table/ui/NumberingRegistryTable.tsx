@@ -13,6 +13,8 @@ import { toast } from 'sonner'
 import { useDepartmentOptions } from '@/entities/department'
 import { LOOKUP_SLUGS, useLookupEntries } from '@/entities/lookup'
 import {
+  findDuplicateActiveScopes,
+  registryScopeRank,
   useNumberingRegistries,
   type NumberingRegistryResponse,
 } from '@/entities/numbering-registry'
@@ -29,6 +31,7 @@ import {
   Button,
   ConfirmDialog,
   DataTable,
+  Select,
   type DataTableColumn,
   type MenuEntry,
 } from '@/shared/ui'
@@ -40,14 +43,29 @@ const resetPolicyLabels: Record<number, string> = {
   [NUMBERING_RESET_POLICY.Never]: 'لا يتصفّر',
 }
 
+const statusFilterOptions = [
+  { value: 'all', label: 'كل الحالات' },
+  { value: 'active', label: 'نشط' },
+  { value: 'inactive', label: 'موقوف' },
+]
+
+const scopeFilterOptions = [
+  { value: 'all', label: 'كل النطاقات' },
+  { value: 'global', label: 'شامل (بلا قيود)' },
+  { value: 'department', label: 'مقيّد بدائرة' },
+  { value: 'documentType', label: 'مقيّد بنوع وثيقة' },
+  { value: 'direction', label: 'مقيّد باتجاه' },
+]
+
 /** `/numbering` grid: registry scope, template, counters, and status actions. */
 export function NumberingRegistryTable() {
   const table = useTableState({
     defaultSortKey: 'registry',
     defaultSortDirection: 'asc',
+    filterKeys: ['status', 'resetPolicyId', 'scope'],
   })
   const registriesQuery = useNumberingRegistries()
-  const registries = registriesQuery.data ?? []
+  const registries = useMemo(() => registriesQuery.data ?? [], [registriesQuery.data])
 
   const hasPermission = useSessionStore((state) => state.hasPermission)
   const canManage = hasPermission(Permissions.NumberingManage)
@@ -55,6 +73,7 @@ export function NumberingRegistryTable() {
   const departmentsQuery = useDepartmentOptions()
   const documentTypesQuery = useLookupEntries(LOOKUP_SLUGS.DocumentTypes)
   const directionsQuery = useLookupEntries(LOOKUP_SLUGS.DocumentDirections)
+  const resetPoliciesQuery = useLookupEntries(LOOKUP_SLUGS.NumberingResetPolicies)
 
   const departmentNames = useMemo(
     () =>
@@ -80,6 +99,49 @@ export function NumberingRegistryTable() {
       ),
     [directionsQuery.data],
   )
+
+  const resetPolicyOptions = useMemo(
+    () => [
+      { value: 'all', label: 'كل سياسات التصفير' },
+      ...(resetPoliciesQuery.data ?? []).map((entry) => ({
+        value: String(entry.id),
+        label: entry.descAr,
+      })),
+    ],
+    [resetPoliciesQuery.data],
+  )
+
+  const filteredRegistries = useMemo(
+    () =>
+      registries.filter((registry) => {
+        const { status, resetPolicyId, scope } = table.filters
+        if (status === 'active' && !registry.isActive) return false
+        if (status === 'inactive' && registry.isActive) return false
+        if (resetPolicyId && String(registry.resetPolicyId) !== resetPolicyId) return false
+        if (scope === 'global' && registryScopeRank(registry) !== 0) return false
+        if (scope === 'department' && registry.departmentId === null) return false
+        if (scope === 'documentType' && registry.documentTypeId === null) return false
+        if (scope === 'direction' && registry.directionId === null) return false
+        return true
+      }),
+    [registries, table.filters],
+  )
+
+  const duplicateGroups = useMemo(
+    () => findDuplicateActiveScopes(registries),
+    [registries],
+  )
+
+  const duplicateCodesFor = (registry: NumberingRegistryResponse): string[] => {
+    const group = duplicateGroups.find((candidate) =>
+      candidate.registries.some((member) => member.registryId === registry.registryId),
+    )
+    return (
+      group?.registries
+        .filter((member) => member.registryId !== registry.registryId)
+        .map((member) => member.code) ?? []
+    )
+  }
 
   const [formOpen, setFormOpen] = useState(false)
   const [formRegistry, setFormRegistry] = useState<NumberingRegistryResponse | null>(
@@ -171,6 +233,22 @@ export function NumberingRegistryTable() {
                 </Badge>
               ))}
             </div>
+          )
+        },
+      },
+      {
+        id: 'specificity',
+        header: 'أبعاد النطاق',
+        sortable: true,
+        sortValue: (registry) => registryScopeRank(registry),
+        cell: (registry) => {
+          const rank = registryScopeRank(registry)
+          return rank === 0 ? (
+            <Badge variant="outline">شامل</Badge>
+          ) : (
+            <span className="whitespace-nowrap text-xs text-muted">
+              {formatNumber(rank)} من 3
+            </span>
           )
         },
       },
@@ -308,14 +386,31 @@ export function NumberingRegistryTable() {
     ? [createEntry, refreshEntry]
     : [refreshEntry]
 
+  const hasQuery = Boolean(table.search) || table.hasActiveFilters
+
   return (
     <>
+      {duplicateGroups.length > 0 && (
+        <div
+          role="status"
+          className="flex flex-col gap-1 rounded-lg border border-warning/40 bg-warning/10 px-3 py-2 text-xs text-warning"
+        >
+          <p className="font-semibold">تنبيه: نطاق مزدوج بين سجلات نشطة</p>
+          {duplicateGroups.map((group) => (
+            <p key={group.key}>
+              {group.registries.map((member) => member.code).join('، ')} — نطاق متطابق تمامًا
+            </p>
+          ))}
+          <p>عند تطابق أكثر من سجل نشط قد يختار الخادم أحدها فقط؛ خصّص نطاق أحدها أو أوقفه.</p>
+        </div>
+      )}
+
       <DataTable
         tableId="numbering-registries"
         mode="client"
         caption="سجلات الترقيم"
         columns={columns}
-        rows={registriesQuery.data}
+        rows={filteredRegistries}
         rowKey={(registry) => registry.registryId}
         rowSearchText={(registry) =>
           [
@@ -339,7 +434,7 @@ export function NumberingRegistryTable() {
         isFetching={registriesQuery.isFetching}
         page={table.page}
         pageSize={table.pageSize}
-        totalCount={registries.length}
+        totalCount={filteredRegistries.length}
         onPageChange={table.setPage}
         onPageSizeChange={table.setPageSize}
         search={table.search}
@@ -360,24 +455,60 @@ export function NumberingRegistryTable() {
             </Button>
           ) : undefined
         }
+        filters={
+          <div className="flex flex-wrap items-center gap-2">
+            <Select
+              aria-label="تصفية حسب الحالة"
+              value={table.filters.status || 'all'}
+              onValueChange={(value) =>
+                table.setFilter('status', value === 'all' ? null : value)
+              }
+              options={statusFilterOptions}
+              className="w-40"
+            />
+            <Select
+              aria-label="تصفية حسب سياسة التصفير"
+              value={table.filters.resetPolicyId || 'all'}
+              onValueChange={(value) =>
+                table.setFilter('resetPolicyId', value === 'all' ? null : value)
+              }
+              options={resetPolicyOptions}
+              className="w-44"
+            />
+            <Select
+              aria-label="تصفية حسب النطاق"
+              value={table.filters.scope || 'all'}
+              onValueChange={(value) =>
+                table.setFilter('scope', value === 'all' ? null : value)
+              }
+              options={scopeFilterOptions}
+              className="w-48"
+            />
+            {table.hasActiveFilters && (
+              <Button type="button" variant="ghost" size="sm" onClick={table.clearFilters}>
+                مسح المرشحات
+              </Button>
+            )}
+          </div>
+        }
         emptyTitle={
-          table.search ? 'لا توجد سجلات مطابقة.' : 'لا توجد سجلات ترقيم بعد.'
+          hasQuery ? 'لا توجد سجلات مطابقة.' : 'لا توجد سجلات ترقيم بعد.'
         }
         emptyDescription={
-          table.search
-            ? 'جرّب تعديل عبارة البحث أو امسحها لعرض كل السجلات.'
+          hasQuery
+            ? 'جرّب تعديل البحث أو المرشحات لعرض سجلات أخرى.'
             : canManage
               ? 'أنشئ سجلًا للترقيم ثم اربطه بدائرة أو نوع أو اتجاه، أو اتركه سجلًا شاملًا.'
               : 'تُدار سجلات الترقيم من قبل حاملي صلاحية إدارة الترقيم.'
         }
         emptyAction={
-          table.search ? (
+          hasQuery ? (
             <Button
               type="button"
               variant="outline"
-              onClick={() => table.setSearch('')}
+              onClick={table.clearQuery}
             >
-              مسح البحث
+              مسح البحث والمرشحات
             </Button>
           ) : canManage ? (
             <Button type="button" onClick={openCreate}>
@@ -416,6 +547,7 @@ export function NumberingRegistryTable() {
               ? directionLabels.get(detailsRegistry.directionId)
               : null
           }
+          duplicateCodes={duplicateCodesFor(detailsRegistry)}
           onOpenChange={(open) => {
             if (!open) setDetailsRegistryId(null)
           }}

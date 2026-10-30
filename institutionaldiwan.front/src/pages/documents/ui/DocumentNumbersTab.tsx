@@ -2,10 +2,12 @@ import { useMemo, useState } from 'react'
 import {
   Ban,
   Building2,
+  Copy,
   Hash,
   RefreshCw,
   Replace,
 } from 'lucide-react'
+import { toast } from 'sonner'
 import {
   NumberStatusBadge,
   useDocumentNumberHistory,
@@ -20,16 +22,38 @@ import {
   ReplaceNumberDialog,
 } from '@/features/numbering-manage'
 import { toArabicErrorMessage } from '@/shared/api'
-import { DOCUMENT_STATUS } from '@/shared/config'
-import { formatDate, formatDateTime, formatShortId } from '@/shared/lib'
-import { Badge, Button, Skeleton } from '@/shared/ui'
+import {
+  DOCUMENT_NUMBER_EVENT_TYPE,
+  DOCUMENT_NUMBER_STATUS,
+  DOCUMENT_STATUS,
+} from '@/shared/config'
+import {
+  formatDate,
+  formatDateTime,
+  formatShortId,
+  useTableState,
+} from '@/shared/lib'
+import {
+  Badge,
+  Button,
+  DataTable,
+  Skeleton,
+  type DataTableColumn,
+  type MenuEntry,
+} from '@/shared/ui'
 
 const numberEventLabels: Record<number, string> = {
-  1: 'صدر',
-  2: 'أُلغي',
-  3: 'استُبدل',
-  4: 'سُجّل في الدائرة',
-  5: 'أُعيد تسجيله في الدائرة',
+  [DOCUMENT_NUMBER_EVENT_TYPE.Issued]: 'صدر',
+  [DOCUMENT_NUMBER_EVENT_TYPE.Cancelled]: 'أُلغي',
+  [DOCUMENT_NUMBER_EVENT_TYPE.Replaced]: 'استُبدل',
+  [DOCUMENT_NUMBER_EVENT_TYPE.RegisteredInDepartment]: 'سُجّل في الدائرة',
+  [DOCUMENT_NUMBER_EVENT_TYPE.ReRegisteredInDepartment]: 'أُعيد تسجيله في الدائرة',
+}
+
+const numberStatusLabels: Record<number, string> = {
+  [DOCUMENT_NUMBER_STATUS.Active]: 'نشط',
+  [DOCUMENT_NUMBER_STATUS.Cancelled]: 'ملغى',
+  [DOCUMENT_NUMBER_STATUS.Replaced]: 'مُستبدل',
 }
 
 /** The API stamps replacement numbers with an English `Replaces …` note; keep it Arabic here. */
@@ -59,6 +83,10 @@ export function DocumentNumbersTab({
 }: DocumentNumbersTabProps) {
   const historyQuery = useDocumentNumberHistory(documentId)
   const entriesQuery = useDocumentRegistryNumbers(documentId)
+  const table = useTableState({
+    defaultSortKey: 'issuedAt',
+    defaultSortDirection: 'desc',
+  })
 
   const [issueOpen, setIssueOpen] = useState(false)
   const [departmentOpen, setDepartmentOpen] = useState(false)
@@ -80,11 +108,106 @@ export function DocumentNumbersTab({
   const central = entries?.centralNumberId
     ? historyById.get(entries.centralNumberId)
     : undefined
-  const centralActive = central?.statusId === 1
+  const centralActive = central?.statusId === DOCUMENT_NUMBER_STATUS.Active
   const hasCentralNumber = Boolean(entries?.centralNumberId)
 
   const departmentNameOf = (departmentId: string | null) =>
     departmentId ? departmentNames.get(departmentId) ?? formatShortId(departmentId) : '—'
+
+  const columns = useMemo<DataTableColumn<DocumentNumberResponse>[]>(() => {
+    const scopeLabel = (number: DocumentNumberResponse) =>
+      number.scopeId === 1
+        ? 'الديوان المركزي'
+        : number.departmentId
+          ? departmentNames.get(number.departmentId) ?? formatShortId(number.departmentId)
+          : '—'
+
+    return [
+      {
+        id: 'number',
+        header: 'الرقم',
+        hideable: false,
+        sortable: true,
+        sortValue: (number) => number.officialNumberText,
+        cell: (number) => (
+          <code dir="ltr" className="text-xs font-semibold text-foreground">
+            {number.officialNumberText}
+          </code>
+        ),
+      },
+      {
+        id: 'scope',
+        header: 'النطاق',
+        sortable: true,
+        sortValue: scopeLabel,
+        cell: (number) => (
+          <span className="text-xs text-muted">{scopeLabel(number)}</span>
+        ),
+      },
+      {
+        id: 'year',
+        header: 'السنة',
+        sortable: true,
+        sortValue: (number) => number.numberingYear,
+        cell: (number) => (
+          <span dir="ltr" className="whitespace-nowrap text-xs text-muted">
+            {number.numberingYear}
+          </span>
+        ),
+      },
+      {
+        id: 'status',
+        header: 'الحالة',
+        cell: (number) => <NumberStatusBadge statusId={number.statusId} />,
+      },
+      {
+        id: 'issuedAt',
+        header: 'تاريخ الإصدار',
+        sortable: true,
+        sortValue: (number) => number.issuedAt,
+        cell: (number) => (
+          <span dir="ltr" className="whitespace-nowrap text-xs text-muted">
+            {formatDateTime(number.issuedAt)}
+          </span>
+        ),
+      },
+      {
+        id: 'notes',
+        header: 'ملاحظات',
+        sortable: true,
+        sortValue: (number) => number.cancellationReason ?? latestNumberNote(number),
+        cell: (number) => (
+          <span className="line-clamp-2 max-w-64 text-xs text-muted">
+            {number.cancellationReason ?? latestNumberNote(number) ?? '—'}
+          </span>
+        ),
+      },
+    ]
+  }, [departmentNames])
+
+  const copyValue = async (value: string, label: string) => {
+    try {
+      await navigator.clipboard.writeText(value)
+      toast.success(`تم نسخ ${label}.`)
+    } catch {
+      toast.error('تعذّر النسخ إلى الحافظة.')
+    }
+  }
+
+  const buildRowMenu = (number: DocumentNumberResponse): MenuEntry[] => [
+    {
+      id: 'copy-number',
+      label: 'نسخ الرقم',
+      icon: <Copy className="size-4" aria-hidden />,
+      onSelect: () => void copyValue(number.officialNumberText, 'الرقم'),
+    },
+    {
+      id: 'copy-id',
+      label: 'نسخ المعرّف',
+      icon: <Hash className="size-4" aria-hidden />,
+      onSelect: () => void copyValue(number.documentNumberId, 'المعرّف'),
+    },
+  ]
 
   const isLoading = historyQuery.isLoading || entriesQuery.isLoading
   const error = historyQuery.error ?? entriesQuery.error
@@ -341,70 +464,53 @@ export function DocumentNumbersTab({
           </p>
         </div>
 
-        {isLoading ? (
-          <Skeleton className="h-24 w-full" />
-        ) : error ? null : history.length === 0 ? (
-          <p className="rounded-lg border border-dashed border-border px-4 py-6 text-center text-sm text-muted">
-            لم يصدر أي رقم رسمي لهذه الوثيقة بعد.
-          </p>
-        ) : (
-          <div className="overflow-hidden rounded-lg border border-border">
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse text-sm">
-                <caption className="sr-only">سجل الأرقام الرسمية</caption>
-                <thead className="bg-surface-muted">
-                  <tr>
-                    {['الرقم', 'النطاق', 'السنة', 'الحالة', 'تاريخ الإصدار', 'ملاحظات'].map(
-                      (header) => (
-                        <th
-                          key={header}
-                          scope="col"
-                          className="px-3 py-2.5 text-start text-xs font-semibold text-muted"
-                        >
-                          {header}
-                        </th>
-                      ),
-                    )}
-                  </tr>
-                </thead>
-                <tbody>
-                  {history.map((number) => (
-                    <tr key={number.documentNumberId} className="border-t border-border">
-                      <td className="px-3 py-2.5">
-                        <code dir="ltr" className="text-xs font-semibold text-foreground">
-                          {number.officialNumberText}
-                        </code>
-                      </td>
-                      <td className="px-3 py-2.5 text-xs text-muted">
-                        {number.scopeId === 1
-                          ? 'الديوان المركزي'
-                          : departmentNameOf(number.departmentId)}
-                      </td>
-                      <td className="px-3 py-2.5">
-                        <span dir="ltr" className="text-xs text-muted">
-                          {number.numberingYear}
-                        </span>
-                      </td>
-                      <td className="px-3 py-2.5">
-                        <NumberStatusBadge statusId={number.statusId} />
-                      </td>
-                      <td className="px-3 py-2.5">
-                        <span dir="ltr" className="whitespace-nowrap text-xs text-muted">
-                          {formatDateTime(number.issuedAt)}
-                        </span>
-                      </td>
-                      <td className="px-3 py-2.5">
-                        <span className="line-clamp-2 max-w-64 text-xs text-muted">
-                          {number.cancellationReason ?? latestNumberNote(number) ?? '—'}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
+        <DataTable
+          tableId="document-numbers"
+          mode="client"
+          caption="سجل الأرقام الرسمية"
+          columns={columns}
+          rows={history}
+          rowKey={(number) => number.documentNumberId}
+          rowLabel={(number) => number.officialNumberText}
+          rowSearchText={(number) =>
+            [
+              number.officialNumberText,
+              number.scopeId === 1
+                ? 'الديوان المركزي'
+                : departmentNameOf(number.departmentId),
+              String(number.numberingYear),
+              numberStatusLabels[number.statusId],
+              number.cancellationReason,
+              latestNumberNote(number),
+            ]
+              .filter(Boolean)
+              .join(' ')
+              .toLocaleLowerCase('ar')
+          }
+          isLoading={historyQuery.isLoading}
+          error={historyQuery.error}
+          onRetry={() => void historyQuery.refetch()}
+          onRefresh={refetch}
+          isFetching={historyQuery.isFetching || entriesQuery.isFetching}
+          page={table.page}
+          pageSize={table.pageSize}
+          totalCount={history.length}
+          onPageChange={table.setPage}
+          onPageSizeChange={table.setPageSize}
+          search={table.search}
+          onSearchChange={table.setSearch}
+          searchPlaceholder="ابحث بالرقم أو النطاق أو السنة…"
+          sortKey={table.sortKey}
+          sortDirection={table.sortDirection}
+          onSortChange={table.setSort}
+          rowMenu={buildRowMenu}
+          emptyTitle="لم يصدر أي رقم رسمي لهذه الوثيقة بعد."
+          emptyDescription={
+            isDraft
+              ? 'أصدر رقمًا من بطاقة الرقم المركزي ليظهر في هذا السجل.'
+              : 'تظهر هنا كل الأرقام الرسمية الصادرة لهذه الوثيقة.'
+          }
+        />
       </section>
 
       {issueOpen && (

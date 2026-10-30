@@ -46,7 +46,7 @@ complex business mutations, raw `axios`/`fetch` calls, or reusable domain models
 | `users/` | `/users` | 02 — users list/CRUD, role assignment, department assignments, effective permissions | ✅ Implemented |
 | `roles/` | `/roles` | 02 — roles CRUD, activate/deactivate, permission matrix | ✅ Implemented |
 | `employees/` | `/employees` | 02 — employees list/CRUD, activate/deactivate | ✅ Implemented |
-| `numbering/` | `/numbering` | 04 — `GET/POST/PUT/DELETE /api/numbering/registries`, activate, `GET /api/departments/{id}/register` | ✅ Implemented (Phase 5) |
+| `numbering/` | `/numbering` | 04 — `GET/POST/PUT/DELETE /api/numbering/registries`, activate, `GET /api/departments/{id}/register` | ✅ Implemented (Phase 5); registries/register tabs + registry filters ✅ (Module 04 Phase 2); department register book `widgets/department-register-book` ✅ (Module 04 Phase 3) |
 | `audit/` | `/audit` | 09 — `GET /api/audit-logs`, checkpoints, integrity checks/reports (`?panel=logs\|integrity`) | ✅ Implemented (Module 09) |
 | `archive/` | `/archive` | 07 — **deferred** until Archiving API exists | ❌ Blocked |
 
@@ -69,8 +69,8 @@ the cross-module `widgets/visualization-panel` remains planned.
 | `users/`, `roles/`, `employees/` | ✅ Implemented (`/users`, `/roles`, `/employees`) |
 | `departments/` | Implemented: hierarchy views, department management, lazy employee branches and paged rosters. |
 | `institution-settings/` | Implemented: guarded singleton settings form. |
-| `documents/` | Registry ✅ (Phase 2); details ✅ (Phase 3: tabs, participants, timeline, lifecycle actions); grants ✅ (Phase 4); numbers ✅ (Phase 5: issue/cancel/replace/department registration/history); movements ✅ (Phase 6: open/routing actions, step timeline, event log); organizations ✅ (Phase 7: registry/organizations tabs, correspondent create/edit/deactivate/activate behind `DOCUMENT_EDIT`). |
-| `numbering/` | ✅ Implemented (Phase 5: registry grid + department register book behind `NUMBERING_VIEW`, writes behind `NUMBERING_MANAGE`). |
+| `documents/` | Registry ✅ (Phase 2); details ✅ (Phase 3: tabs, participants, timeline, lifecycle actions); grants ✅ (Phase 4); numbers ✅ (Phase 5: issue/cancel/replace/department registration/history); movements ✅ (Phase 6: open/routing actions, step timeline, event log); organizations ✅ (Phase 7: registry/organizations tabs, correspondent create/edit/deactivate/activate behind `DOCUMENT_EDIT`); numbers history grid on the shared `DataTable` ✅ (Module 04 Phase 4). |
+| `numbering/` | ✅ Implemented (Phase 5: registry grid + department register book behind `NUMBERING_VIEW`, writes behind `NUMBERING_MANAGE`); Module 04 Phase 2 split it into URL-backed tabs and added registry filters; Module 04 Phase 3 moved the register book into `widgets/department-register-book`. |
 | `movements/` | ✅ Implemented (Phase 6: inbox/outbox tabs behind `DOCUMENT_VIEW`, routing menus behind `DOCUMENT_EDIT`). |
 | `audit/` | ✅ Implemented (Module 09: log/integrity panels behind `AUDIT_VIEW`, checkpoint and integrity-check actions behind `AUDIT_MANAGE`; browser-verified for both roles). |
 | `archive/` | Blocked on Module 07 backend. |
@@ -81,6 +81,9 @@ the cross-module `widgets/visualization-panel` remains planned.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-29 | agent | Module 04 Phase 4: the document-details numbers history is now the shared `DataTable` (`tableId="document-numbers"`, column chooser, sorting, URL search, copy row menu); no route or permission changed. |
+| 2026-10-29 | agent | Module 04 Phase 3: replaced `pages/numbering/ui/DepartmentRegisterSection.tsx` with `widgets/department-register-book` (shared `DataTable`, department/year URL filters); `/numbering?tab=register` unchanged at the route level. |
+| 2026-10-29 | agent | Module 04 Phase 2: `/numbering` now uses URL-backed tabs (`?tab=registries\|register`); the registry grid gained status/reset-policy/scope filters, a scope-specificity column, and duplicate-scope warnings. |
 | 2026-10-29 | agent | Module 09: implemented `audit/` — `/audit` gated on `AUDIT_VIEW` with the log and integrity-report panels (`?panel=`), enabled the «سجل التدقيق» sidebar entry, and verified both the manager and view-only roles in the browser. |
 | 2026-10-29 | agent | Module 03 Phase 8: recorded the final verification — role-matrix pages access (document/numbering/grants managers) with permission-filtered navigation, chips, and actions; no page code changed. |
 | 2026-10-29 | agent | Module 03 Phase 7: added the external-organizations admin tab to `documents/` (`?tab=registry\|organizations`, page-level `DOCUMENT_VIEW`, writes behind `DOCUMENT_EDIT`) and verified create/duplicate/edit/deactivate/activate plus the participant-picker effect in-browser. No new route or nav entry. |

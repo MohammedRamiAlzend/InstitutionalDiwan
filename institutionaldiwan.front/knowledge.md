@@ -1,6 +1,6 @@
 # Institutional Diwan React Front End — Agent Knowledge
 
-> **Status:** Current as of **2026-10-29**. Backend Modules **01–06** and **09** plus Lookups are
+> **Status:** Current as of **2026-10-30**. Backend Modules **01–06** and **09** plus Lookups are
 > implemented. Canonical numbering is **01 Organization / 02 Identity / 03 Correspondence**;
 > older references to “Identity Module 01” mean the initial auth slice, not the domain module number.
 > Module 01 frontend now includes department create/edit/reparent/manager/notes/external policy,
@@ -37,7 +37,16 @@
 > the module with a role-matrix pass (`DOC-MGR` / `NUM-MGR` / `GRANT-MGR` roles, one user each):
 > navigation, detail chips, and write actions matched each role's permissions in the browser, direct
 > calls to missing routes returned 403, and the draft / canceled / replaced-number / movement states
-> were re-checked; no code changed in that phase. Attachment slices remain pending. Module 09 Audit
+> were re-checked; no code changed in that phase. Attachment slices remain pending. Module 04
+> Numbering is complete: Phase 1 added the pure template model (`renderNumberPattern`) and the scope
+> helpers plus `DOCUMENT_NUMBER_STATUS`/`DOCUMENT_NUMBER_EVENT_TYPE` constants, Phase 2 added
+> `/numbering` tabs (`?tab=registries|register`) with URL-backed status/policy/scope filters,
+> duplicate-scope warnings, and a live template preview with token validation, Phase 3 moved the
+> department register book onto the shared data grid (inactive departments keep their history), Phase
+> 4 moved the document numbers history grid onto it and removed the hardcoded status/event numbers,
+> and Phase 5 verified the manager and read-only flows against the live API (a `NUM-VIEW` user sees
+> no write UI and gets 403 on direct writes) while fixing the registry form so a deactivated
+> department stays visible, disabled, and labelled «(موقوف)»; all four gates pass. Module 09 Audit
 > is implemented: `entities/audit-log` (paged logs + integrity reports, Arabic module labels, hash and
 > verdict badges), `features/audit-manage` (checkpoint + integrity check), `widgets/audit-log-table`
 > (log grid + report list), and `/audit` (`?panel=logs\|integrity`) behind `AUDIT_VIEW` with
@@ -53,7 +62,7 @@
 
 | Area | As-is (today) | To-be (before feature work) |
 | --- | --- | --- |
-| Application code | Module 01 department management/hierarchy/settings; Module 02 auth/admin pages; Module 03 document entity reads, Arabic errors, `/documents` registry, create draft/registered, the `/documents/:documentId` details page with participants/status history/timeline plus draft-edit/register/participant/cancel, the permission-gated access-grants tab (grant/revoke), the numbers tab (issue/cancel/replace/department registration/history), `/numbering` (registry grid + department register book), the `/movements` inbox/outbox page with the document-details movements tab (open/send/receive/complete/reject/return/redirect/close/cancel behind `DOCUMENT_EDIT`), and the `/documents?tab=organizations` external-correspondent admin tab (create/edit/deactivate/activate behind `DOCUMENT_EDIT`); shared/app foundation, employee picker, and lookup catalogs (incl. the document, participant, organization, and movement catalogs) | Module 03 attachments tab; other module pages pending |
+| Application code | Module 01 department management/hierarchy/settings; Module 02 auth/admin pages; Module 03 document entity reads, Arabic errors, `/documents` registry, create draft/registered, the `/documents/:documentId` details page with participants/status history/timeline plus draft-edit/register/participant/cancel, the permission-gated access-grants tab (grant/revoke), the numbers tab (issue/cancel/replace/department registration/history), `/numbering` (tabbed registry grid + department register book, both shared grids with URL-backed filters), the `/movements` inbox/outbox page with the document-details movements tab (open/send/receive/complete/reject/return/redirect/close/cancel behind `DOCUMENT_EDIT`), the `/documents?tab=organizations` external-correspondent admin tab (create/edit/deactivate/activate behind `DOCUMENT_EDIT`), and the Module 04 numbering model/template/scope work; shared/app foundation, employee picker, and lookup catalogs (incl. the document, participant, organization, and movement catalogs) | Module 03 attachments tab; other module pages pending |
 | `package.json` | React/shared/auth stack (router, query, zustand, axios, RHF, zod, sonner, Tailwind v4) plus shared UI/Mermaid dependencies | Remaining packages per slice (see [`README.md`](README.md)) |
 | `vite.config.ts` proxy | ✅ `@` alias + env-driven `/api` and `/hubs` proxies (`DEV_PROXY_TARGET` → `ASPNETCORE_HTTPS_PORT` → `https://localhost:7126`) | Optional local HTTPS certificate; production uses the reverse proxy ([`DEPLOYMENT.md`](DEPLOYMENT.md)) |
 | Dev configuration | ✅ `.env.example` committed; `.env` is git-ignored | — |
@@ -477,6 +486,10 @@ See [`README.md`](README.md) “UI / design contract” and [`src/app/styles/REA
 9. `entities/audit-log` + `features/audit-manage` + `widgets/audit-log-table` + `pages/audit`
    (search + integrity; respect self-audit side effect) — ✅ done (Module 09)
 10. `widgets/visualization-panel` (cross-module Mermaid/chart switcher) + department/employee tree extras
+11. Module 04 Numbering: pure template/scope model + status/event constants ✅ (Phase 1); `/numbering`
+    tabs, URL-backed filters, duplicate-scope warnings, template preview/validation ✅ (Phase 2);
+    department register book on the shared grid ✅ (Phase 3); document numbers grid + constants ✅
+    (Phase 4); manager and read-only verification + registry inactive-department fix ✅ (Phase 5)
 
 ## Mandatory Documentation Rule (`AGENTS.md`)
 

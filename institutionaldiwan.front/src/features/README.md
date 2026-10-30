@@ -66,7 +66,7 @@ error handling, and form/dialog UI.
 | `document-create/` | ✅ Implemented (draft + immediate registration dialog with lookup-driven fields) |
 | `document-manage/` | ✅ Implemented (Phase 3: draft edit, register from registry, participant insert, cancel with reason) |
 | `document-access-grant/` | ✅ Implemented (Phase 4: add-grant dialog over the identity-options user picker, revoke confirmation, grant-key invalidation) |
-| `numbering-manage/` | ✅ Implemented (Phase 5: registry create/edit/activate and issue/cancel/replace/department-registration dialogs) |
+| `numbering-manage/` | ✅ Implemented (Phase 5: registry create/edit/activate and issue/cancel/replace/department-registration dialogs; Module 04 Phase 2 added the form's live pattern preview and stricter token validation) |
 | `movement-routing/` | ✅ Implemented (Phase 6: open dialog with assignee picker, plus one action dialog covering send, receive, complete, reject, return, redirect, close, and cancel). |
 | `external-organization-manage/` | ✅ Implemented (Phase 7: create/edit dialog over the `organization-types` lookup, duplicate-code Arabic error, staged deactivate/activate via `ConfirmDialog`). |
 | `audit-manage/` | ✅ Implemented (Module 09: checkpoint button/dialog with optional target log, integrity-check dialog with optional range and in-place pass/fail panel). |
@@ -77,6 +77,8 @@ error handling, and form/dialog UI.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-30 | agent | Module 04 Phase 5: `numbering-manage`'s registry form keeps its own department in the scope select after that department is deactivated (disabled, labelled «(موقوف)») instead of rendering a blank select; manager and read-only flows verified in-browser. |
+| 2026-10-29 | agent | Module 04 Phase 2: `numbering-manage`'s registry form now previews the next number from the typed template and rejects unknown tokens or a missing `{SEQ}` with Arabic messages; verified in-browser. |
 | 2026-10-29 | agent | Module 09: implemented `audit-manage` — checkpoint and integrity-check mutations, their Zod schemas (optional positive ids, range ordering), and the dialogs that keep the pass/fail result in place and map the 404/409 domain errors through the Arabic catalog. |
 | 2026-10-29 | agent | Module 03 Phase 7: implemented `external-organization-manage` — create/update mutations plus the staged activate/deactivate pair, a Zod schema mirroring the server's contact-info rule, and the create/edit dialog over the `organization-types` lookup that keeps `Correspondence.ExternalOrgCodeAlreadyExists` inside the open dialog. |
 | 2026-10-29 | agent | Module 03 Phase 6: implemented `movement-routing` — the open-movement dialog (type, destination department, assignee, due date, instructions) plus a single action dialog covering send, receive, complete, reject, return, redirect, close, and cancel, each invalidating the whole `movementKeys` prefix and surfacing Arabic domain errors. |

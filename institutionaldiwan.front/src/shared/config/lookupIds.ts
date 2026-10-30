@@ -33,6 +33,22 @@ export const NUMBERING_RESET_POLICY = {
   Never: 3,
 } as const
 
+/** `DocumentNumberStatus` seeds — the lifecycle of an issued official number. */
+export const DOCUMENT_NUMBER_STATUS = {
+  Active: 1,
+  Cancelled: 2,
+  Replaced: 3,
+} as const
+
+/** `DocumentNumberEventType` seeds — rows in a number's immutable history. */
+export const DOCUMENT_NUMBER_EVENT_TYPE = {
+  Issued: 1,
+  Cancelled: 2,
+  Replaced: 3,
+  RegisteredInDepartment: 4,
+  ReRegisteredInDepartment: 5,
+} as const
+
 export const DOCUMENT_DIRECTION = {
   Internal: 1,
   Incoming: 2,

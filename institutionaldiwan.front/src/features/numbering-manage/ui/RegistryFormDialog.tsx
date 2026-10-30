@@ -1,11 +1,15 @@
 import { useMemo } from 'react'
-import { Controller, useForm } from 'react-hook-form'
+import { Controller, useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
 import { useDepartmentOptions } from '@/entities/department'
 import { LOOKUP_SLUGS, useLookupEntries } from '@/entities/lookup'
 import { NUMBERING_RESET_POLICY } from '@/shared/config'
-import type { NumberingRegistryResponse } from '@/entities/numbering-registry'
+import {
+  DEFAULT_NUMBER_PATTERN,
+  renderNumberPattern,
+  type NumberingRegistryResponse,
+} from '@/entities/numbering-registry'
 import { toArabicErrorMessage } from '@/shared/api'
 import { Button, Dialog, FormField, Input, Select } from '@/shared/ui'
 import {
@@ -15,7 +19,6 @@ import {
 import { registryFormSchema, type RegistryFormValues } from '../model/schemas'
 
 const NONE = '__none'
-const DEFAULT_PATTERN = '{YEAR}/{SEQ:D6}'
 
 interface RegistryFormDialogProps {
   /** `null` creates a registry; otherwise the registry is edited. */
@@ -62,13 +65,19 @@ export function RegistryFormDialog({
     () => [
       { value: NONE, label: 'كل الدوائر (سجل شامل)' },
       ...(departmentsQuery.data ?? [])
-        .filter((department) => department.isActive)
+        // An inactive department stays visible only when the registry already targets it:
+        // otherwise the select would render blank and hide the registry's real scope.
+        .filter(
+          (department) =>
+            department.isActive || department.departmentId === registry?.departmentId,
+        )
         .map((department) => ({
           value: department.departmentId,
-          label: `${department.code} — ${department.nameAr}`,
+          label: `${department.code} — ${department.nameAr}${department.isActive ? '' : ' (موقوف)'}`,
+          disabled: !department.isActive,
         })),
     ],
-    [departmentsQuery.data],
+    [departmentsQuery.data, registry?.departmentId],
   )
 
   const documentTypeOptions = useMemo(
@@ -105,6 +114,16 @@ export function RegistryFormDialog({
   )
 
   const templateLocked = isEdit && registry.counters.length > 0
+
+  const patternDraft = useWatch({ control, name: 'formatPattern' })
+  const previewYear = new Date().getFullYear()
+  const previewSequence =
+    (registry?.counters.find((counter) => counter.numberingYear === previewYear)
+      ?.lastValue ?? 0) + 1
+  const previewNumber = renderNumberPattern(patternDraft, {
+    numberingYear: previewYear,
+    sequenceValue: previewSequence,
+  })
 
   const onSubmit = handleSubmit(async (values) => {
     const scope = {
@@ -278,7 +297,7 @@ export function RegistryFormDialog({
             id="registry-pattern"
             dir="ltr"
             className="font-mono"
-            placeholder={DEFAULT_PATTERN}
+            placeholder={DEFAULT_NUMBER_PATTERN}
             disabled={templateLocked || mutation.isPending}
             invalid={Boolean(errors.formatPattern)}
             {...register('formatPattern')}
@@ -286,7 +305,20 @@ export function RegistryFormDialog({
           <p className="text-xs text-muted">
             {templateLocked
               ? 'لا يمكن تعديل القالب بعد إصدار أرقام من السجل.'
-              : `اتركه فارغًا لاستخدام ${DEFAULT_PATTERN}، ويجب أن يتضمن {SEQ}.`}
+              : `اتركه فارغًا لاستخدام ${DEFAULT_NUMBER_PATTERN}، ويجب أن يتضمن {SEQ}.`}
+          </p>
+          <p className="flex flex-wrap items-center gap-1.5 text-xs text-muted">
+            معاينة الرقم القادم:
+            <code
+              dir="ltr"
+              className="rounded bg-surface-muted px-1.5 py-0.5 font-mono text-foreground"
+            >
+              {previewNumber}
+            </code>
+            <span>
+              (السنة <span dir="ltr">{previewYear}</span>، التسلسل{' '}
+              <span dir="ltr">{previewSequence}</span>)
+            </span>
           </p>
         </FormField>
 

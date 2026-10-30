@@ -4,15 +4,15 @@
 > succeeds and 487 tests pass. Frontend Module 01 Organization includes department management,
 > tree/Mermaid/chart/grid views, lazy employee branches, paged rosters, and `/institution-settings`.
 > Module 02 Identity has auth and administration screens with live-server-enforced session/forced
-> password-change rules; `npm run build` and `npm run lint` pass. Both modules were exercised against
-> the live API (login, session invalidation, department create/edit/reparent/manager/notes, settings,
-> identity options). Module 03 Correspondence has started (Phase 0 picker access, Phase 1 document
-> entity reads/Arabic errors, Phase 2 `/documents` registry with document and draft creation,
-> Phase 3 document details with participants, status history, audit timeline, and draft-edit /
-> register / add-participant / cancel actions, Phase 4 access grants with the `grants` tab and
-> grant/revoke behind `ACCESS_GRANT_MANAGE`, Phase 5 numbering registries, the `/numbering` page,
-> and the document numbers tab with issue/cancel/replace/department registration behind
-> `NUMBERING_VIEW`/`NUMBERING_MANAGE`); movement pages are still pending.
+> password-change rules. Module 03 Correspondence is complete (Phases 0–8: document reads and Arabic
+> errors, `/documents` registry and creation, details/lifecycle, access grants, numbering surfaces,
+> the `/movements` inbox/outbox, the external-correspondent tab, and a role-matrix pass). Module 04
+> Numbering is complete (Phases 1–5: template model, `/numbering` tabs with URL-backed filters and
+> duplicate-scope warnings, shared-grid department register and document numbers, template
+> preview/lock, and manager plus read-only verification). Module 09 Audit has `/audit` logs and
+> integrity reports, and Module 05 Movements has its inbox/outbox page. Attachments (06) remain
+> planned. `npm run build` and `npm run lint` pass, and the SPA was exercised against the live API
+> throughout (login, session invalidation, departments, settings, documents, movements, numbering, audit).
 
 The unified institutional correspondence system: a clean-architecture ASP.NET Core 10 API that
 registers documents, allocates official numbers, routes them between departments, and keeps an
@@ -84,7 +84,7 @@ npm run lint
 > endpoint catalog are documented in
 > [`institutionaldiwan.front/README.md`](institutionaldiwan.front/README.md),
 > [`AGENTS.md`](institutionaldiwan.front/AGENTS.md), and
-> [`knowledge.md`](institutionaldiwan.front/knowledge.md) (current as of 2026-10-28). The API is an
+> [`knowledge.md`](institutionaldiwan.front/knowledge.md) (current as of 2026-10-30). The API is an
 > external service from that project's point of view.
 
 ## Module status
@@ -93,21 +93,20 @@ npm run lint
 | --- | --- | --- | --- |
 | 01 — Organization | Departments, institution settings, reference catalogs | Implemented, including configured central-hub protection and inactive-parent activation guard. | Department management, tree/Mermaid/chart/grid, lazy employee branches, paged rosters/details/menus, and institution settings implemented and verified. Generic lookup administration is not implemented. |
 | 02 — Identity | Auth, users, roles, permissions, employees, access grants, department scope | Implemented, including live session-stamp validation, inactive-role guards, and server-enforced forced password change. | Auth and users/roles/employees administration implemented and verified, including temporal department assignments and permission-scoped pickers. The document access-grant UI is implemented with Module 03 Phase 4. |
-| 03 — Correspondence | Documents (create/draft/update/register/participants/cancel/details/timeline), external organizations, access grants | Implemented. | Phases 0–5 done: picker access, document entity reads, Arabic error catalog, badges, the `/documents` registry with document/draft creation, the `/documents/:documentId` details page (participants, status history, timeline, draft-edit/register/add-participant/cancel), the `grants` tab, and the numbers tab (issue/cancel/replace/department registration/history). Movement pages pending. |
-| 04 — Numbering | Registries, central official numbers, department register books | Implemented. | Registry administration, the read-only department register book (`/numbering`), and the document numbers tab implemented with Module 03 Phase 5. |
-| 05 — Movements | Routing workflow and department inbox/outbox | Implemented. | Planned. |
+| 03 — Correspondence | Documents (create/draft/update/register/participants/cancel/details/timeline), external organizations, access grants | Implemented. | Phases 0–8 done and browser-verified: picker access, document reads, Arabic errors, the `/documents` registry with document/draft creation, the details page (participants, status history, timeline, draft-edit/register/add-participant/cancel), the `grants` tab, the numbers tab (issue/cancel/replace/department registration/history), the `/movements` inbox/outbox page with the nine routing commands, the external-correspondent admin tab, and a role-matrix pass. Attachments tab pending. |
+| 04 — Numbering | Registries, central official numbers, department register books | Implemented. | Phases 1–5 done and browser-verified: template preview/validation constants, `/numbering` tabs (`?tab`) with URL-backed status/policy/scope filters and duplicate-scope warnings, the shared-grid department register book that keeps inactive departments and their history, the document numbers grid, and manager plus read-only (403) verification. |
+| 05 — Movements | Routing workflow and department inbox/outbox | Implemented. | Implemented and verified with Module 03 Phase 6: `/movements` inbox/outbox plus the document-details movements tab with the nine routing commands. |
 | 06 — Attachments | Metadata, versions, upload/download, checksum verification | Implemented. | Planned. |
 | 07 — Archiving | Domain entities and lookups | Application/API not implemented. | Blocked on backend. |
 | 08 — Relations | Domain entities and lookups | Application/API not implemented. | Blocked on backend. |
-| 09 — Audit | Entity/action audit chain, search, checkpoints, integrity reports, scheduled maintenance | Implemented. | Planned. |
+| 09 — Audit | Entity/action audit chain, search, checkpoints, integrity reports, scheduled maintenance | Implemented. | Implemented and verified: `/audit` logs and integrity reports behind `AUDIT_VIEW`, checkpoint/integrity actions behind `AUDIT_MANAGE`. |
 | 10 — Notifications | Domain entities and lookups | Application/API not implemented. | Blocked on backend/hubs. |
 
 “Implemented and verified” means the code is present and was exercised against the live API;
 `dotnet test` (487 tests), `npm run build`, and `npm run lint` pass. Module 01 settings loads the
 existing singleton: read errors, including missing settings, show Arabic feedback and retry rather
-than creating or overwriting a record. Frontend Module 03 is in progress: the registry, creation
-flow, document details/lifecycle page, access grants, and numbering surfaces are live, while
-movements remain planned.
+than creating or overwriting a record. Frontend Modules 03, 04, and 09 are implemented and
+browser-verified; Module 06 attachments and Modules 07/08/10 remain.
 
 ## Conventions
 
@@ -154,6 +153,7 @@ have no `README.md` of their own yet — their content is documented in the encl
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-30 | agent | Closed Modules 03 and 04 in the front end: Module 03 Phases 6–8 (movements inbox/outbox plus the document movements tab, the external-correspondent admin tab, and a role-matrix pass) and Module 04 Phases 1–5 (template preview/validation, `/numbering` tabs with URL-backed filters and duplicate-scope warnings, the department register book and document numbers grids on the shared table, and manager plus read-only 403 verification). Fixed the registry form so a deactivated department stays visible, disabled, and labelled «(موقوف)» instead of blanking the scope select. Recorded Module 05 and Module 09 front-end status and refreshed the top status; 487 tests pass and the front build/lint pass. |
 | 2026-10-29 | Qoder | Module 03 Phase 5 (numbering): added `entities/numbering-registry` (registries/counters/department register), document number history/registry reads with `NumberStatusBadge`, `features/numbering-manage` (registry CRUD/activate; issue/cancel/replace/department registration), `widgets/numbering-registry-table`, the `/numbering` page, and the document-details numbers tab; activated the «الترقيم» nav item. Verified in-browser (registry lifecycle/counters, department register, issue `2026/000005`, department registration `DEP-2026-001`, duplicate `2026/000007` rejected in Arabic, replace `2026/000008`→`2026/000009`, cancel with reason, `USER`-role denial with 403 on direct writes). 487 tests pass and the front build/lint pass. |
 | 2026-10-28 | Qoder | Module 03 Phase 4: added the `identity-options/users` option read to `entities/user`, the `features/document-access-grant` slice (grant a user an access level with optional future expiry and reason; revoke while keeping the record), and the document-details `grants` tab, shown only to `ACCESS_GRANT_MANAGE` holders. Verified in-browser (required-field and past-expiry Arabic validation, immediate grant row with grantor/expiry, revoked grant kept as «ملغى» with timestamp + revoker, tab hidden and endpoint 403 for a `USER`-role caller). The API takes no revocation reason, so the revoke dialog confirms without one; 487 tests pass and the front build/lint pass. |
 | 2026-10-28 | Qoder | Module 03 Phase 3: added `entities/external-organization` reads, `features/document-manage` (draft edit, register into the numbering registry, add participant by organization/department/person, cancel with a reason), and the `/documents/:documentId` details page (participants, status history, Arabic audit timeline) with every transition gated on status + permission; registry rows now open the details page. Verified in-browser (draft actions, participants, edit, registration `2026/000004`, cancel with reason, timeline, canceled-document gating); 487 tests pass and the front build/lint pass. |

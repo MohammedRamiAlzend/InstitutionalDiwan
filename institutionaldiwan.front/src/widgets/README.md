@@ -28,7 +28,8 @@ browser.
 | `roles-table/` | Roles administration grid with create/edit, permission matrix, and status confirmation | `entities/role` + `features/role-manage` | ✅ Implemented |
 | `employees-table/` | Employees administration grid with create/edit and status confirmation | `entities/{employee,department}` + `features/employee-manage` | ✅ Implemented |
 | `document-registry-table/` | Correspondence grid with URL filters (status/direction/type/department), paging/sorting, lookup labels, and create entry points | `entities/document` + `entities/lookup` + `entities/department` + `features/document-create` | ✅ Implemented (Phase 2) |
-| `numbering-registry-table/` | Numbering registry grid (scope/format/reset/counters/status) with create/edit/activate actions and a details dialog | `entities/numbering-registry` + `entities/department` + `entities/lookup` + `features/numbering-manage` | ✅ Implemented (Phase 5) |
+| `numbering-registry-table/` | Numbering registry grid (scope/specificity/format/reset/counters/status) with URL filters, duplicate-scope warning, create/edit/activate actions, and a details dialog with a next-number preview | `entities/numbering-registry` + `entities/department` + `entities/lookup` + `features/numbering-manage` | ✅ Implemented (Phase 5); filters/specificity/dedup (Module 04 Phase 2) |
+| `department-register-book/` | Read-only book of numbers departments wrote in their own registers, with URL-backed department/year filters, sorting, search, and copy/open menus | `entities/numbering-registry` + `entities/department` + `entities/document` | ✅ Implemented (Module 04 Phase 3) |
 | `document-attachments-panel/` | File list, upload, download, verify checksum, archive | `entities/document-file` + `features/attachment-upload` | ❌ Planned (API live) |
 | `department-hierarchy-tree/` | Tree/Mermaid/chart/grid, department manage actions, lazy direct-employee branches, paged/searchable rosters, employee details and context/overflow menus | `features/department-manage` + department/employee/lookup/user entities | Implemented, including shared tree/diagram/chart request states; final browser verification pending. |
 | `movement-inbox/` | Inbox/outbox queue with search, status/type filters, overdue highlighting, and routing action menus | `entities/movement` + `features/movement-routing` | ✅ Implemented (Phase 6) |
@@ -62,7 +63,8 @@ browser.
 | `employees-table/` | ✅ Implemented and verified in-browser (Phase 5) |
 | `department-hierarchy-tree/` | Implemented: management, optional lazy employee branches, paged/searchable rosters and read-only details/menus, department-type chart, shared request states; final browser verification pending. |
 | `document-registry-table/` | ✅ Implemented and verified in-browser (Phase 2) |
-| `numbering-registry-table/` | ✅ Implemented and verified in-browser (Phase 5) |
+| `numbering-registry-table/` | ✅ Implemented and verified in-browser (Phase 5; filters, specificity column, duplicate-scope warning, and details next-number preview added in Module 04 Phase 2) |
+| `department-register-book/` | ✅ Implemented and verified in-browser (Module 04 Phase 3: replaces the bespoke register table with the shared grid) |
 | `movement-inbox/` | ✅ Implemented and verified in-browser (Phase 6) |
 | `external-organizations-table/` | ✅ Implemented and verified in-browser (Phase 7) |
 | `audit-log-table/` | ✅ Implemented and verified in-browser (Module 09: `AuditLogTable` + `AuditIntegrityTable`, manager actions hidden for view-only roles) |
@@ -75,6 +77,8 @@ browser.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-29 | agent | Module 04 Phase 3: implemented `department-register-book` — the department register book on the shared client-mode grid with URL-backed department/year filters (inactive departments included), sorting, search, column chooser, and open/copy row menus; removed the bespoke table from `pages/numbering`. |
+| 2026-10-29 | agent | Module 04 Phase 2: `numbering-registry-table` gained URL-backed status/reset-policy/scope filters, a scope-specificity column, the duplicate active-scope banner, and the details-dialog next-number preview with a neutral precedence explanation; verified in-browser. |
 | 2026-10-29 | agent | Module 09: implemented `audit-log-table` — the URL-driven log grid (module/action/date filters, lookup labels, LTR hash pills) and the integrity-report grid, with checkpoint/check toolbar buttons, copy row actions, and `AUDIT_MANAGE`-filtered menus; verified for both the view-only and manager roles. |
 | 2026-10-29 | agent | Module 03 Phase 7: implemented `external-organizations-table` (server paging/search with URL state, active/all status filter, lookup type labels, permission-filtered create/edit/status menus, and copy actions) and verified it in-browser inside the `/documents` organizations tab. |
 | 2026-10-29 | agent | Module 03 Phase 6: implemented `movement-inbox` (client-mode queue over the plain-array inbox/outbox APIs, URL search/filters/sort/paging, overdue highlighting, permission-filtered routing menus) and verified it in-browser for both departments. |

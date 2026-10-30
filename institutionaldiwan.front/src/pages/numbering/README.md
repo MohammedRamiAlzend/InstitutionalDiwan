@@ -1,13 +1,15 @@
 # `src/pages/numbering` — Numbering Registry & Department Register Page (`/numbering`)
 
-> **Status:** ✅ Implemented (Module 03 Phase 5) and verified in-browser.
+> **Status:** ✅ Implemented (Module 03 Phase 5; tabbed in Module 04 Phase 2; register book moved into a
+> widget in Module 04 Phase 3) and verified in-browser.
 
 ## 1. Purpose
 
-Renders the numbering administration page at `/numbering`: the official numbering registries
-(`widgets/numbering-registry-table`) and a read-only department register book
-(`DepartmentRegisterSection`) that lists the numbers departments wrote in their own registers next to
-the central Diwan number.
+Renders the numbering administration page at `/numbering` as two tabs: the official numbering
+registries (`widgets/numbering-registry-table`) and a read-only department register book
+(`widgets/department-register-book`) that lists the numbers departments wrote in their own registers
+next to the central Diwan number. The active tab is URL-backed (`?tab=register`, default
+`registries`), so a tab is linkable and survives reloads.
 
 The page gates on `NUMBERING_VIEW`. Registry writes (`NUMBERING_MANAGE`) are hidden for readers, and
 the server rejects direct writes with 403.
@@ -22,8 +24,7 @@ the server rejects direct writes with 403.
 
 | File | Purpose |
 | --- | --- |
-| `ui/NumberingPage.tsx` | `RequirePermission NUMBERING_VIEW` + «الترقيم» header, registry table, department register section. |
-| `ui/DepartmentRegisterSection.tsx` | Department + numbering-year pickers (defaults to the current year), refresh, and a lines table showing the department register number, central Diwan number, registration date, status, and a link to the document; handles empty/loading/error states. |
+| `ui/NumberingPage.tsx` | `RequirePermission NUMBERING_VIEW` + «الترقيم» header and two URL-backed tabs (`role="tablist"`): «سجلات الترقيم» (`widgets/numbering-registry-table`) and «سجل الدوائر» (`widgets/department-register-book`). |
 | `index.ts` | Public API barrel. |
 
 ## 4. Required Packages
@@ -33,13 +34,25 @@ the server rejects direct writes with 403.
 ## 5. Implementation Status
 
 - ✅ `NumberingPage` with `NUMBERING_VIEW` gate
+- ✅ Two URL-backed tabs (registries / department register)
 - ✅ Registry grid with `NUMBERING_MANAGE`-filtered create/edit/activate actions
-- ✅ Department register book (read-only, `GET /api/departments/{id}/register`)
+- ✅ Department register book (read-only, `GET /api/departments/{id}/register`) rendered by
+  `widgets/department-register-book` on the shared data grid
 - ✅ Verified in-browser: empty state, registry CRUD/status, counters, department register empty and
-  populated states, and denial for a `USER`-role caller
+  populated states, denial for a `USER`-role caller, tab deep-links, registry filters with URL
+  persistence, duplicate-scope warnings, next-number preview, template-token validation, and a
+  department register book with URL-backed department/year, sorting, search, and menus
 
 ## 6. Change Log
 
+- 2026-10-30: Module 04 Phase 5 — verified the page in-browser as manager and read-only user: the
+  manager flow (create/deactivate/activate, URL filters, duplicate banner, template lock, next-number
+  preview) and a `NUM-VIEW` user (no create button, view/copy row menus only). The department register
+  now has a permanent inactive fixture (`VER-04-P5`) that keeps its historical line.
+- 2026-10-29: Module 04 Phase 3 — removed the bespoke `DepartmentRegisterSection` and mounted
+  `widgets/department-register-book` instead; the register grid now has URL state, sorting, search,
+  column chooser, and context menus.
+- 2026-10-29: Module 04 Phase 2 — split the page into URL-backed tabs and documented the tab state.
 - 2026-10-29: Module 03 Phase 5 — implemented the page, the department register section, and verified
   the whole numbering surface in-browser.
 - 2026-10-25: Documented the shared data-grid and context-menu requirements for the counters table.
