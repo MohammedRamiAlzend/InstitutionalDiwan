@@ -1,8 +1,10 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { Controller, useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { FilePlus2, Hash, Save } from 'lucide-react'
+import { Building2, FilePlus2, Hash, Landmark, Save, Search, UserRound } from 'lucide-react'
 import { toast } from 'sonner'
+import { useDepartmentOptions } from '@/entities/department'
+import { useExternalOrganizations } from '@/entities/external-organization'
 import {
   DOCUMENT_CONFIDENTIALITY,
   DOCUMENT_DIRECTION,
@@ -13,15 +15,24 @@ import {
 } from '@/entities/lookup'
 import { useSessionStore } from '@/entities/user'
 import { ApiError, toArabicErrorMessage } from '@/shared/api'
-import { Permissions } from '@/shared/config'
-import { cn } from '@/shared/lib'
-import { Button, Dialog, FormField, Input, Select, Textarea } from '@/shared/ui'
+import { PARTICIPANT_ROLE, Permissions } from '@/shared/config'
+import { cn, useDebouncedValue } from '@/shared/lib'
+import {
+  Button,
+  Checkbox,
+  Dialog,
+  FormField,
+  Input,
+  Select,
+  Textarea,
+} from '@/shared/ui'
 import {
   createDocumentSchema,
   type CreateDocumentFormValues,
   type CreateDocumentMode,
 } from '../model/schemas'
 import {
+  useAddCreationRecipientMutation,
   useCreateDocumentMutation,
   useCreateDraftDocumentMutation,
 } from '../api/documentMutations'
@@ -33,13 +44,38 @@ interface CreateDocumentDialogProps {
 
 const CURRENT_YEAR = new Date().getFullYear()
 
+const RECIPIENT_TARGET_OPTIONS = [
+  {
+    key: 'external',
+    label: 'جهة خارجية',
+    hint: 'وزارة أو شركة أو منظمة مسجّلة.',
+    icon: Building2,
+  },
+  {
+    key: 'department',
+    label: 'قسم داخلي',
+    hint: 'دائرة أو قسم داخل المؤسسة.',
+    icon: Landmark,
+  },
+  {
+    key: 'person',
+    label: 'شخص',
+    hint: 'اسم شخص غير مرتبط بقسم أو جهة.',
+    icon: UserRound,
+  },
+] as const
+
 /**
  * Two creation paths sharing one form: save as DRAFT, or register immediately
- * with a manual official number for the numbering year.
+ * with a manual official number for the numbering year. An optional recipient
+ * is attached as a RECEIVER participant right after the document is created.
  */
 export function CreateDocumentDialog({ open, onOpenChange }: CreateDocumentDialogProps) {
   const canManageNumbering = useSessionStore((state) =>
     state.hasPermission(Permissions.NumberingManage),
+  )
+  const canAddRecipient = useSessionStore((state) =>
+    state.hasPermission(Permissions.DocumentEdit),
   )
 
   const typesQuery = useLookupEntries(LOOKUP_SLUGS.DocumentTypes)
@@ -84,7 +120,9 @@ export function CreateDocumentDialog({ open, onOpenChange }: CreateDocumentDialo
 
   const createMutation = useCreateDocumentMutation()
   const draftMutation = useCreateDraftDocumentMutation()
-  const pending = createMutation.isPending || draftMutation.isPending
+  const addRecipientMutation = useAddCreationRecipientMutation()
+  const pending =
+    createMutation.isPending || draftMutation.isPending || addRecipientMutation.isPending
 
   const {
     register,
@@ -109,10 +147,55 @@ export function CreateDocumentDialog({ open, onOpenChange }: CreateDocumentDialo
       externalReferenceNumber: '',
       externalDocumentDate: '',
       mode: canManageNumbering ? 'register' : 'draft',
+      addRecipient: false,
+      recipientType: 'external',
+      recipientOrganizationId: '',
+      recipientDepartmentId: '',
+      recipientPersonName: '',
     },
   })
 
   const mode = useWatch({ control, name: 'mode' })
+  const addRecipient = useWatch({ control, name: 'addRecipient' })
+  const recipientType = useWatch({ control, name: 'recipientType' })
+
+  const [recipientSearch, setRecipientSearch] = useState('')
+  const debouncedRecipientSearch = useDebouncedValue(recipientSearch)
+
+  const recipientOrganizationsQuery = useExternalOrganizations(
+    {
+      page: 1,
+      pageSize: 20,
+      search: debouncedRecipientSearch.trim() || undefined,
+    },
+    {
+      enabled: open && canAddRecipient && addRecipient && recipientType === 'external',
+    },
+  )
+
+  const recipientDepartmentsQuery = useDepartmentOptions({
+    enabled: open && canAddRecipient && addRecipient && recipientType === 'department',
+  })
+
+  const recipientOrganizationOptions = useMemo(
+    () =>
+      (recipientOrganizationsQuery.data?.items ?? []).map((organization) => ({
+        value: organization.externalOrganizationId,
+        label: `${organization.nameAr} · ${organization.code}`,
+      })),
+    [recipientOrganizationsQuery.data],
+  )
+
+  const recipientDepartmentOptions = useMemo(
+    () =>
+      (recipientDepartmentsQuery.data ?? [])
+        .filter((department) => department.isActive)
+        .map((department) => ({
+          value: department.departmentId,
+          label: `${department.nameAr} · ${department.code}`,
+        })),
+    [recipientDepartmentsQuery.data],
+  )
   const mutationError = mode === 'register' ? createMutation.error : draftMutation.error
   // The conflict is surfaced on the official-number field; repeating it in the
   // form-level banner would show the same message twice.
@@ -134,23 +217,57 @@ export function CreateDocumentDialog({ open, onOpenChange }: CreateDocumentDialo
       priorityLevelId: Number(values.priorityLevelId),
     }
 
+    const recipientRequest =
+      values.addRecipient && canAddRecipient
+        ? {
+            roleId: PARTICIPANT_ROLE.Receiver,
+            isPrimary: true,
+            notes: null,
+            ...(values.recipientType === 'external'
+              ? { externalOrganizationId: values.recipientOrganizationId }
+              : values.recipientType === 'department'
+                ? { internalDepartmentId: values.recipientDepartmentId }
+                : { personName: values.recipientPersonName.trim() }),
+          }
+        : null
+
     try {
-      if (values.mode === 'register') {
-        await createMutation.mutateAsync({
-          ...shared,
-          officialNumberText: values.officialNumberText.trim(),
-          numberingYear: Number(values.numberingYear),
-        })
-        toast.success(`تم تسجيل الوثيقة برقم ${values.officialNumberText.trim()}.`)
+      const created =
+        values.mode === 'register'
+          ? await createMutation.mutateAsync({
+              ...shared,
+              officialNumberText: values.officialNumberText.trim(),
+              numberingYear: Number(values.numberingYear),
+            })
+          : await draftMutation.mutateAsync({
+              ...shared,
+              documentDate: values.documentDate || null,
+              externalReferenceNumber: values.externalReferenceNumber.trim() || null,
+              externalDocumentDate: values.externalDocumentDate || null,
+            })
+
+      const baseMessage =
+        values.mode === 'register'
+          ? `تم تسجيل الوثيقة برقم ${values.officialNumberText.trim()}.`
+          : 'تم حفظ الوثيقة كمسودة.'
+
+      if (!recipientRequest) {
+        toast.success(baseMessage)
       } else {
-        await draftMutation.mutateAsync({
-          ...shared,
-          documentDate: values.documentDate || null,
-          externalReferenceNumber: values.externalReferenceNumber.trim() || null,
-          externalDocumentDate: values.externalDocumentDate || null,
-        })
-        toast.success('تم حفظ الوثيقة كمسودة.')
+        try {
+          await addRecipientMutation.mutateAsync({
+            documentId: created.documentId,
+            request: recipientRequest,
+          })
+          toast.success(`${baseMessage} وأُضيف المستلم.`)
+        } catch (recipientError) {
+          // The document already exists; keep it and report only the recipient failure.
+          toast.error(
+            `أُنشئت الوثيقة، لكن تعذّر إضافة المستلم: ${toArabicErrorMessage(recipientError)}`,
+          )
+        }
       }
+
       onOpenChange(false)
     } catch (error) {
       if (error instanceof ApiError && error.code === 'Numbering.OfficialNumberTaken') {
@@ -175,7 +292,7 @@ export function CreateDocumentDialog({ open, onOpenChange }: CreateDocumentDialo
       open={open}
       onOpenChange={onOpenChange}
       title="وثيقة جديدة"
-      description="احفظ الوثيقة كمسودة لتسجيلها لاحقًا، أو سجّلها فورًا برقم رسمي. تُنسب الوثيقة إلى قسمك الأساسي تلقائيًا."
+      description="احفظ الوثيقة كمسودة لتسجيلها لاحقًا، أو سجّلها فورًا برقم رسمي. تُنسب الوثيقة إلى قسمك الأساسي تلقائيًا، ويمكنك إضافة مستلم اختياري الآن."
       size="lg"
       footer={
         <>
@@ -415,6 +532,169 @@ export function CreateDocumentDialog({ open, onOpenChange }: CreateDocumentDialo
               />
             </FormField>
           </>
+        )}
+
+        {canAddRecipient && (
+          <div className="flex flex-col gap-3 rounded-lg border border-border bg-surface-muted/30 p-3 sm:col-span-2">
+            <Controller
+              control={control}
+              name="addRecipient"
+              render={({ field }) => (
+                <Checkbox
+                  checked={field.value}
+                  onCheckedChange={(checked) => {
+                    field.onChange(checked)
+                    clearErrors([
+                      'recipientOrganizationId',
+                      'recipientDepartmentId',
+                      'recipientPersonName',
+                    ])
+                  }}
+                  label="إضافة مستلم للوثيقة (اختياري)"
+                  description="يُسجَّل كمشارك أساسي بدور «مستلم» فور إنشاء الوثيقة."
+                  disabled={pending}
+                />
+              )}
+            />
+
+            {addRecipient && (
+              <div className="flex flex-col gap-3">
+                <div
+                  role="radiogroup"
+                  aria-label="نوع المستلم"
+                  className="grid gap-2 sm:grid-cols-3"
+                >
+                  {RECIPIENT_TARGET_OPTIONS.map((option) => {
+                    const Icon = option.icon
+                    return (
+                      <button
+                        key={option.key}
+                        type="button"
+                        role="radio"
+                        aria-checked={recipientType === option.key}
+                        onClick={() => {
+                          setValue('recipientType', option.key, {
+                            shouldValidate: false,
+                          })
+                          clearErrors([
+                            'recipientOrganizationId',
+                            'recipientDepartmentId',
+                            'recipientPersonName',
+                          ])
+                        }}
+                        disabled={pending}
+                        className={modeCardClass(recipientType === option.key)}
+                      >
+                        <span className="flex items-center gap-1.5 text-sm font-medium text-foreground">
+                          <Icon className="size-4" aria-hidden />
+                          {option.label}
+                        </span>
+                        <span className="text-xs text-muted">{option.hint}</span>
+                      </button>
+                    )
+                  })}
+                </div>
+
+                {recipientType === 'external' && (
+                  <>
+                    <FormField
+                      label="البحث في الجهات الخارجية"
+                      htmlFor="document-recipient-search"
+                    >
+                      <Input
+                        id="document-recipient-search"
+                        placeholder="ابحث بالاسم أو الرمز…"
+                        startIcon={<Search className="size-4" aria-hidden />}
+                        value={recipientSearch}
+                        onChange={(event) => setRecipientSearch(event.target.value)}
+                        disabled={pending}
+                      />
+                    </FormField>
+
+                    <FormField
+                      label="الجهة المستلمة"
+                      required
+                      error={errors.recipientOrganizationId?.message}
+                    >
+                      <Controller
+                        control={control}
+                        name="recipientOrganizationId"
+                        render={({ field }) => (
+                          <Select
+                            value={field.value || undefined}
+                            onValueChange={field.onChange}
+                            options={recipientOrganizationOptions}
+                            disabled={
+                              pending || recipientOrganizationsQuery.isLoading
+                            }
+                            invalid={Boolean(errors.recipientOrganizationId)}
+                            placeholder={
+                              recipientOrganizationsQuery.isLoading
+                                ? 'جارٍ التحميل…'
+                                : 'اختر الجهة…'
+                            }
+                            aria-label="الجهة المستلمة"
+                          />
+                        )}
+                      />
+                    </FormField>
+
+                    {recipientOrganizationsQuery.isSuccess &&
+                      recipientOrganizationOptions.length === 0 && (
+                        <p className="text-xs text-muted">
+                          لا توجد جهات خارجية مطابقة. تُدار الجهات الخارجية من تبويب
+                          «الجهات الخارجية» في سجل الوثائق.
+                        </p>
+                      )}
+                  </>
+                )}
+
+                {recipientType === 'department' && (
+                  <FormField
+                    label="القسم المستلم"
+                    required
+                    error={errors.recipientDepartmentId?.message}
+                  >
+                    <Controller
+                      control={control}
+                      name="recipientDepartmentId"
+                      render={({ field }) => (
+                        <Select
+                          value={field.value || undefined}
+                          onValueChange={field.onChange}
+                          options={recipientDepartmentOptions}
+                          disabled={pending || recipientDepartmentsQuery.isLoading}
+                          invalid={Boolean(errors.recipientDepartmentId)}
+                          placeholder={
+                            recipientDepartmentsQuery.isLoading
+                              ? 'جارٍ التحميل…'
+                              : 'اختر القسم…'
+                          }
+                          aria-label="القسم المستلم"
+                        />
+                      )}
+                    />
+                  </FormField>
+                )}
+
+                {recipientType === 'person' && (
+                  <FormField
+                    label="اسم المستلم"
+                    required
+                    error={errors.recipientPersonName?.message}
+                    htmlFor="document-recipient-person"
+                  >
+                    <Input
+                      id="document-recipient-person"
+                      placeholder="مثال: أحمد محمد علي"
+                      invalid={Boolean(errors.recipientPersonName)}
+                      {...register('recipientPersonName')}
+                    />
+                  </FormField>
+                )}
+              </div>
+            )}
+          </div>
         )}
 
         {mutationError && !officialNumberConflict && (

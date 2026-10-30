@@ -30,7 +30,7 @@ error handling, and form/dialog UI.
 | Slice Folder | Backend Endpoints & CQRS Commands | Key Domain Rules & Error Handling | State |
 | --- | --- | --- | --- |
 | `auth/` | `POST /api/auth/login`, `POST /api/auth/change-password` (+ `register` out of scope) | JWT storage and replacement; `Identity.InvalidCredentials`, `Identity.UserInactive`, `Identity.CurrentPasswordIncorrect`, `Identity.NewPasswordSameAsOld` rendered via the Arabic error catalog | ✅ Implemented (login/logout/guard/change-password) |
-| `document-create/` | `POST /api/documents`, `POST /api/documents/drafts` | Mode-aware form: draft or registered with official number + numbering year; `409 Numbering.OfficialNumberTaken` attaches to the official-number field; `Correspondence.TitleEmpty`/`TypeCodeEmpty` are Arabic-validated client-side | ✅ Implemented (Phase 2) |
+| `document-create/` | `POST /api/documents`, `POST /api/documents/drafts`, `POST /api/documents/{id}/participants` | Mode-aware form: draft or registered with official number + numbering year; `409 Numbering.OfficialNumberTaken` attaches to the official-number field; `Correspondence.TitleEmpty`/`TypeCodeEmpty` are Arabic-validated client-side; optional recipient posted after creation as a primary RECEIVER participant (`DOCUMENT_EDIT`), kept document on participant failure | ✅ Implemented (Phase 2 + optional recipient) |
 | `document-manage/` | `PUT /api/documents/{id}`, `POST .../register`, `POST .../participants`, `POST .../cancel` | Draft-only edit/register; registry-allocated number; one target per participant and one external party per document; cancel requires a reason and rejects active movements | ✅ Implemented (Phase 3) |
 | `document-access-grant/` | `POST /api/documents/{id}/access-grants`, `DELETE .../access-grants/{grantId}` | `ACCESS_GRANT_MANAGE`; access levels VIEW/DOWNLOAD/FORWARD/MANAGE; picker shows active users only; optional future expiry; grantee label survives search; revoke keeps the record (the DELETE endpoint takes no reason, so the dialog only confirms) | ✅ Implemented (Phase 4) |
 | `numbering-manage/` | `/api/numbering/registries` CRUD + activate; `POST .../numbers/issue`, `.../numbers/{numberId}/cancel\|replace`, `.../numbers/department-registration` | `NUMBERING_MANAGE`; draft-only issue (moves to REGISTERED); `Numbering.OfficialNumberTaken` shown in-dialog; cancel/replace require a reason; department registration requires an active department-scoped registry | ✅ Implemented (Phase 5) |
@@ -63,7 +63,7 @@ error handling, and form/dialog UI.
 | `employee-manage/` | ✅ Implemented (create/edit, activate/deactivate, department-aware form) |
 | `department-manage/` | Implemented: create/edit/reparent/manager/notes/external policy and active-status writes. |
 | `institution-settings-manage/` | Implemented: explicit singleton update with central Diwan/numbering/responsible-employee fields. |
-| `document-create/` | ✅ Implemented (draft + immediate registration dialog with lookup-driven fields) |
+| `document-create/` | ✅ Implemented (draft + immediate registration dialog with lookup-driven fields; optional recipient participant added 2026-10-30) |
 | `document-manage/` | ✅ Implemented (Phase 3: draft edit, register from registry, participant insert, cancel with reason) |
 | `document-access-grant/` | ✅ Implemented (Phase 4: add-grant dialog over the identity-options user picker, revoke confirmation, grant-key invalidation) |
 | `numbering-manage/` | ✅ Implemented (Phase 5: registry create/edit/activate and issue/cancel/replace/department-registration dialogs; Module 04 Phase 2 added the form's live pattern preview and stricter token validation) |
@@ -77,6 +77,7 @@ error handling, and form/dialog UI.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-10-30 | agent | Follow-up: `document-create` can now attach an optional recipient (external organization, internal department, or person) at creation time — the dialog creates the document first, then posts a primary RECEIVER participant; a participant failure keeps the document and reports only the recipient error. |
 | 2026-10-30 | agent | Module 04 Phase 5: `numbering-manage`'s registry form keeps its own department in the scope select after that department is deactivated (disabled, labelled «(موقوف)») instead of rendering a blank select; manager and read-only flows verified in-browser. |
 | 2026-10-29 | agent | Module 04 Phase 2: `numbering-manage`'s registry form now previews the next number from the typed template and rejects unknown tokens or a missing `{SEQ}` with Arabic messages; verified in-browser. |
 | 2026-10-29 | agent | Module 09: implemented `audit-manage` — checkpoint and integrity-check mutations, their Zod schemas (optional positive ids, range ordering), and the dialogs that keep the pass/fail result in place and map the 404/409 domain errors through the Arabic catalog. |

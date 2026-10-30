@@ -1,7 +1,15 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { documentKeys, type DocumentResponse } from '@/entities/document'
+import {
+  documentKeys,
+  type DocumentParticipantResponse,
+  type DocumentResponse,
+} from '@/entities/document'
 import { httpClient } from '@/shared/api'
-import type { CreateDocumentRequest, CreateDraftDocumentRequest } from '../model/types'
+import type {
+  CreateDocumentRecipientRequest,
+  CreateDocumentRequest,
+  CreateDraftDocumentRequest,
+} from '../model/types'
 
 /** `POST /api/documents` — registered immediately with the supplied official number. */
 export function useCreateDocumentMutation() {
@@ -28,6 +36,31 @@ export function useCreateDraftDocumentMutation() {
       return data
     },
     onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: documentKeys.lists() })
+    },
+  })
+}
+
+/** `POST /api/documents/{documentId}/participants` — attaches the optional recipient after creation. */
+export function useAddCreationRecipientMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({
+      documentId,
+      request,
+    }: {
+      documentId: string
+      request: CreateDocumentRecipientRequest
+    }): Promise<DocumentParticipantResponse> => {
+      const { data } = await httpClient.post<DocumentParticipantResponse>(
+        `/documents/${documentId}/participants`,
+        request,
+      )
+      return data
+    },
+    onSuccess: (_participant, { documentId }) => {
+      void queryClient.invalidateQueries({ queryKey: documentKeys.detail(documentId) })
       void queryClient.invalidateQueries({ queryKey: documentKeys.lists() })
     },
   })

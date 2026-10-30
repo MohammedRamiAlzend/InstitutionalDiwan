@@ -475,7 +475,8 @@ See [`README.md`](README.md) “UI / design contract” and [`src/app/styles/REA
    (`GET /api/employees?departmentId=&includeSubDepartments=`); write actions and employee nodes
    inside the tree pending
 7. `entities/document` — ✅ done (Phase 1); `pages/documents` registry + `document-create` — ✅ done
-   (Phase 2); `features/document-manage` + `pages/documents` details (participants, status history,
+   (Phase 2; the dialog also takes an optional recipient — external organization, internal department,
+   or person — posted as a primary RECEIVER participant right after creation); `features/document-manage` + `pages/documents` details (participants, status history,
    timeline, draft-edit/register/participant/cancel) — ✅ done (Phase 3); `features/document-access-grant`
    + the `grants` tab — ✅ done (Phase 4); `entities/numbering-registry` + `features/numbering-manage`
    + `pages/numbering` + the document numbers tab — ✅ done (Phase 5); `entities/movement` +

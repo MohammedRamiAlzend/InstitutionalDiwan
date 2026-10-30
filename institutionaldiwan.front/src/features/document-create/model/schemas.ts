@@ -29,10 +29,42 @@ const documentFields = {
     .max(100, 'الرقم المرجعي الخارجي يتجاوز الحد الأقصى للأحرف.'),
   externalDocumentDate: z.string(),
   mode: z.enum(['draft', 'register']),
+  addRecipient: z.boolean(),
+  recipientType: z.enum(['external', 'department', 'person']),
+  recipientOrganizationId: z.string(),
+  recipientDepartmentId: z.string(),
+  recipientPersonName: z
+    .string()
+    .trim()
+    .max(200, 'اسم المستلم يتجاوز الحد الأقصى للأحرف.'),
 }
 
 /** Shared form for both `POST /api/documents` and `POST /api/documents/drafts`. */
 export const createDocumentSchema = z.object(documentFields).superRefine((values, ctx) => {
+  if (values.addRecipient) {
+    if (values.recipientType === 'external' && !values.recipientOrganizationId) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['recipientOrganizationId'],
+        message: 'اختر الجهة الخارجية المستلمة.',
+      })
+    }
+    if (values.recipientType === 'department' && !values.recipientDepartmentId) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['recipientDepartmentId'],
+        message: 'اختر القسم المستلم.',
+      })
+    }
+    if (values.recipientType === 'person' && !values.recipientPersonName.trim()) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['recipientPersonName'],
+        message: 'اسم المستلم مطلوب.',
+      })
+    }
+  }
+
   if (values.mode !== 'register') return
 
   if (!values.officialNumberText) {
