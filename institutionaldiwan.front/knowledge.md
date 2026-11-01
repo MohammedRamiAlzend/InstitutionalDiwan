@@ -51,6 +51,17 @@
 > verdict badges), `features/audit-manage` (checkpoint + integrity check), `widgets/audit-log-table`
 > (log grid + report list), and `/audit` (`?panel=logs\|integrity`) behind `AUDIT_VIEW` with
 > checkpoint/check behind `AUDIT_MANAGE`; verified in-browser for both a manager and a view-only role.
+> Module 06 Attachments is complete: `entities/document-file` (list, blob download, checksum verify),
+> `features/attachment-upload` (zod pre-flight limits, atomic upload, new version, versions dialog,
+> archive dialog, verify dialog with local SHA-256), `widgets/document-attachments-panel` (client-mode
+> grid with row menu, filters, column chooser) and the `files` tab on `/documents/:documentId` — with
+> no backend change and the per-type limits mirrored in `shared/config/attachmentLimits.ts`. Phase 5
+> verified it in-browser in three roles and proved the access-level rule live: a VIEW-only grant lists
+> and verifies (200) but is refused download and upload with «لا تملك صلاحية الوصول إلى هذه الوثيقة.»
+> (403), while a MANAGE grant on another document makes the same calls succeed; `FileTypeNotFound`,
+> `VersionNotFound` and `ChangeNotesTooLong` were reached by direct API calls because the UI prevents
+> them, and a permanent fixture document (two-version scan, archived signature, Office attachment)
+> stays in the dev database.
 > `npm run build`/`npm run lint` pass and the API was exercised live (login, stale-token rejection,
 > department edit, settings, pickers, registry creation).
 >
@@ -62,7 +73,7 @@
 
 | Area | As-is (today) | To-be (before feature work) |
 | --- | --- | --- |
-| Application code | Module 01 department management/hierarchy/settings; Module 02 auth/admin pages; Module 03 document entity reads, Arabic errors, `/documents` registry, create draft/registered, the `/documents/:documentId` details page with participants/status history/timeline plus draft-edit/register/participant/cancel, the permission-gated access-grants tab (grant/revoke), the numbers tab (issue/cancel/replace/department registration/history), `/numbering` (tabbed registry grid + department register book, both shared grids with URL-backed filters), the `/movements` inbox/outbox page with the document-details movements tab (open/send/receive/complete/reject/return/redirect/close/cancel behind `DOCUMENT_EDIT`), the `/documents?tab=organizations` external-correspondent admin tab (create/edit/deactivate/activate behind `DOCUMENT_EDIT`), and the Module 04 numbering model/template/scope work; shared/app foundation, employee picker, and lookup catalogs (incl. the document, participant, organization, and movement catalogs) | Module 03 attachments tab; other module pages pending |
+| Application code | Module 01 department management/hierarchy/settings; Module 02 auth/admin pages; Module 03 document entity reads, Arabic errors, `/documents` registry, create draft/registered, the `/documents/:documentId` details page with participants/status history/timeline plus draft-edit/register/participant/cancel, the permission-gated access-grants tab (grant/revoke), the numbers tab (issue/cancel/replace/department registration/history), `/numbering` (tabbed registry grid + department register book, both shared grids with URL-backed filters), the `/movements` inbox/outbox page with the document-details movements tab (open/send/receive/complete/reject/return/redirect/close/cancel behind `DOCUMENT_EDIT`), the `/documents?tab=organizations` external-correspondent admin tab (create/edit/deactivate/activate behind `DOCUMENT_EDIT`), and the Module 04 numbering model/template/scope work, and the Module 06 attachments `files` tab (list, download, atomic upload, versions, archive, checksum verify); shared/app foundation, employee picker, and lookup catalogs (incl. the document, participant, organization, and movement catalogs) | Other module pages pending |
 | `package.json` | React/shared/auth stack (router, query, zustand, axios, RHF, zod, sonner, Tailwind v4) plus shared UI/Mermaid dependencies | Remaining packages per slice (see [`README.md`](README.md)) |
 | `vite.config.ts` proxy | ✅ `@` alias + env-driven `/api` and `/hubs` proxies (`DEV_PROXY_TARGET` → `ASPNETCORE_HTTPS_PORT` → `https://localhost:7126`) | Optional local HTTPS certificate; production uses the reverse proxy ([`DEPLOYMENT.md`](DEPLOYMENT.md)) |
 | Dev configuration | ✅ `.env.example` committed; `.env` is git-ignored | — |
@@ -481,7 +492,8 @@ See [`README.md`](README.md) “UI / design contract” and [`src/app/styles/REA
    + the `grants` tab — ✅ done (Phase 4); `entities/numbering-registry` + `features/numbering-manage`
    + `pages/numbering` + the document numbers tab — ✅ done (Phase 5); `entities/movement` +
    `features/movement-routing` + `widgets/movement-inbox` + `pages/movements` + the document movements
-   tab — ✅ done (Phase 6); the attachments panel (`entities/document-file`) pending
+   tab — ✅ done (Phase 6); Module 06 attachments — ✅ done (`entities/document-file` +
+   `features/attachment-upload` + `widgets/document-attachments-panel` + the `files` tab, Phases 0–5)
 8. `features/external-organization-manage` + `widgets/external-organizations-table` + the
    `/documents?tab=organizations` tab (Module 03 Phase 7) — ✅ done
 9. `entities/audit-log` + `features/audit-manage` + `widgets/audit-log-table` + `pages/audit`

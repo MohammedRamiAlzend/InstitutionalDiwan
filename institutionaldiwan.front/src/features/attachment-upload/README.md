@@ -1,9 +1,10 @@
 # `src/features/attachment-upload` — Upload / Version / Archive Document Files (Module 06)
 
 > **Status:** ✅ Atomic upload implemented (2026-11-01, Module 06 Phase 3) and version upload,
-> archiving, and the checksum-verify dialog implemented (2026-11-01, Module 06 Phase 4). Neither
-> phase was browser-verified — the user waived both passes; the validation rules were exercised in
-> Node instead.
+> archiving, and the checksum-verify dialog implemented (2026-11-01, Module 06 Phase 4). Both passes
+> were waived at the time — the validation rules were exercised in Node instead — and every dialog was
+> verified in-browser in Module 06 Phase 5. The two upload-dialog defects that pass recorded were fixed
+> and re-verified in the browser the same day.
 
 ## Purpose
 
@@ -66,6 +67,13 @@ size) is pre-checked here first, so a doomed file never leaves the browser.
 - A failure is **not** toasted separately: the axios interceptor normalizes it to an `ApiError` and
   the dialog renders `toArabicErrorMessage` in a form-level banner, which keeps server-side rejections
   (`FileTypeInactive`, `SignatureMismatch`, access denials) next to the field they concern.
+- Because that banner reads `uploadMutation.error`, `startOver` resets the mutation too. The dialog is
+  mounted for as long as the caller can manage files, so a rejection from a previous attempt would
+  otherwise greet the next open — the form fields would be clean while the banner still named the old
+  failure.
+- Changing the file type re-validates **a picked file only**. Calling `trigger` on an empty pick marks
+  the field touched and prints «اختر ملفًا للرفع» for a field the user has not used yet; submitting the
+  form still reports the missing file, because that is where the requirement belongs.
 - A new version sends **only** the bytes and the notes. The file type, title, and primary-scan flag are
   properties of the file, and the version number is assigned by the server — the dialog prints
   `currentVersionNumber + 1` as an expectation, never as an input.
@@ -97,12 +105,16 @@ size) is pre-checked here first, so a doomed file never leaves the browser.
 | `DocumentVersionsDialog` with per-version download | ✅ Implemented (Phase 4) |
 | `ArchiveFileDialog` confirmation | ✅ Implemented (Phase 4) |
 | `VerifyChecksumDialog` with three named digests | ✅ Implemented (Phase 4) |
-| Browser verification | ❌ Waived by the user for Phases 3–4. The validation rules were exercised in Node instead (14 cases in Phase 3, 21 in Phase 4 including the version schema and `currentVersionOf`). Untouched by that harness: the dialogs' own rendering, progress bars, toasts, the live verify read, and the archived-row gating. |
+| First-upload dialog reopening clean after a server rejection | ✅ Fixed (2026-11-01, after Phase 5) — `startOver` resets the mutation; verified by a real 400 `Attachments.SignatureMismatch` (a `.pdf` with text bytes) followed by close and reopen: no banner, no file, no progress bar |
+| File-type change not flagging an untouched file field | ✅ Fixed (2026-11-01, after Phase 5) — re-validation is gated on a picked file; with a file picked the switch still reports «الامتداد .pdf غير مسموح…», and submitting with nothing picked still reports «اختر ملفًا للرفع» |
+| Browser verification | ✅ Verified in-browser (Phase 5). The Phase 3–4 passes were waived (validation rules checked in Node instead: 14 cases, then 21), and Phase 5 covered what that harness could not — all five dialogs rendering, upload progress, the local-vs-recorded checksum compare, the live verify read, per-version download, the archived-row gating, and the Arabic toasts. The >51 MB request cap was likewise reached in the browser; `FileTypeNotFound`, `VersionNotFound` and `ChangeNotesTooLong` are prevented by these schemas, so they were probed by direct API calls. The two upload-dialog defects Phase 5 recorded were fixed and re-verified the same day. |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-01 | agent | Fixed the two upload-dialog defects Phase 5 recorded: `startOver` now resets the upload mutation, so a server rejection no longer survives close-and-reopen (the dialog stays mounted while the caller can manage files), and the file-type `onValueChange` re-validates only when a file is picked, so changing the type no longer prints «اختر ملفًا للرفع» on an untouched field. Verified in the browser with a real 400 `Attachments.SignatureMismatch`, plus the two cases the guards must not break — a picked file still re-validates against the new type, and submitting with nothing picked still reports the missing file. |
+| 2026-11-01 | agent | Module 06 Phase 5: browser verification flipped to ✅ — the upload dialog, versions dialog, version upload, archive dialog and verify dialog were all exercised in the browser against the permanent fixture document, including the Arabic 403 from a VIEW-only grant and the successful MANAGE contrast. Documented that `FileTypeNotFound` / `VersionNotFound` / `ChangeNotesTooLong` are unreachable from these forms and were probed by direct API calls. No code change. |
 | 2026-11-01 | agent | Module 06 Phase 4: added `uploadVersion` and `archiveFile` with their mutations, the shared `fileRejection` rule table and `buildUploadVersionSchema(fileTypeId)`, the `useLocalChecksum` hook and `FilePickSummary` extracted from the first-upload dialog, and the four dialogs — version upload (next-version number, archived refusal), versions list with per-version download, archive confirmation, and checksum verify with three named digests. The plan's `ArchiveFileButton` became `ArchiveFileDialog` because these actions live in the row context menu, not in a button. |
 | 2026-11-01 | agent | Module 06 Phase 3: implemented the slice — `uploadInitial`, `useUploadInitialMutation`, `uploadAttachmentSchema` (title/type/file rules plus the extension and size pre-checks against the limit mirror, each naming its `Attachments.*` code), and `UploadAttachmentDialog` with the type-driven `accept` and limits text, local SHA-256, upload progress, and the post-upload checksum comparison. |
 | 2026-10-25 | Cursor | Added attachment-upload feature docs for live Module 06 endpoints. |

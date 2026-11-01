@@ -116,6 +116,8 @@ export function UploadAttachmentDialog({
     setValue('fileTypeId', fileTypeId)
     checksum.clear()
     resetResult()
+    // The dialog stays mounted while closed, so the last failure would otherwise greet the next open.
+    uploadMutation.reset()
   }
 
   const selectFile = (file: File | null, field: { onChange: (value: File | null) => void }) => {
@@ -233,8 +235,10 @@ export function UploadAttachmentDialog({
                   onValueChange={(value) => {
                     field.onChange(value)
                     resetResult()
-                    // Limits and the accepted extensions follow the type, so re-check the picked file.
-                    void trigger(['file', 'fileTypeId'])
+                    // Limits and the accepted extensions follow the type, so a picked file must be
+                    // re-checked. Without a pick there is nothing to check: re-validating here would
+                    // flag «اختر ملفًا للرفع» on a field the user has not used yet.
+                    if (selectedFile) void trigger(['file', 'fileTypeId'])
                   }}
                   options={typeOptions}
                   disabled={isBusy || fileTypesQuery.isLoading}

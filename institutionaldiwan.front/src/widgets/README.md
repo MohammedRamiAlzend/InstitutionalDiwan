@@ -4,8 +4,8 @@
 > document registry, numbering registry, movement inbox, and external correspondents grid, the
 > Module 06 attachments grid, and the Module 09 audit log/integrity tables are implemented. The
 > hierarchy includes department writes, lazy employee branches, paged rosters, and a chart. The
-> Module 03 and Module 09 widgets are verified in-browser; the hierarchy's final browser
-> verification, the attachments panel's browser pass, and Module 02 audit fixes remain outstanding.
+> Module 03, Module 06 and Module 09 widgets are verified in-browser; the hierarchy's final browser
+> verification and Module 02 audit fixes remain outstanding.
 > Remaining widgets are documentation only. `/change-password` is standalone.
 
 ## Purpose
@@ -69,7 +69,7 @@ browser.
 | `movement-inbox/` | ✅ Implemented and verified in-browser (Phase 6) |
 | `external-organizations-table/` | ✅ Implemented and verified in-browser (Phase 7) |
 | `audit-log-table/` | ✅ Implemented and verified in-browser (Module 09: `AuditLogTable` + `AuditIntegrityTable`, manager actions hidden for view-only roles) |
-| `document-attachments-panel/` | ✅ Grid, filters, download, upload, versions, archive, and verify implemented (Module 06 Phases 2–4); browser verification skipped at the user's request for all three phases. |
+| `document-attachments-panel/` | ✅ Grid, filters, download, upload, versions, archive, and verify implemented (Module 06 Phases 2–4) and browser-verified in Phase 5 across manager, `USER`, and read-only roles. |
 | `movement-timeline/` | Deferred (the document movements tab renders the step chain today) |
 | `visualization-panel/` | ❌ Not implemented (`shared/ui/mermaid-view` is now live, so the cross-module switcher can follow) |
 | `notification-center/` | ❌ Blocked on Module 10 / SignalR |

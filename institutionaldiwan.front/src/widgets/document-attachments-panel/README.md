@@ -1,8 +1,8 @@
 # institutionaldiwan.front / src/widgets/document-attachments-panel — Document Files Panel
 
 > **Status:** ✅ Grid, filters, download, upload, versions, archiving, and verify are implemented
-> (2026-11-01, Module 06 Phases 2–4). Browser verification was skipped at the user's request for all
-> three phases, so the acceptance pass is outstanding.
+> (2026-11-01, Module 06 Phases 2–4) and verified in-browser in three roles (2026-11-01, Module 06
+> Phase 5), which had waived the per-phase passes.
 
 ## Purpose
 
@@ -71,12 +71,15 @@ a file's version history, archiving, and checksum verification.
 | Grid, filters, row menu, download | ✅ Implemented (Module 06 Phase 2) |
 | Upload action + dialog mount | ✅ Implemented (Module 06 Phase 3) |
 | Versions, upload-version, archive, verify actions | ✅ Implemented (Module 06 Phase 4) |
-| Browser verification | ❌ Skipped at the user's request (Phases 2–4) — the populated grid, the Arabic download name, the URL-backed filters, the empty state, and all five dialogs are unverified in a browser |
+| Browser verification | ✅ Verified in-browser (Module 06 Phase 5) in three roles: manager (populated grid, Arabic download names, URL-backed filters, search/sort, column chooser persisted, both empty states, all five dialogs), `USER` with `DOCUMENT_EDIT` (write UI visible but refused per access level with the Arabic 403), and read-only (no write buttons, download + verify only) |
+| Known issues | The no-match empty area offers «رفع ملف» because `DataTable` builds one empty view for both "no files" and "no match" — the only item left from the Phase 5 list: the two upload-dialog issues (stale server error on reopen, premature «اختر ملفًا للرفع») were fixed in `@/features/attachment-upload` the same day |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-01 | agent | Cleared two of the three known issues from `UploadAttachmentDialog` (fix in `@/features/attachment-upload`, no widget code): a server rejection no longer stays visible after close-and-reopen, and changing the file type no longer flags an untouched file field. Both re-verified in the browser against the scratch document — a real 400 `Attachments.SignatureMismatch` closed and reopened clean, and a picked `.pdf` still rejected against «توقيع». Header status updated to match the Phase 5 verification. |
+| 2026-11-01 | agent | Module 06 Phase 5: browser verification flipped to ✅ after the three-role pass on the permanent fixture document (`d6b111be-…`): grid, filters, search/sort, column chooser, both empty states, download of current and replaced versions with Arabic filenames, upload, new version, versions dialog, archive, and checksum verify all exercised; recorded the two open UX issues (stale dialog error, premature empty-file message) and the clipboard-denial harness limit. No code change. |
 | 2026-11-01 | agent | Module 06 Phase 4: renamed `canUpload` to `canManage` (three write actions now depend on it), completed the row menu with الإصدارات / التحقق من البصمة for every viewer and رفع إصدار / أرشفة for a manager on a live unarchived file, added one `rowAction` state that resolves the file from the live query, moved download-by-version to `downloadFileVersion` and current-version resolution to `currentVersionOf` in the entity so the dialogs share them. |
 | 2026-11-01 | agent | Module 06 Phase 3: added the `canUpload` prop, the «رفع ملف» toolbar button and empty-state action, and the `UploadAttachmentDialog` mount from `@/features/attachment-upload`; the grid already refetches because the upload mutation invalidates its query key. |
 | 2026-11-01 | agent | Module 06 Phase 2: implemented the panel — client-mode `DataTable` over `useDocumentFiles`, URL-backed status/file-type filters, ten columns with the checksum and timestamps hidden by default, a row menu that downloads the current version and copies the id / checksum / original name, and Arabic empty states that distinguish "no files" from "no match". |

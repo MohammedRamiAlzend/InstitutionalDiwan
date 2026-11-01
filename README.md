@@ -10,9 +10,13 @@
 > Numbering is complete (Phases 1–5: template model, `/numbering` tabs with URL-backed filters and
 > duplicate-scope warnings, shared-grid department register and document numbers, template
 > preview/lock, and manager plus read-only verification). Module 09 Audit has `/audit` logs and
-> integrity reports, and Module 05 Movements has its inbox/outbox page. Attachments (06) remain
-> planned. `npm run build` and `npm run lint` pass, and the SPA was exercised against the live API
-> throughout (login, session invalidation, departments, settings, documents, movements, numbering, audit).
+> integrity reports, and Module 05 Movements has its inbox/outbox page. Module 06 Attachments is
+> complete in the front end (Phases 0–5: the document `files` tab with list, download, atomic upload
+> with pre-flight limits and local SHA-256, new versions, archive, checksum verification, plus the
+> three-role matrix and the minimum-access-level sample). `npm run build` and `npm run lint` pass,
+> and the SPA was exercised against the live API
+> throughout (login, session invalidation, departments, settings, documents, movements, numbering,
+> audit, attachments).
 
 The unified institutional correspondence system: a clean-architecture ASP.NET Core 10 API that
 registers documents, allocates official numbers, routes them between departments, and keeps an
@@ -96,7 +100,7 @@ npm run lint
 | 03 — Correspondence | Documents (create/draft/update/register/participants/cancel/details/timeline), external organizations, access grants | Implemented. | Phases 0–8 done and browser-verified: picker access, document reads, Arabic errors, the `/documents` registry with document/draft creation, the details page (participants, status history, timeline, draft-edit/register/add-participant/cancel), the `grants` tab, the numbers tab (issue/cancel/replace/department registration/history), the `/movements` inbox/outbox page with the nine routing commands, the external-correspondent admin tab, and a role-matrix pass. Attachments tab pending. |
 | 04 — Numbering | Registries, central official numbers, department register books | Implemented. | Phases 1–5 done and browser-verified: template preview/validation constants, `/numbering` tabs (`?tab`) with URL-backed status/policy/scope filters and duplicate-scope warnings, the shared-grid department register book that keeps inactive departments and their history, the document numbers grid, and manager plus read-only (403) verification. |
 | 05 — Movements | Routing workflow and department inbox/outbox | Implemented. | Implemented and verified with Module 03 Phase 6: `/movements` inbox/outbox plus the document-details movements tab with the nine routing commands. |
-| 06 — Attachments | Metadata, versions, upload/download, checksum verification | Implemented. | Planned. |
+| 06 — Attachments | Metadata, versions, upload/download, checksum verification | Implemented. | Phases 0–5 done and browser-verified: the `files` tab on `/documents/:id` lists every file with its current version, size, original name and checksum (client-side search, filters, sorting, column chooser, both empty states), downloads current and replaced versions under their original Arabic names, uploads a new file atomically with pre-flight extension/size/empty checks and a local SHA-256, uploads a new version, archives, and verifies the stored checksum against a recomputed one. Write actions are gated by `DOCUMENT_EDIT` and by the per-document access level server-side (VIEW-only user gets the Arabic `Correspondence.DocumentAccessDenied` on download and upload; a MANAGE grant makes the same calls succeed). A permanent verification fixture document with a two-version scan, an archived signature and an Office attachment stays in the dev database. |
 | 07 — Archiving | Domain entities and lookups | Application/API not implemented. | Blocked on backend. |
 | 08 — Relations | Domain entities and lookups | Application/API not implemented. | Blocked on backend. |
 | 09 — Audit | Entity/action audit chain, search, checkpoints, integrity reports, scheduled maintenance | Implemented. | Implemented and verified: `/audit` logs and integrity reports behind `AUDIT_VIEW`, checkpoint/integrity actions behind `AUDIT_MANAGE`. |
@@ -105,8 +109,8 @@ npm run lint
 “Implemented and verified” means the code is present and was exercised against the live API;
 `dotnet test` (487 tests), `npm run build`, and `npm run lint` pass. Module 01 settings loads the
 existing singleton: read errors, including missing settings, show Arabic feedback and retry rather
-than creating or overwriting a record. Frontend Modules 03, 04, and 09 are implemented and
-browser-verified; Module 06 attachments and Modules 07/08/10 remain.
+than creating or overwriting a record. Frontend Modules 03, 04, 06, and 09 are implemented and
+browser-verified; Modules 07/08/10 remain.
 
 ## Conventions
 
@@ -153,6 +157,7 @@ have no `README.md` of their own yet — their content is documented in the encl
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-01 | agent | Module 06 front end closed (Phases 0–5, no backend change): `entities/document-file`, `features/attachment-upload` and `widgets/document-attachments-panel` went from documentation-only to implemented, the `files` tab on `/documents/:id` was activated, and the HTTP layer learned multipart uploads, blob downloads with `Content-Disposition` filename parsing and blob-encoded `ProblemDetails` normalization. Added the `Attachments.*` Arabic catalog, per-type limits mirrored in `shared/config/attachmentLimits.ts`, and SHA-256 in `shared/lib/crypto.ts` for local-vs-stored checksum comparison. Phase 5 verified all of it in-browser in three roles (manager, plain `USER`, read-only), proved the minimum-access-level case (a VIEW-only grant reads and verifies but gets `Correspondence.DocumentAccessDenied` on download and upload, while a MANAGE grant succeeds), reached the UI-unreachable errors (`FileTypeNotFound`, `VersionNotFound`, `ChangeNotesTooLong`) through direct API calls, and left a permanent fixture document with a two-version scan, an archived signature and an Office attachment in the dev database. `npm run lint`, `npm run build`, `dotnet build` and `dotnet test` (487) pass. |
 | 2026-10-30 | agent | The front-end create-document dialog gained an optional recipient field: users with `DOCUMENT_EDIT` can pick an external organization, an internal department, or a person, and the dialog attaches them as a primary RECEIVER participant right after creation (a participant failure keeps the document and reports only the recipient error). Verified in-browser; front build and lint pass. |
 | 2026-10-30 | agent | Closed Modules 03 and 04 in the front end: Module 03 Phases 6–8 (movements inbox/outbox plus the document movements tab, the external-correspondent admin tab, and a role-matrix pass) and Module 04 Phases 1–5 (template preview/validation, `/numbering` tabs with URL-backed filters and duplicate-scope warnings, the department register book and document numbers grids on the shared table, and manager plus read-only 403 verification). Fixed the registry form so a deactivated department stays visible, disabled, and labelled «(موقوف)» instead of blanking the scope select. Recorded Module 05 and Module 09 front-end status and refreshed the top status; 487 tests pass and the front build/lint pass. |
 | 2026-10-29 | Qoder | Module 03 Phase 5 (numbering): added `entities/numbering-registry` (registries/counters/department register), document number history/registry reads with `NumberStatusBadge`, `features/numbering-manage` (registry CRUD/activate; issue/cancel/replace/department registration), `widgets/numbering-registry-table`, the `/numbering` page, and the document-details numbers tab; activated the «الترقيم» nav item. Verified in-browser (registry lifecycle/counters, department register, issue `2026/000005`, department registration `DEP-2026-001`, duplicate `2026/000007` rejected in Arabic, replace `2026/000008`→`2026/000009`, cancel with reason, `USER`-role denial with 403 on direct writes). 487 tests pass and the front build/lint pass. |
