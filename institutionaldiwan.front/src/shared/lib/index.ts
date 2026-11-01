@@ -15,7 +15,7 @@ export {
 } from './columnPreferences'
 export type { ColumnPreferenceDefinition } from './columnPreferences'
 export { useDebouncedValue } from './useDebouncedValue'
-export { useTableState } from './useTableState'
+export { useTableState, MAX_PAGE_SIZE, MIN_PAGE_SIZE } from './useTableState'
 export type { SortDirection, TableState, TableStateOptions } from './useTableState'
 export { formatDate, formatDateTime } from './date'
 export { formatNumber, formatShortId, formatFileSize } from './format'

@@ -98,16 +98,20 @@ hardcode a translucent black.
 
 ### Motion
 
-`index.css` declares three shared entrance animations in `@theme`:
+`index.css` declares the shared entrance/exit animations in `@theme`:
 
 | Utility | Used by |
 | --- | --- |
-| `animate-overlay-in` | Dialog / modal backdrop fade-in (150 ms). |
-| `animate-content-in` | Dialog, dropdown, context menu, and select content entrance (180 ms). |
-| `animate-page-in` | The shell page container, re-keyed on every route path so each page fades up (220 ms). |
+| `animate-overlay-in` / `animate-overlay-out` | Dialog / modal backdrop fade (150 ms in, 120 ms out). |
+| `animate-content-in` / `animate-content-out` | Dialog, dropdown, context menu, and select surface (180 ms in, 140 ms out). |
+| `animate-page-in` | The shell page container and the department view body, each re-keyed on what changed (route path / selected view) — 220 ms fade-up. |
 
 These are the only motion primitives shared components may assume; feature code does not define its
-own keyframes.
+own keyframes. Exits are attached through Radix's state attribute —
+`animate-content-in data-[state=closed]:animate-content-out` — because `Presence` keeps the node
+mounted until the closing animation ends, and the variant selector
+(`.data-\[state\=closed\]\:animate-content-out[data-state=closed]`, specificity 0-2-0) outranks the
+plain entrance utility (0-1-0).
 
 The user can stop that motion from «إعدادات العرض» (see `widgets/app-shell`). The shell writes
 `html[data-motion]` (`on` / `off`, persisted as `diwan.motion`, seeded from
@@ -116,14 +120,18 @@ The user can stop that motion from «إعدادات العرض» (see `widgets/a
 ```css
 html[data-motion='off'] .animate-overlay-in,
 html[data-motion='off'] .animate-content-in,
-html[data-motion='off'] .animate-page-in { animation: none; }
+html[data-motion='off'] .animate-page-in,
+html[data-motion='off'] [data-state] { animation: none; }
 html[data-motion='off'] * { scroll-behavior: auto; transition-duration: 0s; }
 ```
 
 They sit outside `@layer base` on purpose: unlayered declarations beat the generated `animate-*`
-utilities, which a `@layer base` rule could never override. Loading spinners (`animate-spin`) keep
-turning — they report work in progress, not decoration, so a motion-free user still sees that a
-request is running.
+utilities, which a `@layer base` rule could never override. The `[data-state]` arm is needed because
+a variant-prefixed class token (`data-[state=closed]:animate-content-out`) is not matched by the
+plain `.animate-content-out` selector. With `animation: none` the computed duration is `0s`, so
+Radix `Presence` removes the popup immediately instead of waiting for an `animationend` that never
+comes. Loading spinners (`animate-spin`) keep turning — they report work in progress, not
+decoration, so a motion-free user still sees that a request is running.
 
 ### Density
 
@@ -172,6 +180,7 @@ Rules:
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-01 | agent | Added `animate-overlay-out` / `animate-content-out` keyframes and utilities for popup closes, extended the `data-motion='off'` kill rule with `[data-state]` so variant-prefixed exit classes are covered, and documented the specificity/Presence contract. |
 | 2026-11-01 | agent | Added `animate-page-in` for the shell page container and the unlayered `html[data-motion='off']` rules that stop entrance animations and colour transitions while leaving loading spinners running. |
 | 2026-10-27 | agent | Added the `html[data-density='compact']` root-scale rule backing the shell's `diwan.density` preference. |
 | 2026-10-27 | agent | Added the `--color-overlay` semantic token (light/dark) and shared overlay/content entrance animations used by dialogs, menus, and selects. |

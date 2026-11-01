@@ -30,7 +30,7 @@ export function isMenuAction(entry: MenuEntry): entry is MenuAction {
 }
 
 export const menuContentClass =
-  'z-50 min-w-52 overflow-hidden rounded-lg border border-border bg-surface p-1 text-foreground shadow-lg animate-content-in'
+  'z-50 min-w-52 overflow-hidden rounded-lg border border-border bg-surface p-1 text-foreground shadow-lg animate-content-in data-[state=closed]:animate-content-out'
 
 export const menuItemClass =
   'flex cursor-pointer select-none items-center gap-2 rounded-md px-2 py-1.5 text-sm outline-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 data-[highlighted]:bg-surface-muted'

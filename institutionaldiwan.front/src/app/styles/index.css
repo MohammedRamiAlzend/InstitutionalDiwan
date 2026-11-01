@@ -25,10 +25,14 @@
   --font-heading: 'Cairo', 'Readex Pro', 'Segoe UI', Tahoma, Arial, sans-serif;
 }
 
-/* Overlay, popover and page entrances shared by dialog, menu, select, and shell surfaces. */
+/* Overlay, popover and page entrances shared by dialog, menu, select, and shell surfaces.
+   The *-out pair only ever runs through `data-[state=closed]:`, which Radix surfaces
+   flip before Presence removes the node. */
 @theme {
   --animate-overlay-in: overlay-in 150ms ease-out;
+  --animate-overlay-out: overlay-out 120ms ease-in;
   --animate-content-in: content-in 180ms ease-out;
+  --animate-content-out: content-out 140ms ease-in;
   --animate-page-in: page-in 220ms ease-out;
 
   @keyframes overlay-in {
@@ -40,6 +44,15 @@
     }
   }
 
+  @keyframes overlay-out {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+
   @keyframes content-in {
     from {
       opacity: 0;
@@ -48,6 +61,17 @@
     to {
       opacity: 1;
       transform: translateY(0) scale(1);
+    }
+  }
+
+  @keyframes content-out {
+    from {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+    to {
+      opacity: 0;
+      transform: translateY(0.25rem) scale(0.98);
     }
   }
 
@@ -121,10 +145,13 @@
 
 /* Motion stopped from the display settings. These rules are deliberately outside
    @layer base so they win over the generated animate-* utilities.
+   `[data-state]` covers the Radix surfaces whose exit animation sits behind a
+   `data-[state=closed]:` variant, whose class token the plain utility selector misses.
    Loading spinners keep turning: they report work in progress, not decoration. */
 html[data-motion='off'] .animate-overlay-in,
 html[data-motion='off'] .animate-content-in,
-html[data-motion='off'] .animate-page-in {
+html[data-motion='off'] .animate-page-in,
+html[data-motion='off'] [data-state] {
   animation: none;
 }
 

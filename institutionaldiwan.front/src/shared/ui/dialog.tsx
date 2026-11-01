@@ -42,10 +42,10 @@ export function Dialog({
   return (
     <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
       <DialogPrimitive.Portal>
-        <DialogPrimitive.Overlay className="fixed inset-0 z-40 bg-overlay animate-overlay-in" />
+        <DialogPrimitive.Overlay className="fixed inset-0 z-40 bg-overlay animate-overlay-in data-[state=closed]:animate-overlay-out" />
         <DialogPrimitive.Content
           className={cn(
-            'fixed start-1/2 top-1/2 z-50 flex max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-xl border border-border bg-surface p-6 text-foreground shadow-xl animate-content-in',
+            'fixed start-1/2 top-1/2 z-50 flex max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-xl border border-border bg-surface p-6 text-foreground shadow-xl animate-content-in data-[state=closed]:animate-content-out',
             'rtl:translate-x-1/2',
             sizeClasses[size],
             className,

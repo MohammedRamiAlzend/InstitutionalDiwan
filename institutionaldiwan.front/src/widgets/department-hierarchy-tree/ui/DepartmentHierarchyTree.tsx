@@ -338,111 +338,115 @@ export function DepartmentHierarchyTree() {
         </div>
       </div>
 
-      {view === 'table' && (
-        <DepartmentTable
-          table={table}
-          query={listQuery}
-          typeLabel={typeLabel}
-          resolveName={resolveName}
-          onOpen={setSelectedId}
-          onCreate={() => setFormTarget({ mode: 'create', parentDepartmentId: null })}
-          onCreateChild={(parentDepartmentId) =>
-            setFormTarget({ mode: 'create', parentDepartmentId })
-          }
-          onEdit={openEditFormById}
-          onToggleActive={(department) =>
-            setActiveTarget({
-              departmentId: department.departmentId,
-              nameAr: department.nameAr,
-              active: !department.isActive,
-            })
-          }
-        />
-      )}
-
-      {view !== 'table' &&
-        (treeQuery.isLoading ? (
-          <div role="status" aria-label="جارٍ تحميل الهيكل التنظيمي" className="flex flex-col gap-2 rounded-xl border border-border bg-surface p-4">
-            {Array.from({ length: 6 }, (_, index) => (
-              <Skeleton key={index} className="h-9 w-full" />
-            ))}
-          </div>
-        ) : treeQuery.error ? (
-          <div
-            role="alert"
-            className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-danger/40 bg-danger/10 px-3 py-2 text-sm text-danger"
-          >
-            <span>{toArabicErrorMessage(treeQuery.error)}</span>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => void treeQuery.refetch()}
-            >
-              إعادة المحاولة
-            </Button>
-          </div>
-        ) : totalCount === 0 ? (
-          <EmptySurface
-            title="لا توجد أقسام بعد."
-            description="لم تُسجَّل أقسام تنظيمية في الدليل بعد."
+      {/* Keyed by view so شجرة / مخطط / إحصاء / جدول ease in on every switch, the same
+          entrance the shell gives a page. */}
+      <div key={view} className="flex flex-col gap-4 animate-page-in">
+        {view === 'table' && (
+          <DepartmentTable
+            table={table}
+            query={listQuery}
+            typeLabel={typeLabel}
+            resolveName={resolveName}
+            onOpen={setSelectedId}
+            onCreate={() => setFormTarget({ mode: 'create', parentDepartmentId: null })}
+            onCreateChild={(parentDepartmentId) =>
+              setFormTarget({ mode: 'create', parentDepartmentId })
+            }
+            onEdit={openEditFormById}
+            onToggleActive={(department) =>
+              setActiveTarget({
+                departmentId: department.departmentId,
+                nameAr: department.nameAr,
+                active: !department.isActive,
+              })
+            }
           />
-        ) : matchCount === 0 ? (
-          <EmptySurface
-            title="لا توجد نتائج مطابقة."
-            description="جرّب تعديل عبارة البحث أو امسحها لعرض كل الأقسام."
-            action={
+        )}
+
+        {view !== 'table' &&
+          (treeQuery.isLoading ? (
+            <div role="status" aria-label="جارٍ تحميل الهيكل التنظيمي" className="flex flex-col gap-2 rounded-xl border border-border bg-surface p-4">
+              {Array.from({ length: 6 }, (_, index) => (
+                <Skeleton key={index} className="h-9 w-full" />
+              ))}
+            </div>
+          ) : treeQuery.error ? (
+            <div
+              role="alert"
+              className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-danger/40 bg-danger/10 px-3 py-2 text-sm text-danger"
+            >
+              <span>{toArabicErrorMessage(treeQuery.error)}</span>
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() => table.setSearch('')}
+                onClick={() => void treeQuery.refetch()}
               >
-                مسح البحث
+                إعادة المحاولة
               </Button>
-            }
-          />
-        ) : view === 'mermaid' ? (
-          <div className="flex flex-col gap-2">
-            <p className="text-xs text-muted">
-              اضغط على أي قسم في المخطط لعرض تفاصيله والموظفين التابعين له.
-            </p>
-            <MermaidView source={mermaidDiagram.source} ariaLabel="المخطط التنظيمي للأقسام" onNodeClick={openDiagramNode} className="min-h-40" />
-          </div>
-        ) : view === 'chart' ? (
-          <DepartmentTypeChart nodes={filteredTree} typeLabel={typeLabel} />
-        ) : (
-          <div className="rounded-xl border border-border bg-surface">
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-3 py-2 text-xs text-muted">
-              <span>
-                إجمالي الأقسام: <span dir="ltr">{formatNumber(totalCount)}</span>
-              </span>
-              {searching && (
-                <span>
-                  النتائج المطابقة: <span dir="ltr">{formatNumber(matchCount)}</span>
-                </span>
-              )}
             </div>
-            {showEmployees && (
-              <p className="px-3 pt-2 text-xs text-muted">افتح «الموظفون المباشرون» داخل أي قسم لتحميل موظفيه فقط. بحث الأقسام لا يبحث في الموظفين.</p>
-            )}
-            <ul aria-label="الهيكل التنظيمي للأقسام" className="flex flex-col gap-0.5 p-2">
-              {filteredTree.map((node) => (
-                <DepartmentTreeNodeRow
-                  key={node.departmentId}
-                  node={node}
-                  collapsedIds={effectiveCollapsedIds}
-                  collapseDisabled={searching}
-                  showEmployees={showEmployees}
-                  onToggle={toggleCollapsed}
-                  onOpen={setSelectedId}
-                  menu={nodeMenu}
-                  typeLabel={typeLabel}
-                />
-              ))}
-            </ul>
-          </div>
-        ))}
+          ) : totalCount === 0 ? (
+            <EmptySurface
+              title="لا توجد أقسام بعد."
+              description="لم تُسجَّل أقسام تنظيمية في الدليل بعد."
+            />
+          ) : matchCount === 0 ? (
+            <EmptySurface
+              title="لا توجد نتائج مطابقة."
+              description="جرّب تعديل عبارة البحث أو امسحها لعرض كل الأقسام."
+              action={
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => table.setSearch('')}
+                >
+                  مسح البحث
+                </Button>
+              }
+            />
+          ) : view === 'mermaid' ? (
+            <div className="flex flex-col gap-2">
+              <p className="text-xs text-muted">
+                اضغط على أي قسم في المخطط لعرض تفاصيله والموظفين التابعين له.
+              </p>
+              <MermaidView source={mermaidDiagram.source} ariaLabel="المخطط التنظيمي للأقسام" onNodeClick={openDiagramNode} className="min-h-40" />
+            </div>
+          ) : view === 'chart' ? (
+            <DepartmentTypeChart nodes={filteredTree} typeLabel={typeLabel} />
+          ) : (
+            <div className="rounded-xl border border-border bg-surface">
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-3 py-2 text-xs text-muted">
+                <span>
+                  إجمالي الأقسام: <span dir="ltr">{formatNumber(totalCount)}</span>
+                </span>
+                {searching && (
+                  <span>
+                    النتائج المطابقة: <span dir="ltr">{formatNumber(matchCount)}</span>
+                  </span>
+                )}
+              </div>
+              {showEmployees && (
+                <p className="px-3 pt-2 text-xs text-muted">افتح «الموظفون المباشرون» داخل أي قسم لتحميل موظفيه فقط. بحث الأقسام لا يبحث في الموظفين.</p>
+              )}
+              <ul aria-label="الهيكل التنظيمي للأقسام" className="flex flex-col gap-0.5 p-2">
+                {filteredTree.map((node) => (
+                  <DepartmentTreeNodeRow
+                    key={node.departmentId}
+                    node={node}
+                    collapsedIds={effectiveCollapsedIds}
+                    collapseDisabled={searching}
+                    showEmployees={showEmployees}
+                    onToggle={toggleCollapsed}
+                    onOpen={setSelectedId}
+                    menu={nodeMenu}
+                    typeLabel={typeLabel}
+                  />
+                ))}
+              </ul>
+            </div>
+          ))}
+      </div>
 
       <DepartmentDetailDialog
         departmentId={selectedId}

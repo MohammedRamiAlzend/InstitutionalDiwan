@@ -24,6 +24,8 @@ import {
   cn,
   formatNumber,
   loadColumnVisibility,
+  MAX_PAGE_SIZE,
+  MIN_PAGE_SIZE,
   resetColumnVisibility,
   saveColumnVisibility,
   useDebouncedValue,
@@ -39,7 +41,6 @@ import { Button } from './button'
 import { ContextMenu } from './context-menu'
 import { DropdownMenu } from './dropdown-menu'
 import { Input } from './input'
-import { Select } from './select'
 import { Skeleton } from './skeleton'
 
 export interface DataTableColumn<T> {
@@ -79,7 +80,6 @@ export interface DataTableProps<T> {
   totalCount: number
   onPageChange: (page: number) => void
   onPageSizeChange: (pageSize: number) => void
-  pageSizeOptions?: readonly number[]
   search?: string
   onSearchChange?: (search: string) => void
   searchPlaceholder?: string
@@ -99,7 +99,6 @@ export interface DataTableProps<T> {
   className?: string
 }
 
-const DEFAULT_PAGE_SIZES = [10, 20, 50, 100]
 const SEARCH_DEBOUNCE_MS = 300
 
 function compareValues(
@@ -136,7 +135,6 @@ export function DataTable<T>({
   totalCount,
   onPageChange,
   onPageSizeChange,
-  pageSizeOptions = DEFAULT_PAGE_SIZES,
   search = '',
   onSearchChange,
   searchPlaceholder = 'بحث…',
@@ -192,6 +190,18 @@ export function DataTable<T>({
     }
     setSearchDraft(search)
   }, [search])
+
+  // Typed, not picked: the draft keeps intermediate keystrokes out of the URL and the
+  // request, and the commit clamps to the same 1..100 window `useTableState` uses.
+  // `null` means "nothing being typed", so the field mirrors the committed size.
+  const [pageSizeDraft, setPageSizeDraft] = useState<string | null>(null)
+
+  const commitPageSize = () => {
+    const parsed = Number.parseInt(pageSizeDraft ?? '', 10)
+    setPageSizeDraft(null)
+    if (!Number.isFinite(parsed)) return
+    onPageSizeChange(Math.min(Math.max(Math.trunc(parsed), MIN_PAGE_SIZE), MAX_PAGE_SIZE))
+  }
 
   const processedRows = useMemo(() => {
     if (mode !== 'client') return rows ?? []
@@ -521,15 +531,23 @@ export function DataTable<T>({
           <span className="hidden sm:inline">·</span>
           <label className="flex items-center gap-1.5">
             <span className="hidden sm:inline">صفوف في الصفحة</span>
-            <Select
-              value={String(pageSize)}
-              onValueChange={(value) => onPageSizeChange(Number.parseInt(value, 10))}
-              options={pageSizeOptions.map((size) => ({
-                value: String(size),
-                label: formatNumber(size),
-              }))}
-              aria-label="عدد الصفوف في الصفحة"
-              className="h-8 w-20 text-xs"
+            <input
+              type="number"
+              dir="ltr"
+              min={MIN_PAGE_SIZE}
+              max={MAX_PAGE_SIZE}
+              step={1}
+              value={pageSizeDraft ?? String(pageSize)}
+              onChange={(event) => setPageSizeDraft(event.target.value)}
+              onBlur={commitPageSize}
+              onKeyDown={(event) => {
+                if (event.key !== 'Enter') return
+                event.preventDefault()
+                event.currentTarget.blur()
+              }}
+              aria-label={`عدد الصفوف في الصفحة، من ${MIN_PAGE_SIZE} إلى ${MAX_PAGE_SIZE}`}
+              title={`من ${MIN_PAGE_SIZE} إلى ${MAX_PAGE_SIZE}`}
+              className="h-8 w-16 rounded-lg border border-border bg-surface px-2 text-center text-xs text-foreground transition-colors focus:border-focus-ring focus:outline-none"
             />
           </label>
         </div>

@@ -28,9 +28,10 @@ export interface TableState {
   clearQuery: () => void
 }
 
-const MIN_PAGE_SIZE = 1
-const MAX_PAGE_SIZE = 100
-const DEFAULT_PAGE_SIZE = 20
+/** Bounds a grid may page by; `MAX_PAGE_SIZE` mirrors the server's `PageRequest.MaxPageSize`. */
+export const MIN_PAGE_SIZE = 1
+export const MAX_PAGE_SIZE = 100
+const DEFAULT_PAGE_SIZE = 10
 
 function parsePositiveInt(value: string | null, fallback: number): number {
   if (!value) return fallback
@@ -100,11 +101,11 @@ export function useTableState(options: TableStateOptions = {}): TableState {
     (nextSize: number) => {
       const safeSize = Math.min(Math.max(Math.trunc(nextSize), MIN_PAGE_SIZE), MAX_PAGE_SIZE)
       update((next) => {
-        if (safeSize === DEFAULT_PAGE_SIZE) next.delete('pageSize')
+        if (safeSize === defaultPageSize) next.delete('pageSize')
         else next.set('pageSize', String(safeSize))
       }, true)
     },
-    [update],
+    [defaultPageSize, update],
   )
 
   const setSearch = useCallback(
