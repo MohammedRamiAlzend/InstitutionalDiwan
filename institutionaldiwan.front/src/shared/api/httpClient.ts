@@ -1,7 +1,7 @@
-import axios from 'axios'
+import axios, { type AxiosProgressEvent } from 'axios'
 import { ENV } from '@/shared/config'
 import { tokenStorage } from './tokenStorage'
-import { ApiError, toApiError } from './problemDetails'
+import { ApiError, toApiErrorAsync } from './problemDetails'
 
 /**
  * The single Axios instance for all API calls. Attaches the bearer token,
@@ -22,8 +22,8 @@ httpClient.interceptors.request.use((config) => {
 
 httpClient.interceptors.response.use(
   (response) => response,
-  (error) => {
-    const apiError = toApiError(error)
+  async (error) => {
+    const apiError = await toApiErrorAsync(error)
 
     if (apiError.status === 401 && !window.location.pathname.startsWith('/login')) {
       tokenStorage.clear()
@@ -33,5 +33,52 @@ httpClient.interceptors.response.use(
     return Promise.reject(apiError)
   },
 )
+
+export interface UploadOptions {
+  /** 0–100 while the body is being sent; not called when the browser does not know the total. */
+  onProgress?: (percent: number) => void
+}
+
+/**
+ * Multipart POST for the Module 06 uploads. `Content-Type` is deliberately left unset so the
+ * browser writes the multipart boundary; the JWT interceptor and error normalization still apply.
+ */
+export async function uploadForm<T>(
+  url: string,
+  form: FormData,
+  options: UploadOptions = {},
+): Promise<T> {
+  const { data } = await httpClient.post<T>(url, form, {
+    onUploadProgress: (event: AxiosProgressEvent) => {
+      if (!options.onProgress || !event.total) return
+      options.onProgress(Math.round((event.loaded / event.total) * 100))
+    },
+  })
+  return data
+}
+
+export interface BlobDownload {
+  blob: Blob
+  /** Raw `Content-Disposition`; resolve it with `parseContentDisposition` from `@/shared/lib`. */
+  contentDisposition: string | null
+}
+
+/**
+ * Binary GET for file downloads. A failure arrives as a blob-bodied ProblemDetails and is
+ * normalized by the response interceptor, so callers still receive an `ApiError` with the domain
+ * code (for example `Attachments.FileNotFound`) and an Arabic message.
+ */
+export async function downloadBlob(
+  url: string,
+  params?: Record<string, unknown>,
+): Promise<BlobDownload> {
+  const response = await httpClient.get<Blob>(url, { params, responseType: 'blob' })
+  const header = response.headers?.['content-disposition']
+
+  return {
+    blob: response.data,
+    contentDisposition: typeof header === 'string' ? header : null,
+  }
+}
 
 export { ApiError }

@@ -2,8 +2,8 @@
 
 > **Status:** Module 01 Organization reads (`department`, `institution-setting`), Module 02
 > Identity reads (`user`, `role`, `employee`), lookup catalogs, the reusable employee picker,
-> Module 03 document, external-organization, numbering-registry, and movement reads, and the
-> Module 09 `audit-log` reads are implemented. `document-file` (Module 06) remains documentation only.
+> Module 03 document, external-organization, numbering-registry, and movement reads, the
+> Module 06 `document-file` reads, and the Module 09 `audit-log` reads are implemented.
 
 ## Purpose
 
@@ -31,7 +31,7 @@ read-only presentational UI. Entities never perform write mutations.
 | `lookup/` | `LookupEntryResponse` (`/lookups/{lookup}`) | `useLookupEntries`, `LookupLabel`, seeded fallbacks | Named Organization/Identity catalogs (incl. numbering mode/reset policy) plus the five Module 03 document catalogs; generic reads implemented. |
 | `document/` | `DocumentResponse`, `DocumentDetailResponse`, timeline, access grants, number history/registry entries (`/documents`, `/documents/{id}`) | `useDocuments`, `useDocumentById`, `useDocumentDetails`, `useDocumentTimeline`, `useDocumentAccessGrants`, `useDocumentNumberHistory`, `useDocumentRegistryNumbers`, `DocumentStatusBadge`, `DocumentDirectionBadge`, `OfficialNumberTag`, `NumberStatusBadge` | ✅ Reads and presentational UI implemented; the grants/numbers UI lives in the page and writes in `features/document-access-grant` / `features/numbering-manage`. |
 | `external-organization/` | `ExternalOrganizationResponse` (paged `/external-organizations`, `/{id}`) | `useExternalOrganizations`, `useExternalOrganizationById` | ✅ Reads for the participant tab, picker, and admin grid; writes live in `features/external-organization-manage` (Phase 7). |
-| `document-file/` | Module 06 file + version responses (`GET /api/documents/{id}/files`, verify) | `useDocumentFiles`, `ChecksumBadge`, version list | ❌ Planned (API live) |
+| `document-file/` | Module 06 file + version + checksum responses (`GET /api/documents/{id}/files`, `/document-files/{id}/download`, `/document-files/{id}/verify`) | `useDocumentFiles`, `useVerifyChecksum`, `documentFileKeys`, `documentFileApi.download`, `ChecksumBadge`, `FileArchivedBadge` | ✅ Reads implemented (Module 06 Phases 0 and 2) and mounted by `widgets/document-attachments-panel`; writes land in `features/attachment-upload` (Phase 3). |
 | `numbering-registry/` | Registry/counter responses, department register book (`/numbering/registries`, `/departments/{id}/register`) | `useNumberingRegistries`, `useNumberingRegistryById`, `useDepartmentRegister`, `RegistryScopeCard`, pure `renderNumberPattern`/scope helpers | ✅ Reads implemented (Phase 5); pure template/scope model added in Module 04 Phase 1. |
 | `movement/` | `MovementQueueItemResponse`, `MovementResponse` (steps/events) (`GET /api/movements/inbox`, `/outbox`, `/by-document/{documentId}`, `/{movementId}`) | `useMovementQueue`, `useMovementInbox`, `useMovementOutbox`, `useDocumentMovements`, `useMovementById`, `getMovementActions`/`hasActiveMovement` rules, `MovementStatusBadge`, `MovementStepStatusBadge`, `MovementTypeBadge` | ✅ Reads, transition rules, and badges implemented (Phase 6). |
 | `audit-log/` | `AuditLogResponse`, `AuditIntegrityCheckResponse` (paged `/audit-logs`, `/audit-logs/integrity-checks`) | `useAuditLogs`, `useAuditIntegrityReports`, `AUDIT_MODULES`/`auditModuleLabel`, `HashChainPill`, `IntegrityStatusBadge` | ✅ Reads, Arabic module labels, and badges implemented; writes live in `features/audit-manage`. |
@@ -63,12 +63,14 @@ read-only presentational UI. Entities never perform write mutations.
 | `numbering-registry/` | ✅ Registry/counter and department-register reads, `RegistryScopeCard`, and pure `model/format.ts`/`model/scope.ts` helpers (template rendering/validation, scope rank/key, duplicate-scope detection, Arabic scope summary). |
 | `movement/` | ✅ Queue/detail reads, mirrored transition rules (`getMovementActions`, `hasActiveMovement`, `translateMovementNote`), and three badges. |
 | `audit-log/` | ✅ Paged log and integrity-report reads, query keys/hooks (five-minute `staleTime`, no focus refetch), module labels, hash pill, integrity badge. |
-| `document-file/` | ❌ Not implemented (backend live; docs ready). |
+| `document-file/` | ✅ File/version/checksum types, `documentFileApi` (document-scoped list, blob download, on-demand verify), query keys/hooks (verify disabled until an explicit action), `ChecksumBadge`, and `FileArchivedBadge`; mounted by `widgets/document-attachments-panel`. |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-01 | agent | Module 06 Phase 2: added `documentFileApi.download(fileId, versionId?)`, the blob read behind the files grid's «تنزيل الإصدار الحالي»; the slice now has a consumer, `widgets/document-attachments-panel` on the details page's «الملفات» tab. |
+| 2026-11-01 | agent | Module 06 Phase 0: implemented the `document-file` read slice — file/version/checksum types mirroring `DocumentFileResponse`/`DocumentFileVersionResponse`/`AttachmentChecksumResponse`, `documentFileApi` on the document-scoped list route plus the on-demand verify read, `documentFileKeys` with `byDocument`/`verify`, `useDocumentFiles` (30-second `staleTime`, previous-page placeholder), `useVerifyChecksum` (disabled until the caller opts in, because it reads the stored bytes), and `ChecksumBadge`/`FileArchivedBadge`. No page consumes it yet — the `files` tab stays disabled until Phase 2. |
 | 2026-10-29 | agent | Module 04 Phase 2: added `unknownPatternTokens` to `numbering-registry/model/format.ts` for form-time template validation. |
 | 2026-10-29 | agent | Module 04 Phase 1: added pure `numbering-registry/model/format.ts` and `model/scope.ts` (template rendering, scope rank/key, duplicate active scopes, Arabic scope summary) through the slice barrel. |
 | 2026-10-29 | agent | Module 09: implemented the `audit-log` read slice — paged log and integrity-report clients, `auditLogKeys`, `useAuditLogs`/`useAuditIntegrityReports` with a five-minute `staleTime` and no focus refetch (each read appends a self-audit row), the Arabic `AUDIT_MODULES` labels, `HashChainPill`, and `IntegrityStatusBadge`. |

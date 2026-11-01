@@ -1,11 +1,12 @@
 # institutionaldiwan.front / src/widgets — Composite UI Widgets Layer
 
 > **Status:** `app-shell`, Identity admin tables, the Module 01 department hierarchy, the Module 03
-> document registry, numbering registry, movement inbox, and external correspondents grid, and the
-> Module 09 audit log/integrity tables are implemented. The hierarchy includes
-> department writes, lazy employee branches, paged rosters, and a chart. The Module 03 and Module 09
-> widgets are verified in-browser; the hierarchy's final browser verification and Module 02 audit
-> fixes remain in progress. Remaining widgets are documentation only. `/change-password` is standalone.
+> document registry, numbering registry, movement inbox, and external correspondents grid, the
+> Module 06 attachments grid, and the Module 09 audit log/integrity tables are implemented. The
+> hierarchy includes department writes, lazy employee branches, paged rosters, and a chart. The
+> Module 03 and Module 09 widgets are verified in-browser; the hierarchy's final browser
+> verification, the attachments panel's browser pass, and Module 02 audit fixes remain outstanding.
+> Remaining widgets are documentation only. `/change-password` is standalone.
 
 ## Purpose
 
@@ -30,7 +31,7 @@ browser.
 | `document-registry-table/` | Correspondence grid with URL filters (status/direction/type/department), paging/sorting, lookup labels, and create entry points | `entities/document` + `entities/lookup` + `entities/department` + `features/document-create` | ✅ Implemented (Phase 2) |
 | `numbering-registry-table/` | Numbering registry grid (scope/specificity/format/reset/counters/status) with URL filters, duplicate-scope warning, create/edit/activate actions, and a details dialog with a next-number preview | `entities/numbering-registry` + `entities/department` + `entities/lookup` + `features/numbering-manage` | ✅ Implemented (Phase 5); filters/specificity/dedup (Module 04 Phase 2) |
 | `department-register-book/` | Read-only book of numbers departments wrote in their own registers, with URL-backed department/year filters, sorting, search, and copy/open menus | `entities/numbering-registry` + `entities/department` + `entities/document` | ✅ Implemented (Module 04 Phase 3) |
-| `document-attachments-panel/` | File list, upload, download, verify checksum, archive | `entities/document-file` + `features/attachment-upload` | ❌ Planned (API live) |
+| `document-attachments-panel/` | File list with URL-backed status/type filters, download of the current version, copy actions, and the row actions: رفع ملف، رفع إصدار، الإصدارات، الأرشفة، التحقق من البصمة | `entities/document-file` + `features/attachment-upload` | ✅ Grid + download + upload + versions/archive/verify (Module 06 Phases 2–4) |
 | `department-hierarchy-tree/` | Tree/Mermaid/chart/grid, department manage actions, lazy direct-employee branches, paged/searchable rosters, employee details and context/overflow menus | `features/department-manage` + department/employee/lookup/user entities | Implemented, including shared tree/diagram/chart request states; final browser verification pending. |
 | `movement-inbox/` | Inbox/outbox queue with search, status/type filters, overdue highlighting, and routing action menus | `entities/movement` + `features/movement-routing` | ✅ Implemented (Phase 6) |
 | `external-organizations-table/` | External correspondents admin grid (server search/paging, active/all filter, status badges, copy actions) | `entities/{external-organization,lookup,user}` + `features/external-organization-manage` | ✅ Implemented (Phase 7) |
@@ -68,7 +69,7 @@ browser.
 | `movement-inbox/` | ✅ Implemented and verified in-browser (Phase 6) |
 | `external-organizations-table/` | ✅ Implemented and verified in-browser (Phase 7) |
 | `audit-log-table/` | ✅ Implemented and verified in-browser (Module 09: `AuditLogTable` + `AuditIntegrityTable`, manager actions hidden for view-only roles) |
-| `document-attachments-panel/` | ❌ Not implemented (backend live) |
+| `document-attachments-panel/` | ✅ Grid, filters, download, upload, versions, archive, and verify implemented (Module 06 Phases 2–4); browser verification skipped at the user's request for all three phases. |
 | `movement-timeline/` | Deferred (the document movements tab renders the step chain today) |
 | `visualization-panel/` | ❌ Not implemented (`shared/ui/mermaid-view` is now live, so the cross-module switcher can follow) |
 | `notification-center/` | ❌ Blocked on Module 10 / SignalR |
@@ -77,6 +78,9 @@ browser.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-01 | agent | Module 06 Phase 4: `document-attachments-panel` completed its row menu (الإصدارات، التحقق من البصمة for viewers; رفع إصدار، الأرشفة for a manager on a live unarchived file), renamed `canUpload` to `canManage`, and moved to one `rowAction` state that resolves the file from the live query so a mutation updates the open dialog. |
+| 2026-11-01 | agent | Module 06 Phase 3: `document-attachments-panel` grew the `canUpload` prop and the «رفع ملف» toolbar/empty-state action, mounting `UploadAttachmentDialog` from `features/attachment-upload`. |
+| 2026-11-01 | agent | Module 06 Phase 2: implemented `document-attachments-panel` — the client-mode files grid (`tableId="document-files"`) over `useDocumentFiles` with URL-backed status/file-type filters, ten columns (checksum and timestamps hidden by default), a row menu that downloads the current version under the server's own file name and copies the id / checksum / original name, and Arabic empty states that separate "no files" from "no match". Archived files stay listed because archiving stops versions without hiding anything. Browser verification skipped at the user's request. |
 | 2026-10-29 | agent | Module 04 Phase 3: implemented `department-register-book` — the department register book on the shared client-mode grid with URL-backed department/year filters (inactive departments included), sorting, search, column chooser, and open/copy row menus; removed the bespoke table from `pages/numbering`. |
 | 2026-10-29 | agent | Module 04 Phase 2: `numbering-registry-table` gained URL-backed status/reset-policy/scope filters, a scope-specificity column, the duplicate active-scope banner, and the details-dialog next-number preview with a neutral precedence explanation; verified in-browser. |
 | 2026-10-29 | agent | Module 09: implemented `audit-log-table` — the URL-driven log grid (module/action/date filters, lookup labels, LTR hash pills) and the integrity-report grid, with checkpoint/check toolbar buttons, copy row actions, and `AUDIT_MANAGE`-filtered menus; verified for both the view-only and manager roles. |

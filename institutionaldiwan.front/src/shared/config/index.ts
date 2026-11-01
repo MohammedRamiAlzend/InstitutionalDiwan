@@ -23,6 +23,13 @@ export {
   MOVEMENT_STATUS,
   MOVEMENT_STEP_STATUS,
   MOVEMENT_EVENT_TYPE,
+  DOCUMENT_FILE_TYPE,
   AUDIT_ACTION_TYPE,
   AUDIT_ENTITY_TYPE,
 } from './lookupIds'
+export {
+  DOCUMENT_FILE_TYPE_LIMITS,
+  MAX_UPLOAD_BYTES,
+  fileTypeLimits,
+} from './attachmentLimits'
+export type { FileTypeUploadLimits } from './attachmentLimits'

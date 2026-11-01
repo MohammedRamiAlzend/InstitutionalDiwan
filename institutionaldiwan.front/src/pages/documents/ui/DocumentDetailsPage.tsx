@@ -22,6 +22,7 @@ import { toArabicErrorMessage } from '@/shared/api'
 import { Permissions, ROUTES } from '@/shared/config'
 import { cn } from '@/shared/lib'
 import { Badge, Button, PageHeader, Skeleton } from '@/shared/ui'
+import { DocumentFilesTab } from './DocumentFilesTab'
 import { DocumentGrantsTab } from './DocumentGrantsTab'
 import { DocumentMovementsTab } from './DocumentMovementsTab'
 import { DocumentNumbersTab } from './DocumentNumbersTab'
@@ -33,12 +34,12 @@ const TABS = [
   { key: 'participants', label: 'المشاركون', available: true },
   { key: 'numbers', label: 'الأرقام', available: true },
   { key: 'movements', label: 'الحركات', available: true },
-  { key: 'files', label: 'الملفات', available: false },
+  { key: 'files', label: 'الملفات', available: true },
   { key: 'grants', label: 'التصاريح', available: true },
 ] as const
 
 type TabKey = (typeof TABS)[number]['key']
-type AvailableTabKey = 'details' | 'participants' | 'numbers' | 'movements' | 'grants'
+type AvailableTabKey = 'details' | 'participants' | 'numbers' | 'movements' | 'files' | 'grants'
 
 /** Unknown, not-yet-available, or permission-hidden tabs fall back to the details tab. */
 function resolveTab(
@@ -49,6 +50,7 @@ function resolveTab(
   if (raw === 'participants') return 'participants'
   if (raw === 'numbers' && canViewNumbering) return 'numbers'
   if (raw === 'movements') return 'movements'
+  if (raw === 'files') return 'files'
   if (raw === 'grants' && canManageGrants) return 'grants'
   return 'details'
 }
@@ -292,6 +294,12 @@ function DocumentDetailsView() {
           documentStatusId={document.statusId}
           canEdit={canEdit}
           departmentNames={departmentNames}
+        />
+      )}
+      {activeTab === 'files' && (
+        <DocumentFilesTab
+          documentId={document.documentId}
+          canManage={canEdit && !isCanceled}
         />
       )}
       {activeTab === 'grants' && canManageGrants && (

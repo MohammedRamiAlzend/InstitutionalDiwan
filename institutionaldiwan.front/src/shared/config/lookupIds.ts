@@ -147,6 +147,14 @@ export const MOVEMENT_EVENT_TYPE = {
   Canceled: 9,
 } as const
 
+/** `DocumentFileType` seeds (Module 06) — the file-kind picker of the upload form. */
+export const DOCUMENT_FILE_TYPE = {
+  Scan: 1,
+  Attachment: 2,
+  Signature: 3,
+  Other: 4,
+} as const
+
 export const AUDIT_ACTION_TYPE = {
   Create: 1,
   Update: 2,

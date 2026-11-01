@@ -1,15 +1,16 @@
 # institutionaldiwan.front / src/shared/lib — Pure Utilities, Date/Timezone & Table State Helpers
-> **Status:** Implemented for the Identity admin foundation — `cn`, theme store, column preferences, URL table state, debounce, Damascus date/number formatting, and JWT claim hints. Crypto and Arabic normalization land with Module 06 / search slices.
+> **Status:** Implemented for the Identity admin foundation — `cn`, theme store, column preferences, URL table state, debounce, Damascus date/number formatting, and JWT claim hints — plus the Module 06 attachment helpers: `formatFileSize`, client-side SHA-256, and blob save/`Content-Disposition` parsing. Arabic search normalization still pending.
 ## Purpose
-Contains pure, framework-independent helper functions for class merging, `Asia/Damascus` timezone formatting, Arabic text normalization, client-side SHA-256 file checksum calculation (matching Module 06 `DocumentFileVersion` requirements), per-table column-preference persistence, and the theme store.
+Contains pure, framework-independent helper functions for class merging, `Asia/Damascus` timezone formatting, Arabic text normalization, client-side SHA-256 file checksum calculation (matching Module 06 `DocumentFileVersion` requirements), file download plumbing, per-table column-preference persistence, and the theme store.
 ## Contents
 | File | Purpose |
 | --- | --- |
 | `cn.ts` | Combines `clsx` and `tailwind-merge` for conditional Tailwind class composition. |
 | `theme.ts` | Theme store: reads/writes `diwan.theme` (`light` / `dark` / `system`), applies `data-theme`, follows `prefers-color-scheme` while in `system`, and exposes `useTheme` / `useThemeChoice` to React. |
 | `date.ts` | Formats UTC ISO timestamps from the backend (`datetime2(3)`) into `Asia/Damascus` local dates/times with Latin digits. |
-| `format.ts` | Latin-digit number grouping for counts, row ranges, and pagination labels; `formatShortId` renders the first GUID segment for compact LTR display (full value belongs in `title`). |
-| `crypto.ts` | Computes lowercase 64-character hex SHA-256 checksums via `crypto.subtle.digest('SHA-256', buffer)` for attachment uploads. (❌ pending) |
+| `format.ts` | Latin-digit number grouping for counts, row ranges, and pagination labels; `formatShortId` renders the first GUID segment for compact LTR display (full value belongs in `title`); `formatFileSize` renders byte counts as Latin-digit sizes with Arabic units (بايت/ك.ب/م.ب/غ.ب) for attachment and version rows. |
+| `crypto.ts` | `sha256Hex(blobOrBuffer)` computes the lowercase 64-character hex SHA-256 the server records per version, via `crypto.subtle.digest`. Throws `ChecksumUnsupportedError` (Arabic message) when `crypto.subtle` is absent, which happens only on an insecure origin — neither `https` nor `localhost`. |
+| `download.ts` | `parseContentDisposition(header)` extracts a display file name, preferring RFC 5987 `filename*=UTF-8''…` over a plain `filename=` and stripping any path segments; `saveBlobAsFile(blob, fileName)` triggers the browser download through a temporary object URL. |
 | `arabic.ts` | Normalizes Arabic search strings (unified hamzas, taa marbuta, and Eastern/Western numerals). (❌ pending) |
 | `columnPreferences.ts` | Reads/writes the per-table column visibility selection in `localStorage` under `diwan.table.<tableId>.columns.v1`; parses defensively, merges with the table's default columns, and exposes a reset to defaults. View state only — never sent to the API. |
 | `useTableState.ts` | Table view state in URL search params (`page`, `pageSize`, `search`, `sort`, `dir`, plus caller-declared filter keys); resets to page 1 when search, filters, sort, or size change. `clearQuery()` removes the search and every filter in one URL write, because two sequential setters would each rebuild from the same stale params and restore what the other cleared. |
@@ -21,10 +22,13 @@ Contains pure, framework-independent helper functions for class merging, `Asia/D
 | --- | --- |
 | `cn.ts`, `theme.ts` | ✅ Implemented |
 | `date.ts`, `format.ts`, `columnPreferences.ts`, `useTableState.ts`, `useDebouncedValue.ts`, `jwt.ts` | ✅ Implemented |
-| `crypto.ts`, `arabic.ts` | ❌ Pending Module 06 / search slices |
+| `crypto.ts`, `download.ts` | ✅ Implemented (Module 06 Phase 1) |
+| `arabic.ts` | ❌ Pending the search slice |
 ## Change Log
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-01 | agent | Module 06 Phase 1: added `crypto.ts` (`sha256Hex`, `ChecksumUnsupportedError`) and `download.ts` (`parseContentDisposition`, `saveBlobAsFile`) for the upload form's pre-flight checksum and the grid's download action. `saveBlobAsFile` takes an already-resolved file name instead of the header plus a fallback, so precedence stays with the caller; its object-URL revoke is deferred a tick because revoking synchronously can abort the download before the browser picks the blob up. |
+| 2026-11-01 | agent | Module 06 Phase 0: added `formatFileSize` to `format.ts` (Latin digits, Arabic units, `—` for a missing or negative size) for the attachments grid and the versions dialog. |
 | 2026-10-28 | agent | Added `useTableState().clearQuery()` after the document registry's «مسح البحث والمرشحات» button cleared filters but kept the search; both setters ran in one tick from the same URL snapshot. |
 | 2026-10-28 | agent | Added `formatShortId` for compact GUID display in the users grid fallback cells. |
 | 2026-10-27 | agent | Implemented the table-state foundation (`useTableState`, `useDebouncedValue`, `columnPreferences`), Damascus `date`/`format` helpers, and `jwt` claim decoding for the forced password-change hint. |

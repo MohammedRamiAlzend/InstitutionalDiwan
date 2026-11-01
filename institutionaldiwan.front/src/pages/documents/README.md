@@ -2,11 +2,13 @@
 
 > **Status:** Registry page ✅ implemented (Module 03 Phase 2), document details ✅ implemented
 > (Module 03 Phase 3), the access-grants tab ✅ implemented (Module 03 Phase 4), the numbers tab
-> ✅ implemented (Module 03 Phase 5), the movements tab ✅ implemented (Module 03 Phase 6), and the
-> external-organizations admin tab ✅ implemented (Module 03 Phase 7).
+> ✅ implemented (Module 03 Phase 5), the movements tab ✅ implemented (Module 03 Phase 6), the
+> external-organizations admin tab ✅ implemented (Module 03 Phase 7), and the files tab
+> ✅ implemented (Module 06 Phases 2–4: grid, download, upload, versions, archiving, verify).
 > `/documents` now hosts the registry and the correspondent catalog; `/documents/:documentId` renders
 > details, participants, access grants, official numbers/department registrations, movement routing
-> with its timeline, status history, and the audit timeline; only the files tab waits on Module 06.
+> with its timeline, status history, the audit timeline, and the document's attachment files with
+> their full write actions for editors.
 
 ## Purpose
 
@@ -17,7 +19,9 @@ lifecycle actions (draft edit, register, participant, cancel), the Phase 4 acces
 (grant/revoke behind `ACCESS_GRANT_MANAGE`), the Phase 5 numbers tab (issue, cancel, replace,
 department registration, and full number history behind `NUMBERING_VIEW`/`NUMBERING_MANAGE`), and
 the Phase 6 movements tab (open/send/receive/complete/reject/return/redirect/close/cancel behind
-`DOCUMENT_EDIT`, with the movement chain and event log); only files mount later, in Module 06.
+`DOCUMENT_EDIT`, with the movement chain and event log), and the Module 06 files tab (the attachment
+grid with its filters, download, and — for `DOCUMENT_EDIT` on a document that is not canceled — the
+atomic first upload).
 
 ## Strict FSD Rules
 
@@ -36,6 +40,7 @@ the Phase 6 movements tab (open/send/receive/complete/reject/return/redirect/clo
 | `ui/DocumentGrantsTab.tsx` | Access-grants tab: per-grant level label, active/expired/revoked state badge, grantee name (or short id without `USER_MANAGE`), grant/expiry/revocation metadata, and the منح/إلغاء dialogs. |
 | `ui/DocumentNumbersTab.tsx` | Numbers tab: central number card (status, registration date, issuer, cancellation reason, replace/cancel actions, dated event list), department register cards, and the «سجل الأرقام» history grid on the shared `DataTable` (`tableId="document-numbers"`, client mode, column chooser, sorting, URL-backed search, row menu نسخ الرقم/نسخ المعرّف); statuses and event labels come from `DOCUMENT_NUMBER_STATUS`/`DOCUMENT_NUMBER_EVENT_TYPE`, and the API's English `Replaces …` note is translated to «يستبدل الرقم …». |
 | `ui/DocumentMovementsTab.tsx` | Movements tab: one `MovementCard` per movement (type/status badges, action buttons from `getMovementActions`, ordered step chain with per-step outcome label, registry number and department, and the event log), plus the open-movement and action dialogs. |
+| `ui/DocumentFilesTab.tsx` | Files tab: the section card (heading plus the archiving-does-not-hide note and the versions/verify mention) around `widgets/document-attachments-panel`; receives `canManage` from the page and passes it down, otherwise carries no state — the grid owns the query, filters, download, and the five dialogs. |
 | `ui/DocumentTimeline.tsx` | Structural Arabic timeline rebuilt from `eventKind`/status/number-event ids; hides the server's English descriptions. |
 | `ui/ParticipantTarget.tsx` | Resolves the single participant target (department name, external organization name via by-id read, or person name). |
 | `index.ts` | Public barrel exporting both pages. |
@@ -48,17 +53,21 @@ the Phase 6 movements tab (open/send/receive/complete/reject/return/redirect/clo
 - `features/numbering-manage` ✅ (Phase 5)
 - `features/movement-routing` ✅ (Phase 6)
 - `widgets/external-organizations-table` ✅ + `features/external-organization-manage` ✅ (Phase 7)
-- `features/attachment-upload` (planned, Module 06)
+- `widgets/document-attachments-panel` ✅ (Module 06 Phase 2)
+- `features/attachment-upload` (planned, Module 06 Phase 3)
 
 ## URL state
 
 - List: `?tab=registry|organizations` (default `registry`); the registry adds
   `?page=&pageSize=&search=&statusId=&directionId=&documentTypeId=&owningDepartmentId=&sortBy=&sortDescending=`,
   and the organizations tab adds `?page=&pageSize=&search=&include=active|all`.
-- Detail: `?tab=details|participants|numbers|movements|files|grants`; unknown, not-yet-available, or
-  unauthorized tabs fall back to `details`. `grants` is live behind `ACCESS_GRANT_MANAGE`; `numbers`
-  is live behind `NUMBERING_VIEW`; `movements` is live for `DOCUMENT_VIEW`; only the files chip
-  remains disabled with «قريبًا» until Module 06.
+- Detail: `?tab=details|participants|numbers|movements|files|grants`; unknown or unauthorized tabs
+  fall back to `details`. `grants` is live behind `ACCESS_GRANT_MANAGE`; `numbers` is live behind
+  `NUMBERING_VIEW`; `movements` and `files` are live for `DOCUMENT_VIEW`. Every tab chip is now
+  available, so no «قريبًا» badge remains.
+- Inside the files tab the grid adds `?status=active|archived`, `?fileType=<id>`, `?search=`,
+  `?sort=`, `?dir=`, `?page=`, and `?pageSize=`. Switching tabs writes `?tab=` alone, which drops
+  those grid params — a deliberate consequence of the existing tab switcher, not of the files tab.
 
 ## Transitions & gates
 
@@ -80,6 +89,10 @@ the Phase 6 movements tab (open/send/receive/complete/reject/return/redirect/clo
 | فتح حركة | movements tab open, status = REGISTERED, no active movement, caller holds `DOCUMENT_EDIT` |
 | إرسال / إعادة توجيه / إغلاق / إلغاء الحركة | movement status allows it (`getMovementActions`) and caller holds `DOCUMENT_EDIT` |
 | استلام / إكمال / رفض / إرجاع | movement/step status allows it and caller holds `DOCUMENT_EDIT`; receive still needs the destination department's register number |
+| تبويب الملفات | caller holds `DOCUMENT_VIEW` (the route gate); no separate permission hides it |
+| تنزيل الإصدار الحالي | files tab open and the file has a version. Offered to every viewer because the per-document DOWNLOAD level is never exposed to the client — a denial surfaces as the Arabic `403` message |
+| رفع ملف / رفع إصدار / أرشفة | caller holds `DOCUMENT_EDIT` **and** the document is not canceled (`canEdit && !isCanceled`, passed down as `canManage`). Hidden, not disabled, in line with the rest of the write actions here; the server additionally requires MANAGE access on the document, and that denial also arrives as an Arabic message. An archived row offers neither a new version nor archiving. |
+| تنزيل / الإصدارات / التحقق من البصمة | every viewer of the tab — no write permission is checked client-side; download additionally needs the per-document DOWNLOAD level, which the client is never told, so its `403` is translated rather than predicted |
 | تبويب الجهات الخارجية | caller holds `DOCUMENT_VIEW` (the whole `/documents` route gate) |
 | جهة خارجية جديدة / تعديل البيانات / إيقاف / تفعيل | organizations tab open and caller holds `DOCUMENT_EDIT`; نسخ الرمز/المعرّف stay available to every reader |
 
@@ -99,13 +112,16 @@ mounted dialog.
 | `ui/DocumentGrantsTab.tsx` | ✅ Implemented (Module 03 Phase 4) |
 | `ui/DocumentNumbersTab.tsx` | ✅ Implemented (Module 03 Phase 5); history grid moved onto `DataTable` in Module 04 Phase 4 |
 | `ui/DocumentMovementsTab.tsx` | ✅ Implemented (Module 03 Phase 6) |
-| Files tab | Disabled placeholder until Module 06 |
+| `ui/DocumentFilesTab.tsx` | ✅ Implemented (Module 06 Phases 2–4) — the tab chip went from a disabled «قريبًا» placeholder to live, mounting `widgets/document-attachments-panel`, and forwards `canManage` so editors get upload, new version, and archiving while viewers keep download, versions, and verify; browser verification skipped at the user's request for all three phases |
 | Browser verification | Registry ✅ (2026-10-28); details ✅ (2026-10-28): draft actions, `?tab=participants`, person + department participants, draft edit, register (`2026/000004`), cancel with reason, status history, timeline, and canceled-document gating. Grants ✅ (2026-10-28): `?tab=grants` loaded, empty submit and past expiry rejected in Arabic, grant to `user` at «عرض» with expiry/reason appeared immediately with counts, revoke kept the row as «ملغى» with timestamp + revoker, and a `USER`-role login saw no grants chip and fell back to details. Numbers ✅ (2026-10-29): draft issue → registered `2026/000005`, department registration `DEP-2026-001`, duplicate `2026/000007` rejected in Arabic with the dialog retained and the document still draft, replace `2026/000008` → `2026/000009`, and cancel `2026/000009` with an Arabic reason; a `USER`-role login saw no numbers tab and the issue/department/registry endpoints returned 403. Movements ✅ (2026-10-29): the full two-department cycle (open+send from the Central Diwan, receive at HR against `HR-2026-118`, reject with a reason, automatic reroute back to the Central Diwan, receive at the Central Diwan against `CEN-2026-1000`, close) updated the queues and the movements tab at every step; the chain showed the rejected step as «رُفضت» followed by the registered receive, with Arabic notes and the full event log, and the document returned to «مسجل» with «فتح حركة» available again. Organizations ✅ (2026-10-29): `?tab=organizations` loaded from the URL, a new `MOI-01`/«حكومي» correspondent was created («تمت إضافة الجهة الخارجية.»), a second record with the same code kept the dialog open with «توجد جهة خارجية أخرى بنفس الرمز.», editing carried the disabled code and prefilled fields («تم تحديث بيانات الجهة الخارجية.»), and the participant picker offered «وزارة الداخلية — محدَّث · MOI-01»; after «إيقاف الجهة» the row showed «موقوف» under `include=all` and the participant picker listed no external organizations, and «تفعيل الجهة» restored «نشط» and the option. |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-01 | agent | Module 06 Phase 4: the files tab's `canUpload` prop became `canManage` and now gates three write actions (upload, new version, archive); the row menu gained الإصدارات and التحقق من البصمة for every viewer, and the tab description says what the grid can do. |
+| 2026-11-01 | agent | Module 06 Phase 3: `DocumentDetailsPage` now passes `canUpload={canEdit && !isCanceled}` to the files tab, so the panel gains its «رفع ملف» toolbar button and empty-state action for editors on a live document and stays unchanged for viewers and canceled documents. |
+| 2026-11-01 | agent | Module 06 Phase 2: added `ui/DocumentFilesTab.tsx` and made the «الملفات» chip live (`available: true`, `'files'` in `AvailableTabKey`, a `resolveTab` branch, and the conditional mount), so the last disabled tab on the detail page is gone. The tab is a stateless card around `widgets/document-attachments-panel`; the grid owns the query, the URL filters, and the download. |
 | 2026-10-30 | agent | Module 04 Phase 5: verified the numbers tab in-browser as a `NUMBERING_VIEW`-only user (`num.viewer`) — the central-number card shows only «تحديث الأرقام», no issue/replace/cancel/register actions, and the registration lists plus history grid render read-only while direct writes return 403. |
 | 2026-10-29 | agent | Module 04 Phase 4: replaced the bespoke history table in `ui/DocumentNumbersTab.tsx` with the shared `DataTable` (`tableId="document-numbers"`, client mode, column chooser persisted at `diwan.table.document-numbers.columns.v1`, sorting, URL-backed search, row menu نسخ الرقم/نسخ المعرّف) and keyed the status/event labels off `DOCUMENT_NUMBER_STATUS`/`DOCUMENT_NUMBER_EVENT_TYPE`; the central-number card and department registration event lists are unchanged. Verified in-browser on `70c1b912…` and `c2fd1217…`: search and sort round-trip through the URL, hidden columns survive a reload, the row menu offers both copy actions, and نشط/ملغى/مُستبدل render in Arabic. |
 | 2026-10-29 | agent | Module 03 Phase 7: added the `organizations` tab to `ui/DocumentsPage.tsx` (URL-backed `?tab=registry\|organizations` switcher with the page-level `DOCUMENT_VIEW` gate, each tab owning its table state) mounting `widgets/external-organizations-table`; verified create/duplicate/edit/deactivate/activate in-browser and the participant-picker effect of deactivation. |

@@ -5,6 +5,7 @@ import {
   DEPARTMENT_TYPE,
   DOCUMENT_CONFIDENTIALITY,
   DOCUMENT_DIRECTION,
+  DOCUMENT_FILE_TYPE,
   DOCUMENT_PRIORITY,
   DOCUMENT_STATUS,
   DOCUMENT_TYPE,
@@ -44,7 +45,7 @@ export {
   USER_SCOPE_TYPE,
 } from '@/shared/config'
 
-/** Catalogs Module 01/02/03 (pickers, settings, and document forms) consume directly. */
+/** Catalogs Module 01/02/03/06 (pickers, settings, and document/attachment forms) consume directly. */
 export const LOOKUP_SLUGS = {
   DepartmentTypes: 'department-types',
   UserScopeTypes: 'user-scope-types',
@@ -57,6 +58,7 @@ export const LOOKUP_SLUGS = {
   DocumentStatusTypes: 'document-status-types',
   DocumentConfidentialityLevels: 'document-confidentiality-levels',
   DocumentPriorityLevels: 'document-priority-levels',
+  DocumentFileTypes: 'document-file-types',
   ParticipantRoles: 'participant-roles',
   ParticipantTargetTypes: 'participant-target-types',
   OrganizationTypes: 'organization-types',
@@ -138,6 +140,12 @@ export const LOOKUP_FALLBACKS: Record<string, readonly LookupCatalogEntry[]> = {
     { id: DOCUMENT_PRIORITY.Normal, desc: 'Normal', descAr: 'عادي' },
     { id: DOCUMENT_PRIORITY.Urgent, desc: 'Urgent', descAr: 'عاجل' },
     { id: DOCUMENT_PRIORITY.Immediate, desc: 'Immediate', descAr: 'فوري' },
+  ],
+  'document-file-types': [
+    { id: DOCUMENT_FILE_TYPE.Scan, desc: 'Scan', descAr: 'مسح ضوئي' },
+    { id: DOCUMENT_FILE_TYPE.Attachment, desc: 'Attachment', descAr: 'مرفق' },
+    { id: DOCUMENT_FILE_TYPE.Signature, desc: 'Signature', descAr: 'توقيع' },
+    { id: DOCUMENT_FILE_TYPE.Other, desc: 'Other', descAr: 'أخرى' },
   ],
   'participant-roles': [
     { id: PARTICIPANT_ROLE.Sender, desc: 'Sender', descAr: 'مُرسل' },

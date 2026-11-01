@@ -1,4 +1,5 @@
-export { httpClient, ApiError } from './httpClient'
-export { toApiError, isConflictError } from './problemDetails'
+export { httpClient, uploadForm, downloadBlob, ApiError } from './httpClient'
+export type { UploadOptions, BlobDownload } from './httpClient'
+export { toApiError, toApiErrorAsync, isConflictError } from './problemDetails'
 export { toArabicErrorMessage } from './errorMessages'
 export { tokenStorage } from './tokenStorage'

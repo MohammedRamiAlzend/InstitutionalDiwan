@@ -15,11 +15,12 @@ Defines the React Router v7 route tree, the authentication guard (`ProtectedRout
 | `AppRouter.tsx`, `ProtectedRoute.tsx`, `RequirePermission.tsx` | Implemented (login, `/change-password`, shell-nested dashboard, `/documents`, `/documents/:documentId`, `/movements`, `/numbering`, `/departments`, `/institution-settings`, `/users`, `/roles`, `/employees`, `/audit`). |
 | Forced `/change-password` redirect | Implemented; Module 02 auth/admin audit and fixes are in progress. |
 | Organization routes | Both pages enforce `DEPARTMENT_MANAGE`; final browser verification pending. |
-| Module 03 route map | `/documents` ✅, `/documents/:documentId` ✅, `/numbering` ✅, and `/movements` ✅ registered (Phases 2–6); every Module 03 page still pending is a tab inside the details page except the Module 06 files tab. |
+| Module 03 route map | `/documents` ✅, `/documents/:documentId` ✅, `/numbering` ✅, and `/movements` ✅ registered (Phases 2–6); every remaining Module 03 surface is a tab inside the details page, and since Module 06 Phase 2 all six tabs — including «الملفات» — are live, so no route or tab chip is a placeholder. |
 | Module 09 route | `/audit` ✅ registered beside `/numbering`; the page performs its own `AUDIT_VIEW` guard and the checkpoint/check actions are gated on `AUDIT_MANAGE`. |
 ## Change Log
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-01 | agent | Module 06 Phase 2: no route change — the files tab lives inside the registered `/documents/:documentId`, and making it live removed the last disabled tab chip. Corrected the route-map row that still called the files tab an exception. |
 | 2026-10-29 | agent | Module 09: registered `/audit` (`ROUTES.AUDIT`) beside `/numbering`; the page performs its own `AUDIT_VIEW` guard and audit writes stay behind `AUDIT_MANAGE`. |
 | 2026-10-29 | agent | Module 03 Phase 6: registered `/movements` (`ROUTES.MOVEMENTS`) now that `MovementsPage` exists; the page performs its own `DOCUMENT_VIEW` guard and every routing write is gated on `DOCUMENT_EDIT`. |
 | 2026-10-29 | agent | Module 03 Phase 5: registered `/numbering` (`ROUTES.NUMBERING`) now that `NumberingPage` exists; the page performs its own `NUMBERING_VIEW` guard and registry writes stay behind `NUMBERING_MANAGE`. |
