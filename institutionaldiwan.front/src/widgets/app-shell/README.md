@@ -1,21 +1,27 @@
 # `src/widgets/app-shell` — RTL Application Shell, Sidebar & Header Widget
-> **Status:** Implemented (Phase 1, 2026-10-27) — wraps every shell route (the standalone `/change-password` page is outside it): permission-filtered sidebar, sticky header, mobile drawer, shell/user/item context menus, and the display-settings dialog (theme + density).
+> **Status:** Implemented (Phase 1, 2026-10-27) — wraps every shell route (the standalone `/change-password` page is outside it): permission-filtered sidebar, sticky header, mobile drawer, shell/user/item context menus, and the display-settings dialog (theme + density + page motion).
 ## 1. Purpose
 Composes the authenticated Arabic RTL workspace chrome around `<Outlet />`: a collapsible navigation sidebar filtered by the session's effective permissions, a sticky top bar with shell actions, theme toggle, and account menu, a mobile overlay drawer, and the global right-click surface.
 
-The shell owns the desktop-style chrome: a context menu on page content (refresh queries, toggle density, open display settings) and context menus on sidebar entries (open, copy link, collapse/expand group). All shell actions are also keyboard reachable through the shared context-menu primitive.
+The shell owns the desktop-style chrome: a context menu on page content (refresh queries, toggle density, toggle page motion, open display settings) and context menus on sidebar entries (open, copy link, collapse/expand group). All shell actions are also keyboard reachable through the shared context-menu primitive.
+
+Each page inside the shell fades up once when its route path changes (the page container is keyed by
+`location.pathname` and carries `animate-page-in`). The user can stop that motion — and the overlay
+entrances and colour transitions with it — from the display-settings dialog or the shell menu; see
+`model/motion.ts` and the `html[data-motion]` rules in `src/app/styles/README.md`.
 ## 2. Strict FSD Rules
 - Allowed Imports: `src/features/auth`, `src/entities/user`, and `src/shared/*`.
 - Forbidden Imports: NEVER import from `src/app`, `src/pages`, or sibling `src/widgets/*` slices.
 - Public API: exports `AppShell`, `AppSidebar`, and `AppHeader` via `src/widgets/app-shell/index.ts`; `AppRouter` mounts only `<AppShell />`.
 - Logout is not reimplemented here: the account menu calls `useLogout` from `features/auth`, which owns token/session/query-cache teardown.
 ## 3. Contents & Segments
-- `ui/AppShell.tsx` — Layout wrapper: desktop sticky sidebar, mobile overlay drawer (Escape + body scroll lock), `AppHeader`, the page `<main>` wrapped in a shell `ContextMenu` (keyboard `Shift+F10` / `ContextMenu` dispatch), `SettingsDialog`, and the density effect that applies `html[data-density]` and persists `diwan.density` (attribute removed on unmount so `/login` keeps default density).
+- `ui/AppShell.tsx` — Layout wrapper: desktop sticky sidebar, mobile overlay drawer (Escape + body scroll lock), `AppHeader`, the page `<main>` wrapped in a shell `ContextMenu` (keyboard `Shift+F10` / `ContextMenu` dispatch), `SettingsDialog`, the density effect that applies `html[data-density]` and persists `diwan.density` (attribute removed on unmount so `/login` keeps default density), and the motion effect that applies `html[data-motion]`; `diwan.motion` is written only when the user actually chooses, so the system `prefers-reduced-motion` request keeps steering until then. Its page container is keyed by `location.pathname` and carries `animate-page-in`, so every route change replays the entrance.
 - `ui/AppSidebar.tsx` — Brand block, collapse toggle, permission-filtered nav groups (`filterNavGroups`), active `NavLink` styling, disabled entries with the Arabic «قريبًا» badge for slices that have not landed, per-item `ContextMenu` (فتح / نسخ الرابط / طي المجموعة) with clipboard success/error toasts, and `Shift+F10` support on links. Each entry renders as one inline row (18px icon + label, `flex items-center gap-3`); the `NavLink` itself keeps a static `className` and hands its active state to an inner `<span>` render prop, because the context-menu trigger clones the link through Radix `Slot`, which stringifies a function `className` and silently drops all styling.
 - `ui/AppHeader.tsx` — Mobile menu trigger, current-route title, shell-actions `DropdownMenu`, `ThemeToggle`, and the account `DropdownMenu` (avatar initial, username, roles; تغيير كلمة المرور، إعدادات العرض، then danger تسجيل الخروج).
-- `ui/SettingsDialog.tsx` — Display settings dialog: theme choice (فاتح / داكن / حسب النظام through the app `ThemeProvider`) and density choice (مريح / مضغوط) with `aria-pressed` state.
+- `ui/SettingsDialog.tsx` — Display settings dialog: theme choice (فاتح / داكن / حسب النظام through the app `ThemeProvider`), density choice (مريح / مضغوط), and motion choice (حركات التنقل: مفعّلة / متوقفة) with `aria-pressed` state and an Arabic note that loading spinners keep turning when motion is stopped.
 - `model/shell-nav.ts` — `SHELL_NAV_GROUPS` (نظرة عامة، المراسلات، التنظيم، إدارة الوصول، الرقابة والتدقيق), permission codes, and `available` flags. Dashboard, documents, movements, numbering, departments, institution settings, users, roles, employees, and audit are available; remaining entries show «قريبًا». Both organization entries require `DEPARTMENT_MANAGE`. `filterNavGroups` hides unpermitted items/empty groups; `findNavItem` drives route titles.
 - `model/density.ts` — `Density`, `getStoredDensity`, `applyDensity` (`html[data-density]`), `persistDensity` (`diwan.density`).
+- `model/motion.ts` — `Motion` (`on` / `off`), `getStoredMotion`, `applyMotion` (`html[data-motion]`), `persistMotion` (`diwan.motion`). With no stored choice it follows the system `prefers-reduced-motion` request, and the `index.html` boot script resolves the same way before first paint so the first page entrance already honours it.
 - `index.ts` — Public API barrel file.
 ## 4. Required Packages
 - `react-router-dom`, `lucide-react`, `sonner`, `clsx`, `tailwind-merge` — ✅ installed
@@ -23,12 +29,14 @@ The shell owns the desktop-style chrome: a context menu on page content (refresh
 | Item | State |
 | --- | --- |
 | Shell/sidebar/header, display settings, and menus | Implemented; final regression verification pending. |
+| Page-transition motion and its user switch | Implemented and browser-verified: `animate-page-in` on the keyed page container, «حركات التنقل» in the settings dialog, «إيقاف/تفعيل الحركات» in the shell menu, `diwan.motion` + `html[data-motion]`. |
 | Shell route children | Dashboard, documents, numbering, departments, institution settings, users, roles, and employees; `/change-password` stays standalone. |
 | Institution settings navigation | Available under organization for `DEPARTMENT_MANAGE`; distinct from `SettingsDialog` (local theme/density only). |
 | Module 03 document navigation | «الوثائق» available under المراسلات for `DOCUMENT_VIEW` (Phase 2); «الحركات» available for `DOCUMENT_VIEW` (Phase 6); «الترقيم» available for `NUMBERING_VIEW` (Phase 5). |
 | Module 09 audit navigation | «سجل التدقيق» available under الرقابة والتدقيق for `AUDIT_VIEW`; verified for both a manager and a view-only role. |
 | Department badge / SignalR bell | Pending their slices. |
 ## 6. Change Log
+- 2026-11-01: Added the page-transition animation (`animate-page-in` on the route-keyed page container) and the user's motion switch: `model/motion.ts` (`diwan.motion` → `html[data-motion]`, seeded from `prefers-reduced-motion`), a «حركات التنقل» fieldset in `SettingsDialog`, and an «إيقاف/تفعيل الحركات» entry in the shell menu. Verified in-browser: the menu label follows the state, the dialog buttons carry `aria-pressed`, and stopping motion makes the page and dialog entrances compute to `animation: none` and colour transitions to `0s`, while spinners keep animating.
 - 2026-10-29: Enabled the «سجل التدقيق» audit navigation entry now that the `/audit` page is live (Module 09), gated on `AUDIT_VIEW`.
 - 2026-10-29: Enabled the «الحركات» correspondence navigation entry now that the `/movements` inbox/outbox page is live (Module 03 Phase 6); every correspondence entry now links to a real page.
 - 2026-10-29: Enabled the «الترقيم» correspondence navigation entry now that the `/numbering` page is live (Module 03 Phase 5).

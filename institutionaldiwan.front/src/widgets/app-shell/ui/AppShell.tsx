@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
-import { RefreshCw, Rows3, Settings2 } from 'lucide-react'
+import { Pause, Play, RefreshCw, Rows3, Settings2 } from 'lucide-react'
 import {
   ContextMenu,
   dispatchContextMenu,
@@ -17,6 +17,12 @@ import {
   persistDensity,
   type Density,
 } from '../model/density'
+import {
+  applyMotion,
+  getStoredMotion,
+  persistMotion,
+  type Motion,
+} from '../model/motion'
 import { findNavItem } from '../model/shell-nav'
 
 /** Authenticated workspace layout: sidebar, header, settings, and page outlet. */
@@ -27,6 +33,7 @@ export function AppShell() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [density, setDensity] = useState<Density>(getStoredDensity)
+  const [motion, setMotion] = useState<Motion>(getStoredMotion)
 
   useEffect(() => {
     applyDensity(density)
@@ -35,6 +42,10 @@ export function AppShell() {
       delete document.documentElement.dataset.density
     }
   }, [density])
+
+  useEffect(() => {
+    applyMotion(motion)
+  }, [motion])
 
   useEffect(() => {
     if (!mobileOpen) return
@@ -54,6 +65,12 @@ export function AppShell() {
 
   const title = findNavItem(location.pathname)?.label ?? 'الديوان المؤسسي'
 
+  // Only an explicit choice is stored, so `prefers-reduced-motion` keeps steering until then.
+  const changeMotion = (next: Motion) => {
+    setMotion(next)
+    persistMotion(next)
+  }
+
   const shellMenu: MenuEntry[] = [
     {
       id: 'refresh-data',
@@ -69,6 +86,17 @@ export function AppShell() {
       icon: <Rows3 className="size-4" aria-hidden />,
       onSelect: () =>
         setDensity((previous) => (previous === 'comfortable' ? 'compact' : 'comfortable')),
+    },
+    {
+      id: 'toggle-motion',
+      label: motion === 'on' ? 'إيقاف الحركات' : 'تفعيل الحركات',
+      icon:
+        motion === 'on' ? (
+          <Pause className="size-4" aria-hidden />
+        ) : (
+          <Play className="size-4" aria-hidden />
+        ),
+      onSelect: () => changeMotion(motion === 'on' ? 'off' : 'on'),
     },
     { type: 'separator' },
     {
@@ -122,7 +150,12 @@ export function AppShell() {
             }}
             className="flex-1 px-4 py-6 sm:px-6 lg:px-8"
           >
-            <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
+            {/* Keyed by path so the entrance animation replays for every page, including
+                a same-route change such as one document to the next. */}
+            <div
+              key={location.pathname}
+              className="mx-auto flex w-full max-w-7xl flex-col gap-6 animate-page-in"
+            >
               <Outlet />
             </div>
           </main>
@@ -134,6 +167,8 @@ export function AppShell() {
         onOpenChange={setSettingsOpen}
         density={density}
         onDensityChange={setDensity}
+        motion={motion}
+        onMotionChange={changeMotion}
       />
     </div>
   )

@@ -27,7 +27,7 @@
 | `router/ProtectedRoute.tsx` | Redirects unauthenticated users to `/login` and forces `/change-password` when the session flag or the `must_change_password` JWT claim is true (the claim survives a reload, since `/auth/me` carries no flag). |
 | `router/RequirePermission.tsx` | Route/component guard using the full 16-code `Permissions` set (incl. `AUDIT_VIEW` / `AUDIT_MANAGE`). |
 | `styles/tokens.css` | **Single source of color**: raw Forest / Golden Wheat / Charcoal palette, semantic light/dark tokens, and functional status colors. |
-| `styles/index.css` | Tailwind CSS v4 entry, imports `tokens.css`, Arabic font declarations (`Cairo` / `Readex Pro`), base RTL/LTR rules, and print tokens. |
+| `styles/index.css` | Tailwind CSS v4 entry, imports `tokens.css`, Arabic font declarations (`Cairo` / `Readex Pro`), base RTL/LTR rules, the shared overlay/content/page entrance animations with the `html[data-motion='off']` switch, and print tokens. |
 ## Conventions / Vibe-Coding Notes (OpenCode & Freebuff)
 - Always enforce `dir="rtl"` and `lang="ar"` on `<html>` by default (with optional toggle to `ltr`/`en` since lookups carry both `DescAr` and `Desc`).
 - Every screen must work in light **and** dark mode. Colors come only from `styles/tokens.css`; never hardcode hex values in a component.
@@ -44,6 +44,7 @@
 ## Change Log
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-01 | agent | Documented the shell page-transition animation and the `html[data-motion]` preference in the `styles/index.css` entry. |
 | 2026-11-01 | agent | Module 06 Phase 2: corrected the status line — the attachments tab is live inside the already-registered `/documents/:documentId`, so no route was added and only the upload action (Phase 3) stays planned. |
 | 2026-10-29 | agent | Registered the `/audit` route (Module 09) as a shell child and enabled its «سجل التدقيق» sidebar entry. |
 | 2026-10-29 | agent | Registered the `/movements` route (Module 03 Phase 6) as a shell child and updated the status line now that every correspondence route except the Module 06 attachments tab is live. |

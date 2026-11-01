@@ -25,10 +25,11 @@
   --font-heading: 'Cairo', 'Readex Pro', 'Segoe UI', Tahoma, Arial, sans-serif;
 }
 
-/* Overlay and popover entrances shared by dialog, menu, and select surfaces. */
+/* Overlay, popover and page entrances shared by dialog, menu, select, and shell surfaces. */
 @theme {
   --animate-overlay-in: overlay-in 150ms ease-out;
   --animate-content-in: content-in 180ms ease-out;
+  --animate-page-in: page-in 220ms ease-out;
 
   @keyframes overlay-in {
     from {
@@ -47,6 +48,17 @@
     to {
       opacity: 1;
       transform: translateY(0) scale(1);
+    }
+  }
+
+  @keyframes page-in {
+    from {
+      opacity: 0;
+      transform: translateY(0.5rem);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
     }
   }
 }
@@ -105,4 +117,18 @@
       --color-focus-ring: var(--forest-500);
     }
   }
+}
+
+/* Motion stopped from the display settings. These rules are deliberately outside
+   @layer base so they win over the generated animate-* utilities.
+   Loading spinners keep turning: they report work in progress, not decoration. */
+html[data-motion='off'] .animate-overlay-in,
+html[data-motion='off'] .animate-content-in,
+html[data-motion='off'] .animate-page-in {
+  animation: none;
+}
+
+html[data-motion='off'] * {
+  scroll-behavior: auto;
+  transition-duration: 0s;
 }

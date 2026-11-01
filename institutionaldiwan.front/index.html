@@ -16,6 +16,15 @@
             : 'light'
         }
         document.documentElement.dataset.theme = theme
+
+        // Same for motion, so a stored «motion off» does not miss the first page entrance.
+        var motion = localStorage.getItem('diwan.motion')
+        if (motion !== 'on' && motion !== 'off') {
+          motion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+            ? 'off'
+            : 'on'
+        }
+        document.documentElement.dataset.motion = motion
       })()
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />

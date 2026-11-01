@@ -12,7 +12,7 @@ Arabic typography. This is the single source of visual tokens for the SPA.
 | File | Purpose |
 | --- | --- |
 | `tokens.css` | **The single source of truth for color**: the raw Forest / Golden Wheat / Charcoal palette, the semantic light and dark theme mappings, and the functional status colors. |
-| `index.css` | `@import "tailwindcss";`, imports `tokens.css`, maps the semantic variables to Tailwind utilities via `@theme inline` (e.g. `bg-background`, `text-foreground`, `bg-accent`, `text-accent-contrast`, `bg-overlay`), Arabic font stack (`Readex Pro` / `Cairo`), base focus rings, `dir`-safe base rules, shared overlay/popover entrance animations, the `html[data-density='compact']` scale, and the print token override. |
+| `index.css` | `@import "tailwindcss";`, imports `tokens.css`, maps the semantic variables to Tailwind utilities via `@theme inline` (e.g. `bg-background`, `text-foreground`, `bg-accent`, `text-accent-contrast`, `bg-overlay`), Arabic font stack (`Readex Pro` / `Cairo`), base focus rings, `dir`-safe base rules, shared overlay/popover/page entrance animations, the `html[data-density='compact']` scale, the `html[data-motion='off']` switch, and the print token override. |
 
 ## Design tokens (contract)
 
@@ -98,15 +98,32 @@ hardcode a translucent black.
 
 ### Motion
 
-`index.css` declares two shared entrance animations in `@theme`:
+`index.css` declares three shared entrance animations in `@theme`:
 
 | Utility | Used by |
 | --- | --- |
 | `animate-overlay-in` | Dialog / modal backdrop fade-in (150 ms). |
 | `animate-content-in` | Dialog, dropdown, context menu, and select content entrance (180 ms). |
+| `animate-page-in` | The shell page container, re-keyed on every route path so each page fades up (220 ms). |
 
-Both respect the existing design tokens and are the only motion primitives shared components may
-assume; feature code does not define its own keyframes.
+These are the only motion primitives shared components may assume; feature code does not define its
+own keyframes.
+
+The user can stop that motion from «إعدادات العرض» (see `widgets/app-shell`). The shell writes
+`html[data-motion]` (`on` / `off`, persisted as `diwan.motion`, seeded from
+`prefers-reduced-motion` by the `index.html` boot script), and two unlayered rules turn it off:
+
+```css
+html[data-motion='off'] .animate-overlay-in,
+html[data-motion='off'] .animate-content-in,
+html[data-motion='off'] .animate-page-in { animation: none; }
+html[data-motion='off'] * { scroll-behavior: auto; transition-duration: 0s; }
+```
+
+They sit outside `@layer base` on purpose: unlayered declarations beat the generated `animate-*`
+utilities, which a `@layer base` rule could never override. Loading spinners (`animate-spin`) keep
+turning — they report work in progress, not decoration, so a motion-free user still sees that a
+request is running.
 
 ### Density
 
@@ -149,12 +166,13 @@ Rules:
 | Item | State |
 | --- | --- |
 | `tokens.css` (palette + light/dark semantic tokens) | ✅ Implemented |
-| `index.css` | ✅ Implemented (Tailwind v4 entry + `@theme inline` mapping + overlay/content entrance animations + compact density scale) |
+| `index.css` | ✅ Implemented (Tailwind v4 entry + `@theme inline` mapping + overlay/content/page entrance animations + compact density scale + `data-motion` switch) |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-01 | agent | Added `animate-page-in` for the shell page container and the unlayered `html[data-motion='off']` rules that stop entrance animations and colour transitions while leaving loading spinners running. |
 | 2026-10-27 | agent | Added the `html[data-density='compact']` root-scale rule backing the shell's `diwan.density` preference. |
 | 2026-10-27 | agent | Added the `--color-overlay` semantic token (light/dark) and shared overlay/content entrance animations used by dialogs, menus, and selects. |
 | 2026-10-27 | agent | Implemented `tokens.css` exactly per the locked contract and the Tailwind v4 entry `index.css` with semantic-utility mapping, Arabic fonts, focus rings, and print token override. |
