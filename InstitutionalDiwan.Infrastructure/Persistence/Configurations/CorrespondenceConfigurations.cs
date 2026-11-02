@@ -33,7 +33,9 @@ public sealed class DocumentConfiguration : IEntityTypeConfiguration<Document>
         builder.Property(x => x.CreatedAt).HasColumnName("CreatedAt").HasColumnType("datetime2(3)").IsRequired();
         builder.Property(x => x.UpdatedAt).HasColumnName("UpdatedAt").HasColumnType("datetime2(3)");
         builder.Property(x => x.RowVersion).HasColumnName("RowVersion").IsRowVersion();
+        builder.Property(x => x.SchemaVersionId).HasColumnName("SchemaVersionId");
 
+        builder.HasIndex(x => x.SchemaVersionId).HasDatabaseName("IX_DOCUMENTS_SCHEMA_VERSION");
         builder.HasIndex(x => new { x.OwningDepartmentId, x.CurrentStatusId }).HasDatabaseName("IX_DOCUMENTS_DEPT_STATUS");
         builder.HasIndex(x => x.OfficialNumberText).HasDatabaseName("IX_DOCUMENTS_OFFICIAL_NUMBER");
         builder.HasIndex(x => x.RegistrationDate).HasDatabaseName("IX_DOCUMENTS_REG_DATE");
@@ -43,6 +45,17 @@ public sealed class DocumentConfiguration : IEntityTypeConfiguration<Document>
         builder.HasOne<DocumentConfidentialityLevel>().WithMany().HasForeignKey(x => x.ConfidentialityLevelId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne<DocumentPriorityLevel>().WithMany().HasForeignKey(x => x.PriorityLevelId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne<DocumentStatusType>().WithMany().HasForeignKey(x => x.CurrentStatusId).OnDelete(DeleteBehavior.Restrict);
+
+        // A document stays pinned to the schema version it was created on; versions are never deleted.
+        builder.HasOne<DocumentTypeSchemaVersion>().WithMany().HasForeignKey(x => x.SchemaVersionId).OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasMany(x => x.FieldValues)
+            .WithOne()
+            .HasForeignKey(x => x.DocumentId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Navigation(x => x.FieldValues)
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
 
         builder.HasMany(x => x.Participants)
             .WithOne()

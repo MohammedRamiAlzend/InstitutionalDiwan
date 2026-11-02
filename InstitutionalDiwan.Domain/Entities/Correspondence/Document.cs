@@ -15,6 +15,7 @@ public sealed class Document : AggregateRoot<Guid>
     private readonly List<DocumentParticipant> _participants = new();
     private readonly List<DocumentStatusHistory> _statusHistory = new();
     private readonly List<DocumentNumber> _numbers = new();
+    private readonly List<DocumentFieldValue> _fieldValues = new();
 
     public Guid DocumentId
     {
@@ -49,6 +50,15 @@ public sealed class Document : AggregateRoot<Guid>
     public DateTime? UpdatedAt { get; private set; }
     public byte[]? RowVersion { get; private set; }
 
+    /// <summary>
+    /// FK → DocumentTypeSchemaVersion.SchemaVersionId. The dynamic-field schema this document was pinned
+    /// to when it was created; null when its type had no published schema. Never changes afterwards.
+    /// </summary>
+    public Guid? SchemaVersionId { get; private set; }
+
+    /// <summary>The stored dynamic-field values, validated against <see cref="SchemaVersionId"/>'s schema.</summary>
+    public IReadOnlyCollection<DocumentFieldValue> FieldValues => _fieldValues.AsReadOnly();
+
     public IReadOnlyCollection<DocumentParticipant> Participants => _participants.AsReadOnly();
     public IReadOnlyCollection<DocumentStatusHistory> StatusHistory => _statusHistory.AsReadOnly();
 
@@ -74,7 +84,8 @@ public sealed class Document : AggregateRoot<Guid>
         DateTime? documentDate = null,
         string? externalReferenceNumber = null,
         DateTime? externalDocumentDate = null,
-        DateTime? utcNow = null)
+        DateTime? utcNow = null,
+        Guid? schemaVersionId = null)
     {
         var now = utcNow ?? DateTime.UtcNow;
 
@@ -103,6 +114,7 @@ public sealed class Document : AggregateRoot<Guid>
             DocumentDate = documentDate ?? now,
             ExternalReferenceNumber = externalReferenceNumber,
             ExternalDocumentDate = externalDocumentDate,
+            SchemaVersionId = schemaVersionId,
             CreatedAt = now
         };
 
@@ -110,6 +122,46 @@ public sealed class Document : AggregateRoot<Guid>
         doc.RaiseDomainEvent(new DocumentCreatedEvent(doc.DocumentId, doc.DocumentTypeId, doc.DirectionId, doc.OwningDepartmentId, doc.CreatedByUserId));
 
         return Result.Success(doc);
+    }
+
+    /// <summary>
+    /// Replaces the dynamic-field values of a draft. <paramref name="schemaVersion"/> must be the version
+    /// this document is pinned to; values are validated against it, and blank values clear a field.
+    /// </summary>
+    public Result SetFieldValues(
+        DocumentTypeSchemaVersion schemaVersion,
+        IReadOnlyCollection<DocumentFieldValueInput> inputs,
+        DateTime? utcNow = null)
+    {
+        if (CurrentStatusId != DocumentStatusType.DraftId)
+            return Result.Failure(DomainErrors.Correspondence.OnlyDraftEditable);
+
+        if (SchemaVersionId is null || SchemaVersionId != schemaVersion.SchemaVersionId)
+            return Result.Failure(DomainErrors.DocumentFields.SchemaVersionMismatch);
+
+        var built = schemaVersion.BuildValues(DocumentId, inputs);
+        if (built.IsFailure)
+            return built;
+
+        _fieldValues.Clear();
+        _fieldValues.AddRange(built.Value);
+        UpdatedAt = utcNow ?? DateTime.UtcNow;
+        return Result.Success();
+    }
+
+    /// <summary>
+    /// Fails if a required dynamic field of the pinned schema has no value. Run before
+    /// <see cref="Register"/>; a document without a pinned schema has nothing to check.
+    /// </summary>
+    public Result EnsureRequiredFieldsComplete(DocumentTypeSchemaVersion? schemaVersion)
+    {
+        if (SchemaVersionId is null)
+            return Result.Success();
+
+        if (schemaVersion is null || schemaVersion.SchemaVersionId != SchemaVersionId)
+            return Result.Failure(DomainErrors.DocumentFields.SchemaVersionMismatch);
+
+        return schemaVersion.CheckRequiredFields(_fieldValues);
     }
 
     public Result UpdateDraftMetadata(

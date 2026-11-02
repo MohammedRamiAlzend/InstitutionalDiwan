@@ -1,4 +1,5 @@
 using InstitutionalDiwan.Application.Abstractions.Messaging;
+using InstitutionalDiwan.Application.Features.Correspondence.DocumentFields;
 using InstitutionalDiwan.Domain.Common;
 using InstitutionalDiwan.Domain.Entities.Correspondence;
 using InstitutionalDiwan.Domain.Errors;
@@ -12,17 +13,20 @@ internal sealed class CreateDraftDocumentCommandHandler
     private readonly IUserRepository _userRepository;
     private readonly IDocumentRepository _documentRepository;
     private readonly IDocumentTypeRepository _documentTypeRepository;
+    private readonly IDocumentTypeSchemaVersionRepository _schemaVersionRepository;
     private readonly IUnitOfWork _unitOfWork;
 
     public CreateDraftDocumentCommandHandler(
         IUserRepository userRepository,
         IDocumentRepository documentRepository,
         IDocumentTypeRepository documentTypeRepository,
+        IDocumentTypeSchemaVersionRepository schemaVersionRepository,
         IUnitOfWork unitOfWork)
     {
         _userRepository = userRepository;
         _documentRepository = documentRepository;
         _documentTypeRepository = documentTypeRepository;
+        _schemaVersionRepository = schemaVersionRepository;
         _unitOfWork = unitOfWork;
     }
 
@@ -45,6 +49,9 @@ internal sealed class CreateDraftDocumentCommandHandler
         if (!documentType.IsActive)
             return Result.Failure<DocumentResponse>(DomainErrors.Correspondence.DocumentTypeInactive);
 
+        // The document is pinned to the schema published right now and keeps it for its whole life.
+        var schema = await _schemaVersionRepository.GetPublishedAsync(request.DocumentTypeId, cancellationToken);
+
         var documentResult = Document.CreateDraft(
             request.Title,
             request.DocumentTypeId,
@@ -57,10 +64,16 @@ internal sealed class CreateDraftDocumentCommandHandler
             request.DocumentDate,
             request.ExternalReferenceNumber,
             request.ExternalDocumentDate,
-            utcNow: _unitOfWork.UtcNow);
+            utcNow: _unitOfWork.UtcNow,
+            schemaVersionId: schema?.SchemaVersionId);
 
         if (documentResult.IsFailure)
             return Result.Failure<DocumentResponse>(documentResult.Error);
+
+        var valuesResult = DocumentSchemaPinning.ApplyValues(
+            documentResult.Value, schema, request.FieldValues, _unitOfWork.UtcNow);
+        if (valuesResult.IsFailure)
+            return Result.Failure<DocumentResponse>(valuesResult.Error);
 
         _documentRepository.Add(documentResult.Value);
         await _unitOfWork.SaveChangesAsync(cancellationToken);

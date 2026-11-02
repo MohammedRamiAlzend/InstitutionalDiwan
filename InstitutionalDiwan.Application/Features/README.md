@@ -136,6 +136,7 @@ registries, per-document grants/movements) still returns a plain collection on p
 | Identity/`Users` department scope (assign, end, effective permissions) | ✅ Implemented |
 | Correspondence/`Documents` (immediate create, draft, update, register, participants, cancel, details, timeline, list) | ✅ Implemented |
 | Correspondence/`ExternalOrganizations` (create, update, list, get, deactivate, activate) | ✅ Implemented |
+| Correspondence/`DocumentFields` (dynamic fields: schema versions, field values, queries) | ✅ Implemented (HTTP endpoints in Phase 3) |
 | `Lookups` (list, get by id, create, relabel, deactivate, activate over all 33 catalogs) | ✅ Implemented |
 | Organization/`Departments` (create, update, soft delete, activate, get by id, list, tree) | Implemented; designated-hub protection and parent-first reactivation |
 | Organization/`InstitutionSettings` (get, update incl. Central Diwan guards) | Implemented; `LogoPath` limited to 500 characters |
@@ -149,6 +150,7 @@ registries, per-document grants/movements) still returns a plain collection on p
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-02 | Claude | Added `Correspondence/DocumentFields` (dynamic document fields, Phase 2) and wired schema pinning into the document create/register handlers. |
 | 2026-10-28 | Qoder | Added the paged `ListUserOptionsQuery` (`userId`, `username`, `isActive`) for document access-grant and movement-assignment pickers; department options now also serve `DOCUMENT_CREATE`/`DOCUMENT_EDIT` holders. |
 | 2026-10-28 | Qoder | Added `Identity/IdentityOptionsQueries.cs` for permission-scoped, minimal department/role/employee picker reads, plus user/employee list sorting. |
 | 2026-10-28 | Qoder | Filter inactive roles from shared login/password-change issuance and reject new inactive-role grants; document host-side session revocation and forced-password enforcement. |

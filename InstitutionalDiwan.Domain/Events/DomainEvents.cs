@@ -22,6 +22,7 @@ public sealed record DocumentArchivedEvent(Guid DocumentId, int PreviousStatusId
 public sealed record DocumentUnarchivedEvent(Guid DocumentId, int RestoredStatusId, Guid ActorUserId, string? Reason) : DomainEventBase;
 public sealed record DocumentCanceledEvent(Guid DocumentId, int PreviousStatusId, Guid ActorUserId, string Reason) : DomainEventBase;
 public sealed record DocumentParticipantAddedEvent(Guid DocumentId, Guid ParticipantId, int RoleId) : DomainEventBase;
+public sealed record DocumentSchemaVersionPublishedEvent(Guid SchemaVersionId, int DocumentTypeId, int VersionNumber, Guid ActorUserId) : DomainEventBase;
 
 // Module 04: Official Numbering
 public sealed record OfficialNumberIssuedEvent(Guid DocumentNumberId, Guid DocumentId, Guid RegistryId, string OfficialNumberText, int NumberingYear, long SequenceValue) : DomainEventBase;

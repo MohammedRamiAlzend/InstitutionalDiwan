@@ -15,6 +15,8 @@ internal sealed class DocumentRepository : IDocumentRepository
         _context.Documents
             .Include(document => document.Participants)
             .Include(document => document.StatusHistory)
+            .Include(document => document.FieldValues)
+            .AsSplitQuery()
             .FirstOrDefaultAsync(document => document.DocumentId == documentId, cancellationToken);
 
     public Task<Document?> GetWithNumbersAsync(

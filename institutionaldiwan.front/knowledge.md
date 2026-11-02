@@ -390,6 +390,41 @@ picker in `features/document-manage`. The UI is the `/documents?tab=organization
 (`features/external-organization-manage` + `widgets/external-organizations-table`); there is no
 dedicated route or sidebar entry.
 
+### Dynamic document fields — **backend only, not implemented in the SPA (do not call yet)**
+
+Administrators define extra fields per document type and publish them in immutable schema versions
+(draft → published → retired). A document is pinned to the version published when it was created
+and never moves to a newer one; its values are editable only while it is a draft.
+
+Schema administration — `LOOKUP_MANAGE`:
+- `GET`/`POST /api/document-types/{documentTypeId}/fields` — list / define a field
+  (`key` lowercase letters, digits, `_`; `dataType` integer 1 Text, 2 LongText, 3 Number, 4 Date,
+  5 Boolean, 6 Select — immutable).
+- `GET`/`POST /api/document-types/{documentTypeId}/schema-versions` — history (newest first) /
+  start the single draft (copied from the published version).
+- `GET /api/schema-versions/{id}`, `DELETE /api/schema-versions/{id}` (draft only).
+- `POST /api/schema-versions/{id}/fields` (`documentFieldId`, `settings`),
+  `PUT`/`DELETE /api/schema-versions/{id}/fields/{documentFieldId}` — edit the draft.
+- `POST /api/schema-versions/{id}/publish` — freezes the draft and retires the previous version.
+
+Settings: `labelAr`, `isRequired`, `displayOrder`, `regexPattern` + `regexErrorMessageAr`
+(text), `minNumber`/`maxNumber` (number), `maxLength` (text), `options[{key,labelAr}]` (select).
+
+Document side:
+- `GET /api/document-types/{documentTypeId}/schema` — `DOCUMENT_VIEW`; the published schema that
+  renders the create form (empty when the type has none).
+- `GET /api/documents/{id}/fields` — `DOCUMENT_VIEW`; the pinned schema with the stored values.
+- `PUT /api/documents/{id}/fields` — `DOCUMENT_EDIT`; replaces a draft's values
+  (`values[{fieldKey,value}]`, value as text: numbers invariant, dates ISO 8601, booleans
+  `true`/`false`, selects the option key; blank clears).
+- `POST /api/documents` and `POST /api/documents/drafts` accept optional `fieldValues` (same shape).
+- Registering (or `POST /api/documents`) with a required field missing answers
+  `DocumentFields.ValueRequired` before any number is consumed.
+
+Error codes (all need Arabic entries in `shared/api/errorMessages.ts` when the UI is built):
+`DocumentFields.*` — see `InstitutionalDiwan.Domain/Errors/DomainErrors.cs`. Registry filtering by
+field values is not implemented yet.
+
 ### Lookups — `/api/lookups/{lookup}`
 
 `GET` (list, `?includeInactive=`), `GET /{lookup}/{id}` — `DOCUMENT_VIEW`;

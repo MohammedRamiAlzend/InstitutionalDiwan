@@ -473,6 +473,10 @@ internal sealed class TamperEvidentAuditInterceptor : SaveChangesInterceptor
         DocumentParticipantAddedEvent e => new(
             "CORRESPONDENCE", AuditActionType.UpdateId, AuditEntityType.DocumentId, e.DocumentId,
             NewJson(new { e.ParticipantId, e.RoleId }), RelatedDocumentId: e.DocumentId),
+        DocumentSchemaVersionPublishedEvent e => new(
+            "CORRESPONDENCE", AuditActionType.UpdateId, AuditEntityType.DocumentSchemaVersionId, e.SchemaVersionId,
+            NewJson(new { Status = "Published", e.DocumentTypeId, e.VersionNumber }),
+            OldValuesJson: OldJson(new { Status = "Draft" }), ActorUserId: e.ActorUserId),
 
         OfficialNumberIssuedEvent e => new(
             "NUMBERING", AuditActionType.CreateId, AuditEntityType.DocumentNumberId, e.DocumentNumberId,
@@ -598,6 +602,8 @@ internal sealed class TamperEvidentAuditInterceptor : SaveChangesInterceptor
             _ when type == typeof(DocumentFile) => ("ATTACHMENTS", AuditEntityType.FileId),
             _ when type == typeof(DocumentMovement) => ("MOVEMENTS", AuditEntityType.MovementId),
             _ when type == typeof(DocumentRelation) => ("RELATIONS", AuditEntityType.DocumentRelationId),
+            _ when type == typeof(DocumentTypeSchemaVersion) => ("CORRESPONDENCE", AuditEntityType.DocumentSchemaVersionId),
+            _ when type == typeof(DocumentField) => ("CORRESPONDENCE", AuditEntityType.DocumentSchemaVersionId),
             _ => (string.Empty, 0)
         };
 

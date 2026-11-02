@@ -1,4 +1,5 @@
 using InstitutionalDiwan.Application.Abstractions.Messaging;
+using InstitutionalDiwan.Application.Features.Correspondence.DocumentFields;
 using InstitutionalDiwan.Domain.Common;
 using InstitutionalDiwan.Domain.Entities.Correspondence;
 using InstitutionalDiwan.Domain.Entities.Numbering;
@@ -17,6 +18,7 @@ internal sealed class CreateDocumentCommandHandler : ICommandHandler<CreateDocum
     private readonly IDocumentTypeRepository _documentTypeRepository;
     private readonly IDocumentNumberRepository _documentNumberRepository;
     private readonly INumberingRegistryRepository _numberingRegistryRepository;
+    private readonly IDocumentTypeSchemaVersionRepository _schemaVersionRepository;
     private readonly IUnitOfWork _unitOfWork;
 
     public CreateDocumentCommandHandler(
@@ -25,6 +27,7 @@ internal sealed class CreateDocumentCommandHandler : ICommandHandler<CreateDocum
         IDocumentTypeRepository documentTypeRepository,
         IDocumentNumberRepository documentNumberRepository,
         INumberingRegistryRepository numberingRegistryRepository,
+        IDocumentTypeSchemaVersionRepository schemaVersionRepository,
         IUnitOfWork unitOfWork)
     {
         _userRepository = userRepository;
@@ -32,6 +35,7 @@ internal sealed class CreateDocumentCommandHandler : ICommandHandler<CreateDocum
         _documentTypeRepository = documentTypeRepository;
         _documentNumberRepository = documentNumberRepository;
         _numberingRegistryRepository = numberingRegistryRepository;
+        _schemaVersionRepository = schemaVersionRepository;
         _unitOfWork = unitOfWork;
     }
 
@@ -61,6 +65,10 @@ internal sealed class CreateDocumentCommandHandler : ICommandHandler<CreateDocum
                 numberText, request.NumberingYear, cancellationToken))
             return Result.Failure<DocumentResponse>(DomainErrors.Numbering.OfficialNumberTaken);
 
+        // Pinned to the schema published right now; this flow registers immediately, so the values
+        // are applied and the required fields checked before a number is consumed.
+        var schema = await _schemaVersionRepository.GetPublishedAsync(request.DocumentTypeId, cancellationToken);
+
         var documentResult = Document.CreateDraft(
             title: request.Title,
             documentTypeId: request.DocumentTypeId,
@@ -70,12 +78,21 @@ internal sealed class CreateDocumentCommandHandler : ICommandHandler<CreateDocum
             subjectSummary: request.SubjectSummary,
             confidentialityLevelId: request.ConfidentialityLevelId ?? DocumentConfidentialityLevel.NormalId,
             priorityLevelId: request.PriorityLevelId ?? DocumentPriorityLevel.NormalId,
-            utcNow: _unitOfWork.UtcNow);
+            utcNow: _unitOfWork.UtcNow,
+            schemaVersionId: schema?.SchemaVersionId);
 
         if (documentResult.IsFailure)
             return Result.Failure<DocumentResponse>(documentResult.Error);
 
         var document = documentResult.Value;
+
+        var valuesResult = DocumentSchemaPinning.ApplyValues(document, schema, request.FieldValues, _unitOfWork.UtcNow);
+        if (valuesResult.IsFailure)
+            return Result.Failure<DocumentResponse>(valuesResult.Error);
+
+        var requiredResult = document.EnsureRequiredFieldsComplete(schema);
+        if (requiredResult.IsFailure)
+            return Result.Failure<DocumentResponse>(requiredResult.Error);
 
         var registryResult = await ResolveRegistryAsync(
             user.PrimaryDepartmentId, request.DocumentTypeId, request.DirectionId, cancellationToken);

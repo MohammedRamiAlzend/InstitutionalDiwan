@@ -56,13 +56,14 @@ without knowing which provider is underneath.
 | All 66 entity configurations | ✅ Written |
 | Repository implementations | 🟡 19 of 21 (files, audit, lookups, institution settings, external organizations, movements included; relations/notifications pending) |
 | Interceptors | 🟡 `TamperEvidentAuditInterceptor` implemented; outbox interceptor pending |
-| Migrations | ✅ 8 written (`InitialCreate`, `AddUniqueOfficialNumber`, three lookup refactors, `InitialCreate2`, `Add_Department_Register_Numbers`, `Add_Audit_Chain_Uniqueness`) |
+| Migrations | ✅ 9 written (`InitialCreate`, `AddUniqueOfficialNumber`, three lookup refactors, `InitialCreate2`, `Add_Department_Register_Numbers`, `Add_Audit_Chain_Uniqueness`, `Add_Document_Dynamic_Fields`) |
 | Seed data | ✅ 33 reference catalogs + institution settings + a 15-department demo tree + 28 demo employees + permissions + system roles + demo users (`Seed/` — ordered + environment-gated) |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-02 | Claude | Dynamic document fields, Phase 1: `Configurations/DocumentFieldsConfigurations.cs` (DOCUMENT_FIELDS, DOCUMENT_TYPE_SCHEMA_VERSIONS, DOCUMENT_TYPE_SCHEMA_VERSION_FIELDS with a JSON `Options` column, DOCUMENT_FIELD_VALUES), four `DiwanDbContext` DbSets, `Document.SchemaVersionId` + `FieldValues` mapping, the two new repositories and the `Add_Document_Dynamic_Fields` migration. |
 | 2026-10-28 | agent | Added `Seed/EmployeeSeeder.cs` (Order 97, Development/Staging) — 28 demo employees attached to the seeded department tree, idempotent by employee number; `EmployeeRepository.ListPagedAsync` now accepts an optional department-id set so the roster can be filtered by department and descendants. |
 | 2026-10-25 | opencode | Added `AuditLogRepository` and registered `TamperEvidentAuditInterceptor`; refreshed repository/interceptor/migration counts. |
 | 2026-10-20 | Buffy | Added `DOCUMENT_NUMBER_SCOPES` (`DiwanDbContext`, configuration, migration) and the department-register columns/indexes; `DocumentNumberRepository` queries are now scope-aware and the repository gained `ExistsInScopeAsync`, `GetDepartmentEntryAsync`, and `ListByDepartmentAsync`, while `DocumentRepository` gained `GetWithNumbersAsync` + `GetByIdsAsync`. |

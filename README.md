@@ -1,7 +1,7 @@
 # Institutional Diwan — نظام الديوان المؤسساتي الموحد
 
 > **Status:** Backend implemented for Modules 01–06 and 09 plus reference catalogs; `dotnet build`
-> succeeds and 487 tests pass. Frontend Module 01 Organization includes department management,
+> succeeds and 524 tests pass. Frontend Module 01 Organization includes department management,
 > tree/Mermaid/chart/grid views, lazy employee branches, paged rosters, and `/institution-settings`.
 > Module 02 Identity has auth and administration screens with live-server-enforced session/forced
 > password-change rules. Module 03 Correspondence is complete (Phases 0–8: document reads and Arabic
@@ -107,7 +107,7 @@ npm run lint
 | 10 — Notifications | Domain entities and lookups | Application/API not implemented. | Blocked on backend/hubs. |
 
 “Implemented and verified” means the code is present and was exercised against the live API;
-`dotnet test` (487 tests), `npm run build`, and `npm run lint` pass. Module 01 settings loads the
+`dotnet test` (524 tests), `npm run build`, and `npm run lint` pass. Module 01 settings loads the
 existing singleton: read errors, including missing settings, show Arabic feedback and retry rather
 than creating or overwriting a record. Frontend Modules 03, 04, 06, and 09 are implemented and
 browser-verified; Modules 07/08/10 remain.
@@ -157,6 +157,11 @@ have no `README.md` of their own yet — their content is documented in the encl
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-02 | Claude | Dynamic document fields, Phases 4-5: two more critical-case tests (`dotnet test` now 524) and the new endpoints documented in `institutionaldiwan.front/knowledge.md` as backend only. |
+| 2026-11-02 | Claude | Dynamic document fields, Phase 3 (Server): `DocumentFieldsController` (schema administration, publish, published schema, document values), `fieldValues` on document creation, 3 tests added, `dotnet test` now 522. Front end not changed. |
+| 2026-11-02 | Claude | Dynamic document fields, Phase 2 (Application): schema administration and document value use cases, create/register integration with schema pinning, schema audit rows; 11 tests added, `dotnet test` now 519. No HTTP endpoint or front-end change yet. |
+| 2026-11-02 | Claude | Dynamic document fields, Phase 1 (Infrastructure): EF mapping, repositories and the additive `Add_Document_Dynamic_Fields` migration (not yet applied to a database); 6 persistence tests added, `dotnet test` now 508. No API or front-end change yet. |
+| 2026-11-02 | Claude | Dynamic document fields (backend plan `plans/document-dynamic-fields-backend.md`), Phase 0: Domain entities, value objects, errors, event and repository contracts for per-document-type field schemas with versions; `Document` is pinned to its schema version at creation. 15 new tests; `dotnet test` now 502. No persistence, API or front-end change yet. |
 | 2026-11-01 | agent | Front-end grid paging follow-up, no backend change: tables now default to 10 rows per page and the page size is a typed number field («صفوف في الصفحة») clamped to 1..100 — the ceiling `useTableState` shares with the API's `PageRequest.MaxPageSize` — instead of a fixed option list. Keystrokes stay local and commit to the URL on blur or `Enter`. `npm run lint` and `npm run build` pass. |
 | 2026-11-01 | agent | Front-end motion follow-up, no backend change: popups now animate closed as well as open (dialog overlay/content, select, dropdown and context menus animate out through Radix's `data-state="closed"`, which `Presence` waits for), and the departments view body (شجرة / مخطط / إحصاء / جدول) fades up on every switch. Both stay covered by the shell's «حركات التنقل: متوقفة» setting. `npm run lint`, `npm run build`, `dotnet build` and `dotnet test` (487) pass. |
 | 2026-11-01 | agent | Front-end shell polish, no backend change: page navigation now eases in (`animate-page-in` on the route-keyed page container in `widgets/app-shell`), and the user can stop all such motion from «إعدادات العرض» («حركات التنقل») or the shell menu — the choice persists as `diwan.motion`, is applied as `<html data-motion>` before first paint, and defaults to the system `prefers-reduced-motion` request. Loading spinners keep animating so work in progress stays visible. `npm run lint` and `npm run build` pass. |

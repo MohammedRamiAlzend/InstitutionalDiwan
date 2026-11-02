@@ -35,7 +35,7 @@ internal static class TestContextFactory
         for (var id = 1; id <= 8; id++)
             context.AuditActionTypes.Add(AuditActionType.Create(id, $"Action {id}", $"إجراء {id}").Value);
 
-        for (var id = 1; id <= 13; id++)
+        for (var id = 1; id <= 14; id++)
             context.AuditEntityTypes.Add(AuditEntityType.Create(id, $"Entity {id}", $"كيان {id}").Value);
 
         context.SaveChanges();

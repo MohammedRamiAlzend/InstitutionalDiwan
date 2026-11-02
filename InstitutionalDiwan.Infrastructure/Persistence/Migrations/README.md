@@ -1,6 +1,6 @@
 # Infrastructure / Persistence / Migrations
 
-> **Status:** Implemented — eight migrations, including the Module 09 `Add_Audit_Chain_Uniqueness` guard,
+> **Status:** Implemented — nine migrations, including the Module 09 `Add_Audit_Chain_Uniqueness` guard and the additive `Add_Document_Dynamic_Fields`,
 > are generated. Startup applies them through `Server/Extensions/DatabaseExtensions.cs`
 > (`Database.MigrateAsync`).
 
@@ -26,6 +26,7 @@ empty migration when the model changed.
 | `20261018071440_AddUniqueOfficialNumber` | Replaces the non-unique `IX_DOC_NUMBERS_TEXT` on `DOCUMENT_NUMBERS.OfficialNumberText` with the unique `UX_DOC_NUMBERS_TEXT_YEAR (OfficialNumberText, NumberingYear)` — the database-level backstop behind the official-number duplicate check. |
 | `20261020105152_Add_Department_Register_Numbers` | Adds `DOCUMENT_NUMBERS.ScopeId`/`DepartmentId`/`RegistryDate`, `DOCUMENT_NUMBER_HISTORY.EffectiveDate`, `DOCUMENT_MOVEMENT_STEPS.RegistryNumberId`, and the `DOCUMENT_NUMBER_SCOPES` lookup (rows 1–2 inserted inside the migration so the new FK holds for existing rows). Replaces the two global unique indexes with `ScopeId`-filtered ones (`UX_DOC_NUMBERS_REG_YEAR_SEQ`, `UX_DOC_NUMBERS_TEXT_YEAR` for central numbers only), adds `UX_DOC_NUMBERS_DEPT_TEXT_YEAR` + `UX_DOC_NUMBERS_DOC_DEPT` for department registers, and backfills `RegistryDate = IssuedAt` for existing central numbers. |
 | `20261025100040_Add_Audit_Chain_Uniqueness` | Adds the unique `UX_AUDIT_LOGS_PREVIOUS_HASH` index on `AUDIT_LOGS.PreviousHash`, so a chain row can have exactly one successor. Concurrent appends then surface as a duplicate-key conflict instead of forking the hash chain. |
+| `20261102114522_Add_Document_Dynamic_Fields` | Purely additive: nullable `DOCUMENTS.SchemaVersionId` (FK, restrict) and the `DOCUMENT_FIELDS`, `DOCUMENT_TYPE_SCHEMA_VERSIONS`, `DOCUMENT_TYPE_SCHEMA_VERSION_FIELDS` and `DOCUMENT_FIELD_VALUES` tables, with the unique key per type, the one-draft-per-type filtered unique index, the version-number unique index and the sparse typed-value indexes. Existing rows and tables are untouched. |
 
 ## Custom (hand-written) migration steps
 
@@ -44,6 +45,7 @@ empty migration when the model changed.
 | Unique official-number index (`UX_DOC_NUMBERS_TEXT_YEAR`) | ✅ Created + applied (2026-10-18) |
 | Department register numbering (`Add_Department_Register_Numbers`) | ✅ Created + applied against LocalDB (2026-10-20) |
 | Audit chain uniqueness (`Add_Audit_Chain_Uniqueness`) | ✅ Created + applied against LocalDB (2026-10-25) |
+| Dynamic document fields (`Add_Document_Dynamic_Fields`) | ✅ Created (2026-11-02); not yet applied to LocalDB — it applies on the next Development startup |
 | Audit immutability trigger / DENY | ❌ Not created |
 | Closure table / indexed view | ❌ Not created |
 | Full-text catalog & indexes | ❌ Not created |
@@ -58,6 +60,7 @@ empty migration when the model changed.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-02 | Claude | Added `Add_Document_Dynamic_Fields` for the dynamic document fields plan (Phase 1). Generated with `dotnet ef` against a build in a separate configuration, because the running API locks the default `bin`; the snapshot diff is additions only. |
 | 2026-10-25 | opencode | Added `Add_Audit_Chain_Uniqueness` (unique `UX_AUDIT_LOGS_PREVIOUS_HASH`) so concurrent audit appends cannot fork the chain. |
 | 2026-10-20 | Buffy | Added `Add_Department_Register_Numbers`: scope columns + lookup seed rows, history `EffectiveDate`, movement-step `RegistryNumberId`, `ScopeId`-filtered uniqueness replacing the global indexes, one-line-per-department index, and the `RegistryDate` backfill; verified by applying it to a throwaway LocalDB database and probing the indexes. |
 | 2026-10-18 | opencode | Added `AddUniqueOfficialNumber` — drops `IX_DOC_NUMBERS_TEXT`, creates unique `UX_DOC_NUMBERS_TEXT_YEAR (OfficialNumberText, NumberingYear)` so a duplicate official number + year can never be saved (409 backstop for `CreateDocumentCommand`). |

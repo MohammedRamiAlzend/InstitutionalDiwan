@@ -1,4 +1,5 @@
 using InstitutionalDiwan.Application.Abstractions.Messaging;
+using InstitutionalDiwan.Domain.ValueObjects;
 
 namespace InstitutionalDiwan.Application.Features.Correspondence.Documents;
 
@@ -19,4 +20,5 @@ public sealed record CreateDocumentCommand(
     int NumberingYear,
     string? SubjectSummary = null,
     int? ConfidentialityLevelId = null,
-    int? PriorityLevelId = null) : ICommand<DocumentResponse>;
+    int? PriorityLevelId = null,
+    IReadOnlyList<DocumentFieldValueInput>? FieldValues = null) : ICommand<DocumentResponse>;

@@ -51,6 +51,10 @@ public sealed class DiwanDbContext : DbContext, IUnitOfWork
     public DbSet<DocumentPriorityLevel> DocumentPriorityLevels => Set<DocumentPriorityLevel>();
     public DbSet<DocumentParticipant> DocumentParticipants => Set<DocumentParticipant>();
     public DbSet<DocumentStatusHistory> DocumentStatusHistories => Set<DocumentStatusHistory>();
+    public DbSet<DocumentField> DocumentFields => Set<DocumentField>();
+    public DbSet<DocumentTypeSchemaVersion> DocumentTypeSchemaVersions => Set<DocumentTypeSchemaVersion>();
+    public DbSet<DocumentTypeSchemaVersionField> DocumentTypeSchemaVersionFields => Set<DocumentTypeSchemaVersionField>();
+    public DbSet<DocumentFieldValue> DocumentFieldValues => Set<DocumentFieldValue>();
     public DbSet<ExternalOrganization> ExternalOrganizations => Set<ExternalOrganization>();
     public DbSet<ParticipantRole> ParticipantRoles => Set<ParticipantRole>();
     public DbSet<ParticipantTargetType> ParticipantTargetTypes => Set<ParticipantTargetType>();

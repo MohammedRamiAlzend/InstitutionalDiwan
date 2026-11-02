@@ -38,7 +38,7 @@ public sealed class CreateDocumentCommandHandlerTests
         FakeDocumentNumberRepository numbers,
         FakeNumberingRegistryRepository registries,
         FakeUnitOfWork unitOfWork)
-        => new(users, documents, types, numbers, registries, unitOfWork);
+        => new(users, documents, types, numbers, registries, new FakeDocumentTypeSchemaVersionRepository(), unitOfWork);
 
     private static CreateDocumentCommand Command(
         Guid userId,

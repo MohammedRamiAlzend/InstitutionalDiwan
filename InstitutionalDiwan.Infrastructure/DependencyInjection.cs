@@ -67,6 +67,8 @@ public static class DependencyInjection
         services.AddScoped<IDepartmentTypeRepository, DepartmentTypeRepository>();
         services.AddScoped<IDocumentRepository, DocumentRepository>();
         services.AddScoped<IDocumentTypeRepository, DocumentTypeRepository>();
+        services.AddScoped<IDocumentFieldRepository, DocumentFieldRepository>();
+        services.AddScoped<IDocumentTypeSchemaVersionRepository, DocumentTypeSchemaVersionRepository>();
         services.AddScoped<IDocumentNumberRepository, DocumentNumberRepository>();
         services.AddScoped<INumberingRegistryRepository, NumberingRegistryRepository>();
         services.AddScoped<ILookupRepository, LookupRepository>();

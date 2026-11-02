@@ -96,6 +96,30 @@ public interface IDocumentTypeRepository
     void Add(DocumentType documentType);
 }
 
+public interface IDocumentFieldRepository
+{
+    Task<DocumentField?> GetByIdAsync(Guid documentFieldId, CancellationToken cancellationToken = default);
+    Task<DocumentField?> GetByKeyAsync(int documentTypeId, string key, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<DocumentField>> ListByDocumentTypeAsync(int documentTypeId, CancellationToken cancellationToken = default);
+    void Add(DocumentField field);
+}
+
+public interface IDocumentTypeSchemaVersionRepository
+{
+    /// <summary>A version with its fields, by id.</summary>
+    Task<DocumentTypeSchemaVersion?> GetByIdAsync(Guid schemaVersionId, CancellationToken cancellationToken = default);
+    /// <summary>The single editable draft of a document type, if one exists.</summary>
+    Task<DocumentTypeSchemaVersion?> GetDraftAsync(int documentTypeId, CancellationToken cancellationToken = default);
+    /// <summary>The published version new documents of the type are pinned to, if any.</summary>
+    Task<DocumentTypeSchemaVersion?> GetPublishedAsync(int documentTypeId, CancellationToken cancellationToken = default);
+    /// <summary>The highest version number used by the type (0 when none), for numbering the next draft.</summary>
+    Task<int> GetLatestVersionNumberAsync(int documentTypeId, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<DocumentTypeSchemaVersion>> ListByDocumentTypeAsync(int documentTypeId, CancellationToken cancellationToken = default);
+    void Add(DocumentTypeSchemaVersion version);
+    /// <summary>Deletes a discarded draft together with its fields; published versions are never removed.</summary>
+    void Remove(DocumentTypeSchemaVersion version);
+}
+
 public interface INumberingRegistryRepository
 {
     Task<NumberingRegistry?> GetByIdAsync(Guid registryId, CancellationToken cancellationToken = default);

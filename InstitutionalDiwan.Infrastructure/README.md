@@ -50,6 +50,8 @@ Persistence/Configurations/
                                   DOCUMENT_CONFIDENTIALITY_LEVELS, DOCUMENT_PRIORITY_LEVELS,
                                   DOCUMENT_PARTICIPANTS, DOCUMENT_STATUS_HISTORY, EXTERNAL_ORGANIZATIONS,
                                   PARTICIPANT_ROLES, PARTICIPANT_TARGET_TYPES, ORGANIZATION_TYPES
+  DocumentFieldsConfigurations.cs DOCUMENT_FIELDS, DOCUMENT_TYPE_SCHEMA_VERSIONS,
+                                  DOCUMENT_TYPE_SCHEMA_VERSION_FIELDS, DOCUMENT_FIELD_VALUES
   NumberingConfigurations.cs      DOCUMENT_NUMBERS (central + department rows), NUMBERING_REGISTRIES,
                                   NUMBERING_COUNTERS, DOCUMENT_NUMBER_HISTORY, DOCUMENT_NUMBER_STATUSES,
                                   DOCUMENT_NUMBER_EVENT_TYPES, DOCUMENT_NUMBER_SCOPES,
@@ -80,7 +82,7 @@ Persistence/Configurations/
 | Repositories | 🟡 19 of 21 implemented — `UserRepository`, `RoleRepository`, `PermissionRepository`, `DepartmentRepository`, `DepartmentTypeRepository`, `DocumentRepository`, `DocumentTypeRepository`, `NumberingRegistryRepository`, `DocumentNumberRepository`, `EmployeeRepository`, `DocumentAccessGrantRepository`, `LookupRepository`, `InstitutionSettingRepository`, `ExternalOrganizationRepository`, `DocumentMovementRepository`, `DocumentFileRepository`, `DocumentFileTypeRepository`, `FileStorageProviderRepository`, `AuditLogRepository`; relation and notification repositories pending |
 | Seed | ✅ Ordered, environment-aware seeders (33 lookup seeders, `InstitutionSettingSeeder`, `DepartmentSeeder` demo tree, `EmployeeSeeder` demo personnel, `PermissionSeeder`, `RoleSeeder`, `UserSeeder`) |
 | Authentication | ✅ `PasswordHasher` (PBKDF2) + `JwtProvider` + `UserContext` (reads `sub`/`dept_id`/`scope_type`/`permission` claims) |
-| Migrations | ✅ 8 written (`InitialCreate`, `AddUniqueOfficialNumber`, `Refactor_DepartmentTypes_ToLookup`, `Refactor_CorrespondenceNumbering_ToLookups`, `Refactor_AllRemaining_ToLookups`, `InitialCreate2`, `Add_Department_Register_Numbers`, `Add_Audit_Chain_Uniqueness`) |
+| Migrations | ✅ 9 written (`InitialCreate`, `AddUniqueOfficialNumber`, `Refactor_DepartmentTypes_ToLookup`, `Refactor_CorrespondenceNumbering_ToLookups`, `Refactor_AllRemaining_ToLookups`, `InitialCreate2`, `Add_Department_Register_Numbers`, `Add_Audit_Chain_Uniqueness`, `Add_Document_Dynamic_Fields`) |
 | Interceptors | ✅ `TamperEvidentAuditInterceptor` (domain events incl. `UserLoggedIn`, generic old/new snapshots, SHA-256 chain, sensitive-field redaction, no writes outside an HTTP request) |
 | Authorization | ✅ `DepartmentScopeEvaluator` + `DocumentAccessEvaluator` implementing the Application contracts |
 | Storage | ✅ `LocalFileStorageService` + `FileSignatureValidator` |
@@ -91,6 +93,7 @@ Persistence/Configurations/
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-02 | Claude | Dynamic document fields, Phase 1: persistence for per-document-type field schemas with versions (configurations, DbSets, `DocumentFieldRepository`, `DocumentTypeSchemaVersionRepository`, `Add_Document_Dynamic_Fields` migration). See the Persistence README for detail. |
 | 2026-10-28 | Qoder | Added `Seed/EmployeeSeeder` (Order 97, Development/Staging) seeding 28 demo employees across the department tree, and extended `EmployeeRepository.ListPagedAsync` with an optional department-id set so `/api/employees` can list one department's roster (optionally including its descendants). |
 | 2026-10-28 | Qoder | Added `Seed/DepartmentSeeder` (Order 96, Development/Staging) that builds a 15-department demo tree under the seeded Central Diwan root — 4 directorates, 7 departments, 3 sections — inserting level by level because EF cannot infer the insert order of the self-referencing parent FK; registered it in `DependencyInjection` after `InstitutionSettingSeeder`. |
 | 2026-10-26 | Qoder | Mapped the new `UserLoggedInEvent` to a `Login` audit row and seeded the `Execute` action type / `Operation` entity type used by the new action-level audit trail; the interceptor continues to own all entity-level rows. |

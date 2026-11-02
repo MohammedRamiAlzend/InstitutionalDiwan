@@ -48,10 +48,10 @@ public sealed class DocumentLifecycleHandlerTests
         }
 
         public CreateDraftDocumentCommandHandler CreateDraftHandler() =>
-            new(Users, Documents, DocumentTypes, UnitOfWork);
+            new(Users, Documents, DocumentTypes, new FakeDocumentTypeSchemaVersionRepository(), UnitOfWork);
 
         public RegisterDocumentCommandHandler RegisterHandler() =>
-            new(Documents, Numbers, Registries, UnitOfWork, TestClock.Instance);
+            new(Documents, Numbers, Registries, new FakeDocumentTypeSchemaVersionRepository(), UnitOfWork, TestClock.Instance);
 
         public UpdateDraftMetadataCommandHandler UpdateHandler() =>
             new(Documents, UnitOfWork);

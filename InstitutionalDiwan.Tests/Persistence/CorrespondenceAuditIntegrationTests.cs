@@ -1,4 +1,5 @@
 using InstitutionalDiwan.Application.Abstractions.Context;
+using InstitutionalDiwan.Application.Features.Correspondence.DocumentFields;
 using InstitutionalDiwan.Application.Features.Correspondence.Documents;
 using InstitutionalDiwan.Domain.Entities.Audit;
 using InstitutionalDiwan.Domain.Entities.Correspondence;
@@ -41,6 +42,7 @@ public sealed class CorrespondenceAuditIntegrationTests
             new DocumentTypeRepository(db),
             numbers,
             registries,
+            new DocumentTypeSchemaVersionRepository(db),
             db);
 
         var result = await handler.Handle(
@@ -117,6 +119,47 @@ public sealed class CorrespondenceAuditIntegrationTests
         Assert.Equal("عنوان قديم", ReadTitle(log.OldValuesJson));
         Assert.Equal("عنوان جديد", ReadTitle(log.NewValuesJson));
         Assert.True(log.VerifyIntegrity(AuditLog.GenesisHash).IsSuccess);
+    }
+
+    [Fact]
+    public async Task PublishingASchemaVersion_ThroughRealRepositories_AppendsSchemaAuditRows()
+    {
+        var fixture = await Fixture.CreateAsync();
+        using var db = fixture.Db;
+        fixture.Authenticate();
+
+        var fields = new DocumentFieldRepository(db);
+        var versions = new DocumentTypeSchemaVersionRepository(db);
+        var types = new DocumentTypeRepository(db);
+        var userId = fixture.User.UserId;
+
+        var field = await new CreateDocumentFieldCommandHandler(types, fields, db).Handle(
+            new CreateDocumentFieldCommand(userId, DocumentType.OutgoingLetterId, "session_no", DocumentFieldDataType.Text),
+            CancellationToken.None);
+        var draft = await new CreateSchemaDraftCommandHandler(types, versions, db).Handle(
+            new CreateSchemaDraftCommand(userId, DocumentType.OutgoingLetterId), CancellationToken.None);
+        var added = await new AddFieldToDraftCommandHandler(versions, fields, db).Handle(
+            new AddFieldToDraftCommand(draft.Value.SchemaVersionId, field.Value.DocumentFieldId,
+                new DocumentFieldSettingsInput("رقم الجلسة", IsRequired: true)),
+            CancellationToken.None);
+        var published = await new PublishSchemaVersionCommandHandler(versions, db).Handle(
+            new PublishSchemaVersionCommand(draft.Value.SchemaVersionId, userId), CancellationToken.None);
+
+        Assert.True(field.IsSuccess && draft.IsSuccess && added.IsSuccess && published.IsSuccess);
+
+        var logs = await db.AuditLogs
+            .Where(log => log.EntityTypeId == AuditEntityType.DocumentSchemaVersionId)
+            .ToListAsync();
+
+        Assert.Contains(logs, log => log.EntityId == field.Value.DocumentFieldId.ToString()
+            && log.ActionTypeId == AuditActionType.CreateId);
+        Assert.Contains(logs, log => log.EntityId == draft.Value.SchemaVersionId.ToString()
+            && log.ActionTypeId == AuditActionType.CreateId);
+        var publish = Assert.Single(logs, log => log.EntityId == draft.Value.SchemaVersionId.ToString()
+            && log.ActionTypeId == AuditActionType.UpdateId && log.ActorUserId == userId
+            && log.NewValuesJson!.Contains("Published"));
+        Assert.Contains("Published", publish.NewValuesJson!);
+        Assert.Contains("Draft", publish.OldValuesJson!);
     }
 
     private static string? ReadTitle(string? json)

@@ -239,4 +239,66 @@ public static class DomainErrors
         public static readonly Error RecipientDuplicate = Error.Conflict("Notifications.RecipientDuplicate", "User is already added as a recipient for this notification.");
         public static readonly Error ChannelEmpty = Error.Validation("Notifications.ChannelEmpty", "Notification delivery channel is required.");
     }
+
+    public static class DocumentFields
+    {
+        public static readonly Error KeyInvalid = Error.Validation("DocumentFields.KeyInvalid", "Field key must start with a lowercase letter and contain only lowercase letters, digits, and underscores (max 50 characters).");
+        public static readonly Error KeyAlreadyExists = Error.Conflict("DocumentFields.KeyAlreadyExists", "A field with this key already exists for the document type.");
+        public static readonly Error FieldNotFound = Error.NotFound("DocumentFields.FieldNotFound", "The document field was not found.");
+        public static readonly Error DataTypeInvalid = Error.Validation("DocumentFields.DataTypeInvalid", "The field data type is not supported.");
+        public static readonly Error DocumentTypeInvalid = Error.Validation("DocumentFields.DocumentTypeInvalid", "A valid document type is required.");
+        public static readonly Error LabelEmpty = Error.Validation("DocumentFields.LabelEmpty", "The Arabic field label is required.");
+        public static readonly Error LabelTooLong = Error.Validation("DocumentFields.LabelTooLong", "The Arabic field label cannot exceed 200 characters.");
+        public static readonly Error RegexNotAllowed = Error.Validation("DocumentFields.RegexNotAllowed", "A pattern can only be set on text fields.");
+        public static readonly Error RegexInvalid = Error.Validation("DocumentFields.RegexInvalid", "The pattern is not a valid regular expression.");
+        public static readonly Error RegexTooLong = Error.Validation("DocumentFields.RegexTooLong", "The pattern cannot exceed 500 characters.");
+        public static readonly Error RegexMessageRequired = Error.Validation("DocumentFields.RegexMessageRequired", "An Arabic error message is required when a pattern is set.");
+        public static readonly Error RegexMessageTooLong = Error.Validation("DocumentFields.RegexMessageTooLong", "The pattern error message cannot exceed 500 characters.");
+        public static readonly Error RegexTimedOut = Error.Validation("DocumentFields.RegexTimedOut", "Evaluating the field pattern took too long.");
+        public static readonly Error MaxLengthNotAllowed = Error.Validation("DocumentFields.MaxLengthNotAllowed", "A maximum length can only be set on text fields.");
+        public static readonly Error MaxLengthInvalid = Error.Validation("DocumentFields.MaxLengthInvalid", "The maximum length must be between 1 and the limit of the field type (500 for text, 4000 for long text).");
+        public static readonly Error NumberRangeNotAllowed = Error.Validation("DocumentFields.NumberRangeNotAllowed", "A minimum or maximum can only be set on number fields.");
+        public static readonly Error NumberRangeInvalid = Error.Validation("DocumentFields.NumberRangeInvalid", "The minimum cannot be greater than the maximum.");
+        public static readonly Error OptionsRequired = Error.Validation("DocumentFields.OptionsRequired", "A select field requires at least one option.");
+        public static readonly Error OptionsNotAllowed = Error.Validation("DocumentFields.OptionsNotAllowed", "Options can only be set on select fields.");
+        public static readonly Error OptionInvalid = Error.Validation("DocumentFields.OptionInvalid", "Every option needs a key (lowercase letters, digits, underscores) and an Arabic label.");
+        public static readonly Error OptionKeyDuplicate = Error.Validation("DocumentFields.OptionKeyDuplicate", "Option keys must be unique within a field.");
+        public static readonly Error TooManyOptions = Error.Validation("DocumentFields.TooManyOptions", "A select field cannot have more than 100 options.");
+        public static readonly Error SchemaVersionNotFound = Error.NotFound("DocumentFields.SchemaVersionNotFound", "The schema version was not found.");
+        public static readonly Error SchemaVersionNotDraft = Error.Conflict("DocumentFields.SchemaVersionNotDraft", "Only a schema version in DRAFT status can be changed.");
+        public static readonly Error SchemaVersionAlreadyHasDraft = Error.Conflict("DocumentFields.SchemaVersionAlreadyHasDraft", "This document type already has a draft schema version.");
+        public static readonly Error SchemaVersionNotPublished = Error.Conflict("DocumentFields.SchemaVersionNotPublished", "Only a published schema version can be retired.");
+        public static readonly Error SchemaVersionMismatch = Error.Conflict("DocumentFields.SchemaVersionMismatch", "The schema version does not belong to this document.");
+        public static readonly Error FieldAlreadyInVersion = Error.Conflict("DocumentFields.FieldAlreadyInVersion", "The field is already part of this schema version.");
+        public static readonly Error FieldNotInVersion = Error.NotFound("DocumentFields.FieldNotInVersion", "The field is not part of this schema version.");
+        public static readonly Error FieldTypeMismatch = Error.Validation("DocumentFields.FieldTypeMismatch", "The settings data type does not match the field data type, and a field data type cannot be changed.");
+        public static readonly Error FieldDocumentTypeMismatch = Error.Validation("DocumentFields.FieldDocumentTypeMismatch", "The field belongs to a different document type than the schema version.");
+        public static readonly Error TooManyFields = Error.Conflict("DocumentFields.TooManyFields", "A schema version cannot have more than 50 fields.");
+        public static readonly Error DuplicateValue = Error.Validation("DocumentFields.DuplicateValue", "A field value was supplied more than once.");
+
+        public static Error UnknownField(string key) =>
+            Error.Validation("DocumentFields.UnknownField", $"The field '{key}' is not part of the document's schema version.");
+
+        public static Error ValueRequired(string key) =>
+            Error.Validation("DocumentFields.ValueRequired", $"The field '{key}' is required.");
+
+        public static Error ValueTypeInvalid(string key) =>
+            Error.Validation("DocumentFields.ValueTypeInvalid", $"The value of field '{key}' does not match its data type.");
+
+        public static Error ValueTooLong(string key, int maxLength) =>
+            Error.Validation("DocumentFields.ValueTooLong", $"The value of field '{key}' cannot exceed {maxLength} characters.");
+
+        public static Error ValueBelowMinimum(string key, decimal minimum) =>
+            Error.Validation("DocumentFields.ValueBelowMinimum", $"The value of field '{key}' cannot be less than {minimum}.");
+
+        public static Error ValueAboveMaximum(string key, decimal maximum) =>
+            Error.Validation("DocumentFields.ValueAboveMaximum", $"The value of field '{key}' cannot be greater than {maximum}.");
+
+        public static Error ValueOptionInvalid(string key) =>
+            Error.Validation("DocumentFields.ValueOptionInvalid", $"The value of field '{key}' is not one of its options.");
+
+        /// <summary>The detail is the administrator-supplied Arabic message of the field's pattern.</summary>
+        public static Error ValuePatternMismatch(string messageAr) =>
+            Error.Validation("DocumentFields.ValuePatternMismatch", messageAr);
+    }
 }

@@ -37,6 +37,7 @@ public sealed class UnitOfWorkClockTests
             FakeDocumentTypeRepository.WithDefaultTypes(),
             numbers,
             registries,
+            new FakeDocumentTypeSchemaVersionRepository(),
             unitOfWork);
 
         var result = await handler.Handle(

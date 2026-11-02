@@ -13,6 +13,7 @@ consistently shaped.
 | File | Purpose |
 | --- | --- |
 | `ResultExtensions.cs` | Maps `Result` / `Result<T>` to `IActionResult`, turning `ErrorType` into an HTTP status code and an RFC 7807 `ProblemDetails` body. The single place where domain outcomes become HTTP. Also exposes `Error.ToActionResult()` for endpoints that return a non-JSON success payload (the attachment download stream). |
+| `DocumentFieldMapping.cs` | Internal mapping from dynamic-field request contracts to the application inputs (`DocumentFieldSettingsInput`, `DocumentFieldValueInput`). |
 | `DatabaseExtensions.cs` | `InitializeDatabaseAsync`: applies pending migrations in Development (other environments only seed when the database is reachable) and then runs the registered `ISeeder`s through `SeederRunner`, ordered by `Order` and filtered by each seeder's declared environments. |
 | `AuthenticationExtensions.cs` | `AddInstitutionalAuthentication`: JWT bearer validation plus live account/activity and HMAC session-stamp checks against current active roles/permissions; registers permission policies and their handler. |
 | `OpenApiExtensions.cs` | `AddInstitutionalOpenApi`: registers the OpenAPI document, the Bearer security scheme transformer, and the Scalar API reference used in Development. |
@@ -54,6 +55,7 @@ The `ProblemDetails` body carries the domain error code as `Title` and its descr
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-02 | Claude | Added `DocumentFieldMapping` (contract to application input mapping for dynamic fields). |
 | 2026-10-28 | Qoder | Validate live account activity and the mandatory shared HMAC session stamp in OnTokenValidated, revoking stale identity/role/permission tokens without schema or configuration changes. |
 | 2026-10-25 | opencode | Added `Error.ToActionResult()` so `DocumentFilesController.Download` can return a file stream on success and still map domain errors to ProblemDetails. |
 | 2026-10-19 | opencode | Recorded the four implemented extension files with a Contents table and corrected the implementation status (the README reported every component as not implemented and referred to a `SwaggerExtensions`/`MigrationExtensions` that do not exist). |

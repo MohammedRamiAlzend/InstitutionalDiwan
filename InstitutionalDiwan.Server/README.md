@@ -96,6 +96,7 @@ project-references Application and Infrastructure.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-02 | Claude | Dynamic document fields, Phase 3: `DocumentFieldsController` with 14 routes, field contracts, `fieldValues` on document creation. |
 | 2026-10-28 | Qoder | Wire forced-password enforcement between action auditing and authorization; add live JWT session revocation with no legacy stamp fallback, migrations, or signing-key configuration edits. |
 | 2026-10-26 | Qoder | Removed the SPA integration: dropped `SpaRoot`/`SpaProxy` and the client project reference from the csproj, removed the SPA proxy hosting startup from the launch profiles, and deleted `UseDefaultFiles`, `MapStaticAssets`, and `MapFallbackToFile` from `Program.cs`. The project is now an API-only host; the front end lives in the standalone `institutionaldiwan.front` project. |
 | 2026-10-25 | Buffy | Replaced the leftover template `weatherforecast` sample request with a real `GET /api/audit-logs` request. |

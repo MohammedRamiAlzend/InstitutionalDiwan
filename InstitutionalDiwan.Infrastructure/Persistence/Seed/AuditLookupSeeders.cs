@@ -43,6 +43,7 @@ public sealed class AuditEntityTypeSeeder : LookupSeederBase<AuditEntityType>
         (AuditEntityType.DocumentRelationId, "Document relation", "ربط وثيقة"),
         (AuditEntityType.ExternalOrganizationId, "External organization", "جهة خارجية"),
         (AuditEntityType.OperationId, "Operation", "عملية"),
+        (AuditEntityType.DocumentSchemaVersionId, "Document field schema", "مخطط حقول الوثيقة"),
     };
 
     protected override AuditEntityType BuildItem(int id, string desc, string descAr) =>

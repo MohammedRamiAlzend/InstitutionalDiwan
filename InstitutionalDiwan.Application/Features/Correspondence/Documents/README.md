@@ -19,16 +19,16 @@ commands the API actually walks: `CreateDraftDocumentCommand` → `UpdateDraftMe
 | File | Purpose |
 | --- | --- |
 | `CreateDocumentCommand.cs` | CQRS command carrying `UserId` (from the token), document metadata, plus `OfficialNumberText` and `NumberingYear`; defines the create contract. |
-| `CreateDocumentCommandHandler.cs` | Orchestrates user validation → duplicate-number check → `Document.CreateDraft` → registry resolution → `DocumentNumber.Issue` → `Document.Register` → save; the document ends up `REGISTERED`. |
+| `CreateDocumentCommandHandler.cs` | Orchestrates user validation → duplicate-number check → `Document.CreateDraft` → registry resolution → `DocumentNumber.Issue` → `Document.Register` → save; the document ends up `REGISTERED`. Pins the document to the type schema published now, applies `FieldValues` and checks required dynamic fields before a number is consumed. |
 | `CreateDocumentCommandValidator.cs` | FluentValidation rules: required title/type/direction, direction ∈ {INTERNAL, INCOMING, OUTGOING}, required official number (≤100 chars), numbering year in [1900, 2200]. |
 | `CreateDraftDocumentCommand.cs` | CQRS command creating a DRAFT document owned by the caller's department, without consuming an official number. |
-| `CreateDraftDocumentCommandHandler.cs` | Validates the caller (active user) and document type (exists + active), then `Document.CreateDraft` with the caller's `PrimaryDepartmentId` as owner. |
+| `CreateDraftDocumentCommandHandler.cs` | Validates the caller (active user) and document type (exists + active), then `Document.CreateDraft` with the caller's `PrimaryDepartmentId` as owner. Pins the document to the published schema of its type and applies optional `FieldValues`. |
 | `CreateDraftDocumentCommandValidator.cs` | FluentValidation rules for title, type, direction, and optional summary/date/reference fields. |
 | `UpdateDraftMetadataCommand.cs` | CQRS command editing title, summary, confidentiality, and priority. |
 | `UpdateDraftMetadataCommandHandler.cs` | Loads the document (404) and applies `Document.UpdateDraftMetadata`, which refuses anything but `DRAFT` (`Correspondence.OnlyDraftEditable`, 409). |
 | `UpdateDraftMetadataCommandValidator.cs` | FluentValidation rules for title/summary and positive optional level ids. |
 | `RegisterDocumentCommand.cs` | CQRS command transitioning DRAFT → REGISTERED by allocating an official number (optional explicit year). |
-| `RegisterDocumentCommandHandler.cs` | Validates draft status *before* allocating (a rejected call never burns a sequence), resolves the registry, allocates, renders via `OfficialNumberFormatter`, checks `(text, year)` uniqueness, then `DocumentNumber.Issue` + `Document.Register` + save. |
+| `RegisterDocumentCommandHandler.cs` | Validates draft status *before* allocating (a rejected call never burns a sequence), resolves the registry, allocates, renders via `OfficialNumberFormatter`, checks `(text, year)` uniqueness, then `DocumentNumber.Issue` + `Document.Register` + save. Fails with `DocumentFields.ValueRequired` before allocating when a required dynamic field has no value. |
 | `AddDocumentParticipantCommand.cs` | CQRS command attaching an external organization, internal department, or person to a document. |
 | `AddDocumentParticipantCommandHandler.cs` | Enforces exactly-one target, validates the participant role lookup and the referenced department/organization (exists + active), then `Document.AddParticipant`, which enforces the single-external-party limit. |
 | `AddDocumentParticipantCommandValidator.cs` | FluentValidation rules incl. the exactly-one-target invariant (`Correspondence.ParticipantTargetInvalid`). |
@@ -86,6 +86,7 @@ commands the API actually walks: `CreateDraftDocumentCommand` → `UpdateDraftMe
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-02 | Claude | Dynamic document fields, Phase 2: `CreateDraftDocumentCommand`/`CreateDocumentCommand` gained a trailing optional `FieldValues`, and their handlers pin the published schema version; `RegisterDocumentCommandHandler` and `CreateDocumentCommandHandler` check required dynamic fields before allocating a number. All three handlers take `IDocumentTypeSchemaVersionRepository`. See `../DocumentFields/README.md`. |
 | 2026-10-22 | Buffy | Added `ListDepartmentDocumentsQuery`/`Handler` — a department's document register, paged like `ListDocumentsQuery`, authorized with `IDepartmentScopeEvaluator` (403 `Correspondence.DepartmentOutOfScope`, 404 for an unknown department). Handlers now stamp document writes with `IUnitOfWork.UtcNow`. |
 | 2026-10-22 | opencode | `ListDocumentsQuery` now returns `PagedResult<DocumentResponse>` and accepts `page`, `pageSize`, `search`, `sortBy`, `sortDescending`, `statusId`, `owningDepartmentId`, `directionId`, and `documentTypeId`; `DocumentRepository.ListPagedAsync` pushes the filter, sort, and paging into SQL. |
 | 2026-10-19 | Buffy | Completed the Module 03 lifecycle: added draft create, draft metadata update, register (registry-backed allocation), add participant (exactly-one-target + single external party), cancel (blocked by active movements), document details, and the merged audit timeline; added the corresponding response records. |

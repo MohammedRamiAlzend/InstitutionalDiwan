@@ -13,4 +13,5 @@ public sealed record CreateDraftDocumentRequest(
     int? PriorityLevelId = null,
     DateTime? DocumentDate = null,
     string? ExternalReferenceNumber = null,
-    DateTime? ExternalDocumentDate = null);
+    DateTime? ExternalDocumentDate = null,
+    IReadOnlyList<DocumentFieldValueRequest>? FieldValues = null);

@@ -15,6 +15,7 @@ internal sealed class RegisterDocumentCommandHandler
     private readonly IDocumentRepository _documentRepository;
     private readonly IDocumentNumberRepository _documentNumberRepository;
     private readonly INumberingRegistryRepository _numberingRegistryRepository;
+    private readonly IDocumentTypeSchemaVersionRepository _schemaVersionRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IClock _clock;
 
@@ -22,12 +23,14 @@ internal sealed class RegisterDocumentCommandHandler
         IDocumentRepository documentRepository,
         IDocumentNumberRepository documentNumberRepository,
         INumberingRegistryRepository numberingRegistryRepository,
+        IDocumentTypeSchemaVersionRepository schemaVersionRepository,
         IUnitOfWork unitOfWork,
         IClock clock)
     {
         _documentRepository = documentRepository;
         _documentNumberRepository = documentNumberRepository;
         _numberingRegistryRepository = numberingRegistryRepository;
+        _schemaVersionRepository = schemaVersionRepository;
         _unitOfWork = unitOfWork;
         _clock = clock;
     }
@@ -46,6 +49,14 @@ internal sealed class RegisterDocumentCommandHandler
 
         if (document.ActiveOfficialNumberId is not null)
             return Result.Failure<DocumentResponse>(DomainErrors.Numbering.DocumentAlreadyNumbered);
+
+        // Also before allocating a sequence: a missing required dynamic field must not burn a number.
+        var schema = document.SchemaVersionId is { } schemaVersionId
+            ? await _schemaVersionRepository.GetByIdAsync(schemaVersionId, cancellationToken)
+            : null;
+        var requiredResult = document.EnsureRequiredFieldsComplete(schema);
+        if (requiredResult.IsFailure)
+            return Result.Failure<DocumentResponse>(requiredResult.Error);
 
         var numberingYear = request.NumberingYear
             ?? document.DocumentDate?.Year

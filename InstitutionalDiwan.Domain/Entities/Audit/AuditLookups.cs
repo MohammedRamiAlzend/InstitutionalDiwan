@@ -59,6 +59,9 @@ public sealed class AuditEntityType : LookupEntity
     /// <summary>An API action that is not tied to one business entity (entity id = controller.action).</summary>
     public const int OperationId = 13;
 
+    /// <summary>A document type's dynamic-field schema: field definitions and their versions.</summary>
+    public const int DocumentSchemaVersionId = 14;
+
     private AuditEntityType()
     {
     }

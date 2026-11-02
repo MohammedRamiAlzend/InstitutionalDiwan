@@ -12,4 +12,5 @@ public sealed record CreateDocumentRequest(
     int NumberingYear,
     string? SubjectSummary = null,
     int? ConfidentialityLevelId = null,
-    int? PriorityLevelId = null);
+    int? PriorityLevelId = null,
+    IReadOnlyList<DocumentFieldValueRequest>? FieldValues = null);

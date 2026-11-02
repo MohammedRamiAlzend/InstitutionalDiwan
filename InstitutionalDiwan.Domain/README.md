@@ -28,7 +28,7 @@ The project name and namespaces are `InstitutionalDiwan.Domain.*`. Earlier desig
 
 ```
 Common/        Base building blocks (Result, Error, Entity, AggregateRoot, ValueObject, IDomainEvent, DomainException, IUnitOfWork)
-ValueObjects/  Immutable value objects (DepartmentCode, DocumentTitle, OfficialNumberValue, ParticipantTarget)
+ValueObjects/  Immutable value objects (DepartmentCode, DocumentTitle, OfficialNumberValue, ParticipantTarget, DocumentFieldSettings, DocumentFieldValueInput)
 Errors/        Strongly-typed DomainErrors catalog organized by module
 Events/        All immutable IDomainEvent records raised by aggregate roots
 Repositories/  Pure repository contracts consumed by the Application layer
@@ -60,12 +60,14 @@ GlobalUsing.cs Global usings for entities, common, and errors
 | `DocumentTitle` | Non-empty, trimmed, max 500 chars. |
 | `OfficialNumberValue` | Non-empty, trimmed, max 100 chars. |
 | `ParticipantTarget` | Exactly one of `External(orgId)`, `Internal(departmentId)`, or `Person(name)` via `ParticipantTargetKind`. |
+| `DocumentFieldSettings` | Validated per-version configuration of a dynamic field: Arabic label (max 200), requiredness, order, and type-specific constraints — a regex (text only, max 500 chars, compiled once with a 250 ms timeout, Arabic error message required), a max length (text 500 / long text 4000), a number range, or 1–100 unique options (select only). Also defines `DocumentFieldOption`. |
+| `DocumentFieldValueInput` | One raw submitted dynamic value `(FieldKey, Value as text)`; a blank value means "clear". |
 
 ### `Errors/DomainErrors.cs`
 
 A single static catalog nested by module (`DomainErrors.Department`, `.Identity`, `.Correspondence`,
 `.Numbering`, `.Movements`, `.Attachments`, `.Relations`, `.Archiving`, `.Audit`, `.Notifications`,
-`.InstitutionSetting`, `.Lookup`). Each entry is a strongly-typed `Error` with a stable code such as
+`.InstitutionSetting`, `.Lookup`, `.DocumentFields`). Each entry is a strongly-typed `Error` with a stable code such as
 `Correspondence.OnlyDraftEditable` so the API can produce deterministic ProblemDetails.
 
 `Department.CentralDiwanProtected` (Conflict / 409) prevents department handlers from reparenting or
@@ -106,13 +108,13 @@ deterministically.
 
 ### `Events/DomainEvents.cs`
 
-36 immutable `record` domain events (the older notes claimed 22, which is out of date). Grouped by module:
+37 immutable `record` domain events (the older notes claimed 22, which is out of date). Grouped by module:
 
 | Module | Events |
 | --- | --- |
 | Organization (3) | `DepartmentCreated`, `DepartmentMoved`, `DepartmentDeactivated` |
 | Identity (8) | `UserCreated`, `UserLoggedIn`, `UserDeactivated`, `UserPasswordReset`, `UserRoleAssigned`, `UserRoleRevoked`, `DocumentAccessGranted`, `DocumentAccessRevoked` |
-| Correspondence / Archiving (6) | `DocumentCreated`, `DocumentRegistered`, `DocumentArchived`, `DocumentUnarchived`, `DocumentCanceled`, `DocumentParticipantAdded` |
+| Correspondence / Archiving (7) | `DocumentCreated`, `DocumentRegistered`, `DocumentArchived`, `DocumentUnarchived`, `DocumentCanceled`, `DocumentParticipantAdded`, `DocumentSchemaVersionPublished` |
 | Numbering (3) | `OfficialNumberIssued`, `OfficialNumberCancelled`, `OfficialNumberReplaced` |
 | Movements (9) | `MovementCreated`, `MovementSent`, `MovementReceived`, `MovementCompleted`, `MovementRejected`, `MovementReturned`, `MovementRedirected`, `MovementClosed`, `MovementCancelled` |
 | Attachments (3) | `DocumentFileCreated`, `DocumentFileVersionUploaded`, `DocumentFileArchived` |
@@ -121,9 +123,9 @@ deterministically.
 
 ### `Repositories/IDomainRepositories.cs`
 
-21 pure repository contracts: `IDepartmentRepository`, `IDepartmentTypeRepository`, `IUserRepository`,
+23 pure repository contracts: `IDepartmentRepository`, `IDepartmentTypeRepository`, `IUserRepository`,
 `IRoleRepository`, `IEmployeeRepository`, `IDocumentAccessGrantRepository`, `IPermissionRepository`,
-`IDocumentRepository`, `IDocumentTypeRepository`, `INumberingRegistryRepository`,
+`IDocumentRepository`, `IDocumentTypeRepository`, `IDocumentFieldRepository`, `IDocumentTypeSchemaVersionRepository`, `INumberingRegistryRepository`,
 `IDocumentNumberRepository`, `IDocumentMovementRepository`, `IDocumentFileRepository`,
 `IDocumentFileTypeRepository`, `IFileStorageProviderRepository`, `IDocumentRelationRepository`,
 `IAuditLogRepository`, `INotificationRepository`, and `ILookupRepository`. They expose `GetByIdAsync`, a few targeted lookups (`HasActiveChildrenAsync`,
@@ -149,13 +151,13 @@ provider for Module 06.
 and integrity checks, and `SearchAsync` applies the audit filters and paging. Checkpoints and
 integrity reports have their own add/list/latest methods; no update or delete is exposed.
 
-### `Entities/` — the 10 modules (41 entities)
+### `Entities/` — the 10 modules (45 entities)
 
 | # | Module | Entities | Notable aggregate roots |
 | --- | --- | --- | --- |
 | 01 | Organization | `Department`, `DepartmentType`, `InstitutionSetting` | `Department`, `InstitutionSetting` |
 | 02 | Identity & Access | `User`, `Role`, `Permission`, `UserRole`, `RolePermission`, `Employee`, `UserDepartmentAssignment`, `DocumentAccessGrant` | `User`, `Role`, `Employee`, `DocumentAccessGrant` |
-| 03 | Correspondence | `Document`, `DocumentParticipant`, `DocumentStatusHistory`, `DocumentType`, `DocumentStatusType`, `ExternalOrganization` | `Document`, `ExternalOrganization` |
+| 03 | Correspondence | `Document`, `DocumentParticipant`, `DocumentStatusHistory`, `DocumentType`, `DocumentStatusType`, `ExternalOrganization`, `DocumentField`, `DocumentTypeSchemaVersion`, `DocumentTypeSchemaVersionField`, `DocumentFieldValue` | `Document`, `ExternalOrganization`, `DocumentTypeSchemaVersion` |
 | 04 | Official Numbering | `DocumentNumber`, `NumberingRegistry`, `NumberingCounter`, `DocumentNumberHistory`, `DocumentNumberScope` | `DocumentNumber`, `NumberingRegistry` |
 | 05 | Movements & Routing | `DocumentMovement`, `DocumentMovementStep`, `DocumentMovementEvent` | `DocumentMovement` |
 | 06 | Attachments | `DocumentFile`, `DocumentFileVersion`, `DocumentFileType`, `FileStorageProvider` | `DocumentFile` |
@@ -165,6 +167,17 @@ integrity reports have their own add/list/latest methods; no update or delete is
 | 10 | Notifications & Outbox | `Notification`, `NotificationRecipient`, `NotificationOutbox`, `NotificationType` | `Notification` |
 
 #### Selected invariants already encoded
+- **Dynamic document fields** (plan: `plans/document-dynamic-fields-backend.md`) — `DocumentField` is the
+  stable identity of a field (key `^[a-z][a-z0-9_]{0,49}$` and `DocumentFieldDataType` never change).
+  `DocumentTypeSchemaVersion` is one version of a type's field schema: only a `Draft` can be edited
+  (`AddField`/`UpdateField`/`RemoveField`, max 50 fields, data type cannot change), `Publish` freezes it
+  and raises `DocumentSchemaVersionPublished`, `Retire` marks a superseded version, and
+  `CreateDraftFrom` copies a version's fields (keeping their `DocumentFieldId`) to start the next one.
+  `Document.SchemaVersionId` is set by `CreateDraft(schemaVersionId:)` and never changes — a document
+  stays on the schema it was created on. `Document.SetFieldValues` is draft-only, requires the pinned
+  version, validates raw values (type, max length, range, option key, regex with a 250 ms timeout) and
+  replaces the stored `DocumentFieldValue` rows (blank clears). `Document.EnsureRequiredFieldsComplete`
+  is the gate the Application layer runs before `Register`; `Register` itself is unchanged.
 
 - **`Department`** — code/name/type required; no self-parent; no cyclic re-parenting
   (`MoveToParent` receives descendant ids); inactive parent rejected; cannot deactivate with active children.
@@ -341,6 +354,9 @@ them, while listing, relabelling and (de)activation keep working.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-02 | Claude | Dynamic fields, Phase 2: `IDocumentTypeSchemaVersionRepository.Remove` (discard a draft) and `AuditEntityType.DocumentSchemaVersionId` (14) for auditing schema changes. |
+| 2026-11-02 | Claude | Dynamic fields hardening found while mapping persistence: a pattern error message is capped at 500 characters (`DocumentFields.RegexMessageTooLong`) and numbers or range limits must stay below 1e20 so they fit the stored `decimal(28,8)` column. |
+| 2026-11-02 | Claude | Dynamic document fields, Phase 0: added `DocumentField`, `DocumentFieldDataType`, `DocumentTypeSchemaVersion` (+ `Status` enum), `DocumentTypeSchemaVersionField` and `DocumentFieldValue` entities, the `DocumentFieldSettings`/`DocumentFieldValueInput` value objects, the `DomainErrors.DocumentFields` group, the `DocumentSchemaVersionPublished` event and the `IDocumentFieldRepository`/`IDocumentTypeSchemaVersionRepository` contracts. `Document` gained `SchemaVersionId`, `FieldValues`, `SetFieldValues`, `EnsureRequiredFieldsComplete` and an optional trailing `schemaVersionId` on `CreateDraft`, so existing callers are unchanged. Persistence, handlers and API follow in later phases. |
 | 2026-10-28 | Qoder | Add Identity.RoleInactive (409) and Identity.PasswordChangeRequired (403) for inactive-role grant rejection and server-enforced forced-password recovery. |
 | 2026-10-28 | Qoder | Add `Department.CentralDiwanProtected` (Conflict) so department writes require a settings transfer before reparenting or deactivating the designated hub. |
 | 2026-10-28 | agent | Added `User.ResetPassword` and `UserPasswordResetEvent`: an administrative reset replaces the hash, sets `MustChangePassword`, and carries the resetting administrator (35 → 36 events). |

@@ -49,6 +49,7 @@ Production requires opting in by adding `SeedingEnvironments.Production` to
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-02 | Claude | The audit entity-type seed gained a 14th row, `DocumentSchemaVersion` (مخطط حقول الوثيقة), used by the dynamic-fields audit rows. |
 | 2026-10-28 | agent | Added `EmployeeSeeder` (Order 97, Development/Staging): 28 demo employees spread across the seeded tree (including the Central Diwan office), idempotent by `EmployeeNumber`, so the department detail card can list real people. |
 | 2026-10-28 | agent | Added `DepartmentSeeder` (Order 96, Development/Staging): a 15-department demo organization tree across four levels (Central Diwan → 4 directorates → 7 departments → 3 sections) so the departments screen has a realistic hierarchy; reuses the Central Diwan root, idempotent by `Code`, gated away from Production. |
 | 2026-10-26 | Qoder | Extended the audit lookups to 8 action types (`Execute` = 8) and 13 entity types (`Operation` = 13) so action-level audit rows can reference them; startup seeding inserts the new ids idempotently in every environment. |
