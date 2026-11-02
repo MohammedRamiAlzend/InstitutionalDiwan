@@ -8,6 +8,13 @@ export {
 } from './theme'
 export type { ThemeChoice } from './theme'
 export {
+  getTutorialChoice,
+  applyTutorial,
+  setTutorialChoice,
+  useTutorial,
+} from './tutorial'
+export type { Tutorial } from './tutorial'
+export {
   columnPreferenceKey,
   loadColumnVisibility,
   saveColumnVisibility,

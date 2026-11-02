@@ -25,6 +25,11 @@
             : 'on'
         }
         document.documentElement.dataset.motion = motion
+
+        // Tutorial mode is opt-in, so a missing key means off; resolving it here stops
+        // the help chips from appearing a moment after the first page paints.
+        var tutorial = localStorage.getItem('diwan.tutorial') === 'on' ? 'on' : 'off'
+        document.documentElement.dataset.tutorial = tutorial
       })()
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />

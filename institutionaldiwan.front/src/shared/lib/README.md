@@ -1,5 +1,5 @@
 # institutionaldiwan.front / src/shared/lib — Pure Utilities, Date/Timezone & Table State Helpers
-> **Status:** Implemented for the Identity admin foundation — `cn`, theme store, column preferences, URL table state, debounce, Damascus date/number formatting, and JWT claim hints — plus the Module 06 attachment helpers: `formatFileSize`, client-side SHA-256, and blob save/`Content-Disposition` parsing. Arabic search normalization still pending.
+> **Status:** Implemented for the Identity admin foundation — `cn`, theme store, tutorial-mode store, column preferences, URL table state, debounce, Damascus date/number formatting, and JWT claim hints — plus the Module 06 attachment helpers: `formatFileSize`, client-side SHA-256, and blob save/`Content-Disposition` parsing. Arabic search normalization still pending.
 ## Purpose
 Contains pure, framework-independent helper functions for class merging, `Asia/Damascus` timezone formatting, Arabic text normalization, client-side SHA-256 file checksum calculation (matching Module 06 `DocumentFileVersion` requirements), file download plumbing, per-table column-preference persistence, and the theme store.
 ## Contents
@@ -7,6 +7,7 @@ Contains pure, framework-independent helper functions for class merging, `Asia/D
 | --- | --- |
 | `cn.ts` | Combines `clsx` and `tailwind-merge` for conditional Tailwind class composition. |
 | `theme.ts` | Theme store: reads/writes `diwan.theme` (`light` / `dark` / `system`), applies `data-theme`, follows `prefers-color-scheme` while in `system`, and exposes `useTheme` / `useThemeChoice` to React. |
+| `tutorial.ts` | Tutorial-mode store: reads/writes `diwan.tutorial` (`on` / `off`), applies `html[data-tutorial]`, and exposes `useTutorial`. Only `on` is stored — an absent key is the off default, and unlike `motion` there is no system signal to follow. It lives here rather than in `widgets/app-shell` because `shared/ui/data-table` and `form-field` read it too, and a lower layer cannot import upward. |
 | `date.ts` | Formats UTC ISO timestamps from the backend (`datetime2(3)`) into `Asia/Damascus` local dates/times with Latin digits. |
 | `format.ts` | Latin-digit number grouping for counts, row ranges, and pagination labels; `formatShortId` renders the first GUID segment for compact LTR display (full value belongs in `title`); `formatFileSize` renders byte counts as Latin-digit sizes with Arabic units (بايت/ك.ب/م.ب/غ.ب) for attachment and version rows. |
 | `crypto.ts` | `sha256Hex(blobOrBuffer)` computes the lowercase 64-character hex SHA-256 the server records per version, via `crypto.subtle.digest`. Throws `ChecksumUnsupportedError` (Arabic message) when `crypto.subtle` is absent, which happens only on an insecure origin — neither `https` nor `localhost`. |
@@ -21,12 +22,13 @@ Contains pure, framework-independent helper functions for class merging, `Asia/D
 | Item | State |
 | --- | --- |
 | `cn.ts`, `theme.ts` | ✅ Implemented |
-| `date.ts`, `format.ts`, `columnPreferences.ts`, `useTableState.ts`, `useDebouncedValue.ts`, `jwt.ts` | ✅ Implemented |
+| `date.ts`, `format.ts`, `columnPreferences.ts`, `useTableState.ts`, `useDebouncedValue.ts`, `jwt.ts`, `tutorial.ts` | ✅ Implemented |
 | `crypto.ts`, `download.ts` | ✅ Implemented (Module 06 Phase 1) |
 | `arabic.ts` | ❌ Pending the search slice |
 ## Change Log
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-01 | agent | Tutorial mode Phase 0: added `tutorial.ts` — `getTutorialChoice` / `applyTutorial` / `setTutorialChoice` / `useTutorial` over `diwan.tutorial` and `html[data-tutorial]`, with only `on` stored so the off default leaves no key. The store is in `shared/lib` rather than beside `density.ts`/`motion.ts` because `shared/ui/data-table` and `form-field` must read it, and `shared` may not import from `widgets`. |
 | 2026-11-01 | agent | Lowered `useTableState`'s page-size default from 20 to 10 and exported `MIN_PAGE_SIZE` / `MAX_PAGE_SIZE` (1..100, matching the server's `PageRequest.MaxPageSize`) so the grid can offer them as input limits; `setPageSize` now treats the caller's `defaultPageSize` as the value that stays out of the URL, not the module constant, so a grid-specific default is not written to the query string. |
 | 2026-11-01 | agent | Module 06 Phase 1: added `crypto.ts` (`sha256Hex`, `ChecksumUnsupportedError`) and `download.ts` (`parseContentDisposition`, `saveBlobAsFile`) for the upload form's pre-flight checksum and the grid's download action. `saveBlobAsFile` takes an already-resolved file name instead of the header plus a fallback, so precedence stays with the caller; its object-URL revoke is deferred a tick because revoking synchronously can abort the download before the browser picks the blob up. |
 | 2026-11-01 | agent | Module 06 Phase 0: added `formatFileSize` to `format.ts` (Latin digits, Arabic units, `—` for a missing or negative size) for the attachments grid and the versions dialog. |

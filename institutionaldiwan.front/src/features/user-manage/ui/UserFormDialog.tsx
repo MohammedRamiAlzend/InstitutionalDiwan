@@ -154,6 +154,7 @@ export function UserFormDialog({ open, onOpenChange, user }: UserFormDialogProps
           label="اسم المستخدم"
           required
           error={errors.username?.message}
+          guideId="users.form-username"
           className="sm:col-span-2"
         >
           <Input
@@ -173,6 +174,7 @@ export function UserFormDialog({ open, onOpenChange, user }: UserFormDialogProps
             label="كلمة المرور المؤقتة"
             required
             error={errors.password?.message}
+            guideId="users.form-password"
             className="sm:col-span-2"
           >
             <Input
@@ -233,6 +235,7 @@ export function UserFormDialog({ open, onOpenChange, user }: UserFormDialogProps
           label="نطاق المستخدم"
           required
           error={errors.scopeTypeId?.message}
+          guideId="users.form-scope"
         >
           <Controller
             control={control}

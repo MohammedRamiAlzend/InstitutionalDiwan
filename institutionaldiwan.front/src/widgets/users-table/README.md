@@ -21,6 +21,7 @@ Composes the user reads (`entities/user`) with the user writes (`features/user-m
   - Row menu: edit, manage roles, permissions & assignments, reset password (disabled for the current account), activate/deactivate (disabled for the current account), copy username, copy id. All management actions gate on `USER_MANAGE`.
   - Header/empty menus: create user and refresh. Rows and the grid surface also open the same menu on right-click / `Shift+F10`.
   - Status changes go through `ConfirmDialog` with an Arabic description; success and failure surface as toasts.
+  - The «مستخدم جديد» toolbar button is followed by `GuideChip id="users.create"`, so tutorial mode explains it in place; the search, column, page-size, refresh, row-menu, and empty-state chips come from `DataTable` itself.
 - `index.ts` — Public API barrel file.
 
 ## 4. Required Packages
@@ -37,6 +38,7 @@ Composes the user reads (`entities/user`) with the user writes (`features/user-m
 
 ## 6. Change Log
 
+- 2026-11-01: Tutorial mode Phase 0: added the `users.create` help chip beside «مستخدم جديد»; the page's guide ids live in `shared/config/guides/users.ts` and are covered by `npm run check:guides`.
 - 2026-10-28: Added server sorting, switched the supporting catalogs to `useRoleOptions`/`useDepartmentOptions`, and aligned every management action with `USER_MANAGE`.
 
 - 2026-10-28: Added the «إعادة تعيين كلمة المرور» row action (disabled for self) that mounts `ResetPasswordDialog` from `features/user-manage`.

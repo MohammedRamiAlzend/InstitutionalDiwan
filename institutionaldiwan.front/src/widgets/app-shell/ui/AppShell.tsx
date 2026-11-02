@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
-import { Pause, Play, RefreshCw, Rows3, Settings2 } from 'lucide-react'
+import { CircleHelp, Pause, Play, RefreshCw, Rows3, Settings2 } from 'lucide-react'
 import {
   ContextMenu,
   dispatchContextMenu,
   isContextMenuShortcut,
   type MenuEntry,
 } from '@/shared/ui'
+import { setTutorialChoice, useTutorial } from '@/shared/lib'
 import { AppHeader } from './AppHeader'
 import { AppSidebar } from './AppSidebar'
 import { SettingsDialog } from './SettingsDialog'
@@ -34,6 +35,7 @@ export function AppShell() {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [density, setDensity] = useState<Density>(getStoredDensity)
   const [motion, setMotion] = useState<Motion>(getStoredMotion)
+  const tutorial = useTutorial()
 
   useEffect(() => {
     applyDensity(density)
@@ -97,6 +99,12 @@ export function AppShell() {
           <Play className="size-4" aria-hidden />
         ),
       onSelect: () => changeMotion(motion === 'on' ? 'off' : 'on'),
+    },
+    {
+      id: 'toggle-tutorial',
+      label: tutorial === 'on' ? 'إيقاف الوضع التعليمي' : 'تفعيل الوضع التعليمي',
+      icon: <CircleHelp className="size-4" aria-hidden />,
+      onSelect: () => setTutorialChoice(tutorial === 'on' ? 'off' : 'on'),
     },
     { type: 'separator' },
     {

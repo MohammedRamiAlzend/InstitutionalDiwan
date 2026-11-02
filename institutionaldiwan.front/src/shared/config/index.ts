@@ -33,3 +33,5 @@ export {
   fileTypeLimits,
 } from './attachmentLimits'
 export type { FileTypeUploadLimits } from './attachmentLimits'
+export { getGuideEntry, getPageGuide } from './guides'
+export type { GuideEntry, PageGuide } from './guides'

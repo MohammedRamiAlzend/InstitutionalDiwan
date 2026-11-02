@@ -40,6 +40,7 @@ import {
   Button,
   ConfirmDialog,
   DataTable,
+  GuideChip,
   type DataTableColumn,
   type MenuEntry,
 } from '@/shared/ui'
@@ -371,10 +372,13 @@ export function UsersTable() {
         emptyMenu={emptyMenu}
         rowLabel={(user) => user.username}
         toolbar={
-          <Button type="button" onClick={openCreate}>
-            <Plus className="size-4" aria-hidden />
-            مستخدم جديد
-          </Button>
+          <>
+            <Button type="button" onClick={openCreate}>
+              <Plus className="size-4" aria-hidden />
+              مستخدم جديد
+            </Button>
+            <GuideChip id="users.create" />
+          </>
         }
         emptyTitle={table.search ? 'لا توجد نتائج مطابقة.' : 'لا يوجد مستخدمون بعد.'}
         emptyDescription={

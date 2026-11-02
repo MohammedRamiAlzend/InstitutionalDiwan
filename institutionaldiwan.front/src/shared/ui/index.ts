@@ -11,6 +11,12 @@ export { Dialog } from './dialog'
 export type { DialogSize } from './dialog'
 export { DropdownMenu } from './dropdown-menu'
 export { FormField } from './form-field'
+export {
+  GuideChip,
+  GuideProvider,
+  GuideRegion,
+  PageGuideTrigger,
+} from './guide'
 export { Input } from './input'
 export type { InputProps } from './input'
 export type { MenuAction, MenuEntry, MenuLabel, MenuSeparator } from './menu'

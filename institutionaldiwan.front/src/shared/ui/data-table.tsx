@@ -40,6 +40,7 @@ import {
 import { Button } from './button'
 import { ContextMenu } from './context-menu'
 import { DropdownMenu } from './dropdown-menu'
+import { GuideChip } from './guide'
 import { Input } from './input'
 import { Skeleton } from './skeleton'
 
@@ -343,6 +344,7 @@ export function DataTable<T>({
         {rowMenu && (
           <th scope="col" aria-label="إجراءات الصف" className="w-12 px-2 py-2.5">
             <span className="sr-only">إجراءات</span>
+            <GuideChip id="table.rowMenu" className="mx-auto" />
           </th>
         )}
       </tr>
@@ -356,29 +358,35 @@ export function DataTable<T>({
       <div className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center gap-2">
           {onSearchChange && (
-            <Input
-              type="search"
-              value={searchDraft}
-              onChange={(event) => setSearchDraft(event.target.value)}
-              placeholder={searchPlaceholder}
-              aria-label={searchPlaceholder}
-              startIcon={<Search className="size-4" aria-hidden />}
-              className="h-10 w-full ps-10 pe-4 sm:w-72"
-            />
+            <>
+              <Input
+                type="search"
+                value={searchDraft}
+                onChange={(event) => setSearchDraft(event.target.value)}
+                placeholder={searchPlaceholder}
+                aria-label={searchPlaceholder}
+                startIcon={<Search className="size-4" aria-hidden />}
+                className="h-10 w-full ps-10 pe-4 sm:w-72"
+              />
+              <GuideChip id="table.search" />
+            </>
           )}
           {toolbar}
           <div className="ms-auto flex items-center gap-2">
             {onRefresh && (
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                onClick={onRefresh}
-                aria-label="تحديث البيانات"
-                className="size-10"
-              >
-                <RefreshCw className={cn('size-4', spinner)} aria-hidden />
-              </Button>
+              <>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={onRefresh}
+                  aria-label="تحديث البيانات"
+                  className="size-10"
+                >
+                  <RefreshCw className={cn('size-4', spinner)} aria-hidden />
+                </Button>
+                <GuideChip id="table.refresh" />
+              </>
             )}
             <DropdownMenu
               trigger={
@@ -390,6 +398,7 @@ export function DataTable<T>({
               entries={columnMenuEntries}
               label="تخصيص الجدول"
             />
+            <GuideChip id="table.columns" />
           </div>
         </div>
         {filters}
@@ -451,6 +460,7 @@ export function DataTable<T>({
                             )}
                           </div>
                           {emptyAction}
+                          <GuideChip id="table.empty" />
                         </div>
                       </td>
                     </tr>
@@ -550,6 +560,7 @@ export function DataTable<T>({
               className="h-8 w-16 rounded-lg border border-border bg-surface px-2 text-center text-xs text-foreground transition-colors focus:border-focus-ring focus:outline-none"
             />
           </label>
+          <GuideChip id="table.pageSize" />
         </div>
 
         <div className="flex items-center gap-2">
