@@ -1,5 +1,7 @@
 @import 'tailwindcss';
 @import './tokens.css';
+@import 'driver.js/dist/driver.css';
+@import './guide-tour.css';
 
 /* Map the semantic tokens to Tailwind v4 color utilities
    (bg-background, bg-surface, text-foreground, border-border, bg-accent, …). */
@@ -155,7 +157,8 @@ html[data-motion='off'] [data-state] {
   animation: none;
 }
 
-html[data-motion='off'] * {
+/* The guide tour (Driver.js) keeps its animation under every motion setting. */
+html[data-motion='off'] *:not(.driver-popover, .driver-popover *) {
   scroll-behavior: auto;
   transition-duration: 0s;
 }

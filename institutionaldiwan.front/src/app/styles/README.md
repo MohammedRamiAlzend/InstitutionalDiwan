@@ -12,6 +12,7 @@ Arabic typography. This is the single source of visual tokens for the SPA.
 | File | Purpose |
 | --- | --- |
 | `tokens.css` | **The single source of truth for color**: the raw Forest / Golden Wheat / Charcoal palette, the semantic light and dark theme mappings, and the functional status colors. |
+| `guide-tour.css` | Dresses the Driver.js guide popover (`.diwan-tour`) in the semantic tokens: theme, RTL/LTR, logical close button, arrow colors. Imported by `index.css` after `driver.css`. |
 | `index.css` | `@import "tailwindcss";`, imports `tokens.css`, maps the semantic variables to Tailwind utilities via `@theme inline` (e.g. `bg-background`, `text-foreground`, `bg-accent`, `text-accent-contrast`, `bg-overlay`), Arabic font stack (`Readex Pro` / `Cairo`), base focus rings, `dir`-safe base rules, shared overlay/popover/page entrance animations, the `html[data-density='compact']` scale, the `html[data-motion='off']` switch, and the print token override. |
 
 ## Design tokens (contract)
@@ -174,12 +175,14 @@ Rules:
 | Item | State |
 | --- | --- |
 | `tokens.css` (palette + light/dark semantic tokens) | ✅ Implemented |
+| `guide-tour.css` | ✅ Implemented |
 | `index.css` | ✅ Implemented (Tailwind v4 entry + `@theme inline` mapping + overlay/content/page entrance animations + compact density scale + `data-motion` switch) |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-02 | agent | Added `guide-tour.css` and imported Driver.js styles; the `data-motion` switch no longer touches `.driver-popover`, so the guide tour keeps its animation. |
 | 2026-11-01 | agent | Added `animate-overlay-out` / `animate-content-out` keyframes and utilities for popup closes, extended the `data-motion='off'` kill rule with `[data-state]` so variant-prefixed exit classes are covered, and documented the specificity/Presence contract. |
 | 2026-11-01 | agent | Added `animate-page-in` for the shell page container and the unlayered `html[data-motion='off']` rules that stop entrance animations and colour transitions while leaving loading spinners running. |
 | 2026-10-27 | agent | Added the `html[data-density='compact']` root-scale rule backing the shell's `diwan.density` preference. |

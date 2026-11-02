@@ -23,6 +23,10 @@ const sizeClasses: Record<DialogSize, string> = {
   lg: 'max-w-2xl',
 }
 
+function keepWhileGuideOpen(event: Event) {
+  if (document.body.classList.contains('driver-active')) event.preventDefault()
+}
+
 /**
  * Centered modal for create/edit/confirm flows; closes on overlay click and Esc.
  * Height is capped at the viewport and only the body scrolls, so the title and
@@ -44,6 +48,10 @@ export function Dialog({
       <DialogPrimitive.Portal>
         <DialogPrimitive.Overlay className="fixed inset-0 z-40 bg-overlay animate-overlay-in data-[state=closed]:animate-overlay-out" />
         <DialogPrimitive.Content
+          // A guide popover (Driver.js) is mounted on <body>, outside this modal: without
+          // this, clicking its buttons or pressing Esc would close the dialog under it.
+          onInteractOutside={keepWhileGuideOpen}
+          onEscapeKeyDown={keepWhileGuideOpen}
           className={cn(
             'fixed start-1/2 top-1/2 z-50 flex max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-xl border border-border bg-surface p-6 text-foreground shadow-xl animate-content-in data-[state=closed]:animate-content-out',
             'rtl:translate-x-1/2',
