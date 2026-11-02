@@ -29,6 +29,7 @@ import {
   Button,
   ConfirmDialog,
   DataTable,
+  GuideChip,
   Select,
   type DataTableColumn,
   type MenuEntry,
@@ -332,10 +333,13 @@ export function EmployeesTable() {
         emptyMenu={headerMenu}
         rowLabel={(employee) => employee.fullNameAr}
         toolbar={
-          <Button type="button" onClick={openCreate}>
-            <Plus className="size-4" aria-hidden />
-            موظف جديد
-          </Button>
+          <>
+            <Button type="button" onClick={openCreate}>
+              <Plus className="size-4" aria-hidden />
+              موظف جديد
+            </Button>
+            <GuideChip id="employees.create" />
+          </>
         }
         emptyTitle={table.search ? 'لا توجد نتائج مطابقة.' : 'لا يوجد موظفون بعد.'}
         emptyDescription={

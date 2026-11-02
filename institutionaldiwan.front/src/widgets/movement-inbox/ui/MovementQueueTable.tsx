@@ -33,6 +33,7 @@ import { formatDate, formatDateTime, formatShortId, useTableState } from '@/shar
 import {
   Button,
   DataTable,
+  GuideChip,
   Select,
   type DataTableColumn,
   type MenuEntry,
@@ -364,6 +365,7 @@ export function MovementQueueTable({ kind }: MovementQueueTableProps) {
         }
         filters={
           <div className="flex flex-wrap items-center gap-2">
+            <GuideChip id="movements.filters" />
             <Select
               aria-label="تصفية حسب حالة الحركة"
               value={table.filters.statusId || 'all'}

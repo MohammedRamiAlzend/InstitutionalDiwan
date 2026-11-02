@@ -23,6 +23,7 @@ import {
   Button,
   ConfirmDialog,
   DataTable,
+  GuideChip,
   type DataTableColumn,
   type MenuEntry,
 } from '@/shared/ui'
@@ -243,10 +244,13 @@ export function RolesTable() {
         emptyMenu={[createEntry, refreshEntry]}
         rowLabel={(role) => role.nameAr}
         toolbar={
-          <Button type="button" onClick={openCreate}>
-            <Plus className="size-4" aria-hidden />
-            دور جديد
-          </Button>
+          <>
+            <Button type="button" onClick={openCreate}>
+              <Plus className="size-4" aria-hidden />
+              دور جديد
+            </Button>
+            <GuideChip id="roles.create" />
+          </>
         }
         emptyTitle={table.search ? 'لا توجد أدوار مطابقة.' : 'لا توجد أدوار بعد.'}
         emptyDescription={

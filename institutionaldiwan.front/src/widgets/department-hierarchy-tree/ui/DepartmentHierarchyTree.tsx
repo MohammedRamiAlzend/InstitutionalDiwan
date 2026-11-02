@@ -35,7 +35,16 @@ import { useSessionStore } from '@/entities/user'
 import { toArabicErrorMessage } from '@/shared/api'
 import { Permissions } from '@/shared/config'
 import { cn, formatNumber, useTableState } from '@/shared/lib'
-import { Button, Checkbox, ConfirmDialog, MermaidView, Skeleton, type MenuEntry } from '@/shared/ui'
+import {
+  Button,
+  Checkbox,
+  ConfirmDialog,
+  GuideChip,
+  GuideRegion,
+  MermaidView,
+  Skeleton,
+  type MenuEntry,
+} from '@/shared/ui'
 import { copyDepartmentValue } from '../model/clipboard'
 import {
   collectDepartmentIds,
@@ -261,7 +270,9 @@ export function DepartmentHierarchyTree() {
           <Plus className="size-4" aria-hidden />
           قسم جديد
         </Button>
+        <GuideChip id="departments.create" />
 
+        <GuideRegion id="departments.views">
         <div
           role="group"
           aria-label="طريقة عرض الأقسام"
@@ -281,6 +292,7 @@ export function DepartmentHierarchyTree() {
             </Button>
           ))}
         </div>
+        </GuideRegion>
 
         {view !== 'table' && (
           <DepartmentSearch
@@ -289,12 +301,16 @@ export function DepartmentHierarchyTree() {
             placeholder="ابحث باسم القسم أو رمزه…"
           />
         )}
+        {view !== 'table' && <GuideChip id="departments.search" />}
 
         <div className="ms-auto flex flex-wrap items-center gap-2">
           {view === 'tree' && (
             <>
               {canViewEmployees && (
-                <Checkbox checked={employeesVisible} onCheckedChange={setEmployeesVisible} label="إظهار فروع الموظفين" />
+                <>
+                  <Checkbox checked={employeesVisible} onCheckedChange={setEmployeesVisible} label="إظهار فروع الموظفين" />
+                  <GuideChip id="departments.employees" />
+                </>
               )}
               <Button
                 type="button"
@@ -318,6 +334,7 @@ export function DepartmentHierarchyTree() {
                 <ChevronsDownUp className="size-4" aria-hidden />
                 طي الكل
               </Button>
+              <GuideChip id="departments.expand" />
             </>
           )}
           {view !== 'table' && (
@@ -340,6 +357,7 @@ export function DepartmentHierarchyTree() {
 
       {/* Keyed by view so شجرة / مخطط / إحصاء / جدول ease in on every switch, the same
           entrance the shell gives a page. */}
+      <GuideRegion id="departments.content">
       <div key={view} className="flex flex-col gap-4 animate-page-in">
         {view === 'table' && (
           <DepartmentTable
@@ -447,6 +465,7 @@ export function DepartmentHierarchyTree() {
             </div>
           ))}
       </div>
+      </GuideRegion>
 
       <DepartmentDetailDialog
         departmentId={selectedId}

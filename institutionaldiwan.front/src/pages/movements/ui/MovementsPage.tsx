@@ -3,7 +3,7 @@ import { Inbox, Send } from 'lucide-react'
 import { RequirePermission } from '@/features/auth'
 import { Permissions } from '@/shared/config'
 import { cn } from '@/shared/lib'
-import { PageHeader } from '@/shared/ui'
+import { GuideProvider, GuideRegion, PageHeader } from '@/shared/ui'
 import { MovementQueueTable } from '@/widgets/movement-inbox'
 
 const TABS = [
@@ -31,7 +31,9 @@ function resolveTab(raw: string | null): TabKey {
 export function MovementsPage() {
   return (
     <RequirePermission permission={Permissions.DocumentView}>
-      <MovementsView />
+      <GuideProvider pageId="movements">
+        <MovementsView />
+      </GuideProvider>
     </RequirePermission>
   )
 }
@@ -49,8 +51,10 @@ function MovementsView() {
       <PageHeader
         title="الحركات"
         description="تابع الوثائق المرسلة إلى قسمك والمرسلة منه. يُعرض الصندوقان لقسمك المبدئي؛ تفتح الحركة وتُدار من صفحة الوثيقة عند الحاجة."
+        pageGuide="movements"
       />
 
+      <GuideRegion id="movements.tabs">
       <div
         role="tablist"
         aria-label="صناديق الحركات"
@@ -88,9 +92,12 @@ function MovementsView() {
           )
         })}
       </div>
+      </GuideRegion>
 
       <div role="tabpanel">
-        <MovementQueueTable kind={activeTab} />
+        <GuideRegion id="movements.queue">
+          <MovementQueueTable kind={activeTab} />
+        </GuideRegion>
       </div>
     </div>
   )

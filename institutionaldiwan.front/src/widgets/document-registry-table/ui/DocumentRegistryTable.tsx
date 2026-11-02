@@ -24,6 +24,7 @@ import { formatDate, formatDateTime, formatShortId, useTableState } from '@/shar
 import {
   Button,
   DataTable,
+  GuideChip,
   Select,
   type DataTableColumn,
   type MenuEntry,
@@ -326,6 +327,7 @@ export function DocumentRegistryTable() {
         searchPlaceholder="ابحث بالعنوان أو الملخص أو الرقم الرسمي…"
         filters={
           <div className="flex flex-wrap items-center gap-2">
+            <GuideChip id="documents.filters" />
             <Select
               aria-label="تصفية حسب الحالة"
               value={table.filters.statusId || 'all'}
@@ -389,10 +391,13 @@ export function DocumentRegistryTable() {
         rowLabel={(document) => document.title}
         toolbar={
           canCreate ? (
-            <Button type="button" onClick={() => setCreateOpen(true)}>
-              <Plus className="size-4" aria-hidden />
-              وثيقة جديدة
-            </Button>
+            <>
+              <Button type="button" onClick={() => setCreateOpen(true)}>
+                <Plus className="size-4" aria-hidden />
+                وثيقة جديدة
+              </Button>
+              <GuideChip id="documents.create" />
+            </>
           ) : undefined
         }
         emptyTitle={hasQuery ? 'لا توجد وثائق مطابقة.' : 'لا توجد وثائق بعد.'}

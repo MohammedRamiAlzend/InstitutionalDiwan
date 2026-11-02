@@ -1,12 +1,20 @@
 import { KeyRound, ShieldCheck, Sparkles } from 'lucide-react'
 import { useSessionStore } from '@/entities/user'
-import { Badge, PageHeader } from '@/shared/ui'
+import { Badge, GuideProvider, GuideRegion, PageHeader } from '@/shared/ui'
 
 /**
  * Authenticated landing content; the app shell owns navigation and chrome.
  * KPI and recent-activity sections arrive with the Correspondence module.
  */
 export function DashboardPage() {
+  return (
+    <GuideProvider pageId="dashboard">
+      <DashboardContent />
+    </GuideProvider>
+  )
+}
+
+function DashboardContent() {
   const user = useSessionStore((state) => state.user)
 
   const stats = [
@@ -31,8 +39,10 @@ export function DashboardPage() {
         title="لوحة التحكم"
         description="نظرة سريعة على حسابك وما هو متاح في مساحة العمل."
         badge={<Badge variant="outline">النسخة الأولية</Badge>}
+        pageGuide="dashboard"
       />
 
+      <GuideRegion id="dashboard.welcome">
       <section className="rounded-2xl border border-border bg-surface p-6 sm:p-8">
         <p className="text-sm text-muted">مرحبًا بك في الديوان المؤسسي</p>
         <h2 className="mt-1 font-heading text-2xl font-bold text-foreground">
@@ -43,7 +53,9 @@ export function DashboardPage() {
           وستظهر روابطها في القائمة الجانبية عند إتاحتها لحسابك.
         </p>
       </section>
+      </GuideRegion>
 
+      <GuideRegion id="dashboard.stats">
       <section className="grid gap-4 sm:grid-cols-2">
         {stats.map(({ id, label, value, icon: Icon, ltr }) => (
           <article
@@ -65,7 +77,9 @@ export function DashboardPage() {
           </article>
         ))}
       </section>
+      </GuideRegion>
 
+      <GuideRegion id="dashboard.next">
       <section className="rounded-xl border border-dashed border-border bg-surface/60 p-6">
         <h2 className="flex items-center gap-2 font-heading text-base font-semibold text-foreground">
           <Sparkles className="size-4 text-accent" aria-hidden />
@@ -77,6 +91,7 @@ export function DashboardPage() {
           الجانبية بوسم «قريبًا» بدل فتح صفحات فارغة.
         </p>
       </section>
+      </GuideRegion>
     </div>
   )
 }

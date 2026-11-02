@@ -1,5 +1,18 @@
 /* Driver.js guide popover, dressed in the semantic tokens so it follows the light/dark
    theme and RTL. Loaded after driver.css, so these rules win by order. */
+/* Driver.js disables pointer events on everything behind the tour and keeps its overlay
+   path clickable, which traps the user on the current page until the tour is closed. The
+   sidebar is navigation chrome, not page content: keep it live and above the dim overlay
+   (z-index 10000) so a link leaves in one click; unmounting the page then closes the tour. */
+body.driver-active div:has(> aside) {
+  z-index: 10001;
+}
+
+body.driver-active aside,
+body.driver-active aside * {
+  pointer-events: auto;
+}
+
 .driver-popover.diwan-tour {
   /* Radix modals set pointer-events: none on <body>; the popover must stay clickable. */
   pointer-events: auto;

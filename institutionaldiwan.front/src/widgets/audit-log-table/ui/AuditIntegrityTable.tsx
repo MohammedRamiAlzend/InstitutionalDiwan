@@ -13,6 +13,7 @@ import { formatDateTime, formatNumber, formatShortId, useTableState } from '@/sh
 import {
   Button,
   DataTable,
+  GuideChip,
   type DataTableColumn,
   type MenuEntry,
 } from '@/shared/ui'
@@ -191,10 +192,13 @@ export function AuditIntegrityTable() {
         rowLabel={(report) => `فحص ${formatShortId(report.checkId)}`}
         toolbar={
           canManage ? (
-            <Button type="button" variant="outline" onClick={() => setCheckOpen(true)}>
-              <ShieldCheck className="size-4" aria-hidden />
-              فحص السلامة
-            </Button>
+            <>
+              <Button type="button" variant="outline" onClick={() => setCheckOpen(true)}>
+                <ShieldCheck className="size-4" aria-hidden />
+                فحص السلامة
+              </Button>
+              <GuideChip id="audit.check" />
+            </>
           ) : undefined
         }
         emptyTitle="لا توجد تقارير سلامة بعد."

@@ -19,6 +19,7 @@ import {
   Button,
   ConfirmDialog,
   DataTable,
+  GuideChip,
   Select,
   type DataTableColumn,
   type MenuEntry,
@@ -283,10 +284,13 @@ export function ExternalOrganizationsTable() {
         rowLabel={(organization) => organization.nameAr}
         toolbar={
           canEdit ? (
-            <Button type="button" onClick={openCreate}>
-              <Plus className="size-4" aria-hidden />
-              جهة خارجية جديدة
-            </Button>
+            <>
+              <Button type="button" onClick={openCreate}>
+                <Plus className="size-4" aria-hidden />
+                جهة خارجية جديدة
+              </Button>
+              <GuideChip id="documents.org-create" />
+            </>
           ) : undefined
         }
         emptyTitle={

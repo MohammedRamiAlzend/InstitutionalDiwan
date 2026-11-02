@@ -21,7 +21,15 @@ import {
 import { toArabicErrorMessage } from '@/shared/api'
 import { Permissions, ROUTES } from '@/shared/config'
 import { cn } from '@/shared/lib'
-import { Badge, Button, PageHeader, Skeleton } from '@/shared/ui'
+import {
+  Badge,
+  Button,
+  GuideChip,
+  GuideProvider,
+  GuideRegion,
+  PageHeader,
+  Skeleton,
+} from '@/shared/ui'
 import { DocumentFilesTab } from './DocumentFilesTab'
 import { DocumentGrantsTab } from './DocumentGrantsTab'
 import { DocumentMovementsTab } from './DocumentMovementsTab'
@@ -59,7 +67,9 @@ function resolveTab(
 export function DocumentDetailsPage() {
   return (
     <RequirePermission permission={Permissions.DocumentView}>
-      <DocumentDetailsView />
+      <GuideProvider pageId="document-details">
+        <DocumentDetailsView />
+      </GuideProvider>
     </RequirePermission>
   )
 }
@@ -174,6 +184,7 @@ function DocumentDetailsView() {
       <PageHeader
         title={document.title}
         description={document.subjectSummary ?? undefined}
+        pageGuide="document-details"
         badge={
           <div className="flex flex-wrap items-center gap-2">
             <DocumentStatusBadge statusId={document.statusId} />
@@ -193,12 +204,14 @@ function DocumentDetailsView() {
                 تعديل المسودة
               </Button>
             )}
+            {isDraft && canEdit && <GuideChip id="document-details.edit" />}
             {isDraft && canCreate && (
               <Button type="button" onClick={() => setRegisterOpen(true)}>
                 <Hash className="size-4" aria-hidden />
                 تسجيل برقم
               </Button>
             )}
+            {isDraft && canCreate && <GuideChip id="document-details.register" />}
             {canManageParticipants && (
               <Button
                 type="button"
@@ -209,6 +222,7 @@ function DocumentDetailsView() {
                 إضافة مشارك
               </Button>
             )}
+            {canManageParticipants && <GuideChip id="document-details.add-participant" />}
             {canCancel && (
               <Button
                 type="button"
@@ -220,10 +234,12 @@ function DocumentDetailsView() {
                 إلغاء الوثيقة
               </Button>
             )}
+            {canCancel && <GuideChip id="document-details.cancel" />}
           </>
         }
       />
 
+      <GuideRegion id="document-details.tabs">
       <nav
         aria-label="تبويبات الوثيقة"
         className="flex flex-wrap items-center gap-1 border-b border-border pb-1"
@@ -260,8 +276,10 @@ function DocumentDetailsView() {
           )
         })}
       </nav>
+      </GuideRegion>
 
       {activeTab === 'details' && (
+        <GuideRegion id="document-details.tab-details">
         <DocumentOverviewTab
           document={document}
           statusHistory={details.statusHistory}
@@ -270,24 +288,30 @@ function DocumentDetailsView() {
           participantsById={participantsById}
           departmentNames={departmentNames}
         />
+        </GuideRegion>
       )}
       {activeTab === 'participants' && (
+        <GuideRegion id="document-details.tab-participants">
         <DocumentParticipantsTab
           participants={details.participants}
           departmentNames={departmentNames}
           canAdd={canManageParticipants}
           onAdd={() => setParticipantOpen(true)}
         />
+        </GuideRegion>
       )}
       {activeTab === 'numbers' && canViewNumbering && (
+        <GuideRegion id="document-details.tab-numbers">
         <DocumentNumbersTab
           documentId={document.documentId}
           documentStatusId={document.statusId}
           canManage={canManageNumbering}
           departmentNames={departmentNames}
         />
+        </GuideRegion>
       )}
       {activeTab === 'movements' && (
+        <GuideRegion id="document-details.tab-movements">
         <DocumentMovementsTab
           documentId={document.documentId}
           documentTitle={document.title}
@@ -295,15 +319,20 @@ function DocumentDetailsView() {
           canEdit={canEdit}
           departmentNames={departmentNames}
         />
+        </GuideRegion>
       )}
       {activeTab === 'files' && (
+        <GuideRegion id="document-details.tab-files">
         <DocumentFilesTab
           documentId={document.documentId}
           canManage={canEdit && !isCanceled}
         />
+        </GuideRegion>
       )}
       {activeTab === 'grants' && canManageGrants && (
-        <DocumentGrantsTab documentId={document.documentId} />
+        <GuideRegion id="document-details.tab-grants">
+          <DocumentGrantsTab documentId={document.documentId} />
+        </GuideRegion>
       )}
 
       {editOpen && (

@@ -24,6 +24,8 @@ import { formatDateTime } from '@/shared/lib'
 import {
   Button,
   FormField,
+  GuideChip,
+  GuideRegion,
   Input,
   Select,
   Skeleton,
@@ -182,6 +184,7 @@ function InstitutionSettingsFormContent({ setting }: { setting: InstitutionSetti
 
   return (
     <form onSubmit={onSubmit} noValidate className="flex flex-col gap-6">
+      <GuideRegion id="institution-settings.identity">
       <Section
         icon={Building2}
         title="بيانات المؤسسة"
@@ -244,7 +247,9 @@ function InstitutionSettingsFormContent({ setting }: { setting: InstitutionSetti
           </FormField>
         </div>
       </Section>
+      </GuideRegion>
 
+      <GuideRegion id="institution-settings.central">
       <Section
         icon={Landmark}
         title="الديوان المركزي"
@@ -300,7 +305,9 @@ function InstitutionSettingsFormContent({ setting }: { setting: InstitutionSetti
           )}
         </div>
       </Section>
+      </GuideRegion>
 
+      <GuideRegion id="institution-settings.numbering">
       <Section
         icon={Hash}
         title="الترقيم"
@@ -359,7 +366,9 @@ function InstitutionSettingsFormContent({ setting }: { setting: InstitutionSetti
           </FormField>
         </div>
       </Section>
+      </GuideRegion>
 
+      <GuideRegion id="institution-settings.responsible">
       <Section
         icon={UserRound}
         title="الجهة المسؤولة"
@@ -393,6 +402,7 @@ function InstitutionSettingsFormContent({ setting }: { setting: InstitutionSetti
           </FormField>
         </div>
       </Section>
+      </GuideRegion>
 
       {mutationError && (
         <p
@@ -410,6 +420,7 @@ function InstitutionSettingsFormContent({ setting }: { setting: InstitutionSetti
         <Button type="submit" loading={pending}>
           حفظ الإعدادات
         </Button>
+        <GuideChip id="institution-settings.save" />
       </div>
     </form>
   )

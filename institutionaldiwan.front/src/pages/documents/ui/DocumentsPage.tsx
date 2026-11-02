@@ -3,7 +3,7 @@ import { Building2, ScrollText } from 'lucide-react'
 import { RequirePermission } from '@/features/auth'
 import { Permissions } from '@/shared/config'
 import { cn } from '@/shared/lib'
-import { PageHeader } from '@/shared/ui'
+import { GuideProvider, GuideRegion, PageHeader } from '@/shared/ui'
 import { DocumentRegistryTable } from '@/widgets/document-registry-table'
 import { ExternalOrganizationsTable } from '@/widgets/external-organizations-table'
 
@@ -32,7 +32,9 @@ function resolveTab(raw: string | null): TabKey {
 export function DocumentsPage() {
   return (
     <RequirePermission permission={Permissions.DocumentView}>
-      <DocumentsView />
+      <GuideProvider pageId="documents">
+        <DocumentsView />
+      </GuideProvider>
     </RequirePermission>
   )
 }
@@ -51,8 +53,10 @@ function DocumentsView() {
       <PageHeader
         title="الوثائق"
         description="استعرض الوثائق الصادرة والواردة والداخلية، أو أنشئ وثيقة جديدة كمسودة أو برقم رسمي، وأدر جهات المراسلة الخارجية."
+        pageGuide="documents"
       />
 
+      <GuideRegion id="documents.tabs">
       <div
         role="tablist"
         aria-label="أقسام صفحة الوثائق"
@@ -90,12 +94,17 @@ function DocumentsView() {
           )
         })}
       </div>
+      </GuideRegion>
 
       <div role="tabpanel">
         {activeTab === 'registry' ? (
-          <DocumentRegistryTable />
+          <GuideRegion id="documents.registry">
+            <DocumentRegistryTable />
+          </GuideRegion>
         ) : (
-          <ExternalOrganizationsTable />
+          <GuideRegion id="documents.organizations">
+            <ExternalOrganizationsTable />
+          </GuideRegion>
         )}
       </div>
     </div>

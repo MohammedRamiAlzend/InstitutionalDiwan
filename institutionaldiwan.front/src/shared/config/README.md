@@ -48,12 +48,13 @@ export const ROUTES = {
 | `permissions.ts`, `routes.ts`, `lookupIds.ts`, `env.ts`, `index.ts` | Implemented, including `/institution-settings`, the `/audit` route, numbering ID maps, the Module 03 document/participant/organization/movement ID maps, and the Module 09 audit action/entity ID maps. |
 | `DOCUMENT_NUMBER_STATUS`, `DOCUMENT_NUMBER_EVENT_TYPE` | ✅ Exported (Module 04 Phase 1) and consumed (Phase 4) by `NumberStatusBadge` and the document numbers history grid, so no numeric literals remain in those views. |
 | `DOCUMENT_FILE_TYPE`, `attachmentLimits.ts` | ✅ Added in Module 06 Phase 0; consumed by the upload form's pre-validation and the files grid from Phase 3. |
-| `guides/` | 🟡 Tutorial Phase 0: `common.ts` (grid tools) + `users.ts` (the witness page) implemented; one file per page is added in the following phases. |
+| `guides/` | ✅ Tutorial catalogue complete for every page: `common.ts` (grid tools) plus one file per page (`users`, `roles`, `employees`, `movements`, `documents` incl. document details, `departments`, `numbering`, `institution-settings`, `audit`, `dashboard`) — 60 entries, checked by `npm run check:guides`. |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-02 | agent | Tutorial catalogue extended to all pages: added `roles`, `employees`, `movements`, `documents` (+ document details), `departments`, `numbering`, `institution-settings`, `audit` and `dashboard` guides and registered them in `guides/index.ts`. |
 | 2026-11-01 | agent | Tutorial mode Phase 0: added `guides/` — the `GuideEntry`/`PageGuide` contracts, `common.ts` for the six grid-tool entries shared by every table, `users.ts` for the witness page, and `index.ts` with `getGuideEntry`/`getPageGuide` through the public barrel. Ids are namespaced (`<page>.<region>`, `table.<tool>`) so `scripts/check-guide-ids.mjs` can prove every id used exists and every entry written is used. |
 | 2026-11-01 | agent | Module 06 Phase 0: added `DOCUMENT_FILE_TYPE` (Scan 1 / Attachment 2 / Signature 3 / Other 4) and `attachmentLimits.ts` — `DOCUMENT_FILE_TYPE_LIMITS` mirroring `AttachmentsLookupSeeders.cs:37-45`, `MAX_UPLOAD_BYTES` matching `DocumentFilesController.MaxUploadBytes`, and `fileTypeLimits()` returning `null` for an unknown type so the server decides instead of a guessed limit blocking a valid upload. The lookup read exposes ids and labels only, hence the client-side copy. |
 | 2026-10-29 | agent | Module 04 Phase 4: confirmed `DOCUMENT_NUMBER_STATUS` and `DOCUMENT_NUMBER_EVENT_TYPE` are the only source of number status/event ids in the UI — `NumberStatusBadge` and the `DocumentNumbersTab` status/event label maps now reference them directly. |

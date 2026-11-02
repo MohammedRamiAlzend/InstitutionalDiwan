@@ -4,7 +4,7 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useState,
+  useRef,
   type ReactNode,
 } from 'react'
 import { CircleHelp } from 'lucide-react'
@@ -34,12 +34,17 @@ interface GuideProviderProps {
  */
 export function GuideProvider({ pageId, children }: GuideProviderProps) {
   const tutorial = useTutorial()
-  const [visibleIds, setVisibleIds] = useState<readonly string[]>([])
+  // Visibility is read only when the tour starts, so it lives in a ref: keeping it in state
+  // would rebuild the context on every chip mount and loop through the chips' effects.
+  const visible = useRef(new Map<string, number>())
 
   const markVisible = useCallback((id: string) => {
-    setVisibleIds((previous) => (previous.includes(id) ? previous : [...previous, id]))
+    const counts = visible.current
+    counts.set(id, (counts.get(id) ?? 0) + 1)
     return () => {
-      setVisibleIds((previous) => previous.filter((entryId) => entryId !== id))
+      const remaining = (counts.get(id) ?? 1) - 1
+      if (remaining > 0) counts.set(id, remaining)
+      else counts.delete(id)
     }
   }, [])
 
@@ -51,10 +56,10 @@ export function GuideProvider({ pageId, children }: GuideProviderProps) {
     const entries = guide.entryIds.flatMap((id) => {
       const entry = getGuideEntry(id)
       // A region the user cannot see right now has nothing to explain about it.
-      return entry && visibleIds.includes(entry.id) ? [entry] : []
+      return entry && visible.current.has(entry.id) ? [entry] : []
     })
     showGuideTour({ id: guide.pageId, title: 'عن هذه الصفحة', body: guide.intro }, entries)
-  }, [guide, visibleIds])
+  }, [guide])
 
   // A tour must not outlive its page, nor the mode being switched off.
   useEffect(() => destroyGuideTour, [])

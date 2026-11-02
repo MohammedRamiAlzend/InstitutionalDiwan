@@ -31,6 +31,7 @@ import {
   Button,
   ConfirmDialog,
   DataTable,
+  GuideChip,
   Select,
   type DataTableColumn,
   type MenuEntry,
@@ -449,14 +450,18 @@ export function NumberingRegistryTable() {
         rowLabel={(registry) => registry.code}
         toolbar={
           canManage ? (
-            <Button type="button" onClick={openCreate}>
-              <Plus className="size-4" aria-hidden />
-              سجل جديد
-            </Button>
+            <>
+              <Button type="button" onClick={openCreate}>
+                <Plus className="size-4" aria-hidden />
+                سجل جديد
+              </Button>
+              <GuideChip id="numbering.create" />
+            </>
           ) : undefined
         }
         filters={
           <div className="flex flex-wrap items-center gap-2">
+            <GuideChip id="numbering.filters" />
             <Select
               aria-label="تصفية حسب الحالة"
               value={table.filters.status || 'all'}

@@ -3,7 +3,7 @@ import { List, ShieldCheck } from 'lucide-react'
 import { RequirePermission } from '@/features/auth'
 import { Permissions } from '@/shared/config'
 import { cn } from '@/shared/lib'
-import { PageHeader } from '@/shared/ui'
+import { GuideProvider, GuideRegion, PageHeader } from '@/shared/ui'
 import { AuditIntegrityTable, AuditLogTable } from '@/widgets/audit-log-table'
 
 const PANELS = [
@@ -34,7 +34,9 @@ function resolvePanel(raw: string | null): PanelKey {
 export function AuditPage() {
   return (
     <RequirePermission permission={Permissions.AuditView}>
-      <AuditView />
+      <GuideProvider pageId="audit">
+        <AuditView />
+      </GuideProvider>
     </RequirePermission>
   )
 }
@@ -53,8 +55,10 @@ function AuditView() {
       <PageHeader
         title="سجل التدقيق"
         description="سلسلة تدقيق غير قابلة للتعديل: كل إجراء يُخزَّن مع تجزئة تربطه بالسجل السابق. ابحث في السجلات وفُتش تكامل السلسلة عند الحاجة؛ كل عملية بحث تُسجَّل هي أيضًا."
+        pageGuide="audit"
       />
 
+      <GuideRegion id="audit.tabs">
       <div role="tablist" aria-label="أقسام سجل التدقيق" className="flex flex-wrap items-center gap-2">
         {PANELS.map((panel) => {
           const Icon = panel.icon
@@ -88,9 +92,18 @@ function AuditView() {
           )
         })}
       </div>
+      </GuideRegion>
 
       <div role="tabpanel">
-        {activePanel === 'logs' ? <AuditLogTable /> : <AuditIntegrityTable />}
+        {activePanel === 'logs' ? (
+          <GuideRegion id="audit.logs">
+            <AuditLogTable />
+          </GuideRegion>
+        ) : (
+          <GuideRegion id="audit.integrity">
+            <AuditIntegrityTable />
+          </GuideRegion>
+        )}
       </div>
     </div>
   )

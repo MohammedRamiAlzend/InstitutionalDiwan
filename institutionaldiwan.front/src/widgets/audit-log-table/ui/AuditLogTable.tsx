@@ -22,6 +22,7 @@ import {
   Badge,
   Button,
   DataTable,
+  GuideChip,
   Input,
   Select,
   type DataTableColumn,
@@ -333,6 +334,7 @@ export function AuditLogTable() {
         searchPlaceholder="ابحث بالوحدة أو معرّف الكيان أو الارتباط أو IP…"
         filters={
           <div className="flex flex-wrap items-center gap-2">
+            <GuideChip id="audit.filters" />
             <Select
               aria-label="تصفية حسب الوحدة"
               value={table.filters.moduleName || 'all'}
@@ -389,10 +391,12 @@ export function AuditLogTable() {
           canManage ? (
             <div className="flex flex-wrap items-center gap-2">
               <CreateCheckpointButton />
+              <GuideChip id="audit.checkpoint" />
               <Button type="button" variant="outline" onClick={() => setIntegrityOpen(true)}>
                 <ShieldCheck className="size-4" aria-hidden />
                 فحص السلامة
               </Button>
+              <GuideChip id="audit.check" />
             </div>
           ) : undefined
         }

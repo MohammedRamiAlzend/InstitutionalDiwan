@@ -3,7 +3,7 @@ import { BookOpen, ScrollText } from 'lucide-react'
 import { RequirePermission } from '@/features/auth'
 import { Permissions } from '@/shared/config'
 import { cn } from '@/shared/lib'
-import { PageHeader } from '@/shared/ui'
+import { GuideProvider, GuideRegion, PageHeader } from '@/shared/ui'
 import { DepartmentRegisterBook } from '@/widgets/department-register-book'
 import { NumberingRegistryTable } from '@/widgets/numbering-registry-table'
 
@@ -32,7 +32,9 @@ function resolveTab(raw: string | null): TabKey {
 export function NumberingPage() {
   return (
     <RequirePermission permission={Permissions.NumberingView}>
-      <NumberingView />
+      <GuideProvider pageId="numbering">
+        <NumberingView />
+      </GuideProvider>
     </RequirePermission>
   )
 }
@@ -51,8 +53,10 @@ function NumberingView() {
       <PageHeader
         title="الترقيم"
         description="أنشئ سجلات الترقيم وحدّد نطاقها وقالب أرقامها وسياسة تصفيرها، وتابع العدادات وسجل أرقام الدوائر. تُحفظ كل الأرقام الصادرة ولا تُحذف."
+        pageGuide="numbering"
       />
 
+      <GuideRegion id="numbering.tabs">
       <div
         role="tablist"
         aria-label="أقسام صفحة الترقيم"
@@ -90,12 +94,17 @@ function NumberingView() {
           )
         })}
       </div>
+      </GuideRegion>
 
       <div role="tabpanel">
         {activeTab === 'registries' ? (
-          <NumberingRegistryTable />
+          <GuideRegion id="numbering.registries">
+            <NumberingRegistryTable />
+          </GuideRegion>
         ) : (
-          <DepartmentRegisterBook />
+          <GuideRegion id="numbering.register-book">
+            <DepartmentRegisterBook />
+          </GuideRegion>
         )}
       </div>
     </div>
