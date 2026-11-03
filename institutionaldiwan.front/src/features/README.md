@@ -46,6 +46,8 @@ error handling, and form/dialog UI.
 | `audit-manage/` | `POST /api/audit-logs/checkpoints`, `POST .../integrity-checks` | `AUDIT_MANAGE`; integrity failure is **200 + `isValid: false`** rendered in-dialog; empty checkpoint range → Arabic `Audit.NothingToCheckpoint` / `Audit.ChainBroken` | ✅ Implemented (Module 09) |
 | `archive-manage/` | `POST /api/documents/{id}/archive`, `/unarchive`, `/api/saved-searches` (POST/PUT/DELETE) | `DOCUMENT_ARCHIVE` + `MANAGE` access for archive transitions; saved searches need only `DOCUMENT_VIEW` and are private |
 | `document-relation-manage/` | `POST /api/documents/{id}/relations`, `DELETE /api/documents/{id}/relations/{relationId}` | `DOCUMENT_EDIT`; document not archived or cancelled |
+| `document-schema-manage/` | `POST /api/document-types/{id}/fields`, `POST /api/document-types/{id}/schema-versions`, `DELETE /api/schema-versions/{id}`, `POST|PUT|DELETE /api/schema-versions/{id}/fields`, `POST /api/schema-versions/{id}/publish` | `LOOKUP_MANAGE`; draft-only edits; publish freezes the version |
+| `document-field-values/` | `PUT /api/documents/{id}/fields` | `DOCUMENT_EDIT` + DOWNLOAD access; draft documents only |
 
 ## Conventions
 
@@ -82,6 +84,7 @@ error handling, and form/dialog UI.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-03 | Claude | Added `document-schema-manage/` and `document-field-values/` for the dynamic document fields; `document-create` now renders the type's published schema. |
 | 2026-11-03 | agent | Module 08: implemented `document-relation-manage` — create/remove link mutations, schemas, document picker and two dialogs. |
 | 2026-11-03 | agent | Module 07: implemented `archive-manage` — archive and unarchive commands, saved-search create/update/delete, their Zod schemas, and the four dialogs; transitions invalidate the document, registry, archive-search and history keys. |
 | 2026-11-01 | agent | Module 06 Phase 4: `attachment-upload/` grew `uploadVersion`, `archiveFile` and their mutations, the shared `fileRejection` rules with `buildUploadVersionSchema(fileTypeId)`, the `useLocalChecksum` hook, and four dialogs — version upload with the next-version number and an Arabic archived refusal, the versions list with per-version download, the archive confirmation, and checksum verify. |

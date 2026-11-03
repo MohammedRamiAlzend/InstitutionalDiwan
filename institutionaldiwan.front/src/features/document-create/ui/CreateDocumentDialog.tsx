@@ -4,6 +4,14 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { Building2, FilePlus2, Hash, Landmark, Save, Search, UserRound } from 'lucide-react'
 import { toast } from 'sonner'
 import { useDepartmentOptions } from '@/entities/department'
+import {
+  DynamicFieldInputs,
+  toFieldValueRequests,
+  useDocumentTypeSchema,
+  validateFieldValues,
+  type FieldValueErrors,
+  type FieldValueMap,
+} from '@/entities/document-schema'
 import { useExternalOrganizations } from '@/entities/external-organization'
 import {
   DOCUMENT_CONFIDENTIALITY,
@@ -156,6 +164,15 @@ export function CreateDocumentDialog({ open, onOpenChange }: CreateDocumentDialo
   })
 
   const mode = useWatch({ control, name: 'mode' })
+  const documentTypeId = useWatch({ control, name: 'documentTypeId' })
+
+  // Dynamic fields follow the chosen type's published schema; a type without one shows no section.
+  const schemaQuery = useDocumentTypeSchema(documentTypeId ? Number(documentTypeId) : undefined, {
+    enabled: open,
+  })
+  const schemaFields = schemaQuery.data?.schema?.fields ?? []
+  const [fieldValues, setFieldValues] = useState<FieldValueMap>({})
+  const [fieldErrors, setFieldErrors] = useState<FieldValueErrors>({})
   const addRecipient = useWatch({ control, name: 'addRecipient' })
   const recipientType = useWatch({ control, name: 'recipientType' })
 
@@ -208,7 +225,12 @@ export function CreateDocumentDialog({ open, onOpenChange }: CreateDocumentDialo
   }
 
   const onSubmit = handleSubmit(async (values) => {
+    const dynamicErrors = validateFieldValues(schemaFields, fieldValues)
+    setFieldErrors(dynamicErrors)
+    if (Object.keys(dynamicErrors).length > 0) return
+
     const shared = {
+      fieldValues: schemaFields.length > 0 ? toFieldValueRequests(schemaFields, fieldValues) : undefined,
       title: values.title.trim(),
       documentTypeId: Number(values.documentTypeId),
       directionId: Number(values.directionId),
@@ -268,6 +290,7 @@ export function CreateDocumentDialog({ open, onOpenChange }: CreateDocumentDialo
         }
       }
 
+      setFieldValues({})
       onOpenChange(false)
     } catch (error) {
       if (error instanceof ApiError && error.code === 'Numbering.OfficialNumberTaken') {
@@ -390,6 +413,11 @@ export function CreateDocumentDialog({ open, onOpenChange }: CreateDocumentDialo
                 value={field.value || undefined}
                 onValueChange={(value) => {
                   field.onChange(value)
+                  if (Object.values(fieldValues).some((entry) => entry.trim())) {
+                    toast.info('أُفرغت الحقول الإضافية لأن نوع الوثيقة تغيّر.')
+                  }
+                  setFieldValues({})
+                  setFieldErrors({})
                   const impliedDirection = DOCUMENT_TYPE_DIRECTION[Number(value)]
                   if (impliedDirection) {
                     setValue('directionId', String(impliedDirection), {
@@ -406,6 +434,27 @@ export function CreateDocumentDialog({ open, onOpenChange }: CreateDocumentDialo
             )}
           />
         </FormField>
+
+        {schemaFields.length > 0 && (
+          <fieldset className="col-span-full flex flex-col gap-4 rounded-xl border border-border p-4">
+            <legend className="px-2 text-sm font-semibold text-foreground">
+              حقول إضافية لهذا النوع
+            </legend>
+            <DynamicFieldInputs
+              fields={schemaFields}
+              values={fieldValues}
+              errors={fieldErrors}
+              disabled={pending}
+              onChange={(key, value) => {
+                setFieldValues((current) => ({ ...current, [key]: value }))
+                setFieldErrors((current) => {
+                  if (!(key in current)) return current
+                  return Object.fromEntries(Object.entries(current).filter(([k]) => k !== key))
+                })
+              }}
+            />
+          </fieldset>
+        )}
 
         <FormField label="الاتجاه" required error={errors.directionId?.message}>
           <Controller

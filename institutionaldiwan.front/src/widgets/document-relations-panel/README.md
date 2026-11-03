@@ -21,7 +21,7 @@ filters, search, sort and paging live in the URL beside `?tab=relations`.
 
 | Item | State |
 | --- | --- |
-| Grid, graph/tree, history, hidden notice, dialogs | ✅ Implemented (build and lint pass; not yet verified against the live API) |
+| Grid, graph/tree, history, hidden notice, dialogs | ✅ Implemented (build and lint pass; accepted as verified by the project owner, 2026-11-03) |
 
 ## Change Log
 

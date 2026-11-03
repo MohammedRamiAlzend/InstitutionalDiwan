@@ -54,6 +54,7 @@ export const ROUTES = {
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-03 | Claude | Added `ROUTES.DOCUMENT_SCHEMAS` and the `document-schemas` page guide plus the `document-details.tab-fields` entry. |
 | 2026-11-03 | agent | Module 08: added `DOCUMENT_RELATION_TYPE` and `RELATION_ACTION_TYPE` to `lookupIds.ts` and the relations entries (`document-details.tab-relations`, `document-details.relations-*`) to the document-details guide. |
 | 2026-11-03 | agent | Module 08: added `DOCUMENT_RELATION_TYPE` and `RELATION_ACTION_TYPE` to `lookupIds.ts` and the relations entries (`document-details.tab-relations`, `document-details.relations-*`) to the document-details guide. |
 | 2026-11-03 | agent | Module 07: added `ROUTES.ARCHIVE`, `ARCHIVE_EVENT_TYPE`/`ARCHIVE_LOCATION` in `lookupIds.ts`, and the `archive` page guide plus the archive entries of the document-details guide. |

@@ -37,6 +37,7 @@ read-only presentational UI. Entities never perform write mutations.
 | `audit-log/` | `AuditLogResponse`, `AuditIntegrityCheckResponse` (paged `/audit-logs`, `/audit-logs/integrity-checks`) | `useAuditLogs`, `useAuditIntegrityReports`, `AUDIT_MODULES`/`auditModuleLabel`, `HashChainPill`, `IntegrityStatusBadge` | ✅ Reads, Arabic module labels, and badges implemented; writes live in `features/audit-manage`. |
 | `archive/` | `ArchivedDocumentResponse`, `DocumentArchiveEventResponse`, `SavedSearchResponse` (`GET /api/archive/documents`, `/api/documents/{id}/archive-events`, `/api/saved-searches`) | `useArchivedDocuments`, `useDocumentArchiveEvents`, `useSavedSearches`, `archiveKeys`, `ArchiveEventTypeBadge` |
 | `document-relation/` | `DocumentRelationResponse`, `RelationGraphResponse`, `DocumentRelationEventResponse` (`GET /api/documents/{id}/relations`, `/graph`, `/events`) | `useDocumentRelations`, `useRelationGraph`, `useRelationEvents`, `relationGraphToMermaid`, `RelationTypeBadge` |
+| `document-schema/` | `DocumentFieldResponse`, `SchemaVersionResponse`, `DocumentFieldsResponse` (`/document-types/{id}/fields`, `/schema`, `/schema-versions`, `/schema-versions/{id}`, `/documents/{id}/fields`) | `useDocumentTypeFields`, `useSchemaVersions`, `useSchemaVersion`, `useDocumentTypeSchema`, `useDocumentFields`, `DynamicFieldInputs`, value validation helpers, badges |
 
 ## Conventions
 
@@ -73,6 +74,7 @@ read-only presentational UI. Entities never perform write mutations.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-03 | Claude | Added `document-schema/` for the dynamic document fields: reads, types, value helpers and the shared `DynamicFieldInputs` control set. |
 | 2026-11-03 | agent | Module 08: implemented the `document-relation` read slice. |
 | 2026-11-03 | agent | Module 07: implemented the `archive` read slice — archive search, per-document archive history and saved-search reads, `archiveKeys`, criteria (de)serialisation for saved searches, and the event-type badge. |
 | 2026-11-01 | agent | Module 06 Phase 2: added `documentFileApi.download(fileId, versionId?)`, the blob read behind the files grid's «تنزيل الإصدار الحالي»; the slice now has a consumer, `widgets/document-attachments-panel` on the details page's «الملفات» tab. |

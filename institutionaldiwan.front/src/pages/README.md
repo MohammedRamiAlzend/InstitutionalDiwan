@@ -47,6 +47,7 @@ complex business mutations, raw `axios`/`fetch` calls, or reusable domain models
 | `roles/` | `/roles` | 02 — roles CRUD, activate/deactivate, permission matrix | ✅ Implemented |
 | `employees/` | `/employees` | 02 — employees list/CRUD, activate/deactivate | ✅ Implemented |
 | `numbering/` | `/numbering` | 04 — `GET/POST/PUT/DELETE /api/numbering/registries`, activate, `GET /api/departments/{id}/register` | ✅ Implemented (Phase 5); registries/register tabs + registry filters ✅ (Module 04 Phase 2); department register book `widgets/department-register-book` ✅ (Module 04 Phase 3) |
+| `document-schemas/` | `/document-schemas` | Dynamic fields — `/document-types/{id}/schema-versions` and the schema write routes | ✅ Implemented behind `LOOKUP_MANAGE`; type and version live in `?type=` / `?version=` |
 | `audit/` | `/audit` | 09 — `GET /api/audit-logs`, checkpoints, integrity checks/reports (`?panel=logs\|integrity`) | ✅ Implemented (Module 09) |
 | `archive/` | `/archive` | 07 — `GET /api/archive/documents`, saved searches | ✅ Implemented (Module 07) |
 
@@ -81,6 +82,7 @@ the cross-module `widgets/visualization-panel` remains planned.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-03 | Claude | Added `/document-schemas` (dynamic document fields administration). |
 | 2026-11-03 | agent | Module 07: implemented `archive/` — `/archive` behind `DOCUMENT_VIEW`, sidebar entry «الأرشيف», plus the archive/unarchive actions and the «سجل الأرشفة» tab on the document details page. |
 | 2026-10-29 | agent | Module 04 Phase 4: the document-details numbers history is now the shared `DataTable` (`tableId="document-numbers"`, column chooser, sorting, URL search, copy row menu); no route or permission changed. |
 | 2026-10-29 | agent | Module 04 Phase 3: replaced `pages/numbering/ui/DepartmentRegisterSection.tsx` with `widgets/department-register-book` (shared `DataTable`, department/year URL filters); `/numbering?tab=register` unchanged at the route level. |

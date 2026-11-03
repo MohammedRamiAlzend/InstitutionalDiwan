@@ -11,6 +11,7 @@ import { InstitutionSettingsPage } from '@/pages/institution-settings'
 import { UsersPage } from '@/pages/users'
 import { RolesPage } from '@/pages/roles'
 import { EmployeesPage } from '@/pages/employees'
+import { DocumentSchemasPage } from '@/pages/document-schemas'
 import { NumberingPage } from '@/pages/numbering'
 import { AuditPage } from '@/pages/audit'
 import { AppShell } from '@/widgets/app-shell'
@@ -35,6 +36,7 @@ export function AppRouter() {
             <Route path={ROUTES.ROLES} element={<RolesPage />} />
             <Route path={ROUTES.EMPLOYEES} element={<EmployeesPage />} />
             <Route path={ROUTES.NUMBERING} element={<NumberingPage />} />
+            <Route path={ROUTES.DOCUMENT_SCHEMAS} element={<DocumentSchemasPage />} />
             <Route path={ROUTES.AUDIT} element={<AuditPage />} />
           </Route>
         </Route>

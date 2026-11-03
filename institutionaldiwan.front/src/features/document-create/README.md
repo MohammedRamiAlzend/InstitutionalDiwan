@@ -76,6 +76,7 @@ not ask for it.
 | Recipient browser verification | ✅ Verified in-browser (2026-10-30) as `admin`: ticking «إضافة مستلم للوثيقة» and submitting a department recipient without a department showed «اختر القسم المستلم.»; after choosing «قسم الموارد البشرية» the draft was created with the toast «تم حفظ الوثيقة كمسودة. وأُضيف المستلم.»; the detail page `?tab=participants` of document `596424ec-cb7c-4fa6-9ea2-a9537a4e65a2` showed «مستلم \| أساسي \| قسم داخلي · قسم الموارد البشرية». |
 
 ## 7. Change Log
+| 2026-11-03 | Claude | The dialog now loads the chosen type's published schema, renders `DynamicFieldInputs` in a full-width fieldset, validates locally and sends `fieldValues`; changing the type clears the values. |
 
 - 2026-10-30: Added the optional recipient block to `CreateDocumentDialog` (checkbox + external/
   department/person target, debounced organization search, active-department picker, person name),

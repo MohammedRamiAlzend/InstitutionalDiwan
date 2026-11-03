@@ -393,7 +393,7 @@ picker in `features/document-manage`. The UI is the `/documents?tab=organization
 (`features/external-organization-manage` + `widgets/external-organizations-table`); there is no
 dedicated route or sidebar entry.
 
-### Dynamic document fields — **backend only, not implemented in the SPA (do not call yet)**
+### Dynamic document fields — implemented in the SPA (`/document-schemas`, create dialog, «الحقول» tab)
 
 Administrators define extra fields per document type and publish them in immutable schema versions
 (draft → published → retired). A document is pinned to the version published when it was created
@@ -424,9 +424,10 @@ Document side:
 - Registering (or `POST /api/documents`) with a required field missing answers
   `DocumentFields.ValueRequired` before any number is consumed.
 
-Error codes (all need Arabic entries in `shared/api/errorMessages.ts` when the UI is built):
-`DocumentFields.*` — see `InstitutionalDiwan.Domain/Errors/DomainErrors.cs`. Registry filtering by
-field values is not implemented yet.
+Error codes:
+`DocumentFields.*` — see `InstitutionalDiwan.Domain/Errors/DomainErrors.cs`; all 40 have Arabic entries in
+`shared/api/errorMessages.ts`. Error bodies carry no structured field key, so the SPA validates values locally
+first. Registry filtering by field values is not implemented yet (neither backend nor SPA).
 
 ### Archiving (Module 07) — implemented in the SPA (`/archive`, document details)
 

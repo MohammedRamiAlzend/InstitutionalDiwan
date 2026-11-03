@@ -15,6 +15,7 @@ export const ROUTES = {
   ROLES: '/roles',
   EMPLOYEES: '/employees',
   NUMBERING: '/numbering',
+  DOCUMENT_SCHEMAS: '/document-schemas',
   AUDIT: '/audit',
 } as const
 

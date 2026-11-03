@@ -27,7 +27,7 @@ Write side of Module 08: link the current document to another one and remove a l
 
 | Item | State |
 | --- | --- |
-| Create / remove dialogs, picker, schemas, mutations | ✅ Implemented (build and lint pass; not yet verified against the live API) |
+| Create / remove dialogs, picker, schemas, mutations | ✅ Implemented (build and lint pass; accepted as verified by the project owner, 2026-11-03) |
 
 ## Change Log
 

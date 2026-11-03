@@ -138,6 +138,12 @@ export const DOCUMENT_DETAILS_GUIDE_ENTRIES: readonly GuideEntry[] = [
     body: 'كل عمليات أرشفة الوثيقة وإلغاء أرشفتها مرتبة من الأحدث: من نفّذها ومتى وفي أي موقع ولأي سبب.',
   },
   {
+    id: 'document-details.tab-fields',
+    title: 'حقول الوثيقة',
+    body: 'الحقول الإضافية التي عرّفتها الإدارة لنوع هذه الوثيقة، بقيمها الحالية. الوثيقة تبقى على نسخة المخطط التي أُنشئت عليها حتى لو نُشرت نسخة أحدث.',
+    note: 'تُعدَّل القيم في المسودة فقط وبصلاحية تعديل الوثيقة، وتُقفل عند التسجيل الرسمي.',
+  },
+  {
     id: 'document-details.tab-relations',
     title: 'روابط الوثيقة',
     body: 'الوثائق المرتبطة بهذه الوثيقة: ردود وروابط مرجعية ووثائق تلغيها أو نسخ عنها. يمكنك استعراضها في جدول أو مخطط أو شجرة، ورؤية سجل كل ما أُضيف وأُزيل.',
@@ -203,6 +209,7 @@ export const DOCUMENT_DETAILS_GUIDE: PageGuide = {
     'document-details.tab-files',
     'document-details.tab-grants',
     'document-details.tab-archive',
+    'document-details.tab-fields',
     'document-details.tab-relations',
     'document-details.relations-grid',
     'document-details.relations-types',

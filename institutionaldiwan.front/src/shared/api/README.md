@@ -68,6 +68,7 @@ Used by documents, users, employees, external organizations, audit logs, and int
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-03 | Claude | Added the Arabic `DocumentFields.*` error catalog (40 codes, matched one-to-one with `DomainErrors.DocumentFields`). |
 | 2026-11-03 | agent | Module 08: added the Arabic `Relations.*` error messages. |
 | 2026-11-03 | agent | Module 08: added the Arabic `Relations.*` error messages. |
 | 2026-11-03 | agent | Module 07: added the Arabic `Archiving.*`, `Correspondence.OnlyRegisteredArchivable`, `Correspondence.DocumentArchived` and `Common.ConcurrencyConflict` messages. |

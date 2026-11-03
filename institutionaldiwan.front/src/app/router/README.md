@@ -20,6 +20,7 @@ Defines the React Router v7 route tree, the authentication guard (`ProtectedRout
 ## Change Log
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-03 | Claude | Registered `/document-schemas` (`ROUTES.DOCUMENT_SCHEMAS`); the page performs its own `LOOKUP_MANAGE` guard. |
 | 2026-11-03 | agent | Module 07: registered `/archive` (`ROUTES.ARCHIVE`); `ArchivePage` does its own `DOCUMENT_VIEW` guard. |
 | 2026-11-01 | agent | Module 06 Phase 2: no route change — the files tab lives inside the registered `/documents/:documentId`, and making it live removed the last disabled tab chip. Corrected the route-map row that still called the files tab an exception. |
 | 2026-10-29 | agent | Module 09: registered `/audit` (`ROUTES.AUDIT`) beside `/numbering`; the page performs its own `AUDIT_VIEW` guard and audit writes stay behind `AUDIT_MANAGE`. |

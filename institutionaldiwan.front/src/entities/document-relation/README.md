@@ -29,7 +29,7 @@ permanent relation history. Writes live in `features/document-relation-manage`.
 
 | Item | State |
 | --- | --- |
-| Reads, keys, hooks, direction phrases, graph/tree builders, badges | ✅ Implemented (build and lint pass; not yet verified against the live API) |
+| Reads, keys, hooks, direction phrases, graph/tree builders, badges | ✅ Implemented (build and lint pass; accepted as verified by the project owner, 2026-11-03) |
 
 ## Change Log
 

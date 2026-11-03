@@ -5,6 +5,7 @@ import {
   FileText,
   Hash,
   IdCard,
+  ListPlus,
   Inbox,
   LayoutDashboard,
   ScrollText,
@@ -137,6 +138,14 @@ export const SHELL_NAV_GROUPS: readonly ShellNavGroup[] = [
         to: ROUTES.NUMBERING,
         icon: Hash,
         permission: Permissions.NumberingView,
+        available: true,
+      },
+      {
+        id: 'document-schemas',
+        label: 'مخططات الحقول',
+        to: ROUTES.DOCUMENT_SCHEMAS,
+        icon: ListPlus,
+        permission: Permissions.LookupManage,
         available: true,
       },
       {

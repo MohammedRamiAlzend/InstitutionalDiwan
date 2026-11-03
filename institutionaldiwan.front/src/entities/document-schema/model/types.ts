@@ -1,0 +1,104 @@
+/** `DocumentFieldDataType` — the API serializes enums as integers. */
+export const FIELD_DATA_TYPE = {
+  Text: 1,
+  LongText: 2,
+  Number: 3,
+  Date: 4,
+  Boolean: 5,
+  Select: 6,
+} as const
+
+export type FieldDataType = (typeof FIELD_DATA_TYPE)[keyof typeof FIELD_DATA_TYPE]
+
+/** `DocumentTypeSchemaVersionStatus`. */
+export const SCHEMA_STATUS = {
+  Draft: 1,
+  Published: 2,
+  Retired: 3,
+} as const
+
+export type SchemaStatus = (typeof SCHEMA_STATUS)[keyof typeof SCHEMA_STATUS]
+
+/** Limits mirrored from the backend rules (DomainErrors.DocumentFields). */
+export const FIELD_LIMITS = {
+  maxFieldsPerVersion: 50,
+  maxOptions: 100,
+  maxRegexLength: 500,
+  maxRegexMessageLength: 500,
+  maxLabelLength: 200,
+  maxKeyLength: 50,
+  maxTextLength: 500,
+  maxLongTextLength: 4000,
+} as const
+
+/** `DocumentFieldResponse` — the stable identity of a field of a document type. */
+export interface DocumentFieldResponse {
+  documentFieldId: string
+  documentTypeId: number
+  key: string
+  dataType: FieldDataType
+  createdAt: string
+}
+
+export interface FieldOption {
+  key: string
+  labelAr: string
+}
+
+/** `SchemaFieldResponse` — a field as configured inside one schema version. */
+export interface SchemaFieldResponse {
+  documentFieldId: string
+  key: string
+  dataType: FieldDataType
+  labelAr: string
+  isRequired: boolean
+  displayOrder: number
+  regexPattern: string | null
+  regexErrorMessageAr: string | null
+  minNumber: number | null
+  maxNumber: number | null
+  maxLength: number | null
+  options: FieldOption[]
+}
+
+/** `SchemaVersionResponse` — one version with its fields in display order. */
+export interface SchemaVersionResponse {
+  schemaVersionId: string
+  documentTypeId: number
+  versionNumber: number
+  status: SchemaStatus
+  createdAt: string
+  publishedAt: string | null
+  publishedByUserId: string | null
+  fields: SchemaFieldResponse[]
+}
+
+/** `SchemaVersionSummaryResponse` — a history row without its fields. */
+export interface SchemaVersionSummaryResponse {
+  schemaVersionId: string
+  versionNumber: number
+  status: SchemaStatus
+  fieldCount: number
+  createdAt: string
+  publishedAt: string | null
+  publishedByUserId: string | null
+}
+
+/** `DocumentTypeSchemaResponse` — the published schema a new document is pinned to, if any. */
+export interface DocumentTypeSchemaResponse {
+  documentTypeId: number
+  schema: SchemaVersionResponse | null
+}
+
+export interface DocumentFieldValueResponse {
+  field: SchemaFieldResponse
+  value: string | null
+}
+
+/** `DocumentFieldsResponse` — a document's pinned schema version and stored values. */
+export interface DocumentFieldsResponse {
+  documentId: string
+  schemaVersionId: string | null
+  versionNumber: number | null
+  fields: DocumentFieldValueResponse[]
+}

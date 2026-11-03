@@ -9,6 +9,7 @@ import {
   useDocumentDetails,
   useDocumentTimeline,
 } from '@/entities/document'
+import { useDocumentFields } from '@/entities/document-schema'
 import { DOCUMENT_STATUS } from '@/entities/lookup'
 import { useSessionStore } from '@/entities/user'
 import {
@@ -34,6 +35,7 @@ import {
   PageHeader,
   Skeleton,
 } from '@/shared/ui'
+import { DocumentFieldsPanel } from '@/widgets/document-fields-panel'
 import { DocumentRelationsPanel } from '@/widgets/document-relations-panel'
 import { DocumentArchiveTab } from './DocumentArchiveTab'
 import { DocumentFilesTab } from './DocumentFilesTab'
@@ -50,6 +52,7 @@ const TABS = [
   { key: 'movements', label: 'الحركات', available: true },
   { key: 'files', label: 'الملفات', available: true },
   { key: 'grants', label: 'التصاريح', available: true },
+  { key: 'fields', label: 'الحقول', available: true },
   { key: 'relations', label: 'الروابط', available: true },
   { key: 'archive', label: 'سجل الأرشفة', available: true },
 ] as const
@@ -62,6 +65,7 @@ type AvailableTabKey =
   | 'movements'
   | 'files'
   | 'grants'
+  | 'fields'
   | 'relations'
   | 'archive'
 
@@ -76,6 +80,7 @@ function resolveTab(
   if (raw === 'movements') return 'movements'
   if (raw === 'files') return 'files'
   if (raw === 'grants' && canManageGrants) return 'grants'
+  if (raw === 'fields') return 'fields'
   if (raw === 'relations') return 'relations'
   if (raw === 'archive') return 'archive'
   return 'details'
@@ -113,6 +118,9 @@ function DocumentDetailsView() {
 
   const detailsQuery = useDocumentDetails(documentId)
   const timelineQuery = useDocumentTimeline(documentId)
+  // A document pinned to no schema has no dynamic fields, so its tab stays hidden.
+  const fieldsQuery = useDocumentFields(documentId)
+  const hasDynamicFields = Boolean(fieldsQuery.data?.schemaVersionId)
   const departmentsQuery = useDepartmentOptions()
 
   const [editOpen, setEditOpen] = useState(false)
@@ -285,7 +293,8 @@ function DocumentDetailsView() {
         {TABS.filter(
           (tab) =>
             (tab.key !== 'grants' || canManageGrants) &&
-            (tab.key !== 'numbers' || canViewNumbering),
+            (tab.key !== 'numbers' || canViewNumbering) &&
+            (tab.key !== 'fields' || hasDynamicFields),
         ).map((tab) => {
           const isActive = activeTab === tab.key
 
@@ -370,6 +379,19 @@ function DocumentDetailsView() {
       {activeTab === 'grants' && canManageGrants && (
         <GuideRegion id="document-details.tab-grants">
           <DocumentGrantsTab documentId={document.documentId} />
+        </GuideRegion>
+      )}
+      {activeTab === 'fields' && hasDynamicFields && (
+        <GuideRegion id="document-details.tab-fields">
+          <DocumentFieldsPanel
+            documentId={document.documentId}
+            canEdit={canEdit && isDraft}
+            lockedReason={
+              canEdit && !isDraft
+                ? 'قيم الحقول تُقفل عند تسجيل الوثيقة؛ لا تُعدَّل إلا في المسودة.'
+                : undefined
+            }
+          />
         </GuideRegion>
       )}
       {activeTab === 'relations' && (

@@ -49,8 +49,8 @@ empty migration when the model changed.
 | Department register numbering (`Add_Department_Register_Numbers`) | ✅ Created + applied against LocalDB (2026-10-20) |
 | Audit chain uniqueness (`Add_Audit_Chain_Uniqueness`) | ✅ Created + applied against LocalDB (2026-10-25) |
 | Dynamic document fields (`Add_Document_Dynamic_Fields`) | ✅ Created (2026-11-02) + applied to the development database |
-| Archiving constraints (`Add_Archiving_Constraints`) | ✅ Created (2026-11-03) and verified on a scratch SQL Server database; not yet applied to the development database — it applies on the next Development startup |
-| Relations constraints (`Add_Relations_Constraints`) | ✅ Created (2026-11-03); applies on the next Development startup |
+| Archiving constraints (`Add_Archiving_Constraints`) | ✅ Created (2026-11-03) and verified on a scratch SQL Server database; applied to the development database (verified with `dotnet ef migrations list`, 2026-11-03) |
+| Relations constraints (`Add_Relations_Constraints`) | ✅ Created (2026-11-03) and applied to the development database (verified with `dotnet ef migrations list`, 2026-11-03) |
 | Audit immutability trigger / DENY | ❌ Not created |
 | Closure table / indexed view | ❌ Not created |
 | Full-text catalog & indexes | ❌ Not created |
@@ -65,6 +65,7 @@ empty migration when the model changed.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-03 | Claude | Confirmed all 11 migrations are applied to the development database (`dotnet ef migrations list` shows none pending; `database update` was a no-op). |
 | 2026-11-03 | Claude | Added `Add_Relations_Constraints` for Module 08 (Phase 1). |
 | 2026-11-03 | Claude | Added `Add_Archiving_Constraints` for Module 07 (Phase 1) and verified it by applying the full chain to a scratch SQL Server database, since dropped. Recorded that `Add_Document_Dynamic_Fields` is now applied to the development database. |
 | 2026-11-02 | Claude | Added `Add_Document_Dynamic_Fields` for the dynamic document fields plan (Phase 1). Generated with `dotnet ef` against a build in a separate configuration, because the running API locks the default `bin`; the snapshot diff is additions only. |

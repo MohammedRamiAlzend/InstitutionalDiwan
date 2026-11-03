@@ -40,6 +40,7 @@ atomic first upload).
 | `ui/DocumentGrantsTab.tsx` | Access-grants tab: per-grant level label, active/expired/revoked state badge, grantee name (or short id without `USER_MANAGE`), grant/expiry/revocation metadata, and the منح/إلغاء dialogs. |
 | `ui/DocumentArchiveTab.tsx` | Archive-history tab: event type, status transition, location, actor and reason, newest first, with loading/error/empty states. |
 | `ui/DocumentDetailsPage.tsx` («الروابط» tab) | Mounts `DocumentRelationsPanel` for `?tab=relations`; writes need `DOCUMENT_EDIT` and a document that is neither archived nor cancelled. |
+| `ui/DocumentDetailsPage.tsx` («الحقول» tab) | Mounts `DocumentFieldsPanel` for `?tab=fields`; the tab is hidden when the document has no pinned schema, and values are editable only for a draft with `DOCUMENT_EDIT`. |
 | `ui/DocumentNumbersTab.tsx` | Numbers tab: central number card (status, registration date, issuer, cancellation reason, replace/cancel actions, dated event list), department register cards, and the «سجل الأرقام» history grid on the shared `DataTable` (`tableId="document-numbers"`, client mode, column chooser, sorting, URL-backed search, row menu نسخ الرقم/نسخ المعرّف); statuses and event labels come from `DOCUMENT_NUMBER_STATUS`/`DOCUMENT_NUMBER_EVENT_TYPE`, and the API's English `Replaces …` note is translated to «يستبدل الرقم …». |
 | `ui/DocumentMovementsTab.tsx` | Movements tab: one `MovementCard` per movement (type/status badges, action buttons from `getMovementActions`, ordered step chain with per-step outcome label, registry number and department, and the event log), plus the open-movement and action dialogs. |
 | `ui/DocumentFilesTab.tsx` | Files tab: the section card (heading plus the archiving-does-not-hide note and the versions/verify mention) around `widgets/document-attachments-panel`; receives `canManage` from the page and passes it down, otherwise carries no state — the grid owns the query, filters, download, and the five dialogs. |
@@ -123,6 +124,7 @@ mounted dialog.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-03 | Claude | Added the «الحقول» tab for the dynamic document fields. |
 | 2026-11-03 | agent | Module 08: `DocumentDetailsPage` gained the «الروابط» tab (`?tab=relations`) mounting `DocumentRelationsPanel`. |
 | 2026-11-03 | agent | Module 07: `DocumentDetailsPage` gained «أرشفة»/«إلغاء الأرشفة» actions (`DOCUMENT_ARCHIVE`), the `archive` tab (`ui/DocumentArchiveTab.tsx`), and now treats an archived document as frozen for participants, files and numbers. |
 | 2026-11-03 | Claude | Movements tab offers only the actions on the caller's side of the current step. Verified in-browser against a scratch API with sender, receiver and unrelated users, including the Arabic denials on document cancel, edit, register and open movement. |

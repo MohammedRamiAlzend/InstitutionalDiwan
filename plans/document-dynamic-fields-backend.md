@@ -1,6 +1,6 @@
 # الخطة — الحقول الديناميكية للوثيقة (الباك إند)
 
-**الحالة:** معتمدة — المراحل 0 إلى 5 (Domain وInfrastructure وApplication وServer والاختبارات والتوثيق) منفّذة ومختبرة (2026-11-02: المجموع 524 اختبارًا؛ لم يُوسَّع UpdateDraftMetadata لأن SetDocumentFieldValuesCommand يغطي تعديل القيم، وتصفية السجل بالحقول مؤجلة)؛ الـ migration مكتوب ولم يُطبَّق على قاعدة بيانات بعد؛ المرحلتان 4 و5 منفّذتان؛ الباقي خطة الواجهة وفلترة السجل بالحقول.
+**الحالة:** معتمدة — المراحل 0 إلى 5 (Domain وInfrastructure وApplication وServer والاختبارات والتوثيق) منفّذة ومختبرة (2026-11-02: المجموع 524 اختبارًا؛ لم يُوسَّع UpdateDraftMetadata لأن SetDocumentFieldValuesCommand يغطي تعديل القيم، وتصفية السجل بالحقول مؤجلة)؛ الـ migration مطبَّق على قاعدة التطوير (2026-11-03)؛ الـ backend مغلق؛ الباقي خطة الواجهة ([document-dynamic-fields-frontend.md](document-dynamic-fields-frontend.md)) وفلترة السجل بالحقول (مؤجلة).
 **النطاق:** `InstitutionalDiwan.Domain` / `Application` / `Infrastructure` / `Server` / `Tests`. الواجهة (`institutionaldiwan.front`) في خطة منفصلة لاحقًا.
 **آخر مراجعة:** 2026-11-02.
 
