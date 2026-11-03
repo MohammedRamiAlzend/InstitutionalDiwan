@@ -157,6 +157,7 @@ have no `README.md` of their own yet — their content is documented in the encl
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-03 | Claude | Added the Module 10 backend plan `plans/module-10-notifications-backend.md` (draft, awaiting approval; no code). |
 | 2026-11-03 | Claude | Dynamic document fields front end (plan `plans/document-dynamic-fields-frontend.md`, Phases 0-5): `/document-schemas`, dynamic inputs in document creation and the «الحقول» tab; build and lint pass and the flows were exercised against the live API. Registry filtering by field values stays deferred. |
 | 2026-11-03 | Claude | Closed the dynamic document fields backend (all 11 migrations confirmed applied to the development database), accepted Module 08 as verified per the project owner, and added the front-end plan `plans/document-dynamic-fields-frontend.md`. |
 | 2026-11-03 | Claude | Module 08 Relations front end (plan `plans/module-08-relations-frontend.md`): `entities/document-relation`, `features/document-relation-manage`, `widgets/document-relations-panel` and the «الروابط» tab. |
