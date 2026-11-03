@@ -8,6 +8,9 @@ internal sealed class FakeDocumentRepository : IDocumentRepository
 {
     public List<Document> Documents { get; } = new();
 
+    /// <summary>The access the last paged read was asked to apply.</summary>
+    public DocumentViewAccess? LastViewAccess { get; private set; }
+
     public Task<Document?> GetByIdAsync(Guid documentId, CancellationToken cancellationToken = default)
         => Task.FromResult(Documents.FirstOrDefault(document => document.DocumentId == documentId));
 
@@ -16,13 +19,20 @@ internal sealed class FakeDocumentRepository : IDocumentRepository
 
     public Task<PagedList<Document>> ListPagedAsync(
         PageRequest page,
+        DocumentViewAccess access,
         int? statusId = null,
         Guid? owningDepartmentId = null,
         int? directionId = null,
         int? documentTypeId = null,
         CancellationToken cancellationToken = default)
     {
-        var query = Documents.AsEnumerable();
+        LastViewAccess = access;
+
+        // Authorship and scope only: the full rule is verified in SQL by DocumentViewAccessQueryTests.
+        var query = Documents.Where(document =>
+            document.CreatedByUserId == access.CallerUserId ||
+            (document.ConfidentialityLevelId is not (DocumentConfidentialityLevel.SecretId or DocumentConfidentialityLevel.TopSecretId) &&
+             (access.AccessibleDepartmentIds is null || access.AccessibleDepartmentIds.Contains(document.OwningDepartmentId))));
 
         if (statusId is { } status)
             query = query.Where(document => document.CurrentStatusId == status);

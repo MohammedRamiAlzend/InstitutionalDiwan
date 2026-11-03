@@ -230,12 +230,15 @@ internal sealed class FakeDepartmentScopeEvaluator : IDepartmentScopeEvaluator
 {
     public HashSet<Guid> AccessibleDepartments { get; } = new();
 
+    /// <summary>When set, the caller reaches every department, as an institution-wide scope does.</summary>
+    public bool InstitutionWide { get; set; }
+
     public Task<bool> CanAccessDepartmentAsync(
         Guid departmentId,
         CancellationToken cancellationToken = default)
-        => Task.FromResult(AccessibleDepartments.Contains(departmentId));
+        => Task.FromResult(InstitutionWide || AccessibleDepartments.Contains(departmentId));
 
     public Task<IReadOnlySet<Guid>?> GetAccessibleDepartmentIdsAsync(
         CancellationToken cancellationToken = default)
-        => Task.FromResult<IReadOnlySet<Guid>?>(AccessibleDepartments);
+        => Task.FromResult<IReadOnlySet<Guid>?>(InstitutionWide ? null : AccessibleDepartments);
 }

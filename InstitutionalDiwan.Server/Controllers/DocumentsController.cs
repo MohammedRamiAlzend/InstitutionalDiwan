@@ -25,7 +25,8 @@ public sealed class DocumentsController : ControllerBase
     /// <remarks>
     /// Supports server-side paging, a free-text search across the title, subject summary, and
     /// official number, and filters by status, owning department, direction, and document type.
-    /// Requires the <c>DOCUMENT_VIEW</c> permission.
+    /// Only documents the caller has VIEW access to are returned or counted. Requires the
+    /// <c>DOCUMENT_VIEW</c> permission.
     /// </remarks>
     /// <param name="page">Page number (integer, optional, 1-based). Example: <c>2</c>.</param>
     /// <param name="pageSize">Rows per page (integer, optional, 1-100). Example: <c>20</c>.</param>
@@ -42,7 +43,7 @@ public sealed class DocumentsController : ControllerBase
     /// <response code="403">The token lacks the DOCUMENT_VIEW permission.</response>
     [HttpGet]
     [EndpointSummary("Lists a page of documents, newest first by default.")]
-    [EndpointDescription("Lists a page of documents, newest first by default. Supports server-side paging, a free-text search across the title, subject summary, and official number, and filters by status, owning department, direction, and document type. Requires the DOCUMENT_VIEW permission. Responses: 200 (One page of documents with the paging counters.), 401 (The token is missing, expired, or invalid.), 403 (The token lacks the DOCUMENT_VIEW permission.)")]
+    [EndpointDescription("Lists a page of documents, newest first by default. Supports server-side paging, a free-text search across the title, subject summary, and official number, and filters by status, owning department, direction, and document type. Only documents the caller has VIEW access to are returned or counted. Requires the DOCUMENT_VIEW permission. Responses: 200 (One page of documents with the paging counters.), 401 (The token is missing, expired, or invalid.), 403 (The token lacks the DOCUMENT_VIEW permission.)")]
     [Produces("application/json", Type = typeof(PagedResult<DocumentResponse>))]
     [ProducesResponseType<PagedResult<DocumentResponse>>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
@@ -80,7 +81,9 @@ public sealed class DocumentsController : ControllerBase
     /// This is the department's document register: the same server-side paging, search, sorting,
     /// and filtering as <c>GET /api/documents</c>, narrowed to the documents the department owns
     /// (<c>owningDepartmentId</c>). The department must sit inside the caller's organizational
-    /// scope. Requires the <c>DOCUMENT_VIEW</c> permission.
+    /// scope, and only documents the caller has VIEW access to are returned or counted, so
+    /// <c>SECRET</c> and <c>TOP_SECRET</c> documents need authorship or a grant. Requires the
+    /// <c>DOCUMENT_VIEW</c> permission.
     /// </remarks>
     /// <param name="departmentId">Department unique identifier (GUID, route). Example: <c>e7a62f43-9b82-4d01-8c2e-7ab91e506d42</c>.</param>
     /// <param name="page">Page number (integer, optional, 1-based). Example: <c>2</c>.</param>
@@ -98,7 +101,7 @@ public sealed class DocumentsController : ControllerBase
     /// <response code="404">No department with that id exists.</response>
     [HttpGet("/api/departments/{departmentId:guid}/documents")]
     [EndpointSummary("Lists a page of one department's documents, newest first by default.")]
-    [EndpointDescription("Lists a page of one department's documents, newest first by default. This is the department's document register: the same server-side paging, search, sorting, and filtering as GET /api/documents, narrowed to the documents the department owns. The department must sit inside the caller's organizational scope. Requires the DOCUMENT_VIEW permission. Responses: 200 (One page of the department's documents with the paging counters.), 401 (The token is missing, expired, or invalid.), 403 (The token lacks DOCUMENT_VIEW, or the department is outside the caller's scope.), 404 (No department with that id exists.)")]
+    [EndpointDescription("Lists a page of one department's documents, newest first by default. This is the department's document register: the same server-side paging, search, sorting, and filtering as GET /api/documents, narrowed to the documents the department owns. The department must sit inside the caller's organizational scope, and only documents the caller has VIEW access to are returned or counted, so SECRET and TOP_SECRET documents need authorship or a grant. Requires the DOCUMENT_VIEW permission. Responses: 200 (One page of the department's documents with the paging counters.), 401 (The token is missing, expired, or invalid.), 403 (The token lacks DOCUMENT_VIEW, or the department is outside the caller's scope.), 404 (No department with that id exists.)")]
     [Produces("application/json", Type = typeof(PagedResult<DocumentResponse>))]
     [ProducesResponseType<PagedResult<DocumentResponse>>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
@@ -134,17 +137,17 @@ public sealed class DocumentsController : ControllerBase
 
     /// <summary>Fetches a document by id.</summary>
     /// <remarks>
-    /// Retrieves a specific document by its unique identifier.
+    /// Retrieves a specific document by its unique identifier. The caller needs VIEW access to it.
     /// </remarks>
     /// <param name="documentId">The unique identifier of the document (GUID). Example: <c>7c9e3b42-8a61-4d52-9f17-2ab85c6e7934</c></param>
     /// <param name="cancellationToken">Request cancellation token (optional).</param>
     /// <response code="200">The document returned as <c>DocumentResponse</c>.</response>
     /// <response code="401">The token is missing, expired, or invalid.</response>
-    /// <response code="403">The token lacks the DOCUMENT_VIEW permission.</response>
+    /// <response code="403">The token lacks DOCUMENT_VIEW, or the caller has no VIEW access to the document.</response>
     /// <response code="404">No document with that id exists.</response>
     [HttpGet("{documentId:guid}")]
     [EndpointSummary("Fetches a document by id.")]
-    [EndpointDescription("Fetches a document by id. Retrieves a specific document by its unique identifier. Requires the DOCUMENT_VIEW permission. Responses: 200 (The document returned as DocumentResponse.), 401 (The token is missing, expired, or invalid.), 403 (The token lacks the DOCUMENT_VIEW permission.), 404 (No document with that id exists.)")]
+    [EndpointDescription("Fetches a document by id. Retrieves a specific document by its unique identifier. Requires the DOCUMENT_VIEW permission and VIEW access to the document. Responses: 200 (The document returned as DocumentResponse.), 401 (The token is missing, expired, or invalid.), 403 (The token lacks DOCUMENT_VIEW, or the caller has no VIEW access to the document.), 404 (No document with that id exists.)")]
     [Produces("application/json", Type = typeof(DocumentResponse))]
     [ProducesResponseType<DocumentResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
@@ -160,11 +163,13 @@ public sealed class DocumentsController : ControllerBase
     /// <param name="documentId">Document unique identifier (GUID, route). Example: <c>7c9e3b42-8a61-4d52-9f17-2ab85c6e7934</c>.</param>
     /// <param name="cancellationToken">Request cancellation token (optional).</param>
     /// <response code="200">The document detail.</response>
+    /// <response code="403">The token lacks DOCUMENT_VIEW, or the caller has no VIEW access to the document.</response>
     /// <response code="404">No document with that id exists.</response>
     [HttpGet("{documentId:guid}/details")]
     [EndpointSummary("Fetches a document with its participants and status history.")]
-    [EndpointDescription("Fetches a document with its participants and status history. Requires the DOCUMENT_VIEW permission. Responses: 200 (The document detail.), 404 (No document with that id exists.)")]
+    [EndpointDescription("Fetches a document with its participants and status history. Requires the DOCUMENT_VIEW permission and VIEW access to the document. Responses: 200 (The document detail.), 403 (The token lacks DOCUMENT_VIEW, or the caller has no VIEW access to the document.), 404 (No document with that id exists.)")]
     [ProducesResponseType<DocumentDetailResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetDetails([Description("Document unique identifier (GUID, route). Example: 7c9e3b42-8a61-4d52-9f17-2ab85c6e7934.")] Guid documentId, CancellationToken cancellationToken)
     {
@@ -179,11 +184,13 @@ public sealed class DocumentsController : ControllerBase
     /// <param name="documentId">Document unique identifier (GUID, route). Example: <c>7c9e3b42-8a61-4d52-9f17-2ab85c6e7934</c>.</param>
     /// <param name="cancellationToken">Request cancellation token (optional).</param>
     /// <response code="200">The timeline entries.</response>
+    /// <response code="403">The token lacks DOCUMENT_VIEW, or the caller has no VIEW access to the document.</response>
     /// <response code="404">No document with that id exists.</response>
     [HttpGet("{documentId:guid}/timeline")]
     [EndpointSummary("Returns the document's audit timeline (oldest first): status transitions, added participants, and official-number events.")]
-    [EndpointDescription("Returns the document's audit timeline (oldest first): status transitions, added participants, and official-number events. Requires the DOCUMENT_VIEW permission. Responses: 200 (The timeline entries.), 404 (No document with that id exists.)")]
+    [EndpointDescription("Returns the document's audit timeline (oldest first): status transitions, added participants, and official-number events. Requires the DOCUMENT_VIEW permission and VIEW access to the document. Responses: 200 (The timeline entries.), 403 (The token lacks DOCUMENT_VIEW, or the caller has no VIEW access to the document.), 404 (No document with that id exists.)")]
     [ProducesResponseType<IReadOnlyCollection<DocumentTimelineEntryResponse>>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetTimeline([Description("Document unique identifier (GUID, route). Example: 7c9e3b42-8a61-4d52-9f17-2ab85c6e7934.")] Guid documentId, CancellationToken cancellationToken)
     {

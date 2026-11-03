@@ -9,6 +9,8 @@ namespace InstitutionalDiwan.Tests.Application;
 
 public sealed class ListDepartmentDocumentsQueryHandlerTests
 {
+    private static readonly Guid CallerId = Guid.NewGuid();
+
     private static Department CreateDepartment(string code)
     {
         var department = Department.Create(code, "قسم", DepartmentType.SectionId);
@@ -53,7 +55,12 @@ public sealed class ListDepartmentDocumentsQueryHandlerTests
         foreach (var departmentId in accessibleDepartments)
             scope.AccessibleDepartments.Add(departmentId);
 
-        return new ListDepartmentDocumentsQueryHandler(documents, departments, scope);
+        return new ListDepartmentDocumentsQueryHandler(
+            documents,
+            departments,
+            scope,
+            new FakeUserContext { IsAuthenticated = true, UserId = CallerId },
+            TestClock.Instance);
     }
 
     [Fact]
@@ -70,6 +77,30 @@ public sealed class ListDepartmentDocumentsQueryHandlerTests
         Assert.Equal("hr-memo", document.Title);
         Assert.Equal(departmentId, document.OwningDepartmentId);
         Assert.Equal(1, result.Value.TotalCount);
+    }
+
+    [Theory]
+    [InlineData(DocumentConfidentialityLevel.SecretId)]
+    [InlineData(DocumentConfidentialityLevel.TopSecretId)]
+    public async Task Handle_HidesRestrictedDocumentsFromScopeOnlyCallers_AndFromTheCount(int confidentiality)
+    {
+        var (documents, departments) = Arrange();
+        var departmentId = departments.Departments[0].DepartmentId;
+        documents.Add(Document.CreateDraft(
+            "secret-memo",
+            DocumentType.OutgoingLetterId,
+            DocumentDirection.InternalId,
+            departmentId,
+            Guid.NewGuid(),
+            confidentialityLevelId: confidentiality).Value);
+
+        var result = await CreateHandler(documents, departments, departmentId).Handle(
+            new ListDepartmentDocumentsQuery(departmentId), CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal("hr-memo", Assert.Single(result.Value.Items).Title);
+        Assert.Equal(1, result.Value.TotalCount);
+        Assert.Equal(CallerId, documents.LastViewAccess!.CallerUserId);
     }
 
     [Fact]

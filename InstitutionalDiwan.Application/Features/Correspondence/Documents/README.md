@@ -40,11 +40,11 @@ commands the API actually walks: `CreateDraftDocumentCommand` → `UpdateDraftMe
 | `DocumentParticipantResponse.cs` | Read model for one participant row (target type, ids/person, primary flag, notes). |
 | `DocumentStatusHistoryResponse.cs` | Read model for one recorded status transition. |
 | `DocumentTimelineEntryResponse.cs` | Read model for one audit-timeline entry (`EventKind` ∈ `STATUS` / `PARTICIPANT` / `NUMBER`). |
-| `GetDocumentByIdQuery.cs` / `GetDocumentByIdQueryHandler.cs` | Fetches one document by id (NotFound when missing). |
-| `GetDocumentDetailsQuery.cs` / `GetDocumentDetailsQueryHandler.cs` | Fetches the document with participants and status history. |
-| `GetDocumentTimelineQuery.cs` / `GetDocumentTimelineQueryHandler.cs` | Merges status transitions, participant additions, and official-number events into one oldest-first timeline. |
-| `ListDocumentsQuery.cs` / `ListDocumentsQueryHandler.cs` | Returns a page of documents (`PagedResult<DocumentResponse>`), newest first by default. Carries `Page`/`PageSize`/`Search`/`SortBy`/`SortDescending` plus `StatusId`/`OwningDepartmentId`/`DirectionId`/`DocumentTypeId` filters; the handler builds a `PageRequest` and delegates to `IDocumentRepository.ListPagedAsync`, so filtering, sorting, and `Skip`/`Take` run in SQL. |
-| `ListDepartmentDocumentsQuery.cs` / `ListDepartmentDocumentsQueryHandler.cs` | One department's document register: the paged/searchable/sortable contract of `ListDocumentsQuery` with the department as the filter. The handler returns 404 for an unknown department and 403 (`Correspondence.DepartmentOutOfScope`) when the department sits outside the caller's scope, then delegates to `IDocumentRepository.ListPagedAsync`. |
+| `GetDocumentByIdQuery.cs` / `GetDocumentByIdQueryHandler.cs` | Fetches one document by id (NotFound when missing, 403 `Correspondence.DocumentAccessDenied` without `VIEW` access). |
+| `GetDocumentDetailsQuery.cs` / `GetDocumentDetailsQueryHandler.cs` | Fetches the document with participants and status history, after the same `VIEW` check. |
+| `GetDocumentTimelineQuery.cs` / `GetDocumentTimelineQueryHandler.cs` | Merges status transitions, participant additions, and official-number events into one oldest-first timeline, after the same `VIEW` check. |
+| `ListDocumentsQuery.cs` / `ListDocumentsQueryHandler.cs` | Returns a page of the documents the caller may view (`PagedResult<DocumentResponse>`), newest first by default. Carries `Page`/`PageSize`/`Search`/`SortBy`/`SortDescending` plus `StatusId`/`OwningDepartmentId`/`DirectionId`/`DocumentTypeId` filters; the handler builds a `PageRequest` and a `DocumentViewAccess` and delegates to `IDocumentRepository.ListPagedAsync`, so access, filtering, sorting, and `Skip`/`Take` run in SQL. |
+| `ListDepartmentDocumentsQuery.cs` / `ListDepartmentDocumentsQueryHandler.cs` | One department's document register: the paged/searchable/sortable contract of `ListDocumentsQuery` with the department as the filter. The handler returns 404 for an unknown department and 403 (`Correspondence.DepartmentOutOfScope`) when the department sits outside the caller's scope, then delegates to `IDocumentRepository.ListPagedAsync`, which still limits the rows to what the caller may view. |
 | `README.md` | This file. |
 
 ## Conventions / Notes
@@ -56,9 +56,11 @@ commands the API actually walks: `CreateDraftDocumentCommand` → `UpdateDraftMe
   gap in the registry counter.
 - The number's internal format/order is not validated against the registry's `FormatPattern` —
   uniqueness is purely the (text, year) pair, backed by the `UX_DOC_NUMBERS_REG_YEAR_SEQ` index.
-- Reads (`GET`, `POST /drafts` etc.) are guarded by `DOCUMENT_VIEW` / `DOCUMENT_CREATE` /
-  `DOCUMENT_EDIT`; timing-safe access checks per document (grants, confidentiality) live in
-  `Infrastructure/Authorization/DocumentAccessEvaluator`.
+- Routes (`GET`, `POST /drafts` etc.) are guarded by `DOCUMENT_VIEW` / `DOCUMENT_CREATE` /
+  `DOCUMENT_EDIT`. Every read also applies document-level `VIEW` access
+  (`Infrastructure/Authorization/DocumentAccessEvaluator`): a single-document read asks
+  `IDocumentAccessEvaluator`, and a list applies the same rule in SQL through `DocumentViewAccess`
+  so its paging counters stay correct. The write handlers do not check document access yet.
 - `ListDocumentsQuery` sorts by `createdAt` (default, newest first), `title`, `registrationDate`, or
   `officialNumber`; an unknown `sortBy` falls back to `createdAt`. `search` matches the title, the
   subject summary, and the official number.
@@ -81,11 +83,14 @@ commands the API actually walks: `CreateDraftDocumentCommand` → `UpdateDraftMe
 | `ListDocumentsQuery` (paged, searchable, sortable, filtered) | ✅ |
 | `ListDepartmentDocumentsQuery` (paged + scope-checked) | ✅ |
 | Archive/unarchive use cases (Module 07) | ✅ In `Features/Archiving` |
+| Document-level `VIEW` access on every read | ✅ |
+| Document-level access on update, register, add participant, cancel | ❌ Levels awaiting a decision |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-03 | Claude | Closed the read side of the document access gap: get by id, details and timeline answer 403 `Correspondence.DocumentAccessDenied` without `VIEW` access, and both lists pass `DocumentViewAccess` to `ListPagedAsync` so `SECRET`/`TOP_SECRET` and out-of-scope documents leave the rows and the counts. |
 | 2026-11-03 | Claude | Recorded that archive and unarchive live in `Features/Archiving`. `AddDocumentParticipantCommandHandler` now answers `Correspondence.DocumentArchived` for an archived document, through `Document.AddParticipant`. |
 | 2026-11-02 | Claude | Dynamic document fields, Phase 2: `CreateDraftDocumentCommand`/`CreateDocumentCommand` gained a trailing optional `FieldValues`, and their handlers pin the published schema version; `RegisterDocumentCommandHandler` and `CreateDocumentCommandHandler` check required dynamic fields before allocating a number. All three handlers take `IDocumentTypeSchemaVersionRepository`. See `../DocumentFields/README.md`. |
 | 2026-10-22 | Buffy | Added `ListDepartmentDocumentsQuery`/`Handler` — a department's document register, paged like `ListDocumentsQuery`, authorized with `IDepartmentScopeEvaluator` (403 `Correspondence.DepartmentOutOfScope`, 404 for an unknown department). Handlers now stamp document writes with `IUnitOfWork.UtcNow`. |

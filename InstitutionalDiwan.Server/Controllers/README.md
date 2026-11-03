@@ -129,6 +129,7 @@ plain JSON array.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-03 | Claude | Documented document-level `VIEW` access on the document reads of `DocumentsController` and `DocumentFieldsController`: the 403 response on get, details, timeline and fields, and that lists return and count only viewable documents. |
 | 2026-11-03 | Claude | Added `DocumentArchiveController` and `SavedSearchesController` for Module 07 (Phase 3), and corrected the controller count. |
 | 2026-11-02 | Claude | Added `DocumentFieldsController` (dynamic document fields, Phase 3); `POST /api/documents` and `POST /api/documents/drafts` accept optional `fieldValues`. |
 | 2026-10-28 | Qoder | Module 03 Phase 2: department options now also accept `DOCUMENT_VIEW`, so read-only document registry users can resolve owning-department names and drive the department filter. |

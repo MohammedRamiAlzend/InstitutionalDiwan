@@ -15,8 +15,10 @@ public sealed class GetDocumentByIdQueryHandlerTests
         Assert.True(document.IsSuccess);
         var documents = new FakeDocumentRepository();
         documents.Add(document.Value);
+        var access = new FakeDocumentAccessEvaluator();
+        access.ViewableDocuments.Add(document.Value.DocumentId);
 
-        var handler = new GetDocumentByIdQueryHandler(documents);
+        var handler = new GetDocumentByIdQueryHandler(documents, access);
         var result = await handler.Handle(new GetDocumentByIdQuery(document.Value.DocumentId), CancellationToken.None);
 
         Assert.True(result.IsSuccess);
@@ -28,7 +30,7 @@ public sealed class GetDocumentByIdQueryHandlerTests
     [Fact]
     public async Task Handle_WhenDocumentIsMissing_ReturnsNotFound()
     {
-        var handler = new GetDocumentByIdQueryHandler(new FakeDocumentRepository());
+        var handler = new GetDocumentByIdQueryHandler(new FakeDocumentRepository(), new FakeDocumentAccessEvaluator());
 
         var result = await handler.Handle(new GetDocumentByIdQuery(Guid.NewGuid()), CancellationToken.None);
 

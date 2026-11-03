@@ -13,10 +13,60 @@ public sealed class ListDocumentsQueryHandlerTests
         return document.Value;
     }
 
+    /// <summary>An institution-wide caller by default, so these tests stay about paging and filters.</summary>
+    private static ListDocumentsQueryHandler CreateHandler(
+        FakeDocumentRepository documents,
+        FakeDepartmentScopeEvaluator? scope = null,
+        Guid? callerId = null) =>
+        new(
+            documents,
+            scope ?? new FakeDepartmentScopeEvaluator { InstitutionWide = true },
+            new FakeUserContext { IsAuthenticated = true, UserId = callerId ?? Guid.NewGuid() },
+            TestClock.Instance);
+
+    [Fact]
+    public async Task Handle_PassesTheCallerScopeAndClockToTheQuery()
+    {
+        var documents = new FakeDocumentRepository();
+        var callerId = Guid.NewGuid();
+        var departmentId = Guid.NewGuid();
+        var scope = new FakeDepartmentScopeEvaluator();
+        scope.AccessibleDepartments.Add(departmentId);
+
+        await CreateHandler(documents, scope, callerId).Handle(new ListDocumentsQuery(), CancellationToken.None);
+
+        var access = documents.LastViewAccess!;
+        Assert.Equal(callerId, access.CallerUserId);
+        Assert.Equal(new[] { departmentId }, access.AccessibleDepartmentIds);
+        Assert.Equal(TestClock.Instance.UtcNow, access.AsOfUtc);
+    }
+
+    [Fact]
+    public async Task Handle_FilterOnADepartmentOutsideTheScope_ReturnsNothing()
+    {
+        var documents = new FakeDocumentRepository();
+        var reachable = Guid.NewGuid();
+        var unreachable = Guid.NewGuid();
+        documents.Add(Document.CreateDraft("reachable", DocumentType.OutgoingLetterId, DocumentDirection.InternalId, reachable, Guid.NewGuid()).Value);
+        documents.Add(Document.CreateDraft("unreachable", DocumentType.OutgoingLetterId, DocumentDirection.InternalId, unreachable, Guid.NewGuid()).Value);
+        var scope = new FakeDepartmentScopeEvaluator();
+        scope.AccessibleDepartments.Add(reachable);
+
+        var handler = CreateHandler(documents, scope);
+
+        var filtered = await handler.Handle(new ListDocumentsQuery(OwningDepartmentId: unreachable), CancellationToken.None);
+        var all = await handler.Handle(new ListDocumentsQuery(), CancellationToken.None);
+
+        Assert.Empty(filtered.Value.Items);
+        Assert.Equal(0, filtered.Value.TotalCount);
+        Assert.Equal("reachable", Assert.Single(all.Value.Items).Title);
+        Assert.Equal(1, all.Value.TotalCount);
+    }
+
     [Fact]
     public async Task Handle_WithNoDocuments_ReturnsEmptyPage()
     {
-        var handler = new ListDocumentsQueryHandler(new FakeDocumentRepository());
+        var handler = CreateHandler(new FakeDocumentRepository());
 
         var result = await handler.Handle(new ListDocumentsQuery(), CancellationToken.None);
 
@@ -34,7 +84,7 @@ public sealed class ListDocumentsQueryHandlerTests
         documents.Add(CreateDocument("first"));
         documents.Add(CreateDocument("second"));
 
-        var handler = new ListDocumentsQueryHandler(documents);
+        var handler = CreateHandler(documents);
         var result = await handler.Handle(new ListDocumentsQuery(), CancellationToken.None);
 
         Assert.True(result.IsSuccess);
@@ -51,7 +101,7 @@ public sealed class ListDocumentsQueryHandlerTests
         for (var i = 0; i < 51; i++)
             documents.Add(CreateDocument($"doc-{i}"));
 
-        var handler = new ListDocumentsQueryHandler(documents);
+        var handler = CreateHandler(documents);
         var result = await handler.Handle(
             new ListDocumentsQuery(Page: 2, PageSize: 20), CancellationToken.None);
 
@@ -72,7 +122,7 @@ public sealed class ListDocumentsQueryHandlerTests
         for (var i = 0; i < 5; i++)
             documents.Add(CreateDocument($"doc-{i}"));
 
-        var handler = new ListDocumentsQueryHandler(documents);
+        var handler = CreateHandler(documents);
         var result = await handler.Handle(
             new ListDocumentsQuery(PageSize: 10_000), CancellationToken.None);
 
@@ -87,7 +137,7 @@ public sealed class ListDocumentsQueryHandlerTests
         documents.Add(CreateDocument("Budget report"));
         documents.Add(CreateDocument("Staff memo"));
 
-        var handler = new ListDocumentsQueryHandler(documents);
+        var handler = CreateHandler(documents);
         var result = await handler.Handle(
             new ListDocumentsQuery(Search: "budget"), CancellationToken.None);
 
@@ -113,7 +163,7 @@ public sealed class ListDocumentsQueryHandlerTests
         documents.Add(matching);
         documents.Add(otherDepartment);
 
-        var handler = new ListDocumentsQueryHandler(documents);
+        var handler = CreateHandler(documents);
         var result = await handler.Handle(
             new ListDocumentsQuery(OwningDepartmentId: departmentId), CancellationToken.None);
 
@@ -129,7 +179,7 @@ public sealed class ListDocumentsQueryHandlerTests
         documents.Add(CreateDocument("b"));
         documents.Add(CreateDocument("a"));
 
-        var handler = new ListDocumentsQueryHandler(documents);
+        var handler = CreateHandler(documents);
         var result = await handler.Handle(
             new ListDocumentsQuery(SortBy: "title", SortDescending: false), CancellationToken.None);
 

@@ -132,7 +132,9 @@ deterministically.
 `IDocumentFileTypeRepository`, `IFileStorageProviderRepository`, `IDocumentArchiveRepository`, `ISavedSearchRepository`, `IDocumentRelationRepository`,
 `IAuditLogRepository`, `INotificationRepository`, and `ILookupRepository`. They expose `GetByIdAsync`, a few targeted lookups (`HasActiveChildrenAsync`,
 `GetActiveForScopeAsync`, `HasActiveMovementsAsync`, `GetLatestAsync` for audit hash chaining), and
-`Add`/`Remove` — no `SaveChanges` (that is `IUnitOfWork`).
+`Add`/`Remove` — no `SaveChanges` (that is `IUnitOfWork`). `IDocumentRepository.ListPagedAsync` requires a
+`DocumentViewAccess` (caller, organizational scope, and the instant grants are valid at), so a document
+list cannot be read without the `VIEW` rule.
 
 `ILookupRepository` is the one generic contract: it addresses any seeded reference catalog by its
 kebab-case slug (`IsSupported`, `ListAsync`, `GetByIdAsync`, `AddAsync`, `RelabelAsync`,
@@ -356,6 +358,7 @@ them, while listing, relabelling and (de)activation keep working.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-03 | Claude | Added `DocumentViewAccess` and made it a required argument of `IDocumentRepository.ListPagedAsync`, so the document lists apply the `VIEW` rule in SQL. |
 | 2026-11-03 | Claude | Module 07 Archiving, Phase 1: `ArchiveSearchFilter` gained `AsOfUtc`, which decides which access grants are still valid during a search. |
 | 2026-11-03 | Claude | Module 07 Archiving, Phase 0: `Document.Archive` accepts only `REGISTERED` documents and requires a location, `Unarchive` requires a reason, `EnsureNotArchived` freezes `AddParticipant` and `AttachReplacementNumber`; `DocumentArchivedEvent` carries the location; `SavedSearch` and `DocumentArchiveEvent` enforce their column limits and `SavedSearch.ClearDefault` was added; added `Permissions.DocumentArchive`, the `IDocumentArchiveRepository` / `ISavedSearchRepository` contracts with `ArchiveSearchFilter` / `ArchivedDocumentRow`, and new `Archiving.*` errors. |
 | 2026-11-02 | Claude | Dynamic fields, Phase 2: `IDocumentTypeSchemaVersionRepository.Remove` (discard a draft) and `AuditEntityType.DocumentSchemaVersionId` (14) for auditing schema changes. |

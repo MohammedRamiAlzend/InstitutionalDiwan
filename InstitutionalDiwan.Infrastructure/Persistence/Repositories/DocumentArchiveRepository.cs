@@ -29,10 +29,11 @@ internal sealed class DocumentArchiveRepository : IDocumentArchiveRepository
         var archivedEvents = _context.DocumentArchiveEvents
             .Where(archiveEvent => archiveEvent.EventTypeId == ArchiveEventType.ArchivedId);
 
-        var documents = ApplyViewAccess(
-            _context.Documents.AsNoTracking()
-                .Where(document => document.CurrentStatusId == DocumentStatusType.ArchivedId),
-            filter);
+        var documents = _context.Documents.AsNoTracking()
+            .Where(document => document.CurrentStatusId == DocumentStatusType.ArchivedId)
+            .WhereViewableBy(
+                _context,
+                new DocumentViewAccess(filter.CallerUserId, filter.AccessibleDepartmentIds, filter.AsOfUtc));
 
         if (filter.OwningDepartmentId is { } departmentId)
             documents = documents.Where(document => document.OwningDepartmentId == departmentId);
@@ -100,37 +101,4 @@ internal sealed class DocumentArchiveRepository : IDocumentArchiveRepository
     }
 
     public void Add(DocumentArchiveEvent archiveEvent) => _context.DocumentArchiveEvents.Add(archiveEvent);
-
-    /// <summary>
-    /// The <c>VIEW</c> rule of <c>DocumentAccessEvaluator</c> as SQL: authorship, a valid grant, or
-    /// organizational scope for documents that are not restricted by confidentiality. Its movement
-    /// path is left out because an archived document has no active movement.
-    /// </summary>
-    private IQueryable<Document> ApplyViewAccess(IQueryable<Document> documents, ArchiveSearchFilter filter)
-    {
-        var callerId = filter.CallerUserId;
-        var asOf = filter.AsOfUtc;
-        var validGrants = _context.DocumentAccessGrants.Where(grant =>
-            grant.UserId == callerId &&
-            !grant.IsRevoked &&
-            (grant.ExpiresAt == null || grant.ExpiresAt > asOf));
-
-        const int secret = DocumentConfidentialityLevel.SecretId;
-        const int topSecret = DocumentConfidentialityLevel.TopSecretId;
-
-        if (filter.AccessibleDepartmentIds is not { } departmentIds)
-        {
-            return documents.Where(document =>
-                document.CreatedByUserId == callerId ||
-                validGrants.Any(grant => grant.DocumentId == document.DocumentId) ||
-                (document.ConfidentialityLevelId != secret && document.ConfidentialityLevelId != topSecret));
-        }
-
-        return documents.Where(document =>
-            document.CreatedByUserId == callerId ||
-            validGrants.Any(grant => grant.DocumentId == document.DocumentId) ||
-            (document.ConfidentialityLevelId != secret &&
-             document.ConfidentialityLevelId != topSecret &&
-             departmentIds.Contains(document.OwningDepartmentId)));
-    }
 }

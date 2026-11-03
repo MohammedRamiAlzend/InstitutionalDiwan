@@ -29,13 +29,14 @@ internal sealed class DocumentRepository : IDocumentRepository
 
     public async Task<PagedList<Document>> ListPagedAsync(
         PageRequest page,
+        DocumentViewAccess access,
         int? statusId = null,
         Guid? owningDepartmentId = null,
         int? directionId = null,
         int? documentTypeId = null,
         CancellationToken cancellationToken = default)
     {
-        var query = _context.Documents.AsNoTracking();
+        var query = _context.Documents.AsNoTracking().WhereViewableBy(_context, access);
 
         if (statusId is { } status)
             query = query.Where(document => document.CurrentStatusId == status);

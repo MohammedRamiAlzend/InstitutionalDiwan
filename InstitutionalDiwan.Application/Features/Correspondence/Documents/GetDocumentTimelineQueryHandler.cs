@@ -1,5 +1,7 @@
+using InstitutionalDiwan.Application.Abstractions.Authorization;
 using InstitutionalDiwan.Application.Abstractions.Messaging;
 using InstitutionalDiwan.Domain.Common;
+using InstitutionalDiwan.Domain.Entities.Identity;
 using InstitutionalDiwan.Domain.Entities.Numbering;
 using InstitutionalDiwan.Domain.Errors;
 using InstitutionalDiwan.Domain.Repositories;
@@ -11,13 +13,16 @@ internal sealed class GetDocumentTimelineQueryHandler
 {
     private readonly IDocumentRepository _documentRepository;
     private readonly IDocumentNumberRepository _documentNumberRepository;
+    private readonly IDocumentAccessEvaluator _documentAccessEvaluator;
 
     public GetDocumentTimelineQueryHandler(
         IDocumentRepository documentRepository,
-        IDocumentNumberRepository documentNumberRepository)
+        IDocumentNumberRepository documentNumberRepository,
+        IDocumentAccessEvaluator documentAccessEvaluator)
     {
         _documentRepository = documentRepository;
         _documentNumberRepository = documentNumberRepository;
+        _documentAccessEvaluator = documentAccessEvaluator;
     }
 
     public async Task<Result<IReadOnlyCollection<DocumentTimelineEntryResponse>>> Handle(
@@ -28,6 +33,13 @@ internal sealed class GetDocumentTimelineQueryHandler
         if (document is null)
             return Result.Failure<IReadOnlyCollection<DocumentTimelineEntryResponse>>(
                 DomainErrors.Correspondence.DocumentNotFound);
+
+        if (!await _documentAccessEvaluator.CanAccessDocumentAsync(
+                request.DocumentId, AccessLevel.ViewId, cancellationToken))
+        {
+            return Result.Failure<IReadOnlyCollection<DocumentTimelineEntryResponse>>(
+                DomainErrors.Correspondence.DocumentAccessDenied);
+        }
 
         var entries = new List<DocumentTimelineEntryResponse>();
 

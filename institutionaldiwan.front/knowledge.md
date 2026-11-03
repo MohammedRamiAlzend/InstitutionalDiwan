@@ -174,10 +174,10 @@ required for every table.
 
 | Method | Route | Permission |
 | --- | --- | --- |
-| `GET` | `/api/documents` | `DOCUMENT_VIEW` | Paged; also `sortBy`, `sortDescending`, `statusId`, `owningDepartmentId`, `directionId`, `documentTypeId`. |
-| `GET` | `/api/documents/{documentId}` | `DOCUMENT_VIEW` |
-| `GET` | `/api/documents/{documentId}/details` | `DOCUMENT_VIEW` |
-| `GET` | `/api/documents/{documentId}/timeline` | `DOCUMENT_VIEW` |
+| `GET` | `/api/documents` | `DOCUMENT_VIEW` | Paged; also `sortBy`, `sortDescending`, `statusId`, `owningDepartmentId`, `directionId`, `documentTypeId`. Returns and counts only documents with `VIEW` access. |
+| `GET` | `/api/documents/{documentId}` | `DOCUMENT_VIEW` | + `VIEW` access; otherwise 403 `Correspondence.DocumentAccessDenied`. |
+| `GET` | `/api/documents/{documentId}/details` | `DOCUMENT_VIEW` | + `VIEW` access. |
+| `GET` | `/api/documents/{documentId}/timeline` | `DOCUMENT_VIEW` | + `VIEW` access. |
 | `POST` | `/api/documents` | `DOCUMENT_CREATE` |
 | `POST` | `/api/documents/drafts` | `DOCUMENT_CREATE` |
 | `PUT` | `/api/documents/{documentId}` | `DOCUMENT_EDIT` |
@@ -415,7 +415,7 @@ Settings: `labelAr`, `isRequired`, `displayOrder`, `regexPattern` + `regexErrorM
 Document side:
 - `GET /api/document-types/{documentTypeId}/schema` — `DOCUMENT_VIEW`; the published schema that
   renders the create form (empty when the type has none).
-- `GET /api/documents/{id}/fields` — `DOCUMENT_VIEW`; the pinned schema with the stored values.
+- `GET /api/documents/{id}/fields` — `DOCUMENT_VIEW` + `VIEW` access; the pinned schema with the stored values.
 - `PUT /api/documents/{id}/fields` — `DOCUMENT_EDIT`; replaces a draft's values
   (`values[{fieldKey,value}]`, value as text: numbers invariant, dates ISO 8601, booleans
   `true`/`false`, selects the option key; blank clears).

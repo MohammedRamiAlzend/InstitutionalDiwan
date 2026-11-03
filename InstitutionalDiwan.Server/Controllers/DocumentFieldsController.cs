@@ -283,12 +283,14 @@ public sealed class DocumentFieldsController : ControllerBase
     /// <param name="documentId">Document unique identifier (GUID, route). Example: <c>7c9e3b42-8a61-4d52-9f17-2ab85c6e7934</c>.</param>
     /// <param name="cancellationToken">Request cancellation token (optional).</param>
     /// <response code="200">The schema version the document is pinned to and its values.</response>
+    /// <response code="403">The token lacks DOCUMENT_VIEW, or the caller has no VIEW access to the document.</response>
     /// <response code="404">No document with that id exists.</response>
     [HttpGet("documents/{documentId:guid}/fields")]
     [EndpointSummary("Fetches a document's pinned schema with the values it stores.")]
-    [EndpointDescription("Fetches the schema version a document is pinned to together with the dynamic-field values it stores. Requires the DOCUMENT_VIEW permission. Responses: 200 (The schema version the document is pinned to and its values.), 404 (No document with that id exists.)")]
+    [EndpointDescription("Fetches the schema version a document is pinned to together with the dynamic-field values it stores. Requires the DOCUMENT_VIEW permission and VIEW access to the document. Responses: 200 (The schema version the document is pinned to and its values.), 403 (The token lacks DOCUMENT_VIEW, or the caller has no VIEW access to the document.), 404 (No document with that id exists.)")]
     [Authorize(Policy = Permissions.DocumentView)]
     [ProducesResponseType<DocumentFieldsResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetDocumentFields(
         [Description(DocumentIdDoc)] Guid documentId, CancellationToken cancellationToken)

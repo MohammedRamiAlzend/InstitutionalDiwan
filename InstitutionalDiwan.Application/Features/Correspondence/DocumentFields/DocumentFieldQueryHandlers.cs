@@ -1,5 +1,7 @@
+using InstitutionalDiwan.Application.Abstractions.Authorization;
 using InstitutionalDiwan.Application.Abstractions.Messaging;
 using InstitutionalDiwan.Domain.Common;
+using InstitutionalDiwan.Domain.Entities.Identity;
 using InstitutionalDiwan.Domain.Errors;
 using InstitutionalDiwan.Domain.Repositories;
 
@@ -109,13 +111,16 @@ internal sealed class GetDocumentFieldsQueryHandler : IQueryHandler<GetDocumentF
 {
     private readonly IDocumentRepository _documentRepository;
     private readonly IDocumentTypeSchemaVersionRepository _versionRepository;
+    private readonly IDocumentAccessEvaluator _documentAccessEvaluator;
 
     public GetDocumentFieldsQueryHandler(
         IDocumentRepository documentRepository,
-        IDocumentTypeSchemaVersionRepository versionRepository)
+        IDocumentTypeSchemaVersionRepository versionRepository,
+        IDocumentAccessEvaluator documentAccessEvaluator)
     {
         _documentRepository = documentRepository;
         _versionRepository = versionRepository;
+        _documentAccessEvaluator = documentAccessEvaluator;
     }
 
     public async Task<Result<DocumentFieldsResponse>> Handle(
@@ -125,6 +130,12 @@ internal sealed class GetDocumentFieldsQueryHandler : IQueryHandler<GetDocumentF
         var document = await _documentRepository.GetByIdAsync(request.DocumentId, cancellationToken);
         if (document is null)
             return Result.Failure<DocumentFieldsResponse>(DomainErrors.Correspondence.DocumentNotFound);
+
+        if (!await _documentAccessEvaluator.CanAccessDocumentAsync(
+                request.DocumentId, AccessLevel.ViewId, cancellationToken))
+        {
+            return Result.Failure<DocumentFieldsResponse>(DomainErrors.Correspondence.DocumentAccessDenied);
+        }
 
         var schema = document.SchemaVersionId is { } schemaVersionId
             ? await _versionRepository.GetByIdAsync(schemaVersionId, cancellationToken)

@@ -197,7 +197,9 @@ public sealed class DocumentFieldHandlerTests
         var v2 = await world.PublishAsync(draft.SchemaVersionId);
 
         Assert.Equal(v1.SchemaVersionId, document.SchemaVersionId);
-        var fields = await new GetDocumentFieldsQueryHandler(world.Documents, world.Versions)
+        var access = new FakeDocumentAccessEvaluator();
+        access.ViewableDocuments.Add(document.DocumentId);
+        var fields = await new GetDocumentFieldsQueryHandler(world.Documents, world.Versions, access)
             .Handle(new GetDocumentFieldsQuery(document.DocumentId), CancellationToken.None);
         Assert.Equal(1, fields.Value.VersionNumber);
         Assert.Equal("12", fields.Value.Fields.Single(f => f.Field.Key == "session_no").Value);

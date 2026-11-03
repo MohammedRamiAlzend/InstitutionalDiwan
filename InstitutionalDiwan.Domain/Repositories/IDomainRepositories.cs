@@ -66,18 +66,31 @@ public interface IPermissionRepository
     Task<IReadOnlyList<Permission>> ListAllAsync(CancellationToken cancellationToken = default);
 }
 
+/// <summary>
+/// Who is reading a list of documents, for applying the <c>VIEW</c> rule inside the query.
+/// <paramref name="AccessibleDepartmentIds"/> is the caller's organizational scope, where null means
+/// institution-wide. <paramref name="AsOfUtc"/> decides which access grants are still valid.
+/// </summary>
+public sealed record DocumentViewAccess(
+    Guid CallerUserId,
+    IReadOnlyCollection<Guid>? AccessibleDepartmentIds,
+    DateTime AsOfUtc);
+
 public interface IDocumentRepository
 {
     Task<Document?> GetByIdAsync(Guid documentId, CancellationToken cancellationToken = default);
     /// <summary>Loads the document together with its central and department numbers.</summary>
     Task<Document?> GetWithNumbersAsync(Guid documentId, CancellationToken cancellationToken = default);
     /// <summary>
-    /// A page of documents with the optional status, owning-department, direction, and type filters
-    /// applied. <see cref="PageRequest.SortBy"/> accepts <c>createdAt</c>, <c>title</c>,
-    /// <c>registrationDate</c>, and <c>officialNumber</c>; the default is newest first.
+    /// A page of the documents the caller may view, with the optional status, owning-department,
+    /// direction, and type filters applied. Access is part of the query, so paging counters never
+    /// include a document the caller cannot see. <see cref="PageRequest.SortBy"/> accepts
+    /// <c>createdAt</c>, <c>title</c>, <c>registrationDate</c>, and <c>officialNumber</c>; the
+    /// default is newest first.
     /// </summary>
     Task<PagedList<Document>> ListPagedAsync(
         PageRequest page,
+        DocumentViewAccess access,
         int? statusId = null,
         Guid? owningDepartmentId = null,
         int? directionId = null,

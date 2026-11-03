@@ -282,7 +282,10 @@ public sealed class DocumentLifecycleHandlerTests
                 draft.DocumentId, ParticipantRole.SenderId, PersonName: "أحمد"),
             CancellationToken.None);
 
-        var result = await new GetDocumentDetailsQueryHandler(world.Documents)
+        var access = new FakeDocumentAccessEvaluator();
+        access.ViewableDocuments.Add(draft.DocumentId);
+
+        var result = await new GetDocumentDetailsQueryHandler(world.Documents, access)
             .Handle(new GetDocumentDetailsQuery(draft.DocumentId), CancellationToken.None);
 
         Assert.True(result.IsSuccess);
@@ -306,7 +309,10 @@ public sealed class DocumentLifecycleHandlerTests
             new RegisterDocumentCommand(draft.DocumentId, world.User.UserId, NumberingYear),
             CancellationToken.None);
 
-        var result = await new GetDocumentTimelineQueryHandler(world.Documents, world.Numbers)
+        var access = new FakeDocumentAccessEvaluator();
+        access.ViewableDocuments.Add(draft.DocumentId);
+
+        var result = await new GetDocumentTimelineQueryHandler(world.Documents, world.Numbers, access)
             .Handle(new GetDocumentTimelineQuery(draft.DocumentId), CancellationToken.None);
 
         Assert.True(result.IsSuccess);
