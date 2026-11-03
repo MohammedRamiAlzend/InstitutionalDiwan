@@ -28,11 +28,7 @@ internal sealed class FakeDocumentRepository : IDocumentRepository
     {
         LastViewAccess = access;
 
-        // Authorship and scope only: the full rule is verified in SQL by DocumentViewAccessQueryTests.
-        var query = Documents.Where(document =>
-            document.CreatedByUserId == access.CallerUserId ||
-            (document.ConfidentialityLevelId is not (DocumentConfidentialityLevel.SecretId or DocumentConfidentialityLevel.TopSecretId) &&
-             (access.AccessibleDepartmentIds is null || access.AccessibleDepartmentIds.Contains(document.OwningDepartmentId))));
+        var query = Documents.Where(document => IsViewable(document, access));
 
         if (statusId is { } status)
             query = query.Where(document => document.CurrentStatusId == status);
@@ -75,7 +71,23 @@ internal sealed class FakeDocumentRepository : IDocumentRepository
         => Task.FromResult<IReadOnlyList<Document>>(
             Documents.Where(document => documentIds.Contains(document.DocumentId)).ToList());
 
+    public Task<IReadOnlySet<Guid>> ListViewableIdsAsync(
+        IReadOnlyCollection<Guid> documentIds,
+        DocumentViewAccess access,
+        CancellationToken cancellationToken = default)
+        => Task.FromResult<IReadOnlySet<Guid>>(
+            Documents
+                .Where(document => documentIds.Contains(document.DocumentId) && IsViewable(document, access))
+                .Select(document => document.DocumentId)
+                .ToHashSet());
+
     public void Add(Document document) => Documents.Add(document);
+
+    // Authorship and scope only: the full rule is verified in SQL by DocumentViewAccessQueryTests.
+    private static bool IsViewable(Document document, DocumentViewAccess access) =>
+        document.CreatedByUserId == access.CallerUserId ||
+        (document.ConfidentialityLevelId is not (DocumentConfidentialityLevel.SecretId or DocumentConfidentialityLevel.TopSecretId) &&
+         (access.AccessibleDepartmentIds is null || access.AccessibleDepartmentIds.Contains(document.OwningDepartmentId)));
 }
 
 internal sealed class FakeDocumentTypeRepository : IDocumentTypeRepository

@@ -89,6 +89,7 @@ Concrete EF Core implementations of the repository interfaces declared in
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-03 | Claude | Added `DocumentRepository.ListViewableIdsAsync` on the shared `VIEW` rule, for the movement queues and the department register. |
 | 2026-11-03 | Claude | Moved the SQL form of the `VIEW` rule out of `DocumentArchiveRepository` into `DocumentViewAccessQuery`, added the movement-participation path the archive search could leave out, and applied it to `DocumentRepository.ListPagedAsync`, which previously returned every document to any `DOCUMENT_VIEW` holder. |
 | 2026-11-03 | Claude | Module 07 Archiving, Phase 1: added `DocumentArchiveRepository` (events and access-filtered search) and `SavedSearchRepository`, registered in `DependencyInjection`. Also corrected the status count, which had missed the two dynamic-field repositories. |
 | 2026-11-02 | Claude | `DocumentTypeSchemaVersionRepository.Remove` added for discarding a schema draft (dynamic fields, Phase 2). |

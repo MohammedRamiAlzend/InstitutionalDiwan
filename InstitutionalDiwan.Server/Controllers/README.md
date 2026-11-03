@@ -129,6 +129,7 @@ plain JSON array.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-03 | Claude | Documented `VIEW` access on the movement and number reads, hidden content in the inbox, outbox and register rows, and the scope check on the department register. |
 | 2026-11-03 | Claude | Documented document-level access on the document writes: 403 with `DOWNLOAD` required on update, register, participants and field values, and `MANAGE` on cancel. |
 | 2026-11-03 | Claude | Documented document-level `VIEW` access on the document reads of `DocumentsController` and `DocumentFieldsController`: the 403 response on get, details, timeline and fields, and that lists return and count only viewable documents. |
 | 2026-11-03 | Claude | Added `DocumentArchiveController` and `SavedSearchesController` for Module 07 (Phase 3), and corrected the controller count. |

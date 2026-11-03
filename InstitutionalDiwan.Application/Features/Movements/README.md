@@ -34,11 +34,11 @@ together with the `DocumentNumber` id it was dated by.
 | `RedirectMovementCommand.cs` / `…Handler.cs` / `…Validator.cs` | Appends a step to a new destination without closing the movement. |
 | `CloseMovementCommand.cs` / `…Handler.cs` | Closes the movement and releases the document. |
 | `CancelMovementCommand.cs` / `…Handler.cs` | Cancels the movement with a required reason and releases the document. |
-| `GetMovementByIdQuery.cs` / `…Handler.cs` | One movement with its steps and audit trail. |
-| `ListDocumentMovementsQuery.cs` / `…Handler.cs` | Every movement of a document, newest first. |
+| `GetMovementByIdQuery.cs` / `…Handler.cs` | One movement with its steps and audit trail; requires `VIEW` access to its document. |
+| `ListDocumentMovementsQuery.cs` / `…Handler.cs` | Every movement of a document, newest first; requires `VIEW` access to it. |
 | `GetDepartmentInboxQuery.cs` / `…Handler.cs` | The documents waiting in a department's inbox. |
 | `GetDepartmentOutboxQuery.cs` / `…Handler.cs` | The documents a department sent out and that are still elsewhere. |
-| `MovementQueue.cs` | Shared plumbing: resolves the department a queue query targets and turns movements into document-aware rows with a single batch lookup. |
+| `MovementQueue.cs` | Shared plumbing: resolves the department a queue query targets and turns movements into document-aware rows with a single batch lookup. A row the caller cannot view stays listed without its title, official number, or instructions. |
 | `MovementQueueItemResponse.cs` | One inbox/outbox row — the document's title and official number next to the movement and the current step. |
 | `MovementResponse.cs` | A movement with its steps and events, used by the transition commands and the movement queries. |
 
@@ -96,6 +96,7 @@ together with the `DocumentNumber` id it was dated by.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-03 | Claude | Added document-level `VIEW` access to the movement reads, and hid the title, official number and instructions of queue rows the caller cannot view. The workflow commands still have no document-level or custody check; their rules are awaiting a decision. |
 | 2026-10-25 | opencode | Closed the Module 05 gaps: added `CentralDiwanRouting` to open/send/redirect, routed rejections back to the Central Diwan as a new sent step, added `MovementStepGuard` for current-step validation, and added the planned step/department/document route aliases. |
 | 2026-10-22 | Buffy | The routing handlers now pass `IUnitOfWork.UtcNow` into every transition (`Create`, `Send`, `ReceiveStep`, `CompleteStep`, `RejectStep`, `ReturnToSender`, `RedirectTo`, `Close`, `Cancel`) and into `Document.MarkInMovement`/`MarkMovementEnded`, so steps and events in one transaction share the same instant. |
 | 2026-10-21 | opencode | Implemented the whole routing workflow and the read side: added the open/send/complete/reject/return/redirect/close/cancel commands, the movement queries, and the department inbox and outbox (`GetDepartmentInboxQuery`, `GetDepartmentOutboxQuery`, `MovementQueue`, `MovementQueueItemResponse`). |

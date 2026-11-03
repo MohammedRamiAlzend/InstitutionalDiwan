@@ -102,16 +102,16 @@ public sealed class MovementWorkflowHandlerTests
             new(Movements, Documents, UnitOfWork);
 
         public GetMovementByIdQueryHandler GetByIdHandler() =>
-            new(Movements);
+            new(Movements, new FakeDocumentAccessEvaluator { AllowAll = true });
 
         public ListDocumentMovementsQueryHandler ListByDocumentHandler() =>
-            new(Movements, Documents);
+            new(Movements, Documents, new FakeDocumentAccessEvaluator { AllowAll = true });
 
         public GetDepartmentInboxQueryHandler InboxHandler() =>
-            new(Movements, Documents, Users, Scope);
+            new(Movements, Documents, Users, Scope, TestClock.Instance);
 
         public GetDepartmentOutboxQueryHandler OutboxHandler() =>
-            new(Movements, Documents, Users, Scope);
+            new(Movements, Documents, Users, Scope, TestClock.Instance);
     }
 
     private static async Task<Document> RegisterDocument(World world)
@@ -450,6 +450,7 @@ public sealed class MovementWorkflowHandlerTests
         await world.SendMovementHandler().Handle(
             new SendMovementCommand(movement.MovementId, world.Clerk.UserId),
             CancellationToken.None);
+        world.Scope.AccessibleDepartments.Add(world.DiwanId);
 
         var inbox = await world.InboxHandler().Handle(
             new GetDepartmentInboxQuery(world.HROfficer.UserId), CancellationToken.None);
@@ -459,8 +460,47 @@ public sealed class MovementWorkflowHandlerTests
         Assert.Equal(movement.MovementId, row.MovementId);
         Assert.Equal(world.Document.DocumentId, row.DocumentId);
         Assert.Equal(world.Document.Title, row.DocumentTitle);
+        Assert.Equal(world.Document.OfficialNumberText, row.OfficialNumberText);
         Assert.Equal(world.HrId, row.ToDepartmentId);
         Assert.Equal(MovementStepStatus.SentId, row.StepStatusId);
+    }
+
+    [Fact]
+    public async Task Inbox_KeepsARowTheCallerCannotView_WithoutItsContent()
+    {
+        var world = new World();
+        await RegisterDocument(world);
+        var movement = await CreateMovement(world);
+        await world.SendMovementHandler().Handle(
+            new SendMovementCommand(movement.MovementId, world.Clerk.UserId),
+            CancellationToken.None);
+
+        var inbox = await world.InboxHandler().Handle(
+            new GetDepartmentInboxQuery(world.HROfficer.UserId), CancellationToken.None);
+
+        Assert.True(inbox.IsSuccess);
+        var row = Assert.Single(inbox.Value);
+        Assert.Equal(movement.MovementId, row.MovementId);
+        Assert.Equal(string.Empty, row.DocumentTitle);
+        Assert.Null(row.OfficialNumberText);
+        Assert.Null(row.Instructions);
+    }
+
+    [Fact]
+    public async Task MovementReads_WithoutViewAccess_AreForbidden()
+    {
+        var world = new World();
+        await RegisterDocument(world);
+        var movement = await CreateMovement(world);
+        var denied = new FakeDocumentAccessEvaluator();
+
+        var get = await new GetMovementByIdQueryHandler(world.Movements, denied).Handle(
+            new GetMovementByIdQuery(movement.MovementId), CancellationToken.None);
+        var list = await new ListDocumentMovementsQueryHandler(world.Movements, world.Documents, denied).Handle(
+            new ListDocumentMovementsQuery(world.Document.DocumentId), CancellationToken.None);
+
+        Assert.Equal(DomainErrors.Correspondence.DocumentAccessDenied.Code, get.Error.Code);
+        Assert.Equal(DomainErrors.Correspondence.DocumentAccessDenied.Code, list.Error.Code);
     }
 
     [Fact]

@@ -27,12 +27,12 @@ one document.
 | `ReplaceOfficialNumberCommand.cs` | CQRS command issuing a replacement and linking it to the number being corrected. |
 | `ReplaceOfficialNumberCommandHandler.cs` | Allocates the replacement, marks the old number `REPLACED` with `ReplacedByNumberId`, re-points the document via `Document.AttachReplacementNumber`, and saves. |
 | `ReplaceOfficialNumberCommandValidator.cs` | FluentValidation rules for the replace payload. |
-| `GetDocumentNumberHistoryQuery.cs` / `GetDocumentNumberHistoryQueryHandler.cs` | Lists every number of a document oldest-first (404 when the document does not exist). |
+| `GetDocumentNumberHistoryQuery.cs` / `GetDocumentNumberHistoryQueryHandler.cs` | Lists every number of a document oldest-first (404 when the document does not exist, 403 without `VIEW` access to it). |
 | `RecordDepartmentRegistrationCommand.cs` | CQRS command carrying document id, department, the typed register number, the register date, and the actor. |
 | `RecordDepartmentRegistrationCommandHandler.cs` | Requires the department's own active registry (never the shared default), rejects a draft without a central number, keeps one line per department, and either creates the entry or re-dates the existing one. |
 | `RecordDepartmentRegistrationCommandValidator.cs` | FluentValidation rules: ids required, non-blank number ≤ 100 chars, plausible register date, notes ≤ 1000 chars. |
 | `DocumentRegistryNumbersResponse.cs` | Read model pairing the central number with per-department register lines and their dated registration events. |
-| `GetDocumentRegistryNumbersQuery.cs` / `GetDocumentRegistryNumbersQueryHandler.cs` | Returns the central number plus every department register line for a document (404 when missing). |
+| `GetDocumentRegistryNumbersQuery.cs` / `GetDocumentRegistryNumbersQueryHandler.cs` | Returns the central number plus every department register line for a document (404 when missing, 403 without `VIEW` access to it). |
 
 ## Conventions / Notes
 
@@ -62,6 +62,7 @@ one document.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-03 | Claude | The number history and registry entries reads now require `VIEW` access to the document (403 `Correspondence.DocumentAccessDenied`). Issue, cancel, replace and department registration have no document-level check yet; their levels are awaiting a decision. |
 | 2026-11-03 | Claude | Cancelling or replacing an official number and recording a department registration now reject an archived document with `Correspondence.DocumentArchived`. The replace handler checks before allocating, so a rejected call never consumes a registry number. |
 | 2026-10-22 | Buffy | Issue/cancel/replace and department-registration handlers now pass `IUnitOfWork.UtcNow` into the registry allocation and the number factories, so the counter, the number, and its history share one instant. |
 | 2026-10-20 | Buffy | Added department register entries: a clerk-typed number and date per department (`RecordDepartmentRegistrationCommand`), a second arrival that reuses the number and adds a dated history row, and `GetDocumentRegistryNumbersQuery` to read the central number alongside every department line. |

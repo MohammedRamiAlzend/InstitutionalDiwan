@@ -92,5 +92,22 @@ internal sealed class DocumentRepository : IDocumentRepository
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlySet<Guid>> ListViewableIdsAsync(
+        IReadOnlyCollection<Guid> documentIds,
+        DocumentViewAccess access,
+        CancellationToken cancellationToken = default)
+    {
+        if (documentIds.Count == 0)
+            return new HashSet<Guid>();
+
+        var viewable = await _context.Documents
+            .Where(document => documentIds.Contains(document.DocumentId))
+            .WhereViewableBy(_context, access)
+            .Select(document => document.DocumentId)
+            .ToListAsync(cancellationToken);
+
+        return viewable.ToHashSet();
+    }
+
     public void Add(Document document) => _context.Documents.Add(document);
 }

@@ -32,7 +32,7 @@ entries ordered by the department's own date, with the central Diwan number kept
 | `ActivateNumberingRegistryCommand.cs` / `ActivateNumberingRegistryCommandHandler.cs` | Reactivates a registry so scope matching can select it again. |
 | `NumberingRegistryValidation.cs` | Shared scope (department/document type/direction) and reset-policy lookup checks used by create and update. |
 | `DepartmentRegisterModels.cs` | `ListDepartmentRegisterQuery` (department + optional year) and the `DepartmentRegisterLineResponse` read model for the register book. |
-| `ListDepartmentRegisterQueryHandler.cs` | 404s on an unknown department, loads the department's entries, joins the documents in one batch, and reports each line's register number, date, and arrival count. |
+| `ListDepartmentRegisterQueryHandler.cs` | 404s on an unknown department, 403s on one outside the caller's scope (`Correspondence.DepartmentOutOfScope`), blanks the title and central number of documents the caller cannot view, loads the department's entries, joins the documents in one batch, and reports each line's register number, date, and arrival count. |
 
 ## Conventions / Notes
 
@@ -56,6 +56,7 @@ entries ordered by the department's own date, with the central Diwan number kept
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-03 | Claude | The department register now requires the department to be in the caller's scope, and keeps every line but hides the document's title and central number when the caller cannot view it, so the book has no gaps and leaks no content. |
 | 2026-10-22 | Buffy | `CreateNumberingRegistryCommandHandler` now stamps the registry with `IUnitOfWork.UtcNow` (the shared `NumberingRegistryResolver` does the same for the auto-created default registry). |
 | 2026-10-20 | Buffy | Added the department register book (`ListDepartmentRegisterQuery`) and noted that the template lock now counts only central numbers, so typed department entries cannot freeze a registry format. |
 | 2026-10-19 | Buffy | Added registry write use cases (create, update with the issued-numbers template lock, deactivate, activate) plus the shared `NumberingRegistryValidation` scope/policy checks; write endpoints added to `NumberingRegistriesController`. |

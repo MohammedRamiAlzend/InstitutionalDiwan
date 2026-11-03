@@ -12,13 +12,16 @@ internal sealed class GetDepartmentOutboxQueryHandler
     private readonly IDocumentRepository _documentRepository;
     private readonly IUserRepository _userRepository;
     private readonly IDepartmentScopeEvaluator _departmentScopeEvaluator;
+    private readonly IClock _clock;
 
     public GetDepartmentOutboxQueryHandler(
         IDocumentMovementRepository movementRepository,
         IDocumentRepository documentRepository,
         IUserRepository userRepository,
-        IDepartmentScopeEvaluator departmentScopeEvaluator)
+        IDepartmentScopeEvaluator departmentScopeEvaluator,
+        IClock clock)
     {
+        _clock = clock;
         _movementRepository = movementRepository;
         _documentRepository = documentRepository;
         _userRepository = userRepository;
@@ -43,6 +46,7 @@ internal sealed class GetDepartmentOutboxQueryHandler
             departmentId.Value, cancellationToken);
 
         return Result.Success<IReadOnlyCollection<MovementQueueItemResponse>>(
-            await MovementQueue.BuildAsync(movements, _documentRepository, cancellationToken));
+            await MovementQueue.BuildAsync(
+                movements, _documentRepository, _departmentScopeEvaluator, request.UserId, _clock, cancellationToken));
     }
 }

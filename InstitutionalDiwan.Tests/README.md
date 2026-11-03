@@ -139,6 +139,7 @@ indexes) runs against a private SQLite in-memory database through `Support/TestC
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-03 | Claude | Added access cases for the movement and number reads, the inbox row and the department register to `MovementWorkflowHandlerTests`, `OfficialNumberLifecycleHandlerTests` and `DepartmentRegisterNumberingTests`, and held `ListViewableIdsAsync` equal to the evaluator in `DocumentViewAccessQueryTests`. `dotnet test` now 669. |
 | 2026-11-03 | Claude | Added `Application/DocumentWriteAccessHandlerTests.cs` for document-level access on writes; `FakeDocumentAccessEvaluator` gained `DownloadableDocuments` and `AllowAll`. `dotnet test` now 664. |
 | 2026-11-03 | Claude | Added `Persistence/DocumentViewAccessQueryTests.cs` and `Application/DocumentReadAccessHandlerTests.cs` for document-level `VIEW` access on reads; `FakeDocumentRepository.ListPagedAsync` takes the access and `FakeDepartmentScopeEvaluator` gained `InstitutionWide`. `dotnet test` now 651. |
 | 2026-11-03 | Claude | Added `Server/ArchivingControllersTests.cs` (permissions and routes), `Server/GlobalExceptionHandlingMiddlewareTests.cs` (concurrency conflicts answer 409) and archiving cases in `AuditActionMiddlewareTests`. `dotnet test` now 637. |

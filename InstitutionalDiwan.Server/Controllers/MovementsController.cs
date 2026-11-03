@@ -84,11 +84,11 @@ public sealed class MovementsController : ControllerBase
     /// <param name="cancellationToken">Request cancellation token (optional).</param>
     /// <response code="200">The movement with its steps and events.</response>
     /// <response code="401">The token is missing, expired, or invalid.</response>
-    /// <response code="403">The token lacks the DOCUMENT_VIEW permission.</response>
+    /// <response code="403">The token lacks DOCUMENT_VIEW, or the caller has no VIEW access to the document.</response>
     /// <response code="404">No movement with that id exists.</response>
     [HttpGet("{movementId:guid}")]
     [EndpointSummary("Fetches a movement with its steps and audit trail.")]
-    [EndpointDescription("Fetches a movement with its steps and audit trail. Requires the DOCUMENT_VIEW permission. Responses: 200 (The movement with its steps and events.), 401 (The token is missing, expired, or invalid.), 403 (The token lacks the DOCUMENT_VIEW permission.), 404 (No movement with that id exists.)")]
+    [EndpointDescription("Fetches a movement with its steps and audit trail. Requires the DOCUMENT_VIEW permission and VIEW access to the document. Responses: 200 (The movement with its steps and events.), 401 (The token is missing, expired, or invalid.), 403 (The token lacks DOCUMENT_VIEW, or the caller has no VIEW access to the document.), 404 (No movement with that id exists.)")]
     [Authorize(Policy = Permissions.DocumentView)]
     [ProducesResponseType<MovementResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
@@ -111,10 +111,10 @@ public sealed class MovementsController : ControllerBase
     /// <param name="cancellationToken">Request cancellation token (optional).</param>
     /// <response code="200">The document's movements, newest first.</response>
     /// <response code="401">The token is missing, expired, or invalid.</response>
-    /// <response code="403">The token lacks the DOCUMENT_VIEW permission.</response>
+    /// <response code="403">The token lacks DOCUMENT_VIEW, or the caller has no VIEW access to the document.</response>
     [HttpGet("by-document/{documentId:guid}")]
     [EndpointSummary("Lists every movement of a document, newest first.")]
-    [EndpointDescription("Lists every movement of a document, newest first: each movement with the steps it went through and the events recorded against it. Requires the DOCUMENT_VIEW permission. Responses: 200 (The document's movements, newest first.), 401 (The token is missing, expired, or invalid.), 403 (The token lacks the DOCUMENT_VIEW permission.)")]
+    [EndpointDescription("Lists every movement of a document, newest first: each movement with the steps it went through and the events recorded against it. Requires the DOCUMENT_VIEW permission and VIEW access to the document. Responses: 200 (The document's movements, newest first.), 401 (The token is missing, expired, or invalid.), 403 (The token lacks DOCUMENT_VIEW, or the caller has no VIEW access to the document.)")]
     [Authorize(Policy = Permissions.DocumentView)]
     [ProducesResponseType<IReadOnlyCollection<MovementResponse>>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
@@ -132,7 +132,8 @@ public sealed class MovementsController : ControllerBase
     /// <remarks>
     /// The inbox holds the documents a department received and has not dealt with yet: the current
     /// step of their movement is addressed to that department and is sent or received. Each row
-    /// carries the document's title and official number next to the movement and the step.
+    /// carries the document's title and official number next to the movement and the step; these
+    /// and the instructions are empty when the caller has no VIEW access to the document.
     /// </remarks>
     /// <param name="departmentId">
     /// Department to read the inbox of (GUID, query, optional). Defaults to the caller's own
@@ -146,7 +147,7 @@ public sealed class MovementsController : ControllerBase
     /// <response code="404">The caller's user account was not found.</response>
     [HttpGet("inbox")]
     [EndpointSummary("Lists the documents waiting in a department's inbox.")]
-    [EndpointDescription("Lists the documents waiting in a department's inbox: movements whose current step is addressed to that department and is sent or received, so the document still awaits the department's action. Each row carries the document's title and official number next to the movement and the step. The department defaults to the caller's own primary department; another department can be read only when it is inside the caller's organizational scope. Requires the DOCUMENT_VIEW permission. Responses: 200 (The department inbox.), 401 (The token is missing, expired, or invalid.), 403 (The token lacks the DOCUMENT_VIEW permission, the caller is inactive, or the requested department is outside the caller's scope.), 404 (The caller's user account was not found.)")]
+    [EndpointDescription("Lists the documents waiting in a department's inbox: movements whose current step is addressed to that department and is sent or received, so the document still awaits the department's action. Each row carries the document's title and official number next to the movement and the step; these and the instructions are empty when the caller has no VIEW access to the document. The department defaults to the caller's own primary department; another department can be read only when it is inside the caller's organizational scope. Requires the DOCUMENT_VIEW permission. Responses: 200 (The department inbox.), 401 (The token is missing, expired, or invalid.), 403 (The token lacks the DOCUMENT_VIEW permission, the caller is inactive, or the requested department is outside the caller's scope.), 404 (The caller's user account was not found.)")]
     [Authorize(Policy = Permissions.DocumentView)]
     [ProducesResponseType<IReadOnlyCollection<MovementQueueItemResponse>>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
@@ -168,7 +169,8 @@ public sealed class MovementsController : ControllerBase
     /// <remarks>
     /// The outbox holds the documents a department handed over and that have not come back yet:
     /// the current step of their movement leaves that department and is sent or received. Each row
-    /// carries the document's title and official number next to the movement and the step.
+    /// carries the document's title and official number next to the movement and the step; these
+    /// and the instructions are empty when the caller has no VIEW access to the document.
     /// </remarks>
     /// <param name="departmentId">
     /// Department to read the outbox of (GUID, query, optional). Defaults to the caller's own
@@ -182,7 +184,7 @@ public sealed class MovementsController : ControllerBase
     /// <response code="404">The caller's user account was not found.</response>
     [HttpGet("outbox")]
     [EndpointSummary("Lists the documents a department sent out and that are still elsewhere.")]
-    [EndpointDescription("Lists the documents a department sent out and that are still with the receiving side: movements whose current step leaves that department and is sent or received, so the document has not come back yet. Each row carries the document's title and official number next to the movement and the step. The department defaults to the caller's own primary department; another department can be read only when it is inside the caller's organizational scope. Requires the DOCUMENT_VIEW permission. Responses: 200 (The department outbox.), 401 (The token is missing, expired, or invalid.), 403 (The token lacks the DOCUMENT_VIEW permission, the caller is inactive, or the requested department is outside the caller's scope.), 404 (The caller's user account was not found.)")]
+    [EndpointDescription("Lists the documents a department sent out and that are still with the receiving side: movements whose current step leaves that department and is sent or received, so the document has not come back yet. Each row carries the document's title and official number next to the movement and the step; these and the instructions are empty when the caller has no VIEW access to the document. The department defaults to the caller's own primary department; another department can be read only when it is inside the caller's organizational scope. Requires the DOCUMENT_VIEW permission. Responses: 200 (The department outbox.), 401 (The token is missing, expired, or invalid.), 403 (The token lacks the DOCUMENT_VIEW permission, the caller is inactive, or the requested department is outside the caller's scope.), 404 (The caller's user account was not found.)")]
     [Authorize(Policy = Permissions.DocumentView)]
     [ProducesResponseType<IReadOnlyCollection<MovementQueueItemResponse>>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
@@ -520,10 +522,10 @@ public sealed class MovementsController : ControllerBase
     /// <param name="cancellationToken">Request cancellation token (optional).</param>
     /// <response code="200">The document's movements, newest first.</response>
     /// <response code="401">The token is missing, expired, or invalid.</response>
-    /// <response code="403">The token lacks the DOCUMENT_VIEW permission.</response>
+    /// <response code="403">The token lacks DOCUMENT_VIEW, or the caller has no VIEW access to the document.</response>
     [HttpGet("/api/documents/{documentId:guid}/movements")]
     [EndpointSummary("Lists every movement of a document using the planned document-scoped route.")]
-    [EndpointDescription("Lists every movement of a document, newest first, with its steps and events. This is the planned alias of GET /api/movements/by-document/{documentId}. Requires the DOCUMENT_VIEW permission. Responses: 200 (The document's movements, newest first.), 401 (The token is missing, expired, or invalid.), 403 (The token lacks the DOCUMENT_VIEW permission.)")]
+    [EndpointDescription("Lists every movement of a document, newest first, with its steps and events. This is the planned alias of GET /api/movements/by-document/{documentId}. Requires the DOCUMENT_VIEW permission and VIEW access to the document. Responses: 200 (The document's movements, newest first.), 401 (The token is missing, expired, or invalid.), 403 (The token lacks DOCUMENT_VIEW, or the caller has no VIEW access to the document.)")]
     [Authorize(Policy = Permissions.DocumentView)]
     [ProducesResponseType<IReadOnlyCollection<MovementResponse>>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]

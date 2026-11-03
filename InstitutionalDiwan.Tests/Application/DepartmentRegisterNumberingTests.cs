@@ -290,8 +290,8 @@ public sealed class DepartmentRegisterNumberingTests
         await world.IssueCentralAsync();
         await world.RecordAsync(world.HrId, "45", FirstVisit);
 
-        var result = await new ListDepartmentRegisterQueryHandler(
-                world.Departments, world.Documents, world.Numbers)
+        var scope = new FakeDepartmentScopeEvaluator { InstitutionWide = true };
+        var result = await RegisterHandler(world, scope)
             .Handle(new ListDepartmentRegisterQuery(world.HrId, NumberingYear), CancellationToken.None);
 
         Assert.True(result.IsSuccess, result.Error?.Code);
@@ -301,6 +301,48 @@ public sealed class DepartmentRegisterNumberingTests
         Assert.Equal(world.Document.OfficialNumberText, line.CentralNumberText);
         Assert.Equal(1, line.RegistrationCount);
     }
+
+    [Fact]
+    public async Task DepartmentRegister_OutsideTheCallersScope_IsForbidden()
+    {
+        var world = new World();
+        await world.IssueCentralAsync();
+        await world.RecordAsync(world.HrId, "45", FirstVisit);
+
+        var result = await RegisterHandler(world, new FakeDepartmentScopeEvaluator())
+            .Handle(new ListDepartmentRegisterQuery(world.HrId, NumberingYear), CancellationToken.None);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(DomainErrors.Correspondence.DepartmentOutOfScope.Code, result.Error.Code);
+    }
+
+    [Fact]
+    public async Task DepartmentRegister_KeepsALineTheCallerCannotView_WithoutItsContent()
+    {
+        var world = new World();
+        await world.IssueCentralAsync();
+        await world.RecordAsync(world.HrId, "45", FirstVisit);
+        var scope = new FakeDepartmentScopeEvaluator();
+        scope.AccessibleDepartments.Add(world.HrId);
+
+        var result = await RegisterHandler(world, scope)
+            .Handle(new ListDepartmentRegisterQuery(world.HrId, NumberingYear), CancellationToken.None);
+
+        Assert.True(result.IsSuccess, result.Error?.Code);
+        var line = Assert.Single(result.Value);
+        Assert.Equal("45", line.RegistryNumberText);
+        Assert.Equal(string.Empty, line.DocumentTitle);
+        Assert.Null(line.CentralNumberText);
+    }
+
+    private static ListDepartmentRegisterQueryHandler RegisterHandler(World world, FakeDepartmentScopeEvaluator scope) =>
+        new(
+            world.Departments,
+            world.Documents,
+            world.Numbers,
+            scope,
+            new FakeUserContext { IsAuthenticated = true, UserId = Guid.NewGuid() },
+            TestClock.Instance);
 
     private static DocumentMovement CreateSentMovement(World world)
     {

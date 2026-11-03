@@ -1,5 +1,7 @@
+using InstitutionalDiwan.Application.Abstractions.Authorization;
 using InstitutionalDiwan.Application.Abstractions.Messaging;
 using InstitutionalDiwan.Domain.Common;
+using InstitutionalDiwan.Domain.Entities.Identity;
 using InstitutionalDiwan.Domain.Errors;
 using InstitutionalDiwan.Domain.Repositories;
 
@@ -10,13 +12,16 @@ internal sealed class GetDocumentNumberHistoryQueryHandler
 {
     private readonly IDocumentRepository _documentRepository;
     private readonly IDocumentNumberRepository _documentNumberRepository;
+    private readonly IDocumentAccessEvaluator _documentAccessEvaluator;
 
     public GetDocumentNumberHistoryQueryHandler(
         IDocumentRepository documentRepository,
-        IDocumentNumberRepository documentNumberRepository)
+        IDocumentNumberRepository documentNumberRepository,
+        IDocumentAccessEvaluator documentAccessEvaluator)
     {
         _documentRepository = documentRepository;
         _documentNumberRepository = documentNumberRepository;
+        _documentAccessEvaluator = documentAccessEvaluator;
     }
 
     public async Task<Result<IReadOnlyCollection<DocumentNumberResponse>>> Handle(
@@ -27,6 +32,13 @@ internal sealed class GetDocumentNumberHistoryQueryHandler
         {
             return Result.Failure<IReadOnlyCollection<DocumentNumberResponse>>(
                 DomainErrors.Correspondence.DocumentNotFound);
+        }
+
+        if (!await _documentAccessEvaluator.CanAccessDocumentAsync(
+                request.DocumentId, AccessLevel.ViewId, cancellationToken))
+        {
+            return Result.Failure<IReadOnlyCollection<DocumentNumberResponse>>(
+                DomainErrors.Correspondence.DocumentAccessDenied);
         }
 
         var numbers = await _documentNumberRepository.ListByDocumentAsync(

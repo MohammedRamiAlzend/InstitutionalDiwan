@@ -99,6 +99,14 @@ public interface IDocumentRepository
     Task<IReadOnlyList<Document>> GetByIdsAsync(
         IReadOnlyCollection<Guid> documentIds,
         CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Which of the given documents the caller may view, for rows that must stay listed (a queue, a
+    /// register) but may only show a document's content to someone who can read it.
+    /// </summary>
+    Task<IReadOnlySet<Guid>> ListViewableIdsAsync(
+        IReadOnlyCollection<Guid> documentIds,
+        DocumentViewAccess access,
+        CancellationToken cancellationToken = default);
     void Add(Document document);
 }
 

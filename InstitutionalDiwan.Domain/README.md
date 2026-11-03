@@ -358,6 +358,7 @@ them, while listing, relabelling and (de)activation keep working.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-03 | Claude | Added `IDocumentRepository.ListViewableIdsAsync` for rows that stay listed but may only show a document's content to someone who can read it. |
 | 2026-11-03 | Claude | Added `DocumentViewAccess` and made it a required argument of `IDocumentRepository.ListPagedAsync`, so the document lists apply the `VIEW` rule in SQL. |
 | 2026-11-03 | Claude | Module 07 Archiving, Phase 1: `ArchiveSearchFilter` gained `AsOfUtc`, which decides which access grants are still valid during a search. |
 | 2026-11-03 | Claude | Module 07 Archiving, Phase 0: `Document.Archive` accepts only `REGISTERED` documents and requires a location, `Unarchive` requires a reason, `EnsureNotArchived` freezes `AddParticipant` and `AttachReplacementNumber`; `DocumentArchivedEvent` carries the location; `SavedSearch` and `DocumentArchiveEvent` enforce their column limits and `SavedSearch.ClearDefault` was added; added `Permissions.DocumentArchive`, the `IDocumentArchiveRepository` / `ISavedSearchRepository` contracts with `ArchiveSearchFilter` / `ArchivedDocumentRow`, and new `Archiving.*` errors. |

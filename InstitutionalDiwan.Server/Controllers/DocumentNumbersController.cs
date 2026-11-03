@@ -28,12 +28,14 @@ public sealed class DocumentNumbersController : ControllerBase
     /// <param name="documentId">Document unique identifier (GUID, route). Example: <c>7c9e3b42-8a61-4d52-9f17-2ab85c6e7934</c>.</param>
     /// <param name="cancellationToken">Request cancellation token (optional).</param>
     /// <response code="200">The number history, oldest first.</response>
+    /// <response code="403">The token lacks NUMBERING_VIEW, or the caller has no VIEW access to the document.</response>
     /// <response code="404">No document with that id exists.</response>
     [HttpGet("history")]
     [EndpointSummary("Lists every official number issued for the document, with its event history.")]
-    [EndpointDescription("Lists every official number issued for the document, with its event history. Requires the NUMBERING_VIEW permission. Responses: 200 (The number history, oldest first.), 404 (No document with that id exists.)")]
+    [EndpointDescription("Lists every official number issued for the document, with its event history. Requires the NUMBERING_VIEW permission and VIEW access to the document. Responses: 200 (The number history, oldest first.), 403 (The token lacks NUMBERING_VIEW, or the caller has no VIEW access to the document.), 404 (No document with that id exists.)")]
     [Authorize(Policy = Permissions.NumberingView)]
     [ProducesResponseType<IReadOnlyCollection<DocumentNumberResponse>>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetHistory([Description("Document unique identifier (GUID, route). Example: 7c9e3b42-8a61-4d52-9f17-2ab85c6e7934.")] Guid documentId, CancellationToken cancellationToken)
     {
@@ -50,12 +52,14 @@ public sealed class DocumentNumbersController : ControllerBase
     /// <param name="documentId">Document unique identifier (GUID, route). Example: <c>7c9e3b42-8a61-4d52-9f17-2ab85c6e7934</c>.</param>
     /// <param name="cancellationToken">Request cancellation token (optional).</param>
     /// <response code="200">The central number and department entries.</response>
+    /// <response code="403">The token lacks NUMBERING_VIEW, or the caller has no VIEW access to the document.</response>
     /// <response code="404">No document with that id exists.</response>
     [HttpGet("registry-entries")]
     [EndpointSummary("Returns the document's central number together with every department register line, each with its dated registration events.")]
-    [EndpointDescription("Returns the document's central number together with every department register line, each with its dated registration events. Requires the NUMBERING_VIEW permission. Responses: 200 (The central number and department entries.), 404 (No document with that id exists.)")]
+    [EndpointDescription("Returns the document's central number together with every department register line, each with its dated registration events. Requires the NUMBERING_VIEW permission and VIEW access to the document. Responses: 200 (The central number and department entries.), 403 (The token lacks NUMBERING_VIEW, or the caller has no VIEW access to the document.), 404 (No document with that id exists.)")]
     [Authorize(Policy = Permissions.NumberingView)]
     [ProducesResponseType<DocumentRegistryNumbersResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetRegistryEntries([Description("Document unique identifier (GUID, route). Example: 7c9e3b42-8a61-4d52-9f17-2ab85c6e7934.")] Guid documentId, CancellationToken cancellationToken)
     {

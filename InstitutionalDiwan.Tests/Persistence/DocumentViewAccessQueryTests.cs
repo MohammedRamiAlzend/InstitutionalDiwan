@@ -222,6 +222,11 @@ public sealed class DocumentViewAccessQueryTests
 
         Assert.Equal(expected, result.Items.Select(document => document.DocumentId).ToHashSet());
         Assert.Equal(expected.Count, result.TotalCount);
+        Assert.Equal(
+            expected,
+            (await new DocumentRepository(db).ListViewableIdsAsync(
+                documents.Select(document => document.DocumentId).ToList(),
+                await AccessAsync(scope, caller))).ToHashSet());
 
         // The evaluator is the reference above; these pin the rule itself for every caller.
         Assert.Contains(authored.DocumentId, expected);

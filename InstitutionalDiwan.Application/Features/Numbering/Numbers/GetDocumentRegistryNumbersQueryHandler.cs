@@ -1,5 +1,7 @@
+using InstitutionalDiwan.Application.Abstractions.Authorization;
 using InstitutionalDiwan.Application.Abstractions.Messaging;
 using InstitutionalDiwan.Domain.Common;
+using InstitutionalDiwan.Domain.Entities.Identity;
 using InstitutionalDiwan.Domain.Entities.Numbering;
 using InstitutionalDiwan.Domain.Errors;
 using InstitutionalDiwan.Domain.Repositories;
@@ -11,13 +13,16 @@ internal sealed class GetDocumentRegistryNumbersQueryHandler
 {
     private readonly IDocumentRepository _documentRepository;
     private readonly IDocumentNumberRepository _documentNumberRepository;
+    private readonly IDocumentAccessEvaluator _documentAccessEvaluator;
 
     public GetDocumentRegistryNumbersQueryHandler(
         IDocumentRepository documentRepository,
-        IDocumentNumberRepository documentNumberRepository)
+        IDocumentNumberRepository documentNumberRepository,
+        IDocumentAccessEvaluator documentAccessEvaluator)
     {
         _documentRepository = documentRepository;
         _documentNumberRepository = documentNumberRepository;
+        _documentAccessEvaluator = documentAccessEvaluator;
     }
 
     public async Task<Result<DocumentRegistryNumbersResponse>> Handle(
@@ -28,6 +33,13 @@ internal sealed class GetDocumentRegistryNumbersQueryHandler
         if (document is null)
             return Result.Failure<DocumentRegistryNumbersResponse>(
                 DomainErrors.Correspondence.DocumentNotFound);
+
+        if (!await _documentAccessEvaluator.CanAccessDocumentAsync(
+                request.DocumentId, AccessLevel.ViewId, cancellationToken))
+        {
+            return Result.Failure<DocumentRegistryNumbersResponse>(
+                DomainErrors.Correspondence.DocumentAccessDenied);
+        }
 
         var numbers = await _documentNumberRepository.ListByDocumentAsync(
             request.DocumentId, cancellationToken);

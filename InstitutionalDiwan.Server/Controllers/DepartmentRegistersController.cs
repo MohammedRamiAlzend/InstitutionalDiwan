@@ -28,11 +28,11 @@ public sealed class DepartmentRegistersController : ControllerBase
     /// <param name="cancellationToken">Request cancellation token (optional).</param>
     /// <response code="200">The register lines.</response>
     /// <response code="401">The token is missing, expired, or invalid.</response>
-    /// <response code="403">The token lacks the NUMBERING_VIEW permission.</response>
+    /// <response code="403">The token lacks NUMBERING_VIEW, or the department is outside the caller's scope.</response>
     /// <response code="404">No department with that id exists.</response>
     [HttpGet]
     [EndpointSummary("Lists a department's register entries ordered by register date.")]
-    [EndpointDescription("Lists a department's register entries ordered by register date. Requires the NUMBERING_VIEW permission. Responses: 200 (The register lines.), 401 (The token is missing, expired, or invalid.), 403 (The token lacks the NUMBERING_VIEW permission.), 404 (No department with that id exists.)")]
+    [EndpointDescription("Lists a department's register entries ordered by register date. The department must be inside the caller's organizational scope. Every line is listed, but the document's title and central number are empty when the caller has no VIEW access to that document. Requires the NUMBERING_VIEW permission. Responses: 200 (The register lines.), 401 (The token is missing, expired, or invalid.), 403 (The token lacks NUMBERING_VIEW, or the department is outside the caller's scope.), 404 (No department with that id exists.)")]
     [ProducesResponseType<IReadOnlyCollection<DepartmentRegisterLineResponse>>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden)]

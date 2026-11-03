@@ -48,11 +48,15 @@ internal static class MovementQueue
 
     /// <summary>
     /// Turns movements into queue rows, resolving the document title and official number with a
-    /// single batch lookup.
+    /// single batch lookup. A row stays in the queue when the caller cannot view its document, so
+    /// the department still knows what it holds, but without the title, number, or instructions.
     /// </summary>
     public static async Task<IReadOnlyCollection<MovementQueueItemResponse>> BuildAsync(
         IReadOnlyList<DocumentMovement> movements,
         IDocumentRepository documentRepository,
+        IDepartmentScopeEvaluator departmentScopeEvaluator,
+        Guid userId,
+        IClock clock,
         CancellationToken cancellationToken)
     {
         if (movements.Count == 0)
@@ -66,9 +70,25 @@ internal static class MovementQueue
         var documents = await documentRepository.GetByIdsAsync(documentIds, cancellationToken);
         var documentsById = documents.ToDictionary(document => document.DocumentId);
 
+        var viewableIds = await documentRepository.ListViewableIdsAsync(
+            documentIds,
+            new DocumentViewAccess(
+                userId,
+                await departmentScopeEvaluator.GetAccessibleDepartmentIdsAsync(cancellationToken),
+                clock.UtcNow),
+            cancellationToken);
+
         return movements
             .Select(movement =>
             {
+                if (!viewableIds.Contains(movement.DocumentId))
+                {
+                    return MovementQueueItemResponse.From(movement, string.Empty, null) with
+                    {
+                        Instructions = null
+                    };
+                }
+
                 documentsById.TryGetValue(movement.DocumentId, out var document);
 
                 return MovementQueueItemResponse.From(

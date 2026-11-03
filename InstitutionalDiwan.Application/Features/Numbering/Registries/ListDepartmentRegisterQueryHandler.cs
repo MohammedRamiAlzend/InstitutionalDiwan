@@ -1,3 +1,5 @@
+using InstitutionalDiwan.Application.Abstractions.Authentication;
+using InstitutionalDiwan.Application.Abstractions.Authorization;
 using InstitutionalDiwan.Application.Abstractions.Messaging;
 using InstitutionalDiwan.Domain.Common;
 using InstitutionalDiwan.Domain.Entities.Numbering;
@@ -6,21 +8,35 @@ using InstitutionalDiwan.Domain.Repositories;
 
 namespace InstitutionalDiwan.Application.Features.Numbering.Registries;
 
+/// <summary>
+/// A department's register book. The department must sit inside the caller's scope. Every line stays,
+/// because the book must show no gaps and its number belongs to the department, but the document's
+/// title and central number appear only when the caller may view that document.
+/// </summary>
 internal sealed class ListDepartmentRegisterQueryHandler
     : IQueryHandler<ListDepartmentRegisterQuery, IReadOnlyCollection<DepartmentRegisterLineResponse>>
 {
     private readonly IDepartmentRepository _departmentRepository;
     private readonly IDocumentRepository _documentRepository;
     private readonly IDocumentNumberRepository _documentNumberRepository;
+    private readonly IDepartmentScopeEvaluator _departmentScopeEvaluator;
+    private readonly IUserContext _userContext;
+    private readonly IClock _clock;
 
     public ListDepartmentRegisterQueryHandler(
         IDepartmentRepository departmentRepository,
         IDocumentRepository documentRepository,
-        IDocumentNumberRepository documentNumberRepository)
+        IDocumentNumberRepository documentNumberRepository,
+        IDepartmentScopeEvaluator departmentScopeEvaluator,
+        IUserContext userContext,
+        IClock clock)
     {
         _departmentRepository = departmentRepository;
         _documentRepository = documentRepository;
         _documentNumberRepository = documentNumberRepository;
+        _departmentScopeEvaluator = departmentScopeEvaluator;
+        _userContext = userContext;
+        _clock = clock;
     }
 
     public async Task<Result<IReadOnlyCollection<DepartmentRegisterLineResponse>>> Handle(
@@ -33,6 +49,12 @@ internal sealed class ListDepartmentRegisterQueryHandler
                 DomainErrors.Department.NotFound);
         }
 
+        if (!await _departmentScopeEvaluator.CanAccessDepartmentAsync(request.DepartmentId, cancellationToken))
+        {
+            return Result.Failure<IReadOnlyCollection<DepartmentRegisterLineResponse>>(
+                DomainErrors.Correspondence.DepartmentOutOfScope);
+        }
+
         var numbers = await _documentNumberRepository.ListByDepartmentAsync(
             request.DepartmentId, request.NumberingYear, cancellationToken);
 
@@ -40,15 +62,26 @@ internal sealed class ListDepartmentRegisterQueryHandler
             return Result.Success<IReadOnlyCollection<DepartmentRegisterLineResponse>>(
                 Array.Empty<DepartmentRegisterLineResponse>());
 
-        var documents = await _documentRepository.GetByIdsAsync(
-            numbers.Select(number => number.DocumentId).Distinct().ToList(), cancellationToken);
+        var documentIds = numbers.Select(number => number.DocumentId).Distinct().ToList();
+
+        var documents = await _documentRepository.GetByIdsAsync(documentIds, cancellationToken);
 
         var documentLookup = documents.ToDictionary(document => document.DocumentId);
+
+        var viewableIds = await _documentRepository.ListViewableIdsAsync(
+            documentIds,
+            new DocumentViewAccess(
+                _userContext.UserId,
+                await _departmentScopeEvaluator.GetAccessibleDepartmentIdsAsync(cancellationToken),
+                _clock.UtcNow),
+            cancellationToken);
 
         IReadOnlyCollection<DepartmentRegisterLineResponse> register = numbers
             .Select(number =>
             {
-                documentLookup.TryGetValue(number.DocumentId, out var document);
+                var document = viewableIds.Contains(number.DocumentId)
+                    ? documentLookup.GetValueOrDefault(number.DocumentId)
+                    : null;
 
                 return new DepartmentRegisterLineResponse(
                     number.DocumentNumberId,

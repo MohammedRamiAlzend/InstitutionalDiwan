@@ -216,7 +216,8 @@ public sealed class OfficialNumberLifecycleHandlerTests
                 world.Document.DocumentId, original.DocumentNumberId, world.UserId, "تصحيح", NumberingYear),
             CancellationToken.None);
 
-        var result = await new GetDocumentNumberHistoryQueryHandler(world.Documents, world.Numbers)
+        var result = await new GetDocumentNumberHistoryQueryHandler(
+                world.Documents, world.Numbers, new FakeDocumentAccessEvaluator { AllowAll = true })
             .Handle(new GetDocumentNumberHistoryQuery(world.Document.DocumentId), CancellationToken.None);
 
         Assert.True(result.IsSuccess);
@@ -230,10 +231,27 @@ public sealed class OfficialNumberLifecycleHandlerTests
     {
         var world = new World();
 
-        var result = await new GetDocumentNumberHistoryQueryHandler(world.Documents, world.Numbers)
+        var result = await new GetDocumentNumberHistoryQueryHandler(
+                world.Documents, world.Numbers, new FakeDocumentAccessEvaluator { AllowAll = true })
             .Handle(new GetDocumentNumberHistoryQuery(Guid.NewGuid()), CancellationToken.None);
 
         Assert.True(result.IsFailure);
         Assert.Equal(DomainErrors.Correspondence.DocumentNotFound.Code, result.Error.Code);
+    }
+
+    [Fact]
+    public async Task NumberReads_WithoutViewAccess_AreForbidden()
+    {
+        var world = new World();
+        await IssueAsync(world);
+        var denied = new FakeDocumentAccessEvaluator();
+
+        var history = await new GetDocumentNumberHistoryQueryHandler(world.Documents, world.Numbers, denied)
+            .Handle(new GetDocumentNumberHistoryQuery(world.Document.DocumentId), CancellationToken.None);
+        var entries = await new GetDocumentRegistryNumbersQueryHandler(world.Documents, world.Numbers, denied)
+            .Handle(new GetDocumentRegistryNumbersQuery(world.Document.DocumentId), CancellationToken.None);
+
+        Assert.Equal(DomainErrors.Correspondence.DocumentAccessDenied.Code, history.Error.Code);
+        Assert.Equal(DomainErrors.Correspondence.DocumentAccessDenied.Code, entries.Error.Code);
     }
 }
