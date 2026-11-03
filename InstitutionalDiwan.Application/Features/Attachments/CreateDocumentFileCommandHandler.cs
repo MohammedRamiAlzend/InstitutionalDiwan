@@ -55,6 +55,10 @@ internal sealed class CreateDocumentFileCommandHandler
             return Result.Failure<DocumentFileResponse>(DomainErrors.Correspondence.DocumentAccessDenied);
         }
 
+        var notArchived = document.EnsureNotArchived();
+        if (notArchived.IsFailure)
+            return Result.Failure<DocumentFileResponse>(notArchived.Error);
+
         var fileType = await _fileTypeRepository.GetByIdAsync(request.FileTypeId, cancellationToken);
         if (fileType is null)
             return Result.Failure<DocumentFileResponse>(DomainErrors.Attachments.FileTypeNotFound);

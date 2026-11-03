@@ -1,6 +1,6 @@
 # الخطة — المودول 07: الأرشفة (الباك إند)
 
-**الحالة:** معتمدة (2026-11-03) بالقرارات المقترحة في §2. المرحلتان 0 و1 منفّذتان ومختبرتان (المجموع 562 اختبارًا)؛ الباقي من المرحلة 2. الـ migration جرى التحقق منه على قاعدة SQL Server مؤقتة ولم يُطبَّق على قاعدة التطوير بعد.
+**الحالة:** معتمدة (2026-11-03) بالقرارات المقترحة في §2. المراحل 0 و1 و2 منفّذة ومختبرة (المجموع 616 اختبارًا)؛ الباقي من المرحلة 3. الـ migration جرى التحقق منه على قاعدة SQL Server مؤقتة ولم يُطبَّق على قاعدة التطوير بعد.
 **النطاق:** `InstitutionalDiwan.Domain` / `Application` / `Infrastructure` / `Server` / `Tests`. واجهة الأرشفة في خطة منفصلة لاحقًا.
 **آخر مراجعة:** 2026-11-03.
 
@@ -92,7 +92,7 @@
 - Migration إضافي `Add_Archiving_Constraints`: FK لـ `DocumentId` و`ActorUserId` و`PreviousStatusId`/`NewStatusId` و`SavedSearch.UserId`؛ فهرس فريد `(UserId, Name)`؛ فهرس فريد مفلتر `(UserId) WHERE IsDefault = 1`؛ فهرس `(EventTypeId, OccurredAt)` لبحث الأرشيف.
 - تم التأكد أن `Add_Document_Dynamic_Fields` مطبّق على قاعدة التطوير.
 
-### المرحلة 2 — Application
+### المرحلة 2 — Application (منفّذة)
 - `Features/Archiving/`: `ArchiveDocumentCommand`, `UnarchiveDocumentCommand`, `ListDocumentArchiveEventsQuery`, `SearchArchivedDocumentsQuery` مع validators والـ responses.
 - `Features/Archiving/SavedSearches/`: `Create`, `Update`, `Delete`, `List`.
 - **التجميد:** فحص `DocumentArchived` في المعالجات الواردة في §1 (البند 1) التي لا يغطيها الدومين، مع إبقاء القراءة متاحة.

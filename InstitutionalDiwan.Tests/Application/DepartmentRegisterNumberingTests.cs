@@ -235,7 +235,7 @@ public sealed class DepartmentRegisterNumberingTests
         var central = await world.IssueCentralAsync();
         await world.RecordAsync(world.HrId, "45", FirstVisit);
 
-        var result = await new CancelOfficialNumberCommandHandler(world.Numbers, world.UnitOfWork)
+        var result = await new CancelOfficialNumberCommandHandler(world.Documents, world.Numbers, world.UnitOfWork)
             .Handle(new CancelOfficialNumberCommand(
                 world.Document.DocumentId, central.DocumentNumberId, world.UserId, "خطأ"),
                 CancellationToken.None);

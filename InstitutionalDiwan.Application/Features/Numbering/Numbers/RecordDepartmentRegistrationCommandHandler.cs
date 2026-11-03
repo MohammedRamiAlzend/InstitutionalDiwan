@@ -38,6 +38,10 @@ internal sealed class RecordDepartmentRegistrationCommandHandler
         if (document is null)
             return Result.Failure<DocumentNumberResponse>(DomainErrors.Correspondence.DocumentNotFound);
 
+        var notArchived = document.EnsureNotArchived();
+        if (notArchived.IsFailure)
+            return Result.Failure<DocumentNumberResponse>(notArchived.Error);
+
         if (await _departmentRepository.GetByIdAsync(request.DepartmentId, cancellationToken) is null)
             return Result.Failure<DocumentNumberResponse>(DomainErrors.Department.NotFound);
 

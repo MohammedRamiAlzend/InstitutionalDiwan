@@ -58,10 +58,10 @@ public sealed class AttachmentHandlerTests
             new(Documents, FileTypes, Files, Users, Access, Uploader(), UnitOfWork);
 
         public UploadDocumentFileVersionCommandHandler UploadHandler() =>
-            new(Files, FileTypes, Users, Access, Uploader(), UnitOfWork);
+            new(Documents, Files, FileTypes, Users, Access, Uploader(), UnitOfWork);
 
         public ArchiveDocumentFileCommandHandler ArchiveHandler() =>
-            new(Files, Users, Access, UnitOfWork);
+            new(Documents, Files, Users, Access, UnitOfWork);
 
         public ListDocumentFilesQueryHandler ListHandler() =>
             new(Files, Users, Access);

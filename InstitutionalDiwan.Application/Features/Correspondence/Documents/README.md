@@ -80,12 +80,13 @@ commands the API actually walks: `CreateDraftDocumentCommand` → `UpdateDraftMe
 | `GetDocumentByIdQuery`, `GetDocumentDetailsQuery`, `GetDocumentTimelineQuery` | ✅ |
 | `ListDocumentsQuery` (paged, searchable, sortable, filtered) | ✅ |
 | `ListDepartmentDocumentsQuery` (paged + scope-checked) | ✅ |
-| Archive/unarchive use cases (Module 07) | ❌ Not implemented |
+| Archive/unarchive use cases (Module 07) | ✅ In `Features/Archiving` |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-03 | Claude | Recorded that archive and unarchive live in `Features/Archiving`. `AddDocumentParticipantCommandHandler` now answers `Correspondence.DocumentArchived` for an archived document, through `Document.AddParticipant`. |
 | 2026-11-02 | Claude | Dynamic document fields, Phase 2: `CreateDraftDocumentCommand`/`CreateDocumentCommand` gained a trailing optional `FieldValues`, and their handlers pin the published schema version; `RegisterDocumentCommandHandler` and `CreateDocumentCommandHandler` check required dynamic fields before allocating a number. All three handlers take `IDocumentTypeSchemaVersionRepository`. See `../DocumentFields/README.md`. |
 | 2026-10-22 | Buffy | Added `ListDepartmentDocumentsQuery`/`Handler` — a department's document register, paged like `ListDocumentsQuery`, authorized with `IDepartmentScopeEvaluator` (403 `Correspondence.DepartmentOutOfScope`, 404 for an unknown department). Handlers now stamp document writes with `IUnitOfWork.UtcNow`. |
 | 2026-10-22 | opencode | `ListDocumentsQuery` now returns `PagedResult<DocumentResponse>` and accepts `page`, `pageSize`, `search`, `sortBy`, `sortDescending`, `statusId`, `owningDepartmentId`, `directionId`, and `documentTypeId`; `DocumentRepository.ListPagedAsync` pushes the filter, sort, and paging into SQL. |

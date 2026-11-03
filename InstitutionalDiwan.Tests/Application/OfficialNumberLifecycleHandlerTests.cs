@@ -46,7 +46,7 @@ public sealed class OfficialNumberLifecycleHandlerTests
             new(Documents, Numbers, Registries, UnitOfWork, TestClock.Instance);
 
         public CancelOfficialNumberCommandHandler CancelHandler() =>
-            new(Numbers, UnitOfWork);
+            new(Documents, Numbers, UnitOfWork);
 
         public ReplaceOfficialNumberCommandHandler ReplaceHandler() =>
             new(Documents, Numbers, Registries, UnitOfWork, TestClock.Instance);

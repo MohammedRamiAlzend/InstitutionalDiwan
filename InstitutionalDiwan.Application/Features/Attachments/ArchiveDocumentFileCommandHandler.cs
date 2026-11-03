@@ -10,17 +10,20 @@ namespace InstitutionalDiwan.Application.Features.Attachments;
 internal sealed class ArchiveDocumentFileCommandHandler
     : ICommandHandler<ArchiveDocumentFileCommand, DocumentFileResponse>
 {
+    private readonly IDocumentRepository _documentRepository;
     private readonly IDocumentFileRepository _fileRepository;
     private readonly IUserRepository _userRepository;
     private readonly IDocumentAccessEvaluator _documentAccessEvaluator;
     private readonly IUnitOfWork _unitOfWork;
 
     public ArchiveDocumentFileCommandHandler(
+        IDocumentRepository documentRepository,
         IDocumentFileRepository fileRepository,
         IUserRepository userRepository,
         IDocumentAccessEvaluator documentAccessEvaluator,
         IUnitOfWork unitOfWork)
     {
+        _documentRepository = documentRepository;
         _fileRepository = fileRepository;
         _userRepository = userRepository;
         _documentAccessEvaluator = documentAccessEvaluator;
@@ -47,6 +50,14 @@ internal sealed class ArchiveDocumentFileCommandHandler
         {
             return Result.Failure<DocumentFileResponse>(DomainErrors.Correspondence.DocumentAccessDenied);
         }
+
+        var document = await _documentRepository.GetByIdAsync(file.DocumentId, cancellationToken);
+        if (document is null)
+            return Result.Failure<DocumentFileResponse>(DomainErrors.Correspondence.DocumentNotFound);
+
+        var notArchived = document.EnsureNotArchived();
+        if (notArchived.IsFailure)
+            return Result.Failure<DocumentFileResponse>(notArchived.Error);
 
         var archiveResult = file.Archive(_unitOfWork.UtcNow);
         if (archiveResult.IsFailure)

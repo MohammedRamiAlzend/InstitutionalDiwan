@@ -39,6 +39,11 @@ internal sealed class ReplaceOfficialNumberCommandHandler
             return Result.Failure<DocumentNumberResponse>(
                 DomainErrors.Correspondence.DocumentNotFound);
 
+        // Checked here as well as in the domain so a rejected call never consumes a registry number.
+        var notArchived = document.EnsureNotArchived();
+        if (notArchived.IsFailure)
+            return Result.Failure<DocumentNumberResponse>(notArchived.Error);
+
         var replaced = await _documentNumberRepository.GetByIdAsync(
             request.DocumentNumberId, cancellationToken);
 

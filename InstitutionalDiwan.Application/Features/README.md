@@ -5,7 +5,7 @@
 > Correspondence/`Documents` (full Module 03 lifecycle) and `ExternalOrganizations`, Organization
 > (`Departments`, `InstitutionSettings`), Numbering (`Registries`, `Numbers`), the whole
 > Movements slice (routing workflow + inbox/outbox), Attachments (Module 06), and Audit (Module 09)
-> are live; Archiving, Relations, and Notifications are target design. The unbounded list queries are
+> are live; Archiving (Module 07) has its use cases but no endpoints yet; Relations and Notifications are target design. The unbounded list queries are
 > server-paged, searchable, sortable, and — for documents — addressable as one department's register.
 
 ## Purpose
@@ -77,8 +77,8 @@ stamp against live identity/role/permission state and restricts forced-change se
 - **Queries:** `DownloadDocumentFileVersionQuery` ✅ (current or named version, DOWNLOAD access), `VerifyAttachmentChecksumQuery` ✅ (recomputes and compares), `ListDocumentFilesQuery` ✅ — see [`Attachments/README.md`](Attachments/README.md)
 
 ### Archiving (Module 07)
-- **Commands:** `ArchiveDocumentCommand`, `UnarchiveDocumentCommand`, `CreateSavedSearchCommand`
-- **Queries:** `SearchDocumentsAdvancedQuery`, `GetSavedSearchesQuery`, `GetDocumentArchiveHistoryQuery`
+- **Commands:** `ArchiveDocumentCommand` ✅, `UnarchiveDocumentCommand` ✅, `CreateSavedSearchCommand` ✅, `UpdateSavedSearchCommand` ✅, `DeleteSavedSearchCommand` ✅
+- **Queries:** `SearchArchivedDocumentsQuery` ✅, `ListSavedSearchesQuery` ✅, `ListDocumentArchiveEventsQuery` ✅; see [`Archiving/README.md`](Archiving/README.md)
 
 ### Relations (Module 08)
 - **Commands:** `CreateDocumentRelationCommand`, `RemoveDocumentRelationCommand`
@@ -144,12 +144,14 @@ registries, per-document grants/movements) still returns a plain collection on p
 | Movements (routing workflow + inbox/outbox + Central Diwan hub) | ✅ Implemented |
 | Attachments (Module 06: create/upload/archive, list/download/verify) | ✅ Implemented |
 | Audit (Module 09: search, checkpoints, integrity checks/reports, action recorder) | ✅ Implemented |
-| Archiving, Relations, Notifications | ❌ Not implemented |
+| Archiving (Module 07: archive/unarchive, history, access-filtered search, saved searches) | 🟡 Use cases implemented; endpoints pending |
+| Relations, Notifications | ❌ Not implemented |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-03 | Claude | Added the `Archiving/` slice and its `SavedSearches/` subfolder (Module 07, Phase 2). |
 | 2026-11-02 | Claude | Added `Correspondence/DocumentFields` (dynamic document fields, Phase 2) and wired schema pinning into the document create/register handlers. |
 | 2026-10-28 | Qoder | Added the paged `ListUserOptionsQuery` (`userId`, `username`, `isActive`) for document access-grant and movement-assignment pickers; department options now also serve `DOCUMENT_CREATE`/`DOCUMENT_EDIT` holders. |
 | 2026-10-28 | Qoder | Added `Identity/IdentityOptionsQueries.cs` for permission-scoped, minimal department/role/employee picker reads, plus user/employee list sorting. |

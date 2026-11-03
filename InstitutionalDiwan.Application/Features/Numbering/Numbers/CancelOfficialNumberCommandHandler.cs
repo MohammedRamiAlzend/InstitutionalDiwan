@@ -9,13 +9,16 @@ namespace InstitutionalDiwan.Application.Features.Numbering.Numbers;
 internal sealed class CancelOfficialNumberCommandHandler
     : ICommandHandler<CancelOfficialNumberCommand, DocumentNumberResponse>
 {
+    private readonly IDocumentRepository _documentRepository;
     private readonly IDocumentNumberRepository _documentNumberRepository;
     private readonly IUnitOfWork _unitOfWork;
 
     public CancelOfficialNumberCommandHandler(
+        IDocumentRepository documentRepository,
         IDocumentNumberRepository documentNumberRepository,
         IUnitOfWork unitOfWork)
     {
+        _documentRepository = documentRepository;
         _documentNumberRepository = documentNumberRepository;
         _unitOfWork = unitOfWork;
     }
@@ -29,6 +32,14 @@ internal sealed class CancelOfficialNumberCommandHandler
 
         if (number is null || number.DocumentId != request.DocumentId)
             return Result.Failure<DocumentNumberResponse>(DomainErrors.Numbering.NumberNotFound);
+
+        var document = await _documentRepository.GetByIdAsync(request.DocumentId, cancellationToken);
+        if (document is null)
+            return Result.Failure<DocumentNumberResponse>(DomainErrors.Correspondence.DocumentNotFound);
+
+        var notArchived = document.EnsureNotArchived();
+        if (notArchived.IsFailure)
+            return Result.Failure<DocumentNumberResponse>(notArchived.Error);
 
         if (number.StatusId != DocumentNumberStatus.ActiveId)
             return Result.Failure<DocumentNumberResponse>(DomainErrors.Numbering.NumberNotActive);

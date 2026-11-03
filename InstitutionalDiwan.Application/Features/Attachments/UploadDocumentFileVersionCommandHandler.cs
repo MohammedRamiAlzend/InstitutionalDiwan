@@ -11,6 +11,7 @@ namespace InstitutionalDiwan.Application.Features.Attachments;
 internal sealed class UploadDocumentFileVersionCommandHandler
     : ICommandHandler<UploadDocumentFileVersionCommand, DocumentFileResponse>
 {
+    private readonly IDocumentRepository _documentRepository;
     private readonly IDocumentFileRepository _fileRepository;
     private readonly IDocumentFileTypeRepository _fileTypeRepository;
     private readonly IUserRepository _userRepository;
@@ -19,6 +20,7 @@ internal sealed class UploadDocumentFileVersionCommandHandler
     private readonly IUnitOfWork _unitOfWork;
 
     public UploadDocumentFileVersionCommandHandler(
+        IDocumentRepository documentRepository,
         IDocumentFileRepository fileRepository,
         IDocumentFileTypeRepository fileTypeRepository,
         IUserRepository userRepository,
@@ -26,6 +28,7 @@ internal sealed class UploadDocumentFileVersionCommandHandler
         AttachmentUploader uploader,
         IUnitOfWork unitOfWork)
     {
+        _documentRepository = documentRepository;
         _fileRepository = fileRepository;
         _fileTypeRepository = fileTypeRepository;
         _userRepository = userRepository;
@@ -57,6 +60,14 @@ internal sealed class UploadDocumentFileVersionCommandHandler
         {
             return Result.Failure<DocumentFileResponse>(DomainErrors.Correspondence.DocumentAccessDenied);
         }
+
+        var document = await _documentRepository.GetByIdAsync(file.DocumentId, cancellationToken);
+        if (document is null)
+            return Result.Failure<DocumentFileResponse>(DomainErrors.Correspondence.DocumentNotFound);
+
+        var notArchived = document.EnsureNotArchived();
+        if (notArchived.IsFailure)
+            return Result.Failure<DocumentFileResponse>(notArchived.Error);
 
         var fileType = await _fileTypeRepository.GetByIdAsync(file.FileTypeId, cancellationToken);
         if (fileType is null)

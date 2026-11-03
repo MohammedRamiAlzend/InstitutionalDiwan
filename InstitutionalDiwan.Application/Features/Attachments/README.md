@@ -24,7 +24,7 @@ archive) require `MANAGE`, listing/verification require `VIEW`, and downloading 
 | `CreateDocumentFileWithVersionCommand.cs` / `…Handler.cs` / `…Validator.cs` | The planned initial upload: creates the file and stores version 1 in one use case and one save, so no file can exist without its first version. |
 | `UploadDocumentFileVersionCommand.cs` / `…Handler.cs` / `…Validator.cs` | Buffers and validates the upload against the file type, writes it through `IFileStorageService` (SHA-256 computed in the same pass), and appends the next immutable version through `DocumentFile.AddVersion(...)`. |
 | `AttachmentUploader.cs` | Shared upload pipeline used by both initial and later uploads: size guard, one buffered copy for magic-byte inspection, default-provider resolution, and streamed storage. |
-| `ArchiveDocumentFileCommand.cs` / `…Handler.cs` | Archives a file so no further versions can be uploaded; existing versions stay readable. |
+| `ArchiveDocumentFileCommand.cs` / `…Handler.cs` | Archives a file so no further versions can be uploaded; existing versions stay readable. Rejected while the document itself is archived. |
 | `ListDocumentFilesQuery.cs` / `…Handler.cs` | A document's files, oldest first, each with its full version history. |
 | `DownloadDocumentFileVersionQuery.cs` / `…Handler.cs` | Opens the current (or a named) version's bytes after a DOWNLOAD access check and resolves the provider that stored it. |
 | `VerifyAttachmentChecksumQuery.cs` / `…Handler.cs` | Re-reads a stored version, recomputes its SHA-256, and returns both checksums plus `isMatch`. |
@@ -66,5 +66,6 @@ archive) require `MANAGE`, listing/verification require `VIEW`, and downloading 
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-03 | Claude | Every attachment write (create, create with version, upload version, archive file) now rejects an archived document with `Correspondence.DocumentArchived`, checked after the access check and before anything is stored. Reads, downloads and checksum verification are unchanged. `DocumentFile.IsArchived` stays a separate concept from an archived document. |
 | 2026-10-25 | opencode | Added the planned atomic initial upload (`CreateDocumentFileWithVersionCommand` + `AttachmentUploader`) and the document-scoped `POST/GET /api/documents/{documentId}/files` routes, while keeping the metadata-only create path. |
 | 2026-10-25 | opencode | Implemented the Module 06 slice: create/upload/archive commands, list/download/verify queries, document access checks, and the response models; depends on the new `Abstractions/Storage` contracts. |
