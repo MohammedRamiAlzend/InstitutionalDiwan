@@ -120,7 +120,7 @@ ships light and dark themes from one token file — see the non-negotiable secti
   `EMPLOYEE_MANAGE`, `ACCESS_GRANT_MANAGE`, `REPORT_VIEW`, `LOOKUP_MANAGE`,
   `AUDIT_VIEW`, `AUDIT_MANAGE`.
 - **Do not invent backend routes.** Live vs pending modules are listed in `knowledge.md`. Never call
-  Modules 07 / 08 / 10 until those APIs exist.
+  Modules 08 / 10 until those APIs exist.
 - **No deep imports, no `any`.** `npm run build` runs `tsc -b` — it must pass with no errors,
   and `npm run lint` must stay clean.
 

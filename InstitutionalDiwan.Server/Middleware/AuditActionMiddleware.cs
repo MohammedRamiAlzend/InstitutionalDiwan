@@ -123,6 +123,7 @@ public sealed class AuditActionMiddleware
         "NumberingRegistries" or "DocumentNumbers" or "DepartmentRegisters" => "NUMBERING",
         "Departments" or "InstitutionSettings" or "ExternalOrganizations" => "ORGANIZATION",
         "AuditLogs" => "AUDIT",
+        "DocumentArchive" or "SavedSearches" => "ARCHIVING",
         _ => controllerName.ToUpperInvariant()
     };
 
@@ -154,7 +155,7 @@ public sealed class AuditActionMiddleware
                 actionName,
                 "Update", "Change", "Move", "Assign", "Set", "Activate", "Deactivate", "End",
                 "Send", "Receive", "Complete", "Redirect", "Close", "Return", "Reject", "Cancel",
-                "Archive", "Relabel", "Record", "Reset"))
+                "Archive", "Unarchive", "Relabel", "Record", "Reset"))
         {
             return AuditActionType.UpdateId;
         }

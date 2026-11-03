@@ -78,7 +78,8 @@
 | `vite.config.ts` proxy | ✅ `@` alias + env-driven `/api` and `/hubs` proxies (`DEV_PROXY_TARGET` → `ASPNETCORE_HTTPS_PORT` → `https://localhost:7126`) | Optional local HTTPS certificate; production uses the reverse proxy ([`DEPLOYMENT.md`](DEPLOYMENT.md)) |
 | Dev configuration | ✅ `.env.example` committed; `.env` is git-ignored | — |
 | Backend | External API Modules 01–06 and 09 implemented, including `identity-options` picker reads and live JWT session validation | Frontend consumes relative `/api/...` URLs; refresh endpoint counts when Module 03 work starts |
-| Modules without API | 07 Archiving, 08 Relations, 10 Notifications | Do **not** call them; domain/lookups exist only |
+| Backend only | 07 Archiving | API live, no SPA code yet; see "Archiving" below |
+| Modules without API | 08 Relations, 10 Notifications | Do **not** call them; domain/lookups exist only |
 
 ## Commands
 
@@ -113,7 +114,7 @@ source of truth: `src/shared/config/permissions.ts`.
 | `DOCUMENT_EDIT` | Update/cancel documents, participants, movements actions, attachment writes |
 | `DOCUMENT_DELETE` | Reserved |
 | `DOCUMENT_APPROVE` | Reserved |
-| `DOCUMENT_ARCHIVE` | Reserved until Module 07 endpoints exist (admin only) |
+| `DOCUMENT_ARCHIVE` | Archive and unarchive documents (seeded for admin only) |
 | `NUMBERING_VIEW` / `NUMBERING_MANAGE` | Registries, official numbers, department register |
 | `DEPARTMENT_MANAGE` | Departments + institution settings |
 | `ROLE_MANAGE` | Roles + permission catalog |
@@ -426,6 +427,30 @@ Error codes (all need Arabic entries in `shared/api/errorMessages.ts` when the U
 `DocumentFields.*` — see `InstitutionalDiwan.Domain/Errors/DomainErrors.cs`. Registry filtering by
 field values is not implemented yet.
 
+### Archiving (Module 07) — **backend only, not implemented in the SPA**
+
+- `POST /api/documents/{id}/archive` — `DOCUMENT_ARCHIVE` + `MANAGE` access. Body `archiveLocationId`
+  (from `/api/lookups/archive-locations`), optional `reason` (max 500). Only `REGISTERED` documents.
+- `POST /api/documents/{id}/unarchive` — `DOCUMENT_ARCHIVE` + `MANAGE` access. Body `reason` (required, max 500).
+- `GET /api/documents/{id}/archive-events` — `DOCUMENT_VIEW` + `VIEW` access; newest first.
+- `GET /api/archive/documents` — `DOCUMENT_VIEW`; paged; `search`, `sortBy` (`archivedAt`, `title`,
+  `officialNumber`), `sortDescending`, `owningDepartmentId`, `documentTypeId`, `directionId`,
+  `archiveLocationId`, `archivedFromUtc`, `archivedToUtc`. Rows are `{ document, archivedAt,
+  archivedByUserId, archiveLocationId }`. Results and counters include only documents the caller may view.
+- `GET`/`POST /api/saved-searches`, `PUT`/`DELETE /api/saved-searches/{id}` — `DOCUMENT_VIEW`, owner
+  only (another user's search answers 404). Body `name` (max 150), `criteriaJson` (a JSON object string
+  with the search parameters above, max 4000), `isDefault`. The server stores the criteria but does not
+  run them: read them back and call the archive search. Limit 50 per user, one default.
+
+An archived document rejects participant, attachment, and number writes with 409
+`Correspondence.DocumentArchived` until it is unarchived; reads, downloads, checksum verification, and
+access grants still work. Any write that loses a concurrent race can now answer 409
+`Common.ConcurrencyConflict`: reload and retry.
+
+Error codes (all need Arabic entries in `shared/api/errorMessages.ts` when the UI is built):
+`Archiving.*`, `Correspondence.OnlyRegisteredArchivable`, `Correspondence.DocumentArchived`,
+`Common.ConcurrencyConflict`.
+
 ### Lookups — `/api/lookups/{lookup}`
 
 `GET` (list, `?includeInactive=`), `GET /{lookup}/{id}` — `DOCUMENT_VIEW`;
@@ -464,7 +489,6 @@ Branch UI on `.code`, never on HTTP status alone. Exception: audit integrity **c
 
 | Module | What exists | What is missing |
 | --- | --- | --- |
-| 07 — Archiving | Domain entities + lookups + EF config | Application handlers, repositories in use, controllers |
 | 08 — Relations | Domain entities + lookups + EF config | Same |
 | 10 — Notifications | Domain entities + lookups + EF config | Same; transactional outbox processor empty |
 | SignalR hubs | Planned | Not wired in `Program.cs` |

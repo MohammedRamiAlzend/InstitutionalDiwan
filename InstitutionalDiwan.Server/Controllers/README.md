@@ -1,6 +1,6 @@
 # Presentation / Controllers
 
-> **Status:** Implemented — eighteen thin controllers, one per module plus the generic lookups controller and the administrative picker reads.
+> **Status:** Implemented — twenty-one thin controllers, one per module plus the generic lookups controller and the administrative picker reads.
 
 ## Purpose
 
@@ -21,6 +21,8 @@ access live here.
 | `DocumentFilesController.cs` | `api/document-files` (plus planned `/api/documents/{documentId}/files` aliases) | `DOCUMENT_VIEW` reads; `DOCUMENT_EDIT` writes | Module 06 attachments: create a file's version chain (metadata-only or atomic first-version upload), upload the next version (multipart; extension/size/magic-byte validation), archive, list by document, download a version, and verify its SHA-256. |
 | `ExternalOrganizationsController.cs` | `api/external-organizations` | `DOCUMENT_VIEW` reads; `DOCUMENT_EDIT` writes | External correspondent CRUD: paged/searchable list (incl. `includeInactive`), get, create, update, deactivate, activate. |
 | `DocumentFieldsController.cs` | `api` (`document-types/{id}/fields`, `document-types/{id}/schema`, `document-types/{id}/schema-versions`, `schema-versions/{id}[/fields[/{fieldId}]|/publish]`, `documents/{id}/fields`) | `LOOKUP_MANAGE` for schema administration; `DOCUMENT_VIEW` for the published schema and a document's values; `DOCUMENT_EDIT` to set draft values | Dynamic document fields: define fields, run the schema draft/publish lifecycle, read the published schema, read and replace a draft document's values. |
+| `DocumentArchiveController.cs` | `api` (`archive/documents`, `documents/{id}/archive-events`, `documents/{id}/archive`, `documents/{id}/unarchive`) | `DOCUMENT_VIEW` reads; `DOCUMENT_ARCHIVE` writes; per-document access in the handlers | Module 07: archive and restore documents, a document's archive history, and the access-filtered archive search. |
+| `SavedSearchesController.cs` | `api/saved-searches` | `DOCUMENT_VIEW`; owner only in the handlers | Module 07: the caller's personal saved archive searches (list, create, replace, delete). |
 | `InstitutionSettingsController.cs` | `api/institution-settings` | `DEPARTMENT_MANAGE` | Reads and replaces the singleton institution settings (Central Diwan guards). |
 | `UsersController.cs` | `api/users` | `USER_MANAGE` | User CRUD (paged/searchable list), activate/deactivate, assign/revoke roles, `POST {id}/reset-password` (forced change at next sign-in), `POST {id}/department-assignments`, `DELETE {id}/department-assignments/{assignmentId}`, `GET {id}/effective-permissions`. |
 | `RolesController.cs` | `api/roles` | `ROLE_MANAGE` | Role CRUD, activate, grant/revoke permissions. |
@@ -127,6 +129,7 @@ plain JSON array.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-03 | Claude | Added `DocumentArchiveController` and `SavedSearchesController` for Module 07 (Phase 3), and corrected the controller count. |
 | 2026-11-02 | Claude | Added `DocumentFieldsController` (dynamic document fields, Phase 3); `POST /api/documents` and `POST /api/documents/drafts` accept optional `fieldValues`. |
 | 2026-10-28 | Qoder | Module 03 Phase 2: department options now also accept `DOCUMENT_VIEW`, so read-only document registry users can resolve owning-department names and drive the department filter. |
 | 2026-10-28 | Qoder | Module 03 Phase 0: `GET /api/identity-options/users` (paged username search; `USER_MANAGE`, `ACCESS_GRANT_MANAGE`, or `DOCUMENT_EDIT`) and department options opened to `DOCUMENT_CREATE`/`DOCUMENT_EDIT` so document, participant, grant, and movement forms can pick parties without broader administration rights. |

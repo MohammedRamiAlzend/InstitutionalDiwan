@@ -4,7 +4,8 @@
 > auditing, and the exception middleware; the `Auth`, `Documents`, `DocumentNumbers`, `ExternalOrganizations`,
 > `InstitutionSettings`, `Users`, `Roles`, `Permissions`, `Departments`, `Employees`,
 > `DocumentAccessGrants`, `NumberingRegistries`, `DepartmentRegisters`, `Movements` (routing workflow
-> + inbox/outbox), `DocumentFiles` (Module 06 attachments), `AuditLogs` (Module 09), and `Lookups`
+> + inbox/outbox), `DocumentFiles` (Module 06 attachments), `DocumentArchive` and `SavedSearches`
+> (Module 07), `AuditLogs` (Module 09), and `Lookups`
 > controllers serve the live endpoints.
 
 ## Purpose
@@ -96,6 +97,7 @@ project-references Application and Infrastructure.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-03 | Claude | Module 07 Archiving, Phase 3: archive and saved search endpoints, and concurrency conflicts now answer 409. |
 | 2026-11-02 | Claude | Dynamic document fields, Phase 3: `DocumentFieldsController` with 14 routes, field contracts, `fieldValues` on document creation. |
 | 2026-10-28 | Qoder | Wire forced-password enforcement between action auditing and authorization; add live JWT session revocation with no legacy stamp fallback, migrations, or signing-key configuration edits. |
 | 2026-10-26 | Qoder | Removed the SPA integration: dropped `SpaRoot`/`SpaProxy` and the client project reference from the csproj, removed the SPA proxy hosting startup from the launch profiles, and deleted `UseDefaultFiles`, `MapStaticAssets`, and `MapFallbackToFile` from `Program.cs`. The project is now an API-only host; the front end lives in the standalone `institutionaldiwan.front` project. |

@@ -86,6 +86,31 @@ public sealed class AuditActionMiddlewareTests
         Assert.Equal(nameof(InvalidOperationException), values.RootElement.GetProperty("error").GetString());
     }
 
+    [Theory]
+    [InlineData("POST", "DocumentArchive", "Archive", AuditActionType.UpdateId)]
+    [InlineData("POST", "DocumentArchive", "Unarchive", AuditActionType.UpdateId)]
+    [InlineData("GET", "DocumentArchive", "Search", AuditActionType.ViewId)]
+    [InlineData("GET", "DocumentArchive", "ListEvents", AuditActionType.ViewId)]
+    [InlineData("POST", "SavedSearches", "Create", AuditActionType.CreateId)]
+    [InlineData("PUT", "SavedSearches", "Update", AuditActionType.UpdateId)]
+    [InlineData("DELETE", "SavedSearches", "Delete", AuditActionType.DeleteId)]
+    public async Task Invoke_ArchivingActions_AreClassifiedUnderTheArchivingModule(
+        string method,
+        string controller,
+        string action,
+        int expectedActionTypeId)
+    {
+        var recorder = new RecordingRecorder();
+        var middleware = Middleware(recorder, context => SetStatusAsync(context, StatusCodes.Status200OK));
+        var (context, userContext) = Request(method, "/api/archive", controller, action, authenticated: true);
+
+        await middleware.InvokeAsync(context, userContext);
+
+        var record = Assert.Single(recorder.Records);
+        Assert.Equal("ARCHIVING", record.ModuleName);
+        Assert.Equal(expectedActionTypeId, record.ActionTypeId);
+    }
+
     private static AuditActionMiddleware Middleware(
         RecordingRecorder recorder,
         RequestDelegate next) =>

@@ -8,12 +8,14 @@ namespace InstitutionalDiwan.Server.Middleware;
 /// Catches unhandled exceptions, logs them, and returns a clean RFC 7807 <see cref="ProblemDetails"/>
 /// response without leaking stack traces. Database unique-key violations (the last line of defence
 /// behind application-level duplicate checks such as the official number + year check) are mapped
-/// to <c>409 Conflict</c> instead of <c>500</c>.
+/// to <c>409 Conflict</c> instead of <c>500</c>, and so are optimistic concurrency conflicts, whose
+/// title is the error code <c>Common.ConcurrencyConflict</c>.
 /// </summary>
 public sealed class GlobalExceptionHandlingMiddleware
 {
     private const int SqlServerUniqueIndexError = 2601;
     private const int SqlServerUniqueConstraintError = 2627;
+    private const string ConcurrencyConflictCode = "Common.ConcurrencyConflict";
 
     private readonly RequestDelegate _next;
     private readonly ILogger<GlobalExceptionHandlingMiddleware> _logger;
@@ -48,6 +50,25 @@ public sealed class GlobalExceptionHandlingMiddleware
                 Status = StatusCodes.Status409Conflict,
                 Title = "A conflicting record already exists.",
                 Detail = "The submitted record conflicts with data that already exists.",
+                Type = "https://httpstatuses.io/409"
+            });
+        }
+        catch (DbUpdateConcurrencyException exception)
+        {
+            _logger.LogWarning(exception, "Concurrency conflict while processing {Method} {Path}.",
+                context.Request.Method, context.Request.Path);
+
+            if (context.Response.HasStarted)
+                throw;
+
+            context.Response.Clear();
+            context.Response.StatusCode = StatusCodes.Status409Conflict;
+
+            await context.Response.WriteAsJsonAsync(new ProblemDetails
+            {
+                Status = StatusCodes.Status409Conflict,
+                Title = ConcurrencyConflictCode,
+                Detail = "The record was changed by another request. Reload it and try again.",
                 Type = "https://httpstatuses.io/409"
             });
         }
