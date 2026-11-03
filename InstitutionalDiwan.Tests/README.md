@@ -132,6 +132,7 @@ indexes) runs against a private SQLite in-memory database through `Support/TestC
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-03 | Claude | `Seed/UserSeederTests` now checks that the demo accounts land in the Central Diwan and `DEP-HR`, that a missing department fails with a clear message, and that existing accounts keep their department and need no department rows; 524 to 527 tests. |
 | 2026-11-02 | Claude | Dynamic fields, Phase 4: `DocumentFieldHandlerTests` gained a test that a new required field in a later version does not block registering a document pinned to the old one, and a validator test; 522 to 524 tests. |
 | 2026-11-02 | Claude | Dynamic fields, Phase 3: added `Server/DocumentFieldsControllerTests.cs` (permission policy contract of the new endpoints); the OpenAPI documentation tests now cover the new routes; 519 to 522 tests. |
 | 2026-11-02 | Claude | Dynamic fields, Phase 2: added `Application/DocumentFieldHandlerTests.cs` (field/draft/publish/discard lifecycle, settings validation, pinning that survives a new publish, value replacement and lock, required-field gate before numbering, queries), a real-interceptor audit test for schema publishing in `Persistence/CorrespondenceAuditIntegrationTests.cs`, fakes in `Support/FakeDocumentFieldRepositories.cs`; audit entity-type seed count 13 to 14; 508 to 519 tests. |

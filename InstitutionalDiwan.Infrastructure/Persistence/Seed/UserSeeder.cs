@@ -1,11 +1,16 @@
+using System.Linq.Expressions;
 using InstitutionalDiwan.Domain.Entities.Identity;
+using InstitutionalDiwan.Domain.Entities.Organization;
 using Microsoft.EntityFrameworkCore;
 
 namespace InstitutionalDiwan.Infrastructure.Persistence.Seed;
 
 /// <summary>
 /// Seeds the demo accounts used to exercise the login flow (Order 300). Runs after
-/// <see cref="RoleSeeder"/> so the roles it assigns already exist.
+/// <see cref="RoleSeeder"/> so the roles it assigns already exist, and after
+/// <see cref="InstitutionSettingSeeder"/> and <see cref="DepartmentSeeder"/> so each account belongs to
+/// a real department: <c>admin</c> to the Central Diwan and <c>user</c> to <c>DEP-HR</c>. Existing
+/// accounts are never changed.
 ///
 /// Gated to Development and Staging only: these accounts share a well-known password and must
 /// never reach Production. To seed a production account, add <see cref="SeedingEnvironments.Production"/>
@@ -22,8 +27,8 @@ public sealed class UserSeeder : ISeeder
     /// <summary>Shared demo password (Development/Staging only).</summary>
     public const string DemoPassword = "12345678";
 
-    /// <summary>Fixed department id for seeded accounts (no department rows are required).</summary>
-    private static readonly Guid SeedDepartmentId = Guid.Parse("11111111-2222-3333-4444-555555555555");
+    /// <summary>Code of the demo department the standard account belongs to (seeded by <see cref="DepartmentSeeder"/>).</summary>
+    private const string StandardUserDepartmentCode = "DEP-HR";
 
     public int Order => 300;
 
@@ -42,8 +47,23 @@ public sealed class UserSeeder : ISeeder
             ?? throw new InvalidOperationException(
                 "Role 'USER' not found — RoleSeeder (Order 200) must run before UserSeeder.");
 
-        await EnsureUserAsync(context, DemoUsername, adminRole, UserScopeType.SystemId, cancellationToken);
-        await EnsureUserAsync(context, DemoStandardUsername, userRole, UserScopeType.DepartmentId, cancellationToken);
+        await EnsureUserAsync(
+            context,
+            DemoUsername,
+            adminRole,
+            UserScopeType.SystemId,
+            department => department.DepartmentTypeId == DepartmentType.CentralDiwanId,
+            "Central Diwan department not found — InstitutionSettingSeeder (Order 95) must run before UserSeeder.",
+            cancellationToken);
+
+        await EnsureUserAsync(
+            context,
+            DemoStandardUsername,
+            userRole,
+            UserScopeType.DepartmentId,
+            department => department.Code == StandardUserDepartmentCode,
+            $"Department '{StandardUserDepartmentCode}' not found — DepartmentSeeder (Order 96) must run before UserSeeder.",
+            cancellationToken);
     }
 
     private static async Task EnsureUserAsync(
@@ -51,6 +71,8 @@ public sealed class UserSeeder : ISeeder
         string username,
         Role role,
         int scopeTypeId,
+        Expression<Func<Department, bool>> primaryDepartment,
+        string missingDepartmentMessage,
         CancellationToken cancellationToken)
     {
         var db = context.Db;
@@ -59,11 +81,18 @@ public sealed class UserSeeder : ISeeder
         if (await db.Users.AnyAsync(u => u.Username == normalized, cancellationToken))
             return;
 
+        // Resolved only for a missing account, so an existing user never depends on the demo tree.
+        var primaryDepartmentId = await db.Departments
+            .Where(primaryDepartment)
+            .Select(department => (Guid?)department.DepartmentId)
+            .FirstOrDefaultAsync(cancellationToken)
+            ?? throw new InvalidOperationException(missingDepartmentMessage);
+
         var passwordHash = context.PasswordHasher.Hash(DemoPassword);
         var userResult = User.Create(
             normalized,
             passwordHash,
-            primaryDepartmentId: SeedDepartmentId,
+            primaryDepartmentId: primaryDepartmentId,
             scopeTypeId: scopeTypeId,
             mustChangePassword: false);
 
