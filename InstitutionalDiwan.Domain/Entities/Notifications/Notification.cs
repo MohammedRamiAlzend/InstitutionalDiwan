@@ -7,6 +7,11 @@ public sealed class Notification : AggregateRoot<Guid>
     private readonly List<NotificationRecipient> _recipients = new();
     private readonly List<NotificationOutbox> _outboxEntries = new();
 
+    public const int MaxTitleLength = 300;
+    public const int MaxBodyLength = 2000;
+    public const int MaxActionUrlLength = 500;
+    public const int MaxRecipients = 500;
+
     public Guid NotificationId
     {
         get => Id;
@@ -52,6 +57,16 @@ public sealed class Notification : AggregateRoot<Guid>
         if (string.IsNullOrWhiteSpace(bodyAr))
             return Result.Failure<Notification>(DomainErrors.Notifications.BodyEmpty);
 
+        if (titleAr.Trim().Length > MaxTitleLength)
+            return Result.Failure<Notification>(DomainErrors.Notifications.TitleTooLong);
+
+        if (bodyAr.Trim().Length > MaxBodyLength)
+            return Result.Failure<Notification>(DomainErrors.Notifications.BodyTooLong);
+
+        var actionUrlText = string.IsNullOrWhiteSpace(actionUrl) ? null : actionUrl.Trim();
+        if (actionUrlText is not null && !IsValidActionUrl(actionUrlText))
+            return Result.Failure<Notification>(DomainErrors.Notifications.ActionUrlInvalid);
+
         var notification = new Notification
         {
             NotificationId = Guid.NewGuid(),
@@ -61,7 +76,7 @@ public sealed class Notification : AggregateRoot<Guid>
             PriorityId = priorityId > 0 ? priorityId : NotificationPriority.NormalId,
             RelatedDocumentId = relatedDocumentId,
             RelatedMovementId = relatedMovementId,
-            ActionUrl = actionUrl,
+            ActionUrl = actionUrlText,
             CreatedAt = utcNow ?? DateTime.UtcNow
         };
 
@@ -73,10 +88,24 @@ public sealed class Notification : AggregateRoot<Guid>
         return Result.Success(notification);
     }
 
+    /// <summary>
+    /// True for a relative in-app path such as <c>/documents/{id}</c>: it starts with a single slash
+    /// and carries no scheme, host, backslash, or control character, so it can never leave the app.
+    /// </summary>
+    public static bool IsValidActionUrl(string actionUrl) =>
+        actionUrl.Length <= MaxActionUrlLength &&
+        actionUrl.StartsWith('/') &&
+        !actionUrl.StartsWith("//", StringComparison.Ordinal) &&
+        !actionUrl.Contains('\\') &&
+        !actionUrl.Any(char.IsControl);
+
     public Result AddRecipient(Guid userId, Guid? departmentId = null, DateTime? utcNow = null)
     {
         if (_recipients.Any(r => r.UserId == userId))
             return Result.Failure(DomainErrors.Notifications.RecipientDuplicate);
+
+        if (_recipients.Count >= MaxRecipients)
+            return Result.Failure(DomainErrors.Notifications.TooManyRecipients);
 
         _recipients.Add(NotificationRecipient.Create(NotificationId, userId, departmentId, utcNow));
         return Result.Success();

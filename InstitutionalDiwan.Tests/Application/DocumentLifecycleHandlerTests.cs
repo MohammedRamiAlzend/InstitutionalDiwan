@@ -52,7 +52,7 @@ public sealed class DocumentLifecycleHandlerTests
             new(Users, Documents, DocumentTypes, new FakeDocumentTypeSchemaVersionRepository(), UnitOfWork);
 
         public RegisterDocumentCommandHandler RegisterHandler() =>
-            new(Documents, Numbers, Registries, new FakeDocumentTypeSchemaVersionRepository(), Access, UnitOfWork, TestClock.Instance);
+            new(Documents, Numbers, Registries, new FakeDocumentTypeSchemaVersionRepository(), Access, UnitOfWork, FakeNotificationPublisher.Instance, TestClock.Instance);
 
         public UpdateDraftMetadataCommandHandler UpdateHandler() =>
             new(Documents, Access, UnitOfWork);

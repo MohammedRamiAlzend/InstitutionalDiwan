@@ -152,6 +152,7 @@ registries, per-document grants/movements) still returns a plain collection on p
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-03 | Claude | Added `Notifications/`: `NotificationPublisher` (recipient rules per event type), list/unread-count queries and mark-read/dismiss/read-all commands; the movement, registration and archive handlers now call the publisher before saving. |
 | 2026-11-03 | Claude | Added the `Relations/` slice (Module 08, Phase 2). |
 | 2026-11-03 | Claude | Added the `Archiving/` slice and its `SavedSearches/` subfolder (Module 07, Phase 2). |
 | 2026-11-02 | Claude | Added `Correspondence/DocumentFields` (dynamic document fields, Phase 2) and wired schema pinning into the document create/register handlers. |

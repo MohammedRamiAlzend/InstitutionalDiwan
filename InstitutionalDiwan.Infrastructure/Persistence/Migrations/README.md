@@ -51,6 +51,7 @@ empty migration when the model changed.
 | Dynamic document fields (`Add_Document_Dynamic_Fields`) | ✅ Created (2026-11-02) + applied to the development database |
 | Archiving constraints (`Add_Archiving_Constraints`) | ✅ Created (2026-11-03) and verified on a scratch SQL Server database; applied to the development database (verified with `dotnet ef migrations list`, 2026-11-03) |
 | Relations constraints (`Add_Relations_Constraints`) | ✅ Created (2026-11-03) and applied to the development database (verified with `dotnet ef migrations list`, 2026-11-03) |
+| Notifications constraints (`Add_Notifications_Constraints`) | ✅ Created (2026-11-03), verified on a scratch SQL Server database (all 12 migrations apply) and applied to the development database: foreign keys from recipients (user, department) and notifications (document, movement), inbox, retention and unique recipient indexes, the 4000-character outbox payload limit, and a data step that sets the registration notice channels to `IN_APP` |
 | Audit immutability trigger / DENY | ❌ Not created |
 | Closure table / indexed view | ❌ Not created |
 | Full-text catalog & indexes | ❌ Not created |
@@ -65,6 +66,7 @@ empty migration when the model changed.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-03 | Claude | Added `Add_Notifications_Constraints` (Module 10): FKs, inbox/retention/unique indexes, payload limit and the `IN_APP` channel fix; verified on a scratch database first. |
 | 2026-11-03 | Claude | Confirmed all 11 migrations are applied to the development database (`dotnet ef migrations list` shows none pending; `database update` was a no-op). |
 | 2026-11-03 | Claude | Added `Add_Relations_Constraints` for Module 08 (Phase 1). |
 | 2026-11-03 | Claude | Added `Add_Archiving_Constraints` for Module 07 (Phase 1) and verified it by applying the full chain to a scratch SQL Server database, since dropped. Recorded that `Add_Document_Dynamic_Fields` is now applied to the development database. |

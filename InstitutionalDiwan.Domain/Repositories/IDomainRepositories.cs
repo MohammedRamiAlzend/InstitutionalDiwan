@@ -388,7 +388,53 @@ public interface INotificationRepository
 {
     Task<Notification?> GetByIdAsync(Guid notificationId, CancellationToken cancellationToken = default);
     void Add(Notification notification);
+
+    /// <summary>The user's own inbox rows (newest first); dismissed rows are never listed.</summary>
+    Task<PagedList<NotificationInboxItem>> GetInboxAsync(
+        Guid userId, bool unreadOnly, int? typeId, PageRequest page, CancellationToken cancellationToken = default);
+
+    /// <summary>The recipients (id + user) of a notification, for the realtime fan-out.</summary>
+    Task<IReadOnlyList<NotificationRecipient>> GetRecipientsAsync(
+        Guid notificationId, CancellationToken cancellationToken = default);
+
+    Task<NotificationOutbox?> GetOutboxByIdAsync(Guid outboxId, CancellationToken cancellationToken = default);
+
+    Task<NotificationType?> GetTypeAsync(int notificationTypeId, CancellationToken cancellationToken = default);
+
+    Task<int> CountUnreadAsync(Guid userId, CancellationToken cancellationToken = default);
+
+    /// <summary>A recipient row, only when it belongs to <paramref name="userId"/> (tracked for update).</summary>
+    Task<NotificationRecipient?> GetRecipientAsync(
+        Guid recipientId, Guid userId, CancellationToken cancellationToken = default);
+
+    /// <summary>Marks every unread, non-dismissed row of the user as read; returns how many changed.</summary>
+    Task<int> MarkAllReadAsync(Guid userId, DateTime utcNow, CancellationToken cancellationToken = default);
+
+    /// <summary>Outbox rows that are pending or failed and due for a (re)try, oldest first.</summary>
+    Task<IReadOnlyList<NotificationOutbox>> GetDueOutboxAsync(
+        DateTime utcNow, int batchSize, CancellationToken cancellationToken = default);
+
+    /// <summary>Deletes read/dismissed recipient rows delivered before the cutoff, and their emptied notifications.</summary>
+    Task<int> PurgeRecipientsAsync(DateTime deliveredBefore, CancellationToken cancellationToken = default);
+
+    /// <summary>Deletes SENT outbox rows processed before the cutoff; dead letters are never touched.</summary>
+    Task<int> PurgeSentOutboxAsync(DateTime processedBefore, CancellationToken cancellationToken = default);
 }
+
+/// <summary>One inbox row: the recipient state joined with its notification content.</summary>
+public sealed record NotificationInboxItem(
+    Guid RecipientId,
+    Guid NotificationId,
+    int TypeId,
+    string TitleAr,
+    string BodyAr,
+    int PriorityId,
+    Guid? RelatedDocumentId,
+    Guid? RelatedMovementId,
+    string? ActionUrl,
+    bool IsRead,
+    DateTime? ReadAt,
+    DateTime CreatedAt);
 
 /// <summary>
 /// Generic access to the seeded reference ("lookup") catalogs. Implementations own the

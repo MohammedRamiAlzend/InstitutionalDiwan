@@ -15,6 +15,11 @@ public sealed class NotificationTypeSeeder : LookupSeederBase<NotificationType>
         (NotificationType.MovementReceivedId, "Movement received", "استلام إحالة"),
         (NotificationType.MovementCompletedId, "Movement completed", "إكمال إحالة"),
         (NotificationType.DocumentArchivedId, "Document archived", "أرشفة وثيقة"),
+        (NotificationType.MovementRejectedId, "Movement rejected", "رفض إحالة"),
+        (NotificationType.MovementReturnedId, "Movement returned", "إعادة إحالة"),
+        (NotificationType.MovementRedirectedId, "Movement redirected", "تحويل إحالة"),
+        (NotificationType.MovementClosedId, "Movement closed", "إغلاق إحالة"),
+        (NotificationType.MovementCancelledId, "Movement cancelled", "إلغاء إحالة"),
     };
 
     protected override NotificationType BuildItem(int id, string desc, string descAr)
@@ -22,7 +27,17 @@ public sealed class NotificationTypeSeeder : LookupSeederBase<NotificationType>
         var (title, body, channels) = id switch
         {
             NotificationType.DocumentRegisteredId =>
-                ("تم تسجيل وثيقة", "تم تسجيل الوثيقة {Title} بالرقم {Number}.", "IN_APP,EMAIL"),
+                ("تم تسجيل وثيقة", "تم تسجيل الوثيقة {Title} بالرقم {Number}.", "IN_APP"),
+            NotificationType.MovementRejectedId =>
+                ("تم رفض الإحالة", "تم رفض إحالة الوثيقة {Title}.", "IN_APP"),
+            NotificationType.MovementReturnedId =>
+                ("أُعيدت الإحالة", "أُعيدت إحالة الوثيقة {Title} إلى دائرتكم.", "IN_APP"),
+            NotificationType.MovementRedirectedId =>
+                ("تم تحويل الإحالة", "تم تحويل إحالة الوثيقة {Title}.", "IN_APP"),
+            NotificationType.MovementClosedId =>
+                ("أُغلقت الإحالة", "أُغلقت إحالة الوثيقة {Title}.", "IN_APP"),
+            NotificationType.MovementCancelledId =>
+                ("أُلغيت الإحالة", "أُلغيت إحالة الوثيقة {Title}.", "IN_APP"),
             NotificationType.MovementSentId =>
                 ("إحالة جديدة", "تمت إحالة الوثيقة {Title} إلى دائرتك.", "IN_APP"),
             NotificationType.MovementReceivedId =>

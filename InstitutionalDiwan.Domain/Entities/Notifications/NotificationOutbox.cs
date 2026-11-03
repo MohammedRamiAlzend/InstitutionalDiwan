@@ -2,6 +2,8 @@ namespace InstitutionalDiwan.Domain.Entities.Notifications;
 
 public sealed class NotificationOutbox : Entity<Guid>
 {
+    public const int MaxPayloadLength = 4000;
+
     public Guid OutboxId
     {
         get => Id;
@@ -29,6 +31,9 @@ public sealed class NotificationOutbox : Entity<Guid>
     {
         if (channelId <= 0)
             return Result.Failure<NotificationOutbox>(DomainErrors.Notifications.ChannelEmpty);
+
+        if (payloadJson is { Length: > MaxPayloadLength })
+            return Result.Failure<NotificationOutbox>(DomainErrors.Notifications.PayloadTooLong);
 
         var outbox = new NotificationOutbox
         {

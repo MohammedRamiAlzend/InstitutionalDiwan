@@ -97,6 +97,7 @@ project-references Application and Infrastructure.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-03 | Claude | Module 10: added `NotificationsController`, the SignalR hub `/hubs/notifications` (token via `access_token` query string, connection closed when the token expires) and the `IRealtimeNotifier` binding. The hub is single-instance: no backplane, so a multi-instance deployment needs Redis or Azure SignalR and one outbox processor. |
 | 2026-11-03 | Claude | Module 07 Archiving, Phase 3: archive and saved search endpoints, and concurrency conflicts now answer 409. |
 | 2026-11-02 | Claude | Dynamic document fields, Phase 3: `DocumentFieldsController` with 14 routes, field contracts, `fieldValues` on document creation. |
 | 2026-10-28 | Qoder | Wire forced-password enforcement between action auditing and authorization; add live JWT session revocation with no legacy stamp fallback, migrations, or signing-key configuration edits. |

@@ -58,7 +58,7 @@ public sealed class ArchivingHandlerTests
         }
 
         public ArchiveDocumentCommandHandler ArchiveHandler() =>
-            new(Documents, Movements, Archive, Lookups, Access, UnitOfWork);
+            new(Documents, Movements, Archive, Lookups, Access, UnitOfWork, FakeNotificationPublisher.Instance);
 
         public UnarchiveDocumentCommandHandler UnarchiveHandler() =>
             new(Documents, Archive, Access, UnitOfWork);

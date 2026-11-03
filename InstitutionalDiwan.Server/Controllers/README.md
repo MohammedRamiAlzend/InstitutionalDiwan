@@ -35,6 +35,7 @@ access live here.
 | `NumberingRegistriesController.cs` | `api/numbering/registries` | `NUMBERING_VIEW` reads; `NUMBERING_MANAGE` writes | Numbering registry list/by-id + create, update, deactivate, activate. |
 | `LookupsController.cs` | `api/lookups/{lookup}` | `[Authorize]` reads; `LOOKUP_MANAGE` writes | Generic reference-catalog API over all 33 seeded lookups. |
 | `AuditLogsController.cs` | `api/audit-logs` | `AUDIT_VIEW` reads; `AUDIT_MANAGE` checkpoints/integrity checks | Module 09 audit trail: filtered self-auditing search, checkpoint creation, integrity verification, and integrity-report listing. |
+| `NotificationsController.cs` | `api/notifications` | `[Authorize]` (no permission code; every route is scoped to the caller) | Module 10 inbox: paged list (`unreadOnly`, `typeId`), `unread-count` (not audited), `{recipientId}/read`, `read-all`, `{recipientId}/dismiss`. Another user's row answers 404 `Notifications.RecipientNotFound`. |
 
 ## Lookups endpoints
 
@@ -84,6 +85,18 @@ access live here.
 | `GET` | `/api/documents/{documentId}/files` | `DOCUMENT_VIEW` | Planned alias of the document file list. |
 | `GET` | `/api/document-files/{fileId}/download?versionId=` | `DOCUMENT_VIEW` | Stream one version (current by default) under its original name/MIME type; requires DOWNLOAD access. |
 | `GET` | `/api/document-files/{fileId}/verify?versionId=` | `DOCUMENT_VIEW` | Recompute the stored SHA-256 and return both checksums plus `isMatch`. |
+
+## Notification endpoints (Module 10)
+
+| Method | Route | Behavior |
+| --- | --- | --- |
+| `GET` | `/api/notifications` | The caller's own inbox, newest first, dismissed rows hidden; `unreadOnly`, `typeId`, `page`, `pageSize` (max 100). |
+| `GET` | `/api/notifications/unread-count` | `{ count }` for the bell badge; excluded from the action audit trail. |
+| `POST` | `/api/notifications/{recipientId}/read` | Idempotent; 404 when the row is not the caller's. |
+| `POST` | `/api/notifications/read-all` | `{ count }` rows changed. |
+| `POST` | `/api/notifications/{recipientId}/dismiss` | Idempotent; hides the row. |
+
+The SignalR hub `/hubs/notifications` (see `Hubs/`) pushes `notificationReceived`.
 
 ## Audit endpoints (Module 09)
 

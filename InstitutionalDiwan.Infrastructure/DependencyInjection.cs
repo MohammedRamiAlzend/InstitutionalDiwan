@@ -58,6 +58,11 @@ public static class DependencyInjection
         services.AddHostedService<AuditChainIntegrityVerificationJob>();
         services.AddHostedService<DailyAuditCheckpointJob>();
 
+        // Notification outbox delivery and retention.
+        services.Configure<NotificationJobsOptions>(configuration.GetSection(NotificationJobsOptions.SectionName));
+        services.AddHostedService<OutboxProcessorJob>();
+        services.AddHostedService<NotificationRetentionJob>();
+
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IRoleRepository, RoleRepository>();
         services.AddScoped<IPermissionRepository, PermissionRepository>();
@@ -82,6 +87,8 @@ public static class DependencyInjection
         services.AddScoped<ISavedSearchRepository, SavedSearchRepository>();
         services.AddScoped<IDocumentRelationRepository, DocumentRelationRepository>();
         services.AddScoped<IAuditLogRepository, AuditLogRepository>();
+        services.AddScoped<INotificationRepository, NotificationRepository>();
+        services.AddScoped<InstitutionalDiwan.Application.Abstractions.Notifications.INotificationRecipientDirectory, NotificationRecipientDirectory>();
 
         // Module 06 physical storage: local file system + magic-byte validation, both consumed by
         // the Attachments handlers through Application abstractions.

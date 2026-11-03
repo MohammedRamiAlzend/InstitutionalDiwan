@@ -17,6 +17,7 @@ ASP.NET Core HTTP pipeline middleware that applies request-wide concerns before 
 | `GlobalExceptionHandlingMiddleware.cs` | Maps unexpected failures to safe ProblemDetails responses; unique-key violations and optimistic concurrency conflicts answer 409. |
 | `AuditActionMiddleware.cs` | Audits authenticated API actions, including authorization failures. |
 | `ForcedPasswordChangeMiddleware.cs` | Blocks forced-change sessions before endpoints execute; only anonymous endpoints and the selected authenticated GET `Auth.Me` / POST `Auth.ChangePassword` actions are exempt. |
+| `SkipActionAuditAttribute.cs` | Marks a polled, read-only action (the notification unread count) so `AuditActionMiddleware` does not record it. |
 
 ## Components
 
@@ -86,6 +87,7 @@ the exception, record the failure, and rethrow.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-03 | Claude | `AuditActionMiddleware` skips actions marked `[SkipActionAudit]`; used by `GET /api/notifications/unread-count`, which the bell polls. |
 | 2026-11-03 | Claude | `AuditActionMiddleware` maps the `DocumentRelations` controller to the `RELATIONS` module (Module 08, Phase 3). |
 | 2026-11-03 | Claude | `GlobalExceptionHandlingMiddleware` now answers `DbUpdateConcurrencyException` with 409 and the title `Common.ConcurrencyConflict` instead of 500, for every endpoint that writes a row with a `RowVersion`. `AuditActionMiddleware` maps `DocumentArchive` and `SavedSearches` to the `ARCHIVING` module and classifies `Unarchive` as an update. |
 | 2026-10-28 | Qoder | Add the endpoint-aware forced-password gate inside auditing and before authorization; permit only authenticated me/change-password actions and anonymous endpoints until recovery completes. |

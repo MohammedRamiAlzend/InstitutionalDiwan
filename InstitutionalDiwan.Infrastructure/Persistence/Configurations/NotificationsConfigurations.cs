@@ -1,4 +1,8 @@
+using InstitutionalDiwan.Domain.Entities.Correspondence;
+using InstitutionalDiwan.Domain.Entities.Movements;
 using InstitutionalDiwan.Domain.Entities.Notifications;
+using InstitutionalDiwan.Domain.Entities.Organization;
+using InstitutionalDiwan.Domain.Entities.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -22,6 +26,18 @@ public sealed class NotificationConfiguration : IEntityTypeConfiguration<Notific
         builder.Property(x => x.RelatedMovementId).HasColumnName("RelatedMovementId");
         builder.Property(x => x.ActionUrl).HasColumnName("ActionUrl").HasMaxLength(500);
         builder.Property(x => x.CreatedAt).HasColumnName("CreatedAt").HasColumnType("datetime2(3)").IsRequired();
+
+        builder.HasIndex(x => x.CreatedAt).HasDatabaseName("IX_NOTIFICATIONS_CREATED");
+
+        builder.HasOne<Document>()
+            .WithMany()
+            .HasForeignKey(x => x.RelatedDocumentId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne<DocumentMovement>()
+            .WithMany()
+            .HasForeignKey(x => x.RelatedMovementId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne<NotificationType>()
             .WithMany()
@@ -69,6 +85,28 @@ public sealed class NotificationRecipientConfiguration : IEntityTypeConfiguratio
         builder.Property(x => x.DeliveredAt).HasColumnName("DeliveredAt").HasColumnType("datetime2(3)").IsRequired();
 
         builder.HasIndex(x => new { x.UserId, x.IsRead }).HasDatabaseName("IX_NOTIFICATION_RECIPIENTS_USER_READ");
+
+        // Inbox listing: a user's visible rows, newest first.
+        builder.HasIndex(x => new { x.UserId, x.IsDismissed, x.DeliveredAt })
+            .HasDatabaseName("IX_NOTIFICATION_RECIPIENTS_INBOX");
+
+        // One row per user per notification (also enforced by the aggregate).
+        builder.HasIndex(x => new { x.NotificationId, x.UserId })
+            .IsUnique()
+            .HasDatabaseName("UX_NOTIFICATION_RECIPIENTS_NOTIFICATION_USER");
+
+        // Retention purge.
+        builder.HasIndex(x => x.DeliveredAt).HasDatabaseName("IX_NOTIFICATION_RECIPIENTS_DELIVERED");
+
+        builder.HasOne<User>()
+            .WithMany()
+            .HasForeignKey(x => x.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne<Department>()
+            .WithMany()
+            .HasForeignKey(x => x.DepartmentId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }
 
@@ -83,7 +121,7 @@ public sealed class NotificationOutboxConfiguration : IEntityTypeConfiguration<N
         builder.Property(x => x.OutboxId).HasColumnName("OutboxId").ValueGeneratedNever();
         builder.Property(x => x.NotificationId).HasColumnName("NotificationId").IsRequired();
         builder.Property(x => x.ChannelId).HasColumnName("ChannelId").IsRequired();
-        builder.Property(x => x.PayloadJson).HasColumnName("PayloadJson").IsRequired();
+        builder.Property(x => x.PayloadJson).HasColumnName("PayloadJson").HasMaxLength(4000).IsRequired();
         builder.Property(x => x.StatusId).HasColumnName("StatusId").IsRequired();
         builder.Property(x => x.RetryCount).HasColumnName("RetryCount").IsRequired();
         builder.Property(x => x.LastError).HasColumnName("LastError").HasMaxLength(1000);

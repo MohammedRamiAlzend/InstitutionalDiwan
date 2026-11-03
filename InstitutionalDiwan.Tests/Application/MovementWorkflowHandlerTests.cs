@@ -82,28 +82,28 @@ public sealed class MovementWorkflowHandlerTests
             new(Movements, Documents, Departments, Users, Routing(), DocumentAccess, UnitOfWork);
 
         public SendMovementCommandHandler SendMovementHandler() =>
-            new(Movements, Routing(), CustodyScope, UnitOfWork);
+            new(Movements, Routing(), CustodyScope, UnitOfWork, FakeNotificationPublisher.Instance);
 
         public ReceiveDocumentCommandHandler ReceiveHandler() =>
-            new(Movements, Documents, CustodyScope, UnitOfWork, TestClock.Instance);
+            new(Movements, Documents, CustodyScope, UnitOfWork, FakeNotificationPublisher.Instance, TestClock.Instance);
 
         public CompleteMovementStepCommandHandler CompleteHandler() =>
-            new(Movements, CustodyScope, UnitOfWork);
+            new(Movements, CustodyScope, UnitOfWork, FakeNotificationPublisher.Instance);
 
         public RejectMovementStepCommandHandler RejectHandler() =>
-            new(Movements, Routing(), CustodyScope, UnitOfWork);
+            new(Movements, Routing(), CustodyScope, UnitOfWork, FakeNotificationPublisher.Instance);
 
         public ReturnMovementToSenderCommandHandler ReturnHandler() =>
-            new(Movements, CustodyScope, UnitOfWork);
+            new(Movements, CustodyScope, UnitOfWork, FakeNotificationPublisher.Instance);
 
         public RedirectMovementCommandHandler RedirectHandler() =>
-            new(Movements, Departments, Users, Routing(), CustodyScope, UnitOfWork);
+            new(Movements, Departments, Users, Routing(), CustodyScope, UnitOfWork, FakeNotificationPublisher.Instance);
 
         public CloseMovementCommandHandler CloseHandler() =>
-            new(Movements, Documents, CustodyScope, UnitOfWork);
+            new(Movements, Documents, CustodyScope, UnitOfWork, FakeNotificationPublisher.Instance);
 
         public CancelMovementCommandHandler CancelHandler() =>
-            new(Movements, Documents, CustodyScope, UnitOfWork);
+            new(Movements, Documents, CustodyScope, UnitOfWork, FakeNotificationPublisher.Instance);
 
         public GetMovementByIdQueryHandler GetByIdHandler() =>
             new(Movements, new FakeDocumentAccessEvaluator { AllowAll = true });
@@ -122,7 +122,7 @@ public sealed class MovementWorkflowHandlerTests
     {
         var result = await new RegisterDocumentCommandHandler(
                 world.Documents, world.Numbers, world.Registries, new FakeDocumentTypeSchemaVersionRepository(),
-                new FakeDocumentAccessEvaluator { AllowAll = true }, world.UnitOfWork, TestClock.Instance)
+                new FakeDocumentAccessEvaluator { AllowAll = true }, world.UnitOfWork, FakeNotificationPublisher.Instance, TestClock.Instance)
             .Handle(new RegisterDocumentCommand(world.Document.DocumentId, world.Clerk.UserId, 2026),
                 CancellationToken.None);
 

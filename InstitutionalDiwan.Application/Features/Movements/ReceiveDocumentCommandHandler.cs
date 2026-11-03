@@ -1,3 +1,5 @@
+using InstitutionalDiwan.Application.Abstractions.Notifications;
+using InstitutionalDiwan.Domain.Entities.Notifications;
 using InstitutionalDiwan.Application.Abstractions.Authorization;
 using InstitutionalDiwan.Application.Abstractions.Messaging;
 using InstitutionalDiwan.Domain.Common;
@@ -13,6 +15,7 @@ internal sealed class ReceiveDocumentCommandHandler
     private readonly IDocumentRepository _documentRepository;
     private readonly IDepartmentScopeEvaluator _departmentScopeEvaluator;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly INotificationPublisher _notificationPublisher;
     private readonly IClock _clock;
 
     public ReceiveDocumentCommandHandler(
@@ -20,12 +23,14 @@ internal sealed class ReceiveDocumentCommandHandler
         IDocumentRepository documentRepository,
         IDepartmentScopeEvaluator departmentScopeEvaluator,
         IUnitOfWork unitOfWork,
+        INotificationPublisher notificationPublisher,
         IClock clock)
     {
         _movementRepository = movementRepository;
         _documentRepository = documentRepository;
         _departmentScopeEvaluator = departmentScopeEvaluator;
         _unitOfWork = unitOfWork;
+        _notificationPublisher = notificationPublisher;
         _clock = clock;
     }
 
@@ -64,6 +69,7 @@ internal sealed class ReceiveDocumentCommandHandler
 
         var step = movement.Steps.Single(current => current.StepNo == movement.CurrentStepNo);
 
+        await _notificationPublisher.PublishMovementAsync(NotificationType.MovementReceivedId, movement, request.UserId, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success(new MovementStepReceiptResponse(

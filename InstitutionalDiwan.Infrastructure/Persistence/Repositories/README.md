@@ -44,6 +44,8 @@ Concrete EF Core implementations of the repository interfaces declared in
 | `SavedSearchRepository.cs` | A user's personal `SavedSearch` rows: by id, listed by name, the single default, name-uniqueness and per-user count checks, `Add` and `Remove`. |
 | `DocumentRelationRepository.cs` | Module 08 relation access: by id, by document in both directions, relation types, exact-row existence, `ListTouchingAsync` for the graph, and the paged relation history. `WouldCreateCycleAsync` walks the type's edges breadth first and, on SQL Server inside a transaction, first takes an `sp_getapplock` per relation type so two opposite links cannot both pass the check. |
 | `AuditLogRepository.cs` | **Append-only** audit access: `GetLatestAsync` for the next hash link, `GetByIdAsync` for range anchoring, `ListRangeAsync` for ordered chain walks, `SearchAsync` for filtered paging, and `AddCheckpoint`/`AddIntegrityCheck` plus their latest/listing queries. No update or delete path exists. |
+| `NotificationRepository.cs` | Module 10 inbox and outbox access: paged own-inbox with type and unread filters, unread count, an owner-only recipient lookup, a set-based mark-all-read, recipients and due outbox rows for the job, and the retention purges. |
+| `NotificationRecipientDirectory.cs` | Who may be notified: active users of a department (primary department or current assignment) and the SECRET/TOP_SECRET filter (creator or valid grant only). |
 
 ## Planned repositories not yet implemented
 
@@ -91,6 +93,7 @@ Concrete EF Core implementations of the repository interfaces declared in
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-03 | Claude | Added `NotificationRepository` and `NotificationRecipientDirectory` for Module 10. |
 | 2026-11-03 | Claude | Module 08 Relations, Phase 1: added `DocumentRelationRepository`, registered in `DependencyInjection`. |
 | 2026-11-03 | Claude | Added `DocumentRepository.ListViewableIdsAsync` on the shared `VIEW` rule, for the movement queues and the department register. |
 | 2026-11-03 | Claude | Moved the SQL form of the `VIEW` rule out of `DocumentArchiveRepository` into `DocumentViewAccessQuery`, added the movement-participation path the archive search could leave out, and applied it to `DocumentRepository.ListPagedAsync`, which previously returned every document to any `DOCUMENT_VIEW` holder. |

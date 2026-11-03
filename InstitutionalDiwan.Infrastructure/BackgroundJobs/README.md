@@ -25,6 +25,14 @@ Creates a checkpoint that seals the `TerminalHash` and `RecordCount` for every l
 previous checkpoint. If no new logs exist the job logs a debug message and does nothing. The
 checkpoint also appends a self-audit entry.
 
+### `OutboxProcessorJob.cs` (Module 10)
+Polls `NOTIFICATION_OUTBOX` for pending or failed rows that are due, fans an IN_APP payload out to every recipient through `IRealtimeNotifier`, and marks the row `SENT`. A failure records an exponential backoff (`RetryBaseSeconds * 2^(n-1)`) and the row becomes a dead letter after `MaxRetries`. An unsupported channel dead-letters at once.
+
+### `NotificationRetentionJob.cs` (Module 10)
+Daily: deletes read or dismissed inbox rows older than `RecipientRetentionDays` (90), the notifications left empty, and `SENT` outbox rows older than `SentOutboxRetentionDays` (30). Unread rows and dead letters are never touched.
+
+`NotificationJobsOptions` (section `NotificationJobs`) holds `Enabled`, `StartupDelaySeconds`, `OutboxPollSeconds`, `OutboxBatchSize`, `MaxRetries`, `RetryBaseSeconds`, `RetentionIntervalHours` and the two retention periods. The notification jobs run on one instance only (see the SignalR note in the Server README).
+
 ## Configuration
 
 `AuditJobsOptions` binds the `AuditJobs` section:
@@ -69,6 +77,8 @@ then enqueues high-priority overdue `Notification` alerts (via the outbox).
 | --- | --- |
 | `AuditChainIntegrityVerificationJob` | ✅ Implemented |
 | `DailyAuditCheckpointJob` | ✅ Implemented |
+| `OutboxProcessorJob` | ✅ Implemented (verified live: hub push, outbox `SENT`) |
+| `NotificationRetentionJob` | ✅ Implemented (purge queries covered by tests) |
 | `ExpiredDelegationAndAccessCleanupJob` | ❌ Not implemented |
 | `OverdueMovementEscalationJob` | ❌ Not implemented |
 

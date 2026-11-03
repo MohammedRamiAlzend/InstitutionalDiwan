@@ -1,6 +1,6 @@
 # Infrastructure / Outbox
 
-> **Status:** Target design — **no code yet**.
+> **Status:** Implemented as `BackgroundJobs/OutboxProcessorJob.cs` (Module 10). This folder keeps the design notes; the job is documented in [`../BackgroundJobs/README.md`](../BackgroundJobs/README.md).
 
 ## Purpose
 
@@ -44,3 +44,9 @@ and `ProcessedAt` are all persisted columns.
 
 The persistence side is ready: `NOTIFICATION_OUTBOX` (with `Status`, `RetryCount`, `NextRetryAt`,
 `ProcessedAt` and the `IX_NOTIFICATION_OUTBOX_STATUS_RETRY` index) is already configured.
+
+## Change Log
+
+| Date | Author | Change |
+| --- | --- | --- |
+| 2026-11-03 | Claude | The outbox processor shipped as `BackgroundJobs/OutboxProcessorJob.cs`. Differences from this design: no domain-event dispatch (the application-level `INotificationPublisher` writes the rows in the handler transaction), and SignalR delivery goes through `IRealtimeNotifier` rather than a hub class here. |

@@ -7,6 +7,8 @@ using Scalar.AspNetCore;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
+builder.Services.AddSignalR();
+builder.Services.AddScoped<InstitutionalDiwan.Application.Abstractions.Notifications.IRealtimeNotifier, InstitutionalDiwan.Server.Hubs.SignalRRealtimeNotifier>();
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddInstitutionalOpenApi();
@@ -42,5 +44,6 @@ app.UseMiddleware<ForcedPasswordChangeMiddleware>();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHub<InstitutionalDiwan.Server.Hubs.NotificationsHub>(InstitutionalDiwan.Server.Hubs.NotificationsHub.Route);
 
 app.Run();

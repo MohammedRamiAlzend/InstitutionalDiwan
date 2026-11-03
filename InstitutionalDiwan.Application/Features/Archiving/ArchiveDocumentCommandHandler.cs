@@ -1,3 +1,5 @@
+using InstitutionalDiwan.Application.Abstractions.Notifications;
+using InstitutionalDiwan.Domain.Entities.Notifications;
 using InstitutionalDiwan.Application.Abstractions.Authorization;
 using InstitutionalDiwan.Application.Abstractions.Messaging;
 using InstitutionalDiwan.Application.Features.Correspondence.Documents;
@@ -20,6 +22,7 @@ internal sealed class ArchiveDocumentCommandHandler
     private readonly ILookupRepository _lookupRepository;
     private readonly IDocumentAccessEvaluator _documentAccessEvaluator;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly INotificationPublisher _notificationPublisher;
 
     public ArchiveDocumentCommandHandler(
         IDocumentRepository documentRepository,
@@ -27,7 +30,8 @@ internal sealed class ArchiveDocumentCommandHandler
         IDocumentArchiveRepository documentArchiveRepository,
         ILookupRepository lookupRepository,
         IDocumentAccessEvaluator documentAccessEvaluator,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        INotificationPublisher notificationPublisher)
     {
         _documentRepository = documentRepository;
         _documentMovementRepository = documentMovementRepository;
@@ -35,6 +39,7 @@ internal sealed class ArchiveDocumentCommandHandler
         _lookupRepository = lookupRepository;
         _documentAccessEvaluator = documentAccessEvaluator;
         _unitOfWork = unitOfWork;
+        _notificationPublisher = notificationPublisher;
     }
 
     public async Task<Result<DocumentResponse>> Handle(
@@ -80,6 +85,7 @@ internal sealed class ArchiveDocumentCommandHandler
             return Result.Failure<DocumentResponse>(eventResult.Error);
 
         _documentArchiveRepository.Add(eventResult.Value);
+        await _notificationPublisher.PublishDocumentAsync(NotificationType.DocumentArchivedId, document, request.UserId, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return DocumentResponse.From(document);

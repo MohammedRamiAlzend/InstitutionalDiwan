@@ -12,6 +12,11 @@ public sealed class NotificationType : LookupEntity
     public const int MovementReceivedId = 4;
     public const int MovementCompletedId = 5;
     public const int DocumentArchivedId = 6;
+    public const int MovementRejectedId = 7;
+    public const int MovementReturnedId = 8;
+    public const int MovementRedirectedId = 9;
+    public const int MovementClosedId = 10;
+    public const int MovementCancelledId = 11;
 
     public string TitleTemplateAr { get; private set; } = null!;
     public string BodyTemplateAr { get; private set; } = null!;

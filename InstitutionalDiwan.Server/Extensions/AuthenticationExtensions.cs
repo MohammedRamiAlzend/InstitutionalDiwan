@@ -48,7 +48,21 @@ public static class AuthenticationExtensions
                 };
                 options.Events = new JwtBearerEvents
                 {
-                    OnTokenValidated = context => ValidateSessionAsync(context, jwt.SecretKey)
+                    OnTokenValidated = context => ValidateSessionAsync(context, jwt.SecretKey),
+
+                    // Browsers cannot set headers on a WebSocket upgrade, so SignalR sends the token
+                    // in the query string; accept it for the hub routes only.
+                    OnMessageReceived = context =>
+                    {
+                        var accessToken = context.Request.Query["access_token"];
+                        if (!string.IsNullOrEmpty(accessToken) &&
+                            context.HttpContext.Request.Path.StartsWithSegments("/hubs"))
+                        {
+                            context.Token = accessToken;
+                        }
+
+                        return Task.CompletedTask;
+                    }
                 };
             });
 

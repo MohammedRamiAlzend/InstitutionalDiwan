@@ -1,3 +1,5 @@
+using InstitutionalDiwan.Application.Abstractions.Notifications;
+using InstitutionalDiwan.Domain.Entities.Notifications;
 using InstitutionalDiwan.Application.Abstractions.Authorization;
 using InstitutionalDiwan.Application.Abstractions.Messaging;
 using InstitutionalDiwan.Application.Features.Numbering;
@@ -20,6 +22,7 @@ internal sealed class RegisterDocumentCommandHandler
     private readonly IDocumentTypeSchemaVersionRepository _schemaVersionRepository;
     private readonly IDocumentAccessEvaluator _documentAccessEvaluator;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly INotificationPublisher _notificationPublisher;
     private readonly IClock _clock;
 
     public RegisterDocumentCommandHandler(
@@ -29,6 +32,7 @@ internal sealed class RegisterDocumentCommandHandler
         IDocumentTypeSchemaVersionRepository schemaVersionRepository,
         IDocumentAccessEvaluator documentAccessEvaluator,
         IUnitOfWork unitOfWork,
+        INotificationPublisher notificationPublisher,
         IClock clock)
     {
         _documentAccessEvaluator = documentAccessEvaluator;
@@ -37,6 +41,7 @@ internal sealed class RegisterDocumentCommandHandler
         _numberingRegistryRepository = numberingRegistryRepository;
         _schemaVersionRepository = schemaVersionRepository;
         _unitOfWork = unitOfWork;
+        _notificationPublisher = notificationPublisher;
         _clock = clock;
     }
 
@@ -125,6 +130,7 @@ internal sealed class RegisterDocumentCommandHandler
             return Result.Failure<DocumentResponse>(registerResult.Error);
 
         _documentNumberRepository.Add(numberResult.Value);
+        await _notificationPublisher.PublishDocumentAsync(NotificationType.DocumentRegisteredId, document, request.UserId, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return DocumentResponse.From(document);

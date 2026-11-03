@@ -1,3 +1,5 @@
+using InstitutionalDiwan.Application.Abstractions.Notifications;
+using InstitutionalDiwan.Domain.Entities.Notifications;
 using InstitutionalDiwan.Application.Abstractions.Authorization;
 using InstitutionalDiwan.Application.Abstractions.Messaging;
 using InstitutionalDiwan.Domain.Common;
@@ -13,17 +15,20 @@ internal sealed class SendMovementCommandHandler
     private readonly CentralDiwanRouting _centralDiwanRouting;
     private readonly IDepartmentScopeEvaluator _departmentScopeEvaluator;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly INotificationPublisher _notificationPublisher;
 
     public SendMovementCommandHandler(
         IDocumentMovementRepository movementRepository,
         CentralDiwanRouting centralDiwanRouting,
         IDepartmentScopeEvaluator departmentScopeEvaluator,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        INotificationPublisher notificationPublisher)
     {
         _movementRepository = movementRepository;
         _centralDiwanRouting = centralDiwanRouting;
         _departmentScopeEvaluator = departmentScopeEvaluator;
         _unitOfWork = unitOfWork;
+        _notificationPublisher = notificationPublisher;
     }
 
     public async Task<Result<MovementResponse>> Handle(
@@ -48,6 +53,7 @@ internal sealed class SendMovementCommandHandler
         if (send.IsFailure)
             return Result.Failure<MovementResponse>(send.Error);
 
+        await _notificationPublisher.PublishMovementAsync(NotificationType.MovementSentId, movement, request.UserId, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return MovementResponse.From(movement);

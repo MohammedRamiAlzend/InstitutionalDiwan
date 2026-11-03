@@ -2259,9 +2259,16 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
 
                     b.HasKey("NotificationId");
 
+                    b.HasIndex("CreatedAt")
+                        .HasDatabaseName("IX_NOTIFICATIONS_CREATED");
+
                     b.HasIndex("NotificationTypeId");
 
                     b.HasIndex("PriorityId");
+
+                    b.HasIndex("RelatedDocumentId");
+
+                    b.HasIndex("RelatedMovementId");
 
                     b.ToTable("NOTIFICATIONS", (string)null);
                 });
@@ -2326,7 +2333,8 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
 
                     b.Property<string>("PayloadJson")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)")
                         .HasColumnName("PayloadJson");
 
                     b.Property<DateTime?>("ProcessedAt")
@@ -2451,10 +2459,20 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
 
                     b.HasKey("RecipientId");
 
-                    b.HasIndex("NotificationId");
+                    b.HasIndex("DeliveredAt")
+                        .HasDatabaseName("IX_NOTIFICATION_RECIPIENTS_DELIVERED");
+
+                    b.HasIndex("DepartmentId");
+
+                    b.HasIndex("NotificationId", "UserId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_NOTIFICATION_RECIPIENTS_NOTIFICATION_USER");
 
                     b.HasIndex("UserId", "IsRead")
                         .HasDatabaseName("IX_NOTIFICATION_RECIPIENTS_USER_READ");
+
+                    b.HasIndex("UserId", "IsDismissed", "DeliveredAt")
+                        .HasDatabaseName("IX_NOTIFICATION_RECIPIENTS_INBOX");
 
                     b.ToTable("NOTIFICATION_RECIPIENTS", (string)null);
                 });
@@ -3598,6 +3616,16 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                         .HasForeignKey("PriorityId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("InstitutionalDiwan.Domain.Entities.Correspondence.Document", null)
+                        .WithMany()
+                        .HasForeignKey("RelatedDocumentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("InstitutionalDiwan.Domain.Entities.Movements.DocumentMovement", null)
+                        .WithMany()
+                        .HasForeignKey("RelatedMovementId")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Notifications.NotificationOutbox", b =>
@@ -3623,10 +3651,21 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Notifications.NotificationRecipient", b =>
                 {
+                    b.HasOne("InstitutionalDiwan.Domain.Entities.Organization.Department", null)
+                        .WithMany()
+                        .HasForeignKey("DepartmentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("InstitutionalDiwan.Domain.Entities.Notifications.Notification", null)
                         .WithMany("Recipients")
                         .HasForeignKey("NotificationId")
                         .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("InstitutionalDiwan.Domain.Entities.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 

@@ -255,6 +255,12 @@ public static class DomainErrors
         public static readonly Error BodyEmpty = Error.Validation("Notifications.BodyEmpty", "Notification body is required.");
         public static readonly Error RecipientDuplicate = Error.Conflict("Notifications.RecipientDuplicate", "User is already added as a recipient for this notification.");
         public static readonly Error ChannelEmpty = Error.Validation("Notifications.ChannelEmpty", "Notification delivery channel is required.");
+        public static readonly Error TitleTooLong = Error.Validation("Notifications.TitleTooLong", "A notification title cannot exceed 300 characters.");
+        public static readonly Error BodyTooLong = Error.Validation("Notifications.BodyTooLong", "A notification body cannot exceed 2000 characters.");
+        public static readonly Error ActionUrlInvalid = Error.Validation("Notifications.ActionUrlInvalid", "A notification action URL must be a relative application path of at most 500 characters.");
+        public static readonly Error PayloadTooLong = Error.Validation("Notifications.PayloadTooLong", "A notification outbox payload cannot exceed 4000 characters.");
+        public static readonly Error TooManyRecipients = Error.Conflict("Notifications.TooManyRecipients", "A notification cannot have more than 500 recipients.");
+        public static readonly Error RecipientNotFound = Error.NotFound("Notifications.RecipientNotFound", "The notification was not found.");
     }
 
     public static class DocumentFields

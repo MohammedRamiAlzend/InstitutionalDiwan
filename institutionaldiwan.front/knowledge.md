@@ -80,7 +80,7 @@
 | Backend | External API Modules 01–06 and 09 implemented, including `identity-options` picker reads and live JWT session validation | Frontend consumes relative `/api/...` URLs; refresh endpoint counts when Module 03 work starts |
 | Implemented | 07 Archiving | `/archive` search + saved searches, archive/unarchive and history on `/documents/:id` |
 | Implemented | 08 Relations | «الروابط» tab on `/documents/:id`: links grid, Mermaid/tree graph, history, add/remove |
-| Modules without API | 10 Notifications | Do **not** call it; domain/lookups exist only |
+| Backend only | 10 Notifications | API and hub exist (see "Notifications" below); the front end has no bell, page or SignalR client yet |
 
 ## Commands
 
@@ -505,12 +505,40 @@ module as slices land; never render the raw `detail` to the user.
 Branch UI on `.code`, never on HTTP status alone. Exception: audit integrity **command** returns
 **200** with `isValid: false` — treat as a successful RPC whose payload reports failure.
 
+## Notifications (Module 10) — `/api/notifications` and `/hubs/notifications`
+
+Every route only needs a valid token (no permission code) and is scoped to the caller. Another user's
+row answers **404** `Notifications.RecipientNotFound`, exactly like a missing one.
+
+| Method | Route | Notes |
+| --- | --- | --- |
+| `GET` | `/api/notifications` | Query `unreadOnly`, `typeId`, `page`, `pageSize` (≤100). Paged `{ items, page, pageSize, totalCount, … }`, newest first, dismissed rows hidden. Item: `recipientId, notificationId, typeId, titleAr, bodyAr, priorityId, relatedDocumentId, relatedMovementId, actionUrl, isRead, readAt, createdAt`. |
+| `GET` | `/api/notifications/unread-count` | `{ count }`. Not recorded in the audit trail, so it is safe to poll. |
+| `POST` | `/api/notifications/{recipientId}/read` | Idempotent. Use `recipientId`, not `notificationId`. |
+| `POST` | `/api/notifications/read-all` | `{ count }` rows changed. |
+| `POST` | `/api/notifications/{recipientId}/dismiss` | Idempotent; the row leaves the list and the count. |
+
+`actionUrl` is a relative app path (`/documents/{id}`), validated on the server (starts with one `/`, no scheme or host).
+
+Notification types: 1 document created, 2 registered, 3 movement sent, 4 received, 5 completed, 6 archived,
+7 rejected, 8 returned, 9 redirected, 10 closed, 11 movement cancelled. Priorities 1 normal, 2 high, 3 urgent. IN_APP only.
+
+**Who is told:** a sent or redirected movement goes to its assignee, else to the users of the destination
+department; every other movement event goes to the source department and the movement creator; registration and
+archive go to the document creator. The actor is never notified, and a SECRET or TOP_SECRET document is only
+announced to its creator and grant holders.
+
+**Hub** `/hubs/notifications` (SignalR, JSON): connect with the token as the `access_token` query string (the Vite
+proxy already forwards `/hubs`). The server pushes `notificationReceived` with
+`{ recipientId, notificationId, typeId, titleAr, bodyAr, priorityId, actionUrl, createdAt }` to the user's sessions
+and closes the connection when the token expires. The push is only an alert: the database is the source of truth, so
+reload the inbox and the count on every alert and on every reconnect. Delivery goes through an outbox (about 5 s
+latency, retried with backoff, dead-lettered after 5 failures).
+
 ## Not yet implemented on the backend (front end must not call)
 
 | Module | What exists | What is missing |
 | --- | --- | --- |
-| 10 — Notifications | Domain entities + lookups + EF config | Same; transactional outbox processor empty |
-| SignalR hubs | Planned | Not wired in `Program.cs` |
 | CORS | — | Not configured (development will rely on the Vite proxy once it is added) |
 
 ## UI acceptance (minimum per interactive screen)

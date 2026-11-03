@@ -39,7 +39,8 @@ public sealed class AuditActionMiddleware
         if (descriptor is null ||
             !context.Request.Path.StartsWithSegments("/api") ||
             HttpMethods.IsOptions(context.Request.Method) ||
-            !userContext.IsAuthenticated)
+            !userContext.IsAuthenticated ||
+            descriptor.MethodInfo?.IsDefined(typeof(SkipActionAuditAttribute), inherit: false) == true)
         {
             await _next(context);
             return;

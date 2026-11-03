@@ -5,8 +5,17 @@
 > (`IDepartmentScopeEvaluator`, `IDocumentAccessEvaluator`), `Storage/` (`IFileStorageService`,
 > `IFileSignatureValidator`, `StoredFile`), `Time/` (`IDateTimeProvider`), `Context/`
 > (`IRequestContext`), `Persistence/` (`ITransactionManager`), and `Audit/`
-> (`IAuditActionRecorder`, `AuditActionRecord`) are live; the data/caching contracts are still
+> (`IAuditActionRecorder`, `AuditActionRecord`) and `Notifications/` (`INotificationPublisher`,
+> `INotificationRecipientDirectory`, `IRealtimeNotifier`, `NotificationPush`, `NotificationAudience`) are live; the data/caching contracts are still
 > target design.
+
+## Notifications (Module 10, implemented)
+
+| Contract | Purpose |
+| --- | --- |
+| `INotificationPublisher` | Stages a notification (inbox rows plus one IN_APP outbox row) inside the caller's unit of work; never saves and never throws, so a notification problem cannot undo a movement. |
+| `INotificationRecipientDirectory` | Active users of a department (primary department or current assignment) and the confidentiality filter: SECRET/TOP_SECRET documents are only announced to the creator and grant holders. |
+| `IRealtimeNotifier` / `NotificationPush` | Delivers the realtime alert to a user's open sessions; implemented by the Server with SignalR. |
 
 ## Purpose
 

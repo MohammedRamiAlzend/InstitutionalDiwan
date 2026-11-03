@@ -99,7 +99,7 @@ public sealed class DepartmentRegisterNumberingTests
                 CancellationToken.None);
 
         public ReceiveDocumentCommandHandler ReceiveHandler() =>
-            new(Movements, Documents, CustodyScope, UnitOfWork, TestClock.Instance);
+            new(Movements, Documents, CustodyScope, UnitOfWork, FakeNotificationPublisher.Instance, TestClock.Instance);
 
         public DocumentNumber? DepartmentEntry(Guid departmentId) =>
             Numbers.DocumentNumbers.SingleOrDefault(number =>

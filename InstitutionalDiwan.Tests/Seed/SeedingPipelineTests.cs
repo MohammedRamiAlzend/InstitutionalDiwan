@@ -95,7 +95,7 @@ public sealed class SeedingPipelineTests
         Assert.Equal(3, await db.ArchiveLocations.CountAsync());
         Assert.Equal(8, await db.AuditActionTypes.CountAsync());
         Assert.Equal(14, await db.AuditEntityTypes.CountAsync());
-        Assert.Equal(6, await db.NotificationTypes.CountAsync());
+        Assert.Equal(11, await db.NotificationTypes.CountAsync());
         Assert.Equal(3, await db.NotificationPriorities.CountAsync());
         Assert.Equal(3, await db.NotificationChannels.CountAsync());
         Assert.Equal(4, await db.NotificationOutboxStatuses.CountAsync());
@@ -141,7 +141,7 @@ public sealed class SeedingPipelineTests
         Assert.Equal(5, await db.DocumentTypes.CountAsync());
         Assert.Equal(5, await db.DocumentStatusTypes.CountAsync());
         Assert.Equal(4, await db.UserScopeTypes.CountAsync());
-        Assert.Equal(6, await db.NotificationTypes.CountAsync());
+        Assert.Equal(11, await db.NotificationTypes.CountAsync());
         Assert.Equal(17, await db.Permissions.CountAsync());
         Assert.Equal(2, await db.Roles.CountAsync());
         Assert.Equal(20, await db.RolePermissions.CountAsync());
