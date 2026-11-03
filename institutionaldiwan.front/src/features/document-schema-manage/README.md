@@ -28,10 +28,11 @@ Write side of the per-document-type field schemas: define a field, start/delete 
 
 | Item | State |
 | --- | --- |
-| All writes | ✅ Implemented (build and lint pass; draft, add field, publish verified in-browser; delete draft, edit and remove not exercised in-browser) |
+| All writes | ✅ Implemented and verified in-browser (draft, add, edit, remove, publish, delete draft) |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-03 | Claude | Fixed the edit dialog opening empty: the editor now mounts it per target field. |
 | 2026-11-03 | Claude | Implemented per plan `plans/document-dynamic-fields-frontend.md`. |

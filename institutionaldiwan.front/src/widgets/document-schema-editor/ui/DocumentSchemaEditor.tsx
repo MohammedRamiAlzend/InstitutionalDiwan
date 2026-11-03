@@ -347,12 +347,16 @@ export function DocumentSchemaEditor() {
           </GuideRegion>
         </>
       )}
-      <FieldSettingsDialog
-        version={dialog?.type === 'add' || dialog?.type === 'edit' ? (version ?? null) : null}
-        field={dialog?.type === 'edit' ? dialog.field : undefined}
-        definedFields={definedFieldsQuery.data ?? []}
-        onOpenChange={closeDialog}
-      />
+      {(dialog?.type === 'add' || dialog?.type === 'edit') && version && (
+        // Mounted per target so the form starts from that field's settings.
+        <FieldSettingsDialog
+          key={dialog.type === 'edit' ? dialog.field.documentFieldId : 'add'}
+          version={version}
+          field={dialog.type === 'edit' ? dialog.field : undefined}
+          definedFields={definedFieldsQuery.data ?? []}
+          onOpenChange={closeDialog}
+        />
+      )}
       <RemoveFieldDialog
         version={version ?? null}
         field={dialog?.type === 'remove' ? dialog.field : null}
