@@ -12,6 +12,7 @@ public static class Permissions
     public const string DocumentEdit = "DOCUMENT_EDIT";
     public const string DocumentDelete = "DOCUMENT_DELETE";
     public const string DocumentApprove = "DOCUMENT_APPROVE";
+    public const string DocumentArchive = "DOCUMENT_ARCHIVE";
     public const string NumberingView = "NUMBERING_VIEW";
     public const string NumberingManage = "NUMBERING_MANAGE";
     public const string DepartmentManage = "DEPARTMENT_MANAGE";
@@ -27,7 +28,7 @@ public static class Permissions
     /// <summary>Every known permission — used to register one authorization policy per permission.</summary>
     public static readonly IReadOnlyCollection<string> All = new[]
     {
-        DocumentView, DocumentCreate, DocumentEdit, DocumentDelete, DocumentApprove,
+        DocumentView, DocumentCreate, DocumentEdit, DocumentDelete, DocumentApprove, DocumentArchive,
         NumberingView, NumberingManage, DepartmentManage, RoleManage, UserManage, EmployeeManage,
         AccessGrantManage, ReportView, LookupManage, AuditView, AuditManage,
     };

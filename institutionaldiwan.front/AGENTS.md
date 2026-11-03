@@ -113,8 +113,9 @@ ships light and dark themes from one token file — see the non-negotiable secti
   `isValid: false` when the chain is broken — read the body, do not treat it as a transport error.
 - **Permissions are exact strings.** The codes in `src/shared/config/permissions.ts` must match
   the API's `InstitutionalDiwan.Domain/Common/Permissions.cs` exactly (the API is a separate
-  project). There are **16** of them:
+  project). There are **17** of them:
   `DOCUMENT_VIEW`, `DOCUMENT_CREATE`, `DOCUMENT_EDIT`, `DOCUMENT_DELETE`, `DOCUMENT_APPROVE`,
+  `DOCUMENT_ARCHIVE`,
   `NUMBERING_VIEW`, `NUMBERING_MANAGE`, `DEPARTMENT_MANAGE`, `ROLE_MANAGE`, `USER_MANAGE`,
   `EMPLOYEE_MANAGE`, `ACCESS_GRANT_MANAGE`, `REPORT_VIEW`, `LOOKUP_MANAGE`,
   `AUDIT_VIEW`, `AUDIT_MANAGE`.
@@ -193,6 +194,7 @@ export const Permissions = {
   DocumentEdit: 'DOCUMENT_EDIT',
   DocumentDelete: 'DOCUMENT_DELETE',
   DocumentApprove: 'DOCUMENT_APPROVE',
+  DocumentArchive: 'DOCUMENT_ARCHIVE',
   NumberingView: 'NUMBERING_VIEW',
   NumberingManage: 'NUMBERING_MANAGE',
   DepartmentManage: 'DEPARTMENT_MANAGE',

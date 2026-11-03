@@ -2,6 +2,10 @@ namespace InstitutionalDiwan.Domain.Entities.Archiving;
 
 public sealed class SavedSearch : AggregateRoot<Guid>
 {
+    public const int MaxNameLength = 150;
+    public const int MaxCriteriaLength = 4000;
+    public const int MaxPerUser = 50;
+
     public Guid SavedSearchId
     {
         get => Id;
@@ -27,18 +31,16 @@ public sealed class SavedSearch : AggregateRoot<Guid>
         bool isDefault = false,
         DateTime? utcNow = null)
     {
-        if (string.IsNullOrWhiteSpace(name))
-            return Result.Failure<SavedSearch>(DomainErrors.Archiving.SearchNameEmpty);
-
-        if (string.IsNullOrWhiteSpace(criteriaJson))
-            return Result.Failure<SavedSearch>(DomainErrors.Archiving.CriteriaJsonEmpty);
+        var valid = Validate(name, criteriaJson);
+        if (valid.IsFailure)
+            return Result.Failure<SavedSearch>(valid.Error);
 
         var savedSearch = new SavedSearch
         {
             SavedSearchId = Guid.NewGuid(),
             UserId = userId,
-            Name = name.Trim(),
-            CriteriaJson = criteriaJson.Trim(),
+            Name = name!.Trim(),
+            CriteriaJson = criteriaJson!.Trim(),
             IsDefault = isDefault,
             CreatedAt = utcNow ?? DateTime.UtcNow
         };
@@ -48,16 +50,41 @@ public sealed class SavedSearch : AggregateRoot<Guid>
 
     public Result UpdateCriteria(string? name, string? criteriaJson, bool isDefault, DateTime? utcNow = null)
     {
+        var valid = Validate(name, criteriaJson);
+        if (valid.IsFailure)
+            return valid;
+
+        Name = name!.Trim();
+        CriteriaJson = criteriaJson!.Trim();
+        IsDefault = isDefault;
+        UpdatedAt = utcNow ?? DateTime.UtcNow;
+        return Result.Success();
+    }
+
+    /// <summary>Drops the default flag when another of the user's searches becomes their default.</summary>
+    public void ClearDefault(DateTime? utcNow = null)
+    {
+        if (!IsDefault)
+            return;
+
+        IsDefault = false;
+        UpdatedAt = utcNow ?? DateTime.UtcNow;
+    }
+
+    private static Result Validate(string? name, string? criteriaJson)
+    {
         if (string.IsNullOrWhiteSpace(name))
             return Result.Failure(DomainErrors.Archiving.SearchNameEmpty);
+
+        if (name.Trim().Length > MaxNameLength)
+            return Result.Failure(DomainErrors.Archiving.SearchNameTooLong);
 
         if (string.IsNullOrWhiteSpace(criteriaJson))
             return Result.Failure(DomainErrors.Archiving.CriteriaJsonEmpty);
 
-        Name = name.Trim();
-        CriteriaJson = criteriaJson.Trim();
-        IsDefault = isDefault;
-        UpdatedAt = utcNow ?? DateTime.UtcNow;
+        if (criteriaJson.Trim().Length > MaxCriteriaLength)
+            return Result.Failure(DomainErrors.Archiving.CriteriaInvalid);
+
         return Result.Success();
     }
 }

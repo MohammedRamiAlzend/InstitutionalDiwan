@@ -1,6 +1,6 @@
 /**
  * Canonical permission codes — must match the API's
- * `InstitutionalDiwan.Domain/Common/Permissions.cs` exactly (16 codes).
+ * `InstitutionalDiwan.Domain/Common/Permissions.cs` exactly (17 codes).
  */
 export const Permissions = {
   DocumentView: 'DOCUMENT_VIEW',
@@ -8,6 +8,7 @@ export const Permissions = {
   DocumentEdit: 'DOCUMENT_EDIT',
   DocumentDelete: 'DOCUMENT_DELETE',
   DocumentApprove: 'DOCUMENT_APPROVE',
+  DocumentArchive: 'DOCUMENT_ARCHIVE',
   NumberingView: 'NUMBERING_VIEW',
   NumberingManage: 'NUMBERING_MANAGE',
   DepartmentManage: 'DEPARTMENT_MANAGE',

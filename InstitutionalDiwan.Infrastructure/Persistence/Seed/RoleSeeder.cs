@@ -18,7 +18,7 @@ public sealed class RoleSeeder : ISeeder
     private static readonly string[] AdminPermissions =
     {
         Permissions.DocumentView, Permissions.DocumentCreate, Permissions.DocumentEdit,
-        Permissions.DocumentDelete, Permissions.DocumentApprove,
+        Permissions.DocumentDelete, Permissions.DocumentApprove, Permissions.DocumentArchive,
         Permissions.NumberingView, Permissions.NumberingManage,
         Permissions.DepartmentManage, Permissions.RoleManage, Permissions.UserManage,
         Permissions.EmployeeManage, Permissions.AccessGrantManage,

@@ -114,6 +114,8 @@ public static class DomainErrors
         public static readonly Error CannotArchiveCanceled = Error.Conflict("Correspondence.CannotArchiveCanceled", "Canceled documents cannot be archived.");
         public static readonly Error HasActiveMovements = Error.Conflict("Correspondence.HasActiveMovements", "Cannot archive or cancel a document while it has active movements.");
         public static readonly Error NotArchived = Error.Conflict("Correspondence.NotArchived", "Document is not currently archived.");
+        public static readonly Error OnlyRegisteredArchivable = Error.Conflict("Correspondence.OnlyRegisteredArchivable", "Only documents in REGISTERED status can be archived.");
+        public static readonly Error DocumentArchived = Error.Conflict("Correspondence.DocumentArchived", "Archived documents cannot be changed; unarchive the document first.");
         public static readonly Error AlreadyCanceled = Error.Conflict("Correspondence.AlreadyCanceled", "Document is already canceled.");
         public static readonly Error CannotCancelArchived = Error.Conflict("Correspondence.CannotCancelArchived", "Archived documents must be unarchived before cancellation.");
         public static readonly Error CancelReasonEmpty = Error.Validation("Correspondence.CancelReasonEmpty", "A cancellation reason is required.");
@@ -217,6 +219,14 @@ public static class DomainErrors
         public static readonly Error EventTypeInvalid = Error.Validation("Archiving.EventTypeInvalid", "Archive event type must be ARCHIVED, UNARCHIVED, or RETAINED.");
         public static readonly Error SearchNameEmpty = Error.Validation("Archiving.SearchNameEmpty", "Saved search name is required.");
         public static readonly Error CriteriaJsonEmpty = Error.Validation("Archiving.CriteriaJsonEmpty", "Saved search criteria JSON is required.");
+        public static readonly Error LocationNotFound = Error.Validation("Archiving.LocationNotFound", "The specified archive location does not exist or is inactive.");
+        public static readonly Error UnarchiveReasonEmpty = Error.Validation("Archiving.UnarchiveReasonEmpty", "A reason is required to unarchive a document.");
+        public static readonly Error ReasonTooLong = Error.Validation("Archiving.ReasonTooLong", "An archive reason cannot exceed 500 characters.");
+        public static readonly Error SearchNotFound = Error.NotFound("Archiving.SearchNotFound", "The saved search was not found.");
+        public static readonly Error SearchNameTooLong = Error.Validation("Archiving.SearchNameTooLong", "A saved search name cannot exceed 150 characters.");
+        public static readonly Error SearchNameTaken = Error.Conflict("Archiving.SearchNameTaken", "You already have a saved search with this name.");
+        public static readonly Error SearchLimitReached = Error.Conflict("Archiving.SearchLimitReached", "You have reached the maximum of 50 saved searches.");
+        public static readonly Error CriteriaInvalid = Error.Validation("Archiving.CriteriaInvalid", "The saved search criteria are not valid or exceed 4000 characters.");
     }
 
     public static class Audit

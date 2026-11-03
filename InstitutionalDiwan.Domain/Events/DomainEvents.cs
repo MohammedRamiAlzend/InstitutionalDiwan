@@ -18,7 +18,7 @@ public sealed record DocumentAccessRevokedEvent(Guid GrantId, Guid DocumentId, G
 // Module 03 & 07: Correspondence & Archiving
 public sealed record DocumentCreatedEvent(Guid DocumentId, int DocumentTypeId, int DirectionId, Guid OwningDepartmentId, Guid CreatedByUserId) : DomainEventBase;
 public sealed record DocumentRegisteredEvent(Guid DocumentId, Guid OfficialNumberId, string OfficialNumberText, DateTime RegistrationDate) : DomainEventBase;
-public sealed record DocumentArchivedEvent(Guid DocumentId, int PreviousStatusId, Guid ActorUserId, string? Reason) : DomainEventBase;
+public sealed record DocumentArchivedEvent(Guid DocumentId, int PreviousStatusId, Guid ActorUserId, string? Reason, int ArchiveLocationId) : DomainEventBase;
 public sealed record DocumentUnarchivedEvent(Guid DocumentId, int RestoredStatusId, Guid ActorUserId, string? Reason) : DomainEventBase;
 public sealed record DocumentCanceledEvent(Guid DocumentId, int PreviousStatusId, Guid ActorUserId, string Reason) : DomainEventBase;
 public sealed record DocumentParticipantAddedEvent(Guid DocumentId, Guid ParticipantId, int RoleId) : DomainEventBase;

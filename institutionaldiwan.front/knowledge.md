@@ -101,7 +101,7 @@
   `useMutation`, `ui/` forms/dialogs).
 - Arabic-first UI: `dir="rtl"` on the document root, `dir="ltr"` on codes, ids, and official numbers.
 
-## Canonical permissions (16)
+## Canonical permissions (17)
 
 Must match the external API's `InstitutionalDiwan.Domain/Common/Permissions.cs` exactly. Front-end
 source of truth: `src/shared/config/permissions.ts`.
@@ -113,6 +113,7 @@ source of truth: `src/shared/config/permissions.ts`.
 | `DOCUMENT_EDIT` | Update/cancel documents, participants, movements actions, attachment writes |
 | `DOCUMENT_DELETE` | Reserved |
 | `DOCUMENT_APPROVE` | Reserved |
+| `DOCUMENT_ARCHIVE` | Reserved until Module 07 endpoints exist (admin only) |
 | `NUMBERING_VIEW` / `NUMBERING_MANAGE` | Registries, official numbers, department register |
 | `DEPARTMENT_MANAGE` | Departments + institution settings |
 | `ROLE_MANAGE` | Roles + permission catalog |
@@ -343,7 +344,7 @@ exposes full contact data, role permissions, or management rights:
 
 ### Roles & permissions — `/api/roles`, `/api/permissions`
 
-`GET /api/permissions` — `ROLE_MANAGE`. Returns the flat 16-code catalog with `code`, `nameAr`,
+`GET /api/permissions` — `ROLE_MANAGE`. Returns the flat 17-code catalog with `code`, `nameAr`,
 `nameEn`, `moduleName`, and `description`; the SPA groups it by `moduleName` through
 `permissionModuleLabel`.
 Roles: `GET /api/roles` (plain array), `GET /api/roles/{id}`, `POST /api/roles`

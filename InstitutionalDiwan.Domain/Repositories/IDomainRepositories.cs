@@ -229,6 +229,57 @@ public interface IFileStorageProviderRepository
     Task<FileStorageProvider?> GetDefaultAsync(CancellationToken cancellationToken = default);
 }
 
+/// <summary>
+/// Filter applied to <see cref="IDocumentArchiveRepository.SearchAsync"/>. <paramref name="CallerUserId"/>
+/// and <paramref name="AccessibleDepartmentIds"/> restrict the result to what the caller may view; a null
+/// set means an institution-wide scope. The remaining values are optional narrowing filters.
+/// </summary>
+public sealed record ArchiveSearchFilter(
+    Guid CallerUserId,
+    IReadOnlyCollection<Guid>? AccessibleDepartmentIds,
+    Guid? OwningDepartmentId = null,
+    int? DocumentTypeId = null,
+    int? DirectionId = null,
+    int? ArchiveLocationId = null,
+    DateTime? ArchivedFromUtc = null,
+    DateTime? ArchivedToUtc = null);
+
+/// <summary>An archived document together with the details of the event that archived it.</summary>
+public sealed record ArchivedDocumentRow(
+    Document Document,
+    DateTime ArchivedAt,
+    Guid ArchivedByUserId,
+    int? ArchiveLocationId);
+
+public interface IDocumentArchiveRepository
+{
+    /// <summary>Every archive event of a document, newest first.</summary>
+    Task<IReadOnlyList<DocumentArchiveEvent>> ListByDocumentAsync(Guid documentId, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// A page of archived documents the caller may view, each with its latest archive event. Access is
+    /// part of the query, so paging counters never include a document the caller cannot see.
+    /// <see cref="PageRequest.SortBy"/> accepts <c>archivedAt</c>, <c>title</c>, and <c>officialNumber</c>;
+    /// the default is most recently archived first.
+    /// </summary>
+    Task<PagedList<ArchivedDocumentRow>> SearchAsync(
+        ArchiveSearchFilter filter,
+        PageRequest page,
+        CancellationToken cancellationToken = default);
+    void Add(DocumentArchiveEvent archiveEvent);
+}
+
+public interface ISavedSearchRepository
+{
+    Task<SavedSearch?> GetByIdAsync(Guid savedSearchId, CancellationToken cancellationToken = default);
+    /// <summary>The user's saved searches ordered by name.</summary>
+    Task<IReadOnlyList<SavedSearch>> ListByUserAsync(Guid userId, CancellationToken cancellationToken = default);
+    Task<SavedSearch?> GetDefaultAsync(Guid userId, CancellationToken cancellationToken = default);
+    Task<bool> ExistsByNameAsync(Guid userId, string name, Guid? excludingSavedSearchId = null, CancellationToken cancellationToken = default);
+    Task<int> CountByUserAsync(Guid userId, CancellationToken cancellationToken = default);
+    void Add(SavedSearch savedSearch);
+    void Remove(SavedSearch savedSearch);
+}
+
 public interface IDocumentRelationRepository
 {
     Task<DocumentRelation?> GetByIdAsync(Guid relationId, CancellationToken cancellationToken = default);

@@ -70,6 +70,8 @@ A single static catalog nested by module (`DomainErrors.Department`, `.Identity`
 `.InstitutionSetting`, `.Lookup`, `.DocumentFields`). Each entry is a strongly-typed `Error` with a stable code such as
 `Correspondence.OnlyDraftEditable` so the API can produce deterministic ProblemDetails.
 
+The `.Archiving` group covers Module 07: `SearchNotFound` (NotFound), `SearchNameTaken` / `SearchLimitReached` (Conflict), and the validation errors `EventTypeInvalid`, `LocationNotFound`, `UnarchiveReasonEmpty`, `ReasonTooLong`, `SearchNameEmpty`, `SearchNameTooLong`, `CriteriaJsonEmpty`, and `CriteriaInvalid`. `Correspondence.OnlyRegisteredArchivable` and `Correspondence.DocumentArchived` (both Conflict) guard the document itself: only a `REGISTERED` document can be archived, and an archived document rejects changes until it is unarchived.
+
 `Department.CentralDiwanProtected` (Conflict / 409) prevents department handlers from reparenting or
 deactivating the currently designated Central Diwan; transfer the designation through institution
 settings first. This cross-aggregate guard uses the settings repository, while reactivation reuses
@@ -123,11 +125,11 @@ deterministically.
 
 ### `Repositories/IDomainRepositories.cs`
 
-23 pure repository contracts: `IDepartmentRepository`, `IDepartmentTypeRepository`, `IUserRepository`,
+25 pure repository contracts: `IDepartmentRepository`, `IDepartmentTypeRepository`, `IUserRepository`,
 `IRoleRepository`, `IEmployeeRepository`, `IDocumentAccessGrantRepository`, `IPermissionRepository`,
 `IDocumentRepository`, `IDocumentTypeRepository`, `IDocumentFieldRepository`, `IDocumentTypeSchemaVersionRepository`, `INumberingRegistryRepository`,
 `IDocumentNumberRepository`, `IDocumentMovementRepository`, `IDocumentFileRepository`,
-`IDocumentFileTypeRepository`, `IFileStorageProviderRepository`, `IDocumentRelationRepository`,
+`IDocumentFileTypeRepository`, `IFileStorageProviderRepository`, `IDocumentArchiveRepository`, `ISavedSearchRepository`, `IDocumentRelationRepository`,
 `IAuditLogRepository`, `INotificationRepository`, and `ILookupRepository`. They expose `GetByIdAsync`, a few targeted lookups (`HasActiveChildrenAsync`,
 `GetActiveForScopeAsync`, `HasActiveMovementsAsync`, `GetLatestAsync` for audit hash chaining), and
 `Add`/`Remove` — no `SaveChanges` (that is `IUnitOfWork`).
@@ -354,6 +356,7 @@ them, while listing, relabelling and (de)activation keep working.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-03 | Claude | Module 07 Archiving, Phase 0: `Document.Archive` accepts only `REGISTERED` documents and requires a location, `Unarchive` requires a reason, `EnsureNotArchived` freezes `AddParticipant` and `AttachReplacementNumber`; `DocumentArchivedEvent` carries the location; `SavedSearch` and `DocumentArchiveEvent` enforce their column limits and `SavedSearch.ClearDefault` was added; added `Permissions.DocumentArchive`, the `IDocumentArchiveRepository` / `ISavedSearchRepository` contracts with `ArchiveSearchFilter` / `ArchivedDocumentRow`, and new `Archiving.*` errors. |
 | 2026-11-02 | Claude | Dynamic fields, Phase 2: `IDocumentTypeSchemaVersionRepository.Remove` (discard a draft) and `AuditEntityType.DocumentSchemaVersionId` (14) for auditing schema changes. |
 | 2026-11-02 | Claude | Dynamic fields hardening found while mapping persistence: a pattern error message is capped at 500 characters (`DocumentFields.RegexMessageTooLong`) and numbers or range limits must stay below 1e20 so they fit the stored `decimal(28,8)` column. |
 | 2026-11-02 | Claude | Dynamic document fields, Phase 0: added `DocumentField`, `DocumentFieldDataType`, `DocumentTypeSchemaVersion` (+ `Status` enum), `DocumentTypeSchemaVersionField` and `DocumentFieldValue` entities, the `DocumentFieldSettings`/`DocumentFieldValueInput` value objects, the `DomainErrors.DocumentFields` group, the `DocumentSchemaVersionPublished` event and the `IDocumentFieldRepository`/`IDocumentTypeSchemaVersionRepository` contracts. `Document` gained `SchemaVersionId`, `FieldValues`, `SetFieldValues`, `EnsureRequiredFieldsComplete` and an optional trailing `schemaVersionId` on `CreateDraft`, so existing callers are unchanged. Persistence, handlers and API follow in later phases. |

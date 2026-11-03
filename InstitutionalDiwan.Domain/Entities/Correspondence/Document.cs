@@ -202,6 +202,10 @@ public sealed class Document : AggregateRoot<Guid>
     {
         var now = utcNow ?? DateTime.UtcNow;
 
+        var notArchived = EnsureNotArchived();
+        if (notArchived.IsFailure)
+            return Result.Failure<DocumentParticipant>(notArchived.Error);
+
         if (target.Kind == ParticipantTargetKind.External &&
             _participants.Any(p => p.ExternalOrganizationId.HasValue))
         {
@@ -250,6 +254,10 @@ public sealed class Document : AggregateRoot<Guid>
     public Result AttachReplacementNumber(Guid replacementNumberId, OfficialNumberValue replacementText, DateTime? utcNow = null)
     {
         var now = utcNow ?? DateTime.UtcNow;
+        var notArchived = EnsureNotArchived();
+        if (notArchived.IsFailure)
+            return notArchived;
+
         if (ActiveOfficialNumberId is null)
             return Result.Failure(DomainErrors.Numbering.NumberNotFound);
 
@@ -329,7 +337,22 @@ public sealed class Document : AggregateRoot<Guid>
         return Result.Success();
     }
 
-    public Result Archive(Guid actorUserId, bool hasActiveMovements, string? reason = null, DateTime? utcNow = null)
+    /// <summary>Fails when the document is archived; every write outside the archive lifecycle runs this first.</summary>
+    public Result EnsureNotArchived() =>
+        CurrentStatusId == DocumentStatusType.ArchivedId
+            ? Result.Failure(DomainErrors.Correspondence.DocumentArchived)
+            : Result.Success();
+
+    /// <summary>
+    /// Moves a registered document with no active movement into the archive at
+    /// <paramref name="archiveLocationId"/>. The caller records the matching <c>DocumentArchiveEvent</c>.
+    /// </summary>
+    public Result Archive(
+        Guid actorUserId,
+        bool hasActiveMovements,
+        int archiveLocationId,
+        string? reason = null,
+        DateTime? utcNow = null)
     {
         var now = utcNow ?? DateTime.UtcNow;
         if (CurrentStatusId == DocumentStatusType.ArchivedId)
@@ -341,22 +364,32 @@ public sealed class Document : AggregateRoot<Guid>
         if (hasActiveMovements)
             return Result.Failure(DomainErrors.Correspondence.HasActiveMovements);
 
+        if (CurrentStatusId != DocumentStatusType.RegisteredId)
+            return Result.Failure(DomainErrors.Correspondence.OnlyRegisteredArchivable);
+
+        if (archiveLocationId <= 0)
+            return Result.Failure(DomainErrors.Archiving.LocationNotFound);
+
         var previous = CurrentStatusId;
         StatusBeforeArchiveId = previous;
         CurrentStatusId = DocumentStatusType.ArchivedId;
         UpdatedAt = now;
 
         AppendStatusHistory(previous, DocumentStatusType.ArchivedId, actorUserId, reason, now);
-        RaiseDomainEvent(new DocumentArchivedEvent(DocumentId, previous, actorUserId, reason));
+        RaiseDomainEvent(new DocumentArchivedEvent(DocumentId, previous, actorUserId, reason, archiveLocationId));
         return Result.Success();
     }
 
-    public Result Unarchive(Guid actorUserId, string? reason = null, DateTime? utcNow = null)
+    public Result Unarchive(Guid actorUserId, string? reason, DateTime? utcNow = null)
     {
         var now = utcNow ?? DateTime.UtcNow;
         if (CurrentStatusId != DocumentStatusType.ArchivedId)
             return Result.Failure(DomainErrors.Correspondence.NotArchived);
 
+        if (string.IsNullOrWhiteSpace(reason))
+            return Result.Failure(DomainErrors.Archiving.UnarchiveReasonEmpty);
+
+        reason = reason.Trim();
         var restored = StatusBeforeArchiveId ?? DocumentStatusType.RegisteredId;
         StatusBeforeArchiveId = null;
         CurrentStatusId = restored;

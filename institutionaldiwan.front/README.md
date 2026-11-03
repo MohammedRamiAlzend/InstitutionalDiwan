@@ -208,7 +208,7 @@ Full endpoint tables: [`knowledge.md`](knowledge.md).
 | `src/main.tsx` | Vite entry: mounts the `app` layer root and the global stylesheet. |
 | `src/assets/` | Vite template images (`hero.png`, `react.svg`, `vite.svg`); replaced by the institution's own artwork. |
 | `public/` | Vite template favicon and icon sprite. |
-| `AGENTS.md` | Agent rules, desktop-grade interaction contract, 16 permissions, first-slice TypeScript contracts, UI state checklist. |
+| `AGENTS.md` | Agent rules, desktop-grade interaction contract, 17 permissions, first-slice TypeScript contracts, UI state checklist. |
 | `DEPLOYMENT.md` | Publishing guide, external API host/IP configuration, and step-by-step endpoint wiring. |
 | `knowledge.md` | As-is/to-be, live endpoints (incl. Attachments + Audit), lookups, errors, build order. |
 | `CHANGELOG.md` | Creation notes for this project. |

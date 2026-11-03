@@ -6,6 +6,8 @@ namespace InstitutionalDiwan.Domain.Entities.Archiving;
 /// </summary>
 public sealed class DocumentArchiveEvent : Entity<Guid>
 {
+    public const int MaxReasonLength = 500;
+
     public Guid ArchiveEventId
     {
         get => Id;
@@ -46,6 +48,9 @@ public sealed class DocumentArchiveEvent : Entity<Guid>
 
         if (previousStatusId <= 0 || newStatusId <= 0)
             return Result.Failure<DocumentArchiveEvent>(DomainErrors.Archiving.EventTypeInvalid);
+
+        if (reason?.Trim().Length > MaxReasonLength)
+            return Result.Failure<DocumentArchiveEvent>(DomainErrors.Archiving.ReasonTooLong);
 
         var ev = new DocumentArchiveEvent
         {

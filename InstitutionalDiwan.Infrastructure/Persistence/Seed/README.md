@@ -4,7 +4,7 @@ Ordered, environment-aware database seeding.
 
 > **Status:** Implemented — 33 reference-catalog seeders, the institution-settings singleton, a
 > 15-department demo organization tree (Development/Staging), 28 demo employees attached to that
-> tree (Development/Staging), 16 permissions, system roles with 19 grants, and demo users.
+> tree (Development/Staging), 17 permissions, system roles with 20 grants, and demo users.
 
 ## How it works
 
@@ -29,8 +29,8 @@ Development, Production, etc.
 | 95 | `InstitutionSettingSeeder` | All | The singleton `InstitutionSetting` row (automatic numbering, yearly reset) plus the `CENTRAL_DIWAN` root department it designates; runs after the numbering lookups and department types it references. |
 | 96 | `DepartmentSeeder` | Development, Staging | A demo organization tree of 15 departments across four levels: the `CENTRAL_DIWAN` root (reused from Order 95), four directorates, seven departments, and three sections (e.g. `DIR-ADMIN` → `DEP-HR` → `SEC-PAYROLL`), so the departments screen has a realistic hierarchy to display. Idempotent by `Code`. |
 | 97 | `EmployeeSeeder` | Development, Staging | 28 demo employees attached by department code — the Central Diwan office, every directorate, department, and section — so a department card can list the people who belong to it. Includes Arabic/English names, employee numbers (`EMP-0001`…), job titles, and a few contact details. Idempotent by `EmployeeNumber`. |
-| 100 | `PermissionSeeder` | All | Permission catalog — the 16 codes in `Permissions.All`, including `LOOKUP_MANAGE`, `NUMBERING_MANAGE`, `AUDIT_VIEW`, and `AUDIT_MANAGE`. |
-| 200 | `RoleSeeder` | All | `ADMIN` / `USER` roles plus their permission grants (ADMIN receives all 16, USER the three document permissions; 19 grants total). |
+| 100 | `PermissionSeeder` | All | Permission catalog — the 17 codes in `Permissions.All`, including `DOCUMENT_ARCHIVE`, `LOOKUP_MANAGE`, `NUMBERING_MANAGE`, `AUDIT_VIEW`, and `AUDIT_MANAGE`. |
+| 200 | `RoleSeeder` | All | `ADMIN` / `USER` roles plus their permission grants (ADMIN receives all 17, USER the three document permissions; 20 grants total). |
 | 300 | `UserSeeder` | Development, Staging | Demo accounts `admin` / `user` (password `12345678`) with role assignments. |
 
 Order matters: the lookup catalogs are seeded before permissions/roles so business tables can
@@ -49,6 +49,7 @@ Production requires opting in by adding `SeedingEnvironments.Production` to
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-03 | Claude | Added `DOCUMENT_ARCHIVE` to the catalog (16 → 17) and granted it to `ADMIN` only (19 → 20 grants), because `USER` already holds `DOCUMENT_EDIT` and archiving must stay restricted. Both seeders are idempotent, so existing databases receive it on the next startup. |
 | 2026-11-02 | Claude | The audit entity-type seed gained a 14th row, `DocumentSchemaVersion` (مخطط حقول الوثيقة), used by the dynamic-fields audit rows. |
 | 2026-10-28 | agent | Added `EmployeeSeeder` (Order 97, Development/Staging): 28 demo employees spread across the seeded tree (including the Central Diwan office), idempotent by `EmployeeNumber`, so the department detail card can list real people. |
 | 2026-10-28 | agent | Added `DepartmentSeeder` (Order 96, Development/Staging): a 15-department demo organization tree across four levels (Central Diwan → 4 directorates → 7 departments → 3 sections) so the departments screen has a realistic hierarchy; reuses the Central Diwan root, idempotent by `Code`, gated away from Production. |

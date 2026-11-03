@@ -1,4 +1,5 @@
 ﻿global using InstitutionalDiwan.Domain.Common;
+global using InstitutionalDiwan.Domain.Entities.Archiving;
 global using InstitutionalDiwan.Domain.Entities.Attachments;
 global using InstitutionalDiwan.Domain.Entities.Audit;
 global using InstitutionalDiwan.Domain.Entities.Correspondence;
