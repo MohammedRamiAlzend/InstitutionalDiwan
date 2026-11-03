@@ -45,6 +45,7 @@ error handling, and form/dialog UI.
 | `attachment-upload/` | Module 06 `POST /api/documents/{id}/files`, `POST /api/document-files/{id}/versions`, `POST /api/document-files/{id}/archive` | Magic bytes + SHA-256; MANAGE access; show checksum after upload | ✅ Upload + versions + archive + verify (Module 06 Phases 3–4) |
 | `audit-manage/` | `POST /api/audit-logs/checkpoints`, `POST .../integrity-checks` | `AUDIT_MANAGE`; integrity failure is **200 + `isValid: false`** rendered in-dialog; empty checkpoint range → Arabic `Audit.NothingToCheckpoint` / `Audit.ChainBroken` | ✅ Implemented (Module 09) |
 | `archive-manage/` | `POST /api/documents/{id}/archive`, `/unarchive`, `/api/saved-searches` (POST/PUT/DELETE) | `DOCUMENT_ARCHIVE` + `MANAGE` access for archive transitions; saved searches need only `DOCUMENT_VIEW` and are private |
+| `document-relation-manage/` | `POST /api/documents/{id}/relations`, `DELETE /api/documents/{id}/relations/{relationId}` | `DOCUMENT_EDIT`; document not archived or cancelled |
 
 ## Conventions
 
@@ -73,6 +74,7 @@ error handling, and form/dialog UI.
 | `external-organization-manage/` | ✅ Implemented (Phase 7: create/edit dialog over the `organization-types` lookup, duplicate-code Arabic error, staged deactivate/activate via `ConfirmDialog`). |
 | `audit-manage/` | ✅ Implemented (Module 09: checkpoint button/dialog with optional target log, integrity-check dialog with optional range and in-place pass/fail panel). |
 | `archive-manage/` | ✅ Implemented (Module 07: archive dialog with location + optional reason, unarchive dialog with mandatory reason, save/rename/delete saved searches). |
+| `document-relation-manage/` | ✅ Implemented (Module 08: add-link dialog with document picker, type and notes; remove-link dialog with mandatory reason). |
 | `attachment-upload/` | ✅ Implemented for Module 06 Phases 3–4 (atomic upload, version upload, archive confirmation, versions list with per-version download, checksum verify with three named digests). Browser-verified in Module 06 Phase 5 across manager, `USER`, and read-only roles. |
 | Final integration verification | Pending; Module 02 audit fixes still in progress. |
 
@@ -80,6 +82,7 @@ error handling, and form/dialog UI.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-03 | agent | Module 08: implemented `document-relation-manage` — create/remove link mutations, schemas, document picker and two dialogs. |
 | 2026-11-03 | agent | Module 07: implemented `archive-manage` — archive and unarchive commands, saved-search create/update/delete, their Zod schemas, and the four dialogs; transitions invalidate the document, registry, archive-search and history keys. |
 | 2026-11-01 | agent | Module 06 Phase 4: `attachment-upload/` grew `uploadVersion`, `archiveFile` and their mutations, the shared `fileRejection` rules with `buildUploadVersionSchema(fileTypeId)`, the `useLocalChecksum` hook, and four dialogs — version upload with the next-version number and an Arabic archived refusal, the versions list with per-version download, the archive confirmation, and checksum verify. |
 | 2026-11-01 | agent | Module 06 Phase 3: `attachment-upload/` moved from docs to code — `uploadInitial`, `useUploadInitialMutation`, the zod pre-check schema against `shared/config/attachmentLimits`, and `UploadAttachmentDialog` (type-driven `accept`, local SHA-256, upload progress, post-upload checksum comparison). |

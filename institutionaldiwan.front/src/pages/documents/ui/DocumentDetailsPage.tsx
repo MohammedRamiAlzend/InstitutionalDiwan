@@ -34,6 +34,7 @@ import {
   PageHeader,
   Skeleton,
 } from '@/shared/ui'
+import { DocumentRelationsPanel } from '@/widgets/document-relations-panel'
 import { DocumentArchiveTab } from './DocumentArchiveTab'
 import { DocumentFilesTab } from './DocumentFilesTab'
 import { DocumentGrantsTab } from './DocumentGrantsTab'
@@ -49,6 +50,7 @@ const TABS = [
   { key: 'movements', label: 'الحركات', available: true },
   { key: 'files', label: 'الملفات', available: true },
   { key: 'grants', label: 'التصاريح', available: true },
+  { key: 'relations', label: 'الروابط', available: true },
   { key: 'archive', label: 'سجل الأرشفة', available: true },
 ] as const
 
@@ -60,6 +62,7 @@ type AvailableTabKey =
   | 'movements'
   | 'files'
   | 'grants'
+  | 'relations'
   | 'archive'
 
 /** Unknown, not-yet-available, or permission-hidden tabs fall back to the details tab. */
@@ -73,6 +76,7 @@ function resolveTab(
   if (raw === 'movements') return 'movements'
   if (raw === 'files') return 'files'
   if (raw === 'grants' && canManageGrants) return 'grants'
+  if (raw === 'relations') return 'relations'
   if (raw === 'archive') return 'archive'
   return 'details'
 }
@@ -366,6 +370,22 @@ function DocumentDetailsView() {
       {activeTab === 'grants' && canManageGrants && (
         <GuideRegion id="document-details.tab-grants">
           <DocumentGrantsTab documentId={document.documentId} />
+        </GuideRegion>
+      )}
+      {activeTab === 'relations' && (
+        <GuideRegion id="document-details.tab-relations">
+          <DocumentRelationsPanel
+            documentId={document.documentId}
+            documentTitle={document.title}
+            canManage={canEdit && !isCanceled && !isArchived}
+            frozenReason={
+              canEdit && (isCanceled || isArchived)
+                ? isArchived
+                  ? 'الوثيقة مؤرشفة؛ ألغِ أرشفتها لإضافة الروابط أو إزالتها.'
+                  : 'الوثيقة ملغاة؛ لا يمكن تعديل روابطها.'
+                : undefined
+            }
+          />
         </GuideRegion>
       )}
       {activeTab === 'archive' && (

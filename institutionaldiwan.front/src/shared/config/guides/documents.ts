@@ -137,6 +137,51 @@ export const DOCUMENT_DETAILS_GUIDE_ENTRIES: readonly GuideEntry[] = [
     title: 'سجل الأرشفة',
     body: 'كل عمليات أرشفة الوثيقة وإلغاء أرشفتها مرتبة من الأحدث: من نفّذها ومتى وفي أي موقع ولأي سبب.',
   },
+  {
+    id: 'document-details.tab-relations',
+    title: 'روابط الوثيقة',
+    body: 'الوثائق المرتبطة بهذه الوثيقة: ردود وروابط مرجعية ووثائق تلغيها أو نسخ عنها. يمكنك استعراضها في جدول أو مخطط أو شجرة، ورؤية سجل كل ما أُضيف وأُزيل.',
+    note: 'إضافة الرابط وإزالته تتطلب صلاحية تعديل الوثيقة، ولا يتاحان لوثيقة مؤرشفة أو ملغاة.',
+  },
+  {
+    id: 'document-details.relations-grid',
+    title: 'جدول الروابط',
+    body: 'كل صف رابط بين هذه الوثيقة ووثيقة أخرى، مقروءًا من جهة هذه الوثيقة. افتح الوثيقة المقابلة بنقرتين، أو أزل الرابط من قائمة الصف.',
+    note: 'إزالة الرابط تتطلب سببًا يُحفظ في سجل الروابط.',
+  },
+  {
+    id: 'document-details.relations-types',
+    title: 'نوع الرابط',
+    body: 'ردّ على: جواب على وثيقة سابقة. مرتبط: صلة متبادلة بين وثيقتين. يلغي: تحلّ هذه الوثيقة محل الأخرى. نسخة عن: وثيقة مكررة من أخرى.',
+    note: '«يلغي» توثيق معلوماتي فقط ولا يغيّر حالة أي من الوثيقتين.',
+  },
+  {
+    id: 'document-details.relations-direction',
+    title: 'اتجاه الرابط',
+    body: 'الاتجاه صادر إذا كانت هذه الوثيقة هي التي أنشأت الرابط نحو الأخرى، ووارد إذا كان العكس، ومتبادل للروابط المرجعية.',
+  },
+  {
+    id: 'document-details.relations-graph',
+    title: 'مخطط الروابط',
+    body: 'يعرض الوثائق المتصلة بهذه الوثيقة مباشرة أو عبر وثائق أخرى بحسب العمق المختار (من 1 إلى 3). انقر وثيقة في المخطط لفتحها.',
+    note: 'يتوقف العرض عند 100 وثيقة، وتُنبَّه عند ذلك.',
+  },
+  {
+    id: 'document-details.relations-hidden',
+    title: 'روابط مخفية',
+    body: 'روابط إلى وثائق لا تملك صلاحية الاطلاع عليها. يُعرض عددها فقط، ولا يظهر عنوان الوثيقة ولا رقمها.',
+  },
+  {
+    id: 'document-details.relations-events',
+    title: 'سجل الروابط',
+    body: 'كل إضافة وإزالة لرابط، حتى الروابط المزالة، مرتبة من الأحدث مع المنفّذ والسبب والوقت.',
+  },
+  {
+    id: 'document-details.relations-target',
+    title: 'الوثيقة المراد ربطها',
+    body: 'ابحث بالعنوان أو الرقم الرسمي واختر الوثيقة المقابلة. تظهر لك الوثائق التي تملك صلاحية الاطلاع عليها فقط.',
+    note: 'لا يمكن ربط الوثيقة بنفسها ولا بوثيقة ملغاة.',
+  },
 ]
 
 export const DOCUMENT_DETAILS_GUIDE: PageGuide = {
@@ -158,5 +203,13 @@ export const DOCUMENT_DETAILS_GUIDE: PageGuide = {
     'document-details.tab-files',
     'document-details.tab-grants',
     'document-details.tab-archive',
+    'document-details.tab-relations',
+    'document-details.relations-grid',
+    'document-details.relations-types',
+    'document-details.relations-direction',
+    'document-details.relations-graph',
+    'document-details.relations-hidden',
+    'document-details.relations-events',
+    'document-details.relations-target',
   ],
 }

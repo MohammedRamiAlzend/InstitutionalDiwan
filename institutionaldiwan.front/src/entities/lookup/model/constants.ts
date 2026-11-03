@@ -1,6 +1,8 @@
 import {
   ARCHIVE_EVENT_TYPE,
   ARCHIVE_LOCATION,
+  DOCUMENT_RELATION_TYPE,
+  RELATION_ACTION_TYPE,
   ASSIGNMENT_TYPE,
   AUDIT_ACTION_TYPE,
   AUDIT_ENTITY_TYPE,
@@ -27,6 +29,8 @@ import type { LookupCatalogEntry } from './types'
 export {
   ARCHIVE_EVENT_TYPE,
   ARCHIVE_LOCATION,
+  DOCUMENT_RELATION_TYPE,
+  RELATION_ACTION_TYPE,
   ASSIGNMENT_TYPE,
   AUDIT_ACTION_TYPE,
   AUDIT_ENTITY_TYPE,
@@ -74,6 +78,8 @@ export const LOOKUP_SLUGS = {
   AuditEntityTypes: 'audit-entity-types',
   ArchiveEventTypes: 'archive-event-types',
   ArchiveLocations: 'archive-locations',
+  DocumentRelationTypes: 'document-relation-types',
+  RelationActionTypes: 'relation-action-types',
 } as const
 
 export type LookupSlug = (typeof LOOKUP_SLUGS)[keyof typeof LOOKUP_SLUGS]
@@ -246,6 +252,17 @@ export const LOOKUP_FALLBACKS: Record<string, readonly LookupCatalogEntry[]> = {
     { id: ARCHIVE_LOCATION.CentralRegistry, desc: 'Central registry', descAr: 'الديوان المركزي' },
     { id: ARCHIVE_LOCATION.PhysicalArchive, desc: 'Physical archive', descAr: 'الأرشيف الورقي' },
     { id: ARCHIVE_LOCATION.ElectronicArchive, desc: 'Electronic archive', descAr: 'الأرشيف الإلكتروني' },
+  ],
+  'document-relation-types': [
+    { id: DOCUMENT_RELATION_TYPE.ReplyTo, desc: 'Reply to', descAr: 'ردّ على' },
+    { id: DOCUMENT_RELATION_TYPE.Related, desc: 'Related', descAr: 'مرتبط' },
+    { id: DOCUMENT_RELATION_TYPE.Supersedes, desc: 'Supersedes', descAr: 'يلغي' },
+    { id: DOCUMENT_RELATION_TYPE.DuplicateOf, desc: 'Duplicate of', descAr: 'نسخة عن' },
+  ],
+  'relation-action-types': [
+    { id: RELATION_ACTION_TYPE.Created, desc: 'Created', descAr: 'إنشاء' },
+    { id: RELATION_ACTION_TYPE.Updated, desc: 'Updated', descAr: 'تحديث' },
+    { id: RELATION_ACTION_TYPE.Removed, desc: 'Removed', descAr: 'حذف' },
   ],
 }
 

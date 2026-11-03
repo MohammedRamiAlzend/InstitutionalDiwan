@@ -205,3 +205,18 @@ export const ARCHIVE_LOCATION = {
   PhysicalArchive: 2,
   ElectronicArchive: 3,
 } as const
+
+/** `document-relation-types` — mirrors `DocumentRelationType` in the Domain. */
+export const DOCUMENT_RELATION_TYPE = {
+  ReplyTo: 1,
+  Related: 2,
+  Supersedes: 3,
+  DuplicateOf: 4,
+} as const
+
+/** `relation-action-types` — mirrors `RelationActionType` in the Domain. */
+export const RELATION_ACTION_TYPE = {
+  Created: 1,
+  Updated: 2,
+  Removed: 3,
+} as const

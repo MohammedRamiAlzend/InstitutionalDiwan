@@ -68,6 +68,8 @@ Used by documents, users, employees, external organizations, audit logs, and int
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-03 | agent | Module 08: added the Arabic `Relations.*` error messages. |
+| 2026-11-03 | agent | Module 08: added the Arabic `Relations.*` error messages. |
 | 2026-11-03 | agent | Module 07: added the Arabic `Archiving.*`, `Correspondence.OnlyRegisteredArchivable`, `Correspondence.DocumentArchived` and `Common.ConcurrencyConflict` messages. |
 | 2026-11-01 | agent | Module 06 Phase 1: added `uploadForm` and `downloadBlob` to `httpClient.ts`, added `toApiErrorAsync` to `problemDetails.ts`, and made the response interceptor `async` so it can await that normalizer. A `responseType: 'blob'` request leaves the `ProblemDetails` body as an unread `Blob`, which the old sync path treated as a truthy object with no `title` and degraded every domain failure — archived file, unknown version, no download access — into the generic «حدث خطأ غير متوقع». |
 | 2026-11-01 | agent | Module 06 Phase 0: added the `Attachments.*` Arabic catalog (22 codes: title, file type, empty/oversized file, disallowed extension, signature mismatch, archived file, version, storage provider, checksum) so the upload, versions, archive, and verify screens never surface the English server `detail`. No client change yet — multipart and blob helpers stay pending for Phase 1. |

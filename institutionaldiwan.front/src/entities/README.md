@@ -36,6 +36,7 @@ read-only presentational UI. Entities never perform write mutations.
 | `movement/` | `MovementQueueItemResponse`, `MovementResponse` (steps/events) (`GET /api/movements/inbox`, `/outbox`, `/by-document/{documentId}`, `/{movementId}`) | `useMovementQueue`, `useMovementInbox`, `useMovementOutbox`, `useDocumentMovements`, `useMovementById`, `getMovementActions`/`hasActiveMovement` rules, `MovementStatusBadge`, `MovementStepStatusBadge`, `MovementTypeBadge` | ✅ Reads, transition rules, and badges implemented (Phase 6). |
 | `audit-log/` | `AuditLogResponse`, `AuditIntegrityCheckResponse` (paged `/audit-logs`, `/audit-logs/integrity-checks`) | `useAuditLogs`, `useAuditIntegrityReports`, `AUDIT_MODULES`/`auditModuleLabel`, `HashChainPill`, `IntegrityStatusBadge` | ✅ Reads, Arabic module labels, and badges implemented; writes live in `features/audit-manage`. |
 | `archive/` | `ArchivedDocumentResponse`, `DocumentArchiveEventResponse`, `SavedSearchResponse` (`GET /api/archive/documents`, `/api/documents/{id}/archive-events`, `/api/saved-searches`) | `useArchivedDocuments`, `useDocumentArchiveEvents`, `useSavedSearches`, `archiveKeys`, `ArchiveEventTypeBadge` |
+| `document-relation/` | `DocumentRelationResponse`, `RelationGraphResponse`, `DocumentRelationEventResponse` (`GET /api/documents/{id}/relations`, `/graph`, `/events`) | `useDocumentRelations`, `useRelationGraph`, `useRelationEvents`, `relationGraphToMermaid`, `RelationTypeBadge` |
 
 ## Conventions
 
@@ -65,12 +66,14 @@ read-only presentational UI. Entities never perform write mutations.
 | `movement/` | ✅ Queue/detail reads, mirrored transition rules (`getMovementActions`, `hasActiveMovement`, `translateMovementNote`), and three badges. |
 | `audit-log/` | ✅ Paged log and integrity-report reads, query keys/hooks (five-minute `staleTime`, no focus refetch), module labels, hash pill, integrity badge. |
 | `archive/` | ✅ Archive search, archive history and saved-search reads, query keys/hooks, saved-search criteria helpers, event-type badge (Module 07). |
+| `document-relation/` | ✅ Links, graph and history reads, query keys/hooks, direction phrases, Mermaid/tree builders, badges (Module 08). |
 | `document-file/` | ✅ File/version/checksum types, `documentFileApi` (document-scoped list, blob download, on-demand verify), query keys/hooks (verify disabled until an explicit action), `ChecksumBadge`, and `FileArchivedBadge`; mounted by `widgets/document-attachments-panel`. |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-03 | agent | Module 08: implemented the `document-relation` read slice. |
 | 2026-11-03 | agent | Module 07: implemented the `archive` read slice — archive search, per-document archive history and saved-search reads, `archiveKeys`, criteria (de)serialisation for saved searches, and the event-type badge. |
 | 2026-11-01 | agent | Module 06 Phase 2: added `documentFileApi.download(fileId, versionId?)`, the blob read behind the files grid's «تنزيل الإصدار الحالي»; the slice now has a consumer, `widgets/document-attachments-panel` on the details page's «الملفات» tab. |
 | 2026-11-01 | agent | Module 06 Phase 0: implemented the `document-file` read slice — file/version/checksum types mirroring `DocumentFileResponse`/`DocumentFileVersionResponse`/`AttachmentChecksumResponse`, `documentFileApi` on the document-scoped list route plus the on-demand verify read, `documentFileKeys` with `byDocument`/`verify`, `useDocumentFiles` (30-second `staleTime`, previous-page placeholder), `useVerifyChecksum` (disabled until the caller opts in, because it reads the stored bytes), and `ChecksumBadge`/`FileArchivedBadge`. No page consumes it yet — the `files` tab stays disabled until Phase 2. |

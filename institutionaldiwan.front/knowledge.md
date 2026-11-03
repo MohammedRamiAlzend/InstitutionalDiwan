@@ -79,7 +79,7 @@
 | Dev configuration | ✅ `.env.example` committed; `.env` is git-ignored | — |
 | Backend | External API Modules 01–06 and 09 implemented, including `identity-options` picker reads and live JWT session validation | Frontend consumes relative `/api/...` URLs; refresh endpoint counts when Module 03 work starts |
 | Implemented | 07 Archiving | `/archive` search + saved searches, archive/unarchive and history on `/documents/:id` |
-| Backend only | 08 Relations | API exists (below) but the SPA has no screen for it yet |
+| Implemented | 08 Relations | «الروابط» tab on `/documents/:id`: links grid, Mermaid/tree graph, history, add/remove |
 | Modules without API | 10 Notifications | Do **not** call it; domain/lookups exist only |
 
 ## Commands
@@ -452,7 +452,7 @@ Error codes (Arabic entries exist in `shared/api/errorMessages.ts`):
 `Archiving.*`, `Correspondence.OnlyRegisteredArchivable`, `Correspondence.DocumentArchived`,
 `Common.ConcurrencyConflict`.
 
-### Relations (Module 08) — backend only, not yet in the SPA
+### Relations (Module 08)
 
 - `GET /api/documents/{id}/relations` — `DOCUMENT_VIEW` + `VIEW` access. `{ items, hiddenRelationCount }`; each item
   has `direction` (`Outgoing`, `Incoming`, `Symmetric`), `type` (`isSymmetric`, `preventCycles`) and a
