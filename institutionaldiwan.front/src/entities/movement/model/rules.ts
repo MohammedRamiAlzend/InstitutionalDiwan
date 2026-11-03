@@ -16,17 +16,60 @@ export function currentMovementStep(
   return movement.steps.find((step) => step.stepNo === movement.currentStepNo)
 }
 
+/** Which side of the current step the caller's department scope covers. */
+export interface MovementCustody {
+  sender: boolean
+  receiver: boolean
+}
+
+export function getMovementCustody(
+  step: { fromDepartmentId: string; toDepartmentId: string } | undefined,
+  coversDepartment: (departmentId: string) => boolean,
+): MovementCustody {
+  return {
+    sender: step !== undefined && coversDepartment(step.fromDepartmentId),
+    receiver: step !== undefined && coversDepartment(step.toDepartmentId),
+  }
+}
+
+/** Mirrors the API's `MovementCustody` checks: a movement not sent yet is still the sender's. */
+function custodyAllows(
+  action: MovementAction,
+  statusId: number,
+  custody: MovementCustody,
+): boolean {
+  switch (action) {
+    case 'send':
+    case 'cancel':
+      return custody.sender
+    case 'redirect':
+      return statusId === MOVEMENT_STATUS.Draft ? custody.sender : custody.receiver
+    case 'close':
+      return custody.sender || custody.receiver
+    default:
+      return custody.receiver
+  }
+}
+
 /**
- * The actions the current status allows. It mirrors the domain transitions; the API stays the
- * final judge and answers `Movements.InvalidStatusTransition` when they disagree.
+ * The actions the current status allows on the caller's side of the current step. It mirrors the
+ * domain transitions and custody rules; the API stays the final judge and answers
+ * `Movements.InvalidStatusTransition` or `Movements.DepartmentOutOfScope` when they disagree.
  */
 export function getMovementActions(
   statusId: number,
   stepStatusId: number,
   canEdit: boolean,
+  custody: MovementCustody,
 ): MovementAction[] {
   if (!canEdit || isMovementTerminal(statusId)) return []
 
+  return actionsForStatus(statusId, stepStatusId).filter((action) =>
+    custodyAllows(action, statusId, custody),
+  )
+}
+
+function actionsForStatus(statusId: number, stepStatusId: number): MovementAction[] {
   switch (statusId) {
     case MOVEMENT_STATUS.Draft:
       return ['send', 'redirect', 'cancel']

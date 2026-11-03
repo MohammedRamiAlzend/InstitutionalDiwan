@@ -129,6 +129,7 @@ plain JSON array.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-03 | Claude | Documented `accessibleDepartmentIds` on `GET /api/auth/me`. |
 | 2026-11-03 | Claude | Documented the custody rules on the movement writes and the document access and scope rules on the number writes, with their 403 responses. |
 | 2026-11-03 | Claude | Documented `VIEW` access on the movement and number reads, hidden content in the inbox, outbox and register rows, and the scope check on the department register. |
 | 2026-11-03 | Claude | Documented document-level access on the document writes: 403 with `DOWNLOAD` required on update, register, participants and field values, and `MANAGE` on cancel. |

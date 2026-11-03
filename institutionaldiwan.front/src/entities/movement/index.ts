@@ -18,9 +18,11 @@ export {
 export {
   currentMovementStep,
   getMovementActions,
+  getMovementCustody,
   hasActiveMovement,
   isMovementTerminal,
   translateMovementNote,
+  type MovementCustody,
 } from './model/rules'
 export { MovementStatusBadge } from './ui/MovementStatusBadge'
 export { MovementStepStatusBadge } from './ui/MovementStepStatusBadge'

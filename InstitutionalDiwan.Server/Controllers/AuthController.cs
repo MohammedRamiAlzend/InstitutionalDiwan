@@ -99,14 +99,16 @@ public sealed class AuthController : ControllerBase
     /// <remarks>
     /// Reads the identity the host projects from the current JWT access token — user id, username,
     /// role codes, and permission codes — through the application layer's
-    /// <c>GetUserProfileQuery</c>. Requires a valid Bearer token in the Authorization header.
+    /// <c>GetUserProfileQuery</c>, plus the departments the caller's live scope reaches
+    /// (<c>accessibleDepartmentIds</c>, null for an institution-wide scope). Requires a valid Bearer
+    /// token in the Authorization header.
     /// </remarks>
     /// <param name="cancellationToken">Request cancellation token (optional).</param>
     /// <response code="200">The caller's profile returned as <c>UserProfileResponse</c>.</response>
     /// <response code="401">The token is missing, expired, or invalid.</response>
     [HttpGet("me")]
     [EndpointSummary("Returns the authenticated caller's identity, roles, and permissions from the token.")]
-    [EndpointDescription("Returns the authenticated caller's identity, roles, and permissions from the token. Reads the identity the host projects from the current JWT access token — user id, username, role codes, and permission codes. Requires a valid Bearer token in the Authorization header. Responses: 200 (The caller's profile returned as UserProfileResponse.), 401 (The token is missing, expired, or invalid.)")]
+    [EndpointDescription("Returns the authenticated caller's identity, roles, and permissions from the token. Reads the identity the host projects from the current JWT access token — user id, username, role codes, and permission codes — plus the departments the caller's live scope reaches (accessibleDepartmentIds, null for an institution-wide scope). Requires a valid Bearer token in the Authorization header. Responses: 200 (The caller's profile returned as UserProfileResponse.), 401 (The token is missing, expired, or invalid.)")]
     [Authorize]
     [Produces("application/json", Type = typeof(UserProfileResponse))]
     [ProducesResponseType<UserProfileResponse>(StatusCodes.Status200OK)]

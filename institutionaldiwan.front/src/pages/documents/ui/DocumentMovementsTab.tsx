@@ -3,6 +3,7 @@ import { Building2, GitBranch, RefreshCw, Route } from 'lucide-react'
 import {
   currentMovementStep,
   getMovementActions,
+  getMovementCustody,
   hasActiveMovement,
   isMovementTerminal,
   MovementStatusBadge,
@@ -15,6 +16,7 @@ import {
   type MovementStepResponse,
 } from '@/entities/movement'
 import { DOCUMENT_STATUS, LOOKUP_SLUGS, LookupLabel } from '@/entities/lookup'
+import { useCoversDepartment } from '@/entities/user'
 import {
   MovementActionButtons,
   MovementActionDialog,
@@ -33,7 +35,7 @@ interface DocumentMovementsTabProps {
   departmentNames: Map<string, string>
 }
 
-/** Movements tab: routing timeline, step history, and the actions the status allows. */
+/** Movements tab: routing timeline, step history, and the actions open to the caller's side. */
 export function DocumentMovementsTab({
   documentId,
   documentTitle,
@@ -181,8 +183,14 @@ function MovementCard({
   departmentNameOf,
   onAction,
 }: MovementCardProps) {
+  const coversDepartment = useCoversDepartment()
   const step = currentMovementStep(movement)
-  const actions = getMovementActions(movement.statusId, step?.stepStatusId ?? 0, canEdit)
+  const actions = getMovementActions(
+    movement.statusId,
+    step?.stepStatusId ?? 0,
+    canEdit,
+    getMovementCustody(step, coversDepartment),
+  )
   const terminal = isMovementTerminal(movement.statusId)
 
   return (

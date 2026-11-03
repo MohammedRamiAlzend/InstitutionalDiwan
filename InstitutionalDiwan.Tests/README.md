@@ -139,6 +139,7 @@ indexes) runs against a private SQLite in-memory database through `Support/TestC
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-03 | Claude | Added reachable-department cases (department scope, institution-wide scope) to `GetUserProfileQueryHandlerTests`, and registered the evaluator in the `JwtSecurityPipelineTests` host, whose `/api/auth/me` now needs it. `dotnet test` now 681. |
 | 2026-11-03 | Claude | Added custody cases to `MovementWorkflowHandlerTests` (each action from the sender, the receiver and an unrelated department, and custody following a rejection) and write cases to `OfficialNumberLifecycleHandlerTests` and `DepartmentRegisterNumberingTests`. `dotnet test` now 679. |
 | 2026-11-03 | Claude | Added access cases for the movement and number reads, the inbox row and the department register to `MovementWorkflowHandlerTests`, `OfficialNumberLifecycleHandlerTests` and `DepartmentRegisterNumberingTests`, and held `ListViewableIdsAsync` equal to the evaluator in `DocumentViewAccessQueryTests`. `dotnet test` now 669. |
 | 2026-11-03 | Claude | Added `Application/DocumentWriteAccessHandlerTests.cs` for document-level access on writes; `FakeDocumentAccessEvaluator` gained `DownloadableDocuments` and `AllowAll`. `dotnet test` now 664. |

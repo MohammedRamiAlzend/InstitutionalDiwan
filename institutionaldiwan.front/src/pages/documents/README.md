@@ -87,8 +87,9 @@ atomic first upload).
 | إلغاء الرقم | number active, caller holds `NUMBERING_MANAGE` |
 | تبويب الحركات | caller holds `DOCUMENT_VIEW` (shown, not disabled, otherwise) |
 | فتح حركة | movements tab open, status = REGISTERED, no active movement, caller holds `DOCUMENT_EDIT` |
-| إرسال / إعادة توجيه / إغلاق / إلغاء الحركة | movement status allows it (`getMovementActions`) and caller holds `DOCUMENT_EDIT` |
-| استلام / إكمال / رفض / إرجاع | movement/step status allows it and caller holds `DOCUMENT_EDIT`; receive still needs the destination department's register number |
+| إرسال / إعادة توجيه / إغلاق / إلغاء الحركة | movement status allows it (`getMovementActions`), caller holds `DOCUMENT_EDIT`, and caller's scope covers the side of the current step: sender for send, cancel and a draft's redirect; receiver for redirect once sent; either for close |
+| استلام / إكمال / رفض / إرجاع | movement/step status allows it, caller holds `DOCUMENT_EDIT`, and caller's scope covers the current step's receiver; receive still needs the destination department's register number |
+| إلغاء الوثيقة | caller holds `DOCUMENT_EDIT` and the document is neither canceled nor archived. The server also requires MANAGE access, which depends on grant levels the client is never told, so a denial arrives as the Arabic `Correspondence.DocumentAccessDenied` message in the dialog |
 | تبويب الملفات | caller holds `DOCUMENT_VIEW` (the route gate); no separate permission hides it |
 | تنزيل الإصدار الحالي | files tab open and the file has a version. Offered to every viewer because the per-document DOWNLOAD level is never exposed to the client — a denial surfaces as the Arabic `403` message |
 | رفع ملف / رفع إصدار / أرشفة | caller holds `DOCUMENT_EDIT` **and** the document is not canceled (`canEdit && !isCanceled`, passed down as `canManage`). Hidden, not disabled, in line with the rest of the write actions here; the server additionally requires MANAGE access on the document, and that denial also arrives as an Arabic message. An archived row offers neither a new version nor archiving. |
@@ -119,6 +120,7 @@ mounted dialog.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-03 | Claude | Movements tab offers only the actions on the caller's side of the current step. Verified in-browser against a scratch API with sender, receiver and unrelated users, including the Arabic denials on document cancel, edit, register and open movement. |
 | 2026-11-01 | agent | Module 06 Phase 5: verified the `files` tab in-browser in three roles against a permanent fixture document, including the per-access-level denial (`Correspondence.DocumentAccessDenied` in Arabic on download and upload for a VIEW-only grant, success under MANAGE) and the absence of the `grants` tab for a user without `ACCESS_GRANT_MANAGE`. No code change. |
 | 2026-11-01 | agent | Module 06 Phase 4: the files tab's `canUpload` prop became `canManage` and now gates three write actions (upload, new version, archive); the row menu gained الإصدارات and التحقق من البصمة for every viewer, and the tab description says what the grid can do. |
 | 2026-11-01 | agent | Module 06 Phase 3: `DocumentDetailsPage` now passes `canUpload={canEdit && !isCanceled}` to the files tab, so the panel gains its «رفع ملف» toolbar button and empty-state action for editors on a live document and stays unchanged for viewers and canceled documents. |

@@ -14,6 +14,7 @@ export { USER_SCOPE_TYPE_IDS, userScopeFromId } from './model/scope'
 export {
   userKeys,
   useMeQuery,
+  useCoversDepartment,
   useUsers,
   useUserById,
   useUserEffectivePermissions,

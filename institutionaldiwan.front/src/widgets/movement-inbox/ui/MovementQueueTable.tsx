@@ -8,9 +8,15 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useDepartmentOptions } from '@/entities/department'
-import { OfficialNumberTag } from '@/entities/document'
+import {
+  documentRowLabel,
+  isDocumentRestricted,
+  OfficialNumberTag,
+  RestrictedDocumentLabel,
+} from '@/entities/document'
 import {
   getMovementActions,
+  getMovementCustody,
   isMovementTerminal,
   MovementStatusBadge,
   MovementStepStatusBadge,
@@ -21,7 +27,7 @@ import {
   type MovementQueueKind,
 } from '@/entities/movement'
 import { LOOKUP_SLUGS, useLookupEntries } from '@/entities/lookup'
-import { useSessionStore } from '@/entities/user'
+import { useCoversDepartment, useSessionStore } from '@/entities/user'
 import {
   DESTRUCTIVE_ACTIONS,
   MOVEMENT_ACTION_ICONS,
@@ -61,6 +67,7 @@ export function MovementQueueTable({ kind }: MovementQueueTableProps) {
 
   const hasPermission = useSessionStore((state) => state.hasPermission)
   const canEdit = hasPermission(Permissions.DocumentEdit)
+  const coversDepartment = useCoversDepartment()
   const navigate = useNavigate()
 
   const queueQuery = useMovementQueue(kind, undefined)
@@ -129,17 +136,22 @@ export function MovementQueueTable({ kind }: MovementQueueTableProps) {
         sortKey: 'documentTitle',
         sortValue: (item) => item.documentTitle,
         hideable: false,
-        cell: (item) => (
-          <div className="flex min-w-56 flex-col gap-1">
-            <Link
-              to={ROUTES.DOCUMENT_DETAIL(item.documentId)}
-              className="text-sm font-medium text-foreground hover:text-accent hover:underline"
-            >
-              {item.documentTitle}
-            </Link>
-            <OfficialNumberTag officialNumberText={item.officialNumberText} />
-          </div>
-        ),
+        cell: (item) =>
+          isDocumentRestricted(item.documentTitle) ? (
+            <div className="flex min-w-56 flex-col gap-1">
+              <RestrictedDocumentLabel />
+            </div>
+          ) : (
+            <div className="flex min-w-56 flex-col gap-1">
+              <Link
+                to={ROUTES.DOCUMENT_DETAIL(item.documentId)}
+                className="text-sm font-medium text-foreground hover:text-accent hover:underline"
+              >
+                {item.documentTitle}
+              </Link>
+              <OfficialNumberTag officialNumberText={item.officialNumberText} />
+            </div>
+          ),
       },
       {
         id: 'type',
@@ -277,6 +289,7 @@ export function MovementQueueTable({ kind }: MovementQueueTableProps) {
       item.movementStatusId,
       item.stepStatusId,
       canEdit,
+      getMovementCustody(item, coversDepartment),
     )
     return kind === 'inbox'
       ? allowed
@@ -298,12 +311,16 @@ export function MovementQueueTable({ kind }: MovementQueueTableProps) {
     })
 
     return [
-      {
-        id: 'open-document',
-        label: 'فتح الوثيقة',
-        icon: <Eye className="size-4" aria-hidden />,
-        onSelect: () => navigate(ROUTES.DOCUMENT_DETAIL(item.documentId)),
-      },
+      ...(isDocumentRestricted(item.documentTitle)
+        ? []
+        : [
+            {
+              id: 'open-document',
+              label: 'فتح الوثيقة',
+              icon: <Eye className="size-4" aria-hidden />,
+              onSelect: () => navigate(ROUTES.DOCUMENT_DETAIL(item.documentId)),
+            },
+          ]),
       {
         id: 'copy-number',
         label: 'نسخ الرقم الرسمي',
@@ -359,7 +376,7 @@ export function MovementQueueTable({ kind }: MovementQueueTableProps) {
         onSortChange={table.setSort}
         searchPlaceholder="ابحث بعنوان الوثيقة أو رقمها أو التعليمات…"
         rowSearchText={(item) =>
-          [item.documentTitle, item.officialNumberText, item.instructions]
+          [documentRowLabel(item.documentTitle), item.officialNumberText, item.instructions]
             .filter(Boolean)
             .join(' ')
         }
@@ -394,7 +411,7 @@ export function MovementQueueTable({ kind }: MovementQueueTableProps) {
         rowMenu={buildRowMenu}
         headerMenu={[refreshEntry]}
         emptyMenu={[refreshEntry]}
-        rowLabel={(item) => item.documentTitle}
+        rowLabel={(item) => documentRowLabel(item.documentTitle)}
         emptyTitle={hasQuery ? 'لا توجد حركات مطابقة.' : 'الصندوق فارغ.'}
         emptyDescription={
           hasQuery

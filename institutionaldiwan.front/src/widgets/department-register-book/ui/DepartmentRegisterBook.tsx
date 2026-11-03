@@ -3,7 +3,12 @@ import { Link, useNavigate } from 'react-router-dom'
 import { ArrowUpRight, Copy, FileText, Hash, RefreshCw } from 'lucide-react'
 import { toast } from 'sonner'
 import { useDepartmentOptions } from '@/entities/department'
-import { NumberStatusBadge } from '@/entities/document'
+import {
+  documentRowLabel,
+  isDocumentRestricted,
+  NumberStatusBadge,
+  RestrictedDocumentLabel,
+} from '@/entities/document'
 import {
   useDepartmentRegister,
   type DepartmentRegisterLineResponse,
@@ -66,15 +71,18 @@ export function DepartmentRegisterBook() {
         hideable: false,
         sortable: true,
         sortValue: (line) => line.documentTitle,
-        cell: (line) => (
-          <Link
-            to={`${ROUTES.DOCUMENT_DETAIL(line.documentId)}?tab=numbers`}
-            className="inline-flex items-center gap-1.5 text-sm text-accent transition-colors hover:underline"
-          >
-            <FileText className="size-3.5 shrink-0" aria-hidden />
-            <span className="line-clamp-1 max-w-72">{line.documentTitle}</span>
-          </Link>
-        ),
+        cell: (line) =>
+          isDocumentRestricted(line.documentTitle) ? (
+            <RestrictedDocumentLabel />
+          ) : (
+            <Link
+              to={`${ROUTES.DOCUMENT_DETAIL(line.documentId)}?tab=numbers`}
+              className="inline-flex items-center gap-1.5 text-sm text-accent transition-colors hover:underline"
+            >
+              <FileText className="size-3.5 shrink-0" aria-hidden />
+              <span className="line-clamp-1 max-w-72">{line.documentTitle}</span>
+            </Link>
+          ),
       },
       {
         id: 'centralNumber',
@@ -139,13 +147,17 @@ export function DepartmentRegisterBook() {
   )
 
   const buildRowMenu = (line: DepartmentRegisterLineResponse): MenuEntry[] => [
-    {
-      id: 'open-document',
-      label: 'فتح الوثيقة',
-      icon: <ArrowUpRight className="size-4" aria-hidden />,
-      onSelect: () => openDocument(line),
-    },
-    { type: 'separator' },
+    ...(isDocumentRestricted(line.documentTitle)
+      ? []
+      : ([
+          {
+            id: 'open-document',
+            label: 'فتح الوثيقة',
+            icon: <ArrowUpRight className="size-4" aria-hidden />,
+            onSelect: () => openDocument(line),
+          },
+          { type: 'separator' },
+        ] as MenuEntry[])),
     {
       id: 'copy-central-number',
       label: 'نسخ رقم الديوان',
@@ -190,7 +202,7 @@ export function DepartmentRegisterBook() {
       rowKey={(line) => line.documentNumberId}
       rowSearchText={(line) =>
         [
-          line.documentTitle,
+          documentRowLabel(line.documentTitle),
           line.centralNumberText,
           line.registryNumberText,
           String(line.numberingYear),
@@ -199,7 +211,7 @@ export function DepartmentRegisterBook() {
           .join(' ')
           .toLocaleLowerCase('ar')
       }
-      rowLabel={(line) => line.documentTitle}
+      rowLabel={(line) => documentRowLabel(line.documentTitle)}
       isLoading={Boolean(departmentId) && registerQuery.isLoading}
       error={departmentId ? registerQuery.error : null}
       onRetry={() => void registerQuery.refetch()}

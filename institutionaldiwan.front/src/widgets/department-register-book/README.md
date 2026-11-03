@@ -30,6 +30,8 @@ context menus, and loading/empty/error states.
   to `?numberingYear=`.
 - Inactive departments stay selectable because they can still hold historical numbers.
 - The document column and the row menu both open `/documents/{id}?tab=numbers`.
+- A line whose document the caller cannot view keeps its department number, but its title and central
+  number are blank. It shows `RestrictedDocumentLabel` with no link, and its menu drops «فتح الوثيقة».
 - Search covers the document title, the central number, the department number, and the year; sorting
   defaults to the registration date, newest first.
 
@@ -38,11 +40,12 @@ context menus, and loading/empty/error states.
 | Item | State |
 | --- | --- |
 | Grid, filters, menus | ✅ Implemented (Module 04 Phase 3) |
-| Browser verification | ✅ No-selection state, department + year in the URL across reloads, inactive department with historical rows, search/sort/column chooser, row menu |
+| Browser verification | ✅ No-selection state, department + year in the URL across reloads, inactive department with historical rows, search/sort/column chooser, row menu, restricted line in light and dark |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-03 | Claude | Added the restricted label for lines whose document the caller cannot view. |
 | 2026-10-30 | agent | Module 04 Phase 5: verified the inactive-department path with a permanent fixture (`VER-04-P5`, kept deactivated) that retains its historical `VER-2026-001` line; no code change. |
 | 2026-10-29 | agent | Module 04 Phase 3: replaced the bespoke register table with a shared `DataTable` widget — URL-backed department/year filters, sorting, search, column chooser, row/header menus, and department options that include inactive departments; verified in-browser. |

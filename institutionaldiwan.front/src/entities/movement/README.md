@@ -15,7 +15,7 @@ badges. Everything here is read-only.
 | `api/movementApi.ts` | `GET /api/movements/inbox`, `/outbox`, `/by-document/{documentId}`, `/{movementId}` |
 | `model/types.ts` | Movement, step, event, queue item and receipt response types; `MovementAction` union |
 | `model/queries.ts` | `movementKeys` + `useMovementQueue`, `useMovementInbox`, `useMovementOutbox`, `useDocumentMovements`, `useMovementById` |
-| `model/rules.ts` | `isMovementTerminal`, `hasActiveMovement`, `currentMovementStep`, `getMovementActions`, `translateMovementNote` |
+| `model/rules.ts` | `isMovementTerminal`, `hasActiveMovement`, `currentMovementStep`, `getMovementCustody`, `getMovementActions`, `translateMovementNote` |
 | `ui/MovementStatusBadge.tsx` | Movement status badge from the `movement-statuses` lookup |
 | `ui/MovementStepStatusBadge.tsx` | Step status badge from the `movement-step-statuses` lookup |
 | `ui/MovementTypeBadge.tsx` | Movement type badge from the `movement-types` lookup |
@@ -45,8 +45,11 @@ Queues keep `staleTime` at 15 seconds; every routing mutation invalidates the wh
 
 ## Rules mirrored from the API
 
-`getMovementActions(statusId, stepStatusId, canEdit)` mirrors the domain transitions so the UI only
-offers valid actions; the API remains the final judge (`Movements.InvalidStatusTransition`).
+`getMovementActions(statusId, stepStatusId, canEdit, custody)` mirrors the domain transitions and the
+API's custody checks so the UI only offers valid actions; the API remains the final judge
+(`Movements.InvalidStatusTransition`, `Movements.DepartmentOutOfScope`). `getMovementCustody(step,
+coversDepartment)` builds `custody`; the caller passes `useCoversDepartment` from `entities/user`,
+because this slice may not import a sibling.
 
 | Status | Actions |
 | --- | --- |
@@ -57,6 +60,14 @@ offers valid actions; the API remains the final judge (`Movements.InvalidStatusT
 | Completed / Rejected / Returned | close |
 | Closed / Canceled | — |
 
+The status list is then narrowed to the caller's side of the current step:
+
+| Side | Actions |
+| --- | --- |
+| Sender | send, cancel, and redirect while the movement is a draft |
+| Receiver | receive, complete, reject, return, and redirect once sent |
+| Either | close |
+
 `translateMovementNote` rewrites the API's English system notes (`Rejected: …`,
 `Rejected step routed to the Central Diwan: …`) into Arabic before rendering.
 
@@ -66,12 +77,13 @@ offers valid actions; the API remains the final judge (`Movements.InvalidStatusT
 | --- | --- |
 | Docs | ✅ |
 | Code | ✅ |
-| Browser-verified | ✅ (inbox/outbox, document timeline, reroute after rejection) |
+| Browser-verified | ✅ (inbox/outbox, document timeline, reroute after rejection, actions per side of the step) |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-03 | Claude | `getMovementActions` now takes the caller's custody of the current step, built by the new `getMovementCustody`, and mirrors the API's sender and receiver checks. |
 | 2026-10-29 | Cursor | Implemented the read model: API client, query keys/hooks, rules, and three badges; documented the deferred Mermaid/tree builders. |
 | 2026-10-25 | Buffy | Added pure `toMermaid` / `toTree` builders for the document movement chain. |
 | 2026-10-25 | Cursor | Added movement entity slice docs mapped to live Module 05 inbox/outbox APIs. |

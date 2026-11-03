@@ -14,6 +14,7 @@ import type {
 export const userKeys = {
   all: ['users'] as const,
   me: () => [...userKeys.all, 'me'] as const,
+  departmentScope: () => [...userKeys.all, 'department-scope'] as const,
   lists: () => [...userKeys.all, 'list'] as const,
   list: (params: UserListParams) => [...userKeys.lists(), params] as const,
   optionLists: () => [...userKeys.all, 'options'] as const,
@@ -39,6 +40,23 @@ export function useMeQuery(options?: EnabledOptions<MeResponse>) {
     retry: false,
     ...options,
   })
+}
+
+/**
+ * Whether the caller's department scope covers a department; nothing is covered until the profile
+ * loads. It has its own key because `AuthSessionLoader` re-syncs the session store (and resets
+ * `mustChangePassword`) whenever `userKeys.me()` receives data.
+ */
+export function useCoversDepartment(): (departmentId: string) => boolean {
+  const { data } = useQuery({
+    queryKey: userKeys.departmentScope(),
+    queryFn: userApi.me,
+    enabled: tokenStorage.has(),
+    staleTime: 5 * 60 * 1000,
+    select: (me) => me.accessibleDepartmentIds,
+  })
+
+  return (departmentId) => data === null || (data?.includes(departmentId) ?? false)
 }
 
 /** Paged users with username search (requires `USER_MANAGE`). */

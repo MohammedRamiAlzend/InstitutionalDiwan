@@ -7,23 +7,25 @@ namespace InstitutionalDiwan.Tests.Application;
 
 public sealed class GetUserProfileQueryHandlerTests
 {
+    private static FakeUserContext AuthenticatedContext() => new()
+    {
+        IsAuthenticated = true,
+        UserId = Guid.NewGuid(),
+        Username = "admin",
+        Roles = new HashSet<string>(StringComparer.Ordinal) { "USER", "ADMIN" },
+        Permissions = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            Permissions.DocumentView,
+            Permissions.DocumentCreate
+        }
+    };
+
     [Fact]
     public async Task Handle_WhenAuthenticated_ReturnsProfileWithOrderedRolesAndPermissions()
     {
-        var userContext = new FakeUserContext
-        {
-            IsAuthenticated = true,
-            UserId = Guid.NewGuid(),
-            Username = "admin",
-            Roles = new HashSet<string>(StringComparer.Ordinal) { "USER", "ADMIN" },
-            Permissions = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-            {
-                Permissions.DocumentView,
-                Permissions.DocumentCreate
-            }
-        };
+        var userContext = AuthenticatedContext();
 
-        var result = await new GetUserProfileQueryHandler(userContext)
+        var result = await new GetUserProfileQueryHandler(userContext, new FakeDepartmentScopeEvaluator())
             .Handle(new GetUserProfileQuery(), CancellationToken.None);
 
         Assert.True(result.IsSuccess);
@@ -34,9 +36,35 @@ public sealed class GetUserProfileQueryHandlerTests
     }
 
     [Fact]
+    public async Task Handle_WithDepartmentScope_ReturnsTheReachableDepartments()
+    {
+        var departmentId = Guid.NewGuid();
+        var scope = new FakeDepartmentScopeEvaluator();
+        scope.AccessibleDepartments.Add(departmentId);
+
+        var result = await new GetUserProfileQueryHandler(AuthenticatedContext(), scope)
+            .Handle(new GetUserProfileQuery(), CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(new[] { departmentId }, result.Value.AccessibleDepartmentIds);
+    }
+
+    [Fact]
+    public async Task Handle_WithInstitutionWideScope_ReturnsNullDepartments()
+    {
+        var scope = new FakeDepartmentScopeEvaluator { InstitutionWide = true };
+
+        var result = await new GetUserProfileQueryHandler(AuthenticatedContext(), scope)
+            .Handle(new GetUserProfileQuery(), CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Null(result.Value.AccessibleDepartmentIds);
+    }
+
+    [Fact]
     public async Task Handle_WhenNotAuthenticated_ReturnsUnauthorized()
     {
-        var result = await new GetUserProfileQueryHandler(new FakeUserContext())
+        var result = await new GetUserProfileQueryHandler(new FakeUserContext(), new FakeDepartmentScopeEvaluator())
             .Handle(new GetUserProfileQuery(), CancellationToken.None);
 
         Assert.True(result.IsFailure);

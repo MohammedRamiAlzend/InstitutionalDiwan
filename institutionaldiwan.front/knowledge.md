@@ -167,7 +167,7 @@ required for every table.
 | --- | --- | --- | --- |
 | `POST` | `/api/auth/login` | — (public) | Returns a JWT access token. |
 | `POST` | `/api/auth/register` | — (public) | Self-registration. |
-| `GET` | `/api/auth/me` | `DOCUMENT_VIEW` | Caller profile. |
+| `GET` | `/api/auth/me` | `DOCUMENT_VIEW` | Caller profile, including `accessibleDepartmentIds`: the departments the caller's live scope reaches, `null` for an institution-wide scope. |
 | `POST` | `/api/auth/change-password` | `DOCUMENT_VIEW` | Payload `{ oldPassword, newPassword }`; returns a fresh `LoginResponse` (JWT + identity). New password 8–200 chars and different from the old one (`Identity.CurrentPasswordIncorrect`, `Identity.NewPasswordSameAsOld`). |
 
 ### Documents — `/api/documents`

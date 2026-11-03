@@ -1,11 +1,13 @@
 import type { PermissionCode } from '@/shared/config'
 
-/** `GET /api/auth/me` — caller profile projected from the JWT (camelCase JSON). */
+/** `GET /api/auth/me` — caller profile (camelCase JSON). */
 export interface MeResponse {
   userId: string
   username: string
   roles: string[]
   permissions: PermissionCode[]
+  /** Departments the caller's live scope reaches; `null` for an institution-wide scope. */
+  accessibleDepartmentIds: string[] | null
 }
 
 /** Account visibility scope (Module 02 `ScopeTypeId` rendered semantically). */
