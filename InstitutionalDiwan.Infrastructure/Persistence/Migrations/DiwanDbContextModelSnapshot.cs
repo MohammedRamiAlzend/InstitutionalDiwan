@@ -3106,13 +3106,21 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
 
                     b.HasKey("RelationId");
 
+                    b.HasIndex("CreatedByUserId");
+
                     b.HasIndex("RelationTypeId");
+
+                    b.HasIndex("TargetDocumentId")
+                        .HasDatabaseName("IX_DOC_RELATIONS_TARGET");
 
                     b.HasIndex("SourceDocumentId", "TargetDocumentId", "RelationTypeId")
                         .IsUnique()
                         .HasDatabaseName("UX_DOC_RELATIONS_SRC_TGT_TYPE");
 
-                    b.ToTable("DOCUMENT_RELATIONS", (string)null);
+                    b.ToTable("DOCUMENT_RELATIONS", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_DOC_RELATIONS_NOT_SELF", "[SourceDocumentId] <> [TargetDocumentId]");
+                        });
                 });
 
             modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Relations.DocumentRelationEvent", b =>
@@ -3158,7 +3166,15 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("ActionTypeId");
 
+                    b.HasIndex("ActorUserId");
+
                     b.HasIndex("RelationTypeId");
+
+                    b.HasIndex("SourceDocumentId", "OccurredAt")
+                        .HasDatabaseName("IX_DOC_REL_EVENTS_SOURCE_DATE");
+
+                    b.HasIndex("TargetDocumentId", "OccurredAt")
+                        .HasDatabaseName("IX_DOC_REL_EVENTS_TARGET_DATE");
 
                     b.ToTable("DOCUMENT_RELATION_EVENTS", (string)null);
                 });
@@ -3724,9 +3740,27 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Relations.DocumentRelation", b =>
                 {
+                    b.HasOne("InstitutionalDiwan.Domain.Entities.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("InstitutionalDiwan.Domain.Entities.Relations.DocumentRelationType", null)
                         .WithMany()
                         .HasForeignKey("RelationTypeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("InstitutionalDiwan.Domain.Entities.Correspondence.Document", null)
+                        .WithMany()
+                        .HasForeignKey("SourceDocumentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("InstitutionalDiwan.Domain.Entities.Correspondence.Document", null)
+                        .WithMany()
+                        .HasForeignKey("TargetDocumentId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
@@ -3739,9 +3773,27 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("InstitutionalDiwan.Domain.Entities.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("ActorUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("InstitutionalDiwan.Domain.Entities.Relations.DocumentRelationType", null)
                         .WithMany()
                         .HasForeignKey("RelationTypeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("InstitutionalDiwan.Domain.Entities.Correspondence.Document", null)
+                        .WithMany()
+                        .HasForeignKey("SourceDocumentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("InstitutionalDiwan.Domain.Entities.Correspondence.Document", null)
+                        .WithMany()
+                        .HasForeignKey("TargetDocumentId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

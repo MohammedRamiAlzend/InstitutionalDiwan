@@ -1,6 +1,6 @@
 # Presentation / Controllers
 
-> **Status:** Implemented — twenty-one thin controllers, one per module plus the generic lookups controller and the administrative picker reads.
+> **Status:** Implemented — twenty-two thin controllers, one per module plus the generic lookups controller and the administrative picker reads.
 
 ## Purpose
 
@@ -23,6 +23,7 @@ access live here.
 | `DocumentFieldsController.cs` | `api` (`document-types/{id}/fields`, `document-types/{id}/schema`, `document-types/{id}/schema-versions`, `schema-versions/{id}[/fields[/{fieldId}]|/publish]`, `documents/{id}/fields`) | `LOOKUP_MANAGE` for schema administration; `DOCUMENT_VIEW` for the published schema and a document's values; `DOCUMENT_EDIT` to set draft values | Dynamic document fields: define fields, run the schema draft/publish lifecycle, read the published schema, read and replace a draft document's values. |
 | `DocumentArchiveController.cs` | `api` (`archive/documents`, `documents/{id}/archive-events`, `documents/{id}/archive`, `documents/{id}/unarchive`) | `DOCUMENT_VIEW` reads; `DOCUMENT_ARCHIVE` writes; per-document access in the handlers | Module 07: archive and restore documents, a document's archive history, and the access-filtered archive search. |
 | `SavedSearchesController.cs` | `api/saved-searches` | `DOCUMENT_VIEW`; owner only in the handlers | Module 07: the caller's personal saved archive searches (list, create, replace, delete). |
+| `DocumentRelationsController.cs` | `api/documents/{id}/relations` (`graph`, `events`, `{relationId}`) | `DOCUMENT_VIEW` reads; `DOCUMENT_EDIT` create and remove; per-document access in the handlers | Module 08: a document's links, the relations graph, the permanent relation history, and creating or removing a link. |
 | `InstitutionSettingsController.cs` | `api/institution-settings` | `DEPARTMENT_MANAGE` | Reads and replaces the singleton institution settings (Central Diwan guards). |
 | `UsersController.cs` | `api/users` | `USER_MANAGE` | User CRUD (paged/searchable list), activate/deactivate, assign/revoke roles, `POST {id}/reset-password` (forced change at next sign-in), `POST {id}/department-assignments`, `DELETE {id}/department-assignments/{assignmentId}`, `GET {id}/effective-permissions`. |
 | `RolesController.cs` | `api/roles` | `ROLE_MANAGE` | Role CRUD, activate, grant/revoke permissions. |
@@ -129,6 +130,7 @@ plain JSON array.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-03 | Claude | Added `DocumentRelationsController` for Module 08 (Phase 3). |
 | 2026-11-03 | Claude | Documented `accessibleDepartmentIds` on `GET /api/auth/me`. |
 | 2026-11-03 | Claude | Documented the custody rules on the movement writes and the document access and scope rules on the number writes, with their 403 responses. |
 | 2026-11-03 | Claude | Documented `VIEW` access on the movement and number reads, hidden content in the inbox, outbox and register rows, and the scope check on the department register. |

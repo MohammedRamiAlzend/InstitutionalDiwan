@@ -29,6 +29,7 @@ empty migration when the model changed.
 | `20261102114522_Add_Document_Dynamic_Fields` | Purely additive: nullable `DOCUMENTS.SchemaVersionId` (FK, restrict) and the `DOCUMENT_FIELDS`, `DOCUMENT_TYPE_SCHEMA_VERSIONS`, `DOCUMENT_TYPE_SCHEMA_VERSION_FIELDS` and `DOCUMENT_FIELD_VALUES` tables, with the unique key per type, the one-draft-per-type filtered unique index, the version-number unique index and the sparse typed-value indexes. Existing rows and tables are untouched. |
 
 | `20261103064712_Add_Archiving_Constraints` | Foreign keys from `DOCUMENT_ARCHIVE_EVENTS` to documents, users and status types and from `SAVED_SEARCHES` to users (all restrict); unique `UX_SAVED_SEARCHES_USER_NAME`, filtered unique `UX_SAVED_SEARCHES_USER_DEFAULT` (one default per user), and `IX_DOC_ARCHIVE_EVENTS_TYPE_DATE`, which replaces the single-column event-type index. Both tables were empty, so no data migration is needed. |
+| `20261103090137_Add_Relations_Constraints` | Foreign keys from `DOCUMENT_RELATIONS` to documents (source and target), users and `DOCUMENT_RELATION_TYPES`, and from `DOCUMENT_RELATION_EVENTS` to documents, users, types and action types (all restrict); deliberately none from the events to `RelationId`, because the history outlives a removed link. Adds `CK_DOC_RELATIONS_NOT_SELF`, `IX_DOC_RELATIONS_TARGET` and the event indexes by document and date. Both tables were empty, so no data migration is needed. |
 
 ## Custom (hand-written) migration steps
 
@@ -49,6 +50,7 @@ empty migration when the model changed.
 | Audit chain uniqueness (`Add_Audit_Chain_Uniqueness`) | ✅ Created + applied against LocalDB (2026-10-25) |
 | Dynamic document fields (`Add_Document_Dynamic_Fields`) | ✅ Created (2026-11-02) + applied to the development database |
 | Archiving constraints (`Add_Archiving_Constraints`) | ✅ Created (2026-11-03) and verified on a scratch SQL Server database; not yet applied to the development database — it applies on the next Development startup |
+| Relations constraints (`Add_Relations_Constraints`) | ✅ Created (2026-11-03); applies on the next Development startup |
 | Audit immutability trigger / DENY | ❌ Not created |
 | Closure table / indexed view | ❌ Not created |
 | Full-text catalog & indexes | ❌ Not created |
@@ -63,6 +65,7 @@ empty migration when the model changed.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-03 | Claude | Added `Add_Relations_Constraints` for Module 08 (Phase 1). |
 | 2026-11-03 | Claude | Added `Add_Archiving_Constraints` for Module 07 (Phase 1) and verified it by applying the full chain to a scratch SQL Server database, since dropped. Recorded that `Add_Document_Dynamic_Fields` is now applied to the development database. |
 | 2026-11-02 | Claude | Added `Add_Document_Dynamic_Fields` for the dynamic document fields plan (Phase 1). Generated with `dotnet ef` against a build in a separate configuration, because the running API locks the default `bin`; the snapshot diff is additions only. |
 | 2026-10-25 | opencode | Added `Add_Audit_Chain_Uniqueness` (unique `UX_AUDIT_LOGS_PREVIOUS_HASH`) so concurrent audit appends cannot fork the chain. |

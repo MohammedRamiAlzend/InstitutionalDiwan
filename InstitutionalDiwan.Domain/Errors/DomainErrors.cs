@@ -212,6 +212,13 @@ public static class DomainErrors
         public static readonly Error RelationTypeInactive = Error.Conflict("Relations.RelationTypeInactive", "Cannot create a link using an inactive relation type.");
         public static readonly Error CycleDetected = Error.Conflict("Relations.CycleDetected", "Linking these documents would create a cycle in a cycle-restricted relation type.");
         public static readonly Error DuplicateRelation = Error.Conflict("Relations.DuplicateRelation", "This document relation already exists.");
+        public static readonly Error RelationNotFound = Error.NotFound("Relations.RelationNotFound", "The document relation was not found.");
+        public static readonly Error RelationTypeNotFound = Error.Validation("Relations.RelationTypeNotFound", "The specified relation type does not exist.");
+        public static readonly Error ReasonRequired = Error.Validation("Relations.ReasonRequired", "A reason is required to remove a document relation.");
+        public static readonly Error ReasonTooLong = Error.Validation("Relations.ReasonTooLong", "A relation removal reason cannot exceed 500 characters.");
+        public static readonly Error NotesTooLong = Error.Validation("Relations.NotesTooLong", "Relation notes cannot exceed 500 characters.");
+        public static readonly Error DocumentCancelled = Error.Conflict("Relations.DocumentCancelled", "A cancelled document cannot be linked to another document.");
+        public static readonly Error GraphDepthInvalid = Error.Validation("Relations.GraphDepthInvalid", "The relations graph depth must be between 1 and 3.");
     }
 
     public static class Archiving

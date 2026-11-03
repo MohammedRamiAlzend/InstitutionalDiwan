@@ -1,14 +1,14 @@
 # Infrastructure / Persistence / Repositories
 
-> **Status:** Partially implemented — 23 of the 25 repository interfaces have implementations
+> **Status:** Partially implemented — 24 of the 25 repository interfaces have implementations
 > (`UserRepository`, `RoleRepository`, `PermissionRepository`, `EmployeeRepository`,
 > `DepartmentRepository`, `DepartmentTypeRepository`, `DocumentRepository`, `DocumentTypeRepository`,
 > `NumberingRegistryRepository`, `DocumentNumberRepository`, `DocumentAccessGrantRepository`,
 > `LookupRepository`, `InstitutionSettingRepository`, `ExternalOrganizationRepository`,
 > `DocumentMovementRepository`, `DocumentFileRepository`, `DocumentFileTypeRepository`,
 > `FileStorageProviderRepository`, `AuditLogRepository`, `DocumentFieldRepository`,
-> `DocumentTypeSchemaVersionRepository`, `DocumentArchiveRepository`, `SavedSearchRepository`); relation and notification repositories
-> have none yet.
+> `DocumentTypeSchemaVersionRepository`, `DocumentArchiveRepository`, `SavedSearchRepository`, `DocumentRelationRepository`); the notification repository
+> has none yet.
 
 ## Purpose
 
@@ -42,6 +42,7 @@ Concrete EF Core implementations of the repository interfaces declared in
 | `DocumentFileRepository.cs` | Loads a `DocumentFile` with its full `Versions` chain by id or per document (oldest first), so the Attachments handlers can append versions and project history. Also holds `DocumentFileTypeRepository` (file-type extension/size limits) and `FileStorageProviderRepository` (by id or active default) in the same file. |
 | `DocumentArchiveRepository.cs` | Module 07 archive access: appends `DocumentArchiveEvent` rows, lists a document's events newest first, and `SearchAsync` pages archived documents with their latest archive event. The `VIEW` rule (`DocumentViewAccessQuery`) is part of the query, so paging counters never include a document the caller cannot see; a persistence test holds the two rules equal. |
 | `SavedSearchRepository.cs` | A user's personal `SavedSearch` rows: by id, listed by name, the single default, name-uniqueness and per-user count checks, `Add` and `Remove`. |
+| `DocumentRelationRepository.cs` | Module 08 relation access: by id, by document in both directions, relation types, exact-row existence, `ListTouchingAsync` for the graph, and the paged relation history. `WouldCreateCycleAsync` walks the type's edges breadth first and, on SQL Server inside a transaction, first takes an `sp_getapplock` per relation type so two opposite links cannot both pass the check. |
 | `AuditLogRepository.cs` | **Append-only** audit access: `GetLatestAsync` for the next hash link, `GetByIdAsync` for range anchoring, `ListRangeAsync` for ordered chain walks, `SearchAsync` for filtered paging, and `AddCheckpoint`/`AddIntegrityCheck` plus their latest/listing queries. No update or delete path exists. |
 
 ## Planned repositories not yet implemented
@@ -83,12 +84,14 @@ Concrete EF Core implementations of the repository interfaces declared in
 | `DocumentFileRepository`, `DocumentFileTypeRepository`, `FileStorageProviderRepository` | ✅ Implemented (2026-10-25) |
 | `AuditLogRepository` | ✅ Implemented (2026-10-25) |
 | `DocumentArchiveRepository`, `SavedSearchRepository` | ✅ Implemented (2026-11-03) |
-| `DocumentRelationRepository`, `NotificationRepository` | ❌ Not implemented |
+| `DocumentRelationRepository` | ✅ Implemented (2026-11-03) |
+| `NotificationRepository` | ❌ Not implemented |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-03 | Claude | Module 08 Relations, Phase 1: added `DocumentRelationRepository`, registered in `DependencyInjection`. |
 | 2026-11-03 | Claude | Added `DocumentRepository.ListViewableIdsAsync` on the shared `VIEW` rule, for the movement queues and the department register. |
 | 2026-11-03 | Claude | Moved the SQL form of the `VIEW` rule out of `DocumentArchiveRepository` into `DocumentViewAccessQuery`, added the movement-participation path the archive search could leave out, and applied it to `DocumentRepository.ListPagedAsync`, which previously returned every document to any `DOCUMENT_VIEW` holder. |
 | 2026-11-03 | Claude | Module 07 Archiving, Phase 1: added `DocumentArchiveRepository` (events and access-filtered search) and `SavedSearchRepository`, registered in `DependencyInjection`. Also corrected the status count, which had missed the two dynamic-field repositories. |

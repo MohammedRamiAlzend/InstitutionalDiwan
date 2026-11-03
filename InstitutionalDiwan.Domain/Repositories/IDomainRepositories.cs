@@ -306,8 +306,29 @@ public interface ISavedSearchRepository
 public interface IDocumentRelationRepository
 {
     Task<DocumentRelation?> GetByIdAsync(Guid relationId, CancellationToken cancellationToken = default);
+    /// <summary>Every relation that has the document as its source or its target.</summary>
     Task<IReadOnlyList<DocumentRelation>> GetByDocumentIdAsync(Guid documentId, CancellationToken cancellationToken = default);
+    /// <summary>The relation type with its symmetry and cycle flags, or null when the id is unknown.</summary>
+    Task<DocumentRelationType?> GetTypeByIdAsync(int relationTypeId, CancellationToken cancellationToken = default);
+    /// <summary>The relation types with the given ids, for labelling a set of relations.</summary>
+    Task<IReadOnlyList<DocumentRelationType>> ListTypesAsync(IReadOnlyCollection<int> relationTypeIds, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// True when the exact (source, target, type) row exists. Callers pass endpoints already normalized
+    /// by <see cref="DocumentRelationType.NormalizeEndpoints"/>.
+    /// </summary>
+    Task<bool> ExistsAsync(Guid sourceDocumentId, Guid targetDocumentId, int relationTypeId, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// True when adding <c>source → target</c> of the given type would close a loop, that is, when the
+    /// target already reaches the source through relations of that type. Serializes concurrent callers
+    /// on the type so two opposite links cannot both pass the check.
+    /// </summary>
+    Task<bool> WouldCreateCycleAsync(int relationTypeId, Guid sourceDocumentId, Guid targetDocumentId, CancellationToken cancellationToken = default);
+    /// <summary>Every relation whose source or target is one of the given documents.</summary>
+    Task<IReadOnlyList<DocumentRelation>> ListTouchingAsync(IReadOnlyCollection<Guid> documentIds, CancellationToken cancellationToken = default);
+    /// <summary>The relation history of a document, newest first, including relations since removed.</summary>
+    Task<PagedList<DocumentRelationEvent>> ListEventsByDocumentAsync(Guid documentId, PageRequest page, CancellationToken cancellationToken = default);
     void Add(DocumentRelation relation);
+    void Add(DocumentRelationEvent relationEvent);
     void Remove(DocumentRelation relation);
 }
 

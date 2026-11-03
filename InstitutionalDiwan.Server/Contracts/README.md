@@ -2,7 +2,7 @@
 
 > **Status:** Partially implemented — Correspondence, Organization (incl. institution settings),
 > Numbering, Identity (incl. employees and document access grants), Movements, Lookups, Attachments,
-> Archiving, and Audit requests exist; the remaining modules are target design.
+> Archiving, Relations, and Audit requests exist; the remaining modules are target design.
 
 ## Purpose
 
@@ -23,7 +23,7 @@ commands/queries map between them and the domain.
 | Movements | `CreateMovementRequest` ✅ (document id, destination department, movement type, optional assignee/instructions/due date — the source department is the caller's), `SendMovementRequest` ✅ (optional notes), `ReceiveDocumentRequest` ✅ (optional notes; the register entry must already exist), `CompleteMovementStepRequest` ✅ (optional notes), `RejectMovementStepRequest` ✅ (required reason), `ReturnMovementToSenderRequest` ✅ (required reason), `RedirectMovementRequest` ✅ (new destination, optional assignee/instructions/due date), `CloseMovementRequest` ✅ (optional notes), `CancelMovementRequest` ✅ (required reason); the read models live in `Application/Features/Movements/` |
 | Attachments | `CreateDocumentFileRequest` ✅ (document id, file type, title, primary-scan flag), `UploadDocumentFileVersionRequest` ✅ (multipart `File` + optional `ChangeNotes`); the read models live in `Application/Features/Attachments/` |
 | Archiving | `ArchiveDocumentRequest` ✅, `UnarchiveDocumentRequest` ✅, `SaveSearchRequest` ✅; see [`Archiving/README.md`](Archiving/README.md). The search takes query parameters, and its read models live in `Application/Features/Archiving`. |
-| Relations | `CreateDocumentRelationRequest`, `DocumentRelationGraphResponse` |
+| Relations | `CreateDocumentRelationRequest` ✅, `RemoveDocumentRelationRequest` ✅; see [`Relations/README.md`](Relations/README.md). The read models live in `Application/Features/Relations`. |
 | Audit | `CreateAuditCheckpointRequest` ✅ (optional `ToAuditLogId`), `RunAuditIntegrityCheckRequest` ✅ (optional start/end ids); read models (`AuditLogResponse`, `AuditCheckpointResponse`, `AuditIntegrityCheckResponse`) live in `Application/Features/Audit/` |
 | Notifications | `NotificationListResponse`, `UnreadCountResponse` |
 
@@ -59,6 +59,7 @@ commands/queries map between them and the domain.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-03 | Claude | Added `Relations/` with the Module 08 requests. |
 | 2026-11-03 | Claude | Added `Archiving/` with the Module 07 requests. |
 | 2026-11-02 | Claude | Dynamic document fields, Phase 3: added `Correspondence/DocumentFieldContracts.cs`; `FieldValues` on the create-document and create-draft requests. |
 | 2026-10-28 | agent | Added `Identity/ResetUserPasswordRequest` for the administrative password-reset endpoint. |

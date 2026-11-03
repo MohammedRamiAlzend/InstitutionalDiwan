@@ -4,6 +4,9 @@ namespace InstitutionalDiwan.Domain.Entities.Relations;
 
 public sealed class DocumentRelation : AggregateRoot<Guid>
 {
+    public const int MaxNotesLength = 500;
+    public const int MaxReasonLength = 500;
+
     public Guid RelationId
     {
         get => Id;
@@ -40,6 +43,9 @@ public sealed class DocumentRelation : AggregateRoot<Guid>
         if (!relationType.IsActive)
             return Result.Failure<DocumentRelation>(DomainErrors.Relations.RelationTypeInactive);
 
+        if (notes?.Trim().Length > MaxNotesLength)
+            return Result.Failure<DocumentRelation>(DomainErrors.Relations.NotesTooLong);
+
         if (relationType.PreventCycles && wouldIntroduceCycle)
             return Result.Failure<DocumentRelation>(DomainErrors.Relations.CycleDetected);
 
@@ -64,5 +70,27 @@ public sealed class DocumentRelation : AggregateRoot<Guid>
             createdByUserId));
 
         return Result.Success(relation);
+    }
+
+    /// <summary>
+    /// Validates the removal and raises <see cref="DocumentRelationRemovedEvent"/>. The caller deletes
+    /// the row and records the matching <c>DocumentRelationEvent</c>, which outlives it.
+    /// </summary>
+    public Result Remove(Guid actorUserId, string? reason)
+    {
+        if (string.IsNullOrWhiteSpace(reason))
+            return Result.Failure(DomainErrors.Relations.ReasonRequired);
+
+        if (reason.Trim().Length > MaxReasonLength)
+            return Result.Failure(DomainErrors.Relations.ReasonTooLong);
+
+        RaiseDomainEvent(new DocumentRelationRemovedEvent(
+            RelationId,
+            SourceDocumentId,
+            TargetDocumentId,
+            RelationTypeId,
+            actorUserId));
+
+        return Result.Success();
     }
 }

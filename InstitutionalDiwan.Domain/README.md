@@ -72,6 +72,8 @@ A single static catalog nested by module (`DomainErrors.Department`, `.Identity`
 
 The `.Archiving` group covers Module 07: `SearchNotFound` (NotFound), `SearchNameTaken` / `SearchLimitReached` (Conflict), and the validation errors `EventTypeInvalid`, `LocationNotFound`, `UnarchiveReasonEmpty`, `ReasonTooLong`, `SearchNameEmpty`, `SearchNameTooLong`, `CriteriaJsonEmpty`, and `CriteriaInvalid`. `Correspondence.OnlyRegisteredArchivable` and `Correspondence.DocumentArchived` (both Conflict) guard the document itself: only a `REGISTERED` document can be archived, and an archived document rejects changes until it is unarchived.
 
+The `.Relations` group covers Module 08: `SelfRelation`, `RelationTypeEmpty`, `RelationTypeNotFound`, `ReasonRequired`, `ReasonTooLong`, `NotesTooLong`, and `GraphDepthInvalid` (Validation), `RelationNotFound` (NotFound), and `RelationTypeInactive`, `CycleDetected`, `DuplicateRelation`, and `DocumentCancelled` (Conflict). `DocumentRelation.Remove` validates the removal reason and raises `DocumentRelationRemovedEvent`; `Create` and `DocumentRelationEvent.Record` now enforce the 500-character `Notes` and `Reason` limits.
+
 `Department.CentralDiwanProtected` (Conflict / 409) prevents department handlers from reparenting or
 deactivating the currently designated Central Diwan; transfer the designation through institution
 settings first. This cross-aggregate guard uses the settings repository, while reactivation reuses
@@ -358,6 +360,7 @@ them, while listing, relabelling and (de)activation keep working.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-03 | Claude | Module 08 Relations, Phase 0: added `DocumentRelation.Remove`, the note and reason length limits, the new `Relations.*` errors, and the extended `IDocumentRelationRepository` contract (type lookup, duplicate and cycle checks, neighbour and history reads). |
 | 2026-11-03 | Claude | Added `IDocumentRepository.ListViewableIdsAsync` for rows that stay listed but may only show a document's content to someone who can read it. |
 | 2026-11-03 | Claude | Added `DocumentViewAccess` and made it a required argument of `IDocumentRepository.ListPagedAsync`, so the document lists apply the `VIEW` rule in SQL. |
 | 2026-11-03 | Claude | Module 07 Archiving, Phase 1: `ArchiveSearchFilter` gained `AsOfUtc`, which decides which access grants are still valid during a search. |

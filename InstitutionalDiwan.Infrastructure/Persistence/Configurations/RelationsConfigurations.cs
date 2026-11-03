@@ -1,3 +1,5 @@
+using InstitutionalDiwan.Domain.Entities.Correspondence;
+using InstitutionalDiwan.Domain.Entities.Identity;
 using InstitutionalDiwan.Domain.Entities.Relations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -8,7 +10,9 @@ public sealed class DocumentRelationConfiguration : IEntityTypeConfiguration<Doc
 {
     public void Configure(EntityTypeBuilder<DocumentRelation> builder)
     {
-        builder.ToTable("DOCUMENT_RELATIONS");
+        builder.ToTable(
+            "DOCUMENT_RELATIONS",
+            table => table.HasCheckConstraint("CK_DOC_RELATIONS_NOT_SELF", "[SourceDocumentId] <> [TargetDocumentId]"));
         builder.Ignore(x => x.Id);
         builder.Ignore(x => x.DomainEvents);
 
@@ -24,10 +28,26 @@ public sealed class DocumentRelationConfiguration : IEntityTypeConfiguration<Doc
         builder.HasIndex(x => new { x.SourceDocumentId, x.TargetDocumentId, x.RelationTypeId })
             .IsUnique()
             .HasDatabaseName("UX_DOC_RELATIONS_SRC_TGT_TYPE");
+        builder.HasIndex(x => x.TargetDocumentId).HasDatabaseName("IX_DOC_RELATIONS_TARGET");
 
         builder.HasOne<DocumentRelationType>()
             .WithMany()
             .HasForeignKey(x => x.RelationTypeId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne<Document>()
+            .WithMany()
+            .HasForeignKey(x => x.SourceDocumentId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne<Document>()
+            .WithMany()
+            .HasForeignKey(x => x.TargetDocumentId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne<User>()
+            .WithMany()
+            .HasForeignKey(x => x.CreatedByUserId)
             .OnDelete(DeleteBehavior.Restrict);
     }
 }
@@ -66,6 +86,25 @@ public sealed class DocumentRelationEventConfiguration : IEntityTypeConfiguratio
         builder.Property(x => x.ActorUserId).HasColumnName("ActorUserId").IsRequired();
         builder.Property(x => x.Reason).HasColumnName("Reason").HasMaxLength(500);
         builder.Property(x => x.OccurredAt).HasColumnName("OccurredAt").HasColumnType("datetime2(3)").IsRequired();
+
+        // The history outlives a removed relation, so RelationId deliberately has no foreign key.
+        builder.HasIndex(x => new { x.SourceDocumentId, x.OccurredAt }).HasDatabaseName("IX_DOC_REL_EVENTS_SOURCE_DATE");
+        builder.HasIndex(x => new { x.TargetDocumentId, x.OccurredAt }).HasDatabaseName("IX_DOC_REL_EVENTS_TARGET_DATE");
+
+        builder.HasOne<Document>()
+            .WithMany()
+            .HasForeignKey(x => x.SourceDocumentId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne<Document>()
+            .WithMany()
+            .HasForeignKey(x => x.TargetDocumentId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne<User>()
+            .WithMany()
+            .HasForeignKey(x => x.ActorUserId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne<DocumentRelationType>()
             .WithMany()

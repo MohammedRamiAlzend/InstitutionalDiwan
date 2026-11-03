@@ -139,6 +139,7 @@ indexes) runs against a private SQLite in-memory database through `Support/TestC
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-03 | Claude | Added `Persistence/RelationsTests.cs` (Module 08 on a real SQLite database with the real repositories: create and remove rules, symmetric and duplicate links, direct and indirect cycles per type, archived and cancelled documents, access checks, list, graph and history reads with hidden documents, foreign keys, unique and CHECK constraints, and the audit rows for create and remove) and `Server/DocumentRelationsControllerTests.cs` (permissions and routes). `dotnet test` now 718. The cycle lock (`sp_getapplock`) only runs on SQL Server, so it is not exercised here. |
 | 2026-11-03 | Claude | `Seed/UserSeederTests` now checks that the demo accounts land in the Central Diwan and `DEP-HR`, that a missing department fails with a clear message, and that existing accounts keep their department and need no department rows; 524 to 527 tests. |
 | 2026-11-03 | Claude | Added reachable-department cases (department scope, institution-wide scope) to `GetUserProfileQueryHandlerTests`, and registered the evaluator in the `JwtSecurityPipelineTests` host, whose `/api/auth/me` now needs it. `dotnet test` now 681. |
 | 2026-11-03 | Claude | Added custody cases to `MovementWorkflowHandlerTests` (each action from the sender, the receiver and an unrelated department, and custody following a rejection) and write cases to `OfficialNumberLifecycleHandlerTests` and `DepartmentRegisterNumberingTests`. `dotnet test` now 679. |

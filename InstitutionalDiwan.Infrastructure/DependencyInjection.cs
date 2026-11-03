@@ -80,6 +80,7 @@ public static class DependencyInjection
         services.AddScoped<IFileStorageProviderRepository, FileStorageProviderRepository>();
         services.AddScoped<IDocumentArchiveRepository, DocumentArchiveRepository>();
         services.AddScoped<ISavedSearchRepository, SavedSearchRepository>();
+        services.AddScoped<IDocumentRelationRepository, DocumentRelationRepository>();
         services.AddScoped<IAuditLogRepository, AuditLogRepository>();
 
         // Module 06 physical storage: local file system + magic-byte validation, both consumed by

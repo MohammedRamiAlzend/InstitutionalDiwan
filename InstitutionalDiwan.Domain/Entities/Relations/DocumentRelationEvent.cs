@@ -37,6 +37,9 @@ public sealed class DocumentRelationEvent : Entity<Guid>
         string? reason = null,
         DateTime? utcNow = null)
     {
+        if (reason?.Trim().Length > DocumentRelation.MaxReasonLength)
+            return Result.Failure<DocumentRelationEvent>(DomainErrors.Relations.ReasonTooLong);
+
         var ev = new DocumentRelationEvent
         {
             RelationEventId = Guid.NewGuid(),

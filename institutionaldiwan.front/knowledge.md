@@ -79,7 +79,8 @@
 | Dev configuration | ✅ `.env.example` committed; `.env` is git-ignored | — |
 | Backend | External API Modules 01–06 and 09 implemented, including `identity-options` picker reads and live JWT session validation | Frontend consumes relative `/api/...` URLs; refresh endpoint counts when Module 03 work starts |
 | Implemented | 07 Archiving | `/archive` search + saved searches, archive/unarchive and history on `/documents/:id` |
-| Modules without API | 08 Relations, 10 Notifications | Do **not** call them; domain/lookups exist only |
+| Backend only | 08 Relations | API exists (below) but the SPA has no screen for it yet |
+| Modules without API | 10 Notifications | Do **not** call it; domain/lookups exist only |
 
 ## Commands
 
@@ -451,6 +452,24 @@ Error codes (Arabic entries exist in `shared/api/errorMessages.ts`):
 `Archiving.*`, `Correspondence.OnlyRegisteredArchivable`, `Correspondence.DocumentArchived`,
 `Common.ConcurrencyConflict`.
 
+### Relations (Module 08) — backend only, not yet in the SPA
+
+- `GET /api/documents/{id}/relations` — `DOCUMENT_VIEW` + `VIEW` access. `{ items, hiddenRelationCount }`; each item
+  has `direction` (`Outgoing`, `Incoming`, `Symmetric`), `type` (`isSymmetric`, `preventCycles`) and a
+  `relatedDocument` summary. Links to documents the caller cannot view are only counted.
+- `GET /api/documents/{id}/relations/graph?depth=` — same access; depth 1–3 (default 2), at most 100 documents,
+  `{ rootDocumentId, nodes, edges, types, hiddenRelationCount, truncated }`. Never passes through a hidden document.
+- `GET /api/documents/{id}/relations/events?page=&pageSize=` — paged history, newest first, including removed links.
+- `POST /api/documents/{id}/relations` — `DOCUMENT_EDIT` + `DOWNLOAD` on this document and `VIEW` on the target. Body
+  `targetDocumentId`, `relationTypeId` (from `/api/lookups/document-relation-types`: 1 reply to, 2 related, 3 supersedes,
+  4 duplicate of), optional `notes` (max 500). The first document may not be archived; neither may be cancelled.
+- `DELETE /api/documents/{id}/relations/{relationId}` — same permissions. JSON body `{ "reason": "..." }`
+  (required, max 500). The removal stays in the history.
+
+Error codes: `Relations.*` (`SelfRelation`, `RelationTypeNotFound`, `RelationTypeInactive`, `DuplicateRelation`,
+`CycleDetected`, `DocumentCancelled`, `RelationNotFound`, `ReasonRequired`, `ReasonTooLong`, `NotesTooLong`,
+`GraphDepthInvalid`), plus `Correspondence.DocumentArchived`. No Arabic entries exist yet in `errorMessages.ts`.
+
 ### Lookups — `/api/lookups/{lookup}`
 
 `GET` (list, `?includeInactive=`), `GET /{lookup}/{id}` — `DOCUMENT_VIEW`;
@@ -489,7 +508,6 @@ Branch UI on `.code`, never on HTTP status alone. Exception: audit integrity **c
 
 | Module | What exists | What is missing |
 | --- | --- | --- |
-| 08 — Relations | Domain entities + lookups + EF config | Same |
 | 10 — Notifications | Domain entities + lookups + EF config | Same; transactional outbox processor empty |
 | SignalR hubs | Planned | Not wired in `Program.cs` |
 | CORS | — | Not configured (development will rely on the Vite proxy once it is added) |

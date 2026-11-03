@@ -5,7 +5,7 @@
 > Correspondence/`Documents` (full Module 03 lifecycle) and `ExternalOrganizations`, Organization
 > (`Departments`, `InstitutionSettings`), Numbering (`Registries`, `Numbers`), the whole
 > Movements slice (routing workflow + inbox/outbox), Attachments (Module 06), and Audit (Module 09)
-> are live; Archiving (Module 07) has its use cases but no endpoints yet; Relations and Notifications are target design. The unbounded list queries are
+> are live; Archiving (Module 07) and Relations (Module 08) are live; Notifications is target design. The unbounded list queries are
 > server-paged, searchable, sortable, and — for documents — addressable as one department's register.
 
 ## Purpose
@@ -81,8 +81,8 @@ stamp against live identity/role/permission state and restricts forced-change se
 - **Queries:** `SearchArchivedDocumentsQuery` ✅, `ListSavedSearchesQuery` ✅, `ListDocumentArchiveEventsQuery` ✅; see [`Archiving/README.md`](Archiving/README.md)
 
 ### Relations (Module 08)
-- **Commands:** `CreateDocumentRelationCommand`, `RemoveDocumentRelationCommand`
-- **Queries:** `GetDocumentRelationsGraphQuery`
+- **Commands:** `CreateDocumentRelationCommand` ✅ (DOWNLOAD on the first document, VIEW on the second; rejects an archived first document, a cancelled document, an unknown or inactive type, a duplicate and a cycle), `RemoveDocumentRelationCommand` ✅ (reason required; the row is deleted and the removal stays in the history)
+- **Queries:** `ListDocumentRelationsQuery` ✅ (direct links with direction; links to documents the caller cannot view are only counted), `GetDocumentRelationsGraphQuery` ✅ (1–3 hops, 100 documents at most, never through a hidden document), `ListDocumentRelationEventsQuery` ✅ (permanent history, including removed links); see [`Relations/README.md`](Relations/README.md)
 
 ### Audit (Module 09)
 - **Commands:** `CreateAuditCheckpointCommand` ✅ (seals every entry since the previous checkpoint after re-verifying the range; rejects an empty range), `RunAuditIntegrityCheckCommand` ✅ (recomputes the SHA-256 chain; a broken chain is a successful report with `isValid = false` and the first corrupted id)
@@ -145,12 +145,14 @@ registries, per-document grants/movements) still returns a plain collection on p
 | Attachments (Module 06: create/upload/archive, list/download/verify) | ✅ Implemented |
 | Audit (Module 09: search, checkpoints, integrity checks/reports, action recorder) | ✅ Implemented |
 | Archiving (Module 07: archive/unarchive, history, access-filtered search, saved searches) | 🟡 Use cases implemented; endpoints pending |
-| Relations, Notifications | ❌ Not implemented |
+| Relations (Module 08: create/remove link, list, graph, history) | ✅ Implemented |
+| Notifications | ❌ Not implemented |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-03 | Claude | Added the `Relations/` slice (Module 08, Phase 2). |
 | 2026-11-03 | Claude | Added the `Archiving/` slice and its `SavedSearches/` subfolder (Module 07, Phase 2). |
 | 2026-11-02 | Claude | Added `Correspondence/DocumentFields` (dynamic document fields, Phase 2) and wired schema pinning into the document create/register handlers. |
 | 2026-10-28 | Qoder | Added the paged `ListUserOptionsQuery` (`userId`, `username`, `isActive`) for document access-grant and movement-assignment pickers; department options now also serve `DOCUMENT_CREATE`/`DOCUMENT_EDIT` holders. |

@@ -124,6 +124,7 @@ public sealed class AuditActionMiddleware
         "Departments" or "InstitutionSettings" or "ExternalOrganizations" => "ORGANIZATION",
         "AuditLogs" => "AUDIT",
         "DocumentArchive" or "SavedSearches" => "ARCHIVING",
+        "DocumentRelations" => "RELATIONS",
         _ => controllerName.ToUpperInvariant()
     };
 
