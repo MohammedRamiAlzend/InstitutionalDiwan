@@ -75,7 +75,7 @@ public sealed class DepartmentRegisterNumberingTests
         public async Task<DocumentNumberResponse> IssueCentralAsync()
         {
             var result = await new IssueOfficialNumberCommandHandler(
-                    Documents, Numbers, Registries, UnitOfWork, TestClock.Instance)
+                    Documents, Numbers, Registries, new FakeDocumentAccessEvaluator { AllowAll = true }, UnitOfWork, TestClock.Instance)
                 .Handle(new IssueOfficialNumberCommand(Document.DocumentId, UserId, NumberingYear),
                     CancellationToken.None);
 
@@ -85,7 +85,9 @@ public sealed class DepartmentRegisterNumberingTests
         }
 
         public RecordDepartmentRegistrationCommandHandler RecordHandler() =>
-            new(Documents, Numbers, Departments, Registries, UnitOfWork);
+            new(Documents, Numbers, Departments, Registries, CustodyScope, UnitOfWork);
+
+        public FakeDepartmentScopeEvaluator CustodyScope { get; } = new() { InstitutionWide = true };
 
         public Task<Result<DocumentNumberResponse>> RecordAsync(
             Guid departmentId,
@@ -97,7 +99,7 @@ public sealed class DepartmentRegisterNumberingTests
                 CancellationToken.None);
 
         public ReceiveDocumentCommandHandler ReceiveHandler() =>
-            new(Movements, Documents, UnitOfWork, TestClock.Instance);
+            new(Movements, Documents, CustodyScope, UnitOfWork, TestClock.Instance);
 
         public DocumentNumber? DepartmentEntry(Guid departmentId) =>
             Numbers.DocumentNumbers.SingleOrDefault(number =>
@@ -214,7 +216,8 @@ public sealed class DepartmentRegisterNumberingTests
         world.Documents.Add(second.Value);
 
         var issue = await new IssueOfficialNumberCommandHandler(
-                world.Documents, world.Numbers, world.Registries, world.UnitOfWork, TestClock.Instance)
+                world.Documents, world.Numbers, world.Registries,
+                new FakeDocumentAccessEvaluator { AllowAll = true }, world.UnitOfWork, TestClock.Instance)
             .Handle(new IssueOfficialNumberCommand(second.Value.DocumentId, world.UserId, NumberingYear),
                 CancellationToken.None);
         Assert.True(issue.IsSuccess, issue.Error?.Code);
@@ -235,7 +238,8 @@ public sealed class DepartmentRegisterNumberingTests
         var central = await world.IssueCentralAsync();
         await world.RecordAsync(world.HrId, "45", FirstVisit);
 
-        var result = await new CancelOfficialNumberCommandHandler(world.Documents, world.Numbers, world.UnitOfWork)
+        var result = await new CancelOfficialNumberCommandHandler(
+                world.Documents, world.Numbers, new FakeDocumentAccessEvaluator { AllowAll = true }, world.UnitOfWork)
             .Handle(new CancelOfficialNumberCommand(
                 world.Document.DocumentId, central.DocumentNumberId, world.UserId, "خطأ"),
                 CancellationToken.None);
@@ -300,6 +304,26 @@ public sealed class DepartmentRegisterNumberingTests
         Assert.Equal(FirstVisit, line.RegistryDate);
         Assert.Equal(world.Document.OfficialNumberText, line.CentralNumberText);
         Assert.Equal(1, line.RegistrationCount);
+    }
+
+    [Fact]
+    public async Task RecordRegistration_ForADepartmentOutsideTheCallersScope_IsForbidden()
+    {
+        var world = new World();
+        await world.IssueCentralAsync();
+        world.CustodyScope.InstitutionWide = false;
+        world.CustodyScope.AccessibleDepartments.Add(world.DiwanId);
+
+        var result = await world.RecordAsync(world.HrId, "45", FirstVisit);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(DomainErrors.Correspondence.DepartmentOutOfScope.Code, result.Error.Code);
+        Assert.Null(world.DepartmentEntry(world.HrId));
+
+        world.CustodyScope.AccessibleDepartments.Add(world.HrId);
+        var allowed = await world.RecordAsync(world.HrId, "45", FirstVisit);
+
+        Assert.True(allowed.IsSuccess, allowed.Error?.Code);
     }
 
     [Fact]

@@ -23,6 +23,10 @@ public sealed class MovementWorkflowHandlerTests
         public FakeInstitutionSettingRepository Settings { get; } = new();
         public FakeDocumentMovementRepository Movements { get; } = new();
         public FakeDepartmentScopeEvaluator Scope { get; } = new();
+
+        /// <summary>The scope the workflow commands see; the tests about custody narrow it.</summary>
+        public FakeDepartmentScopeEvaluator CustodyScope { get; } = new() { InstitutionWide = true };
+        public FakeDocumentAccessEvaluator DocumentAccess { get; } = new() { AllowAll = true };
         public FakeUnitOfWork UnitOfWork { get; } = new();
 
         public User Clerk { get; }
@@ -75,31 +79,31 @@ public sealed class MovementWorkflowHandlerTests
         public CentralDiwanRouting Routing() => new(Settings);
 
         public CreateMovementCommandHandler CreateMovementHandler() =>
-            new(Movements, Documents, Departments, Users, Routing(), UnitOfWork);
+            new(Movements, Documents, Departments, Users, Routing(), DocumentAccess, UnitOfWork);
 
         public SendMovementCommandHandler SendMovementHandler() =>
-            new(Movements, Routing(), UnitOfWork);
+            new(Movements, Routing(), CustodyScope, UnitOfWork);
 
         public ReceiveDocumentCommandHandler ReceiveHandler() =>
-            new(Movements, Documents, UnitOfWork, TestClock.Instance);
+            new(Movements, Documents, CustodyScope, UnitOfWork, TestClock.Instance);
 
         public CompleteMovementStepCommandHandler CompleteHandler() =>
-            new(Movements, UnitOfWork);
+            new(Movements, CustodyScope, UnitOfWork);
 
         public RejectMovementStepCommandHandler RejectHandler() =>
-            new(Movements, Routing(), UnitOfWork);
+            new(Movements, Routing(), CustodyScope, UnitOfWork);
 
         public ReturnMovementToSenderCommandHandler ReturnHandler() =>
-            new(Movements, UnitOfWork);
+            new(Movements, CustodyScope, UnitOfWork);
 
         public RedirectMovementCommandHandler RedirectHandler() =>
-            new(Movements, Departments, Users, Routing(), UnitOfWork);
+            new(Movements, Departments, Users, Routing(), CustodyScope, UnitOfWork);
 
         public CloseMovementCommandHandler CloseHandler() =>
-            new(Movements, Documents, UnitOfWork);
+            new(Movements, Documents, CustodyScope, UnitOfWork);
 
         public CancelMovementCommandHandler CancelHandler() =>
-            new(Movements, Documents, UnitOfWork);
+            new(Movements, Documents, CustodyScope, UnitOfWork);
 
         public GetMovementByIdQueryHandler GetByIdHandler() =>
             new(Movements, new FakeDocumentAccessEvaluator { AllowAll = true });
@@ -484,6 +488,168 @@ public sealed class MovementWorkflowHandlerTests
         Assert.Equal(string.Empty, row.DocumentTitle);
         Assert.Null(row.OfficialNumberText);
         Assert.Null(row.Instructions);
+    }
+
+    private static void AssertOutOfCustody(Result result)
+    {
+        Assert.True(result.IsFailure);
+        Assert.Equal(DomainErrors.Movements.DepartmentOutOfScope.Code, result.Error.Code);
+        Assert.Equal(ErrorType.Forbidden, result.Error.Type);
+    }
+
+    private static async Task<(World World, MovementResponse Movement)> SentMovementAsync()
+    {
+        var world = new World();
+        await RegisterDocument(world);
+        var movement = await CreateMovement(world);
+        var sent = await world.SendMovementHandler().Handle(
+            new SendMovementCommand(movement.MovementId, world.Clerk.UserId), CancellationToken.None);
+        Assert.True(sent.IsSuccess, sent.Error?.Code);
+        return (world, sent.Value);
+    }
+
+    private static void NarrowCustodyTo(World world, Guid departmentId)
+    {
+        world.CustodyScope.InstitutionWide = false;
+        world.CustodyScope.AccessibleDepartments.Clear();
+        world.CustodyScope.AccessibleDepartments.Add(departmentId);
+    }
+
+    [Fact]
+    public async Task ReceiverActions_FromTheSendingOrAnUnrelatedDepartment_AreForbidden()
+    {
+        var (world, movement) = await SentMovementAsync();
+        var unrelated = world.AddDepartment("FIN");
+
+        foreach (var departmentId in new[] { world.DiwanId, unrelated })
+        {
+            NarrowCustodyTo(world, departmentId);
+
+            AssertOutOfCustody(await world.ReceiveHandler().Handle(
+                new ReceiveDocumentCommand(movement.MovementId, world.Clerk.UserId), CancellationToken.None));
+            AssertOutOfCustody(await world.CompleteHandler().Handle(
+                new CompleteMovementStepCommand(movement.MovementId, world.Clerk.UserId), CancellationToken.None));
+            AssertOutOfCustody(await world.RejectHandler().Handle(
+                new RejectMovementStepCommand(movement.MovementId, world.Clerk.UserId, "سبب"), CancellationToken.None));
+            AssertOutOfCustody(await world.ReturnHandler().Handle(
+                new ReturnMovementToSenderCommand(movement.MovementId, world.Clerk.UserId, "سبب"), CancellationToken.None));
+            AssertOutOfCustody(await world.RedirectHandler().Handle(
+                new RedirectMovementCommand(movement.MovementId, world.Clerk.UserId, world.DiwanId), CancellationToken.None));
+        }
+
+        var stored = await world.Movements.GetByIdAsync(movement.MovementId);
+        Assert.Equal(MovementStatus.SentId, stored!.StatusId);
+        Assert.Equal(1, stored.CurrentStepNo);
+    }
+
+    [Fact]
+    public async Task ReceiverActions_FromTheReceivingDepartment_AreAllowed()
+    {
+        var (world, movement) = await SentMovementAsync();
+        NarrowCustodyTo(world, world.HrId);
+
+        var rejected = await world.RejectHandler().Handle(
+            new RejectMovementStepCommand(movement.MovementId, world.HROfficer.UserId, "سبب"),
+            CancellationToken.None);
+
+        Assert.True(rejected.IsSuccess, rejected.Error?.Code);
+
+        // The rejection hands the document to the Central Diwan, and custody follows it.
+        AssertOutOfCustody(await world.RedirectHandler().Handle(
+            new RedirectMovementCommand(movement.MovementId, world.HROfficer.UserId, world.HrId), CancellationToken.None));
+
+        NarrowCustodyTo(world, world.DiwanId);
+        var redirected = await world.RedirectHandler().Handle(
+            new RedirectMovementCommand(movement.MovementId, world.Clerk.UserId, world.HrId), CancellationToken.None);
+
+        Assert.True(redirected.IsSuccess, redirected.Error?.Code);
+    }
+
+    [Fact]
+    public async Task SendAndCancel_OnlyFromTheSendingDepartment()
+    {
+        var world = new World();
+        await RegisterDocument(world);
+        var movement = await CreateMovement(world);
+        NarrowCustodyTo(world, world.HrId);
+
+        AssertOutOfCustody(await world.SendMovementHandler().Handle(
+            new SendMovementCommand(movement.MovementId, world.HROfficer.UserId), CancellationToken.None));
+        AssertOutOfCustody(await world.CancelHandler().Handle(
+            new CancelMovementCommand(movement.MovementId, world.HROfficer.UserId, "سبب"), CancellationToken.None));
+
+        NarrowCustodyTo(world, world.DiwanId);
+
+        var sent = await world.SendMovementHandler().Handle(
+            new SendMovementCommand(movement.MovementId, world.Clerk.UserId), CancellationToken.None);
+        Assert.True(sent.IsSuccess, sent.Error?.Code);
+
+        var canceled = await world.CancelHandler().Handle(
+            new CancelMovementCommand(movement.MovementId, world.Clerk.UserId, "سبب"), CancellationToken.None);
+        Assert.True(canceled.IsSuccess, canceled.Error?.Code);
+    }
+
+    [Fact]
+    public async Task Redirect_BeforeSending_BelongsToTheSender()
+    {
+        var world = new World();
+        await RegisterDocument(world);
+        var movement = await CreateMovement(world);
+
+        NarrowCustodyTo(world, world.HrId);
+        AssertOutOfCustody(await world.RedirectHandler().Handle(
+            new RedirectMovementCommand(movement.MovementId, world.HROfficer.UserId, world.DiwanId), CancellationToken.None));
+
+        NarrowCustodyTo(world, world.DiwanId);
+        var redirected = await world.RedirectHandler().Handle(
+            new RedirectMovementCommand(movement.MovementId, world.Clerk.UserId, world.DiwanId), CancellationToken.None);
+
+        Assert.True(redirected.IsSuccess, redirected.Error?.Code);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task Close_FromEitherSide_IsAllowed(bool fromSender)
+    {
+        var (world, movement) = await SentMovementAsync();
+        NarrowCustodyTo(world, fromSender ? world.DiwanId : world.HrId);
+
+        var closed = await world.CloseHandler().Handle(
+            new CloseMovementCommand(movement.MovementId, world.Clerk.UserId), CancellationToken.None);
+
+        Assert.True(closed.IsSuccess, closed.Error?.Code);
+    }
+
+    [Fact]
+    public async Task Close_FromAnUnrelatedDepartment_IsForbidden()
+    {
+        var (world, movement) = await SentMovementAsync();
+        NarrowCustodyTo(world, world.AddDepartment("FIN"));
+
+        AssertOutOfCustody(await world.CloseHandler().Handle(
+            new CloseMovementCommand(movement.MovementId, world.Clerk.UserId), CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task CreateMovement_RequiresDownloadAccess()
+    {
+        var world = new World();
+        await RegisterDocument(world);
+        world.DocumentAccess.AllowAll = false;
+        world.DocumentAccess.ViewableDocuments.Add(world.Document.DocumentId);
+
+        var denied = await world.CreateMovementHandler().Handle(
+            new CreateMovementCommand(world.Document.DocumentId, world.Clerk.UserId, world.HrId), CancellationToken.None);
+
+        Assert.Equal(DomainErrors.Correspondence.DocumentAccessDenied.Code, denied.Error.Code);
+        Assert.False(await world.Movements.HasActiveMovementsAsync(world.Document.DocumentId));
+
+        world.DocumentAccess.DownloadableDocuments.Add(world.Document.DocumentId);
+        var allowed = await world.CreateMovementHandler().Handle(
+            new CreateMovementCommand(world.Document.DocumentId, world.Clerk.UserId, world.HrId), CancellationToken.None);
+
+        Assert.True(allowed.IsSuccess, allowed.Error?.Code);
     }
 
     [Fact]

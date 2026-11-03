@@ -1,5 +1,7 @@
+using InstitutionalDiwan.Application.Abstractions.Authorization;
 using InstitutionalDiwan.Application.Abstractions.Messaging;
 using InstitutionalDiwan.Domain.Common;
+using InstitutionalDiwan.Domain.Entities.Identity;
 using InstitutionalDiwan.Domain.Entities.Numbering;
 using InstitutionalDiwan.Domain.Errors;
 using InstitutionalDiwan.Domain.Repositories;
@@ -11,15 +13,18 @@ internal sealed class CancelOfficialNumberCommandHandler
 {
     private readonly IDocumentRepository _documentRepository;
     private readonly IDocumentNumberRepository _documentNumberRepository;
+    private readonly IDocumentAccessEvaluator _documentAccessEvaluator;
     private readonly IUnitOfWork _unitOfWork;
 
     public CancelOfficialNumberCommandHandler(
         IDocumentRepository documentRepository,
         IDocumentNumberRepository documentNumberRepository,
+        IDocumentAccessEvaluator documentAccessEvaluator,
         IUnitOfWork unitOfWork)
     {
         _documentRepository = documentRepository;
         _documentNumberRepository = documentNumberRepository;
+        _documentAccessEvaluator = documentAccessEvaluator;
         _unitOfWork = unitOfWork;
     }
 
@@ -36,6 +41,12 @@ internal sealed class CancelOfficialNumberCommandHandler
         var document = await _documentRepository.GetByIdAsync(request.DocumentId, cancellationToken);
         if (document is null)
             return Result.Failure<DocumentNumberResponse>(DomainErrors.Correspondence.DocumentNotFound);
+
+        if (!await _documentAccessEvaluator.CanAccessDocumentAsync(
+                request.DocumentId, AccessLevel.DownloadId, cancellationToken))
+        {
+            return Result.Failure<DocumentNumberResponse>(DomainErrors.Correspondence.DocumentAccessDenied);
+        }
 
         var notArchived = document.EnsureNotArchived();
         if (notArchived.IsFailure)

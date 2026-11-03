@@ -42,14 +42,16 @@ public sealed class OfficialNumberLifecycleHandlerTests
             Documents.Add(Document);
         }
 
+        public FakeDocumentAccessEvaluator Access { get; } = new() { AllowAll = true };
+
         public IssueOfficialNumberCommandHandler IssueHandler() =>
-            new(Documents, Numbers, Registries, UnitOfWork, TestClock.Instance);
+            new(Documents, Numbers, Registries, Access, UnitOfWork, TestClock.Instance);
 
         public CancelOfficialNumberCommandHandler CancelHandler() =>
-            new(Documents, Numbers, UnitOfWork);
+            new(Documents, Numbers, Access, UnitOfWork);
 
         public ReplaceOfficialNumberCommandHandler ReplaceHandler() =>
-            new(Documents, Numbers, Registries, UnitOfWork, TestClock.Instance);
+            new(Documents, Numbers, Registries, Access, UnitOfWork, TestClock.Instance);
     }
 
     private static async Task<DocumentNumberResponse> IssueAsync(World world)
@@ -237,6 +239,34 @@ public sealed class OfficialNumberLifecycleHandlerTests
 
         Assert.True(result.IsFailure);
         Assert.Equal(DomainErrors.Correspondence.DocumentNotFound.Code, result.Error.Code);
+    }
+
+    [Fact]
+    public async Task NumberWrites_RequireDownloadAccess_AndADeniedCallChangesNothing()
+    {
+        var world = new World();
+        var number = await IssueAsync(world);
+        world.Access.AllowAll = false;
+        world.Access.ViewableDocuments.Add(world.Document.DocumentId);
+
+        var issue = await world.IssueHandler().Handle(
+            new IssueOfficialNumberCommand(world.Document.DocumentId, world.UserId, NumberingYear), CancellationToken.None);
+        var cancel = await world.CancelHandler().Handle(
+            new CancelOfficialNumberCommand(world.Document.DocumentId, number.DocumentNumberId, world.UserId, "خطأ"), CancellationToken.None);
+        var replace = await world.ReplaceHandler().Handle(
+            new ReplaceOfficialNumberCommand(world.Document.DocumentId, number.DocumentNumberId, world.UserId, "تصحيح", NumberingYear), CancellationToken.None);
+
+        Assert.Equal(DomainErrors.Correspondence.DocumentAccessDenied.Code, issue.Error.Code);
+        Assert.Equal(DomainErrors.Correspondence.DocumentAccessDenied.Code, cancel.Error.Code);
+        Assert.Equal(DomainErrors.Correspondence.DocumentAccessDenied.Code, replace.Error.Code);
+        Assert.Single(world.Numbers.DocumentNumbers);
+        Assert.Equal(DocumentNumberStatus.ActiveId, world.Numbers.DocumentNumbers.Single().StatusId);
+
+        world.Access.DownloadableDocuments.Add(world.Document.DocumentId);
+        var allowed = await world.CancelHandler().Handle(
+            new CancelOfficialNumberCommand(world.Document.DocumentId, number.DocumentNumberId, world.UserId, "خطأ"), CancellationToken.None);
+
+        Assert.True(allowed.IsSuccess, allowed.Error?.Code);
     }
 
     [Fact]

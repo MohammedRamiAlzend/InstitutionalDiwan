@@ -215,12 +215,12 @@ Each version stores a **64-char hex SHA-256**. Max upload ~50 MB (+ multipart ov
 
 | Method | Route | Permission |
 | --- | --- | --- |
-| `GET` | `.../numbers/history` | `NUMBERING_VIEW` |
-| `GET` | `.../numbers/registry-entries` | `NUMBERING_VIEW` |
-| `POST` | `.../numbers/issue` | `NUMBERING_MANAGE` |
-| `POST` | `.../numbers/{documentNumberId}/cancel` | `NUMBERING_MANAGE` |
-| `POST` | `.../numbers/{documentNumberId}/replace` | `NUMBERING_MANAGE` |
-| `POST` | `.../numbers/department-registration` | `NUMBERING_MANAGE` |
+| `GET` | `.../numbers/history` | `NUMBERING_VIEW` | + `VIEW` access. |
+| `GET` | `.../numbers/registry-entries` | `NUMBERING_VIEW` | + `VIEW` access. |
+| `POST` | `.../numbers/issue` | `NUMBERING_MANAGE` | + `DOWNLOAD` access. |
+| `POST` | `.../numbers/{documentNumberId}/cancel` | `NUMBERING_MANAGE` | + `DOWNLOAD` access. |
+| `POST` | `.../numbers/{documentNumberId}/replace` | `NUMBERING_MANAGE` | + `DOWNLOAD` access. |
+| `POST` | `.../numbers/department-registration` | `NUMBERING_MANAGE` | + scope covering that department. |
 
 `department-registration` must exist before `receive` on a movement is allowed.
 
@@ -238,19 +238,19 @@ Each version stores a **64-char hex SHA-256**. Max upload ~50 MB (+ multipart ov
 
 | Method | Route | Permission |
 | --- | --- | --- |
-| `GET` | `/api/movements/inbox` | `DOCUMENT_VIEW` |
-| `GET` | `/api/movements/outbox` | `DOCUMENT_VIEW` |
-| `GET` | `/api/movements/{movementId}` | `DOCUMENT_VIEW` |
-| `GET` | `/api/movements/by-document/{documentId}` | `DOCUMENT_VIEW` |
-| `POST` | `/api/movements` | `DOCUMENT_EDIT` |
-| `POST` | `/api/movements/{movementId}/send` | `DOCUMENT_EDIT` |
-| `POST` | `/api/movements/{movementId}/receive` | `DOCUMENT_EDIT` |
-| `POST` | `/api/movements/{movementId}/complete` | `DOCUMENT_EDIT` |
-| `POST` | `/api/movements/{movementId}/reject` | `DOCUMENT_EDIT` |
-| `POST` | `/api/movements/{movementId}/return` | `DOCUMENT_EDIT` |
-| `POST` | `/api/movements/{movementId}/redirect` | `DOCUMENT_EDIT` |
-| `POST` | `/api/movements/{movementId}/close` | `DOCUMENT_EDIT` |
-| `POST` | `/api/movements/{movementId}/cancel` | `DOCUMENT_EDIT` |
+| `GET` | `/api/movements/inbox` | `DOCUMENT_VIEW` | Rows without `VIEW` access have an empty title and no number or instructions. |
+| `GET` | `/api/movements/outbox` | `DOCUMENT_VIEW` | Same as the inbox. |
+| `GET` | `/api/movements/{movementId}` | `DOCUMENT_VIEW` | + `VIEW` access to the document. |
+| `GET` | `/api/movements/by-document/{documentId}` | `DOCUMENT_VIEW` | + `VIEW` access. |
+| `POST` | `/api/movements` | `DOCUMENT_EDIT` | + `DOWNLOAD` access. |
+| `POST` | `/api/movements/{movementId}/send` | `DOCUMENT_EDIT` | Custody: scope covers the current step's sender; otherwise 403 `Movements.DepartmentOutOfScope`. |
+| `POST` | `/api/movements/{movementId}/receive` | `DOCUMENT_EDIT` | Custody: the current step's receiver. |
+| `POST` | `/api/movements/{movementId}/complete` | `DOCUMENT_EDIT` | Custody: the receiver. |
+| `POST` | `/api/movements/{movementId}/reject` | `DOCUMENT_EDIT` | Custody: the receiver. |
+| `POST` | `/api/movements/{movementId}/return` | `DOCUMENT_EDIT` | Custody: the receiver. |
+| `POST` | `/api/movements/{movementId}/redirect` | `DOCUMENT_EDIT` | Custody: the receiver, or the sender while the movement is still a draft. |
+| `POST` | `/api/movements/{movementId}/close` | `DOCUMENT_EDIT` | Custody: either side. |
+| `POST` | `/api/movements/{movementId}/cancel` | `DOCUMENT_EDIT` | Custody: the sender. |
 
 Inbox/outbox default to the caller's primary department; `?departmentId=` only inside scope
 (otherwise `403` / `Movements.DepartmentOutOfScope`).

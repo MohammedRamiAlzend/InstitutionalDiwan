@@ -71,7 +71,8 @@ public sealed class ArchivingHandlerTests
         /// <summary>Gives the draft its official number, which also moves it to REGISTERED.</summary>
         public async Task<DocumentNumberResponse> RegisterAsync()
         {
-            var result = await new IssueOfficialNumberCommandHandler(Documents, Numbers, Registries, UnitOfWork, TestClock.Instance)
+            var result = await new IssueOfficialNumberCommandHandler(
+                    Documents, Numbers, Registries, new FakeDocumentAccessEvaluator { AllowAll = true }, UnitOfWork, TestClock.Instance)
                 .Handle(new IssueOfficialNumberCommand(Document.DocumentId, Clerk.UserId, 2026), CancellationToken.None);
             Assert.True(result.IsSuccess, result.Error?.Code);
             return result.Value;
@@ -336,7 +337,8 @@ public sealed class ArchivingHandlerTests
         var world = new World();
         var number = await world.RegisterAsync();
         await world.ArchiveAsync();
-        var handler = new CancelOfficialNumberCommandHandler(world.Documents, world.Numbers, world.UnitOfWork);
+        var handler = new CancelOfficialNumberCommandHandler(
+            world.Documents, world.Numbers, new FakeDocumentAccessEvaluator { AllowAll = true }, world.UnitOfWork);
         var command = new CancelOfficialNumberCommand(world.Document.DocumentId, number.DocumentNumberId, world.Clerk.UserId, "خطأ");
 
         AssertFrozen((await handler.Handle(command, CancellationToken.None)).Error);
@@ -355,7 +357,8 @@ public sealed class ArchivingHandlerTests
         await world.ArchiveAsync();
 
         var result = await new ReplaceOfficialNumberCommandHandler(
-                world.Documents, world.Numbers, world.Registries, world.UnitOfWork, TestClock.Instance)
+                world.Documents, world.Numbers, world.Registries,
+                new FakeDocumentAccessEvaluator { AllowAll = true }, world.UnitOfWork, TestClock.Instance)
             .Handle(
                 new ReplaceOfficialNumberCommand(world.Document.DocumentId, number.DocumentNumberId, world.Clerk.UserId, "تصحيح"),
                 CancellationToken.None);
@@ -372,7 +375,8 @@ public sealed class ArchivingHandlerTests
         await world.ArchiveAsync();
 
         var result = await new RecordDepartmentRegistrationCommandHandler(
-                world.Documents, world.Numbers, world.Departments, world.Registries, world.UnitOfWork)
+                world.Documents, world.Numbers, world.Departments, world.Registries,
+                new FakeDepartmentScopeEvaluator { InstitutionWide = true }, world.UnitOfWork)
             .Handle(
                 new RecordDepartmentRegistrationCommand(
                     world.Document.DocumentId, Guid.NewGuid(), "45", TestClock.Instance.UtcNow, world.Clerk.UserId),

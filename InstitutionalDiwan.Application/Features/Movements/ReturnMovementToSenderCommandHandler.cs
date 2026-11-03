@@ -1,3 +1,4 @@
+using InstitutionalDiwan.Application.Abstractions.Authorization;
 using InstitutionalDiwan.Application.Abstractions.Messaging;
 using InstitutionalDiwan.Domain.Common;
 using InstitutionalDiwan.Domain.Errors;
@@ -9,13 +10,16 @@ internal sealed class ReturnMovementToSenderCommandHandler
     : ICommandHandler<ReturnMovementToSenderCommand, MovementResponse>
 {
     private readonly IDocumentMovementRepository _movementRepository;
+    private readonly IDepartmentScopeEvaluator _departmentScopeEvaluator;
     private readonly IUnitOfWork _unitOfWork;
 
     public ReturnMovementToSenderCommandHandler(
         IDocumentMovementRepository movementRepository,
+        IDepartmentScopeEvaluator departmentScopeEvaluator,
         IUnitOfWork unitOfWork)
     {
         _movementRepository = movementRepository;
+        _departmentScopeEvaluator = departmentScopeEvaluator;
         _unitOfWork = unitOfWork;
     }
 
@@ -26,6 +30,11 @@ internal sealed class ReturnMovementToSenderCommandHandler
         var movement = await _movementRepository.GetByIdAsync(request.MovementId, cancellationToken);
         if (movement is null)
             return Result.Failure<MovementResponse>(DomainErrors.Movements.MovementNotFound);
+
+        var custody = await MovementCustody.EnsureReceiverAsync(
+            movement, _departmentScopeEvaluator, cancellationToken);
+        if (custody.IsFailure)
+            return Result.Failure<MovementResponse>(custody.Error);
 
         var stepGuard = MovementStepGuard.EnsureCurrent(movement, request.StepId);
         if (stepGuard.IsFailure)

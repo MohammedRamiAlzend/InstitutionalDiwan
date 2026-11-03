@@ -1,3 +1,4 @@
+using InstitutionalDiwan.Application.Abstractions.Authorization;
 using InstitutionalDiwan.Application.Abstractions.Messaging;
 using InstitutionalDiwan.Domain.Common;
 using InstitutionalDiwan.Domain.Errors;
@@ -10,15 +11,18 @@ internal sealed class SendMovementCommandHandler
 {
     private readonly IDocumentMovementRepository _movementRepository;
     private readonly CentralDiwanRouting _centralDiwanRouting;
+    private readonly IDepartmentScopeEvaluator _departmentScopeEvaluator;
     private readonly IUnitOfWork _unitOfWork;
 
     public SendMovementCommandHandler(
         IDocumentMovementRepository movementRepository,
         CentralDiwanRouting centralDiwanRouting,
+        IDepartmentScopeEvaluator departmentScopeEvaluator,
         IUnitOfWork unitOfWork)
     {
         _movementRepository = movementRepository;
         _centralDiwanRouting = centralDiwanRouting;
+        _departmentScopeEvaluator = departmentScopeEvaluator;
         _unitOfWork = unitOfWork;
     }
 
@@ -29,6 +33,11 @@ internal sealed class SendMovementCommandHandler
         var movement = await _movementRepository.GetByIdAsync(request.MovementId, cancellationToken);
         if (movement is null)
             return Result.Failure<MovementResponse>(DomainErrors.Movements.MovementNotFound);
+
+        var custody = await MovementCustody.EnsureSenderAsync(
+            movement, _departmentScopeEvaluator, cancellationToken);
+        if (custody.IsFailure)
+            return Result.Failure<MovementResponse>(custody.Error);
 
         var routeResult = await _centralDiwanRouting.ValidateRouteAsync(
             movement.SourceDepartmentId, movement.DestinationDepartmentId, cancellationToken);

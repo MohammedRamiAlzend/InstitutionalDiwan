@@ -1,3 +1,4 @@
+using InstitutionalDiwan.Application.Abstractions.Authorization;
 using InstitutionalDiwan.Application.Abstractions.Messaging;
 using InstitutionalDiwan.Domain.Common;
 using InstitutionalDiwan.Domain.Errors;
@@ -10,15 +11,18 @@ internal sealed class CancelMovementCommandHandler
 {
     private readonly IDocumentMovementRepository _movementRepository;
     private readonly IDocumentRepository _documentRepository;
+    private readonly IDepartmentScopeEvaluator _departmentScopeEvaluator;
     private readonly IUnitOfWork _unitOfWork;
 
     public CancelMovementCommandHandler(
         IDocumentMovementRepository movementRepository,
         IDocumentRepository documentRepository,
+        IDepartmentScopeEvaluator departmentScopeEvaluator,
         IUnitOfWork unitOfWork)
     {
         _movementRepository = movementRepository;
         _documentRepository = documentRepository;
+        _departmentScopeEvaluator = departmentScopeEvaluator;
         _unitOfWork = unitOfWork;
     }
 
@@ -29,6 +33,11 @@ internal sealed class CancelMovementCommandHandler
         var movement = await _movementRepository.GetByIdAsync(request.MovementId, cancellationToken);
         if (movement is null)
             return Result.Failure<MovementResponse>(DomainErrors.Movements.MovementNotFound);
+
+        var custody = await MovementCustody.EnsureSenderAsync(
+            movement, _departmentScopeEvaluator, cancellationToken);
+        if (custody.IsFailure)
+            return Result.Failure<MovementResponse>(custody.Error);
 
         var cancel = movement.Cancel(request.UserId, request.Reason, _unitOfWork.UtcNow);
         if (cancel.IsFailure)

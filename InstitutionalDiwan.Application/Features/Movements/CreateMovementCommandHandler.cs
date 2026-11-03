@@ -1,6 +1,8 @@
+using InstitutionalDiwan.Application.Abstractions.Authorization;
 using InstitutionalDiwan.Application.Abstractions.Messaging;
 using InstitutionalDiwan.Domain.Common;
 using InstitutionalDiwan.Domain.Entities.Correspondence;
+using InstitutionalDiwan.Domain.Entities.Identity;
 using InstitutionalDiwan.Domain.Entities.Movements;
 using InstitutionalDiwan.Domain.Errors;
 using InstitutionalDiwan.Domain.Repositories;
@@ -15,6 +17,7 @@ internal sealed class CreateMovementCommandHandler
     private readonly IDepartmentRepository _departmentRepository;
     private readonly IUserRepository _userRepository;
     private readonly CentralDiwanRouting _centralDiwanRouting;
+    private readonly IDocumentAccessEvaluator _documentAccessEvaluator;
     private readonly IUnitOfWork _unitOfWork;
 
     public CreateMovementCommandHandler(
@@ -23,6 +26,7 @@ internal sealed class CreateMovementCommandHandler
         IDepartmentRepository departmentRepository,
         IUserRepository userRepository,
         CentralDiwanRouting centralDiwanRouting,
+        IDocumentAccessEvaluator documentAccessEvaluator,
         IUnitOfWork unitOfWork)
     {
         _movementRepository = movementRepository;
@@ -30,6 +34,7 @@ internal sealed class CreateMovementCommandHandler
         _departmentRepository = departmentRepository;
         _userRepository = userRepository;
         _centralDiwanRouting = centralDiwanRouting;
+        _documentAccessEvaluator = documentAccessEvaluator;
         _unitOfWork = unitOfWork;
     }
 
@@ -47,6 +52,12 @@ internal sealed class CreateMovementCommandHandler
         var document = await _documentRepository.GetByIdAsync(request.DocumentId, cancellationToken);
         if (document is null)
             return Result.Failure<MovementResponse>(DomainErrors.Correspondence.DocumentNotFound);
+
+        if (!await _documentAccessEvaluator.CanAccessDocumentAsync(
+                request.DocumentId, AccessLevel.DownloadId, cancellationToken))
+        {
+            return Result.Failure<MovementResponse>(DomainErrors.Correspondence.DocumentAccessDenied);
+        }
 
         if (await _movementRepository.HasActiveMovementsAsync(document.DocumentId, cancellationToken))
             return Result.Failure<MovementResponse>(DomainErrors.Movements.ActiveMovementExists);

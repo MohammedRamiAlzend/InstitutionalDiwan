@@ -1,5 +1,7 @@
+using InstitutionalDiwan.Application.Abstractions.Authorization;
 using InstitutionalDiwan.Application.Abstractions.Messaging;
 using InstitutionalDiwan.Domain.Common;
+using InstitutionalDiwan.Domain.Entities.Identity;
 using InstitutionalDiwan.Domain.Entities.Numbering;
 using InstitutionalDiwan.Domain.Errors;
 using InstitutionalDiwan.Domain.Repositories;
@@ -13,6 +15,7 @@ internal sealed class ReplaceOfficialNumberCommandHandler
     private readonly IDocumentRepository _documentRepository;
     private readonly IDocumentNumberRepository _documentNumberRepository;
     private readonly INumberingRegistryRepository _numberingRegistryRepository;
+    private readonly IDocumentAccessEvaluator _documentAccessEvaluator;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IClock _clock;
 
@@ -20,12 +23,14 @@ internal sealed class ReplaceOfficialNumberCommandHandler
         IDocumentRepository documentRepository,
         IDocumentNumberRepository documentNumberRepository,
         INumberingRegistryRepository numberingRegistryRepository,
+        IDocumentAccessEvaluator documentAccessEvaluator,
         IUnitOfWork unitOfWork,
         IClock clock)
     {
         _documentRepository = documentRepository;
         _documentNumberRepository = documentNumberRepository;
         _numberingRegistryRepository = numberingRegistryRepository;
+        _documentAccessEvaluator = documentAccessEvaluator;
         _unitOfWork = unitOfWork;
         _clock = clock;
     }
@@ -38,6 +43,12 @@ internal sealed class ReplaceOfficialNumberCommandHandler
         if (document is null)
             return Result.Failure<DocumentNumberResponse>(
                 DomainErrors.Correspondence.DocumentNotFound);
+
+        if (!await _documentAccessEvaluator.CanAccessDocumentAsync(
+                request.DocumentId, AccessLevel.DownloadId, cancellationToken))
+        {
+            return Result.Failure<DocumentNumberResponse>(DomainErrors.Correspondence.DocumentAccessDenied);
+        }
 
         // Checked here as well as in the domain so a rejected call never consumes a registry number.
         var notArchived = document.EnsureNotArchived();

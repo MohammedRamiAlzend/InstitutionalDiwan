@@ -1,5 +1,7 @@
+using InstitutionalDiwan.Application.Abstractions.Authorization;
 using InstitutionalDiwan.Application.Abstractions.Messaging;
 using InstitutionalDiwan.Domain.Common;
+using InstitutionalDiwan.Domain.Entities.Movements;
 using InstitutionalDiwan.Domain.Errors;
 using InstitutionalDiwan.Domain.Repositories;
 
@@ -12,6 +14,7 @@ internal sealed class RedirectMovementCommandHandler
     private readonly IDepartmentRepository _departmentRepository;
     private readonly IUserRepository _userRepository;
     private readonly CentralDiwanRouting _centralDiwanRouting;
+    private readonly IDepartmentScopeEvaluator _departmentScopeEvaluator;
     private readonly IUnitOfWork _unitOfWork;
 
     public RedirectMovementCommandHandler(
@@ -19,12 +22,14 @@ internal sealed class RedirectMovementCommandHandler
         IDepartmentRepository departmentRepository,
         IUserRepository userRepository,
         CentralDiwanRouting centralDiwanRouting,
+        IDepartmentScopeEvaluator departmentScopeEvaluator,
         IUnitOfWork unitOfWork)
     {
         _movementRepository = movementRepository;
         _departmentRepository = departmentRepository;
         _userRepository = userRepository;
         _centralDiwanRouting = centralDiwanRouting;
+        _departmentScopeEvaluator = departmentScopeEvaluator;
         _unitOfWork = unitOfWork;
     }
 
@@ -35,6 +40,13 @@ internal sealed class RedirectMovementCommandHandler
         var movement = await _movementRepository.GetByIdAsync(request.MovementId, cancellationToken);
         if (movement is null)
             return Result.Failure<MovementResponse>(DomainErrors.Movements.MovementNotFound);
+
+        // A movement not sent yet is still with the sender, so custody is the sender's until then.
+        var custody = movement.StatusId == DocumentMovement.StatusDraft
+            ? await MovementCustody.EnsureSenderAsync(movement, _departmentScopeEvaluator, cancellationToken)
+            : await MovementCustody.EnsureReceiverAsync(movement, _departmentScopeEvaluator, cancellationToken);
+        if (custody.IsFailure)
+            return Result.Failure<MovementResponse>(custody.Error);
 
         var destination = await _departmentRepository.GetByIdAsync(
             request.NewDestinationDepartmentId, cancellationToken);

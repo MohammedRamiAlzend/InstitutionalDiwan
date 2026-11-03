@@ -1,3 +1,4 @@
+using InstitutionalDiwan.Application.Abstractions.Authorization;
 using InstitutionalDiwan.Application.Abstractions.Messaging;
 using InstitutionalDiwan.Domain.Common;
 using InstitutionalDiwan.Domain.Errors;
@@ -10,17 +11,20 @@ internal sealed class ReceiveDocumentCommandHandler
 {
     private readonly IDocumentMovementRepository _movementRepository;
     private readonly IDocumentRepository _documentRepository;
+    private readonly IDepartmentScopeEvaluator _departmentScopeEvaluator;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IClock _clock;
 
     public ReceiveDocumentCommandHandler(
         IDocumentMovementRepository movementRepository,
         IDocumentRepository documentRepository,
+        IDepartmentScopeEvaluator departmentScopeEvaluator,
         IUnitOfWork unitOfWork,
         IClock clock)
     {
         _movementRepository = movementRepository;
         _documentRepository = documentRepository;
+        _departmentScopeEvaluator = departmentScopeEvaluator;
         _unitOfWork = unitOfWork;
         _clock = clock;
     }
@@ -32,6 +36,11 @@ internal sealed class ReceiveDocumentCommandHandler
         var movement = await _movementRepository.GetByIdAsync(request.MovementId, cancellationToken);
         if (movement is null)
             return Result.Failure<MovementStepReceiptResponse>(DomainErrors.Movements.MovementNotFound);
+
+        var custody = await MovementCustody.EnsureReceiverAsync(
+            movement, _departmentScopeEvaluator, cancellationToken);
+        if (custody.IsFailure)
+            return Result.Failure<MovementStepReceiptResponse>(custody.Error);
 
         var stepGuard = MovementStepGuard.EnsureCurrent(movement, request.StepId);
         if (stepGuard.IsFailure)

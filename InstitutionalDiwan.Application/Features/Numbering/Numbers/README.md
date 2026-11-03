@@ -62,7 +62,8 @@ one document.
 
 | Date | Author | Change |
 | --- | --- | --- |
-| 2026-11-03 | Claude | The number history and registry entries reads now require `VIEW` access to the document (403 `Correspondence.DocumentAccessDenied`). Issue, cancel, replace and department registration have no document-level check yet; their levels are awaiting a decision. |
+| 2026-11-03 | Claude | Issue, cancel and replace now require `DOWNLOAD` access to the document, and recording a department registration requires scope over that department (403 `Correspondence.DepartmentOutOfScope`), so a department can record a SECRET document it receives without being able to read it. |
+| 2026-11-03 | Claude | The number history and registry entries reads now require `VIEW` access to the document (403 `Correspondence.DocumentAccessDenied`). |
 | 2026-11-03 | Claude | Cancelling or replacing an official number and recording a department registration now reject an archived document with `Correspondence.DocumentArchived`. The replace handler checks before allocating, so a rejected call never consumes a registry number. |
 | 2026-10-22 | Buffy | Issue/cancel/replace and department-registration handlers now pass `IUnitOfWork.UtcNow` into the registry allocation and the number factories, so the counter, the number, and its history share one instant. |
 | 2026-10-20 | Buffy | Added department register entries: a clerk-typed number and date per department (`RecordDepartmentRegistrationCommand`), a second arrival that reuses the number and adds a dated history row, and `GetDocumentRegistryNumbersQuery` to read the central number alongside every department line. |

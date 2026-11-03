@@ -45,12 +45,12 @@ public sealed class MovementsController : ControllerBase
     /// <response code="200">The created movement.</response>
     /// <response code="400">The payload failed validation.</response>
     /// <response code="401">The token is missing, expired, or invalid.</response>
-    /// <response code="403">The token lacks the DOCUMENT_EDIT permission, or the caller is inactive.</response>
+    /// <response code="403">The token lacks the DOCUMENT_EDIT permission, or the caller has no DOWNLOAD access to the document, or the caller is inactive.</response>
     /// <response code="404">No document, department, or assignee with that id exists.</response>
     /// <response code="409">The document is not REGISTERED, the destination department is inactive, or the document already has an active movement.</response>
     [HttpPost]
     [EndpointSummary("Routes a document to another department by opening a movement.")]
-    [EndpointDescription("Routes a document to another department by opening a movement. The source department is the caller's primary department; the destination is the department the document is handed to. Only a REGISTERED document can be routed, and a document can have one active movement at a time. Requires the DOCUMENT_EDIT permission. Responses: 200 (The created movement.), 400 (The payload failed validation.), 401 (The token is missing, expired, or invalid.), 403 (The token lacks the DOCUMENT_EDIT permission, or the caller is inactive.), 404 (No document, department, or assignee with that id exists.), 409 (The document is not REGISTERED, the destination department is inactive, or the document already has an active movement.)")]
+    [EndpointDescription("Routes a document to another department by opening a movement. The source department is the caller's primary department; the destination is the department the document is handed to. Only a REGISTERED document can be routed, and a document can have one active movement at a time. Requires the DOCUMENT_EDIT permission and DOWNLOAD access to the document. Responses: 200 (The created movement.), 400 (The payload failed validation.), 401 (The token is missing, expired, or invalid.), 403 (The token lacks the DOCUMENT_EDIT permission, or the caller has no DOWNLOAD access to the document, or the caller is inactive.), 404 (No document, department, or assignee with that id exists.), 409 (The document is not REGISTERED, the destination department is inactive, or the document already has an active movement.)")]
     [Authorize(Policy = Permissions.DocumentEdit)]
     [ProducesResponseType<MovementResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
@@ -213,12 +213,12 @@ public sealed class MovementsController : ControllerBase
     /// <param name="cancellationToken">Request cancellation token (optional).</param>
     /// <response code="200">The sent movement.</response>
     /// <response code="401">The token is missing, expired, or invalid.</response>
-    /// <response code="403">The token lacks the DOCUMENT_EDIT permission.</response>
+    /// <response code="403">The token lacks the DOCUMENT_EDIT permission, or the caller's scope does not cover the sending department.</response>
     /// <response code="404">No movement with that id exists.</response>
     /// <response code="409">The movement is not in a status that can be sent.</response>
     [HttpPost("{movementId:guid}/send")]
     [EndpointSummary("Sends the movement's current step to the destination department.")]
-    [EndpointDescription("Sends the movement's current step to the destination department. Requires the DOCUMENT_EDIT permission. Responses: 200 (The sent movement.), 401 (The token is missing, expired, or invalid.), 403 (The token lacks the DOCUMENT_EDIT permission.), 404 (No movement with that id exists.), 409 (The movement is not in a status that can be sent.)")]
+    [EndpointDescription("Sends the movement's current step to the destination department. Requires the DOCUMENT_EDIT permission and a scope covering the sending department of the current step. Responses: 200 (The sent movement.), 401 (The token is missing, expired, or invalid.), 403 (The token lacks the DOCUMENT_EDIT permission, or the caller's scope does not cover the sending department.), 404 (No movement with that id exists.), 409 (The movement is not in a status that can be sent.)")]
     [Authorize(Policy = Permissions.DocumentEdit)]
     [ProducesResponseType<MovementResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
@@ -250,13 +250,13 @@ public sealed class MovementsController : ControllerBase
     /// <param name="cancellationToken">Request cancellation token (optional).</param>
     /// <response code="200">The recorded receipt.</response>
     /// <response code="401">The token is missing, expired, or invalid.</response>
-    /// <response code="403">The token lacks the DOCUMENT_EDIT permission.</response>
+    /// <response code="403">The token lacks the DOCUMENT_EDIT permission, or the caller's scope does not cover the receiving department.</response>
     /// <response code="404">No movement with that id exists.</response>
     /// <response code="409">The step is not awaiting receipt, or the department's register entry
     /// is missing — record it first.</response>
     [HttpPost("{movementId:guid}/receive")]
     [EndpointSummary("Receives the movement's current step at the destination department.")]
-    [EndpointDescription("Receives the movement's current step at the destination department. Requires the DOCUMENT_EDIT permission. Responses: 200 (The recorded receipt.), 401 (The token is missing, expired, or invalid.), 403 (The token lacks the DOCUMENT_EDIT permission.), 404 (No movement with that id exists.), 409 (The step is not awaiting receipt, or the department's register entry is missing — record it first.)")]
+    [EndpointDescription("Receives the movement's current step at the destination department. Requires the DOCUMENT_EDIT permission and a scope covering the receiving department of the current step. Responses: 200 (The recorded receipt.), 401 (The token is missing, expired, or invalid.), 403 (The token lacks the DOCUMENT_EDIT permission, or the caller's scope does not cover the receiving department.), 404 (No movement with that id exists.), 409 (The step is not awaiting receipt, or the department's register entry is missing — record it first.)")]
     [Authorize(Policy = Permissions.DocumentEdit)]
     [ProducesResponseType<MovementStepReceiptResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
@@ -288,12 +288,12 @@ public sealed class MovementsController : ControllerBase
     /// <param name="cancellationToken">Request cancellation token (optional).</param>
     /// <response code="200">The completed movement.</response>
     /// <response code="401">The token is missing, expired, or invalid.</response>
-    /// <response code="403">The token lacks the DOCUMENT_EDIT permission.</response>
+    /// <response code="403">The token lacks the DOCUMENT_EDIT permission, or the caller's scope does not cover the receiving department.</response>
     /// <response code="404">No movement with that id exists.</response>
     /// <response code="409">The step was not received yet, or the movement is already terminal.</response>
     [HttpPost("{movementId:guid}/complete")]
     [EndpointSummary("Completes the movement's current step at the destination department.")]
-    [EndpointDescription("Completes the movement's current step at the destination department. Requires the DOCUMENT_EDIT permission. Responses: 200 (The completed movement.), 401 (The token is missing, expired, or invalid.), 403 (The token lacks the DOCUMENT_EDIT permission.), 404 (No movement with that id exists.), 409 (The step was not received yet, or the movement is already terminal.)")]
+    [EndpointDescription("Completes the movement's current step at the destination department. Requires the DOCUMENT_EDIT permission and a scope covering the receiving department of the current step. Responses: 200 (The completed movement.), 401 (The token is missing, expired, or invalid.), 403 (The token lacks the DOCUMENT_EDIT permission, or the caller's scope does not cover the receiving department.), 404 (No movement with that id exists.), 409 (The step was not received yet, or the movement is already terminal.)")]
     [Authorize(Policy = Permissions.DocumentEdit)]
     [ProducesResponseType<MovementResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
@@ -326,12 +326,12 @@ public sealed class MovementsController : ControllerBase
     /// <response code="200">The rejected movement.</response>
     /// <response code="400">The reason is missing.</response>
     /// <response code="401">The token is missing, expired, or invalid.</response>
-    /// <response code="403">The token lacks the DOCUMENT_EDIT permission.</response>
+    /// <response code="403">The token lacks the DOCUMENT_EDIT permission, or the caller's scope does not cover the receiving department.</response>
     /// <response code="404">No movement with that id exists.</response>
     /// <response code="409">The movement is not in a status that can be rejected.</response>
     [HttpPost("{movementId:guid}/reject")]
     [EndpointSummary("Rejects the movement's current step with a required reason.")]
-    [EndpointDescription("Rejects the movement's current step with a required reason. Requires the DOCUMENT_EDIT permission. Responses: 200 (The rejected movement.), 400 (The reason is missing.), 401 (The token is missing, expired, or invalid.), 403 (The token lacks the DOCUMENT_EDIT permission.), 404 (No movement with that id exists.), 409 (The movement is not in a status that can be rejected.)")]
+    [EndpointDescription("Rejects the movement's current step with a required reason. Requires the DOCUMENT_EDIT permission and a scope covering the receiving department of the current step. Responses: 200 (The rejected movement.), 400 (The reason is missing.), 401 (The token is missing, expired, or invalid.), 403 (The token lacks the DOCUMENT_EDIT permission, or the caller's scope does not cover the receiving department.), 404 (No movement with that id exists.), 409 (The movement is not in a status that can be rejected.)")]
     [Authorize(Policy = Permissions.DocumentEdit)]
     [ProducesResponseType<MovementResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
@@ -365,12 +365,12 @@ public sealed class MovementsController : ControllerBase
     /// <response code="200">The returned movement.</response>
     /// <response code="400">The reason is missing.</response>
     /// <response code="401">The token is missing, expired, or invalid.</response>
-    /// <response code="403">The token lacks the DOCUMENT_EDIT permission.</response>
+    /// <response code="403">The token lacks the DOCUMENT_EDIT permission, or the caller's scope does not cover the receiving department.</response>
     /// <response code="404">No movement with that id exists.</response>
     /// <response code="409">The movement is not in a status that can be returned.</response>
     [HttpPost("{movementId:guid}/return")]
     [EndpointSummary("Returns the document to the sending department with a required reason.")]
-    [EndpointDescription("Returns the document to the sending department with a required reason. Requires the DOCUMENT_EDIT permission. Responses: 200 (The returned movement.), 400 (The reason is missing.), 401 (The token is missing, expired, or invalid.), 403 (The token lacks the DOCUMENT_EDIT permission.), 404 (No movement with that id exists.), 409 (The movement is not in a status that can be returned.)")]
+    [EndpointDescription("Returns the document to the sending department with a required reason. Requires the DOCUMENT_EDIT permission and a scope covering the receiving department of the current step. Responses: 200 (The returned movement.), 400 (The reason is missing.), 401 (The token is missing, expired, or invalid.), 403 (The token lacks the DOCUMENT_EDIT permission, or the caller's scope does not cover the receiving department.), 404 (No movement with that id exists.), 409 (The movement is not in a status that can be returned.)")]
     [Authorize(Policy = Permissions.DocumentEdit)]
     [ProducesResponseType<MovementResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
@@ -407,12 +407,12 @@ public sealed class MovementsController : ControllerBase
     /// <response code="200">The redirected movement, with the new step.</response>
     /// <response code="400">The payload failed validation.</response>
     /// <response code="401">The token is missing, expired, or invalid.</response>
-    /// <response code="403">The token lacks the DOCUMENT_EDIT permission.</response>
+    /// <response code="403">The token lacks the DOCUMENT_EDIT permission, or the caller's scope does not cover the department holding the movement.</response>
     /// <response code="404">No movement, department, or assignee with that id exists.</response>
     /// <response code="409">The destination department is inactive, or the movement is already closed or canceled.</response>
     [HttpPost("{movementId:guid}/redirect")]
     [EndpointSummary("Redirects the document to another department without closing the movement.")]
-    [EndpointDescription("Redirects the document to another department without closing the movement. Requires the DOCUMENT_EDIT permission. Responses: 200 (The redirected movement, with the new step.), 400 (The payload failed validation.), 401 (The token is missing, expired, or invalid.), 403 (The token lacks the DOCUMENT_EDIT permission.), 404 (No movement, department, or assignee with that id exists.), 409 (The destination department is inactive, or the movement is already closed or canceled.)")]
+    [EndpointDescription("Redirects the document to another department without closing the movement. Requires the DOCUMENT_EDIT permission and a scope covering the receiving department of the current step, or the sending department before it is sent. Responses: 200 (The redirected movement, with the new step.), 400 (The payload failed validation.), 401 (The token is missing, expired, or invalid.), 403 (The token lacks the DOCUMENT_EDIT permission, or the caller's scope does not cover the department holding the movement.), 404 (No movement, department, or assignee with that id exists.), 409 (The destination department is inactive, or the movement is already closed or canceled.)")]
     [Authorize(Policy = Permissions.DocumentEdit)]
     [ProducesResponseType<MovementResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
@@ -452,12 +452,12 @@ public sealed class MovementsController : ControllerBase
     /// <param name="cancellationToken">Request cancellation token (optional).</param>
     /// <response code="200">The closed movement.</response>
     /// <response code="401">The token is missing, expired, or invalid.</response>
-    /// <response code="403">The token lacks the DOCUMENT_EDIT permission.</response>
+    /// <response code="403">The token lacks the DOCUMENT_EDIT permission, or the caller's scope covers neither department.</response>
     /// <response code="404">No movement with that id exists.</response>
     /// <response code="409">The movement is already closed or canceled.</response>
     [HttpPost("{movementId:guid}/close")]
     [EndpointSummary("Closes the movement and releases the document.")]
-    [EndpointDescription("Closes the movement and releases the document. Requires the DOCUMENT_EDIT permission. Responses: 200 (The closed movement.), 401 (The token is missing, expired, or invalid.), 403 (The token lacks the DOCUMENT_EDIT permission.), 404 (No movement with that id exists.), 409 (The movement is already closed or canceled.)")]
+    [EndpointDescription("Closes the movement and releases the document. Requires the DOCUMENT_EDIT permission and a scope covering either department of the current step. Responses: 200 (The closed movement.), 401 (The token is missing, expired, or invalid.), 403 (The token lacks the DOCUMENT_EDIT permission, or the caller's scope covers neither department.), 404 (No movement with that id exists.), 409 (The movement is already closed or canceled.)")]
     [Authorize(Policy = Permissions.DocumentEdit)]
     [ProducesResponseType<MovementResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
@@ -490,12 +490,12 @@ public sealed class MovementsController : ControllerBase
     /// <response code="200">The canceled movement.</response>
     /// <response code="400">The reason is missing.</response>
     /// <response code="401">The token is missing, expired, or invalid.</response>
-    /// <response code="403">The token lacks the DOCUMENT_EDIT permission.</response>
+    /// <response code="403">The token lacks the DOCUMENT_EDIT permission, or the caller's scope does not cover the sending department.</response>
     /// <response code="404">No movement with that id exists.</response>
     /// <response code="409">The movement is already closed or canceled.</response>
     [HttpPost("{movementId:guid}/cancel")]
     [EndpointSummary("Cancels the movement with a required reason.")]
-    [EndpointDescription("Cancels the movement with a required reason. Requires the DOCUMENT_EDIT permission. Responses: 200 (The canceled movement.), 400 (The reason is missing.), 401 (The token is missing, expired, or invalid.), 403 (The token lacks the DOCUMENT_EDIT permission.), 404 (No movement with that id exists.), 409 (The movement is already closed or canceled.)")]
+    [EndpointDescription("Cancels the movement with a required reason. Requires the DOCUMENT_EDIT permission and a scope covering the sending department of the current step. Responses: 200 (The canceled movement.), 400 (The reason is missing.), 401 (The token is missing, expired, or invalid.), 403 (The token lacks the DOCUMENT_EDIT permission, or the caller's scope does not cover the sending department.), 404 (No movement with that id exists.), 409 (The movement is already closed or canceled.)")]
     [Authorize(Policy = Permissions.DocumentEdit)]
     [ProducesResponseType<MovementResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
@@ -587,12 +587,12 @@ public sealed class MovementsController : ControllerBase
     /// <param name="cancellationToken">Request cancellation token (optional).</param>
     /// <response code="200">The recorded receipt.</response>
     /// <response code="401">The token is missing, expired, or invalid.</response>
-    /// <response code="403">The token lacks the DOCUMENT_EDIT permission.</response>
+    /// <response code="403">The token lacks the DOCUMENT_EDIT permission, or the caller's scope does not cover the receiving department.</response>
     /// <response code="404">No movement with that id exists.</response>
     /// <response code="409">The step is not current or awaiting receipt, or the department register entry is missing.</response>
     [HttpPost("{movementId:guid}/steps/{stepId:guid}/receive")]
     [EndpointSummary("Receives a named step when it is the movement's current step.")]
-    [EndpointDescription("Receives a named step when it is the movement's current step. The destination department must first record its own register number. Requires the DOCUMENT_EDIT permission. Responses: 200 (The recorded receipt.), 401 (The token is missing, expired, or invalid.), 403 (The token lacks the DOCUMENT_EDIT permission.), 404 (No movement with that id exists.), 409 (The step is not current or awaiting receipt, or the department register entry is missing.)")]
+    [EndpointDescription("Receives a named step when it is the movement's current step. The destination department must first record its own register number. Requires the DOCUMENT_EDIT permission and a scope covering the receiving department of the current step. Responses: 200 (The recorded receipt.), 401 (The token is missing, expired, or invalid.), 403 (The token lacks the DOCUMENT_EDIT permission, or the caller's scope does not cover the receiving department.), 404 (No movement with that id exists.), 409 (The step is not current or awaiting receipt, or the department register entry is missing.)")]
     [Authorize(Policy = Permissions.DocumentEdit)]
     [ProducesResponseType<MovementStepReceiptResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
@@ -625,12 +625,12 @@ public sealed class MovementsController : ControllerBase
     /// <param name="cancellationToken">Request cancellation token (optional).</param>
     /// <response code="200">The completed movement.</response>
     /// <response code="401">The token is missing, expired, or invalid.</response>
-    /// <response code="403">The token lacks the DOCUMENT_EDIT permission.</response>
+    /// <response code="403">The token lacks the DOCUMENT_EDIT permission, or the caller's scope does not cover the receiving department.</response>
     /// <response code="404">No movement with that id exists.</response>
     /// <response code="409">The step is not current, was not received, or the movement is terminal.</response>
     [HttpPost("{movementId:guid}/steps/{stepId:guid}/complete")]
     [EndpointSummary("Completes a named step when it is the movement's current step.")]
-    [EndpointDescription("Completes a named step when it is the movement's current step. Only a received step can be completed. Requires the DOCUMENT_EDIT permission. Responses: 200 (The completed movement.), 401 (The token is missing, expired, or invalid.), 403 (The token lacks the DOCUMENT_EDIT permission.), 404 (No movement with that id exists.), 409 (The step is not current, was not received, or the movement is terminal.)")]
+    [EndpointDescription("Completes a named step when it is the movement's current step. Only a received step can be completed. Requires the DOCUMENT_EDIT permission and a scope covering the receiving department of the current step. Responses: 200 (The completed movement.), 401 (The token is missing, expired, or invalid.), 403 (The token lacks the DOCUMENT_EDIT permission, or the caller's scope does not cover the receiving department.), 404 (No movement with that id exists.), 409 (The step is not current, was not received, or the movement is terminal.)")]
     [Authorize(Policy = Permissions.DocumentEdit)]
     [ProducesResponseType<MovementResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
@@ -665,12 +665,12 @@ public sealed class MovementsController : ControllerBase
     /// <response code="200">The rejected movement, routed to the Central Diwan when needed.</response>
     /// <response code="400">The reason is missing.</response>
     /// <response code="401">The token is missing, expired, or invalid.</response>
-    /// <response code="403">The token lacks the DOCUMENT_EDIT permission.</response>
+    /// <response code="403">The token lacks the DOCUMENT_EDIT permission, or the caller's scope does not cover the receiving department.</response>
     /// <response code="404">No movement with that id exists.</response>
     /// <response code="409">The step is not current or rejectable, or the Central Diwan is not configured.</response>
     [HttpPost("{movementId:guid}/steps/{stepId:guid}/reject")]
     [EndpointSummary("Rejects a named step and routes it to the Central Diwan.")]
-    [EndpointDescription("Rejects a named step when it is the movement's current step. The rejection is recorded, and a new step back to the configured Central Diwan is opened unless the rejecting department is the Central Diwan itself. Requires the DOCUMENT_EDIT permission. Responses: 200 (The rejected movement, routed to the Central Diwan when needed.), 400 (The reason is missing.), 401 (The token is missing, expired, or invalid.), 403 (The token lacks the DOCUMENT_EDIT permission.), 404 (No movement with that id exists.), 409 (The step is not current or rejectable, or the Central Diwan is not configured.)")]
+    [EndpointDescription("Rejects a named step when it is the movement's current step. The rejection is recorded, and a new step back to the configured Central Diwan is opened unless the rejecting department is the Central Diwan itself. Requires the DOCUMENT_EDIT permission and a scope covering the receiving department of the current step. Responses: 200 (The rejected movement, routed to the Central Diwan when needed.), 400 (The reason is missing.), 401 (The token is missing, expired, or invalid.), 403 (The token lacks the DOCUMENT_EDIT permission, or the caller's scope does not cover the receiving department.), 404 (No movement with that id exists.), 409 (The step is not current or rejectable, or the Central Diwan is not configured.)")]
     [Authorize(Policy = Permissions.DocumentEdit)]
     [ProducesResponseType<MovementResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
@@ -706,12 +706,12 @@ public sealed class MovementsController : ControllerBase
     /// <response code="200">The returned movement.</response>
     /// <response code="400">The reason is missing.</response>
     /// <response code="401">The token is missing, expired, or invalid.</response>
-    /// <response code="403">The token lacks the DOCUMENT_EDIT permission.</response>
+    /// <response code="403">The token lacks the DOCUMENT_EDIT permission, or the caller's scope does not cover the receiving department.</response>
     /// <response code="404">No movement with that id exists.</response>
     /// <response code="409">The step is not current, not received, or the movement is terminal.</response>
     [HttpPost("{movementId:guid}/steps/{stepId:guid}/return")]
     [EndpointSummary("Returns a named step to the sending department.")]
-    [EndpointDescription("Returns a named step to the sending department when it is the movement's current step. Only a received step can be returned, and the reason is mandatory. Requires the DOCUMENT_EDIT permission. Responses: 200 (The returned movement.), 400 (The reason is missing.), 401 (The token is missing, expired, or invalid.), 403 (The token lacks the DOCUMENT_EDIT permission.), 404 (No movement with that id exists.), 409 (The step is not current, not received, or the movement is terminal.)")]
+    [EndpointDescription("Returns a named step to the sending department when it is the movement's current step. Only a received step can be returned, and the reason is mandatory. Requires the DOCUMENT_EDIT permission and a scope covering the receiving department of the current step. Responses: 200 (The returned movement.), 400 (The reason is missing.), 401 (The token is missing, expired, or invalid.), 403 (The token lacks the DOCUMENT_EDIT permission, or the caller's scope does not cover the receiving department.), 404 (No movement with that id exists.), 409 (The step is not current, not received, or the movement is terminal.)")]
     [Authorize(Policy = Permissions.DocumentEdit)]
     [ProducesResponseType<MovementResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]

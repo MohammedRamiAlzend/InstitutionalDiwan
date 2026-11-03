@@ -87,14 +87,16 @@ public sealed class DocumentNumbersController : ControllerBase
     /// <param name="cancellationToken">Request cancellation token (optional).</param>
     /// <response code="200">The department register entry.</response>
     /// <response code="400">The number or date is missing or invalid.</response>
+    /// <response code="403">The token lacks NUMBERING_MANAGE, or the caller's scope does not cover the department.</response>
     /// <response code="404">No document or department with that id exists.</response>
     /// <response code="409">The document has no central number yet, the department has no active
     /// register, the number is taken for that year, or a different number was already recorded.</response>
     [HttpPost("department-registration")]
     [EndpointSummary("Records the number and date a department wrote in its own register. The central Diwan number is not changed. Repeating the call for the same department keeps the number and appends a new dated entry.")]
-    [EndpointDescription("Records the number and date a department wrote in its own register. The central Diwan number is not changed. Repeating the call for the same department keeps the number and appends a new dated entry. Requires the NUMBERING_MANAGE permission. Responses: 200 (The department register entry.), 400 (The number or date is missing or invalid.), 404 (No document or department with that id exists.), 409 (The document has no central number yet, the department has no active register, the number is taken for that year, or a different number was already recorded.)")]
+    [EndpointDescription("Records the number and date a department wrote in its own register. The central Diwan number is not changed. Repeating the call for the same department keeps the number and appends a new dated entry. Requires the NUMBERING_MANAGE permission and a scope covering that department. Responses: 200 (The department register entry.), 400 (The number or date is missing or invalid.), 403 (The token lacks NUMBERING_MANAGE, or the caller's scope does not cover the department.), 404 (No document or department with that id exists.), 409 (The document has no central number yet, the department has no active register, the number is taken for that year, or a different number was already recorded.)")]
     [Authorize(Policy = Permissions.NumberingManage)]
     [ProducesResponseType<DocumentNumberResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
@@ -128,13 +130,15 @@ public sealed class DocumentNumbersController : ControllerBase
     /// <param name="cancellationToken">Request cancellation token (optional).</param>
     /// <response code="200">The issued number.</response>
     /// <response code="400">The numbering year is invalid.</response>
+    /// <response code="403">The token lacks NUMBERING_MANAGE, or the caller has no DOWNLOAD access to the document.</response>
     /// <response code="404">No document with that id exists.</response>
     /// <response code="409">The document is not a draft, already numbered, or the number is taken.</response>
     [HttpPost("issue")]
     [EndpointSummary("Issues the next official number for a DRAFT document and registers it.")]
-    [EndpointDescription("Issues the next official number for a DRAFT document and registers it. Requires the NUMBERING_MANAGE permission. Responses: 200 (The issued number.), 400 (The numbering year is invalid.), 404 (No document with that id exists.), 409 (The document is not a draft, already numbered, or the number is taken.)")]
+    [EndpointDescription("Issues the next official number for a DRAFT document and registers it. Requires the NUMBERING_MANAGE permission and DOWNLOAD access to the document. Responses: 200 (The issued number.), 400 (The numbering year is invalid.), 403 (The token lacks NUMBERING_MANAGE, or the caller has no DOWNLOAD access to the document.), 404 (No document with that id exists.), 409 (The document is not a draft, already numbered, or the number is taken.)")]
     [Authorize(Policy = Permissions.NumberingManage)]
     [ProducesResponseType<DocumentNumberResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
@@ -164,13 +168,15 @@ public sealed class DocumentNumbersController : ControllerBase
     /// <param name="cancellationToken">Request cancellation token (optional).</param>
     /// <response code="200">The cancelled number.</response>
     /// <response code="400">The reason is missing.</response>
+    /// <response code="403">The token lacks NUMBERING_MANAGE, or the caller has no DOWNLOAD access to the document.</response>
     /// <response code="404">No document or number with that id exists.</response>
     /// <response code="409">The number is not active.</response>
     [HttpPost("{documentNumberId:guid}/cancel")]
     [EndpointSummary("Cancels an active official number with a required reason.")]
-    [EndpointDescription("Cancels an active official number with a required reason. Requires the NUMBERING_MANAGE permission. Responses: 200 (The cancelled number.), 400 (The reason is missing.), 404 (No document or number with that id exists.), 409 (The number is not active.)")]
+    [EndpointDescription("Cancels an active official number with a required reason. Requires the NUMBERING_MANAGE permission and DOWNLOAD access to the document. Responses: 200 (The cancelled number.), 400 (The reason is missing.), 403 (The token lacks NUMBERING_MANAGE, or the caller has no DOWNLOAD access to the document.), 404 (No document or number with that id exists.), 409 (The number is not active.)")]
     [Authorize(Policy = Permissions.NumberingManage)]
     [ProducesResponseType<DocumentNumberResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
@@ -205,13 +211,15 @@ public sealed class DocumentNumbersController : ControllerBase
     /// <param name="cancellationToken">Request cancellation token (optional).</param>
     /// <response code="200">The replacement number.</response>
     /// <response code="400">The reason or numbering year is invalid.</response>
+    /// <response code="403">The token lacks NUMBERING_MANAGE, or the caller has no DOWNLOAD access to the document.</response>
     /// <response code="404">No document or number with that id exists.</response>
     /// <response code="409">The number is not active, or the replacement number is taken.</response>
     [HttpPost("{documentNumberId:guid}/replace")]
     [EndpointSummary("Replaces an active official number: allocates a new sequence, links the old number to its replacement, and re-points the document at the new number.")]
-    [EndpointDescription("Replaces an active official number: allocates a new sequence, links the old number to its replacement, and re-points the document at the new number. Requires the NUMBERING_MANAGE permission. Responses: 200 (The replacement number.), 400 (The reason or numbering year is invalid.), 404 (No document or number with that id exists.), 409 (The number is not active, or the replacement number is taken.)")]
+    [EndpointDescription("Replaces an active official number: allocates a new sequence, links the old number to its replacement, and re-points the document at the new number. Requires the NUMBERING_MANAGE permission and DOWNLOAD access to the document. Responses: 200 (The replacement number.), 400 (The reason or numbering year is invalid.), 403 (The token lacks NUMBERING_MANAGE, or the caller has no DOWNLOAD access to the document.), 404 (No document or number with that id exists.), 409 (The number is not active, or the replacement number is taken.)")]
     [Authorize(Policy = Permissions.NumberingManage)]
     [ProducesResponseType<DocumentNumberResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]

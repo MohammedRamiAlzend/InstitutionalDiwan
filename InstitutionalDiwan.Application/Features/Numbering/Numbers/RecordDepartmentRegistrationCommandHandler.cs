@@ -1,3 +1,4 @@
+using InstitutionalDiwan.Application.Abstractions.Authorization;
 using InstitutionalDiwan.Application.Abstractions.Messaging;
 using InstitutionalDiwan.Application.Features.Numbering;
 using InstitutionalDiwan.Domain.Common;
@@ -14,6 +15,7 @@ internal sealed class RecordDepartmentRegistrationCommandHandler
     private readonly IDocumentNumberRepository _documentNumberRepository;
     private readonly IDepartmentRepository _departmentRepository;
     private readonly INumberingRegistryRepository _numberingRegistryRepository;
+    private readonly IDepartmentScopeEvaluator _departmentScopeEvaluator;
     private readonly IUnitOfWork _unitOfWork;
 
     public RecordDepartmentRegistrationCommandHandler(
@@ -21,12 +23,14 @@ internal sealed class RecordDepartmentRegistrationCommandHandler
         IDocumentNumberRepository documentNumberRepository,
         IDepartmentRepository departmentRepository,
         INumberingRegistryRepository numberingRegistryRepository,
+        IDepartmentScopeEvaluator departmentScopeEvaluator,
         IUnitOfWork unitOfWork)
     {
         _documentRepository = documentRepository;
         _documentNumberRepository = documentNumberRepository;
         _departmentRepository = departmentRepository;
         _numberingRegistryRepository = numberingRegistryRepository;
+        _departmentScopeEvaluator = departmentScopeEvaluator;
         _unitOfWork = unitOfWork;
     }
 
@@ -37,6 +41,9 @@ internal sealed class RecordDepartmentRegistrationCommandHandler
         var document = await _documentRepository.GetWithNumbersAsync(request.DocumentId, cancellationToken);
         if (document is null)
             return Result.Failure<DocumentNumberResponse>(DomainErrors.Correspondence.DocumentNotFound);
+
+        if (!await _departmentScopeEvaluator.CanAccessDepartmentAsync(request.DepartmentId, cancellationToken))
+            return Result.Failure<DocumentNumberResponse>(DomainErrors.Correspondence.DepartmentOutOfScope);
 
         var notArchived = document.EnsureNotArchived();
         if (notArchived.IsFailure)
