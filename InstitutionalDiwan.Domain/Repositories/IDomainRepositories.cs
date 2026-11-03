@@ -232,11 +232,13 @@ public interface IFileStorageProviderRepository
 /// <summary>
 /// Filter applied to <see cref="IDocumentArchiveRepository.SearchAsync"/>. <paramref name="CallerUserId"/>
 /// and <paramref name="AccessibleDepartmentIds"/> restrict the result to what the caller may view; a null
-/// set means an institution-wide scope. The remaining values are optional narrowing filters.
+/// set means an institution-wide scope. <paramref name="AsOfUtc"/> decides which access grants are still
+/// valid. The remaining values are optional narrowing filters.
 /// </summary>
 public sealed record ArchiveSearchFilter(
     Guid CallerUserId,
     IReadOnlyCollection<Guid>? AccessibleDepartmentIds,
+    DateTime AsOfUtc,
     Guid? OwningDepartmentId = null,
     int? DocumentTypeId = null,
     int? DirectionId = null,

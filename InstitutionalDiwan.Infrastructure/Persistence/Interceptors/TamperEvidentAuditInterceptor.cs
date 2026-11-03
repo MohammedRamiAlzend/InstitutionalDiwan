@@ -457,13 +457,13 @@ internal sealed class TamperEvidentAuditInterceptor : SaveChangesInterceptor
             RelatedDocumentId: e.DocumentId),
         DocumentArchivedEvent e => new(
             "ARCHIVING", AuditActionType.UpdateId, AuditEntityType.DocumentId, e.DocumentId,
-            NewJson(new { e.Reason }),
+            NewJson(new { StatusId = DocumentStatusType.ArchivedId, e.ArchiveLocationId, e.Reason }),
             OldValuesJson: OldJson(new { StatusId = e.PreviousStatusId }),
             RelatedDocumentId: e.DocumentId, ActorUserId: e.ActorUserId),
         DocumentUnarchivedEvent e => new(
             "ARCHIVING", AuditActionType.UpdateId, AuditEntityType.DocumentId, e.DocumentId,
-            NewJson(new { e.Reason }),
-            OldValuesJson: OldJson(new { StatusId = e.RestoredStatusId }),
+            NewJson(new { StatusId = e.RestoredStatusId, e.Reason }),
+            OldValuesJson: OldJson(new { StatusId = DocumentStatusType.ArchivedId }),
             RelatedDocumentId: e.DocumentId, ActorUserId: e.ActorUserId),
         DocumentCanceledEvent e => new(
             "CORRESPONDENCE", AuditActionType.UpdateId, AuditEntityType.DocumentId, e.DocumentId,

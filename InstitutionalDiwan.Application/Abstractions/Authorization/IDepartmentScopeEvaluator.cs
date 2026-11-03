@@ -15,4 +15,11 @@ public interface IDepartmentScopeEvaluator
     Task<bool> CanAccessDepartmentAsync(
         Guid departmentId,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Every department inside the caller's scope, for filtering a list in the database. Null means an
+    /// institution-wide scope (no department restriction); an empty set means nothing is reachable.
+    /// </summary>
+    Task<IReadOnlySet<Guid>?> GetAccessibleDepartmentIdsAsync(
+        CancellationToken cancellationToken = default);
 }

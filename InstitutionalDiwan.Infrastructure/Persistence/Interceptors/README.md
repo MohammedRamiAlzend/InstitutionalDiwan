@@ -83,6 +83,7 @@ scoped-interceptor lifetime issues with `AddDbContext`.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-03 | Claude | Corrected the archive audit rows: `DocumentUnarchivedEvent` recorded the restored status as the old value, so old is now `ARCHIVED` and new is the restored status. `DocumentArchivedEvent` now also records the new status and the archive location. |
 | 2026-11-02 | Claude | Audit mapping for dynamic document fields: `DocumentTypeSchemaVersion` and `DocumentField` changes are audited under `AuditEntityType.DocumentSchemaVersionId` (module CORRESPONDENCE), and `DocumentSchemaVersionPublishedEvent` is mapped explicitly, because an entity that raises an event is skipped by the generic before/after audit and a publish would otherwise write no row. |
 | 2026-10-28 | agent | Mapped `UserPasswordResetEvent` to an `Update` audit row on the user, attributed to the administrator who performed the reset. |
 | 2026-10-26 | Qoder | Mapped `UserLoggedInEvent` to a `Login` audit row attributed to the user who logged in (login requests are still anonymous while the interceptor runs), and documented the split between entity audit rows and action-level `Operation` rows. |

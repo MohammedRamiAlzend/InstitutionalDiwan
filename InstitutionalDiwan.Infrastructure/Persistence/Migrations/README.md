@@ -28,6 +28,8 @@ empty migration when the model changed.
 | `20261025100040_Add_Audit_Chain_Uniqueness` | Adds the unique `UX_AUDIT_LOGS_PREVIOUS_HASH` index on `AUDIT_LOGS.PreviousHash`, so a chain row can have exactly one successor. Concurrent appends then surface as a duplicate-key conflict instead of forking the hash chain. |
 | `20261102114522_Add_Document_Dynamic_Fields` | Purely additive: nullable `DOCUMENTS.SchemaVersionId` (FK, restrict) and the `DOCUMENT_FIELDS`, `DOCUMENT_TYPE_SCHEMA_VERSIONS`, `DOCUMENT_TYPE_SCHEMA_VERSION_FIELDS` and `DOCUMENT_FIELD_VALUES` tables, with the unique key per type, the one-draft-per-type filtered unique index, the version-number unique index and the sparse typed-value indexes. Existing rows and tables are untouched. |
 
+| `20261103064712_Add_Archiving_Constraints` | Foreign keys from `DOCUMENT_ARCHIVE_EVENTS` to documents, users and status types and from `SAVED_SEARCHES` to users (all restrict); unique `UX_SAVED_SEARCHES_USER_NAME`, filtered unique `UX_SAVED_SEARCHES_USER_DEFAULT` (one default per user), and `IX_DOC_ARCHIVE_EVENTS_TYPE_DATE`, which replaces the single-column event-type index. Both tables were empty, so no data migration is needed. |
+
 ## Custom (hand-written) migration steps
 
 | Step | Purpose |
@@ -45,7 +47,8 @@ empty migration when the model changed.
 | Unique official-number index (`UX_DOC_NUMBERS_TEXT_YEAR`) | ✅ Created + applied (2026-10-18) |
 | Department register numbering (`Add_Department_Register_Numbers`) | ✅ Created + applied against LocalDB (2026-10-20) |
 | Audit chain uniqueness (`Add_Audit_Chain_Uniqueness`) | ✅ Created + applied against LocalDB (2026-10-25) |
-| Dynamic document fields (`Add_Document_Dynamic_Fields`) | ✅ Created (2026-11-02); not yet applied to LocalDB — it applies on the next Development startup |
+| Dynamic document fields (`Add_Document_Dynamic_Fields`) | ✅ Created (2026-11-02) + applied to the development database |
+| Archiving constraints (`Add_Archiving_Constraints`) | ✅ Created (2026-11-03) and verified on a scratch SQL Server database; not yet applied to the development database — it applies on the next Development startup |
 | Audit immutability trigger / DENY | ❌ Not created |
 | Closure table / indexed view | ❌ Not created |
 | Full-text catalog & indexes | ❌ Not created |
@@ -60,6 +63,7 @@ empty migration when the model changed.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-03 | Claude | Added `Add_Archiving_Constraints` for Module 07 (Phase 1) and verified it by applying the full chain to a scratch SQL Server database, since dropped. Recorded that `Add_Document_Dynamic_Fields` is now applied to the development database. |
 | 2026-11-02 | Claude | Added `Add_Document_Dynamic_Fields` for the dynamic document fields plan (Phase 1). Generated with `dotnet ef` against a build in a separate configuration, because the running API locks the default `bin`; the snapshot diff is additions only. |
 | 2026-10-25 | opencode | Added `Add_Audit_Chain_Uniqueness` (unique `UX_AUDIT_LOGS_PREVIOUS_HASH`) so concurrent audit appends cannot fork the chain. |
 | 2026-10-20 | Buffy | Added `Add_Department_Register_Numbers`: scope columns + lookup seed rows, history `EffectiveDate`, movement-step `RegistryNumberId`, `ScopeId`-filtered uniqueness replacing the global indexes, one-line-per-department index, and the `RegistryDate` backfill; verified by applying it to a throwaway LocalDB database and probing the indexes. |

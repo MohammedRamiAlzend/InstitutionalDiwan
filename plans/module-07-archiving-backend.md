@@ -1,6 +1,6 @@
 # الخطة — المودول 07: الأرشفة (الباك إند)
 
-**الحالة:** معتمدة (2026-11-03) بالقرارات المقترحة في §2. المرحلة 0 منفّذة ومختبرة (المجموع 542 اختبارًا)؛ الباقي من المرحلة 1.
+**الحالة:** معتمدة (2026-11-03) بالقرارات المقترحة في §2. المرحلتان 0 و1 منفّذتان ومختبرتان (المجموع 562 اختبارًا)؛ الباقي من المرحلة 2. الـ migration جرى التحقق منه على قاعدة SQL Server مؤقتة ولم يُطبَّق على قاعدة التطوير بعد.
 **النطاق:** `InstitutionalDiwan.Domain` / `Application` / `Infrastructure` / `Server` / `Tests`. واجهة الأرشفة في خطة منفصلة لاحقًا.
 **آخر مراجعة:** 2026-11-03.
 
@@ -86,11 +86,11 @@
 - عقدا `IDocumentArchiveRepository` (إضافة الحدث، سجل الوثيقة، البحث المرقّم مع `ArchiveSearchFilter` و`ArchivedDocumentRow`) و`ISavedSearchRepository`.
 - توسيع `DocumentArchivedEvent` بـ `ArchiveLocationId`.
 
-### المرحلة 1 — Infrastructure
+### المرحلة 1 — Infrastructure (منفّذة)
 - تنفيذ المستودعين وتسجيلهما، و`GetAccessibleDepartmentIdsAsync`.
 - تصحيح تدقيق إلغاء الأرشفة وإضافة الموقع لتدقيق الأرشفة.
 - Migration إضافي `Add_Archiving_Constraints`: FK لـ `DocumentId` و`ActorUserId` و`PreviousStatusId`/`NewStatusId` و`SavedSearch.UserId`؛ فهرس فريد `(UserId, Name)`؛ فهرس فريد مفلتر `(UserId) WHERE IsDefault = 1`؛ فهرس `(EventTypeId, OccurredAt)` لبحث الأرشيف.
-- قبل التنفيذ: التأكد أن `Add_Document_Dynamic_Fields` مطبّق، فهو مكتوب ولم يُطبَّق بعد.
+- تم التأكد أن `Add_Document_Dynamic_Fields` مطبّق على قاعدة التطوير.
 
 ### المرحلة 2 — Application
 - `Features/Archiving/`: `ArchiveDocumentCommand`, `UnarchiveDocumentCommand`, `ListDocumentArchiveEventsQuery`, `SearchArchivedDocumentsQuery` مع validators والـ responses.

@@ -1,12 +1,13 @@
 # Infrastructure / Persistence / Repositories
 
-> **Status:** Partially implemented — 19 of the 21 repository interfaces have implementations
+> **Status:** Partially implemented — 23 of the 25 repository interfaces have implementations
 > (`UserRepository`, `RoleRepository`, `PermissionRepository`, `EmployeeRepository`,
 > `DepartmentRepository`, `DepartmentTypeRepository`, `DocumentRepository`, `DocumentTypeRepository`,
 > `NumberingRegistryRepository`, `DocumentNumberRepository`, `DocumentAccessGrantRepository`,
 > `LookupRepository`, `InstitutionSettingRepository`, `ExternalOrganizationRepository`,
 > `DocumentMovementRepository`, `DocumentFileRepository`, `DocumentFileTypeRepository`,
-> `FileStorageProviderRepository`, `AuditLogRepository`); relation and notification repositories
+> `FileStorageProviderRepository`, `AuditLogRepository`, `DocumentFieldRepository`,
+> `DocumentTypeSchemaVersionRepository`, `DocumentArchiveRepository`, `SavedSearchRepository`); relation and notification repositories
 > have none yet.
 
 ## Purpose
@@ -38,6 +39,8 @@ Concrete EF Core implementations of the repository interfaces declared in
 | `ExternalOrganizationRepository.cs` | Loads `ExternalOrganization` by id or normalized (upper-cased) code and lists them by code; `ListPagedAsync` adds the active filter, a code/name search, and `Skip`/`Take` for the external-correspondent CRUD endpoints. |
 | `DocumentMovementRepository.cs` | Loads a `DocumentMovement` with `Steps`/`Events`, answers `HasActiveMovementsAsync(documentId)` (true while the status is not `CLOSED`/`CANCELED`; backs the document cancel/archive guard), and returns `GetActiveByDocumentIdAsync` for the access evaluator's movement participation. `ListByDocumentAsync` gives a document's routing history; `ListInboxAsync`/`ListOutboxAsync` give a department's two queues, both keyed on the **current step** so a rejection routed to the Central Diwan or a redirect moves the custody with the document. |
 | `DocumentFileRepository.cs` | Loads a `DocumentFile` with its full `Versions` chain by id or per document (oldest first), so the Attachments handlers can append versions and project history. Also holds `DocumentFileTypeRepository` (file-type extension/size limits) and `FileStorageProviderRepository` (by id or active default) in the same file. |
+| `DocumentArchiveRepository.cs` | Module 07 archive access: appends `DocumentArchiveEvent` rows, lists a document's events newest first, and `SearchAsync` pages archived documents with their latest archive event. The `VIEW` rule of `DocumentAccessEvaluator` is part of the query, so paging counters never include a document the caller cannot see; a persistence test holds the two rules equal. |
+| `SavedSearchRepository.cs` | A user's personal `SavedSearch` rows: by id, listed by name, the single default, name-uniqueness and per-user count checks, `Add` and `Remove`. |
 | `AuditLogRepository.cs` | **Append-only** audit access: `GetLatestAsync` for the next hash link, `GetByIdAsync` for range anchoring, `ListRangeAsync` for ordered chain walks, `SearchAsync` for filtered paging, and `AddCheckpoint`/`AddIntegrityCheck` plus their latest/listing queries. No update or delete path exists. |
 
 ## Planned repositories not yet implemented
@@ -78,12 +81,14 @@ Concrete EF Core implementations of the repository interfaces declared in
 | `DocumentMovementRepository` | ✅ Implemented (2026-10-19; inbox/outbox added 2026-10-21; active-by-document added 2026-10-25) |
 | `DocumentFileRepository`, `DocumentFileTypeRepository`, `FileStorageProviderRepository` | ✅ Implemented (2026-10-25) |
 | `AuditLogRepository` | ✅ Implemented (2026-10-25) |
+| `DocumentArchiveRepository`, `SavedSearchRepository` | ✅ Implemented (2026-11-03) |
 | `DocumentRelationRepository`, `NotificationRepository` | ❌ Not implemented |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-03 | Claude | Module 07 Archiving, Phase 1: added `DocumentArchiveRepository` (events and access-filtered search) and `SavedSearchRepository`, registered in `DependencyInjection`. Also corrected the status count, which had missed the two dynamic-field repositories. |
 | 2026-11-02 | Claude | `DocumentTypeSchemaVersionRepository.Remove` added for discarding a schema draft (dynamic fields, Phase 2). |
 | 2026-11-02 | Claude | Dynamic document fields, Phase 1: added `DocumentFieldRepository` and `DocumentTypeSchemaVersionRepository`; `DocumentRepository.GetByIdAsync` now also loads `FieldValues` with a split query so a draft's values can be replaced. Registered in `DependencyInjection`. |
 | 2026-10-28 | agent | `EmployeeRepository.ListPagedAsync` gained an optional `departmentIds` set; an empty set returns an empty page, a null set keeps the old behavior, so `/api/employees?departmentId=…` can list one unit's roster. |

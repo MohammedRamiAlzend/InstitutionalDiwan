@@ -38,6 +38,70 @@ public sealed class DepartmentScopeEvaluatorTests
     }
 
     [Fact]
+    public async Task GetAccessibleDepartmentIds_WhenAnonymous_IsEmpty()
+    {
+        var (evaluator, context, _, _) = CreateEvaluator();
+        context.IsAuthenticated = false;
+
+        Assert.Empty((await evaluator.GetAccessibleDepartmentIdsAsync())!);
+    }
+
+    [Fact]
+    public async Task GetAccessibleDepartmentIds_ForInactiveUser_IsEmpty()
+    {
+        var (evaluator, context, users, _) = CreateEvaluator();
+        var user = CreateUser(Guid.NewGuid(), UserScopeType.InstitutionId);
+        Assert.True(user.Deactivate().IsSuccess);
+        context.IsAuthenticated = true;
+        context.UserId = user.UserId;
+        users.Add(user);
+
+        Assert.Empty((await evaluator.GetAccessibleDepartmentIdsAsync())!);
+    }
+
+    [Theory]
+    [InlineData(UserScopeType.InstitutionId)]
+    [InlineData(UserScopeType.SystemId)]
+    public async Task GetAccessibleDepartmentIds_ForInstitutionWideScope_IsNull(int scopeTypeId)
+    {
+        var (evaluator, context, users, _) = CreateEvaluator();
+        var user = CreateUser(Guid.NewGuid(), scopeTypeId);
+        context.IsAuthenticated = true;
+        context.UserId = user.UserId;
+        users.Add(user);
+
+        Assert.Null(await evaluator.GetAccessibleDepartmentIdsAsync());
+    }
+
+    [Fact]
+    public async Task GetAccessibleDepartmentIds_CombinesPrimaryTreeAndCurrentAssignments()
+    {
+        var (evaluator, context, users, departments) = CreateEvaluator();
+        var root = CreateDepartment("ROOT");
+        var child = CreateDepartment("CHILD", root.DepartmentId);
+        var assigned = CreateDepartment("ASSIGNED");
+        var assignedChild = CreateDepartment("ASSIGNED-CHILD", assigned.DepartmentId);
+        var future = CreateDepartment("FUTURE");
+        var unrelated = CreateDepartment("UNRELATED");
+        foreach (var department in new[] { root, child, assigned, assignedChild, future, unrelated })
+            departments.Add(department);
+
+        var user = CreateUser(root.DepartmentId, UserScopeType.DepartmentTreeId);
+        var now = TestClock.Instance.UtcNow;
+        user.AssignDepartmentScope(assigned.DepartmentId, includeSubtree: true, startDate: now.AddDays(-1));
+        user.AssignDepartmentScope(future.DepartmentId, startDate: now.AddDays(1));
+        context.IsAuthenticated = true;
+        context.UserId = user.UserId;
+        users.Add(user);
+
+        var accessible = await evaluator.GetAccessibleDepartmentIdsAsync();
+
+        Assert.Equal(
+            new[] { root.DepartmentId, child.DepartmentId, assigned.DepartmentId, assignedChild.DepartmentId }.ToHashSet(),
+            accessible);
+    }
+
+    [Fact]
     public async Task CanAccessDepartment_WhenAnonymous_ReturnsFalse()
     {
         var (evaluator, context, _, _) = CreateEvaluator();

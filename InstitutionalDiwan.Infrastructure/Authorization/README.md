@@ -76,6 +76,7 @@ depend on `IUserContext` rather than on `HttpContext` directly.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-03 | Claude | Added `DepartmentScopeEvaluator.GetAccessibleDepartmentIdsAsync` so a list can apply scope in SQL; `CanAccessDepartmentAsync` now answers from the same set, so the two cannot disagree. Null means institution-wide, empty means nothing reachable. |
 | 2026-10-28 | Qoder | Read the active persisted account before all department-scope grants, remove token primary/global fast paths, and preserve half-open temporal assignment/subtree semantics. |
 | 2026-10-25 | opencode | Added Module 05 movement participation to `DocumentAccessEvaluator`: sender/receiver on the active movement's current dispatched step gains VIEW/DOWNLOAD, still bounded by confidentiality and never FORWARD/MANAGE. |
 | 2026-10-19 | Buffy | Implemented `DepartmentScopeEvaluator` (primary department, persisted assignments with subtree expansion, institution-wide scope) and `DocumentAccessEvaluator` (grants → authorship → confidentiality → scope, with FORWARD/MANAGE requiring institution-wide scope); both registered in DI behind the new `Application/Abstractions/Authorization` contracts. |

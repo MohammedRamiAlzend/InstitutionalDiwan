@@ -16,7 +16,7 @@ without knowing which provider is underneath.
 | --- | --- | --- |
 | `DiwanDbContext.cs` | ✅ Written | `DbContext, IUnitOfWork`; 67 `DbSet`s; applies configurations by assembly scan. |
 | `Configurations/` | ✅ Written (10 files) | `IEntityTypeConfiguration<T>` for all 67 entities. |
-| `Repositories/` | 🟡 Partial (19 of 21) | `UserRepository`, `RoleRepository`, `PermissionRepository`, `EmployeeRepository`, `DepartmentRepository`, `DepartmentTypeRepository`, `DocumentRepository`, `DocumentTypeRepository`, `NumberingRegistryRepository`, `DocumentNumberRepository`, `DocumentAccessGrantRepository`, `LookupRepository`, `InstitutionSettingRepository`, `ExternalOrganizationRepository`, `DocumentMovementRepository`, `DocumentFileRepository`, `DocumentFileTypeRepository`, `FileStorageProviderRepository`, `AuditLogRepository`; relation and notification repositories pending. |
+| `Repositories/` | 🟡 Partial (23 of 25) | `UserRepository`, `RoleRepository`, `PermissionRepository`, `EmployeeRepository`, `DepartmentRepository`, `DepartmentTypeRepository`, `DocumentRepository`, `DocumentTypeRepository`, `NumberingRegistryRepository`, `DocumentNumberRepository`, `DocumentAccessGrantRepository`, `LookupRepository`, `InstitutionSettingRepository`, `ExternalOrganizationRepository`, `DocumentMovementRepository`, `DocumentFileRepository`, `DocumentFileTypeRepository`, `FileStorageProviderRepository`, `AuditLogRepository`; relation and notification repositories pending. |
 | `Interceptors/` | 🟡 Partial | `TamperEvidentAuditInterceptor` is registered; domain-event/outbox dispatch is pending. |
 | `Transactions/` | ✅ Written | `EfTransactionManager` / `EfTransactionScope` — commit on success, rollback on dispose. |
 | `Migrations/` | ✅ Written (7) | `InitialCreate`, `AddUniqueOfficialNumber` (unique official-number + year index), three lookup refactors (`Refactor_DepartmentTypes_ToLookup`, `Refactor_CorrespondenceNumbering_ToLookups`, `Refactor_AllRemaining_ToLookups`), `InitialCreate2`, and `Add_Department_Register_Numbers` (department registers + `ScopeId`-filtered uniqueness). |
@@ -54,15 +54,16 @@ without knowing which provider is underneath.
 | --- | --- |
 | `DbContext` | ✅ Written |
 | All 66 entity configurations | ✅ Written |
-| Repository implementations | 🟡 19 of 21 (files, audit, lookups, institution settings, external organizations, movements included; relations/notifications pending) |
+| Repository implementations | 🟡 23 of 25 (files, audit, lookups, institution settings, external organizations, movements, document fields, archiving included; relations/notifications pending) |
 | Interceptors | 🟡 `TamperEvidentAuditInterceptor` implemented; outbox interceptor pending |
-| Migrations | ✅ 9 written (`InitialCreate`, `AddUniqueOfficialNumber`, three lookup refactors, `InitialCreate2`, `Add_Department_Register_Numbers`, `Add_Audit_Chain_Uniqueness`, `Add_Document_Dynamic_Fields`) |
+| Migrations | ✅ 10 written (`Add_Archiving_Constraints`, `InitialCreate`, `AddUniqueOfficialNumber`, three lookup refactors, `InitialCreate2`, `Add_Department_Register_Numbers`, `Add_Audit_Chain_Uniqueness`, `Add_Document_Dynamic_Fields`) |
 | Seed data | ✅ 33 reference catalogs + institution settings + a 15-department demo tree + 28 demo employees + permissions + system roles + demo users (`Seed/` — ordered + environment-gated) |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-03 | Claude | Module 07 Archiving, Phase 1: repositories, configuration constraints and the `Add_Archiving_Constraints` migration; see the subfolder READMEs. |
 | 2026-11-02 | Claude | Dynamic document fields, Phase 1: `Configurations/DocumentFieldsConfigurations.cs` (DOCUMENT_FIELDS, DOCUMENT_TYPE_SCHEMA_VERSIONS, DOCUMENT_TYPE_SCHEMA_VERSION_FIELDS with a JSON `Options` column, DOCUMENT_FIELD_VALUES), four `DiwanDbContext` DbSets, `Document.SchemaVersionId` + `FieldValues` mapping, the two new repositories and the `Add_Document_Dynamic_Fields` migration. |
 | 2026-10-28 | agent | Added `Seed/EmployeeSeeder.cs` (Order 97, Development/Staging) — 28 demo employees attached to the seeded department tree, idempotent by employee number; `EmployeeRepository.ListPagedAsync` now accepts an optional department-id set so the roster can be filtered by department and descendants. |
 | 2026-10-25 | opencode | Added `AuditLogRepository` and registered `TamperEvidentAuditInterceptor`; refreshed repository/interceptor/migration counts. |

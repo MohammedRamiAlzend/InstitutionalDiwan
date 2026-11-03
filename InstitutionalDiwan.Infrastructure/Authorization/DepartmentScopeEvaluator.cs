@@ -40,48 +40,48 @@ public sealed class DepartmentScopeEvaluator : IDepartmentScopeEvaluator
         Guid departmentId,
         CancellationToken cancellationToken = default)
     {
-        if (!_userContext.IsAuthenticated || departmentId == Guid.Empty)
+        if (departmentId == Guid.Empty)
             return false;
+
+        var accessible = await GetAccessibleDepartmentIdsAsync(cancellationToken);
+        return accessible is null || accessible.Contains(departmentId);
+    }
+
+    public async Task<IReadOnlySet<Guid>?> GetAccessibleDepartmentIdsAsync(
+        CancellationToken cancellationToken = default)
+    {
+        if (!_userContext.IsAuthenticated)
+            return new HashSet<Guid>();
 
         var user = await _userRepository.GetByIdAsync(_userContext.UserId, cancellationToken);
         if (user is null || !user.IsActive)
-            return false;
+            return new HashSet<Guid>();
 
-        if (IsInstitutionWide(user.ScopeTypeId) || user.PrimaryDepartmentId == departmentId)
-            return true;
+        if (IsInstitutionWide(user.ScopeTypeId))
+            return null;
 
-        if (user.ScopeTypeId == UserScopeType.DepartmentTreeId &&
-            await IsInsideSubtreeAsync(user.PrimaryDepartmentId, departmentId, cancellationToken))
+        var accessible = new HashSet<Guid> { user.PrimaryDepartmentId };
+
+        if (user.ScopeTypeId == UserScopeType.DepartmentTreeId)
         {
-            return true;
+            accessible.UnionWith(await _departmentRepository.GetDescendantIdsAsync(
+                user.PrimaryDepartmentId, cancellationToken));
         }
 
         var utcNow = _clock.UtcNow;
         foreach (var assignment in user.DepartmentAssignments.Where(
                      assignment => IsCurrentlyActive(assignment, utcNow)))
         {
-            if (assignment.DepartmentId == departmentId)
-                return true;
+            accessible.Add(assignment.DepartmentId);
 
-            if (assignment.IncludeSubtree &&
-                await IsInsideSubtreeAsync(assignment.DepartmentId, departmentId, cancellationToken))
+            if (assignment.IncludeSubtree)
             {
-                return true;
+                accessible.UnionWith(await _departmentRepository.GetDescendantIdsAsync(
+                    assignment.DepartmentId, cancellationToken));
             }
         }
 
-        return false;
-    }
-
-    private async Task<bool> IsInsideSubtreeAsync(
-        Guid ancestorDepartmentId,
-        Guid candidateDepartmentId,
-        CancellationToken cancellationToken)
-    {
-        var descendants = await _departmentRepository.GetDescendantIdsAsync(
-            ancestorDepartmentId, cancellationToken);
-
-        return descendants.Contains(candidateDepartmentId);
+        return accessible;
     }
 
     private static bool IsCurrentlyActive(UserDepartmentAssignment assignment, DateTime utcNow) =>

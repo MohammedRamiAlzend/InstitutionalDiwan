@@ -125,12 +125,19 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
 
                     b.HasKey("ArchiveEventId");
 
+                    b.HasIndex("ActorUserId");
+
                     b.HasIndex("ArchiveLocationId");
 
-                    b.HasIndex("EventTypeId");
+                    b.HasIndex("NewStatusId");
+
+                    b.HasIndex("PreviousStatusId");
 
                     b.HasIndex("DocumentId", "OccurredAt")
                         .HasDatabaseName("IX_DOC_ARCHIVE_EVENTS_DOC_DATE");
+
+                    b.HasIndex("EventTypeId", "OccurredAt")
+                        .HasDatabaseName("IX_DOC_ARCHIVE_EVENTS_TYPE_DATE");
 
                     b.ToTable("DOCUMENT_ARCHIVE_EVENTS", (string)null);
                 });
@@ -172,6 +179,14 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("UserId")
                         .HasDatabaseName("IX_SAVED_SEARCHES_USER");
+
+                    b.HasIndex("UserId", "Name")
+                        .IsUnique()
+                        .HasDatabaseName("UX_SAVED_SEARCHES_USER_NAME");
+
+                    b.HasIndex(new[] { "UserId" }, "UX_SAVED_SEARCHES_USER_DEFAULT")
+                        .IsUnique()
+                        .HasFilter("[IsDefault] = 1");
 
                     b.ToTable("SAVED_SEARCHES", (string)null);
                 });
@@ -3220,14 +3235,47 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Archiving.DocumentArchiveEvent", b =>
                 {
+                    b.HasOne("InstitutionalDiwan.Domain.Entities.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("ActorUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("InstitutionalDiwan.Domain.Entities.Archiving.ArchiveLocation", null)
                         .WithMany()
                         .HasForeignKey("ArchiveLocationId")
                         .OnDelete(DeleteBehavior.Restrict);
 
+                    b.HasOne("InstitutionalDiwan.Domain.Entities.Correspondence.Document", null)
+                        .WithMany()
+                        .HasForeignKey("DocumentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("InstitutionalDiwan.Domain.Entities.Archiving.ArchiveEventType", null)
                         .WithMany()
                         .HasForeignKey("EventTypeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("InstitutionalDiwan.Domain.Entities.Correspondence.DocumentStatusType", null)
+                        .WithMany()
+                        .HasForeignKey("NewStatusId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("InstitutionalDiwan.Domain.Entities.Correspondence.DocumentStatusType", null)
+                        .WithMany()
+                        .HasForeignKey("PreviousStatusId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Archiving.SavedSearch", b =>
+                {
+                    b.HasOne("InstitutionalDiwan.Domain.Entities.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

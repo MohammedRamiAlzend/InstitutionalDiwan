@@ -1,4 +1,6 @@
 using InstitutionalDiwan.Domain.Entities.Archiving;
+using InstitutionalDiwan.Domain.Entities.Correspondence;
+using InstitutionalDiwan.Domain.Entities.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -23,6 +25,27 @@ public sealed class DocumentArchiveEventConfiguration : IEntityTypeConfiguration
         builder.Property(x => x.OccurredAt).HasColumnName("OccurredAt").HasColumnType("datetime2(3)").IsRequired();
 
         builder.HasIndex(x => new { x.DocumentId, x.OccurredAt }).HasDatabaseName("IX_DOC_ARCHIVE_EVENTS_DOC_DATE");
+        builder.HasIndex(x => new { x.EventTypeId, x.OccurredAt }).HasDatabaseName("IX_DOC_ARCHIVE_EVENTS_TYPE_DATE");
+
+        builder.HasOne<Document>()
+            .WithMany()
+            .HasForeignKey(x => x.DocumentId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne<User>()
+            .WithMany()
+            .HasForeignKey(x => x.ActorUserId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne<DocumentStatusType>()
+            .WithMany()
+            .HasForeignKey(x => x.PreviousStatusId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne<DocumentStatusType>()
+            .WithMany()
+            .HasForeignKey(x => x.NewStatusId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne<ArchiveEventType>()
             .WithMany()
@@ -54,6 +77,15 @@ public sealed class SavedSearchConfiguration : IEntityTypeConfiguration<SavedSea
         builder.Property(x => x.UpdatedAt).HasColumnName("UpdatedAt").HasColumnType("datetime2(3)");
 
         builder.HasIndex(x => x.UserId).HasDatabaseName("IX_SAVED_SEARCHES_USER");
+        builder.HasIndex(x => new { x.UserId, x.Name }).IsUnique().HasDatabaseName("UX_SAVED_SEARCHES_USER_NAME");
+        builder.HasIndex(x => x.UserId, "UX_SAVED_SEARCHES_USER_DEFAULT")
+            .IsUnique()
+            .HasFilter("[IsDefault] = 1");
+
+        builder.HasOne<User>()
+            .WithMany()
+            .HasForeignKey(x => x.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }
 

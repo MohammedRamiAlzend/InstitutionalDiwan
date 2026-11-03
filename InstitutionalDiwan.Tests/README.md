@@ -132,6 +132,7 @@ indexes) runs against a private SQLite in-memory database through `Support/TestC
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-03 | Claude | Added `Persistence/ArchivingRepositoryTests.cs` (search filters and paging, latest-event selection, foreign keys and unique indexes, archive audit rows, and a matrix proving the search and `DocumentAccessEvaluator` agree for every scope type, confidentiality level and grant state) and scope-set cases in `DepartmentScopeEvaluatorTests`. `dotnet test` now 562. |
 | 2026-11-03 | Claude | Added `Application/ArchivingDomainTests.cs` (18 cases: archive and unarchive transitions, location and reason rules, the freeze on archived documents, `SavedSearch` and `DocumentArchiveEvent` limits) and raised the permission and grant counts for `DOCUMENT_ARCHIVE` (17 permissions, 20 grants). `Document.Archive`/`Unarchive` had no coverage before this. |
 | 2026-11-02 | Claude | Dynamic fields, Phase 4: `DocumentFieldHandlerTests` gained a test that a new required field in a later version does not block registering a document pinned to the old one, and a validator test; 522 to 524 tests. |
 | 2026-11-02 | Claude | Dynamic fields, Phase 3: added `Server/DocumentFieldsControllerTests.cs` (permission policy contract of the new endpoints); the OpenAPI documentation tests now cover the new routes; 519 to 522 tests. |

@@ -356,6 +356,7 @@ them, while listing, relabelling and (de)activation keep working.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-03 | Claude | Module 07 Archiving, Phase 1: `ArchiveSearchFilter` gained `AsOfUtc`, which decides which access grants are still valid during a search. |
 | 2026-11-03 | Claude | Module 07 Archiving, Phase 0: `Document.Archive` accepts only `REGISTERED` documents and requires a location, `Unarchive` requires a reason, `EnsureNotArchived` freezes `AddParticipant` and `AttachReplacementNumber`; `DocumentArchivedEvent` carries the location; `SavedSearch` and `DocumentArchiveEvent` enforce their column limits and `SavedSearch.ClearDefault` was added; added `Permissions.DocumentArchive`, the `IDocumentArchiveRepository` / `ISavedSearchRepository` contracts with `ArchiveSearchFilter` / `ArchivedDocumentRow`, and new `Archiving.*` errors. |
 | 2026-11-02 | Claude | Dynamic fields, Phase 2: `IDocumentTypeSchemaVersionRepository.Remove` (discard a draft) and `AuditEntityType.DocumentSchemaVersionId` (14) for auditing schema changes. |
 | 2026-11-02 | Claude | Dynamic fields hardening found while mapping persistence: a pattern error message is capped at 500 characters (`DocumentFields.RegexMessageTooLong`) and numbers or range limits must stay below 1e20 so they fit the stored `decimal(28,8)` column. |

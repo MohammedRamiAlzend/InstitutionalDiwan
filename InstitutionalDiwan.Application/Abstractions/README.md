@@ -38,7 +38,7 @@ technology choices swappable.
 
 | Interface | Shape | Notes |
 | --- | --- | --- |
-| `IDepartmentScopeEvaluator` | `Task<bool> CanAccessDepartmentAsync(Guid departmentId, CancellationToken)` | Tier 2 of the access model: is the target department inside the caller's scope (primary department, active assignments incl. subtree, institution-wide)? ✅ Implemented. |
+| `IDepartmentScopeEvaluator` | `Task<bool> CanAccessDepartmentAsync(Guid departmentId, CancellationToken)`, `Task<IReadOnlySet<Guid>?> GetAccessibleDepartmentIdsAsync(CancellationToken)` (null = institution-wide) | Tier 2 of the access model: is the target department inside the caller's scope (primary department, active assignments incl. subtree, institution-wide)? ✅ Implemented. |
 | `IDocumentAccessEvaluator` | `Task<bool> CanAccessDocumentAsync(Guid documentId, int requiredAccessLevelId, CancellationToken)` | Tier 3: combines explicit grants, authorship, department scope, and confidentiality for VIEW/DOWNLOAD/FORWARD/MANAGE. ✅ Implemented. |
 
 ### `Data/`
@@ -130,6 +130,7 @@ technology choices swappable.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-03 | Claude | Added `IDepartmentScopeEvaluator.GetAccessibleDepartmentIdsAsync` so list queries can apply organizational scope in the database (Module 07 archive search). |
 | 2026-10-26 | Qoder | Added the `Audit/` group (`IAuditActionRecorder`, `AuditActionRecord`) so the web host can append action-level audit rows without depending on persistence, and marked it implemented by `AuditActionRecorder`. |
 | 2026-10-25 | opencode | Added `Context/IRequestContext` and `Persistence/ITransactionManager`, and marked `IDateTimeProvider` implemented by Infrastructure `DateTimeProvider` for Module 09. |
 | 2026-10-25 | opencode | Added the `Storage/` contracts (`IFileStorageService`, `IFileSignatureValidator`, `StoredFile`) so the Module 06 Attachments handlers depend on abstractions instead of the file system or ASP.NET upload types. |

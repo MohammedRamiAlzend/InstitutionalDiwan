@@ -234,4 +234,8 @@ internal sealed class FakeDepartmentScopeEvaluator : IDepartmentScopeEvaluator
         Guid departmentId,
         CancellationToken cancellationToken = default)
         => Task.FromResult(AccessibleDepartments.Contains(departmentId));
+
+    public Task<IReadOnlySet<Guid>?> GetAccessibleDepartmentIdsAsync(
+        CancellationToken cancellationToken = default)
+        => Task.FromResult<IReadOnlySet<Guid>?>(AccessibleDepartments);
 }
