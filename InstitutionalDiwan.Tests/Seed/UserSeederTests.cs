@@ -17,11 +17,70 @@ public sealed class UserSeederTests
         await new RoleSeeder().SeedAsync(Context(db));
     }
 
+    private static async Task SeedPrerequisitesAsync(DiwanDbContext db)
+    {
+        await SeedRolesAsync(db);
+        await new DepartmentTypeSeeder().SeedAsync(Context(db));
+        await new NumberingModeSeeder().SeedAsync(Context(db));
+        await new NumberingResetPolicySeeder().SeedAsync(Context(db));
+        await new InstitutionSettingSeeder().SeedAsync(Context(db));
+        await new DepartmentSeeder().SeedAsync(Context(db));
+    }
+
+    [Fact]
+    public async Task SeedAsync_PlacesDemoAccountsInRealDepartments()
+    {
+        using var db = TestContextFactory.Create();
+        await SeedPrerequisitesAsync(db);
+
+        await new UserSeeder().SeedAsync(Context(db));
+
+        var departments = await db.Departments.ToDictionaryAsync(d => d.Code, d => d.DepartmentId);
+        var admin = await db.Users.SingleAsync(u => u.Username == "admin");
+        var user = await db.Users.SingleAsync(u => u.Username == "user");
+
+        Assert.Equal(departments["CENTRAL_DIWAN"], admin.PrimaryDepartmentId);
+        Assert.Equal(departments["DEP-HR"], user.PrimaryDepartmentId);
+    }
+
+    [Fact]
+    public async Task SeedAsync_ThrowsWhenDepartmentsAreMissingForNewAccount()
+    {
+        using var db = TestContextFactory.Create();
+        await SeedRolesAsync(db);
+
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => new UserSeeder().SeedAsync(Context(db)));
+
+        Assert.Contains("InstitutionSettingSeeder", exception.Message);
+        Assert.Equal(0, await db.Users.CountAsync());
+    }
+
+    [Fact]
+    public async Task SeedAsync_LeavesExistingAccountsAloneWhenDepartmentsAreMissing()
+    {
+        using var db = TestContextFactory.Create();
+        await SeedRolesAsync(db);
+
+        var originalDepartmentId = Guid.NewGuid();
+        foreach (var (username, scopeTypeId) in new[] { ("admin", UserScopeType.SystemId), ("user", UserScopeType.DepartmentId) })
+        {
+            var existing = User.Create(username, "custom-hash", originalDepartmentId, scopeTypeId: scopeTypeId, mustChangePassword: false);
+            Assert.True(existing.IsSuccess);
+            db.Users.Add(existing.Value);
+        }
+        await db.SaveChangesAsync();
+
+        await new UserSeeder().SeedAsync(Context(db));
+
+        Assert.Equal(2, await db.Users.CountAsync(u => u.PrimaryDepartmentId == originalDepartmentId));
+    }
+
     [Fact]
     public async Task SeedAsync_CreatesDemoAccountsWithRoleAssignments()
     {
         using var db = TestContextFactory.Create();
-        await SeedRolesAsync(db);
+        await SeedPrerequisitesAsync(db);
 
         await new UserSeeder().SeedAsync(Context(db));
 
@@ -46,7 +105,7 @@ public sealed class UserSeederTests
     {
         using var db = TestContextFactory.Create();
         var seeder = new UserSeeder();
-        await SeedRolesAsync(db);
+        await SeedPrerequisitesAsync(db);
 
         await seeder.SeedAsync(Context(db));
         var userIdsAfterFirstRun = await db.Users.Select(u => u.UserId).OrderBy(id => id).ToListAsync();
@@ -61,9 +120,10 @@ public sealed class UserSeederTests
     public async Task SeedAsync_DoesNotOverwriteExistingUser()
     {
         using var db = TestContextFactory.Create();
-        await SeedRolesAsync(db);
+        await SeedPrerequisitesAsync(db);
 
-        var preExisting = User.Create("admin", "custom-hash", Guid.NewGuid(), scopeTypeId: UserScopeType.SystemId, mustChangePassword: false);
+        var originalDepartmentId = Guid.NewGuid();
+        var preExisting = User.Create("admin", "custom-hash", originalDepartmentId, scopeTypeId: UserScopeType.SystemId, mustChangePassword: false);
         Assert.True(preExisting.IsSuccess);
         db.Users.Add(preExisting.Value);
         await db.SaveChangesAsync();
@@ -72,6 +132,7 @@ public sealed class UserSeederTests
 
         var admin = await db.Users.SingleAsync(u => u.Username == "admin");
         Assert.Equal("custom-hash", admin.PasswordHash);
+        Assert.Equal(originalDepartmentId, admin.PrimaryDepartmentId);
         Assert.Equal(2, await db.Users.CountAsync());
         Assert.True(await db.Users.AnyAsync(u => u.Username == "user"));
     }

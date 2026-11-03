@@ -31,11 +31,11 @@ Development, Production, etc.
 | 97 | `EmployeeSeeder` | Development, Staging | 28 demo employees attached by department code — the Central Diwan office, every directorate, department, and section — so a department card can list the people who belong to it. Includes Arabic/English names, employee numbers (`EMP-0001`…), job titles, and a few contact details. Idempotent by `EmployeeNumber`. |
 | 100 | `PermissionSeeder` | All | Permission catalog — the 17 codes in `Permissions.All`, including `DOCUMENT_ARCHIVE`, `LOOKUP_MANAGE`, `NUMBERING_MANAGE`, `AUDIT_VIEW`, and `AUDIT_MANAGE`. |
 | 200 | `RoleSeeder` | All | `ADMIN` / `USER` roles plus their permission grants (ADMIN receives all 17, USER the three document permissions; 20 grants total). |
-| 300 | `UserSeeder` | Development, Staging | Demo accounts `admin` / `user` (password `12345678`) with role assignments. |
+| 300 | `UserSeeder` | Development, Staging | Demo accounts `admin` / `user` (password `12345678`) with role assignments. `admin` belongs to the Central Diwan and `user` to `DEP-HR`. Idempotent by username; existing accounts are never changed. |
 
 Order matters: the lookup catalogs are seeded before permissions/roles so business tables can
 reference them, roles grant permission codes that the catalog defines first, and demo users are
-assigned roles that must already exist. The demo department tree reuses the Central Diwan root that
+assigned roles and primary departments that must already exist. The demo department tree reuses the Central Diwan root that
 `InstitutionSettingSeeder` creates, so it runs immediately after it and before permissions/roles;
 `EmployeeSeeder` runs right after the tree because every demo employee is attached by department
 code.
@@ -49,6 +49,7 @@ Production requires opting in by adding `SeedingEnvironments.Production` to
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-03 | Claude | `UserSeeder` now places `admin` in the Central Diwan and `user` in `DEP-HR` instead of a fixed department id with no row, so documents they create have a real owning department. Existing accounts and documents are not changed. |
 | 2026-11-03 | Claude | Added `DOCUMENT_ARCHIVE` to the catalog (16 → 17) and granted it to `ADMIN` only (19 → 20 grants), because `USER` already holds `DOCUMENT_EDIT` and archiving must stay restricted. Both seeders are idempotent, so existing databases receive it on the next startup. |
 | 2026-11-02 | Claude | The audit entity-type seed gained a 14th row, `DocumentSchemaVersion` (مخطط حقول الوثيقة), used by the dynamic-fields audit rows. |
 | 2026-10-28 | agent | Added `EmployeeSeeder` (Order 97, Development/Staging): 28 demo employees spread across the seeded tree (including the Central Diwan office), idempotent by `EmployeeNumber`, so the department detail card can list real people. |
