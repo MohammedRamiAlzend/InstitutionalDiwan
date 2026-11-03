@@ -129,6 +129,7 @@ plain JSON array.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-03 | Claude | Documented document-level access on the document writes: 403 with `DOWNLOAD` required on update, register, participants and field values, and `MANAGE` on cancel. |
 | 2026-11-03 | Claude | Documented document-level `VIEW` access on the document reads of `DocumentsController` and `DocumentFieldsController`: the 403 response on get, details, timeline and fields, and that lists return and count only viewable documents. |
 | 2026-11-03 | Claude | Added `DocumentArchiveController` and `SavedSearchesController` for Module 07 (Phase 3), and corrected the controller count. |
 | 2026-11-02 | Claude | Added `DocumentFieldsController` (dynamic document fields, Phase 3); `POST /api/documents` and `POST /api/documents/drafts` accept optional `fieldValues`. |

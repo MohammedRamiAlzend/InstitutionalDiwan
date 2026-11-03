@@ -234,7 +234,8 @@ public sealed class DocumentFieldHandlerTests
         var world = new World();
         await world.PublishBasicSchemaAsync();
         var created = await world.CreateDraftDocumentAsync(new DocumentFieldValueInput("session_no", "1"));
-        var handler = new SetDocumentFieldValuesCommandHandler(world.Documents, world.Versions, world.UnitOfWork);
+        var handler = new SetDocumentFieldValuesCommandHandler(
+            world.Documents, world.Versions, new FakeDocumentAccessEvaluator { AllowAll = true }, world.UnitOfWork);
 
         var set = await handler.Handle(
             new SetDocumentFieldValuesCommand(created.DocumentId, new[]
@@ -262,7 +263,7 @@ public sealed class DocumentFieldHandlerTests
         var numbers = new FakeDocumentNumberRepository();
         var handler = new RegisterDocumentCommandHandler(
             world.Documents, numbers, new FakeNumberingRegistryRepository(), world.Versions,
-            world.UnitOfWork, TestClock.Instance);
+            new FakeDocumentAccessEvaluator { AllowAll = true }, world.UnitOfWork, TestClock.Instance);
 
         var blocked = await handler.Handle(
             new RegisterDocumentCommand(created.DocumentId, world.Author.UserId, 2026), CancellationToken.None);
@@ -344,7 +345,7 @@ public sealed class DocumentFieldHandlerTests
 
         var registered = await new RegisterDocumentCommandHandler(
             world.Documents, new FakeDocumentNumberRepository(), new FakeNumberingRegistryRepository(),
-            world.Versions, world.UnitOfWork, TestClock.Instance).Handle(
+            world.Versions, new FakeDocumentAccessEvaluator { AllowAll = true }, world.UnitOfWork, TestClock.Instance).Handle(
             new RegisterDocumentCommand(created.DocumentId, world.Author.UserId, 2026), CancellationToken.None);
 
         Assert.True(registered.IsSuccess, registered.IsFailure ? registered.Error.Code : null);
@@ -352,7 +353,7 @@ public sealed class DocumentFieldHandlerTests
         var newDocument = await world.CreateDraftDocumentAsync(new DocumentFieldValueInput("session_no", "6"));
         var blocked = await new RegisterDocumentCommandHandler(
             world.Documents, new FakeDocumentNumberRepository(), new FakeNumberingRegistryRepository(),
-            world.Versions, world.UnitOfWork, TestClock.Instance).Handle(
+            world.Versions, new FakeDocumentAccessEvaluator { AllowAll = true }, world.UnitOfWork, TestClock.Instance).Handle(
             new RegisterDocumentCommand(newDocument.DocumentId, world.Author.UserId, 2026), CancellationToken.None);
         Assert.Equal("DocumentFields.ValueRequired", blocked.Error.Code);
     }

@@ -1,5 +1,7 @@
+using InstitutionalDiwan.Application.Abstractions.Authorization;
 using InstitutionalDiwan.Application.Abstractions.Messaging;
 using InstitutionalDiwan.Domain.Common;
+using InstitutionalDiwan.Domain.Entities.Identity;
 using InstitutionalDiwan.Domain.Errors;
 using InstitutionalDiwan.Domain.Repositories;
 
@@ -10,13 +12,16 @@ internal sealed class CancelDocumentCommandHandler
 {
     private readonly IDocumentRepository _documentRepository;
     private readonly IDocumentMovementRepository _documentMovementRepository;
+    private readonly IDocumentAccessEvaluator _documentAccessEvaluator;
     private readonly IUnitOfWork _unitOfWork;
 
     public CancelDocumentCommandHandler(
         IDocumentRepository documentRepository,
         IDocumentMovementRepository documentMovementRepository,
+        IDocumentAccessEvaluator documentAccessEvaluator,
         IUnitOfWork unitOfWork)
     {
+        _documentAccessEvaluator = documentAccessEvaluator;
         _documentRepository = documentRepository;
         _documentMovementRepository = documentMovementRepository;
         _unitOfWork = unitOfWork;
@@ -29,6 +34,12 @@ internal sealed class CancelDocumentCommandHandler
         var document = await _documentRepository.GetByIdAsync(request.DocumentId, cancellationToken);
         if (document is null)
             return Result.Failure<DocumentResponse>(DomainErrors.Correspondence.DocumentNotFound);
+
+        if (!await _documentAccessEvaluator.CanAccessDocumentAsync(
+                request.DocumentId, AccessLevel.ManageId, cancellationToken))
+        {
+            return Result.Failure<DocumentResponse>(DomainErrors.Correspondence.DocumentAccessDenied);
+        }
 
         var hasActiveMovements = await _documentMovementRepository.HasActiveMovementsAsync(
             document.DocumentId, cancellationToken);

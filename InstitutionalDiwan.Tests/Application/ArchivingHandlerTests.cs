@@ -320,7 +320,8 @@ public sealed class ArchivingHandlerTests
         await world.ArchiveAsync();
 
         var result = await new AddDocumentParticipantCommandHandler(
-                world.Documents, world.Departments, world.ExternalOrganizations, world.Lookups, world.UnitOfWork)
+                world.Documents, world.Departments, world.ExternalOrganizations, world.Lookups,
+                new FakeDocumentAccessEvaluator { AllowAll = true }, world.UnitOfWork)
             .Handle(
                 new AddDocumentParticipantCommand(world.Document.DocumentId, ParticipantRole.SenderId, PersonName: "أحمد"),
                 CancellationToken.None);

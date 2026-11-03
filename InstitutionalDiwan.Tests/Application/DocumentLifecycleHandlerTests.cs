@@ -24,6 +24,7 @@ public sealed class DocumentLifecycleHandlerTests
         public FakeDepartmentRepository Departments { get; } = new();
         public FakeLookupRepository Lookups { get; } = new();
         public FakeUnitOfWork UnitOfWork { get; } = new();
+        public FakeDocumentAccessEvaluator Access { get; } = new() { AllowAll = true };
         public User User { get; }
         public Guid OwningDepartmentId { get; } = Guid.NewGuid();
 
@@ -51,16 +52,16 @@ public sealed class DocumentLifecycleHandlerTests
             new(Users, Documents, DocumentTypes, new FakeDocumentTypeSchemaVersionRepository(), UnitOfWork);
 
         public RegisterDocumentCommandHandler RegisterHandler() =>
-            new(Documents, Numbers, Registries, new FakeDocumentTypeSchemaVersionRepository(), UnitOfWork, TestClock.Instance);
+            new(Documents, Numbers, Registries, new FakeDocumentTypeSchemaVersionRepository(), Access, UnitOfWork, TestClock.Instance);
 
         public UpdateDraftMetadataCommandHandler UpdateHandler() =>
-            new(Documents, UnitOfWork);
+            new(Documents, Access, UnitOfWork);
 
         public AddDocumentParticipantCommandHandler AddParticipantHandler() =>
-            new(Documents, Departments, ExternalOrganizations, Lookups, UnitOfWork);
+            new(Documents, Departments, ExternalOrganizations, Lookups, Access, UnitOfWork);
 
         public CancelDocumentCommandHandler CancelHandler() =>
-            new(Documents, Movements, UnitOfWork);
+            new(Documents, Movements, Access, UnitOfWork);
     }
 
     private static async Task<DocumentResponse> CreateDraftAsync(World world)

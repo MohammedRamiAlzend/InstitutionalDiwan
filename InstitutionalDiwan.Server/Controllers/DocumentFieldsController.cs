@@ -307,14 +307,16 @@ public sealed class DocumentFieldsController : ControllerBase
     /// <param name="cancellationToken">Request cancellation token (optional).</param>
     /// <response code="200">The document's schema and its new values.</response>
     /// <response code="400">A value failed validation or names a field outside the pinned schema.</response>
+    /// <response code="403">The token lacks DOCUMENT_EDIT, or the caller has no DOWNLOAD access to the document.</response>
     /// <response code="404">No document with that id exists.</response>
     /// <response code="409">The document is no longer in DRAFT status.</response>
     [HttpPut("documents/{documentId:guid}/fields")]
     [EndpointSummary("Replaces the dynamic-field values of a DRAFT document.")]
-    [EndpointDescription("Replaces the dynamic-field values of a DRAFT document, validated against the schema version it is pinned to. Values are locked once the document is registered. Requires the DOCUMENT_EDIT permission. Responses: 200 (The document's schema and its new values.), 400 (A value failed validation or names a field outside the pinned schema.), 404 (No document with that id exists.), 409 (The document is no longer in DRAFT status.)")]
+    [EndpointDescription("Replaces the dynamic-field values of a DRAFT document, validated against the schema version it is pinned to. Values are locked once the document is registered. Requires the DOCUMENT_EDIT permission and DOWNLOAD access to the document. Responses: 200 (The document's schema and its new values.), 400 (A value failed validation or names a field outside the pinned schema.), 403 (The token lacks DOCUMENT_EDIT, or the caller has no DOWNLOAD access to the document.), 404 (No document with that id exists.), 409 (The document is no longer in DRAFT status.)")]
     [Authorize(Policy = Permissions.DocumentEdit)]
     [ProducesResponseType<DocumentFieldsResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> SetDocumentFields(

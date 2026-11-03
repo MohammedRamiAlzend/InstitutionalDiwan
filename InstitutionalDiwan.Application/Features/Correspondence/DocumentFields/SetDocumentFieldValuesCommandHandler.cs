@@ -1,6 +1,8 @@
+using InstitutionalDiwan.Application.Abstractions.Authorization;
 using InstitutionalDiwan.Application.Abstractions.Messaging;
 using InstitutionalDiwan.Domain.Common;
 using InstitutionalDiwan.Domain.Entities.Correspondence;
+using InstitutionalDiwan.Domain.Entities.Identity;
 using InstitutionalDiwan.Domain.Errors;
 using InstitutionalDiwan.Domain.Repositories;
 using InstitutionalDiwan.Domain.ValueObjects;
@@ -12,15 +14,18 @@ internal sealed class SetDocumentFieldValuesCommandHandler
 {
     private readonly IDocumentRepository _documentRepository;
     private readonly IDocumentTypeSchemaVersionRepository _versionRepository;
+    private readonly IDocumentAccessEvaluator _documentAccessEvaluator;
     private readonly IUnitOfWork _unitOfWork;
 
     public SetDocumentFieldValuesCommandHandler(
         IDocumentRepository documentRepository,
         IDocumentTypeSchemaVersionRepository versionRepository,
+        IDocumentAccessEvaluator documentAccessEvaluator,
         IUnitOfWork unitOfWork)
     {
         _documentRepository = documentRepository;
         _versionRepository = versionRepository;
+        _documentAccessEvaluator = documentAccessEvaluator;
         _unitOfWork = unitOfWork;
     }
 
@@ -31,6 +36,12 @@ internal sealed class SetDocumentFieldValuesCommandHandler
         var document = await _documentRepository.GetByIdAsync(request.DocumentId, cancellationToken);
         if (document is null)
             return Result.Failure<DocumentFieldsResponse>(DomainErrors.Correspondence.DocumentNotFound);
+
+        if (!await _documentAccessEvaluator.CanAccessDocumentAsync(
+                request.DocumentId, AccessLevel.DownloadId, cancellationToken))
+        {
+            return Result.Failure<DocumentFieldsResponse>(DomainErrors.Correspondence.DocumentAccessDenied);
+        }
 
         var schema = document.SchemaVersionId is { } schemaVersionId
             ? await _versionRepository.GetByIdAsync(schemaVersionId, cancellationToken)

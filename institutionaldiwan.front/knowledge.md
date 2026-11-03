@@ -180,10 +180,10 @@ required for every table.
 | `GET` | `/api/documents/{documentId}/timeline` | `DOCUMENT_VIEW` | + `VIEW` access. |
 | `POST` | `/api/documents` | `DOCUMENT_CREATE` |
 | `POST` | `/api/documents/drafts` | `DOCUMENT_CREATE` |
-| `PUT` | `/api/documents/{documentId}` | `DOCUMENT_EDIT` |
-| `POST` | `/api/documents/{documentId}/register` | `DOCUMENT_CREATE` |
-| `POST` | `/api/documents/{documentId}/participants` | `DOCUMENT_EDIT` |
-| `POST` | `/api/documents/{documentId}/cancel` | `DOCUMENT_EDIT` |
+| `PUT` | `/api/documents/{documentId}` | `DOCUMENT_EDIT` | + `DOWNLOAD` access; otherwise 403 `Correspondence.DocumentAccessDenied`. |
+| `POST` | `/api/documents/{documentId}/register` | `DOCUMENT_CREATE` | + `DOWNLOAD` access. |
+| `POST` | `/api/documents/{documentId}/participants` | `DOCUMENT_EDIT` | + `DOWNLOAD` access. |
+| `POST` | `/api/documents/{documentId}/cancel` | `DOCUMENT_EDIT` | + `MANAGE` access: the author, a `MANAGE` grant, or an institution-wide scope. |
 
 `POST /api/documents` requires `title`, `documentTypeId`, `directionId`, `officialNumberText`, and
 `numberingYear`; `409` with `Numbering.OfficialNumberTaken` when the pair already exists.
@@ -416,7 +416,7 @@ Document side:
 - `GET /api/document-types/{documentTypeId}/schema` — `DOCUMENT_VIEW`; the published schema that
   renders the create form (empty when the type has none).
 - `GET /api/documents/{id}/fields` — `DOCUMENT_VIEW` + `VIEW` access; the pinned schema with the stored values.
-- `PUT /api/documents/{id}/fields` — `DOCUMENT_EDIT`; replaces a draft's values
+- `PUT /api/documents/{id}/fields` — `DOCUMENT_EDIT` + `DOWNLOAD` access; replaces a draft's values
   (`values[{fieldKey,value}]`, value as text: numbers invariant, dates ISO 8601, booleans
   `true`/`false`, selects the option key; blank clears).
 - `POST /api/documents` and `POST /api/documents/drafts` accept optional `fieldValues` (same shape).

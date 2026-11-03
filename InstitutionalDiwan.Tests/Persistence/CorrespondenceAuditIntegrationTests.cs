@@ -102,7 +102,8 @@ public sealed class CorrespondenceAuditIntegrationTests
 
         fixture.Authenticate();
 
-        var handler = new UpdateDraftMetadataCommandHandler(new DocumentRepository(db), db);
+        var handler = new UpdateDraftMetadataCommandHandler(
+            new DocumentRepository(db), new FakeDocumentAccessEvaluator { AllowAll = true }, db);
 
         var result = await handler.Handle(
             new UpdateDraftMetadataCommand(draft.DocumentId, "عنوان جديد", "ملخص جديد"),

@@ -91,7 +91,9 @@ indexes) runs against a private SQLite in-memory database through `Support/TestC
   (valid, expired, revoked, someone else's), authorship, and movement state (sent, sent by the caller,
   not dispatched, closed, redirected away, secret) against SQLite, and asserts the list and its count
   equal the evaluator's answers. `DocumentReadAccessHandlerTests` covers the 403/404 order of every
-  single-document read.
+  single-document read. `DocumentWriteAccessHandlerTests` covers the write levels (`DOWNLOAD` for edits,
+  `MANAGE` for cancel), that a denied write changes nothing, and who those levels admit under the real
+  evaluator.
 - `LocalFileStorageServiceTests` writes real temp files to prove the `{Year}/{Month}/{DocumentId}`
   layout, one-pass SHA-256, read-back, missing-file behaviour, and refusal of a `../` path escape.
 - `AuditDomainTests` covers the SHA-256 chain: the first row links to genesis, a valid chain verifies,
@@ -137,6 +139,7 @@ indexes) runs against a private SQLite in-memory database through `Support/TestC
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-03 | Claude | Added `Application/DocumentWriteAccessHandlerTests.cs` for document-level access on writes; `FakeDocumentAccessEvaluator` gained `DownloadableDocuments` and `AllowAll`. `dotnet test` now 664. |
 | 2026-11-03 | Claude | Added `Persistence/DocumentViewAccessQueryTests.cs` and `Application/DocumentReadAccessHandlerTests.cs` for document-level `VIEW` access on reads; `FakeDocumentRepository.ListPagedAsync` takes the access and `FakeDepartmentScopeEvaluator` gained `InstitutionWide`. `dotnet test` now 651. |
 | 2026-11-03 | Claude | Added `Server/ArchivingControllersTests.cs` (permissions and routes), `Server/GlobalExceptionHandlingMiddlewareTests.cs` (concurrency conflicts answer 409) and archiving cases in `AuditActionMiddlewareTests`. `dotnet test` now 637. |
 | 2026-11-03 | Claude | Added `Application/ArchivingHandlerTests.cs` (archive and unarchive paths, history, search scoping, and the freeze across all eight write paths), `Persistence/SavedSearchHandlerTests.cs` (saved search use cases on a real database, including moving the default through the filtered index) and `Support/FakeArchivingRepositories.cs`. `dotnet test` now 616. |

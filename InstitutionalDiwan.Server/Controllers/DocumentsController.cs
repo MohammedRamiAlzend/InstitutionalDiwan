@@ -262,14 +262,16 @@ public sealed class DocumentsController : ControllerBase
     /// <param name="cancellationToken">Request cancellation token (optional).</param>
     /// <response code="200">The updated document.</response>
     /// <response code="400">The payload failed validation.</response>
+    /// <response code="403">The token lacks DOCUMENT_EDIT, or the caller has no DOWNLOAD access to the document.</response>
     /// <response code="404">No document with that id exists.</response>
     /// <response code="409">The document is no longer in DRAFT status.</response>
     [HttpPut("{documentId:guid}")]
     [EndpointSummary("Updates a DRAFT document's core metadata.")]
-    [EndpointDescription("Updates a DRAFT document's core metadata. Requires the DOCUMENT_EDIT permission. Responses: 200 (The updated document.), 400 (The payload failed validation.), 404 (No document with that id exists.), 409 (The document is no longer in DRAFT status.)")]
+    [EndpointDescription("Updates a DRAFT document's core metadata. Requires the DOCUMENT_EDIT permission and DOWNLOAD access to the document. Responses: 200 (The updated document.), 400 (The payload failed validation.), 403 (The token lacks DOCUMENT_EDIT, or the caller has no DOWNLOAD access to the document.), 404 (No document with that id exists.), 409 (The document is no longer in DRAFT status.)")]
     [Authorize(Policy = Permissions.DocumentEdit)]
     [ProducesResponseType<DocumentResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> UpdateDraft(
@@ -301,14 +303,16 @@ public sealed class DocumentsController : ControllerBase
     /// <param name="cancellationToken">Request cancellation token (optional).</param>
     /// <response code="200">The registered document.</response>
     /// <response code="400">The numbering year is invalid.</response>
+    /// <response code="403">The token lacks DOCUMENT_CREATE, or the caller has no DOWNLOAD access to the document.</response>
     /// <response code="404">No document with that id exists.</response>
     /// <response code="409">The document is not a draft, already numbered, or the number is taken.</response>
     [HttpPost("{documentId:guid}/register")]
     [EndpointSummary("Registers a DRAFT document: allocates the next official number from the matching registry and moves the document to REGISTERED.")]
-    [EndpointDescription("Registers a DRAFT document: allocates the next official number from the matching registry and moves the document to REGISTERED. Requires the DOCUMENT_CREATE permission. Responses: 200 (The registered document.), 400 (The numbering year is invalid.), 404 (No document with that id exists.), 409 (The document is not a draft, already numbered, or the number is taken.)")]
+    [EndpointDescription("Registers a DRAFT document: allocates the next official number from the matching registry and moves the document to REGISTERED. Requires the DOCUMENT_CREATE permission and DOWNLOAD access to the document. Responses: 200 (The registered document.), 400 (The numbering year is invalid.), 403 (The token lacks DOCUMENT_CREATE, or the caller has no DOWNLOAD access to the document.), 404 (No document with that id exists.), 409 (The document is not a draft, already numbered, or the number is taken.)")]
     [Authorize(Policy = Permissions.DocumentCreate)]
     [ProducesResponseType<DocumentResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Register(
@@ -341,14 +345,16 @@ public sealed class DocumentsController : ControllerBase
     /// <param name="cancellationToken">Request cancellation token (optional).</param>
     /// <response code="200">The created participant.</response>
     /// <response code="400">The payload is invalid or referenced an unknown role/department/organization.</response>
+    /// <response code="403">The token lacks DOCUMENT_EDIT, or the caller has no DOWNLOAD access to the document.</response>
     /// <response code="404">No document with that id exists.</response>
     /// <response code="409">The document already has an external participant or is canceled.</response>
     [HttpPost("{documentId:guid}/participants")]
     [EndpointSummary("Adds a participant (external organization, internal department, or person) to a document.")]
-    [EndpointDescription("Adds a participant (external organization, internal department, or person) to a document. Requires the DOCUMENT_EDIT permission. Responses: 200 (The created participant.), 400 (The payload is invalid or referenced an unknown role/department/organization.), 404 (No document with that id exists.), 409 (The document already has an external participant or is canceled.)")]
+    [EndpointDescription("Adds a participant (external organization, internal department, or person) to a document. Requires the DOCUMENT_EDIT permission and DOWNLOAD access to the document. Responses: 200 (The created participant.), 400 (The payload is invalid or referenced an unknown role/department/organization.), 403 (The token lacks DOCUMENT_EDIT, or the caller has no DOWNLOAD access to the document.), 404 (No document with that id exists.), 409 (The document already has an external participant or is canceled.)")]
     [Authorize(Policy = Permissions.DocumentEdit)]
     [ProducesResponseType<DocumentParticipantResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> AddParticipant(
@@ -379,14 +385,16 @@ public sealed class DocumentsController : ControllerBase
     /// <param name="cancellationToken">Request cancellation token (optional).</param>
     /// <response code="200">The canceled document.</response>
     /// <response code="400">The reason is missing.</response>
+    /// <response code="403">The token lacks DOCUMENT_EDIT, or the caller has no MANAGE access to the document.</response>
     /// <response code="404">No document with that id exists.</response>
     /// <response code="409">The document is archived, already canceled, or has active movements.</response>
     [HttpPost("{documentId:guid}/cancel")]
     [EndpointSummary("Cancels a document with a required reason.")]
-    [EndpointDescription("Cancels a document with a required reason. Requires the DOCUMENT_EDIT permission. Responses: 200 (The canceled document.), 400 (The reason is missing.), 404 (No document with that id exists.), 409 (The document is archived, already canceled, or has active movements.)")]
+    [EndpointDescription("Cancels a document with a required reason. Requires the DOCUMENT_EDIT permission and MANAGE access to the document. Responses: 200 (The canceled document.), 400 (The reason is missing.), 403 (The token lacks DOCUMENT_EDIT, or the caller has no MANAGE access to the document.), 404 (No document with that id exists.), 409 (The document is archived, already canceled, or has active movements.)")]
     [Authorize(Policy = Permissions.DocumentEdit)]
     [ProducesResponseType<DocumentResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Cancel(

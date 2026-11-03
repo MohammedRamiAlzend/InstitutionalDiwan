@@ -23,7 +23,7 @@ every other slice; handlers take the acting `UserId` explicitly.
 | `DocumentFieldResponses.cs` | Read models: `DocumentFieldResponse`, `SchemaFieldResponse`, `SchemaVersionResponse`, `SchemaVersionSummaryResponse`, `DocumentTypeSchemaResponse`, `DocumentFieldValueResponse` and `DocumentFieldsResponse` (values formatted as text in the form the input accepts). |
 | `SchemaFieldCommandHandlers.cs` | Handlers for creating a field identity (unique key per type) and adding, updating and removing a field in a schema draft. |
 | `SchemaDraftCommandHandlers.cs` | Handlers for starting a draft (a copy of the published version, numbered next), discarding a draft, and publishing — which retires the previously published version, read before the draft is published. |
-| `SetDocumentFieldValuesCommandHandler.cs` | Replaces a draft document's values against its pinned schema; also holds `DocumentSchemaPinning`, the helper the create flows share to apply values (rejecting any value when the type has no schema). |
+| `SetDocumentFieldValuesCommandHandler.cs` | Replaces a draft document's values against its pinned schema, after a `DOWNLOAD` access check; also holds `DocumentSchemaPinning`, the helper the create flows share to apply values (rejecting any value when the type has no schema). |
 | `DocumentFieldQueryHandlers.cs` | Handlers for the five queries; reading a document's values requires `VIEW` access to that document (403 `Correspondence.DocumentAccessDenied`). |
 | `DocumentFieldCommandValidators.cs` | FluentValidation rules: ids present, key format, data type defined, label length, value list size; type-specific rules stay in the domain. |
 
@@ -50,5 +50,6 @@ every other slice; handlers take the acting `UserId` explicitly.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-03 | Claude | `SetDocumentFieldValuesCommandHandler` now requires `DOWNLOAD` access to the document (403 `Correspondence.DocumentAccessDenied`), matching draft metadata edits. |
 | 2026-11-03 | Claude | `GetDocumentFieldsQueryHandler` now requires `VIEW` access to the document, because the values are document content. `SetDocumentFieldValuesCommandHandler` still has no document-level check; it waits for the access levels of the write handlers to be decided. |
 | 2026-11-02 | Claude | Created the slice (dynamic document fields, Phase 2): schema administration commands and queries, document value command, and the shared pinning helper. |

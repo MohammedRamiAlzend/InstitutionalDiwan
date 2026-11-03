@@ -14,12 +14,21 @@ internal sealed class FakeDocumentAccessEvaluator : IDocumentAccessEvaluator
     /// <summary>Documents the caller may reach at VIEW only.</summary>
     public HashSet<Guid> ViewableDocuments { get; } = new();
 
+    /// <summary>Documents the caller may reach at DOWNLOAD (which also covers VIEW).</summary>
+    public HashSet<Guid> DownloadableDocuments { get; } = new();
+
+    /// <summary>When set, every document is reachable at every level, for tests about something else.</summary>
+    public bool AllowAll { get; set; }
+
     public Task<bool> CanAccessDocumentAsync(
         Guid documentId,
         int requiredAccessLevelId,
         CancellationToken cancellationToken = default)
     {
-        if (ManagedDocuments.Contains(documentId))
+        if (AllowAll || ManagedDocuments.Contains(documentId))
+            return Task.FromResult(true);
+
+        if (requiredAccessLevelId <= 2 && DownloadableDocuments.Contains(documentId))
             return Task.FromResult(true);
 
         if (requiredAccessLevelId <= 1 && ViewableDocuments.Contains(documentId))

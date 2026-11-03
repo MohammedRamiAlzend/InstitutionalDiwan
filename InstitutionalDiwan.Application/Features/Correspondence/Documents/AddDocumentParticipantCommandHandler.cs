@@ -1,6 +1,8 @@
+using InstitutionalDiwan.Application.Abstractions.Authorization;
 using InstitutionalDiwan.Application.Abstractions.Messaging;
 using InstitutionalDiwan.Domain.Common;
 using InstitutionalDiwan.Domain.Entities.Correspondence;
+using InstitutionalDiwan.Domain.Entities.Identity;
 using InstitutionalDiwan.Domain.Errors;
 using InstitutionalDiwan.Domain.Repositories;
 using InstitutionalDiwan.Domain.ValueObjects;
@@ -16,6 +18,7 @@ internal sealed class AddDocumentParticipantCommandHandler
     private readonly IDepartmentRepository _departmentRepository;
     private readonly IExternalOrganizationRepository _externalOrganizationRepository;
     private readonly ILookupRepository _lookupRepository;
+    private readonly IDocumentAccessEvaluator _documentAccessEvaluator;
     private readonly IUnitOfWork _unitOfWork;
 
     public AddDocumentParticipantCommandHandler(
@@ -23,8 +26,10 @@ internal sealed class AddDocumentParticipantCommandHandler
         IDepartmentRepository departmentRepository,
         IExternalOrganizationRepository externalOrganizationRepository,
         ILookupRepository lookupRepository,
+        IDocumentAccessEvaluator documentAccessEvaluator,
         IUnitOfWork unitOfWork)
     {
+        _documentAccessEvaluator = documentAccessEvaluator;
         _documentRepository = documentRepository;
         _departmentRepository = departmentRepository;
         _externalOrganizationRepository = externalOrganizationRepository;
@@ -40,6 +45,13 @@ internal sealed class AddDocumentParticipantCommandHandler
         if (document is null)
             return Result.Failure<DocumentParticipantResponse>(
                 DomainErrors.Correspondence.DocumentNotFound);
+
+        if (!await _documentAccessEvaluator.CanAccessDocumentAsync(
+                request.DocumentId, AccessLevel.DownloadId, cancellationToken))
+        {
+            return Result.Failure<DocumentParticipantResponse>(
+                DomainErrors.Correspondence.DocumentAccessDenied);
+        }
 
         if (document.CurrentStatusId == DocumentStatusType.CanceledId)
             return Result.Failure<DocumentParticipantResponse>(

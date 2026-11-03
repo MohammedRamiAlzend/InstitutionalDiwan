@@ -1,7 +1,9 @@
+using InstitutionalDiwan.Application.Abstractions.Authorization;
 using InstitutionalDiwan.Application.Abstractions.Messaging;
 using InstitutionalDiwan.Application.Features.Numbering;
 using InstitutionalDiwan.Domain.Common;
 using InstitutionalDiwan.Domain.Entities.Correspondence;
+using InstitutionalDiwan.Domain.Entities.Identity;
 using InstitutionalDiwan.Domain.Entities.Numbering;
 using InstitutionalDiwan.Domain.Errors;
 using InstitutionalDiwan.Domain.Repositories;
@@ -16,6 +18,7 @@ internal sealed class RegisterDocumentCommandHandler
     private readonly IDocumentNumberRepository _documentNumberRepository;
     private readonly INumberingRegistryRepository _numberingRegistryRepository;
     private readonly IDocumentTypeSchemaVersionRepository _schemaVersionRepository;
+    private readonly IDocumentAccessEvaluator _documentAccessEvaluator;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IClock _clock;
 
@@ -24,9 +27,11 @@ internal sealed class RegisterDocumentCommandHandler
         IDocumentNumberRepository documentNumberRepository,
         INumberingRegistryRepository numberingRegistryRepository,
         IDocumentTypeSchemaVersionRepository schemaVersionRepository,
+        IDocumentAccessEvaluator documentAccessEvaluator,
         IUnitOfWork unitOfWork,
         IClock clock)
     {
+        _documentAccessEvaluator = documentAccessEvaluator;
         _documentRepository = documentRepository;
         _documentNumberRepository = documentNumberRepository;
         _numberingRegistryRepository = numberingRegistryRepository;
@@ -42,6 +47,12 @@ internal sealed class RegisterDocumentCommandHandler
         var document = await _documentRepository.GetByIdAsync(request.DocumentId, cancellationToken);
         if (document is null)
             return Result.Failure<DocumentResponse>(DomainErrors.Correspondence.DocumentNotFound);
+
+        if (!await _documentAccessEvaluator.CanAccessDocumentAsync(
+                request.DocumentId, AccessLevel.DownloadId, cancellationToken))
+        {
+            return Result.Failure<DocumentResponse>(DomainErrors.Correspondence.DocumentAccessDenied);
+        }
 
         // Checked before allocating a sequence so a rejected registration never burns a number.
         if (document.CurrentStatusId != DocumentStatusType.DraftId)

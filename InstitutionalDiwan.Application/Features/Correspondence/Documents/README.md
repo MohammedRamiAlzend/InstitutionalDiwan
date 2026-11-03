@@ -25,15 +25,15 @@ commands the API actually walks: `CreateDraftDocumentCommand` → `UpdateDraftMe
 | `CreateDraftDocumentCommandHandler.cs` | Validates the caller (active user) and document type (exists + active), then `Document.CreateDraft` with the caller's `PrimaryDepartmentId` as owner. Pins the document to the published schema of its type and applies optional `FieldValues`. |
 | `CreateDraftDocumentCommandValidator.cs` | FluentValidation rules for title, type, direction, and optional summary/date/reference fields. |
 | `UpdateDraftMetadataCommand.cs` | CQRS command editing title, summary, confidentiality, and priority. |
-| `UpdateDraftMetadataCommandHandler.cs` | Loads the document (404) and applies `Document.UpdateDraftMetadata`, which refuses anything but `DRAFT` (`Correspondence.OnlyDraftEditable`, 409). |
+| `UpdateDraftMetadataCommandHandler.cs` | Loads the document (404), requires `DOWNLOAD` access (403) and applies `Document.UpdateDraftMetadata`, which refuses anything but `DRAFT` (`Correspondence.OnlyDraftEditable`, 409). |
 | `UpdateDraftMetadataCommandValidator.cs` | FluentValidation rules for title/summary and positive optional level ids. |
 | `RegisterDocumentCommand.cs` | CQRS command transitioning DRAFT → REGISTERED by allocating an official number (optional explicit year). |
-| `RegisterDocumentCommandHandler.cs` | Validates draft status *before* allocating (a rejected call never burns a sequence), resolves the registry, allocates, renders via `OfficialNumberFormatter`, checks `(text, year)` uniqueness, then `DocumentNumber.Issue` + `Document.Register` + save. Fails with `DocumentFields.ValueRequired` before allocating when a required dynamic field has no value. |
+| `RegisterDocumentCommandHandler.cs` | Requires `DOWNLOAD` access (403), validates draft status *before* allocating (a rejected call never burns a sequence), resolves the registry, allocates, renders via `OfficialNumberFormatter`, checks `(text, year)` uniqueness, then `DocumentNumber.Issue` + `Document.Register` + save. Fails with `DocumentFields.ValueRequired` before allocating when a required dynamic field has no value. |
 | `AddDocumentParticipantCommand.cs` | CQRS command attaching an external organization, internal department, or person to a document. |
-| `AddDocumentParticipantCommandHandler.cs` | Enforces exactly-one target, validates the participant role lookup and the referenced department/organization (exists + active), then `Document.AddParticipant`, which enforces the single-external-party limit. |
+| `AddDocumentParticipantCommandHandler.cs` | Requires `DOWNLOAD` access (403), enforces exactly-one target, validates the participant role lookup and the referenced department/organization (exists + active), then `Document.AddParticipant`, which enforces the single-external-party limit. |
 | `AddDocumentParticipantCommandValidator.cs` | FluentValidation rules incl. the exactly-one-target invariant (`Correspondence.ParticipantTargetInvalid`). |
 | `CancelDocumentCommand.cs` | CQRS command cancelling a document with a required reason. |
-| `CancelDocumentCommandHandler.cs` | Asks `IDocumentMovementRepository.HasActiveMovementsAsync` first, then `Document.Cancel` (blocked by active movements, archived status, or a missing reason). |
+| `CancelDocumentCommandHandler.cs` | Requires `MANAGE` access (403), asks `IDocumentMovementRepository.HasActiveMovementsAsync`, then `Document.Cancel` (blocked by active movements, archived status, or a missing reason). |
 | `CancelDocumentCommandValidator.cs` | FluentValidation rules: ids required, non-blank reason ≤ 1000 chars. |
 | `DocumentResponse.cs` | Light read model returned by list/create/register/cancel; `From(Document)` maps the aggregate incl. `OfficialNumberText` and `RegistrationDate`. |
 | `DocumentDetailResponse.cs` | Rich read model: the document plus its participants and status history (ordered). |
@@ -60,7 +60,11 @@ commands the API actually walks: `CreateDraftDocumentCommand` → `UpdateDraftMe
   `DOCUMENT_EDIT`. Every read also applies document-level `VIEW` access
   (`Infrastructure/Authorization/DocumentAccessEvaluator`): a single-document read asks
   `IDocumentAccessEvaluator`, and a list applies the same rule in SQL through `DocumentViewAccess`
-  so its paging counters stay correct. The write handlers do not check document access yet.
+  so its paging counters stay correct.
+- Writes check document access right after the 404, before any state rule. Update, register and add
+  participant require `DOWNLOAD`, so department colleagues keep working on documents they can reach
+  through scope; a `DOWNLOAD` grant and a department on the current movement step also pass. Cancel
+  requires `MANAGE`: the author, a `MANAGE` grant, or an institution-wide scope.
 - `ListDocumentsQuery` sorts by `createdAt` (default, newest first), `title`, `registrationDate`, or
   `officialNumber`; an unknown `sortBy` falls back to `createdAt`. `search` matches the title, the
   subject summary, and the official number.
@@ -84,12 +88,13 @@ commands the API actually walks: `CreateDraftDocumentCommand` → `UpdateDraftMe
 | `ListDepartmentDocumentsQuery` (paged + scope-checked) | ✅ |
 | Archive/unarchive use cases (Module 07) | ✅ In `Features/Archiving` |
 | Document-level `VIEW` access on every read | ✅ |
-| Document-level access on update, register, add participant, cancel | ❌ Levels awaiting a decision |
+| Document-level access on update, register, add participant (`DOWNLOAD`) and cancel (`MANAGE`) | ✅ |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-03 | Claude | Closed the write side of the document access gap, at the levels the project owner chose: update draft, register and add participant require `DOWNLOAD`, cancel requires `MANAGE`; all answer 403 `Correspondence.DocumentAccessDenied` before any state rule, so a denied registration never burns a number. |
 | 2026-11-03 | Claude | Closed the read side of the document access gap: get by id, details and timeline answer 403 `Correspondence.DocumentAccessDenied` without `VIEW` access, and both lists pass `DocumentViewAccess` to `ListPagedAsync` so `SECRET`/`TOP_SECRET` and out-of-scope documents leave the rows and the counts. |
 | 2026-11-03 | Claude | Recorded that archive and unarchive live in `Features/Archiving`. `AddDocumentParticipantCommandHandler` now answers `Correspondence.DocumentArchived` for an archived document, through `Document.AddParticipant`. |
 | 2026-11-02 | Claude | Dynamic document fields, Phase 2: `CreateDraftDocumentCommand`/`CreateDocumentCommand` gained a trailing optional `FieldValues`, and their handlers pin the published schema version; `RegisterDocumentCommandHandler` and `CreateDocumentCommandHandler` check required dynamic fields before allocating a number. All three handlers take `IDocumentTypeSchemaVersionRepository`. See `../DocumentFields/README.md`. |
