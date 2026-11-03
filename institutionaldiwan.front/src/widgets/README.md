@@ -37,6 +37,7 @@ browser.
 | `external-organizations-table/` | External correspondents admin grid (server search/paging, active/all filter, status badges, copy actions) | `entities/{external-organization,lookup,user}` + `features/external-organization-manage` | ✅ Implemented (Phase 7) |
 | `movement-timeline/` | Vertical step chain for one document | `entities/movement` + `features/movement-routing` | Deferred — the timeline lives in `pages/documents` until Module 05's visualization panel lands |
 | `audit-log-table/` | Paged audit search (hash columns, module/action/date filters) plus the integrity-report list, with checkpoint/checks toolbar | `entities/audit-log` + `features/audit-manage` | ✅ Implemented (Module 09) |
+| `archive-search-table/` | Access-filtered archive search grid with a saved-searches bar | `entities/archive` + `features/archive-manage` |
 | `visualization-panel/` | Mermaid source viewer plus data-derived diagram / chart / tree switcher with node context menus | `entities/department`, `entities/movement` + `shared/ui/mermaid-view` | ❌ Planned |
 | `notification-center/` | SignalR bell/drawer | Deferred until Module 10 + hubs | ❌ Blocked |
 
@@ -69,6 +70,7 @@ browser.
 | `movement-inbox/` | ✅ Implemented and verified in-browser (Phase 6) |
 | `external-organizations-table/` | ✅ Implemented and verified in-browser (Phase 7) |
 | `audit-log-table/` | ✅ Implemented and verified in-browser (Module 09: `AuditLogTable` + `AuditIntegrityTable`, manager actions hidden for view-only roles) |
+| `archive-search-table/` | ✅ Implemented (Module 07; build and lint pass, verified against the live API) |
 | `document-attachments-panel/` | ✅ Grid, filters, download, upload, versions, archive, and verify implemented (Module 06 Phases 2–4) and browser-verified in Phase 5 across manager, `USER`, and read-only roles. |
 | `movement-timeline/` | Deferred (the document movements tab renders the step chain today) |
 | `visualization-panel/` | ❌ Not implemented (`shared/ui/mermaid-view` is now live, so the cross-module switcher can follow) |
@@ -78,6 +80,7 @@ browser.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-03 | agent | Module 07: implemented `archive-search-table` — the URL-driven archive grid (location/direction/type/department/date-range filters, row and header menus) and the personal saved-searches bar. |
 | 2026-11-01 | agent | Module 06 Phase 4: `document-attachments-panel` completed its row menu (الإصدارات، التحقق من البصمة for viewers; رفع إصدار، الأرشفة for a manager on a live unarchived file), renamed `canUpload` to `canManage`, and moved to one `rowAction` state that resolves the file from the live query so a mutation updates the open dialog. |
 | 2026-11-01 | agent | Module 06 Phase 3: `document-attachments-panel` grew the `canUpload` prop and the «رفع ملف» toolbar/empty-state action, mounting `UploadAttachmentDialog` from `features/attachment-upload`. |
 | 2026-11-01 | agent | Module 06 Phase 2: implemented `document-attachments-panel` — the client-mode files grid (`tableId="document-files"`) over `useDocumentFiles` with URL-backed status/file-type filters, ten columns (checksum and timestamps hidden by default), a row menu that downloads the current version under the server's own file name and copies the id / checksum / original name, and Arabic empty states that separate "no files" from "no match". Archived files stay listed because archiving stops versions without hiding anything. Browser verification skipped at the user's request. |

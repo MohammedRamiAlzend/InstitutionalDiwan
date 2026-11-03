@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { ArrowRight, Ban, FilePenLine, Hash, UserPlus } from 'lucide-react'
+import { Archive, ArchiveRestore, ArrowRight, Ban, FilePenLine, Hash, UserPlus } from 'lucide-react'
 import { useDepartmentOptions } from '@/entities/department'
 import {
   DocumentDirectionBadge,
@@ -11,6 +11,10 @@ import {
 } from '@/entities/document'
 import { DOCUMENT_STATUS } from '@/entities/lookup'
 import { useSessionStore } from '@/entities/user'
+import {
+  ArchiveDocumentDialog,
+  UnarchiveDocumentDialog,
+} from '@/features/archive-manage'
 import { RequirePermission } from '@/features/auth'
 import {
   AddParticipantDialog,
@@ -30,6 +34,7 @@ import {
   PageHeader,
   Skeleton,
 } from '@/shared/ui'
+import { DocumentArchiveTab } from './DocumentArchiveTab'
 import { DocumentFilesTab } from './DocumentFilesTab'
 import { DocumentGrantsTab } from './DocumentGrantsTab'
 import { DocumentMovementsTab } from './DocumentMovementsTab'
@@ -44,10 +49,18 @@ const TABS = [
   { key: 'movements', label: 'الحركات', available: true },
   { key: 'files', label: 'الملفات', available: true },
   { key: 'grants', label: 'التصاريح', available: true },
+  { key: 'archive', label: 'سجل الأرشفة', available: true },
 ] as const
 
 type TabKey = (typeof TABS)[number]['key']
-type AvailableTabKey = 'details' | 'participants' | 'numbers' | 'movements' | 'files' | 'grants'
+type AvailableTabKey =
+  | 'details'
+  | 'participants'
+  | 'numbers'
+  | 'movements'
+  | 'files'
+  | 'grants'
+  | 'archive'
 
 /** Unknown, not-yet-available, or permission-hidden tabs fall back to the details tab. */
 function resolveTab(
@@ -60,6 +73,7 @@ function resolveTab(
   if (raw === 'movements') return 'movements'
   if (raw === 'files') return 'files'
   if (raw === 'grants' && canManageGrants) return 'grants'
+  if (raw === 'archive') return 'archive'
   return 'details'
 }
 
@@ -85,6 +99,7 @@ function DocumentDetailsView() {
   const canManageGrants = hasPermission(Permissions.AccessGrantManage)
   const canViewNumbering = hasPermission(Permissions.NumberingView)
   const canManageNumbering = hasPermission(Permissions.NumberingManage)
+  const canArchive = hasPermission(Permissions.DocumentArchive)
 
   const activeTab = resolveTab(
     searchParams.get('tab'),
@@ -100,6 +115,8 @@ function DocumentDetailsView() {
   const [registerOpen, setRegisterOpen] = useState(false)
   const [participantOpen, setParticipantOpen] = useState(false)
   const [cancelOpen, setCancelOpen] = useState(false)
+  const [archiveOpen, setArchiveOpen] = useState(false)
+  const [unarchiveOpen, setUnarchiveOpen] = useState(false)
 
   const departmentNames = useMemo(
     () =>
@@ -164,7 +181,10 @@ function DocumentDetailsView() {
   const isDraft = document.statusId === DOCUMENT_STATUS.Draft
   const isCanceled = document.statusId === DOCUMENT_STATUS.Canceled
   const isArchived = document.statusId === DOCUMENT_STATUS.Archived
-  const canManageParticipants = canEdit && !isCanceled
+  // An archived document rejects participant, attachment and number writes until unarchived.
+  const canManageParticipants = canEdit && !isCanceled && !isArchived
+  const canArchiveNow = canArchive && document.statusId === DOCUMENT_STATUS.Registered
+  const canUnarchive = canArchive && isArchived
   const canCancel = canEdit && !isCanceled && !isArchived
 
   const setTab = (tab: TabKey) => {
@@ -235,6 +255,20 @@ function DocumentDetailsView() {
               </Button>
             )}
             {canCancel && <GuideChip id="document-details.cancel" />}
+            {canArchiveNow && (
+              <Button type="button" variant="outline" onClick={() => setArchiveOpen(true)}>
+                <Archive className="size-4" aria-hidden />
+                أرشفة
+              </Button>
+            )}
+            {canArchiveNow && <GuideChip id="document-details.archive" />}
+            {canUnarchive && (
+              <Button type="button" variant="outline" onClick={() => setUnarchiveOpen(true)}>
+                <ArchiveRestore className="size-4" aria-hidden />
+                إلغاء الأرشفة
+              </Button>
+            )}
+            {canUnarchive && <GuideChip id="document-details.unarchive" />}
           </>
         }
       />
@@ -305,7 +339,7 @@ function DocumentDetailsView() {
         <DocumentNumbersTab
           documentId={document.documentId}
           documentStatusId={document.statusId}
-          canManage={canManageNumbering}
+          canManage={canManageNumbering && !isArchived}
           departmentNames={departmentNames}
         />
         </GuideRegion>
@@ -325,13 +359,18 @@ function DocumentDetailsView() {
         <GuideRegion id="document-details.tab-files">
         <DocumentFilesTab
           documentId={document.documentId}
-          canManage={canEdit && !isCanceled}
+          canManage={canEdit && !isCanceled && !isArchived}
         />
         </GuideRegion>
       )}
       {activeTab === 'grants' && canManageGrants && (
         <GuideRegion id="document-details.tab-grants">
           <DocumentGrantsTab documentId={document.documentId} />
+        </GuideRegion>
+      )}
+      {activeTab === 'archive' && (
+        <GuideRegion id="document-details.tab-archive">
+          <DocumentArchiveTab documentId={document.documentId} />
         </GuideRegion>
       )}
 
@@ -354,6 +393,22 @@ function DocumentDetailsView() {
           documentId={document.documentId}
           open
           onOpenChange={setParticipantOpen}
+        />
+      )}
+      {archiveOpen && (
+        <ArchiveDocumentDialog
+          documentId={document.documentId}
+          documentTitle={document.title}
+          open
+          onOpenChange={setArchiveOpen}
+        />
+      )}
+      {unarchiveOpen && (
+        <UnarchiveDocumentDialog
+          documentId={document.documentId}
+          documentTitle={document.title}
+          open
+          onOpenChange={setUnarchiveOpen}
         />
       )}
       {cancelOpen && (

@@ -8,6 +8,7 @@ export const ROUTES = {
   /** Route pattern consumed by `AppRouter`; keep in sync with `DOCUMENT_DETAIL`. */
   DOCUMENT_DETAIL_PATTERN: '/documents/:documentId',
   MOVEMENTS: '/movements',
+  ARCHIVE: '/archive',
   DEPARTMENTS: '/departments',
   INSTITUTION_SETTINGS: '/institution-settings',
   USERS: '/users',

@@ -6,7 +6,7 @@ Reads the seeded reference ("lookup") catalogs through `GET /api/lookups/{lookup
 | File | Purpose |
 | --- | --- |
 | `model/types.ts` | `LookupEntryResponse` (API contract) and `LookupCatalogEntry` (`id`/`desc`/`descAr` fallback row). |
-| `model/constants.ts` | Re-exports shared scope/assignment/department/numbering/document/movement ID maps; defines `LOOKUP_SLUGS` and seeded Arabic `LOOKUP_FALLBACKS` for the named catalogs. |
+| `model/constants.ts` | Re-exports shared scope/assignment/department/numbering/document/movement/archive ID maps; defines `LOOKUP_SLUGS` and seeded Arabic `LOOKUP_FALLBACKS` for the named catalogs. |
 | `api/lookupApi.ts` | `entries(lookup, includeInactive?)` → `GET /api/lookups/{lookup}`. |
 | `model/queries.ts` | `lookupKeys` factory and `useLookupEntries(lookup, { includeInactive, enabled })` with `staleTime: Infinity` and seeded placeholder data (active-only reads). |
 | `ui/LookupLabel.tsx` | Renders the Arabic label for an `(lookup, id)` pair from the live catalog, falling back to the seeded row, then `#id`; `null` renders `—`. |
@@ -29,6 +29,7 @@ Reads the seeded reference ("lookup") catalogs through `GET /api/lookups/{lookup
 ## Change Log
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-03 | agent | Module 07: added `ArchiveEventTypes`/`ArchiveLocations` slugs, `ARCHIVE_EVENT_TYPE`/`ARCHIVE_LOCATION` re-exports and their seeded Arabic fallbacks. |
 | 2026-11-01 | agent | Module 06 Phase 2: the files grid became the first consumer of `document-file-types` — `LookupLabel` for the النوع column and `useLookupEntries` for the type filter options, so the seeded placeholders carry the labels before the catalog response arrives. |
 | 2026-11-01 | agent | Module 06 Phase 0: added the `document-file-types` slug with the seeded Arabic placeholders (مسح ضوئي/مرفق/توقيع/أخرى) and the `DOCUMENT_FILE_TYPE` import used by the fallback map. |
 | 2026-10-29 | agent | Module 09: added the `audit-action-types` and `audit-entity-types` slugs with seeded Arabic placeholders plus the `AUDIT_ACTION_TYPE` / `AUDIT_ENTITY_TYPE` ID re-exports used by the audit grid. |

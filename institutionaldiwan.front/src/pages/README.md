@@ -8,7 +8,7 @@
 > live numbering page (`/numbering`, Phase 5), and a live movements page (`/movements`, Phase 6).
 > Module 09 Audit has a live page (`/audit`: log search + integrity reports, read-only for view
 > roles, checkpoint/check for `AUDIT_MANAGE`).
-> Other backend-ready modules remain pending; archive is blocked on Module 07.
+> Other backend-ready modules remain pending; Module 07 Archiving is live (`/archive`).
 
 ## Purpose
 
@@ -48,7 +48,7 @@ complex business mutations, raw `axios`/`fetch` calls, or reusable domain models
 | `employees/` | `/employees` | 02 — employees list/CRUD, activate/deactivate | ✅ Implemented |
 | `numbering/` | `/numbering` | 04 — `GET/POST/PUT/DELETE /api/numbering/registries`, activate, `GET /api/departments/{id}/register` | ✅ Implemented (Phase 5); registries/register tabs + registry filters ✅ (Module 04 Phase 2); department register book `widgets/department-register-book` ✅ (Module 04 Phase 3) |
 | `audit/` | `/audit` | 09 — `GET /api/audit-logs`, checkpoints, integrity checks/reports (`?panel=logs\|integrity`) | ✅ Implemented (Module 09) |
-| `archive/` | `/archive` | 07 — **deferred** until Archiving API exists | ❌ Blocked |
+| `archive/` | `/archive` | 07 — `GET /api/archive/documents`, saved searches | ✅ Implemented (Module 07) |
 
 ## Screen acceptance (pages)
 
@@ -73,7 +73,7 @@ the cross-module `widgets/visualization-panel` remains planned.
 | `numbering/` | ✅ Implemented (Phase 5: registry grid + department register book behind `NUMBERING_VIEW`, writes behind `NUMBERING_MANAGE`); Module 04 Phase 2 split it into URL-backed tabs and added registry filters; Module 04 Phase 3 moved the register book into `widgets/department-register-book`. |
 | `movements/` | ✅ Implemented (Phase 6: inbox/outbox tabs behind `DOCUMENT_VIEW`, routing menus behind `DOCUMENT_EDIT`). |
 | `audit/` | ✅ Implemented (Module 09: log/integrity panels behind `AUDIT_VIEW`, checkpoint and integrity-check actions behind `AUDIT_MANAGE`; browser-verified for both roles). |
-| `archive/` | Blocked on Module 07 backend. |
+| `archive/` | ✅ Implemented (Module 07: archive search grid with saved searches behind `DOCUMENT_VIEW`; build and lint pass, verified against the live API). |
 | Final browser/build/test verification | ✅ Module 03 Phase 8 (2026-10-29): build, lint, backend build, and 487 tests pass; role-matrix browser pass (document / numbering / grants managers) plus draft, canceled, replaced-number, and movement states. |
 | Module 02 audit items | Still open (tracked outside Module 03). |
 
@@ -81,6 +81,7 @@ the cross-module `widgets/visualization-panel` remains planned.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-03 | agent | Module 07: implemented `archive/` — `/archive` behind `DOCUMENT_VIEW`, sidebar entry «الأرشيف», plus the archive/unarchive actions and the «سجل الأرشفة» tab on the document details page. |
 | 2026-10-29 | agent | Module 04 Phase 4: the document-details numbers history is now the shared `DataTable` (`tableId="document-numbers"`, column chooser, sorting, URL search, copy row menu); no route or permission changed. |
 | 2026-10-29 | agent | Module 04 Phase 3: replaced `pages/numbering/ui/DepartmentRegisterSection.tsx` with `widgets/department-register-book` (shared `DataTable`, department/year URL filters); `/numbering?tab=register` unchanged at the route level. |
 | 2026-10-29 | agent | Module 04 Phase 2: `/numbering` now uses URL-backed tabs (`?tab=registries\|register`); the registry grid gained status/reset-policy/scope filters, a scope-specificity column, and duplicate-scope warnings. |

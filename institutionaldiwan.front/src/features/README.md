@@ -44,6 +44,7 @@ error handling, and form/dialog UI.
 | `external-organization-manage/` | `POST /api/external-organizations`, `PUT /{id}`, `DELETE /{id}` (deactivate), `POST /{id}/activate` | `DOCUMENT_EDIT`; code immutable after creation; `Correspondence.ExternalOrgCodeAlreadyExists` shown inside the retained dialog; optional text sent as `null`; deactivated rows keep the record but leave the participant picker | ✅ Implemented (Phase 7) |
 | `attachment-upload/` | Module 06 `POST /api/documents/{id}/files`, `POST /api/document-files/{id}/versions`, `POST /api/document-files/{id}/archive` | Magic bytes + SHA-256; MANAGE access; show checksum after upload | ✅ Upload + versions + archive + verify (Module 06 Phases 3–4) |
 | `audit-manage/` | `POST /api/audit-logs/checkpoints`, `POST .../integrity-checks` | `AUDIT_MANAGE`; integrity failure is **200 + `isValid: false`** rendered in-dialog; empty checkpoint range → Arabic `Audit.NothingToCheckpoint` / `Audit.ChainBroken` | ✅ Implemented (Module 09) |
+| `archive-manage/` | `POST /api/documents/{id}/archive`, `/unarchive`, `/api/saved-searches` (POST/PUT/DELETE) | `DOCUMENT_ARCHIVE` + `MANAGE` access for archive transitions; saved searches need only `DOCUMENT_VIEW` and are private |
 
 ## Conventions
 
@@ -71,6 +72,7 @@ error handling, and form/dialog UI.
 | `movement-routing/` | ✅ Implemented (Phase 6: open dialog with assignee picker, plus one action dialog covering send, receive, complete, reject, return, redirect, close, and cancel). |
 | `external-organization-manage/` | ✅ Implemented (Phase 7: create/edit dialog over the `organization-types` lookup, duplicate-code Arabic error, staged deactivate/activate via `ConfirmDialog`). |
 | `audit-manage/` | ✅ Implemented (Module 09: checkpoint button/dialog with optional target log, integrity-check dialog with optional range and in-place pass/fail panel). |
+| `archive-manage/` | ✅ Implemented (Module 07: archive dialog with location + optional reason, unarchive dialog with mandatory reason, save/rename/delete saved searches). |
 | `attachment-upload/` | ✅ Implemented for Module 06 Phases 3–4 (atomic upload, version upload, archive confirmation, versions list with per-version download, checksum verify with three named digests). Browser-verified in Module 06 Phase 5 across manager, `USER`, and read-only roles. |
 | Final integration verification | Pending; Module 02 audit fixes still in progress. |
 
@@ -78,6 +80,7 @@ error handling, and form/dialog UI.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-03 | agent | Module 07: implemented `archive-manage` — archive and unarchive commands, saved-search create/update/delete, their Zod schemas, and the four dialogs; transitions invalidate the document, registry, archive-search and history keys. |
 | 2026-11-01 | agent | Module 06 Phase 4: `attachment-upload/` grew `uploadVersion`, `archiveFile` and their mutations, the shared `fileRejection` rules with `buildUploadVersionSchema(fileTypeId)`, the `useLocalChecksum` hook, and four dialogs — version upload with the next-version number and an Arabic archived refusal, the versions list with per-version download, the archive confirmation, and checksum verify. |
 | 2026-11-01 | agent | Module 06 Phase 3: `attachment-upload/` moved from docs to code — `uploadInitial`, `useUploadInitialMutation`, the zod pre-check schema against `shared/config/attachmentLimits`, and `UploadAttachmentDialog` (type-driven `accept`, local SHA-256, upload progress, post-upload checksum comparison). |
 | 2026-10-30 | agent | Follow-up: `document-create` can now attach an optional recipient (external organization, internal department, or person) at creation time — the dialog creates the document first, then posts a primary RECEIVER participant; a participant failure keeps the document and reports only the recipient error. |

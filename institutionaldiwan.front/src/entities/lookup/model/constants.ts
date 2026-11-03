@@ -1,4 +1,6 @@
 import {
+  ARCHIVE_EVENT_TYPE,
+  ARCHIVE_LOCATION,
   ASSIGNMENT_TYPE,
   AUDIT_ACTION_TYPE,
   AUDIT_ENTITY_TYPE,
@@ -23,6 +25,8 @@ import {
 import type { LookupCatalogEntry } from './types'
 
 export {
+  ARCHIVE_EVENT_TYPE,
+  ARCHIVE_LOCATION,
   ASSIGNMENT_TYPE,
   AUDIT_ACTION_TYPE,
   AUDIT_ENTITY_TYPE,
@@ -68,6 +72,8 @@ export const LOOKUP_SLUGS = {
   MovementEventTypes: 'movement-event-types',
   AuditActionTypes: 'audit-action-types',
   AuditEntityTypes: 'audit-entity-types',
+  ArchiveEventTypes: 'archive-event-types',
+  ArchiveLocations: 'archive-locations',
 } as const
 
 export type LookupSlug = (typeof LOOKUP_SLUGS)[keyof typeof LOOKUP_SLUGS]
@@ -230,6 +236,16 @@ export const LOOKUP_FALLBACKS: Record<string, readonly LookupCatalogEntry[]> = {
       descAr: 'جهة خارجية',
     },
     { id: AUDIT_ENTITY_TYPE.Operation, desc: 'Operation', descAr: 'عملية' },
+  ],
+  'archive-event-types': [
+    { id: ARCHIVE_EVENT_TYPE.Archived, desc: 'Archived', descAr: 'أرشفة' },
+    { id: ARCHIVE_EVENT_TYPE.Unarchived, desc: 'Unarchived', descAr: 'إلغاء الأرشفة' },
+    { id: ARCHIVE_EVENT_TYPE.RetentionApplied, desc: 'Retention applied', descAr: 'تطبيق مدة الحفظ' },
+  ],
+  'archive-locations': [
+    { id: ARCHIVE_LOCATION.CentralRegistry, desc: 'Central registry', descAr: 'الديوان المركزي' },
+    { id: ARCHIVE_LOCATION.PhysicalArchive, desc: 'Physical archive', descAr: 'الأرشيف الورقي' },
+    { id: ARCHIVE_LOCATION.ElectronicArchive, desc: 'Electronic archive', descAr: 'الأرشيف الإلكتروني' },
   ],
 }
 

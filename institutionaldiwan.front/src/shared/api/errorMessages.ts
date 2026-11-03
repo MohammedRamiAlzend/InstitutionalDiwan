@@ -184,6 +184,22 @@ const CODE_MESSAGES: Record<string, string> = {
   'Attachments.TitleTooLong': 'عنوان الملف يجب ألا يتجاوز 300 حرف.',
   'Attachments.VersionNotFound': 'إصدار الملف غير موجود.',
 
+  // Module 07 — Archiving
+  'Archiving.EventTypeInvalid': 'نوع حدث الأرشفة غير صالح.',
+  'Archiving.SearchNameEmpty': 'اسم البحث المحفوظ مطلوب.',
+  'Archiving.CriteriaJsonEmpty': 'معايير البحث المحفوظ مطلوبة.',
+  'Archiving.LocationNotFound': 'موقع الأرشفة المحدد غير موجود أو موقوف.',
+  'Archiving.UnarchiveReasonEmpty': 'سبب إلغاء الأرشفة مطلوب.',
+  'Archiving.ReasonTooLong': 'سبب الأرشفة لا يتجاوز 500 حرف.',
+  'Archiving.SearchNotFound': 'البحث المحفوظ غير موجود.',
+  'Archiving.SearchNameTooLong': 'اسم البحث المحفوظ لا يتجاوز 150 حرفًا.',
+  'Archiving.SearchNameTaken': 'لديك بحث محفوظ بهذا الاسم مسبقًا.',
+  'Archiving.SearchLimitReached': 'بلغت الحد الأقصى وهو 50 بحثًا محفوظًا؛ احذف بحثًا قبل حفظ آخر.',
+  'Archiving.CriteriaInvalid': 'معايير البحث المحفوظ غير صالحة أو تتجاوز الحد المسموح.',
+  'Correspondence.OnlyRegisteredArchivable': 'لا تُؤرشف إلا الوثائق المسجّلة.',
+  'Correspondence.DocumentArchived': 'الوثيقة مؤرشفة؛ ألغِ أرشفتها أولًا لإجراء هذا التعديل.',
+  'Common.ConcurrencyConflict': 'عُدّلت البيانات من مستخدم آخر أثناء العملية؛ حدّث الصفحة وحاول مجددًا.',
+
   // Module 09 — Tamper-evident audit log
   'Audit.ChainBroken': 'ارتباط سلسلة التدقيق بالسجل السابق مقطوع، تعذّر إنشاء نقطة التحقق.',
   'Audit.HashMismatch': 'تجزئة أحد سجلات التدقيق لا تطابق قيمته المسجّلة.',

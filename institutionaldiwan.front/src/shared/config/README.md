@@ -54,6 +54,7 @@ export const ROUTES = {
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-03 | agent | Module 07: added `ROUTES.ARCHIVE`, `ARCHIVE_EVENT_TYPE`/`ARCHIVE_LOCATION` in `lookupIds.ts`, and the `archive` page guide plus the archive entries of the document-details guide. |
 | 2026-11-03 | Claude | Mirrored the API's new `DOCUMENT_ARCHIVE` permission (17 codes). No screen uses it yet; Module 07 endpoints do not exist. |
 | 2026-11-02 | agent | Tutorial catalogue extended to all pages: added `roles`, `employees`, `movements`, `documents` (+ document details), `departments`, `numbering`, `institution-settings`, `audit` and `dashboard` guides and registered them in `guides/index.ts`. |
 | 2026-11-01 | agent | Tutorial mode Phase 0: added `guides/` — the `GuideEntry`/`PageGuide` contracts, `common.ts` for the six grid-tool entries shared by every table, `users.ts` for the witness page, and `index.ts` with `getGuideEntry`/`getPageGuide` through the public barrel. Ids are namespaced (`<page>.<region>`, `table.<tool>`) so `scripts/check-guide-ids.mjs` can prove every id used exists and every entry written is used. |

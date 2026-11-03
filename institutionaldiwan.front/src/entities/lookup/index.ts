@@ -1,6 +1,8 @@
 export type { LookupEntryResponse, LookupCatalogEntry } from './model/types'
 export {
   LOOKUP_SLUGS,
+  ARCHIVE_EVENT_TYPE,
+  ARCHIVE_LOCATION,
   USER_SCOPE_TYPE,
   ASSIGNMENT_TYPE,
   DEPARTMENT_TYPE,

@@ -82,6 +82,18 @@ export const DOCUMENT_DETAILS_GUIDE_ENTRIES: readonly GuideEntry[] = [
     note: 'يتطلب صلاحية تعديل الوثائق، ولا يظهر لوثيقة ملغاة أو مؤرشفة.',
   },
   {
+    id: 'document-details.archive',
+    title: 'أرشفة الوثيقة',
+    body: 'ينقل الوثيقة المسجّلة إلى الأرشيف في الموقع الذي تختاره. تبقى قابلة للقراءة والتنزيل، لكنها تُجمَّد أمام إضافة المشاركين والمرفقات والأرقام حتى تُلغى أرشفتها.',
+    note: 'يتطلب صلاحية أرشفة الوثائق وإدارة الوثيقة، ولا يظهر إلا لوثيقة مسجّلة.',
+  },
+  {
+    id: 'document-details.unarchive',
+    title: 'إلغاء الأرشفة',
+    body: 'يعيد الوثيقة إلى حالتها قبل الأرشفة لتعود قابلة للتعديل. يلزم ذكر السبب ويُسجَّل في سجل الأرشفة.',
+    note: 'يتطلب صلاحية أرشفة الوثائق وإدارة الوثيقة.',
+  },
+  {
     id: 'document-details.tabs',
     title: 'تبويبات الوثيقة',
     body: 'تتوزع معلومات الوثيقة على تبويبات: التفاصيل والمشاركون والأرقام والحركات والملفات والتصاريح. التبويب المختار يُحفظ في العنوان فتشارك الرابط على اللوحة نفسها.',
@@ -120,6 +132,11 @@ export const DOCUMENT_DETAILS_GUIDE_ENTRIES: readonly GuideEntry[] = [
     body: 'تصاريح الوصول الاستثنائية: تمنح قسمًا أو موظفًا حق رؤية هذه الوثيقة خارج نطاق وصوله المعتاد، ويمكن إلغاؤها لاحقًا.',
     note: 'يظهر لمن يملك صلاحية إدارة تصاريح الوصول فقط.',
   },
+  {
+    id: 'document-details.tab-archive',
+    title: 'سجل الأرشفة',
+    body: 'كل عمليات أرشفة الوثيقة وإلغاء أرشفتها مرتبة من الأحدث: من نفّذها ومتى وفي أي موقع ولأي سبب.',
+  },
 ]
 
 export const DOCUMENT_DETAILS_GUIDE: PageGuide = {
@@ -131,6 +148,8 @@ export const DOCUMENT_DETAILS_GUIDE: PageGuide = {
     'document-details.register',
     'document-details.add-participant',
     'document-details.cancel',
+    'document-details.archive',
+    'document-details.unarchive',
     'document-details.tabs',
     'document-details.tab-details',
     'document-details.tab-participants',
@@ -138,5 +157,6 @@ export const DOCUMENT_DETAILS_GUIDE: PageGuide = {
     'document-details.tab-movements',
     'document-details.tab-files',
     'document-details.tab-grants',
+    'document-details.tab-archive',
   ],
 }

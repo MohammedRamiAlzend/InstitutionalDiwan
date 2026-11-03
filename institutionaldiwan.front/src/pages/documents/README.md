@@ -38,6 +38,7 @@ atomic first upload).
 | `ui/DocumentOverviewTab.tsx` | Details tab: metadata grid, status history (with cancel/edit reasons), and the audit timeline section. |
 | `ui/DocumentParticipantsTab.tsx` | Participants tab: role, target type, resolved target name, primary flag, notes, and the add action. |
 | `ui/DocumentGrantsTab.tsx` | Access-grants tab: per-grant level label, active/expired/revoked state badge, grantee name (or short id without `USER_MANAGE`), grant/expiry/revocation metadata, and the منح/إلغاء dialogs. |
+| `ui/DocumentArchiveTab.tsx` | Archive-history tab: event type, status transition, location, actor and reason, newest first, with loading/error/empty states. |
 | `ui/DocumentNumbersTab.tsx` | Numbers tab: central number card (status, registration date, issuer, cancellation reason, replace/cancel actions, dated event list), department register cards, and the «سجل الأرقام» history grid on the shared `DataTable` (`tableId="document-numbers"`, client mode, column chooser, sorting, URL-backed search, row menu نسخ الرقم/نسخ المعرّف); statuses and event labels come from `DOCUMENT_NUMBER_STATUS`/`DOCUMENT_NUMBER_EVENT_TYPE`, and the API's English `Replaces …` note is translated to «يستبدل الرقم …». |
 | `ui/DocumentMovementsTab.tsx` | Movements tab: one `MovementCard` per movement (type/status badges, action buttons from `getMovementActions`, ordered step chain with per-step outcome label, registry number and department, and the event log), plus the open-movement and action dialogs. |
 | `ui/DocumentFilesTab.tsx` | Files tab: the section card (heading plus the archiving-does-not-hide note and the versions/verify mention) around `widgets/document-attachments-panel`; receives `canManage` from the page and passes it down, otherwise carries no state — the grid owns the query, filters, download, and the five dialogs. |
@@ -111,6 +112,7 @@ mounted dialog.
 | External-organizations tab | ✅ Implemented (Module 03 Phase 7: registry/organizations switcher, grid, create/edit/status dialogs) |
 | `ui/DocumentDetailsPage.tsx` + tabs | ✅ Implemented (Module 03 Phase 3) |
 | `ui/DocumentGrantsTab.tsx` | ✅ Implemented (Module 03 Phase 4) |
+| `ui/DocumentArchiveTab.tsx` | ✅ Implemented (Module 07) |
 | `ui/DocumentNumbersTab.tsx` | ✅ Implemented (Module 03 Phase 5); history grid moved onto `DataTable` in Module 04 Phase 4 |
 | `ui/DocumentMovementsTab.tsx` | ✅ Implemented (Module 03 Phase 6) |
 | `ui/DocumentFilesTab.tsx` | ✅ Implemented (Module 06 Phases 2–4) — the tab chip went from a disabled «قريبًا» placeholder to live, mounting `widgets/document-attachments-panel`, and forwards `canManage` so editors get upload, new version, and archiving while viewers keep download, versions, and verify; browser verification ✅ in Module 06 Phase 5 (three roles, including the access-level denial) |
@@ -120,6 +122,7 @@ mounted dialog.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-03 | agent | Module 07: `DocumentDetailsPage` gained «أرشفة»/«إلغاء الأرشفة» actions (`DOCUMENT_ARCHIVE`), the `archive` tab (`ui/DocumentArchiveTab.tsx`), and now treats an archived document as frozen for participants, files and numbers. |
 | 2026-11-03 | Claude | Movements tab offers only the actions on the caller's side of the current step. Verified in-browser against a scratch API with sender, receiver and unrelated users, including the Arabic denials on document cancel, edit, register and open movement. |
 | 2026-11-01 | agent | Module 06 Phase 5: verified the `files` tab in-browser in three roles against a permanent fixture document, including the per-access-level denial (`Correspondence.DocumentAccessDenied` in Arabic on download and upload for a VIEW-only grant, success under MANAGE) and the absence of the `grants` tab for a user without `ACCESS_GRANT_MANAGE`. No code change. |
 | 2026-11-01 | agent | Module 06 Phase 4: the files tab's `canUpload` prop became `canManage` and now gates three write actions (upload, new version, archive); the row menu gained الإصدارات and التحقق من البصمة for every viewer, and the tab description says what the grid can do. |

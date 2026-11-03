@@ -101,7 +101,7 @@ npm run lint
 | 04 — Numbering | Registries, central official numbers, department register books | Implemented. | Phases 1–5 done and browser-verified: template preview/validation constants, `/numbering` tabs (`?tab`) with URL-backed status/policy/scope filters and duplicate-scope warnings, the shared-grid department register book that keeps inactive departments and their history, the document numbers grid, and manager plus read-only (403) verification. |
 | 05 — Movements | Routing workflow and department inbox/outbox | Implemented. | Implemented and verified with Module 03 Phase 6: `/movements` inbox/outbox plus the document-details movements tab with the nine routing commands. |
 | 06 — Attachments | Metadata, versions, upload/download, checksum verification | Implemented. | Phases 0–5 done and browser-verified: the `files` tab on `/documents/:id` lists every file with its current version, size, original name and checksum (client-side search, filters, sorting, column chooser, both empty states), downloads current and replaced versions under their original Arabic names, uploads a new file atomically with pre-flight extension/size/empty checks and a local SHA-256, uploads a new version, archives, and verifies the stored checksum against a recomputed one. Write actions are gated by `DOCUMENT_EDIT` and by the per-document access level server-side (VIEW-only user gets the Arabic `Correspondence.DocumentAccessDenied` on download and upload; a MANAGE grant makes the same calls succeed). A permanent verification fixture document with a two-version scan, an archived signature and an Office attachment stays in the dev database. |
-| 07 — Archiving | Archive and unarchive with a recorded location, archive history, access-filtered search, personal saved searches, and archived documents frozen against changes | Implemented and verified against the live API. Retention periods are out of scope. | Not started; the API is ready. |
+| 07 — Archiving | Archive and unarchive with a recorded location, archive history, access-filtered search, personal saved searches, and archived documents frozen against changes | Implemented and verified against the live API. Retention periods are out of scope. | `/archive` search grid with filters and personal saved searches, archive/unarchive actions and a history tab on `/documents/:id`; build and lint pass, verified against the live API. |
 | 08 — Relations | Domain entities and lookups | Application/API not implemented. | Blocked on backend. |
 | 09 — Audit | Entity/action audit chain, search, checkpoints, integrity reports, scheduled maintenance | Implemented. | Implemented and verified: `/audit` logs and integrity reports behind `AUDIT_VIEW`, checkpoint/integrity actions behind `AUDIT_MANAGE`. |
 | 10 — Notifications | Domain entities and lookups | Application/API not implemented. | Blocked on backend/hubs. |
@@ -110,7 +110,7 @@ npm run lint
 `dotnet test` (637 tests), `npm run build`, and `npm run lint` pass. Module 01 settings loads the
 existing singleton: read errors, including missing settings, show Arabic feedback and retry rather
 than creating or overwriting a record. Frontend Modules 03, 04, 06, and 09 are implemented and
-browser-verified; Modules 07/08/10 remain in the front end, and Modules 08/10 in the backend.
+browser-verified; Module 07 is implemented (build and lint pass, verified against the live API); Modules 08/10 remain in the front end and the backend.
 
 ## Conventions
 
@@ -157,6 +157,7 @@ have no `README.md` of their own yet — their content is documented in the encl
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-03 | Claude | Module 07 Archiving front end: `entities/archive`, `features/archive-manage`, `widgets/archive-search-table`, the `/archive` page, the archive/unarchive actions and «سجل الأرشفة» tab on document details, Arabic `Archiving.*` errors and the `archive` tutorial guide. `npm run build` and `npm run lint` pass; exercised against the live API (admin: archive, history tab, grid filter, saved-search create/default-apply/duplicate/delete, unarchive). Backend unchanged.
 | 2026-11-03 | Claude | Module 07 Archiving backend, Phases 3-5: `DocumentArchiveController`, `SavedSearchesController` and the `DOCUMENT_ARCHIVE`-protected transitions; concurrency conflicts answer 409 for every endpoint. Verified against the live API on a scratch database, including parallel requests; `dotnet test` now 637. Front end not started. |
 | 2026-11-03 | Claude | Module 07 Archiving backend, Phase 2 (Application): archive and unarchive commands, archive history and search queries, saved search use cases, and archived documents frozen in every remaining write path; `dotnet test` now 616. No endpoint yet. |
 | 2026-11-03 | Claude | Module 07 Archiving backend, Phase 1 (Infrastructure): archive and saved-search repositories, access-filtered archive search, corrected archive audit rows and the additive `Add_Archiving_Constraints` migration (verified on a scratch SQL Server database, not yet applied to the development database); `dotnet test` now 562. No endpoint yet. |

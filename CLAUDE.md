@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-Institutional correspondence system: a clean-architecture ASP.NET Core 10 API (`InstitutionalDiwan.*` projects, in `InstitutionalDiwan.slnx`) plus a **standalone** Arabic-first React 19 + Vite SPA in `institutionaldiwan.front/` (not in the solution; the API is an external service to it). Backend modules 01–07 and 09 are implemented; modules 08/10 have no API (never call their endpoints), and module 07 has no front end yet.
+Institutional correspondence system: a clean-architecture ASP.NET Core 10 API (`InstitutionalDiwan.*` projects, in `InstitutionalDiwan.slnx`) plus a **standalone** Arabic-first React 19 + Vite SPA in `institutionaldiwan.front/` (not in the solution; the API is an external service to it). Backend modules 01–07 and 09 are implemented; modules 08/10 have no API (never call their endpoints).
 
 Read [`README.md`](README.md) (module status), [`AGENT.md`](AGENT.md) (backend rules) and [`institutionaldiwan.front/AGENTS.md`](institutionaldiwan.front/AGENTS.md) (front-end rules) before large changes; `institutionaldiwan.front/knowledge.md` is the live endpoint/permission catalog.
 

@@ -66,7 +66,7 @@ developers can implement slices predictably without spaghetti imports.
 | `vite.config.ts` | ✅ `@` → `./src` alias + env-driven `/api` + `/hubs` proxy | Optional local HTTPS certificate |
 | Dev configuration | ✅ `.env.example` committed (`DEV_PROXY_TARGET`, `VITE_API_BASE_URL`); create local `.env` as needed | — |
 | UI | Arabic-first login/password change/dashboard/Identity admin plus `/departments` management and tree/Mermaid/chart/grid, optional lazy employee branches and paged rosters, `/institution-settings`, the `/documents` registry (filters, search, sort, create draft/registered) with the external-organizations admin tab (create/edit/deactivate/activate), the document details page (participants, access grants, numbers, movements, status history, timeline, draft-edit/register/participant/cancel/number/routing lifecycle), `/numbering` (registry grid + department register book), `/movements` (department inbox/outbox with routing menus), and `/audit` (audit log search + integrity reports + checkpoint/check for managers), shared theme/density tokens, and the document `files` tab (list with current version/size/checksum, download, atomic upload, versions, archive, checksum verify) | Remaining module pages (archive) |
-| Backend coverage docs | `knowledge.md` describes the external API | Modules 01–06, 09 live; 07/08/10 deferred |
+| Backend coverage docs | `knowledge.md` describes the external API | Modules 01–07, 09 live; 08/10 deferred |
 
 Always treat **as-is** as the truth for “what runs today,” and **to-be** as the install/implement
 checklist before coding features.
@@ -181,7 +181,7 @@ Summary:
 | `/employees` | `pages/employees` | 02 | ✅ Employees admin (department-linked) |
 | `/numbering` | `pages/numbering` | 04 | ✅ Registry administration + department register book |
 | `/audit` | `pages/audit` | 09 | ✅ Audit log search (module/action/date filters, hash chain) + integrity reports; checkpoint and integrity check behind `AUDIT_MANAGE` (self-auditing reads) |
-| `/archive` | `pages/archive` | 07 | **Blocked** until Module 07 API exists |
+| `/archive` | `pages/archive` | 07 | ✅ Archive search grid with filters and personal saved searches (`DOCUMENT_VIEW`); archive/unarchive and the history tab live on `/documents/:id` |
 
 Full endpoint tables: [`knowledge.md`](knowledge.md).
 
@@ -248,6 +248,7 @@ Full endpoint tables: [`knowledge.md`](knowledge.md).
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-03 | agent | Module 07 Archiving front end: added `entities/archive`, `features/archive-manage`, `widgets/archive-search-table`, the `/archive` page and «الأرشيف» sidebar entry, the archive/unarchive actions and «سجل الأرشفة» tab on document details (an archived document now disables participant, file and number writes), the `Archiving.*` Arabic errors, the `archive` tutorial guide, and the archive lookups. `npm run build` and `npm run lint` pass; exercised against the live API (admin: archive, history tab, grid filter, saved-search create/default-apply/duplicate/delete, unarchive). |
 | 2026-11-02 | Claude | `knowledge.md` documents the dynamic document fields endpoints (schema administration, published schema, document values, `fieldValues` on creation), marked backend only: the SPA does not use them yet. |
 | 2026-11-01 | agent | Reworked grid paging: `useTableState`'s default page size is now 10 (was 20) and `MIN_PAGE_SIZE` / `MAX_PAGE_SIZE` (1..100 — the same ceiling as the server's `PageRequest.MaxPageSize`) are exported from `@/shared/lib`. The `DataTable` footer replaces the fixed `10/20/50/100` select with a typed «صفوف في الصفحة» number field whose draft commits to the URL on blur or `Enter` and clamps out-of-range entries, so a request fires only per accepted value; `setPageSize` also now compares against the caller's `defaultPageSize` instead of the module constant, so a grid-specific default still stays out of the URL. Lint and build pass. |
 | 2026-11-01 | agent | Extended the motion work to popups and in-page views: dialogs, selects, dropdown and context menus now animate out as well as in (`animate-overlay-out` / `animate-content-out` behind `data-[state=closed]:`, which Radix `Presence` waits for), and the departments body is keyed by the selected view so شجرة / مخطط / إحصاء / جدول fade up on switch like a page. The «متوقفة» setting kills both, through `html[data-motion='off'] [data-state]` for the variant-prefixed exit classes. Lint, build, backend build, and 487 tests pass. |

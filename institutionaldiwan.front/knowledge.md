@@ -78,7 +78,7 @@
 | `vite.config.ts` proxy | ✅ `@` alias + env-driven `/api` and `/hubs` proxies (`DEV_PROXY_TARGET` → `ASPNETCORE_HTTPS_PORT` → `https://localhost:7126`) | Optional local HTTPS certificate; production uses the reverse proxy ([`DEPLOYMENT.md`](DEPLOYMENT.md)) |
 | Dev configuration | ✅ `.env.example` committed; `.env` is git-ignored | — |
 | Backend | External API Modules 01–06 and 09 implemented, including `identity-options` picker reads and live JWT session validation | Frontend consumes relative `/api/...` URLs; refresh endpoint counts when Module 03 work starts |
-| Backend only | 07 Archiving | API live, no SPA code yet; see "Archiving" below |
+| Implemented | 07 Archiving | `/archive` search + saved searches, archive/unarchive and history on `/documents/:id` |
 | Modules without API | 08 Relations, 10 Notifications | Do **not** call them; domain/lookups exist only |
 
 ## Commands
@@ -427,7 +427,7 @@ Error codes (all need Arabic entries in `shared/api/errorMessages.ts` when the U
 `DocumentFields.*` — see `InstitutionalDiwan.Domain/Errors/DomainErrors.cs`. Registry filtering by
 field values is not implemented yet.
 
-### Archiving (Module 07) — **backend only, not implemented in the SPA**
+### Archiving (Module 07) — implemented in the SPA (`/archive`, document details)
 
 - `POST /api/documents/{id}/archive` — `DOCUMENT_ARCHIVE` + `MANAGE` access. Body `archiveLocationId`
   (from `/api/lookups/archive-locations`), optional `reason` (max 500). Only `REGISTERED` documents.
@@ -447,7 +447,7 @@ An archived document rejects participant, attachment, and number writes with 409
 access grants still work. Any write that loses a concurrent race can now answer 409
 `Common.ConcurrencyConflict`: reload and retry.
 
-Error codes (all need Arabic entries in `shared/api/errorMessages.ts` when the UI is built):
+Error codes (Arabic entries exist in `shared/api/errorMessages.ts`):
 `Archiving.*`, `Correspondence.OnlyRegisteredArchivable`, `Correspondence.DocumentArchived`,
 `Common.ConcurrencyConflict`.
 

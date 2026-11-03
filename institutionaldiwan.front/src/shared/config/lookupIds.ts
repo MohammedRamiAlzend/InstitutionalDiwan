@@ -191,3 +191,17 @@ export const DOCUMENT_TYPE_DIRECTION: Readonly<Record<number, number>> = {
   [DOCUMENT_TYPE.OutgoingLetter]: DOCUMENT_DIRECTION.Outgoing,
   [DOCUMENT_TYPE.InternalMemo]: DOCUMENT_DIRECTION.Internal,
 }
+
+/** `archive-event-types` — mirrors `ArchiveEventType` in the Domain. */
+export const ARCHIVE_EVENT_TYPE = {
+  Archived: 1,
+  Unarchived: 2,
+  RetentionApplied: 3,
+} as const
+
+/** `archive-locations` — mirrors `ArchiveLocation` in the Domain. */
+export const ARCHIVE_LOCATION = {
+  CentralRegistry: 1,
+  PhysicalArchive: 2,
+  ElectronicArchive: 3,
+} as const
