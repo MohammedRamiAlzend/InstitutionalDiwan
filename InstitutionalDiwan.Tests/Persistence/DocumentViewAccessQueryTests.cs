@@ -50,11 +50,11 @@ public sealed class DocumentViewAccessQueryTests
         db.ArchiveLocations.Add(ArchiveLocation.Create(ArchiveLocation.PhysicalArchiveId, "Physical", "ورقي").Value);
 
         db.MovementTypes.Add(MovementType.Create(MovementType.ReferralId, "Referral", "إحالة").Value);
-        foreach (var id in new[] { MovementStatus.DraftId, MovementStatus.SentId, MovementStatus.ClosedId, MovementStatus.CanceledId })
+        foreach (var id in new[] { MovementStatus.DraftId, MovementStatus.SentId, MovementStatus.ReceivedId, MovementStatus.ReturnedId, MovementStatus.ClosedId, MovementStatus.CanceledId })
             db.MovementStatuses.Add(MovementStatus.Create(id, $"Status {id}", $"حالة {id}").Value);
-        foreach (var id in new[] { MovementStepStatus.PendingId, MovementStepStatus.SentId, MovementStepStatus.RedirectedId })
+        foreach (var id in new[] { MovementStepStatus.PendingId, MovementStepStatus.SentId, MovementStepStatus.ReceivedId, MovementStepStatus.ReturnedId, MovementStepStatus.RedirectedId })
             db.MovementStepStatuses.Add(MovementStepStatus.Create(id, $"Step {id}", $"خطوة {id}").Value);
-        foreach (var id in new[] { MovementEventType.CreatedId, MovementEventType.SentId, MovementEventType.ClosedId, MovementEventType.RedirectedId })
+        foreach (var id in new[] { MovementEventType.CreatedId, MovementEventType.SentId, MovementEventType.ReceivedId, MovementEventType.ReturnedId, MovementEventType.ClosedId, MovementEventType.RedirectedId })
             db.MovementEventTypes.Add(MovementEventType.Create(id, $"Event {id}", $"حدث {id}").Value);
     }
 
@@ -199,6 +199,19 @@ public sealed class DocumentViewAccessQueryTests
         Assert.True(redirectedMovement.Send(world.Author.UserId).IsSuccess);
         Assert.True(redirectedMovement.RedirectTo(far.DepartmentId, world.Author.UserId).IsSuccess);
 
+        // A returned document waits for the department that sent it, so only that side may read it.
+        var returnedToCaller = Routed();
+        var returnedToCallerMovement = Movement(returnedToCaller, world.Parent.DepartmentId, world.Remote.DepartmentId);
+        Assert.True(returnedToCallerMovement.Send(world.Author.UserId).IsSuccess);
+        Assert.True(returnedToCallerMovement.ReceiveStep(world.Author.UserId, Guid.NewGuid()).IsSuccess);
+        Assert.True(returnedToCallerMovement.ReturnToSender(world.Author.UserId, "ناقصة").IsSuccess);
+
+        var returnedAway = Routed();
+        var returnedAwayMovement = Movement(returnedAway, world.Remote.DepartmentId, world.Parent.DepartmentId);
+        Assert.True(returnedAwayMovement.Send(world.Author.UserId).IsSuccess);
+        Assert.True(returnedAwayMovement.ReceiveStep(world.Author.UserId, Guid.NewGuid()).IsSuccess);
+        Assert.True(returnedAwayMovement.ReturnToSender(world.Author.UserId, "ناقصة").IsSuccess);
+
         var archived = NewDocument(world, world.Parent.DepartmentId);
         Register(world, archived);
         Assert.True(archived.Archive(world.Author.UserId, hasActiveMovements: false, ArchiveLocation.PhysicalArchiveId).IsSuccess);
@@ -234,6 +247,7 @@ public sealed class DocumentViewAccessQueryTests
         Assert.Contains(grantedDownload.DocumentId, expected);
         Assert.Contains(inFlight.DocumentId, expected);
         Assert.Contains(sentByCaller.DocumentId, expected);
+        Assert.Contains(returnedToCaller.DocumentId, expected);
         Assert.Contains(archived.DocumentId, expected);
         Assert.DoesNotContain(expired.DocumentId, expected);
         Assert.DoesNotContain(revoked.DocumentId, expected);
@@ -245,6 +259,7 @@ public sealed class DocumentViewAccessQueryTests
         Assert.Equal(institutionWide, expected.Contains(notDispatched.DocumentId));
         Assert.Equal(institutionWide, expected.Contains(closed.DocumentId));
         Assert.Equal(institutionWide, expected.Contains(redirectedAway.DocumentId));
+        Assert.Equal(institutionWide, expected.Contains(returnedAway.DocumentId));
     }
 
     [Fact]

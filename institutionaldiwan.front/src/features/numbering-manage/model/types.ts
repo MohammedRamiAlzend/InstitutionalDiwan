@@ -39,4 +39,6 @@ export interface RecordDepartmentRegistrationRequest {
   registryNumberText: string
   registryDate: string
   notes: string | null
+  /** The department register to record in; omitted lets the server pick its best match. */
+  registryId?: string | null
 }

@@ -34,6 +34,26 @@ internal sealed class RecordDepartmentRegistrationCommandHandler
         _unitOfWork = unitOfWork;
     }
 
+    private async Task<Result<NumberingRegistry>> ResolveRegistryAsync(
+        RecordDepartmentRegistrationCommand request,
+        CancellationToken cancellationToken)
+    {
+        if (request.RegistryId is not { } registryId)
+        {
+            return await NumberingRegistryResolver.RequireDepartmentRegistryAsync(
+                _numberingRegistryRepository, request.DepartmentId, cancellationToken);
+        }
+
+        var chosen = await _numberingRegistryRepository.GetByIdAsync(registryId, cancellationToken);
+        if (chosen is null)
+            return Result.Failure<NumberingRegistry>(DomainErrors.Numbering.RegistryNotFound);
+
+        if (!chosen.IsActive || chosen.DepartmentId != request.DepartmentId)
+            return Result.Failure<NumberingRegistry>(DomainErrors.Numbering.DepartmentRegistryMismatch);
+
+        return Result.Success(chosen);
+    }
+
     public async Task<Result<DocumentNumberResponse>> Handle(
         RecordDepartmentRegistrationCommand request,
         CancellationToken cancellationToken)
@@ -45,6 +65,9 @@ internal sealed class RecordDepartmentRegistrationCommandHandler
         if (!await _departmentScopeEvaluator.CanAccessDepartmentAsync(request.DepartmentId, cancellationToken))
             return Result.Failure<DocumentNumberResponse>(DomainErrors.Correspondence.DepartmentOutOfScope);
 
+        if (!await _departmentScopeEvaluator.IsPrimaryDepartmentAsync(request.DepartmentId, cancellationToken))
+            return Result.Failure<DocumentNumberResponse>(DomainErrors.Numbering.DepartmentRegistrationOwnDepartmentOnly);
+
         var notArchived = document.EnsureNotArchived();
         if (notArchived.IsFailure)
             return Result.Failure<DocumentNumberResponse>(notArchived.Error);
@@ -52,8 +75,7 @@ internal sealed class RecordDepartmentRegistrationCommandHandler
         if (await _departmentRepository.GetByIdAsync(request.DepartmentId, cancellationToken) is null)
             return Result.Failure<DocumentNumberResponse>(DomainErrors.Department.NotFound);
 
-        var registryResult = await NumberingRegistryResolver.RequireDepartmentRegistryAsync(
-            _numberingRegistryRepository, request.DepartmentId, cancellationToken);
+        var registryResult = await ResolveRegistryAsync(request, cancellationToken);
 
         if (registryResult.IsFailure)
             return Result.Failure<DocumentNumberResponse>(registryResult.Error);

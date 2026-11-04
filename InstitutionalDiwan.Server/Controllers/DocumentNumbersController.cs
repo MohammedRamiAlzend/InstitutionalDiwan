@@ -82,18 +82,19 @@ public sealed class DocumentNumbersController : ControllerBase
     /// <item><term>registryNumberText</term><description>Department register number text (string, required). Example: <c>FIN-001/2026</c>.</description></item>
     /// <item><term>registryDate</term><description>Registry date (date, required). Example: <c>2026-01-15</c>.</description></item>
     /// <item><term>notes</term><description>Notes (string, optional). Example: <c>Reviewed and forwarded to the responsible department.</c>.</description></item>
+    /// <item><term>registryId</term><description>Department register to record the number in (GUID, optional; the best matching active register when omitted). Example: <c>b2f4c8d1-3a6e-4f7b-9c05-8d1e2a6f4b33</c>.</description></item>
     /// </list>
     /// </param>
     /// <param name="cancellationToken">Request cancellation token (optional).</param>
     /// <response code="200">The department register entry.</response>
     /// <response code="400">The number or date is missing or invalid.</response>
-    /// <response code="403">The token lacks NUMBERING_MANAGE, or the caller's scope does not cover the department.</response>
-    /// <response code="404">No document or department with that id exists.</response>
+    /// <response code="403">The token lacks NUMBERING_MANAGE, or the department is not the caller's own.</response>
+    /// <response code="404">No document, department or register with that id exists.</response>
     /// <response code="409">The document has no central number yet, the department has no active
-    /// register, the number is taken for that year, or a different number was already recorded.</response>
+    /// register, the chosen register is inactive or belongs to another department, the number is taken for that year, or a different number was already recorded.</response>
     [HttpPost("department-registration")]
     [EndpointSummary("Records the number and date a department wrote in its own register. The central Diwan number is not changed. Repeating the call for the same department keeps the number and appends a new dated entry.")]
-    [EndpointDescription("Records the number and date a department wrote in its own register. The central Diwan number is not changed. Repeating the call for the same department keeps the number and appends a new dated entry. Requires the NUMBERING_MANAGE permission and a scope covering that department. Responses: 200 (The department register entry.), 400 (The number or date is missing or invalid.), 403 (The token lacks NUMBERING_MANAGE, or the caller's scope does not cover the department.), 404 (No document or department with that id exists.), 409 (The document has no central number yet, the department has no active register, the number is taken for that year, or a different number was already recorded.)")]
+    [EndpointDescription("Records the number and date a department wrote in its own register. The central Diwan number is not changed. Repeating the call for the same department keeps the number and appends a new dated entry. Requires the NUMBERING_MANAGE permission, and the department must be the caller's own primary department. An optional registryId chooses one of that department's registers. Responses: 200 (The department register entry.), 400 (The number or date is missing or invalid.), 403 (The token lacks NUMBERING_MANAGE, or the caller's scope does not cover the department.), 404 (No document or department with that id exists.), 409 (The document has no central number yet, the department has no active register, the number is taken for that year, or a different number was already recorded.)")]
     [Authorize(Policy = Permissions.NumberingManage)]
     [ProducesResponseType<DocumentNumberResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden)]
@@ -114,7 +115,8 @@ public sealed class DocumentNumbersController : ControllerBase
             request.RegistryNumberText,
             request.RegistryDate,
             userId,
-            request.Notes), cancellationToken);
+            request.Notes,
+            request.RegistryId), cancellationToken);
 
         return result.ToActionResult();
     }

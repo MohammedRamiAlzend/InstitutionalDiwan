@@ -59,6 +59,26 @@ export function useCoversDepartment(): (departmentId: string) => boolean {
   return (departmentId) => data === null || (data?.includes(departmentId) ?? false)
 }
 
+/**
+ * The caller's own (primary) department id with the profile's load state. `departmentId` is
+ * `undefined` while loading, after a failed load, or when the server's profile carries no
+ * department (an outdated API), so callers can show an error instead of waiting forever. Shares
+ * the scope key with `useCoversDepartment` for the same reason (see its comment).
+ */
+export function useMyPrimaryDepartmentId(): {
+  departmentId: string | undefined
+  isLoading: boolean
+} {
+  const { data, isLoading } = useQuery({
+    queryKey: userKeys.departmentScope(),
+    queryFn: userApi.me,
+    enabled: tokenStorage.has(),
+    staleTime: 5 * 60 * 1000,
+  })
+
+  return { departmentId: data?.primaryDepartmentId, isLoading }
+}
+
 /** Paged users with username search (requires `USER_MANAGE`). */
 export function useUsers(
   params: UserListParams,

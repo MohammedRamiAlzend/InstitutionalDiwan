@@ -8,6 +8,8 @@ export interface MeResponse {
   permissions: PermissionCode[]
   /** Departments the caller's live scope reaches; `null` for an institution-wide scope. */
   accessibleDepartmentIds: string[] | null
+  /** The caller's own department: the only one whose register numbers they may write. */
+  primaryDepartmentId: string
 }
 
 /** Account visibility scope (Module 02 `ScopeTypeId` rendered semantically). */

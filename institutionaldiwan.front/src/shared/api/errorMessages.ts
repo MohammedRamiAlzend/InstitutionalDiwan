@@ -126,6 +126,8 @@ const CODE_MESSAGES: Record<string, string> = {
   'Numbering.CancelReasonRequired': 'سبب إلغاء الرقم مطلوب.',
   'Numbering.DepartmentNumberLocked': 'رقم تسجيل الدائرة مقفل ولا يمكن تعديله.',
   'Numbering.DepartmentNumberRequired': 'رقم تسجيل الدائرة مطلوب.',
+  'Numbering.DepartmentRegistrationOwnDepartmentOnly': 'لا يمكنك تسجيل رقم إلا في سجل دائرتك أنت.',
+  'Numbering.DepartmentRegistryMismatch': 'السجل المختار غير نشط أو لا يتبع هذه الدائرة.',
   'Numbering.DepartmentRegistrationRequired': 'يجب تسجيل رقم الدائرة الوجهة قبل استلام الوثيقة.',
   'Numbering.DepartmentRegistryNotConfigured': 'سجل ترقيم الدائرة غير مهيأ.',
   'Numbering.DepartmentScopeMismatch': 'يجب أن يتم التسجيل من الدائرة الوجهة نفسها.',

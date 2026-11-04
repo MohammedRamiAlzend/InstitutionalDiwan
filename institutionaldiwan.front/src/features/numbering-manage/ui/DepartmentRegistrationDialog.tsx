@@ -1,8 +1,10 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
 import { useDepartmentOptions } from '@/entities/department'
+import { useNumberingRegistries } from '@/entities/numbering-registry'
+import { useMyPrimaryDepartmentId } from '@/entities/user'
 import { toArabicErrorMessage } from '@/shared/api'
 import { Button, Dialog, FormField, Input, Select, Textarea } from '@/shared/ui'
 import { useRecordDepartmentRegistrationMutation } from '../api/numberMutations'
@@ -25,8 +27,10 @@ interface DepartmentRegistrationDialogProps {
 }
 
 /**
- * Records the number and date a department wrote in its own register. Repeating the
- * same number for the same department appends a dated registration event.
+ * Records the number and date the caller's own department wrote in one of its registers. The
+ * department is fixed (a department can only number in its own register); when it has several
+ * active registers the clerk picks the one the number was written in. Repeating the same number
+ * for the same department appends a dated registration event.
  */
 export function DepartmentRegistrationDialog({
   documentId,
@@ -35,37 +39,66 @@ export function DepartmentRegistrationDialog({
 }: DepartmentRegistrationDialogProps) {
   const mutation = useRecordDepartmentRegistrationMutation(documentId)
   const departmentsQuery = useDepartmentOptions({ enabled: open })
+  const registriesQuery = useNumberingRegistries({ enabled: open })
+  const { departmentId: ownDepartmentId, isLoading: profileLoading } =
+    useMyPrimaryDepartmentId()
 
   const {
     register,
     control,
     handleSubmit,
+    setValue,
+    setError,
     formState: { errors },
   } = useForm<DepartmentRegistrationFormValues>({
     resolver: zodResolver(departmentRegistrationSchema),
     defaultValues: {
       departmentId: '',
+      registryId: '',
       registryNumberText: '',
       registryDate: todayIsoDate(),
       notes: '',
     },
   })
 
-  const departmentOptions = useMemo(
-    () =>
-      (departmentsQuery.data ?? [])
-        .filter((department) => department.isActive)
-        .map((department) => ({
-          value: department.departmentId,
-          label: `${department.code} — ${department.nameAr}`,
-        })),
-    [departmentsQuery.data],
+  useEffect(() => {
+    if (ownDepartmentId) setValue('departmentId', ownDepartmentId)
+  }, [ownDepartmentId, setValue])
+
+  const ownDepartment = (departmentsQuery.data ?? []).find(
+    (department) => department.departmentId === ownDepartmentId,
   )
 
+  const registryOptions = useMemo(
+    () =>
+      (registriesQuery.data ?? [])
+        .filter((registry) => registry.isActive && registry.departmentId === ownDepartmentId)
+        .map((registry) => ({
+          value: registry.registryId,
+          label: `${registry.code} — ${registry.nameAr}`,
+        })),
+    [registriesQuery.data, ownDepartmentId],
+  )
+
+  // A single register needs no choice: it is preselected and shown read-only.
+  useEffect(() => {
+    if (registryOptions.length === 1) setValue('registryId', registryOptions[0].value)
+  }, [registryOptions, setValue])
+
+  const loading = departmentsQuery.isLoading || registriesQuery.isLoading || profileLoading
+  // The profile finished loading without a department: an outdated session or API.
+  const missingOwnDepartment = !profileLoading && !ownDepartmentId
+
   const onSubmit = handleSubmit(async (values) => {
+    if (registryOptions.length > 1 && !values.registryId) {
+      setError('registryId', { message: 'اختر السجل الذي سُجّل فيه الرقم.' })
+      return
+    }
+
     try {
       await mutation.mutateAsync({
         departmentId: values.departmentId,
+        registryId: values.registryId || null,
         registryNumberText: values.registryNumberText.trim(),
         registryDate: values.registryDate,
         notes: values.notes.trim() || null,
@@ -82,7 +115,7 @@ export function DepartmentRegistrationDialog({
       open={open}
       onOpenChange={onOpenChange}
       title="تسجيل رقم الدائرة"
-      description="يُسجَّل الرقم الذي كتبته الدائرة في سجلها الخاص مع تاريخه، ولا يتغيّر رقم الديوان المركزي. تكرار التسجيل لنفس الدائرة يضيف حدثًا مؤرخًا."
+      description="يُسجَّل الرقم الذي كتبته دائرتك في سجلها الخاص مع تاريخه، ولا يتغيّر رقم الديوان المركزي. لا يمكن التسجيل إلا باسم دائرتك. تكرار التسجيل لنفس الدائرة يضيف حدثًا مؤرخًا."
       size="lg"
       footer={
         <>
@@ -98,6 +131,7 @@ export function DepartmentRegistrationDialog({
             type="submit"
             form="department-registration-form"
             loading={mutation.isPending}
+            disabled={loading || missingOwnDepartment || registryOptions.length === 0}
           >
             تسجيل الرقم
           </Button>
@@ -110,32 +144,53 @@ export function DepartmentRegistrationDialog({
         noValidate
         className="grid gap-4 sm:grid-cols-2"
       >
+        <FormField label="الدائرة" error={errors.departmentId?.message}>
+          <Input
+            value={
+              loading
+                ? 'جارٍ التحميل…'
+                : ownDepartment
+                  ? `${ownDepartment.code} — ${ownDepartment.nameAr}`
+                  : ''
+            }
+            readOnly
+            aria-label="الدائرة"
+          />
+        </FormField>
+
         <FormField
-          label="الدائرة"
-          required
-          error={errors.departmentId?.message}
-          className="sm:col-span-2"
+          label="السجل"
+          required={registryOptions.length > 1}
+          error={errors.registryId?.message}
         >
           <Controller
             control={control}
-            name="departmentId"
+            name="registryId"
             render={({ field }) => (
               <Select
                 value={field.value || undefined}
                 onValueChange={field.onChange}
-                options={departmentOptions}
-                disabled={mutation.isPending || departmentsQuery.isLoading}
-                invalid={Boolean(errors.departmentId)}
-                placeholder={
-                  departmentsQuery.isLoading ? 'جارٍ التحميل…' : 'اختر الدائرة…'
+                options={registryOptions}
+                disabled={
+                  mutation.isPending || loading || registryOptions.length <= 1
                 }
-                aria-label="الدائرة"
+                invalid={Boolean(errors.registryId)}
+                placeholder={
+                  loading
+                    ? 'جارٍ التحميل…'
+                    : registryOptions.length === 0
+                      ? 'لا يوجد سجل نشط'
+                      : 'اختر السجل…'
+                }
+                aria-label="السجل"
               />
             )}
           />
-          <p className="text-xs text-muted">
-            يجب أن يكون للدائرة سجل ترقيم نشط؛ أضفه من صفحة «الترقيم» إن لم يكن موجودًا.
-          </p>
+          {!loading && !missingOwnDepartment && registryOptions.length === 0 && (
+            <p className="text-xs text-danger">
+              لا يوجد لدائرتك سجل ترقيم نشط؛ يضيفه المسؤول من صفحة «الترقيم».
+            </p>
+          )}
         </FormField>
 
         <FormField
@@ -179,6 +234,15 @@ export function DepartmentRegistrationDialog({
             {...register('notes')}
           />
         </FormField>
+
+        {missingOwnDepartment && (
+          <p
+            role="alert"
+            className="sm:col-span-2 rounded-lg bg-danger/10 px-3 py-2 text-sm text-danger"
+          >
+            تعذّر تحديد دائرتك. أعد تحميل الصفحة أو سجّل الدخول من جديد، وتأكد أن الخادم محدَّث.
+          </p>
+        )}
 
         {mutation.error && (
           <p

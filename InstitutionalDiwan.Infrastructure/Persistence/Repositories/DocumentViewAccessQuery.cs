@@ -39,11 +39,15 @@ internal static class DocumentViewAccessQuery
             movement.StatusId != DocumentMovement.StatusCanceled &&
             movement.Steps.Any(step =>
                 step.StepNo == movement.CurrentStepNo &&
-                (step.StepStatusId == MovementStepStatus.SentId ||
-                 step.StepStatusId == MovementStepStatus.ReceivedId ||
-                 step.StepStatusId == MovementStepStatus.CompletedId) &&
-                (departmentIds.Contains(step.FromDepartmentId) ||
-                 departmentIds.Contains(step.ToDepartmentId))));
+                (((step.StepStatusId == MovementStepStatus.SentId ||
+                   step.StepStatusId == MovementStepStatus.ReceivedId ||
+                   step.StepStatusId == MovementStepStatus.CompletedId) &&
+                  (departmentIds.Contains(step.FromDepartmentId) ||
+                   departmentIds.Contains(step.ToDepartmentId))) ||
+                 // Bounced back (returned or rejected): only the department that sent it.
+                 ((step.StepStatusId == MovementStepStatus.ReturnedId ||
+                   step.StepStatusId == MovementStepStatus.RejectedId) &&
+                  departmentIds.Contains(step.FromDepartmentId)))));
 
         return documents.Where(document =>
             document.CreatedByUserId == callerId ||

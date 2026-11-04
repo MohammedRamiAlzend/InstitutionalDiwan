@@ -215,4 +215,46 @@ public sealed class DocumentAccessEvaluatorTests
 
         Assert.False(await evaluator.CanAccessDocumentAsync(document.DocumentId, AccessLevel.ViewId));
     }
+
+    [Fact]
+    public async Task CanAccessDocument_WhenTheStepWasReturned_AllowsOnlyTheDepartmentItCameBackTo()
+    {
+        var (evaluator, _, documents, _, scope, movements) = CreateEvaluator();
+        var senderId = Guid.NewGuid();
+        var receiverId = Guid.NewGuid();
+        var document = CreateDocument(Guid.NewGuid(), Guid.NewGuid());
+        documents.Add(document);
+
+        var movement = DocumentMovement.Create(
+            document.DocumentId, senderId, receiverId, Guid.NewGuid()).Value;
+        Assert.True(movement.Send(Guid.NewGuid()).IsSuccess);
+        Assert.True(movement.ReceiveStep(Guid.NewGuid(), Guid.NewGuid()).IsSuccess);
+        Assert.True(movement.ReturnToSender(Guid.NewGuid(), "ناقصة").IsSuccess);
+        movements.Add(movement);
+
+        scope.AccessibleDepartments.Add(senderId);
+        Assert.True(await evaluator.CanAccessDocumentAsync(document.DocumentId, AccessLevel.ViewId));
+
+        scope.AccessibleDepartments.Clear();
+        scope.AccessibleDepartments.Add(receiverId);
+        Assert.False(await evaluator.CanAccessDocumentAsync(document.DocumentId, AccessLevel.ViewId));
+    }
+
+    [Fact]
+    public async Task CanAccessDocument_WhenTheStepWasRejected_AllowsTheSenderToReadWhyItWasRejected()
+    {
+        var (evaluator, _, documents, _, scope, movements) = CreateEvaluator();
+        var senderId = Guid.NewGuid();
+        var document = CreateDocument(Guid.NewGuid(), Guid.NewGuid());
+        documents.Add(document);
+
+        var movement = DocumentMovement.Create(
+            document.DocumentId, senderId, Guid.NewGuid(), Guid.NewGuid()).Value;
+        Assert.True(movement.Send(Guid.NewGuid()).IsSuccess);
+        Assert.True(movement.RejectStep(Guid.NewGuid(), "ليست من اختصاصنا").IsSuccess);
+        movements.Add(movement);
+
+        scope.AccessibleDepartments.Add(senderId);
+        Assert.True(await evaluator.CanAccessDocumentAsync(document.DocumentId, AccessLevel.ViewId));
+    }
 }

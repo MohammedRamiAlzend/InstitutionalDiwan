@@ -162,6 +162,8 @@ public static class DomainErrors
         public static readonly Error RegistryNumberTaken = Error.Conflict("Numbering.RegistryNumberTaken", "This number is already used in the department register for that year.");
         public static readonly Error DepartmentNumberLocked = Error.Conflict("Numbering.DepartmentNumberLocked", "The document is already registered in this department under a different number.");
         public static readonly Error DocumentNotRegistered = Error.Conflict("Numbering.DocumentNotRegistered", "Issue the central official number before recording a department register entry.");
+        public static readonly Error DepartmentRegistrationOwnDepartmentOnly = Error.Forbidden("Numbering.DepartmentRegistrationOwnDepartmentOnly", "A department register number can only be recorded for the caller's own department.");
+        public static readonly Error DepartmentRegistryMismatch = Error.Conflict("Numbering.DepartmentRegistryMismatch", "The chosen register is inactive or does not belong to the department.");
         public static readonly Error DepartmentNumberRequired = Error.Validation("Numbering.DepartmentNumberRequired", "The department register number is required.");
     }
 

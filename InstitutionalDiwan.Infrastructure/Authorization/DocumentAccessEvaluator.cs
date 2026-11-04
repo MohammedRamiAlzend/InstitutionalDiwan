@@ -105,8 +105,18 @@ public sealed class DocumentAccessEvaluator : IDocumentAccessEvaluator
         var currentStep = movement?.Steps
             .FirstOrDefault(step => step.StepNo == movement.CurrentStepNo);
 
-        if (currentStep is null ||
-            currentStep.StepStatusId is not (MovementStepStatus.SentId
+        if (currentStep is null)
+            return false;
+
+        // A step that bounced back (returned or rejected) is waiting for the department that sent
+        // it, exactly as that department's inbox shows, so that department keeps reading access.
+        if (currentStep.StepStatusId is MovementStepStatus.ReturnedId or MovementStepStatus.RejectedId)
+        {
+            return await _departmentScopeEvaluator.CanAccessDepartmentAsync(
+                currentStep.FromDepartmentId, cancellationToken);
+        }
+
+        if (currentStep.StepStatusId is not (MovementStepStatus.SentId
                 or MovementStepStatus.ReceivedId
                 or MovementStepStatus.CompletedId))
         {

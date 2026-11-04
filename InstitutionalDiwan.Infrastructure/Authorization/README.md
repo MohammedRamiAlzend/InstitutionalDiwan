@@ -76,6 +76,8 @@ depend on `IUserContext` rather than on `HttpContext` directly.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-04 | Claude | Fixed a returned or rejected movement showing in the sender's inbox as a locked «وثيقة مقيّدة» row: movement-based reading access (`DocumentAccessEvaluator` and the list predicate `DocumentViewAccessQuery`) now also covers the sending department of a step whose status is returned or rejected, matching what `ListInboxAsync` already shows; the receiving side loses access as before. Parity test and evaluator tests extended. |
+| 2026-11-04 | Claude | `DepartmentScopeEvaluator.IsPrimaryDepartmentAsync`: true only for the caller's live primary department, independent of scope (used to restrict department register entries to the caller's own department). |
 | 2026-11-03 | Claude | Added `DepartmentScopeEvaluator.GetAccessibleDepartmentIdsAsync` so a list can apply scope in SQL; `CanAccessDepartmentAsync` now answers from the same set, so the two cannot disagree. Null means institution-wide, empty means nothing reachable. |
 | 2026-10-28 | Qoder | Read the active persisted account before all department-scope grants, remove token primary/global fast paths, and preserve half-open temporal assignment/subtree semantics. |
 | 2026-10-25 | opencode | Added Module 05 movement participation to `DocumentAccessEvaluator`: sender/receiver on the active movement's current dispatched step gains VIEW/DOWNLOAD, still bounded by confidentiality and never FORWARD/MANAGE. |

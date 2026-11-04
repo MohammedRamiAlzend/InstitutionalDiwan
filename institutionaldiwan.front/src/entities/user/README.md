@@ -27,6 +27,7 @@ Models Module 02 `User` (`MeResponse`, `UserResponse`, `UserOption`) and owns th
 ## Change Log
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-04 | Claude | `MeResponse.primaryDepartmentId` and the `useMyPrimaryDepartmentId` hook (returns `{ departmentId, isLoading }`; shares the scope query key with `useCoversDepartment`). |
 | 2026-11-03 | Claude | Added `accessibleDepartmentIds` to `MeResponse` and `useCoversDepartment`, which answers whether the caller's scope reaches a department. |
 | 2026-10-28 | agent | Module 03 Phase 4: added `UserOption`/`UserOptionParams`, the paged `GET /api/identity-options/users` call, `optionLists`/`options` query keys, and `useUserOptions` for the document access-grant picker. |
 | 2026-10-27 | agent | Implemented the session slice for Identity Module 01: typed contracts, Zustand store with `hasPermission`, `me` API/query, and the scope badge. |

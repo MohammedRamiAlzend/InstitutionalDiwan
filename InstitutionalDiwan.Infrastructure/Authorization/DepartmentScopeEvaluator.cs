@@ -47,6 +47,17 @@ public sealed class DepartmentScopeEvaluator : IDepartmentScopeEvaluator
         return accessible is null || accessible.Contains(departmentId);
     }
 
+    public async Task<bool> IsPrimaryDepartmentAsync(
+        Guid departmentId,
+        CancellationToken cancellationToken = default)
+    {
+        if (departmentId == Guid.Empty || !_userContext.IsAuthenticated)
+            return false;
+
+        var user = await _userRepository.GetByIdAsync(_userContext.UserId, cancellationToken);
+        return user is { IsActive: true } && user.PrimaryDepartmentId == departmentId;
+    }
+
     public async Task<IReadOnlySet<Guid>?> GetAccessibleDepartmentIdsAsync(
         CancellationToken cancellationToken = default)
     {

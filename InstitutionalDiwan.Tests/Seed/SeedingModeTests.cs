@@ -93,6 +93,48 @@ public sealed class SeedingModeTests
         Assert.Single(superAdmin.UserRoles);
     }
 
+[Fact]
+    public async Task StandardAccounts_CanRegisterDepartmentNumbers()
+    {
+        using var db = TestContextFactory.Create();
+
+        await RunAsync(db, SeedingModes.Standard);
+
+        var operatorRole = await db.Roles.SingleAsync(r => r.Code == StandardAccountSeeder.OperatorRoleCode);
+        var granted = await db.RolePermissions
+            .Where(rp => rp.RoleId == operatorRole.RoleId)
+            .Select(rp => rp.PermissionCode)
+            .ToListAsync();
+        Assert.Contains(Permissions.NumberingView, granted);
+        Assert.Contains(Permissions.NumberingManage, granted);
+        Assert.Contains(Permissions.DocumentEdit, granted);
+
+        var accounts = await db.Users.Include(u => u.UserRoles)
+            .Where(u => u.Username != SuperAdminSeeder.Username).ToListAsync();
+        Assert.Equal(6, accounts.Count);
+        Assert.All(accounts, u => Assert.Equal(operatorRole.RoleId, Assert.Single(u.UserRoles).RoleId));
+    }
+
+    [Fact]
+    public async Task StandardAccounts_CreatedWithTheLegacyUserRole_AreMovedToTheOperatorRole()
+    {
+        using var db = TestContextFactory.Create();
+        await RunAsync(db, SeedingModes.Standard);
+
+        var operatorRole = await db.Roles.SingleAsync(r => r.Code == StandardAccountSeeder.OperatorRoleCode);
+        var userRole = await db.Roles.SingleAsync(r => r.Code == "USER");
+        var account = await db.Users.Include(u => u.UserRoles).SingleAsync(u => u.Username == "ديوان الفرد");
+        account.RevokeRole(operatorRole.RoleId);
+        account.AssignRole(userRole.RoleId);
+        await db.SaveChangesAsync();
+
+        await RunAsync(db, SeedingModes.Standard);
+
+        db.ChangeTracker.Clear();
+        var reloaded = await db.Users.Include(u => u.UserRoles).SingleAsync(u => u.Username == "ديوان الفرد");
+        Assert.Equal(operatorRole.RoleId, Assert.Single(reloaded.UserRoles).RoleId);
+    }
+
     [Fact]
     public async Task NoneMode_SeedsOnlyTheSuperAdminAccount()
     {

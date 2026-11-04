@@ -46,6 +46,7 @@ internal sealed class GetUserProfileQueryHandler
             _userContext.Username,
             roles,
             permissions,
-            accessibleDepartmentIds?.OrderBy(departmentId => departmentId).ToList()));
+            accessibleDepartmentIds?.OrderBy(departmentId => departmentId).ToList(),
+            _userContext.PrimaryDepartmentId));
     }
 }

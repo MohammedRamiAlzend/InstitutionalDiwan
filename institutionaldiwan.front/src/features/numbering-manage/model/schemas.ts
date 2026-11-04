@@ -102,6 +102,7 @@ export type ReplaceNumberFormValues = z.infer<typeof replaceNumberSchema>
 export const departmentRegistrationSchema = z
   .object({
     departmentId: z.string().min(1, 'اختر الدائرة.'),
+    registryId: z.string(),
     registryNumberText: z
       .string()
       .trim()

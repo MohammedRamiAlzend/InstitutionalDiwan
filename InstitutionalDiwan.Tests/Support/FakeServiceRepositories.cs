@@ -238,6 +238,14 @@ internal sealed class FakeDepartmentScopeEvaluator : IDepartmentScopeEvaluator
         CancellationToken cancellationToken = default)
         => Task.FromResult(InstitutionWide || AccessibleDepartments.Contains(departmentId));
 
+    /// <summary>The caller's primary department; when null every department counts as their own.</summary>
+    public Guid? PrimaryDepartmentId { get; set; }
+
+    public Task<bool> IsPrimaryDepartmentAsync(
+        Guid departmentId,
+        CancellationToken cancellationToken = default)
+        => Task.FromResult(PrimaryDepartmentId is null || PrimaryDepartmentId == departmentId);
+
     public Task<IReadOnlySet<Guid>?> GetAccessibleDepartmentIdsAsync(
         CancellationToken cancellationToken = default)
         => Task.FromResult<IReadOnlySet<Guid>?>(InstitutionWide ? null : AccessibleDepartments);

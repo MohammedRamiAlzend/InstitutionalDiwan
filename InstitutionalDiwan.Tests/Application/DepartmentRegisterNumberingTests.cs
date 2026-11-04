@@ -132,6 +132,74 @@ public sealed class DepartmentRegisterNumberingTests
     }
 
     [Fact]
+    public async Task Record_ForAnotherDepartment_IsRefusedEvenWhenTheScopeCoversIt()
+    {
+        var world = new World();
+        await world.IssueCentralAsync();
+        world.CustodyScope.PrimaryDepartmentId = world.FinanceId;
+
+        var result = await world.RecordAsync(world.HrId, "45", FirstVisit);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(DomainErrors.Numbering.DepartmentRegistrationOwnDepartmentOnly.Code, result.Error.Code);
+        Assert.Null(world.DepartmentEntry(world.HrId));
+
+        var own = await world.RecordAsync(world.FinanceId, "7", FirstVisit);
+        Assert.True(own.IsSuccess, own.Error?.Code);
+    }
+
+    [Fact]
+    public async Task Record_WithAChosenRegister_StoresTheNumberInThatRegister()
+    {
+        var world = new World();
+        await world.IssueCentralAsync();
+        var second = world.CreateRegistry("HR-OUT", "سجل الصادر", world.HrId);
+        world.Registries.Add(second);
+
+        var result = await world.RecordHandler().Handle(
+            new RecordDepartmentRegistrationCommand(
+                world.Document.DocumentId, world.HrId, "45", FirstVisit, world.UserId,
+                RegistryId: second.RegistryId),
+            CancellationToken.None);
+
+        Assert.True(result.IsSuccess, result.Error?.Code);
+        Assert.Equal(second.RegistryId, result.Value.RegistryId);
+    }
+
+    [Fact]
+    public async Task Record_WithARegisterOfAnotherDepartment_IsRefused()
+    {
+        var world = new World();
+        await world.IssueCentralAsync();
+        var financeRegistry = world.Registries.Registries.Single(r => r.DepartmentId == world.FinanceId);
+
+        var result = await world.RecordHandler().Handle(
+            new RecordDepartmentRegistrationCommand(
+                world.Document.DocumentId, world.HrId, "45", FirstVisit, world.UserId,
+                RegistryId: financeRegistry.RegistryId),
+            CancellationToken.None);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(DomainErrors.Numbering.DepartmentRegistryMismatch.Code, result.Error.Code);
+    }
+
+    [Fact]
+    public async Task Record_WithAnUnknownRegister_ReportsNotFound()
+    {
+        var world = new World();
+        await world.IssueCentralAsync();
+
+        var result = await world.RecordHandler().Handle(
+            new RecordDepartmentRegistrationCommand(
+                world.Document.DocumentId, world.HrId, "45", FirstVisit, world.UserId,
+                RegistryId: Guid.NewGuid()),
+            CancellationToken.None);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(DomainErrors.Numbering.RegistryNotFound.Code, result.Error.Code);
+    }
+
+    [Fact]
     public async Task Record_WhenDepartmentAlreadyRegistered_KeepsNumberAndAddsNewDate()
     {
         var world = new World();

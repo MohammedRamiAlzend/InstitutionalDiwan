@@ -15,6 +15,7 @@ export {
   userKeys,
   useMeQuery,
   useCoversDepartment,
+  useMyPrimaryDepartmentId,
   useUsers,
   useUserById,
   useUserEffectivePermissions,

@@ -29,7 +29,7 @@ another layer's surface by itself.
 | `ui/IssueNumberDialog.tsx` | Issues the next official number for a DRAFT document; `Numbering.OfficialNumberTaken` and other server rejections render in-dialog. |
 | `ui/CancelNumberDialog.tsx` | Cancels an active number with a required Arabic reason. |
 | `ui/ReplaceNumberDialog.tsx` | Replaces an active number with a required reason; keeps the prior number as «مُستبدل». |
-| `ui/DepartmentRegistrationDialog.tsx` | Records the number/date a department wrote in its own register; requires an active department-scoped registry. |
+| `ui/DepartmentRegistrationDialog.tsx` | Records the number/date the caller's own department wrote in one of its registers: the department is fixed to the caller's primary department (read-only), a register select appears when the department has several active registers (one is preselected, none shows a warning), and `registryId` is sent; when the profile loads without a department (outdated session or server) it shows an Arabic error and disables submit instead of loading forever. |
 | `index.ts` | Public barrel exporting request types, mutation hooks, and dialogs. |
 
 ## Domain rules & error handling
@@ -56,6 +56,7 @@ another layer's surface by itself.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-04 | Claude | Department registration is now limited to the caller's own department (read-only field from `useMyPrimaryDepartmentId`) with a register select (`registryId`) when the department has more than one active register; added the Arabic `Numbering.DepartmentRegistrationOwnDepartmentOnly` and `DepartmentRegistryMismatch` messages. |
 | 2026-10-30 | agent | Module 04 Phase 5: the registry form keeps its own department in the scope select after that department is deactivated (option disabled and labelled «(موقوف)»), fixing a blank select that hid the registry's real scope; verified in-browser. |
 | 2026-10-29 | agent | Module 04 Phase 2: added a live next-number preview to the registry form and stricter pattern validation (unknown tokens and a missing `{SEQ}` are rejected in Arabic); verified in-browser. |
 | 2026-10-29 | agent | Module 03 Phase 5: implemented the slice — registry create/edit/activate mutations and dialogs, issue/cancel/replace/department-registration mutations and dialogs, with key invalidation and Arabic domain errors; verified end to end in-browser. |

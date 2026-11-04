@@ -17,6 +17,15 @@ public interface IDepartmentScopeEvaluator
         CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// True only when <paramref name="departmentId"/> is the caller's own primary department,
+    /// whatever their scope. Used for actions that speak for one department only, such as writing
+    /// that department's register number.
+    /// </summary>
+    Task<bool> IsPrimaryDepartmentAsync(
+        Guid departmentId,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Every department inside the caller's scope, for filtering a list in the database. Null means an
     /// institution-wide scope (no department restriction); an empty set means nothing is reachable.
     /// </summary>

@@ -168,7 +168,7 @@ required for every table.
 | --- | --- | --- | --- |
 | `POST` | `/api/auth/login` | — (public) | Returns a JWT access token. |
 | `POST` | `/api/auth/register` | — (public) | Self-registration. |
-| `GET` | `/api/auth/me` | `DOCUMENT_VIEW` | Caller profile, including `accessibleDepartmentIds`: the departments the caller's live scope reaches, `null` for an institution-wide scope. |
+| `GET` | `/api/auth/me` | `DOCUMENT_VIEW` | Caller profile, including `accessibleDepartmentIds` (the departments the caller's live scope reaches, `null` for an institution-wide scope) and `primaryDepartmentId` (the caller's own department). |
 | `POST` | `/api/auth/change-password` | `DOCUMENT_VIEW` | Payload `{ oldPassword, newPassword }`; returns a fresh `LoginResponse` (JWT + identity). New password 8–200 chars and different from the old one (`Identity.CurrentPasswordIncorrect`, `Identity.NewPasswordSameAsOld`). |
 
 ### Documents — `/api/documents`
@@ -221,7 +221,7 @@ Each version stores a **64-char hex SHA-256**. Max upload ~50 MB (+ multipart ov
 | `POST` | `.../numbers/issue` | `NUMBERING_MANAGE` | + `DOWNLOAD` access. |
 | `POST` | `.../numbers/{documentNumberId}/cancel` | `NUMBERING_MANAGE` | + `DOWNLOAD` access. |
 | `POST` | `.../numbers/{documentNumberId}/replace` | `NUMBERING_MANAGE` | + `DOWNLOAD` access. |
-| `POST` | `.../numbers/department-registration` | `NUMBERING_MANAGE` | + scope covering that department. |
+| `POST` | `.../numbers/department-registration` | `NUMBERING_MANAGE` | Body `{ departmentId, registryNumberText, registryDate, notes?, registryId? }`. `departmentId` must be the caller's own primary department (else 403 `Numbering.DepartmentRegistrationOwnDepartmentOnly`); `registryId` picks one of that department's active registers (404 `Numbering.RegistryNotFound`, 409 `Numbering.DepartmentRegistryMismatch`), omitted = best match. |
 
 `department-registration` must exist before `receive` on a movement is allowed.
 
