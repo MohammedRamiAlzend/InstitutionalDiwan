@@ -1,5 +1,5 @@
 # institutionaldiwan.front / src/app — Application Initialization & Global Providers Layer
-> **Status:** Application wiring implemented: public login, standalone protected password change, and shell-nested Organization/Identity/Correspondence/Audit pages, including `/institution-settings`, `/documents`, `/documents/:documentId`, `/movements`, `/numbering`, and `/audit`. Final verification and Module 02 auth/admin audit fixes remain in progress; the Module 06 attachments tab is live inside `/documents/:documentId` and needs no route of its own — its upload, version, archive, and verify actions are all implemented, so only the Phase 5 role-matrix verification is outstanding.
+> **Status:** Application wiring implemented: public login, standalone protected password change, and shell-nested Organization/Identity/Correspondence/Audit pages, including `/institution-settings`, `/documents`, `/documents/:documentId`, `/movements`, `/numbering`, and `/audit`. Final verification and Module 02 auth/admin audit fixes remain in progress; the Module 06 attachments tab is live inside `/documents/:documentId` and needs no route of its own — its upload, version, archive, and verify actions are implemented and the Module 06 role-matrix verification (Phase 5) is done.
 ## Purpose
 `src/app/` is the top-most layer in Feature-Sliced Design (FSD). It initializes the Institutional Diwan React SPA, wires global providers (TanStack Query, React Router, Auth/Session hydration, RTL/Theme direction, Toast notifications, SignalR connection lifecycle), defines route trees and permission guards, and loads global stylesheets. It contains no domain-specific business forms or tables—only application-wide wiring.
 ## Layer & Import Rules (FSD Strict Hierarchy)
@@ -44,6 +44,7 @@
 ## Change Log
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-04 | Claude | Corrected the status line: the Module 06 attachments tab is complete and role-matrix verified, so nothing about it remains pending. |
 | 2026-11-01 | agent | Documented the shell page-transition animation and the `html[data-motion]` preference in the `styles/index.css` entry. |
 | 2026-11-01 | agent | Module 06 Phase 2: corrected the status line — the attachments tab is live inside the already-registered `/documents/:documentId`, so no route was added and only the upload action (Phase 3) stays planned. |
 | 2026-10-29 | agent | Registered the `/audit` route (Module 09) as a shell child and enabled its «سجل التدقيق» sidebar entry. |
