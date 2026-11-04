@@ -36,5 +36,6 @@ Read side of the per-document-type field schemas: a type's field identities, its
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-04 | Claude | Registry filtering by dynamic field values (plan `plans/document-registry-field-filters.md`): added `model/filters.ts` (operators per data type, Arabic operator labels, `encodeFieldFilter`/`decodeFieldFilter`, local value validation, `MAX_FIELD_FILTERS`). |
 | 2026-11-03 | Claude | Added value helpers and `DynamicFieldInputs` (plan Phase 3) and verified the slice against the live API. |
 | 2026-11-03 | Claude | Implemented the dynamic fields read slice (plan Phase 0). |

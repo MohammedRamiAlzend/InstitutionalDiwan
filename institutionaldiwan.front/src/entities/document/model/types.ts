@@ -142,4 +142,6 @@ export interface DocumentListParams extends PagedQueryParams {
   owningDepartmentId?: string
   directionId?: number
   documentTypeId?: number
+  /** `key:operator:value` dynamic-field filters; the server requires `documentTypeId` with them. */
+  fieldFilters?: string[]
 }

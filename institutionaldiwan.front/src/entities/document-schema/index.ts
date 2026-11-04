@@ -11,6 +11,16 @@ export type {
   SchemaVersionSummaryResponse,
 } from './model/types'
 export { FIELD_DATA_TYPE, FIELD_LIMITS, SCHEMA_STATUS } from './model/types'
+export {
+  FIELD_FILTER_OPERATOR,
+  MAX_FIELD_FILTERS,
+  decodeFieldFilter,
+  encodeFieldFilter,
+  fieldFilterOperatorLabel,
+  operatorsFor,
+  validateFieldFilterValue,
+} from './model/filters'
+export type { FieldFilterOperator, FieldFilterValue } from './model/filters'
 export { FIELD_DATA_TYPE_LABELS, SCHEMA_STATUS_LABELS } from './model/labels'
 export {
   schemaKeys,

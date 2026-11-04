@@ -17,4 +17,5 @@ public sealed record ListDocumentsQuery(
     int? StatusId = null,
     Guid? OwningDepartmentId = null,
     int? DirectionId = null,
-    int? DocumentTypeId = null) : IQuery<PagedResult<DocumentResponse>>;
+    int? DocumentTypeId = null,
+    IReadOnlyList<string>? FieldFilters = null) : IQuery<PagedResult<DocumentResponse>>;

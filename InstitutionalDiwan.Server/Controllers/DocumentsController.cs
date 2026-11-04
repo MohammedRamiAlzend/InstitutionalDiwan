@@ -43,9 +43,10 @@ public sealed class DocumentsController : ControllerBase
     /// <response code="403">The token lacks the DOCUMENT_VIEW permission.</response>
     [HttpGet]
     [EndpointSummary("Lists a page of documents, newest first by default.")]
-    [EndpointDescription("Lists a page of documents, newest first by default. Supports server-side paging, a free-text search across the title, subject summary, and official number, and filters by status, owning department, direction, and document type. Only documents the caller has VIEW access to are returned or counted. Requires the DOCUMENT_VIEW permission. Responses: 200 (One page of documents with the paging counters.), 401 (The token is missing, expired, or invalid.), 403 (The token lacks the DOCUMENT_VIEW permission.)")]
+    [EndpointDescription("Lists a page of documents, newest first by default. Supports server-side paging, a free-text search across the title, subject summary, and official number, and filters by status, owning department, direction, and document type. With a document type, repeat fieldFilters=key:operator:value (at most 5, combined with AND) to filter by dynamic field values: eq/contains for text, eq/gt/gte/lt/lte for numbers and dates, eq for booleans and select options. Only documents the caller has VIEW access to are returned or counted. Requires the DOCUMENT_VIEW permission. Responses: 200 (One page of documents with the paging counters.), 400 (A field filter is malformed, names an unknown field, uses an unsupported operator, has an invalid value, or no document type was supplied.), 401 (The token is missing, expired, or invalid.), 403 (The token lacks the DOCUMENT_VIEW permission.)")]
     [Produces("application/json", Type = typeof(PagedResult<DocumentResponse>))]
     [ProducesResponseType<PagedResult<DocumentResponse>>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> List(
@@ -58,6 +59,7 @@ public sealed class DocumentsController : ControllerBase
         [Description("Filter by owning department id (GUID, optional). Example: e7a62f43-9b82-4d01-8c2e-7ab91e506d42.")] [FromQuery] Guid? owningDepartmentId = null,
         [Description("Filter by direction id (integer, optional). Example: 1.")] [FromQuery] int? directionId = null,
         [Description("Filter by document type id (integer, optional). Example: 1.")] [FromQuery] int? documentTypeId = null,
+        [Description("Dynamic-field filters as key:operator:value, repeated up to 5 times and combined with AND; requires documentTypeId (string array, optional, query parameter). Example: contract_number:contains:A-12.")] [FromQuery] string[]? fieldFilters = null,
         CancellationToken cancellationToken = default)
     {
         var result = await _sender.Send(
@@ -70,7 +72,8 @@ public sealed class DocumentsController : ControllerBase
                 statusId,
                 owningDepartmentId,
                 directionId,
-                documentTypeId),
+                documentTypeId,
+                fieldFilters),
             cancellationToken);
 
         return result.ToActionResult();

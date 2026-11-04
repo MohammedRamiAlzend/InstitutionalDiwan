@@ -158,6 +158,7 @@ have no `README.md` of their own yet — their content is documented in the encl
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-04 | Claude | Implemented registry filtering by dynamic field values (plan `plans/document-registry-field-filters.md`): `fieldFilters` on `GET /api/documents`, six new `DocumentFields.Filter*` errors with Arabic messages, the «تصفية بالحقول» dialog and chips on `/documents`; 776 tests pass. |
 | 2026-11-04 | Claude | Added the Module 01 lookups-administration front-end plan `plans/module-01-lookups-frontend.md` (draft, awaiting approval; no code, no backend change required). |
 | 2026-11-04 | Claude | Added the Module 10 front-end plan `plans/module-10-notifications-frontend.md` (draft, awaiting approval; no code), including two small additive backend changes (inbox `search`/`sortBy`, unread count by type) scheduled before the front end. |
 | 2026-11-04 | Claude | Added `examples/workflow/`, a standalone interactive page (HTML, CSS, JavaScript) explaining the document lifecycle and how the system works. No backend or front-end code changed. |

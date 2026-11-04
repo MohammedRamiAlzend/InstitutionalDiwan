@@ -20,6 +20,7 @@ public sealed class ListDocumentsQueryHandlerTests
         Guid? callerId = null) =>
         new(
             documents,
+            new FakeDocumentFieldRepository(),
             scope ?? new FakeDepartmentScopeEvaluator { InstitutionWide = true },
             new FakeUserContext { IsAuthenticated = true, UserId = callerId ?? Guid.NewGuid() },
             TestClock.Instance);

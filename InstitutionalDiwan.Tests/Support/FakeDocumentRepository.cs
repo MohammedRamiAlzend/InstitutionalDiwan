@@ -24,6 +24,7 @@ internal sealed class FakeDocumentRepository : IDocumentRepository
         Guid? owningDepartmentId = null,
         int? directionId = null,
         int? documentTypeId = null,
+        IReadOnlyList<InstitutionalDiwan.Domain.ValueObjects.DocumentFieldFilter>? fieldFilters = null,
         CancellationToken cancellationToken = default)
     {
         LastViewAccess = access;

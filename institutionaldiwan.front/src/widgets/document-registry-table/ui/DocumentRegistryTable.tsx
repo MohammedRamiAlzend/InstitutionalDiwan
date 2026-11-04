@@ -29,6 +29,10 @@ import {
   type DataTableColumn,
   type MenuEntry,
 } from '@/shared/ui'
+import { FieldFilterBar } from './FieldFilterBar'
+
+/** URL parameter holding the repeated `key:operator:value` dynamic-field filters. */
+const FIELD_FILTER_PARAM = 'f'
 
 function optionalId(value: string | undefined): number | undefined {
   if (!value) return undefined
@@ -42,7 +46,11 @@ export function DocumentRegistryTable() {
     defaultSortKey: 'createdAt',
     defaultSortDirection: 'desc',
     filterKeys: ['statusId', 'directionId', 'documentTypeId', 'owningDepartmentId'],
+    // Field filters belong to one document type, so changing the type drops them.
+    repeatedKeys: [FIELD_FILTER_PARAM],
+    resetOnChange: { documentTypeId: [FIELD_FILTER_PARAM] },
   })
+  const documentTypeId = optionalId(table.filters.documentTypeId)
 
   const documentsQuery = useDocuments({
     page: table.page,
@@ -52,7 +60,8 @@ export function DocumentRegistryTable() {
     sortDescending: table.sortDirection === 'desc',
     statusId: optionalId(table.filters.statusId),
     directionId: optionalId(table.filters.directionId),
-    documentTypeId: optionalId(table.filters.documentTypeId),
+    documentTypeId,
+    fieldFilters: documentTypeId ? table.repeated[FIELD_FILTER_PARAM] : undefined,
     owningDepartmentId: table.filters.owningDepartmentId || undefined,
   })
 
@@ -354,6 +363,11 @@ export function DocumentRegistryTable() {
               }
               options={typeOptions}
               className="w-40"
+            />
+            <FieldFilterBar
+              documentTypeId={documentTypeId}
+              raw={table.repeated[FIELD_FILTER_PARAM] ?? []}
+              onChange={(raw) => table.setRepeated(FIELD_FILTER_PARAM, raw)}
             />
             <Select
               aria-label="تصفية حسب القسم المالك"

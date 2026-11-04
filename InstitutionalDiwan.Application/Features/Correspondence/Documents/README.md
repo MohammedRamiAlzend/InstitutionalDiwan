@@ -94,6 +94,7 @@ commands the API actually walks: `CreateDraftDocumentCommand` → `UpdateDraftMe
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-04 | Claude | Registry filtering by dynamic field values (plan `plans/document-registry-field-filters.md`): `ListDocumentsQuery.FieldFilters`, `DocumentFieldFilterParser` (splits `key:operator:value` at the first two colons, validates the operator and value against the field's data type, max 5) and `ListDocumentsQueryHandler` now resolves the type's fields; new `DocumentFields.Filter*` and `TooManyFilters` errors. |
 | 2026-11-03 | Claude | Closed the write side of the document access gap, at the levels the project owner chose: update draft, register and add participant require `DOWNLOAD`, cancel requires `MANAGE`; all answer 403 `Correspondence.DocumentAccessDenied` before any state rule, so a denied registration never burns a number. |
 | 2026-11-03 | Claude | Closed the read side of the document access gap: get by id, details and timeline answer 403 `Correspondence.DocumentAccessDenied` without `VIEW` access, and both lists pass `DocumentViewAccess` to `ListPagedAsync` so `SECRET`/`TOP_SECRET` and out-of-scope documents leave the rows and the counts. |
 | 2026-11-03 | Claude | Recorded that archive and unarchive live in `Features/Archiving`. `AddDocumentParticipantCommandHandler` now answers `Correspondence.DocumentArchived` for an archived document, through `Document.AddParticipant`. |

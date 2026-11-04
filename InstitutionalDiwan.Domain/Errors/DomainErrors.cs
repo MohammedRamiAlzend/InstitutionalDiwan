@@ -296,6 +296,12 @@ public static class DomainErrors
         public static readonly Error FieldNotInVersion = Error.NotFound("DocumentFields.FieldNotInVersion", "The field is not part of this schema version.");
         public static readonly Error FieldTypeMismatch = Error.Validation("DocumentFields.FieldTypeMismatch", "The settings data type does not match the field data type, and a field data type cannot be changed.");
         public static readonly Error FieldDocumentTypeMismatch = Error.Validation("DocumentFields.FieldDocumentTypeMismatch", "The field belongs to a different document type than the schema version.");
+        public static readonly Error FilterRequiresDocumentType = Error.Validation("DocumentFields.FilterRequiresDocumentType", "Filtering by field values requires a document type.");
+        public static readonly Error FilterMalformed = Error.Validation("DocumentFields.FilterMalformed", "A field filter must look like key:operator:value with a supported operator (eq, contains, gt, gte, lt, lte).");
+        public static readonly Error FilterFieldNotFound = Error.Validation("DocumentFields.FilterFieldNotFound", "A field filter names a field that does not exist for this document type.");
+        public static readonly Error FilterOperatorNotSupported = Error.Validation("DocumentFields.FilterOperatorNotSupported", "The operator is not supported for this field data type.");
+        public static readonly Error FilterValueInvalid = Error.Validation("DocumentFields.FilterValueInvalid", "The filter value does not match the field data type.");
+        public static readonly Error TooManyFilters = Error.Validation("DocumentFields.TooManyFilters", "A registry query accepts at most 5 field filters.");
         public static readonly Error TooManyFields = Error.Conflict("DocumentFields.TooManyFields", "A schema version cannot have more than 50 fields.");
         public static readonly Error DuplicateValue = Error.Validation("DocumentFields.DuplicateValue", "A field value was supplied more than once.");
 

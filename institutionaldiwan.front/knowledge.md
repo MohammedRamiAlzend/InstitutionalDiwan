@@ -175,7 +175,7 @@ required for every table.
 
 | Method | Route | Permission |
 | --- | --- | --- |
-| `GET` | `/api/documents` | `DOCUMENT_VIEW` | Paged; also `sortBy`, `sortDescending`, `statusId`, `owningDepartmentId`, `directionId`, `documentTypeId`. Returns and counts only documents with `VIEW` access. |
+| `GET` | `/api/documents` | `DOCUMENT_VIEW` | Paged; also `sortBy`, `sortDescending`, `statusId`, `owningDepartmentId`, `directionId`, `documentTypeId`, repeated `fieldFilters` (see Dynamic document fields). Returns and counts only documents with `VIEW` access. |
 | `GET` | `/api/documents/{documentId}` | `DOCUMENT_VIEW` | + `VIEW` access; otherwise 403 `Correspondence.DocumentAccessDenied`. |
 | `GET` | `/api/documents/{documentId}/details` | `DOCUMENT_VIEW` | + `VIEW` access. |
 | `GET` | `/api/documents/{documentId}/timeline` | `DOCUMENT_VIEW` | + `VIEW` access. |
@@ -427,7 +427,7 @@ Document side:
 Error codes:
 `DocumentFields.*` — see `InstitutionalDiwan.Domain/Errors/DomainErrors.cs`; all 40 have Arabic entries in
 `shared/api/errorMessages.ts`. Error bodies carry no structured field key, so the SPA validates values locally
-first. Registry filtering by field values is not implemented yet (neither backend nor SPA).
+first. Registry filtering: `GET /api/documents?documentTypeId=N&fieldFilters=key:op:value` (repeat up to 5, AND; requires `documentTypeId`). Operators: text/long text `eq`, `contains`; number and date `eq`, `gt`, `gte`, `lt`, `lte` (dates compare by calendar day, UTC); boolean and select `eq`. Documents without a value for the field never match. Errors: `DocumentFields.FilterRequiresDocumentType`, `FilterMalformed`, `FilterFieldNotFound`, `FilterOperatorNotSupported`, `FilterValueInvalid`, `TooManyFilters` (all with Arabic entries). The SPA keeps the filters in the repeated `f` URL parameter on `/documents`. The department register does not accept them yet.
 
 ### Archiving (Module 07) — implemented in the SPA (`/archive`, document details)
 

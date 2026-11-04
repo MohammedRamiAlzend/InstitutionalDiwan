@@ -1,5 +1,7 @@
 
 
+using InstitutionalDiwan.Domain.ValueObjects;
+
 namespace InstitutionalDiwan.Domain.Repositories;
 
 public interface IDepartmentRepository
@@ -95,6 +97,7 @@ public interface IDocumentRepository
         Guid? owningDepartmentId = null,
         int? directionId = null,
         int? documentTypeId = null,
+        IReadOnlyList<DocumentFieldFilter>? fieldFilters = null,
         CancellationToken cancellationToken = default);
     Task<IReadOnlyList<Document>> GetByIdsAsync(
         IReadOnlyCollection<Guid> documentIds,

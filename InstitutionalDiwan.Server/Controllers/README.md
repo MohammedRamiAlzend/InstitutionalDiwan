@@ -143,6 +143,7 @@ plain JSON array.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-04 | Claude | Registry filtering by dynamic field values (plan `plans/document-registry-field-filters.md`): `GET /api/documents` accepts repeated `fieldFilters=key:operator:value` and documents the new 400 responses. |
 | 2026-11-04 | Claude | `GET /api/notifications` gained `search`, `sortBy` and `sortDescending`; `GET /api/notifications/unread-count` now also returns `byType`. |
 | 2026-11-03 | Claude | Added `DocumentRelationsController` for Module 08 (Phase 3). |
 | 2026-11-03 | Claude | Documented `accessibleDepartmentIds` on `GET /api/auth/me`. |

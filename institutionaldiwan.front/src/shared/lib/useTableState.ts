@@ -9,6 +9,13 @@ export interface TableStateOptions {
   defaultSortDirection?: SortDirection
   /** Extra URL parameters exposed through `filters` / `setFilter`. */
   filterKeys?: readonly string[]
+  /**
+   * URL parameters that may repeat (`?f=a&f=b`), exposed through `repeated` / `setRepeated`. They
+   * count as active filters and are cleared with them.
+   */
+  repeatedKeys?: readonly string[]
+  /** Changing a filter key also removes these parameters (for example field filters of a type). */
+  resetOnChange?: Readonly<Record<string, readonly string[]>>
 }
 
 export interface TableState {
@@ -18,12 +25,14 @@ export interface TableState {
   sortKey: string | null
   sortDirection: SortDirection
   filters: Record<string, string>
+  repeated: Record<string, string[]>
   hasActiveFilters: boolean
   setPage: (page: number) => void
   setPageSize: (pageSize: number) => void
   setSearch: (search: string) => void
   setSort: (sortKey: string | null, sortDirection?: SortDirection) => void
   setFilter: (key: string, value: string | null) => void
+  setRepeated: (key: string, values: readonly string[]) => void
   clearFilters: () => void
   clearQuery: () => void
 }
@@ -50,6 +59,8 @@ export function useTableState(options: TableStateOptions = {}): TableState {
     defaultSortKey = null,
     defaultSortDirection = 'desc',
     filterKeys = [],
+    repeatedKeys = [],
+    resetOnChange = {},
   } = options
 
   const [searchParams, setSearchParams] = useSearchParams()
@@ -75,6 +86,18 @@ export function useTableState(options: TableStateOptions = {}): TableState {
     }
     return values
   }, [filterSignature, searchParams])
+
+  const resetSignature = JSON.stringify(resetOnChange)
+  const repeatedSignature = repeatedKeys.join("|")
+  const repeated = useMemo(() => {
+    const values: Record<string, string[]> = {}
+    if (!repeatedSignature) return values
+    for (const key of repeatedSignature.split("|")) {
+      const all = searchParams.getAll(key).filter(Boolean)
+      if (all.length > 0) values[key] = all
+    }
+    return values
+  }, [repeatedSignature, searchParams])
 
   const update = useCallback(
     (mutate: (next: URLSearchParams) => void, resetPage = false) => {
@@ -140,6 +163,18 @@ export function useTableState(options: TableStateOptions = {}): TableState {
       update((next) => {
         if (!trimmed) next.delete(key)
         else next.set(key, trimmed)
+        const dependents = (JSON.parse(resetSignature) as Record<string, string[]>)[key] ?? []
+        for (const dependent of dependents) next.delete(dependent)
+      }, true)
+    },
+    [resetSignature, update],
+  )
+
+  const setRepeated = useCallback(
+    (key: string, values: readonly string[]) => {
+      update((next) => {
+        next.delete(key)
+        for (const value of values) if (value) next.append(key, value)
       }, true)
     },
     [update],
@@ -148,8 +183,9 @@ export function useTableState(options: TableStateOptions = {}): TableState {
   const clearFilters = useCallback(() => {
     update((next) => {
       for (const key of filterKeys) next.delete(key)
+      for (const key of repeatedKeys) next.delete(key)
     }, true)
-  }, [filterKeys, update])
+  }, [filterKeys, repeatedKeys, update])
 
   // One URL write: two sequential setters would each start from the same stale
   // search params, so the second would restore what the first removed.
@@ -157,8 +193,9 @@ export function useTableState(options: TableStateOptions = {}): TableState {
     update((next) => {
       next.delete('search')
       for (const key of filterKeys) next.delete(key)
+      for (const key of repeatedKeys) next.delete(key)
     }, true)
-  }, [filterKeys, update])
+  }, [filterKeys, repeatedKeys, update])
 
   return {
     page,
@@ -167,12 +204,14 @@ export function useTableState(options: TableStateOptions = {}): TableState {
     sortKey,
     sortDirection,
     filters,
-    hasActiveFilters: Object.keys(filters).length > 0,
+    repeated,
+    hasActiveFilters: Object.keys(filters).length > 0 || Object.keys(repeated).length > 0,
     setPage,
     setPageSize,
     setSearch,
     setSort,
     setFilter,
+    setRepeated,
     clearFilters,
     clearQuery,
   }

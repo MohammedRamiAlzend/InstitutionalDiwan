@@ -24,7 +24,10 @@ export const documentApi = {
         owningDepartmentId: params.owningDepartmentId || undefined,
         directionId: params.directionId,
         documentTypeId: params.documentTypeId,
+        fieldFilters: params.fieldFilters?.length ? params.fieldFilters : undefined,
       },
+      // ASP.NET binds repeated keys (`fieldFilters=a&fieldFilters=b`), not `fieldFilters[]`.
+      paramsSerializer: { indexes: null },
     })
     return data
   },

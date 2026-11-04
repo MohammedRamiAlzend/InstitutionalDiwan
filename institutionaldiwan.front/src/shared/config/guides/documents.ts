@@ -18,6 +18,12 @@ export const DOCUMENTS_GUIDE_ENTRIES: readonly GuideEntry[] = [
     body: 'اجمع بين الحالة والاتجاه والنوع والقسم المالك لتضييق السجل. المرشحات تُحفظ في العنوان، وزر «مسح» يعيد عرض كل الوثائق.',
   },
   {
+    id: 'documents.field-filters',
+    title: 'التصفية بقيم الحقول',
+    body: 'بعد اختيار نوع الوثيقة يمكنك التصفية بقيم حقوله الإضافية: نص يحتوي كلمة، رقم أو تاريخ ضمن نطاق، نعم/لا، أو خيار محدد. تجتمع المرشحات بـ «و» (حتى 5)، وتُحفظ في العنوان.',
+    note: 'تغيير النوع يمسح مرشحات الحقول لأن لكل نوع حقوله. الوثائق التي لا تحمل قيمة للحقل لا تظهر.',
+  },
+  {
     id: 'documents.create',
     title: 'وثيقة جديدة',
     body: 'تنشئ وثيقة كمسودة قابلة للتعديل، أو تسجلها مباشرة برقم رسمي من سجل ترقيم. الرقم الرسمي لا يُغيَّر ولا يُحذف بعد إصداره.',
@@ -44,6 +50,7 @@ export const DOCUMENTS_GUIDE: PageGuide = {
     'documents.tabs',
     'documents.registry',
     'documents.filters',
+    'documents.field-filters',
     'documents.create',
     'documents.organizations',
     'documents.org-create',

@@ -29,6 +29,7 @@ Contains pure, framework-independent helper functions for class merging, `Asia/D
 ## Change Log
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-04 | Claude | Registry filtering by dynamic field values (plan `plans/document-registry-field-filters.md`): `useTableState` gained `repeatedKeys` (`repeated`, `setRepeated`, cleared with the filters) and `resetOnChange` (changing a filter key drops dependent parameters). |
 | 2026-11-04 | Claude | Module 10 notifications front end (plan `plans/module-10-notifications-frontend.md`): added `safeRelativeUrl`. |
 | 2026-11-01 | agent | Tutorial mode Phase 0: added `tutorial.ts` — `getTutorialChoice` / `applyTutorial` / `setTutorialChoice` / `useTutorial` over `diwan.tutorial` and `html[data-tutorial]`, with only `on` stored so the off default leaves no key. The store is in `shared/lib` rather than beside `density.ts`/`motion.ts` because `shared/ui/data-table` and `form-field` must read it, and `shared` may not import from `widgets`. |
 | 2026-11-01 | agent | Lowered `useTableState`'s page-size default from 20 to 10 and exported `MIN_PAGE_SIZE` / `MAX_PAGE_SIZE` (1..100, matching the server's `PageRequest.MaxPageSize`) so the grid can offer them as input limits; `setPageSize` now treats the caller's `defaultPageSize` as the value that stays out of the URL, not the module constant, so a grid-specific default is not written to the query string. |

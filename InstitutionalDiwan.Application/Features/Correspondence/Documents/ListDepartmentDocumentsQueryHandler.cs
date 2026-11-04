@@ -71,7 +71,8 @@ internal sealed class ListDepartmentDocumentsQueryHandler
             request.DepartmentId,
             request.DirectionId,
             request.DocumentTypeId,
-            cancellationToken);
+            fieldFilters: null,
+            cancellationToken: cancellationToken);
 
         return Result.Success(new PagedResult<DocumentResponse>(
             documents.Items.Select(DocumentResponse.From).ToList(),

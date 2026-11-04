@@ -93,6 +93,7 @@ Concrete EF Core implementations of the repository interfaces declared in
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-04 | Claude | Registry filtering by dynamic field values (plan `plans/document-registry-field-filters.md`): `DocumentRepository.ListPagedAsync` takes `DocumentFieldFilter`s and adds one `EXISTS` over `DocumentFieldValues` per filter after the visibility predicate (LIKE escaping for text, calendar-day comparison for dates). |
 | 2026-11-03 | Claude | Added `NotificationRepository` and `NotificationRecipientDirectory` for Module 10. |
 | 2026-11-03 | Claude | Module 08 Relations, Phase 1: added `DocumentRelationRepository`, registered in `DependencyInjection`. |
 | 2026-11-03 | Claude | Added `DocumentRepository.ListViewableIdsAsync` on the shared `VIEW` rule, for the movement queues and the department register. |
