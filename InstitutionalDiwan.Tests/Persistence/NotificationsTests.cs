@@ -298,6 +298,108 @@ public sealed class NotificationsTests
     }
 
     [Fact]
+    public async Task GetInbox_Search_MatchesTitleOrBody_AndTreatsWildcardsAsLiteralText()
+    {
+        var world = new World();
+        await SeedInboxAsync(world);
+        var percent = Notification.Create(
+            NotificationType.MovementSentId, "خصم 100% على الرسوم", "تفاصيل", NotificationPriority.NormalId, null, null, null, Now).Value;
+        percent.AddRecipient(world.Clerk.UserId, TargetDept, Now);
+        world.Db.Notifications.Add(percent);
+        await world.Db.SaveChangesAsync();
+
+        var byBody = await world.Notifications.GetInboxAsync(
+            world.Clerk.UserId, false, null, new PageRequest(1, 20, "نص"));
+        Assert.Equal(2, byBody.TotalCount);
+
+        var byTitle = await world.Notifications.GetInboxAsync(
+            world.Clerk.UserId, false, null, new PageRequest(1, 20, "ثانٍ"));
+        Assert.Equal("ثانٍ", Assert.Single(byTitle.Items).TitleAr);
+
+        var literalPercent = await world.Notifications.GetInboxAsync(
+            world.Clerk.UserId, false, null, new PageRequest(1, 20, "%"));
+        Assert.Equal("خصم 100% على الرسوم", Assert.Single(literalPercent.Items).TitleAr);
+
+        var underscore = await world.Notifications.GetInboxAsync(
+            world.Clerk.UserId, false, null, new PageRequest(1, 20, "_"));
+        Assert.Empty(underscore.Items);
+
+        var otherUser = await world.Notifications.GetInboxAsync(
+            world.Manager.UserId, false, null, new PageRequest(1, 20, "ثانٍ"));
+        Assert.Empty(otherUser.Items);
+
+        var withFilters = await world.Notifications.GetInboxAsync(
+            world.Clerk.UserId, false, NotificationType.MovementSentId, new PageRequest(1, 20, "نص"));
+        Assert.Equal(1, withFilters.TotalCount);
+    }
+
+    [Fact]
+    public async Task GetInbox_SortsByTheRequestedColumn_AndKeepsPagesStable()
+    {
+        var world = new World();
+        await SeedInboxAsync(world);
+        var urgent = Notification.Create(
+            NotificationType.MovementRejectedId, "عاجل", "نص", NotificationPriority.UrgentId, null, null, null, Now).Value;
+        urgent.AddRecipient(world.Clerk.UserId, TargetDept, Now);
+        world.Db.Notifications.Add(urgent);
+        await world.Db.SaveChangesAsync();
+        var userId = world.Clerk.UserId;
+
+        async Task<string[]> Titles(string? sortBy, bool descending, int page = 1, int pageSize = 20) =>
+            (await world.Notifications.GetInboxAsync(
+                userId, false, null, new PageRequest(page, pageSize, null, sortBy, descending)))
+            .Items.Select(item => item.TitleAr).ToArray();
+
+        Assert.Equal(new[] { "عاجل", "ثانٍ", "عنوان" }, await Titles(null, false));
+        Assert.Equal(new[] { "عاجل", "ثانٍ", "عنوان" }, await Titles(null, true));
+        Assert.Equal(new[] { "عنوان", "ثانٍ", "عاجل" }, await Titles("deliveredAt", false));
+        Assert.Equal(new[] { "عاجل", "ثانٍ", "عنوان" }, await Titles("deliveredAt", true));
+        Assert.Equal("عاجل", (await Titles("priority", true))[0]);
+        Assert.Equal("عاجل", (await Titles("priority", false))[2]);
+        Assert.Equal("عنوان", (await Titles("type", false))[0]);
+        Assert.Equal("عاجل", (await Titles("type", true))[0]);
+        Assert.Equal(3, (await Titles("unknown-key", false)).Length);
+
+        var row = await world.Db.NotificationRecipients.FirstAsync(r => r.UserId == userId);
+        row.MarkAsRead(Now);
+        await world.Db.SaveChangesAsync();
+        Assert.Equal(row.NotificationId,
+            (await world.Notifications.GetInboxAsync(userId, false, null, new PageRequest(1, 20, null, "isRead", true)))
+            .Items[0].NotificationId);
+        Assert.Equal(row.NotificationId,
+            (await world.Notifications.GetInboxAsync(userId, false, null, new PageRequest(1, 20, null, "isRead", false)))
+            .Items[^1].NotificationId);
+
+        var pagedTitles = new List<string>();
+        for (var page = 1; page <= 3; page++)
+            pagedTitles.AddRange(await Titles("priority", true, page, 1));
+        Assert.Equal(3, pagedTitles.Distinct().Count());
+    }
+
+    [Fact]
+    public async Task CountUnreadByType_GroupsOnlyTheCallersUnreadRows_AndMatchesTheTotal()
+    {
+        var world = new World();
+        await SeedInboxAsync(world);
+
+        var byType = await world.Notifications.CountUnreadByTypeAsync(world.Clerk.UserId);
+
+        Assert.Equal(2, byType.Count);
+        Assert.Equal(1, byType.Single(row => row.TypeId == NotificationType.MovementSentId).Count);
+        Assert.Equal(1, byType.Single(row => row.TypeId == NotificationType.MovementReceivedId).Count);
+        Assert.Equal(await world.Notifications.CountUnreadAsync(world.Clerk.UserId), byType.Sum(row => row.Count));
+
+        var row = await world.Db.NotificationRecipients.FirstAsync(r => r.UserId == world.Clerk.UserId);
+        row.MarkAsRead(Now);
+        await world.Db.SaveChangesAsync();
+
+        var afterRead = await world.Notifications.CountUnreadByTypeAsync(world.Clerk.UserId);
+        Assert.Equal(1, afterRead.Sum(r => r.Count));
+        Assert.DoesNotContain(afterRead, r => r.Count == 0);
+        Assert.Empty(await world.Notifications.CountUnreadByTypeAsync(Guid.NewGuid()));
+    }
+
+    [Fact]
     public async Task MarkReadAndDismiss_AffectOnlyTheOwner_AndAnotherUserGetsNotFound()
     {
         var world = new World();

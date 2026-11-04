@@ -389,7 +389,11 @@ public interface INotificationRepository
     Task<Notification?> GetByIdAsync(Guid notificationId, CancellationToken cancellationToken = default);
     void Add(Notification notification);
 
-    /// <summary>The user's own inbox rows (newest first); dismissed rows are never listed.</summary>
+    /// <summary>
+    /// The user's own inbox rows; dismissed rows are never listed. Newest first unless
+    /// <see cref="PageRequest.SortBy"/> is one of deliveredAt, priority, type or isRead;
+    /// <see cref="PageRequest.Search"/> matches the Arabic title and body.
+    /// </summary>
     Task<PagedList<NotificationInboxItem>> GetInboxAsync(
         Guid userId, bool unreadOnly, int? typeId, PageRequest page, CancellationToken cancellationToken = default);
 
@@ -402,6 +406,9 @@ public interface INotificationRepository
     Task<NotificationType?> GetTypeAsync(int notificationTypeId, CancellationToken cancellationToken = default);
 
     Task<int> CountUnreadAsync(Guid userId, CancellationToken cancellationToken = default);
+
+    /// <summary>The unread, non-dismissed rows of the user grouped by notification type (types with none are omitted).</summary>
+    Task<IReadOnlyList<UnreadTypeCount>> CountUnreadByTypeAsync(Guid userId, CancellationToken cancellationToken = default);
 
     /// <summary>A recipient row, only when it belongs to <paramref name="userId"/> (tracked for update).</summary>
     Task<NotificationRecipient?> GetRecipientAsync(
@@ -420,6 +427,9 @@ public interface INotificationRepository
     /// <summary>Deletes SENT outbox rows processed before the cutoff; dead letters are never touched.</summary>
     Task<int> PurgeSentOutboxAsync(DateTime processedBefore, CancellationToken cancellationToken = default);
 }
+
+/// <summary>How many unread notifications of one type a user has.</summary>
+public sealed record UnreadTypeCount(int TypeId, int Count);
 
 /// <summary>One inbox row: the recipient state joined with its notification content.</summary>
 public sealed record NotificationInboxItem(

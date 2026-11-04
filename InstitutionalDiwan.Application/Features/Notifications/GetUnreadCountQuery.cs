@@ -16,7 +16,15 @@ internal sealed class GetUnreadCountQueryHandler : IQueryHandler<GetUnreadCountQ
 
     public async Task<Result<UnreadCountResponse>> Handle(
         GetUnreadCountQuery request,
-        CancellationToken cancellationToken) =>
-        Result.Success(new UnreadCountResponse(
-            await _notificationRepository.CountUnreadAsync(request.UserId, cancellationToken)));
+        CancellationToken cancellationToken)
+    {
+        var total = await _notificationRepository.CountUnreadAsync(request.UserId, cancellationToken);
+        var byType = total == 0
+            ? Array.Empty<UnreadTypeCount>()
+            : await _notificationRepository.CountUnreadByTypeAsync(request.UserId, cancellationToken);
+
+        return Result.Success(new UnreadCountResponse(
+            total,
+            byType.Select(row => new UnreadTypeCountResponse(row.TypeId, row.Count)).ToList()));
+    }
 }

@@ -3,6 +3,8 @@ import {
   ARCHIVE_LOCATION,
   DOCUMENT_RELATION_TYPE,
   RELATION_ACTION_TYPE,
+  NOTIFICATION_TYPE,
+  NOTIFICATION_PRIORITY,
   ASSIGNMENT_TYPE,
   AUDIT_ACTION_TYPE,
   AUDIT_ENTITY_TYPE,
@@ -31,6 +33,8 @@ export {
   ARCHIVE_LOCATION,
   DOCUMENT_RELATION_TYPE,
   RELATION_ACTION_TYPE,
+  NOTIFICATION_TYPE,
+  NOTIFICATION_PRIORITY,
   ASSIGNMENT_TYPE,
   AUDIT_ACTION_TYPE,
   AUDIT_ENTITY_TYPE,
@@ -80,6 +84,8 @@ export const LOOKUP_SLUGS = {
   ArchiveLocations: 'archive-locations',
   DocumentRelationTypes: 'document-relation-types',
   RelationActionTypes: 'relation-action-types',
+  NotificationTypes: 'notification-types',
+  NotificationPriorities: 'notification-priorities',
 } as const
 
 export type LookupSlug = (typeof LOOKUP_SLUGS)[keyof typeof LOOKUP_SLUGS]
@@ -263,6 +269,24 @@ export const LOOKUP_FALLBACKS: Record<string, readonly LookupCatalogEntry[]> = {
     { id: RELATION_ACTION_TYPE.Created, desc: 'Created', descAr: 'إنشاء' },
     { id: RELATION_ACTION_TYPE.Updated, desc: 'Updated', descAr: 'تحديث' },
     { id: RELATION_ACTION_TYPE.Removed, desc: 'Removed', descAr: 'حذف' },
+  ],
+  'notification-types': [
+    { id: NOTIFICATION_TYPE.DocumentCreated, desc: 'Document created', descAr: 'إنشاء وثيقة' },
+    { id: NOTIFICATION_TYPE.DocumentRegistered, desc: 'Document registered', descAr: 'تسجيل وثيقة' },
+    { id: NOTIFICATION_TYPE.MovementSent, desc: 'Movement sent', descAr: 'إرسال إحالة' },
+    { id: NOTIFICATION_TYPE.MovementReceived, desc: 'Movement received', descAr: 'استلام إحالة' },
+    { id: NOTIFICATION_TYPE.MovementCompleted, desc: 'Movement completed', descAr: 'إكمال إحالة' },
+    { id: NOTIFICATION_TYPE.DocumentArchived, desc: 'Document archived', descAr: 'أرشفة وثيقة' },
+    { id: NOTIFICATION_TYPE.MovementRejected, desc: 'Movement rejected', descAr: 'رفض إحالة' },
+    { id: NOTIFICATION_TYPE.MovementReturned, desc: 'Movement returned', descAr: 'إعادة إحالة' },
+    { id: NOTIFICATION_TYPE.MovementRedirected, desc: 'Movement redirected', descAr: 'تحويل إحالة' },
+    { id: NOTIFICATION_TYPE.MovementClosed, desc: 'Movement closed', descAr: 'إغلاق إحالة' },
+    { id: NOTIFICATION_TYPE.MovementCancelled, desc: 'Movement cancelled', descAr: 'إلغاء إحالة' },
+  ],
+  'notification-priorities': [
+    { id: NOTIFICATION_PRIORITY.Normal, desc: 'Normal', descAr: 'عادية' },
+    { id: NOTIFICATION_PRIORITY.High, desc: 'High', descAr: 'عالية' },
+    { id: NOTIFICATION_PRIORITY.Urgent, desc: 'Urgent', descAr: 'عاجلة' },
   ],
 }
 

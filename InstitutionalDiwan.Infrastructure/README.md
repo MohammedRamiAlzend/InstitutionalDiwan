@@ -93,6 +93,7 @@ Persistence/Configurations/
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-04 | Claude | `NotificationRepository` applies the inbox search (LIKE with escaped wildcards) and sort keys, and gained `CountUnreadByTypeAsync`. No schema change. |
 | 2026-11-02 | Claude | Dynamic document fields, Phase 1: persistence for per-document-type field schemas with versions (configurations, DbSets, `DocumentFieldRepository`, `DocumentTypeSchemaVersionRepository`, `Add_Document_Dynamic_Fields` migration). See the Persistence README for detail. |
 | 2026-10-28 | Qoder | Added `Seed/EmployeeSeeder` (Order 97, Development/Staging) seeding 28 demo employees across the department tree, and extended `EmployeeRepository.ListPagedAsync` with an optional department-id set so `/api/employees` can list one department's roster (optionally including its descendants). |
 | 2026-10-28 | Qoder | Added `Seed/DepartmentSeeder` (Order 96, Development/Staging) that builds a 15-department demo tree under the seeded Central Diwan root — 4 directorates, 7 departments, 3 sections — inserting level by level because EF cannot infer the insert order of the self-referencing parent FK; registered it in `DependencyInjection` after `InstitutionSettingSeeder`. |

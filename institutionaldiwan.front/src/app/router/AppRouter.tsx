@@ -14,7 +14,10 @@ import { EmployeesPage } from '@/pages/employees'
 import { DocumentSchemasPage } from '@/pages/document-schemas'
 import { NumberingPage } from '@/pages/numbering'
 import { AuditPage } from '@/pages/audit'
+import { NotificationsPage } from '@/pages/notifications'
 import { AppShell } from '@/widgets/app-shell'
+import { NotificationBell } from '@/widgets/notification-bell'
+import { NotificationLiveLayout } from './NotificationLiveLayout'
 import { ProtectedRoute } from './ProtectedRoute'
 
 export function AppRouter() {
@@ -24,7 +27,8 @@ export function AppRouter() {
         <Route path={ROUTES.LOGIN} element={<LoginPage />} />
         <Route element={<ProtectedRoute />}>
           <Route path={ROUTES.CHANGE_PASSWORD} element={<ChangePasswordPage />} />
-          <Route element={<AppShell />}>
+          <Route element={<NotificationLiveLayout />}>
+          <Route element={<AppShell headerSlot={<NotificationBell />} />}>
             <Route path={ROUTES.DASHBOARD} element={<DashboardPage />} />
             <Route path={ROUTES.DOCUMENTS} element={<DocumentsPage />} />
             <Route path={ROUTES.DOCUMENT_DETAIL_PATTERN} element={<DocumentDetailsPage />} />
@@ -38,6 +42,8 @@ export function AppRouter() {
             <Route path={ROUTES.NUMBERING} element={<NumberingPage />} />
             <Route path={ROUTES.DOCUMENT_SCHEMAS} element={<DocumentSchemasPage />} />
             <Route path={ROUTES.AUDIT} element={<AuditPage />} />
+            <Route path={ROUTES.NOTIFICATIONS} element={<NotificationsPage />} />
+          </Route>
           </Route>
         </Route>
         <Route path="*" element={<Navigate to={ROUTES.DASHBOARD} replace />} />

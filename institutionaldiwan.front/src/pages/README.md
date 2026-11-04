@@ -50,6 +50,7 @@ complex business mutations, raw `axios`/`fetch` calls, or reusable domain models
 | `document-schemas/` | `/document-schemas` | Dynamic fields — `/document-types/{id}/schema-versions` and the schema write routes | ✅ Implemented behind `LOOKUP_MANAGE`; type and version live in `?type=` / `?version=` |
 | `audit/` | `/audit` | 09 — `GET /api/audit-logs`, checkpoints, integrity checks/reports (`?panel=logs\|integrity`) | ✅ Implemented (Module 09) |
 | `archive/` | `/archive` | 07 — `GET /api/archive/documents`, saved searches | ✅ Implemented (Module 07) |
+| `notifications/` | `/notifications` | 10 — `GET /api/notifications`, `/hubs/notifications` | ✅ Implemented (Module 10) |
 
 ## Screen acceptance (pages)
 
@@ -75,6 +76,7 @@ the cross-module `widgets/visualization-panel` remains planned.
 | `movements/` | ✅ Implemented (Phase 6: inbox/outbox tabs behind `DOCUMENT_VIEW`, routing menus behind `DOCUMENT_EDIT`). |
 | `audit/` | ✅ Implemented (Module 09: log/integrity panels behind `AUDIT_VIEW`, checkpoint and integrity-check actions behind `AUDIT_MANAGE`; browser-verified for both roles). |
 | `archive/` | ✅ Implemented (Module 07: archive search grid with saved searches behind `DOCUMENT_VIEW`; build and lint pass, verified against the live API). |
+| `notifications/` | ✅ Implemented (Module 10: inbox grid with no permission gate, since every route is scoped to the caller; build and lint pass, exercised against the live API). |
 | Final browser/build/test verification | ✅ Module 03 Phase 8 (2026-10-29): build, lint, backend build, and 487 tests pass; role-matrix browser pass (document / numbering / grants managers) plus draft, canceled, replaced-number, and movement states. |
 | Module 02 audit items | Still open (tracked outside Module 03). |
 
@@ -82,6 +84,7 @@ the cross-module `widgets/visualization-panel` remains planned.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-04 | Claude | Module 10 notifications front end (plan `plans/module-10-notifications-frontend.md`): implemented `notifications/` — `/notifications` and the «الإشعارات» sidebar entry. |
 | 2026-11-03 | Claude | Added `/document-schemas` (dynamic document fields administration). |
 | 2026-11-03 | agent | Module 07: implemented `archive/` — `/archive` behind `DOCUMENT_VIEW`, sidebar entry «الأرشيف», plus the archive/unarchive actions and the «سجل الأرشفة» tab on the document details page. |
 | 2026-10-29 | agent | Module 04 Phase 4: the document-details numbers history is now the shared `DataTable` (`tableId="document-numbers"`, column chooser, sorting, URL search, copy row menu); no route or permission changed. |

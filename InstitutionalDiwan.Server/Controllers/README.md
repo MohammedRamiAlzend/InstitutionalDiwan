@@ -35,7 +35,7 @@ access live here.
 | `NumberingRegistriesController.cs` | `api/numbering/registries` | `NUMBERING_VIEW` reads; `NUMBERING_MANAGE` writes | Numbering registry list/by-id + create, update, deactivate, activate. |
 | `LookupsController.cs` | `api/lookups/{lookup}` | `[Authorize]` reads; `LOOKUP_MANAGE` writes | Generic reference-catalog API over all 33 seeded lookups. |
 | `AuditLogsController.cs` | `api/audit-logs` | `AUDIT_VIEW` reads; `AUDIT_MANAGE` checkpoints/integrity checks | Module 09 audit trail: filtered self-auditing search, checkpoint creation, integrity verification, and integrity-report listing. |
-| `NotificationsController.cs` | `api/notifications` | `[Authorize]` (no permission code; every route is scoped to the caller) | Module 10 inbox: paged list (`unreadOnly`, `typeId`), `unread-count` (not audited), `{recipientId}/read`, `read-all`, `{recipientId}/dismiss`. Another user's row answers 404 `Notifications.RecipientNotFound`. |
+| `NotificationsController.cs` | `api/notifications` | `[Authorize]` (no permission code; every route is scoped to the caller) | Module 10 inbox: paged list (`unreadOnly`, `typeId`, `search`, `sortBy`, `sortDescending`), `unread-count` with per-type counts (not audited), `{recipientId}/read`, `read-all`, `{recipientId}/dismiss`. Another user's row answers 404 `Notifications.RecipientNotFound`. |
 
 ## Lookups endpoints
 
@@ -90,8 +90,8 @@ access live here.
 
 | Method | Route | Behavior |
 | --- | --- | --- |
-| `GET` | `/api/notifications` | The caller's own inbox, newest first, dismissed rows hidden; `unreadOnly`, `typeId`, `page`, `pageSize` (max 100). |
-| `GET` | `/api/notifications/unread-count` | `{ count }` for the bell badge; excluded from the action audit trail. |
+| `GET` | `/api/notifications` | The caller's own inbox, newest first by default, dismissed rows hidden; `unreadOnly`, `typeId`, `search` (Arabic title/body), `sortBy` (`deliveredAt`, `priority`, `type`, `isRead`), `sortDescending`, `page`, `pageSize` (max 100). |
+| `GET` | `/api/notifications/unread-count` | `{ count, byType: [{ typeId, count }] }` for the bell badge; excluded from the action audit trail. |
 | `POST` | `/api/notifications/{recipientId}/read` | Idempotent; 404 when the row is not the caller's. |
 | `POST` | `/api/notifications/read-all` | `{ count }` rows changed. |
 | `POST` | `/api/notifications/{recipientId}/dismiss` | Idempotent; hides the row. |
@@ -143,6 +143,7 @@ plain JSON array.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-04 | Claude | `GET /api/notifications` gained `search`, `sortBy` and `sortDescending`; `GET /api/notifications/unread-count` now also returns `byType`. |
 | 2026-11-03 | Claude | Added `DocumentRelationsController` for Module 08 (Phase 3). |
 | 2026-11-03 | Claude | Documented `accessibleDepartmentIds` on `GET /api/auth/me`. |
 | 2026-11-03 | Claude | Documented the custody rules on the movement writes and the document access and scope rules on the number writes, with their 403 responses. |

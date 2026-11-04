@@ -9,6 +9,7 @@ export const ROUTES = {
   DOCUMENT_DETAIL_PATTERN: '/documents/:documentId',
   MOVEMENTS: '/movements',
   ARCHIVE: '/archive',
+  NOTIFICATIONS: '/notifications',
   DEPARTMENTS: '/departments',
   INSTITUTION_SETTINGS: '/institution-settings',
   USERS: '/users',

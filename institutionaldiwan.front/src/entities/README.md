@@ -36,6 +36,7 @@ read-only presentational UI. Entities never perform write mutations.
 | `movement/` | `MovementQueueItemResponse`, `MovementResponse` (steps/events) (`GET /api/movements/inbox`, `/outbox`, `/by-document/{documentId}`, `/{movementId}`) | `useMovementQueue`, `useMovementInbox`, `useMovementOutbox`, `useDocumentMovements`, `useMovementById`, `getMovementActions`/`hasActiveMovement` rules, `MovementStatusBadge`, `MovementStepStatusBadge`, `MovementTypeBadge` | ✅ Reads, transition rules, and badges implemented (Phase 6). |
 | `audit-log/` | `AuditLogResponse`, `AuditIntegrityCheckResponse` (paged `/audit-logs`, `/audit-logs/integrity-checks`) | `useAuditLogs`, `useAuditIntegrityReports`, `AUDIT_MODULES`/`auditModuleLabel`, `HashChainPill`, `IntegrityStatusBadge` | ✅ Reads, Arabic module labels, and badges implemented; writes live in `features/audit-manage`. |
 | `archive/` | `ArchivedDocumentResponse`, `DocumentArchiveEventResponse`, `SavedSearchResponse` (`GET /api/archive/documents`, `/api/documents/{id}/archive-events`, `/api/saved-searches`) | `useArchivedDocuments`, `useDocumentArchiveEvents`, `useSavedSearches`, `archiveKeys`, `ArchiveEventTypeBadge` |
+| `notification/` | `NotificationResponse`, `UnreadCountResponse` (`GET /api/notifications`, `/api/notifications/unread-count`) | `useNotifications`, `useUnreadCount`, `notificationKeys`, `NotificationItem`, `NotificationPriorityBadge`, `NotificationTypeIcon` |
 | `document-relation/` | `DocumentRelationResponse`, `RelationGraphResponse`, `DocumentRelationEventResponse` (`GET /api/documents/{id}/relations`, `/graph`, `/events`) | `useDocumentRelations`, `useRelationGraph`, `useRelationEvents`, `relationGraphToMermaid`, `RelationTypeBadge` |
 | `document-schema/` | `DocumentFieldResponse`, `SchemaVersionResponse`, `DocumentFieldsResponse` (`/document-types/{id}/fields`, `/schema`, `/schema-versions`, `/schema-versions/{id}`, `/documents/{id}/fields`) | `useDocumentTypeFields`, `useSchemaVersions`, `useSchemaVersion`, `useDocumentTypeSchema`, `useDocumentFields`, `DynamicFieldInputs`, value validation helpers, badges |
 
@@ -67,6 +68,7 @@ read-only presentational UI. Entities never perform write mutations.
 | `movement/` | ✅ Queue/detail reads, mirrored transition rules (`getMovementActions`, `hasActiveMovement`, `translateMovementNote`), and three badges. |
 | `audit-log/` | ✅ Paged log and integrity-report reads, query keys/hooks (five-minute `staleTime`, no focus refetch), module labels, hash pill, integrity badge. |
 | `archive/` | ✅ Archive search, archive history and saved-search reads, query keys/hooks, saved-search criteria helpers, event-type badge (Module 07). |
+| `notification/` | ✅ Inbox and unread-count reads (search, sort, filters, per-type counts), user-scoped query keys, row/priority/type-icon UI (Module 10). |
 | `document-relation/` | ✅ Links, graph and history reads, query keys/hooks, direction phrases, Mermaid/tree builders, badges (Module 08). |
 | `document-file/` | ✅ File/version/checksum types, `documentFileApi` (document-scoped list, blob download, on-demand verify), query keys/hooks (verify disabled until an explicit action), `ChecksumBadge`, and `FileArchivedBadge`; mounted by `widgets/document-attachments-panel`. |
 
@@ -74,6 +76,7 @@ read-only presentational UI. Entities never perform write mutations.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-04 | Claude | Module 10 notifications front end (plan `plans/module-10-notifications-frontend.md`): implemented the `notification` read slice. |
 | 2026-11-03 | Claude | Added `document-schema/` for the dynamic document fields: reads, types, value helpers and the shared `DynamicFieldInputs` control set. |
 | 2026-11-03 | agent | Module 08: implemented the `document-relation` read slice. |
 | 2026-11-03 | agent | Module 07: implemented the `archive` read slice — archive search, per-document archive history and saved-search reads, `archiveKeys`, criteria (de)serialisation for saved searches, and the event-type badge. |

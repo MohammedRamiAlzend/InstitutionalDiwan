@@ -264,6 +264,18 @@ const CODE_MESSAGES: Record<string, string> = {
   'Audit.NothingToCheckpoint': 'لا توجد سجلات تدقيق جديدة منذ آخر نقطة تحقق.',
   'Audit.PreviousLogNotFound': 'تعذّر العثور على السجل السابق لنطاق الفحص.',
   'Audit.RequiredFieldsMissing': 'بيانات سجل التدقيق ناقصة ولا يمكن إضافته إلى السلسلة.',
+  // Module 10 — Notifications
+  'Notifications.RecipientNotFound': 'الإشعار غير موجود أو لم يعد متاحًا لك.',
+  'Notifications.ActionUrlInvalid': 'رابط الإشعار غير صالح.',
+  'Notifications.TypeCodeEmpty': 'نوع الإشعار مطلوب.',
+  'Notifications.TitleEmpty': 'عنوان الإشعار مطلوب.',
+  'Notifications.BodyEmpty': 'نص الإشعار مطلوب.',
+  'Notifications.TitleTooLong': 'عنوان الإشعار أطول من الحد المسموح.',
+  'Notifications.BodyTooLong': 'نص الإشعار أطول من الحد المسموح.',
+  'Notifications.RecipientDuplicate': 'المستلم مضاف إلى الإشعار مسبقًا.',
+  'Notifications.ChannelEmpty': 'قناة التسليم مطلوبة.',
+  'Notifications.PayloadTooLong': 'حمولة الإشعار أطول من الحد المسموح.',
+  'Notifications.TooManyRecipients': 'عدد مستلمي الإشعار يتجاوز الحد المسموح.',
 }
 
 const STATUS_MESSAGES: Record<number, string> = {

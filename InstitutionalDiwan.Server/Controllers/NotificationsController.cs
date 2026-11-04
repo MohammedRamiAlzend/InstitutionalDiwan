@@ -29,12 +29,15 @@ public sealed class NotificationsController : ControllerBase
     /// <param name="typeId">Filter by notification type id (integer, query, optional). Example: <c>3</c>.</param>
     /// <param name="page">One-based page number (integer, query, optional, default <c>1</c>). Example: <c>1</c>.</param>
     /// <param name="pageSize">Rows per page, at most 100 (integer, query, optional, default <c>20</c>). Example: <c>20</c>.</param>
+    /// <param name="search">Text to find in the Arabic title or body (string, query, optional). Example: <c>وثيقة</c>.</param>
+    /// <param name="sortBy">Sort column: deliveredAt (default, newest first), priority, type, isRead (string, query, optional). Example: <c>priority</c>.</param>
+    /// <param name="sortDescending">Sort descending instead of ascending when <c>sortBy</c> is given (boolean, query, optional, default <c>false</c>). Example: <c>true</c>.</param>
     /// <param name="cancellationToken">Request cancellation token (optional).</param>
     /// <response code="200">One page of the caller's notifications.</response>
     /// <response code="401">The token is missing, expired, or invalid.</response>
     [HttpGet]
     [EndpointSummary("Lists the caller's notifications, newest first.")]
-    [EndpointDescription("Lists the caller's own in-app notifications, newest first. Dismissed notifications are never listed. Any authenticated user may call it; no permission code is required. Responses: 200 (One page of the caller's notifications.), 401 (The token is missing, expired, or invalid.)")]
+    [EndpointDescription("Lists the caller's own in-app notifications, newest first by default; search matches the Arabic title or body and sortBy can be deliveredAt, priority, type or isRead. Dismissed notifications are never listed. Any authenticated user may call it; no permission code is required. Responses: 200 (One page of the caller's notifications.), 401 (The token is missing, expired, or invalid.)")]
     [ProducesResponseType<PagedResult<NotificationResponse>>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> List(
@@ -42,13 +45,16 @@ public sealed class NotificationsController : ControllerBase
         [FromQuery, Description("Filter by notification type id (integer, optional). Example: 3.")] int? typeId = null,
         [FromQuery, Description("One-based page number (integer, optional, default 1). Example: 1.")] int page = 1,
         [FromQuery, Description("Rows per page, at most 100 (integer, optional, default 20). Example: 20.")] int pageSize = 20,
+        [FromQuery, Description("Text to find in the Arabic title or body (string, optional). Example: وثيقة.")] string? search = null,
+        [FromQuery, Description("Sort column: deliveredAt (default, newest first), priority, type, isRead (string, optional). Example: priority.")] string? sortBy = null,
+        [FromQuery, Description("Sort descending instead of ascending when sortBy is given (boolean, optional, default false). Example: true.")] bool sortDescending = false,
         CancellationToken cancellationToken = default)
     {
         if (CurrentUserId is not { } userId)
             return Unauthorized();
 
         var result = await _sender.Send(
-            new ListNotificationsQuery(userId, unreadOnly, typeId, page, pageSize), cancellationToken);
+            new ListNotificationsQuery(userId, unreadOnly, typeId, page, pageSize, search, sortBy, sortDescending), cancellationToken);
         return result.ToActionResult();
     }
 
@@ -59,7 +65,7 @@ public sealed class NotificationsController : ControllerBase
     [HttpGet("unread-count")]
     [SkipActionAudit]
     [EndpointSummary("Counts the caller's unread notifications.")]
-    [EndpointDescription("Counts the caller's unread, non-dismissed notifications. Meant for the bell badge, so this route is not recorded in the action audit trail. Any authenticated user may call it. Responses: 200 (The unread count.), 401 (The token is missing, expired, or invalid.)")]
+    [EndpointDescription("Counts the caller's unread, non-dismissed notifications in total and per notification type (byType). Meant for the bell badge, so this route is not recorded in the action audit trail. Any authenticated user may call it. Responses: 200 (The unread count.), 401 (The token is missing, expired, or invalid.)")]
     [ProducesResponseType<UnreadCountResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> UnreadCount(CancellationToken cancellationToken)

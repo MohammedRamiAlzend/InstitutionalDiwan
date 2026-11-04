@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { CircleHelp, Pause, Play, RefreshCw, Rows3, Settings2 } from 'lucide-react'
@@ -26,8 +26,16 @@ import {
 } from '../model/motion'
 import { findNavItem } from '../model/shell-nav'
 
+interface AppShellProps {
+  /**
+   * Extra header controls rendered before the theme toggle (the notification bell). Composed by
+   * the app layer because a widget may not import a sibling widget.
+   */
+  headerSlot?: ReactNode
+}
+
 /** Authenticated workspace layout: sidebar, header, settings, and page outlet. */
-export function AppShell() {
+export function AppShell({ headerSlot }: AppShellProps = {}) {
   const location = useLocation()
   const queryClient = useQueryClient()
   const [collapsed, setCollapsed] = useState(false)
@@ -144,6 +152,7 @@ export function AppShell() {
           onOpenSidebar={() => setMobileOpen(true)}
           onOpenSettings={() => setSettingsOpen(true)}
           menuEntries={shellMenu}
+          headerSlot={headerSlot}
         />
 
         <ContextMenu entries={shellMenu}>

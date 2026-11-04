@@ -32,8 +32,11 @@ public sealed record NotificationResponse(
         item.CreatedAt);
 }
 
-/// <summary>The unread notification count of the calling user.</summary>
-public sealed record UnreadCountResponse(int Count);
+/// <summary>The unread notification count of the calling user, in total and per notification type.</summary>
+public sealed record UnreadCountResponse(int Count, IReadOnlyList<UnreadTypeCountResponse> ByType);
+
+/// <summary>The unread notifications of one type.</summary>
+public sealed record UnreadTypeCountResponse(int TypeId, int Count);
 
 /// <summary>How many notifications a bulk read changed.</summary>
 public sealed record MarkedReadResponse(int Count);

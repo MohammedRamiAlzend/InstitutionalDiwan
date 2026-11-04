@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useSessionStore } from '@/entities/user'
 import { useLogout } from '@/features/auth'
@@ -23,6 +24,8 @@ interface AppHeaderProps {
   onOpenSettings: () => void
   /** Shell-level actions (refresh, density, settings) shared with the chrome menu. */
   menuEntries: readonly MenuEntry[]
+  /** Extra controls (the notification bell) shown before the theme toggle. */
+  headerSlot?: ReactNode
 }
 
 /** Sticky top bar: navigation trigger, current context, shell actions, theme, and account menu. */
@@ -31,6 +34,7 @@ export function AppHeader({
   onOpenSidebar,
   onOpenSettings,
   menuEntries,
+  headerSlot,
 }: AppHeaderProps) {
   const user = useSessionStore((state) => state.user)
   const logout = useLogout()
@@ -98,6 +102,8 @@ export function AppHeader({
           entries={menuEntries}
           label="مساحة العمل"
         />
+
+        {headerSlot}
 
         <ThemeToggle />
 

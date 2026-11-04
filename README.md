@@ -104,13 +104,13 @@ npm run lint
 | 07 — Archiving | Archive and unarchive with a recorded location, archive history, access-filtered search, personal saved searches, and archived documents frozen against changes | Implemented and verified against the live API. Retention periods are out of scope. | `/archive` search grid with filters and personal saved searches, archive/unarchive actions and a history tab on `/documents/:id`; build and lint pass, verified against the live API. |
 | 08 — Relations | Link a document to another (reply to, related, supersedes, duplicate of), the links of a document, a relations graph that never passes through documents the caller cannot view, and a permanent link history | Implemented in the backend (cycle and duplicate checks, access rules, audit). Accepted as verified by the project owner (2026-11-03). | Implemented: the «الروابط» tab on `/documents/:id` (grid, Mermaid/tree graph, history, add/remove); build and lint pass; accepted as verified by the project owner (2026-11-03). |
 | 09 — Audit | Entity/action audit chain, search, checkpoints, integrity reports, scheduled maintenance | Implemented. | Implemented and verified: `/audit` logs and integrity reports behind `AUDIT_VIEW`, checkpoint/integrity actions behind `AUDIT_MANAGE`. |
-| 10 — Notifications | In-app notifications: movement and document events announced to the right department users, a personal inbox (list, unread count, read, read-all, dismiss), a SignalR alert hub and an outbox with retry, dead letters and retention | Implemented in the backend (plan `plans/module-10-notifications-backend.md`): verified against the live API (REST, hub push, ownership 404, outbox SENT). IN_APP only; EMAIL/SMS are out of scope. | Not started: the bell, the `/notifications` page and the SignalR client are the next plan. |
+| 10 — Notifications | In-app notifications: movement and document events announced to the right department users, a personal inbox (list, unread count, read, read-all, dismiss), a SignalR alert hub and an outbox with retry, dead letters and retention | Implemented in the backend (plan `plans/module-10-notifications-backend.md`): verified against the live API (REST, hub push, ownership 404, outbox SENT). IN_APP only; EMAIL/SMS are out of scope. | Implemented (plan `plans/module-10-notifications-frontend.md`): the header bell with an unread badge and live-connection line, the `/notifications` inbox grid (server search, sort, paging, unread/type filters), and a lazy-loaded SignalR client with reconnect and de-duplicated toasts. `npm run build` and `npm run lint` pass; exercised against the live API. |
 
 “Implemented and verified” means the code is present and was exercised against the live API;
-`dotnet test` (740 tests), `npm run build`, and `npm run lint` pass. Module 01 settings loads the
+`dotnet test` (743 tests), `npm run build`, and `npm run lint` pass. Module 01 settings loads the
 existing singleton: read errors, including missing settings, show Arabic feedback and retry rather
 than creating or overwriting a record. Frontend Modules 03, 04, 06, and 09 are implemented and
-browser-verified; Module 07 is implemented (build and lint pass, verified against the live API); Module 08 is implemented in the backend and the front end (accepted as verified by the project owner); Module 10 is implemented in the backend (in-app notifications, SignalR hub, outbox) and still missing in the front end.
+browser-verified; Module 07 is implemented (build and lint pass, verified against the live API); Module 08 is implemented in the backend and the front end (accepted as verified by the project owner); Module 10 is implemented in the backend (in-app notifications, SignalR hub, outbox, inbox search/sort and per-type unread counts) and in the front end.
 
 ## Conventions
 
@@ -135,6 +135,7 @@ browser-verified; Module 07 is implemented (build and lint pass, verified agains
 | `build.cmd` | Windows convenience wrapper around `dotnet build`. |
 | `add-endpoint-docs.mjs` | Node script that fills in the OpenAPI summary, description, and parameter examples of a new endpoint; idempotent, run it with Node. |
 | `plans/` | Implementation plans that have not been executed yet. |
+| `examples/` | Standalone explainers; `examples/workflow/` is an interactive HTML/CSS/JS page that walks a document through its whole lifecycle. |
 | `opencode.json` | OpenCode workspace configuration. |
 | `.freebuff/` | Freebuff project identifier. |
 
@@ -157,6 +158,8 @@ have no `README.md` of their own yet — their content is documented in the encl
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-04 | Claude | Added the Module 10 front-end plan `plans/module-10-notifications-frontend.md` (draft, awaiting approval; no code), including two small additive backend changes (inbox `search`/`sortBy`, unread count by type) scheduled before the front end. |
+| 2026-11-04 | Claude | Added `examples/workflow/`, a standalone interactive page (HTML, CSS, JavaScript) explaining the document lifecycle and how the system works. No backend or front-end code changed. |
 | 2026-11-03 | Claude | Implemented the Module 10 notifications backend per `plans/module-10-notifications-backend.md`: publisher called from the movement, registration and archive handlers in the same transaction, recipient directory with a confidentiality filter, inbox API (`/api/notifications`), SignalR hub `/hubs/notifications`, `OutboxProcessorJob` with exponential backoff and dead letters, retention job, additive migration `Add_Notifications_Constraints`, five new notification types (7–11), and 22 new tests (740 pass). Verified live: hub push, ownership 404, actor never notified, outbox SENT. |
 | 2026-11-03 | Claude | Added the Module 10 backend plan `plans/module-10-notifications-backend.md` (draft, awaiting approval; no code). |
 | 2026-11-03 | Claude | Dynamic document fields front end (plan `plans/document-dynamic-fields-frontend.md`, Phases 0-5): `/document-schemas`, dynamic inputs in document creation and the «الحقول» tab; build and lint pass and the flows were exercised against the live API. Registry filtering by field values stays deferred. |

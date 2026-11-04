@@ -17,6 +17,7 @@ Contains pure, framework-independent helper functions for class merging, `Asia/D
 | `useTableState.ts` | Table view state in URL search params (`page`, `pageSize`, `search`, `sort`, `dir`, plus caller-declared filter keys); resets to page 1 when search, filters, sort, or size change. Page size defaults to 10 and is clamped to `MIN_PAGE_SIZE`..`MAX_PAGE_SIZE` (1..100, the same ceiling as the server's `PageRequest.MaxPageSize`); both bounds are exported so the grid can offer them as input limits, and a value equal to the effective `defaultPageSize` stays out of the URL. `clearQuery()` removes the search and every filter in one URL write, because two sequential setters would each rebuild from the same stale params and restore what the other cleared. |
 | `useDebouncedValue.ts` | Generic debounce hook used by table search inputs. |
 | `jwt.ts` | Decodes the JWT payload (no signature verification) and exposes the `must_change_password` UX hint the `/api/auth/me` response omits. |
+| `safeRelativeUrl.ts` | Accepts a notification `actionUrl` only when it is an in-app path (one leading `/`, no scheme, host, backslash or control character); returns `null` otherwise. |
 | `index.ts` | Public barrel exporting the implemented helpers. |
 ## Implementation status
 | Item | State |
@@ -28,6 +29,7 @@ Contains pure, framework-independent helper functions for class merging, `Asia/D
 ## Change Log
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-04 | Claude | Module 10 notifications front end (plan `plans/module-10-notifications-frontend.md`): added `safeRelativeUrl`. |
 | 2026-11-01 | agent | Tutorial mode Phase 0: added `tutorial.ts` — `getTutorialChoice` / `applyTutorial` / `setTutorialChoice` / `useTutorial` over `diwan.tutorial` and `html[data-tutorial]`, with only `on` stored so the off default leaves no key. The store is in `shared/lib` rather than beside `density.ts`/`motion.ts` because `shared/ui/data-table` and `form-field` must read it, and `shared` may not import from `widgets`. |
 | 2026-11-01 | agent | Lowered `useTableState`'s page-size default from 20 to 10 and exported `MIN_PAGE_SIZE` / `MAX_PAGE_SIZE` (1..100, matching the server's `PageRequest.MaxPageSize`) so the grid can offer them as input limits; `setPageSize` now treats the caller's `defaultPageSize` as the value that stays out of the URL, not the module constant, so a grid-specific default is not written to the query string. |
 | 2026-11-01 | agent | Module 06 Phase 1: added `crypto.ts` (`sha256Hex`, `ChecksumUnsupportedError`) and `download.ts` (`parseContentDisposition`, `saveBlobAsFile`) for the upload form's pre-flight checksum and the grid's download action. `saveBlobAsFile` takes an already-resolved file name instead of the header plus a fallback, so precedence stays with the caller; its object-URL revoke is deferred a tick because revoking synchronously can abort the download before the browser picks the blob up. |

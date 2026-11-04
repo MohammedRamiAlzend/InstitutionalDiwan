@@ -21,7 +21,11 @@ internal sealed class ListNotificationsQueryHandler
         var pageSize = Math.Clamp(request.PageSize, 1, PageRequest.MaxPageSize);
 
         var inbox = await _notificationRepository.GetInboxAsync(
-            request.UserId, request.UnreadOnly, request.TypeId, new PageRequest(page, pageSize), cancellationToken);
+            request.UserId,
+            request.UnreadOnly,
+            request.TypeId,
+            new PageRequest(page, pageSize, request.Search, request.SortBy, request.SortDescending),
+            cancellationToken);
 
         return Result.Success(new PagedResult<NotificationResponse>(
             inbox.Items.Select(NotificationResponse.From).ToList(),

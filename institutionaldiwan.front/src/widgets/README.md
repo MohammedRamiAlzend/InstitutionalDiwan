@@ -38,6 +38,8 @@ browser.
 | `movement-timeline/` | Vertical step chain for one document | `entities/movement` + `features/movement-routing` | Deferred — the timeline lives in `pages/documents` until Module 05's visualization panel lands |
 | `audit-log-table/` | Paged audit search (hash columns, module/action/date filters) plus the integrity-report list, with checkpoint/checks toolbar | `entities/audit-log` + `features/audit-manage` | ✅ Implemented (Module 09) |
 | `archive-search-table/` | Access-filtered archive search grid with a saved-searches bar | `entities/archive` + `features/archive-manage` |
+| `notification-bell/` | Header bell: unread badge, live-connection line and the latest eight notifications | `entities/notification` + `features/notification-manage` + `features/notification-live` |
+| `notification-inbox/` | The `/notifications` grid with server search/sort/paging and unread/type filters | `entities/notification` + `features/notification-manage` + `features/notification-live` |
 | `document-relations-panel/` | Links grid, graph/tree views and relation history for one document | `entities/document-relation` + `features/document-relation-manage` |
 | `document-schema-editor/` | Schema version history and field grid of one document type with draft actions (new draft, add/edit/remove field, publish, delete) | `entities/document-schema` + `features/document-schema-manage` |
 | `document-fields-panel/` | A document's dynamic fields against its pinned schema version, editable while a draft | `entities/document-schema` + `features/document-field-values` |
@@ -74,6 +76,7 @@ browser.
 | `external-organizations-table/` | ✅ Implemented and verified in-browser (Phase 7) |
 | `audit-log-table/` | ✅ Implemented and verified in-browser (Module 09: `AuditLogTable` + `AuditIntegrityTable`, manager actions hidden for view-only roles) |
 | `archive-search-table/` | ✅ Implemented (Module 07; build and lint pass, verified against the live API) |
+| `notification-bell/`, `notification-inbox/` | ✅ Implemented (Module 10; build and lint pass, exercised against the live API). |
 | `document-relations-panel/` | ✅ Implemented (Module 08; build and lint pass, accepted as verified by the project owner, 2026-11-03) |
 | `document-schema-editor/` | ✅ Implemented and verified in-browser (dynamic fields plan Phases 1–2) |
 | `document-fields-panel/` | ✅ Implemented and verified in-browser (plan Phase 4) |
@@ -86,6 +89,7 @@ browser.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-04 | Claude | Module 10 notifications front end (plan `plans/module-10-notifications-frontend.md`): implemented `notification-bell` and `notification-inbox`. |
 | 2026-11-03 | Claude | Added `document-schema-editor/` and `document-fields-panel/` for the dynamic document fields. |
 | 2026-11-03 | agent | Module 08: implemented `document-relations-panel` — the relations grid, Mermaid/tree views and history. |
 | 2026-11-03 | agent | Module 07: implemented `archive-search-table` — the URL-driven archive grid (location/direction/type/department/date-range filters, row and header menus) and the personal saved-searches bar. |

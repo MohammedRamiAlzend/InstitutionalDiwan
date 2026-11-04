@@ -37,13 +37,34 @@ internal sealed class NotificationRepository : INotificationRepository
         if (typeId is { } type)
             query = query.Where(row => row.notification.NotificationTypeId == type);
 
+        if (page.NormalizedSearch is { } search)
+        {
+            var pattern = $"%{EscapeLike(search)}%";
+            query = query.Where(row =>
+                EF.Functions.Like(row.notification.TitleAr, pattern, "\\") ||
+                EF.Functions.Like(row.notification.BodyAr, pattern, "\\"));
+        }
+
         var total = await query.CountAsync(cancellationToken);
 
-        var items = await query
-            .OrderByDescending(row => row.recipient.DeliveredAt)
+        // No sort key keeps the inbox newest first whatever SortDescending says; the record id is a
+        // stable tie-breaker so pages never overlap.
+        var ordered = (page.NormalizedSortBy, page.SortDescending) switch
+        {
+            ("deliveredat", false) => query.OrderBy(row => row.recipient.DeliveredAt),
+            ("priority", true) => query.OrderByDescending(row => row.notification.PriorityId),
+            ("priority", false) => query.OrderBy(row => row.notification.PriorityId),
+            ("type", true) => query.OrderByDescending(row => row.notification.NotificationTypeId),
+            ("type", false) => query.OrderBy(row => row.notification.NotificationTypeId),
+            ("isread", true) => query.OrderByDescending(row => row.recipient.IsRead),
+            ("isread", false) => query.OrderBy(row => row.recipient.IsRead),
+            _ => query.OrderByDescending(row => row.recipient.DeliveredAt)
+        };
+
+        var items = await ordered
             .ThenBy(row => row.recipient.RecipientId)
-            .Skip((page.Page - 1) * page.PageSize)
-            .Take(page.PageSize)
+            .Skip(page.Skip)
+            .Take(page.Take)
             .Select(row => new NotificationInboxItem(
                 row.recipient.RecipientId,
                 row.notification.NotificationId,
@@ -61,6 +82,23 @@ internal sealed class NotificationRepository : INotificationRepository
 
         return new PagedList<NotificationInboxItem>(items, total);
     }
+
+    /// <summary>Escapes the LIKE wildcards so a search for "100%" finds the literal text.</summary>
+    private static string EscapeLike(string term) =>
+        term.Replace("\\", "\\\\").Replace("%", "\\%").Replace("_", "\\_").Replace("[", "\\[");
+
+    public async Task<IReadOnlyList<UnreadTypeCount>> CountUnreadByTypeAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default) =>
+        await (
+            from recipient in _context.NotificationRecipients.AsNoTracking()
+            join notification in _context.Notifications.AsNoTracking()
+                on recipient.NotificationId equals notification.NotificationId
+            where recipient.UserId == userId && !recipient.IsRead && !recipient.IsDismissed
+            group notification by notification.NotificationTypeId into byType
+            orderby byType.Key
+            select new UnreadTypeCount(byType.Key, byType.Count()))
+        .ToListAsync(cancellationToken);
 
     public Task<NotificationType?> GetTypeAsync(int notificationTypeId, CancellationToken cancellationToken = default) =>
         _context.NotificationTypes.AsNoTracking().FirstOrDefaultAsync(

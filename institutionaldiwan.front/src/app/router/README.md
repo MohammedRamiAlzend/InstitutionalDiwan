@@ -20,6 +20,7 @@ Defines the React Router v7 route tree, the authentication guard (`ProtectedRout
 ## Change Log
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-04 | Claude | Module 10 notifications front end (plan `plans/module-10-notifications-frontend.md`): registered `/notifications` (`ROUTES.NOTIFICATIONS`), wrapped the shell routes in `NotificationLiveLayout` (keeps the hub open and marks a toast-opened notification read) and passed `NotificationBell` to `AppShell`. |
 | 2026-11-03 | Claude | Registered `/document-schemas` (`ROUTES.DOCUMENT_SCHEMAS`); the page performs its own `LOOKUP_MANAGE` guard. |
 | 2026-11-03 | agent | Module 07: registered `/archive` (`ROUTES.ARCHIVE`); `ArchivePage` does its own `DOCUMENT_VIEW` guard. |
 | 2026-11-01 | agent | Module 06 Phase 2: no route change — the files tab lives inside the registered `/documents/:documentId`, and making it live removed the last disabled tab chip. Corrected the route-map row that still called the files tab an exception. |

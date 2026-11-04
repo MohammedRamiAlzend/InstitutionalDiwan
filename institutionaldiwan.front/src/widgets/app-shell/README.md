@@ -57,3 +57,4 @@ entrances and colour transitions with it — from the display-settings dialog or
 - 2026-10-25: Documented the app-shell right-click menus (empty chrome, sidebar) required by the interaction contract.
 - 2026-10-22: Converted this `README.md` from the Word document it was authored in to markdown, so the `README.md`-per-folder rule in `AGENT.md` holds and the content is diffable and agent-editable.
 - 2026-10-19: Created `widgets/app-shell` slice folder and `README.md`.
+- 2026-11-04: Added the «الإشعارات» overview navigation entry and the optional `headerSlot` prop (the bell is composed by `app/router`, since a widget may not import a sibling widget).

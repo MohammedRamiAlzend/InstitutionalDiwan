@@ -220,3 +220,33 @@ export const RELATION_ACTION_TYPE = {
   Updated: 2,
   Removed: 3,
 } as const
+
+/** `notification-types` — mirrors `NotificationType` in the Domain. */
+export const NOTIFICATION_TYPE = {
+  DocumentCreated: 1,
+  DocumentRegistered: 2,
+  MovementSent: 3,
+  MovementReceived: 4,
+  MovementCompleted: 5,
+  DocumentArchived: 6,
+  MovementRejected: 7,
+  MovementReturned: 8,
+  MovementRedirected: 9,
+  MovementClosed: 10,
+  MovementCancelled: 11,
+} as const
+
+/** `notification-priorities` — mirrors `NotificationPriority` in the Domain. */
+export const NOTIFICATION_PRIORITY = {
+  Normal: 1,
+  High: 2,
+  Urgent: 3,
+} as const
+
+/** `sortBy` values `GET /api/notifications` accepts; anything else keeps newest first. */
+export const NOTIFICATION_SORT_KEY = {
+  DeliveredAt: 'deliveredAt',
+  Priority: 'priority',
+  Type: 'type',
+  IsRead: 'isRead',
+} as const

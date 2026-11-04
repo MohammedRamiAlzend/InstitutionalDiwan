@@ -360,6 +360,7 @@ them, while listing, relabelling and (de)activation keep working.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-04 | Claude | `INotificationRepository` gained `CountUnreadByTypeAsync` and the `UnreadTypeCount` record; `GetInboxAsync` now honours `PageRequest.Search`/`SortBy`. |
 | 2026-11-03 | Claude | Module 08 Relations, Phase 0: added `DocumentRelation.Remove`, the note and reason length limits, the new `Relations.*` errors, and the extended `IDocumentRelationRepository` contract (type lookup, duplicate and cycle checks, neighbour and history reads). |
 | 2026-11-03 | Claude | Added `IDocumentRepository.ListViewableIdsAsync` for rows that stay listed but may only show a document's content to someone who can read it. |
 | 2026-11-03 | Claude | Added `DocumentViewAccess` and made it a required argument of `IDocumentRepository.ListPagedAsync`, so the document lists apply the `VIEW` rule in SQL. |
