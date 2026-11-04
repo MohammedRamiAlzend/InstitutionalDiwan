@@ -16,7 +16,7 @@ import {
   type MovementStepResponse,
 } from '@/entities/movement'
 import { DOCUMENT_STATUS, LOOKUP_SLUGS, LookupLabel } from '@/entities/lookup'
-import { useCoversDepartment } from '@/entities/user'
+import { useCoversDepartment, UserLabel } from '@/entities/user'
 import {
   MovementActionButtons,
   MovementActionDialog,
@@ -231,11 +231,11 @@ function MovementCard({
         </span>
         {movement.assignedToUserId && (
           <span>
-            المكلَّف: <span dir="ltr">{formatShortId(movement.assignedToUserId)}</span>
+            المكلَّف: <UserLabel userId={movement.assignedToUserId} />
           </span>
         )}
         <span>
-          أنشأها: <span dir="ltr">{formatShortId(movement.createdByUserId)}</span>
+          أنشأها: <UserLabel userId={movement.createdByUserId} />
         </span>
       </div>
 
@@ -287,7 +287,7 @@ function MovementCard({
                   {formatDateTime(event.occurredAt)}
                 </span>
                 <span className="text-muted">
-                  بواسطة <span dir="ltr">{formatShortId(event.actorUserId)}</span>
+                  بواسطة <UserLabel userId={event.actorUserId} />
                 </span>
                 {translateMovementNote(event.notes) && (
                   <span className="text-foreground">{translateMovementNote(event.notes)}</span>
@@ -383,7 +383,7 @@ function StepTimelineItem({
           )}
           {step.assignedToUserId && (
             <span>
-              المكلَّف <span dir="ltr">{formatShortId(step.assignedToUserId)}</span>
+              المكلَّف <UserLabel userId={step.assignedToUserId} />
             </span>
           )}
         </div>

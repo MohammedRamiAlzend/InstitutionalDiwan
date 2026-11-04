@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Copy, Eye, Hash, Plus, RefreshCw } from 'lucide-react'
 import { toast } from 'sonner'
-import { DepartmentBadge, useDepartmentOptions } from '@/entities/department'
+import { DepartmentBadge, useDepartmentOptions, DepartmentLabel } from '@/entities/department'
 import {
   DocumentDirectionBadge,
   DocumentStatusBadge,
@@ -20,7 +20,7 @@ import { useSessionStore } from '@/entities/user'
 import { CreateDocumentDialog } from '@/features/document-create'
 import { toArabicErrorMessage } from '@/shared/api'
 import { Permissions, ROUTES } from '@/shared/config'
-import { formatDate, formatDateTime, formatShortId, useTableState } from '@/shared/lib'
+import { formatDate, formatDateTime, useTableState } from '@/shared/lib'
 import {
   Button,
   DataTable,
@@ -201,13 +201,7 @@ export function DocumentRegistryTable() {
               isActive={department.isActive}
             />
           ) : (
-            <span
-              dir="ltr"
-              title={document.owningDepartmentId}
-              className="font-mono text-xs text-muted"
-            >
-              {formatShortId(document.owningDepartmentId)}
-            </span>
+            <DepartmentLabel departmentId={document.owningDepartmentId} />
           )
         },
       },

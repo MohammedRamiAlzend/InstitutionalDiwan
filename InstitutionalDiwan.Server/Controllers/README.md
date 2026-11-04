@@ -13,6 +13,7 @@ access live here.
 
 | File | Route | Authorization | Responsibility |
 | --- | --- | --- | --- |
+| 2026-11-04 | Claude | `IdentityOptionsController`: added `GET api/identity-options/users/by-ids` (batch username lookup for «name + id» labels; `USER_MANAGE`/`ACCESS_GRANT_MANAGE`/`DOCUMENT_EDIT`/`DOCUMENT_VIEW`/`AUDIT_VIEW`). |
 | `AuthController.cs` | `api/auth` | `[AllowAnonymous]` login/register, `[Authorize]` me/change-password | Login, registration, caller profile (`me` → `GetUserProfileQuery`), password change. |
 | `DocumentsController.cs` | `api/documents` | `DOCUMENT_VIEW` reads; `DOCUMENT_CREATE` create/register; `DOCUMENT_EDIT` update/participants/cancel | Full lifecycle: immediate create, paged/searchable/filterable list, a department's register view (`GET /api/departments/{departmentId}/documents`), get, details, timeline, `POST drafts`, `PUT {id}`, `POST {id}/register`, `POST {id}/participants`, `POST {id}/cancel`. |
 | `DocumentNumbersController.cs` | `api/documents/{documentId}/numbers` | `NUMBERING_VIEW` reads; `NUMBERING_MANAGE` writes | Central number lifecycle (`issue`, `{numberId}/cancel`, `{numberId}/replace`, `history`), the department register write (`department-registration`: typed number + date), and `registry-entries` (central number + every department line). |

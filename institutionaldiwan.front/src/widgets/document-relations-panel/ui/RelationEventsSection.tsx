@@ -5,6 +5,7 @@ import { LOOKUP_SLUGS, LookupLabel } from '@/entities/lookup'
 import { toArabicErrorMessage } from '@/shared/api'
 import { formatDateTime, formatShortId } from '@/shared/lib'
 import { Button, Skeleton } from '@/shared/ui'
+import { UserLabel } from '@/entities/user'
 
 const PAGE_SIZE = 10
 const PAGE_PARAM = 'eventsPage'
@@ -89,8 +90,8 @@ export function RelationEventsSection({ documentId }: { documentId: string }) {
               </div>
               <div className="flex items-baseline gap-1.5">
                 <dt className="text-muted">المنفّذ:</dt>
-                <dd dir="ltr" title={event.actorUserId} className="font-mono text-xs">
-                  {formatShortId(event.actorUserId)}
+                <dd className="text-xs">
+                  <UserLabel userId={event.actorUserId} />
                 </dd>
               </div>
               {event.reason && (

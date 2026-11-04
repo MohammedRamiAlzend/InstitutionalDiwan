@@ -52,6 +52,7 @@ Existing create/edit/parent-change and activation actions are composed from `fea
 | Browser interaction, RTL/LTR, and light/dark verification | Pending main-agent browser validation; not claimed by this update. |
 
 ## 6. Change Log
+- 2026-11-04: User, department and employee references now render as «name + short id» (`UserLabel` / `DepartmentLabel` / `EmployeeLabel`) instead of a bare id.
 - 2026-11-01: The body (table, tree, diagram, chart, and their loading/empty/error states) now sits in a container keyed by the selected view and carrying `animate-page-in`, so switching شجرة / مخطط / إحصاء / جدول eases in the same way a page does. Stopped motion («حركات التنقل: متوقفة» in the shell settings) disables it.
 - 2026-10-28: Complete scoped hierarchy UI with explicitly lazy, permission-gated employee branches; scoped roster search/paging and employee detail/context/overflow actions; token-based department-type chart; shared hierarchy request states; and department overflow parity. Preserve pending department manage actions. `npm run build` passed with chunk-size warnings; `npm run lint` passed with one out-of-scope settings-form warning. Browser validation is pending.
 - 2026-10-28: Diagram nodes are now activatable: clicking (or `Enter` / `Space` on) a department in the Mermaid view opens the same detail dialog with its employee roster, resolved through the entity's new `departmentIdByNodeId` map; a hint line above the diagram announces it.

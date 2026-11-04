@@ -19,6 +19,7 @@ export const userKeys = {
   list: (params: UserListParams) => [...userKeys.lists(), params] as const,
   optionLists: () => [...userKeys.all, 'options'] as const,
   options: (params: UserOptionParams) => [...userKeys.optionLists(), params] as const,
+  label: (userId: string) => [...userKeys.all, 'label', userId] as const,
   detail: (userId: string) => [...userKeys.all, 'detail', userId] as const,
   effectivePermissions: (userId: string) =>
     [...userKeys.all, 'effective-permissions', userId] as const,

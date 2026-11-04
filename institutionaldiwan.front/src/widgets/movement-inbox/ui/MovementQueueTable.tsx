@@ -7,7 +7,7 @@ import {
   RefreshCw,
 } from 'lucide-react'
 import { toast } from 'sonner'
-import { useDepartmentOptions } from '@/entities/department'
+import { useDepartmentOptions, DepartmentLabel } from '@/entities/department'
 import {
   documentRowLabel,
   isDocumentRestricted,
@@ -27,7 +27,7 @@ import {
   type MovementQueueKind,
 } from '@/entities/movement'
 import { LOOKUP_SLUGS, useLookupEntries } from '@/entities/lookup'
-import { useCoversDepartment, useSessionStore } from '@/entities/user'
+import { useCoversDepartment, useSessionStore, UserLabel } from '@/entities/user'
 import {
   DESTRUCTIVE_ACTIONS,
   MOVEMENT_ACTION_ICONS,
@@ -35,7 +35,7 @@ import {
   MovementActionDialog,
 } from '@/features/movement-routing'
 import { Permissions, ROUTES } from '@/shared/config'
-import { formatDate, formatDateTime, formatShortId, useTableState } from '@/shared/lib'
+import { formatDate, formatDateTime, useTableState } from '@/shared/lib'
 import {
   Button,
   DataTable,
@@ -189,15 +189,17 @@ export function MovementQueueTable({ kind }: MovementQueueTableProps) {
             <span className="text-muted">
               من:{' '}
               <span className="text-foreground">
-                {departmentNames.get(item.fromDepartmentId) ??
-                  formatShortId(item.fromDepartmentId)}
+                {departmentNames.get(item.fromDepartmentId) ?? (
+                  <DepartmentLabel departmentId={item.fromDepartmentId} />
+                )}
               </span>
             </span>
             <span className="text-muted">
               إلى:{' '}
               <span className="text-foreground">
-                {departmentNames.get(item.toDepartmentId) ??
-                  formatShortId(item.toDepartmentId)}
+                {departmentNames.get(item.toDepartmentId) ?? (
+                  <DepartmentLabel departmentId={item.toDepartmentId} />
+                )}
               </span>
             </span>
           </div>
@@ -245,11 +247,7 @@ export function MovementQueueTable({ kind }: MovementQueueTableProps) {
         id: 'assignee',
         header: 'المكلَّف',
         defaultHidden: true,
-        cell: (item) => (
-          <span dir="ltr" className="font-mono text-xs text-muted">
-            {item.assignedToUserId ? formatShortId(item.assignedToUserId) : '—'}
-          </span>
-        ),
+        cell: (item) => <UserLabel userId={item.assignedToUserId} />,
       },
       {
         id: 'instructions',

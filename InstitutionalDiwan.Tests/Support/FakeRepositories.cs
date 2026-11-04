@@ -17,6 +17,12 @@ internal sealed class FakeUserRepository : IUserRepository
     public Task<IReadOnlyList<User>> ListAllAsync(CancellationToken cancellationToken = default)
         => Task.FromResult<IReadOnlyList<User>>(Users.OrderBy(user => user.Username).ToList());
 
+    public Task<IReadOnlyList<User>> ListByIdsAsync(
+        IReadOnlyCollection<Guid> userIds,
+        CancellationToken cancellationToken = default)
+        => Task.FromResult<IReadOnlyList<User>>(
+            Users.Where(user => userIds.Contains(user.UserId)).ToList());
+
     public Task<PagedList<User>> ListPagedAsync(
         PageRequest page,
         CancellationToken cancellationToken = default)

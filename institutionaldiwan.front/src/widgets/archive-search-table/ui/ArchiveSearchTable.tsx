@@ -12,7 +12,7 @@ import {
   type ArchiveSortKey,
   type SavedSearchResponse,
 } from '@/entities/archive'
-import { DepartmentBadge, useDepartmentOptions } from '@/entities/department'
+import { DepartmentBadge, useDepartmentOptions, DepartmentLabel } from '@/entities/department'
 import {
   DocumentDirectionBadge,
   OfficialNumberTag,
@@ -28,7 +28,7 @@ import {
 import { SaveSearchDialog } from '@/features/archive-manage'
 import { toArabicErrorMessage } from '@/shared/api'
 import { ROUTES } from '@/shared/config'
-import { formatDate, formatDateTime, formatShortId, useTableState } from '@/shared/lib'
+import { formatDate, formatDateTime, useTableState } from '@/shared/lib'
 import {
   Button,
   DataTable,
@@ -39,6 +39,7 @@ import {
   type MenuEntry,
 } from '@/shared/ui'
 import { SavedSearchesBar } from './SavedSearchesBar'
+import { UserLabel } from '@/entities/user'
 
 const SORT_KEYS: readonly ArchiveSortKey[] = ['archivedAt', 'title', 'officialNumber']
 
@@ -256,9 +257,7 @@ export function ArchiveSearchTable() {
               isActive={department.isActive}
             />
           ) : (
-            <span dir="ltr" title={document.owningDepartmentId} className="font-mono text-xs text-muted">
-              {formatShortId(document.owningDepartmentId)}
-            </span>
+            <DepartmentLabel departmentId={document.owningDepartmentId} />
           )
         },
       },
@@ -276,11 +275,7 @@ export function ArchiveSearchTable() {
         id: 'archivedBy',
         header: 'أرشفها',
         defaultHidden: true,
-        cell: ({ archivedByUserId }) => (
-          <span dir="ltr" title={archivedByUserId} className="font-mono text-xs text-muted">
-            {formatShortId(archivedByUserId)}
-          </span>
-        ),
+        cell: ({ archivedByUserId }) => <UserLabel userId={archivedByUserId} />,
       },
     ],
     [departmentById],

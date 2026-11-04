@@ -10,6 +10,7 @@ Models Module 02 `Employee` (`EmployeeResponse`) as its own entity slice; writes
 | `model/options.ts` | `useEmployeeOptions` (paged `GET /api/identity-options/employees`) and `useEmployeeOptionById` for labels only — no contact data, accepted by `USER_MANAGE` **or** `DEPARTMENT_MANAGE` **or** `EMPLOYEE_MANAGE`. |
 | `model/queries.ts` | `employeeKeys` (`all`/`lists`/`list(params)`/`detail`), `useEmployees` (keeps previous page via `placeholderData`, 60 s stale time), and `useEmployeeById` (disabled without an id). |
 | `ui/EmployeePicker.tsx` | Controlled nullable employee selector with 300 ms debounced search, 20-item pages, selected-record lookup, and Arabic list-error retry. |
+| `ui/EmployeeLabel.tsx` | `EmployeeLabel`: Arabic full name plus short id for an employee reference (via `useEmployeeOptionById`); falls back to the short id alone. |
 | `index.ts` | Public barrel exporting types, query keys, hooks, and `EmployeePicker`. |
 ## Notes
 - `EmployeeResponse` previously lived in `entities/user`; it moved here so `entities/user` no longer owns employee records and no sibling entity import is needed.
@@ -35,6 +36,7 @@ Models Module 02 `Employee` (`EmployeeResponse`) as its own entity slice; writes
 ## Change Log
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-04 | Claude | Added `EmployeeLabel` («name + short id»). |
 | 2026-10-28 | agent | Added `model/options.ts` for the permission-scoped `identity-options` picker reads, documented list sorting, and recorded picker verification in the department, user, and settings forms. |
 | 2026-10-28 | agent | Document the reusable paged/searchable `EmployeePicker`, selected-value fallback, inactive options, and caller-controlled permission gating for Module 01 forms. |
 | 2026-10-28 | agent | `EmployeeListParams` gained `departmentId` and `includeSubDepartments`, forwarded by `employeeApi.list`, so the department dialog can request one unit's roster (optionally including descendants). |

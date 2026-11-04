@@ -37,6 +37,7 @@ Composes the user reads (`entities/user`) with the user writes (`features/user-m
 - ✅ Server-side sorting (username, status, last login, creation time) is wired through the grid header and `GET /api/users?sortBy=…&sortDescending=…`.
 
 ## 6. Change Log
+- 2026-11-04: User, department and employee references now render as «name + short id» (`UserLabel` / `DepartmentLabel` / `EmployeeLabel`) instead of a bare id.
 
 - 2026-11-01: Tutorial mode Phase 0: added the `users.create` help chip beside «مستخدم جديد»; the page's guide ids live in `shared/config/guides/users.ts` and are covered by `npm run check:guides`.
 - 2026-10-28: Added server sorting, switched the supporting catalogs to `useRoleOptions`/`useDepartmentOptions`, and aligned every management action with `USER_MANAGE`.

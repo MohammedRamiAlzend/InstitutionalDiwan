@@ -22,3 +22,4 @@ export {
   useUserOptions,
 } from './model/queries'
 export { UserScopeBadge } from './ui/UserScopeBadge'
+export { UserLabel } from './ui/UserLabel'

@@ -124,6 +124,7 @@ mounted dialog.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-04 | Claude | User, department and employee references now render as «name + short id» (`UserLabel` / `DepartmentLabel` / `EmployeeLabel`) instead of a bare id. |
 | 2026-11-03 | Claude | Added the «الحقول» tab for the dynamic document fields. |
 | 2026-11-03 | agent | Module 08: `DocumentDetailsPage` gained the «الروابط» tab (`?tab=relations`) mounting `DocumentRelationsPanel`. |
 | 2026-11-03 | agent | Module 07: `DocumentDetailsPage` gained «أرشفة»/«إلغاء الأرشفة» actions (`DOCUMENT_ARCHIVE`), the `archive` tab (`ui/DocumentArchiveTab.tsx`), and now treats an archived document as frozen for participants, files and numbers. |

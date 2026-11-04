@@ -8,6 +8,7 @@ import { LOOKUP_SLUGS, LookupLabel } from '@/entities/lookup'
 import { formatDateTime, formatShortId } from '@/shared/lib'
 import { Skeleton } from '@/shared/ui'
 import { ParticipantTarget } from './ParticipantTarget'
+import { UserLabel } from '@/entities/user'
 
 const NUMBER_EVENT_LABELS: Record<number, string> = {
   1: 'صدر رقم رسمي',
@@ -129,9 +130,7 @@ export function DocumentTimeline({
                 <span>{formatDateTime(entry.occurredAt)}</span>
                 <span aria-hidden>·</span>
                 <span>بواسطة</span>
-                <span dir="ltr" title={entry.actorUserId} className="font-mono">
-                  {formatShortId(entry.actorUserId)}
-                </span>
+                <UserLabel userId={entry.actorUserId} />
               </div>
             </div>
           </li>

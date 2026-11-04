@@ -13,11 +13,11 @@ import {
   DepartmentBadge,
   useDepartments,
   type DepartmentResponse,
+  DepartmentLabel,
 } from '@/entities/department'
 import {
   formatDate,
   formatDateTime,
-  formatShortId,
   type TableState,
 } from '@/shared/lib'
 import {
@@ -28,6 +28,7 @@ import {
   type MenuEntry,
 } from '@/shared/ui'
 import { copyDepartmentValue } from '../model/clipboard'
+import { EmployeeLabel } from '@/entities/employee'
 
 interface DepartmentTableProps {
   table: TableState
@@ -92,13 +93,7 @@ export function DepartmentTable({
           return parentName ? (
             <span className="text-xs text-foreground">{parentName}</span>
           ) : (
-            <span
-              dir="ltr"
-              title={department.parentDepartmentId}
-              className="font-mono text-xs text-muted"
-            >
-              {formatShortId(department.parentDepartmentId)}
-            </span>
+            <DepartmentLabel departmentId={department.parentDepartmentId} />
           )
         },
       },
@@ -139,13 +134,7 @@ export function DepartmentTable({
         defaultHidden: true,
         cell: (department) =>
           department.managerEmployeeId ? (
-            <span
-              dir="ltr"
-              title={department.managerEmployeeId}
-              className="font-mono text-xs text-muted"
-            >
-              {formatShortId(department.managerEmployeeId)}
-            </span>
+            <EmployeeLabel employeeId={department.managerEmployeeId} />
           ) : (
             <span className="text-muted">—</span>
           ),

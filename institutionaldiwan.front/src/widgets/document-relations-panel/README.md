@@ -27,4 +27,5 @@ filters, search, sort and paging live in the URL beside `?tab=relations`.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-04 | Claude | User, department and employee references now render as «name + short id» (`UserLabel` / `DepartmentLabel` / `EmployeeLabel`) instead of a bare id. |
 | 2026-11-03 | agent | Implemented the Module 08 relations panel. |

@@ -47,6 +47,7 @@ overflow trigger.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-04 | Claude | User, department and employee references now render as «name + short id» (`UserLabel` / `DepartmentLabel` / `EmployeeLabel`) instead of a bare id. |
 | 2026-11-03 | Claude | Filtered row actions by the caller's side of the current step and added the restricted label for rows the caller cannot view. |
 | 2026-10-29 | Cursor | Implemented the queue table; documented the primary-department only scope and the manual client-side filtering. |
 | 2026-10-25 | Buffy | Documented client-side pagination for the plain-array queues, stable table ids, `localStorage` column chooser, and row context menus. |

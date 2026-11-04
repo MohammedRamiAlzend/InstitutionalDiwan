@@ -84,6 +84,21 @@ public sealed class IdentityOptionsController(ISender sender, IAuthorizationServ
         return (await sender.Send(new ListUserOptionsQuery(page, pageSize, search), cancellationToken)).ToActionResult();
     }
 
+    [HttpGet("users/by-ids")]
+    [EndpointSummary("Returns the minimal user options for a list of user ids, so tables can show a name next to an id.")]
+    [EndpointDescription("Returns userId, username and isActive for each requested id that exists (at most 100 distinct ids per call; unknown ids are simply absent). Inactive accounts are included so historic references stay labelled. Requires any one of USER_MANAGE, ACCESS_GRANT_MANAGE, DOCUMENT_EDIT, DOCUMENT_VIEW or AUDIT_VIEW. No contact details, roles, or department assignments are returned. Responses: 200 (options), 401 (unauthenticated), 403 (no allowed permission).")]
+    [ProducesResponseType<IReadOnlyCollection<UserOptionResponse>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> UsersByIds(
+        [FromQuery, Description("User identifiers to label (GUID, repeat the parameter; at most 100). Example: 3fa85f64-5717-4562-b3fc-2c963f66afa6.")] Guid[]? ids,
+        CancellationToken cancellationToken = default)
+    {
+        if (!await CanReadAsync(
+                Permissions.UserManage, Permissions.AccessGrantManage, Permissions.DocumentEdit,
+                Permissions.DocumentView, Permissions.AuditView))
+            return Forbid();
+        return (await sender.Send(new GetUserOptionsByIdsQuery(ids ?? Array.Empty<Guid>()), cancellationToken)).ToActionResult();
+    }
+
     private async Task<bool> CanReadAsync(params string[] permissions)
     {
         if (User.Identity?.IsAuthenticated != true) return false;

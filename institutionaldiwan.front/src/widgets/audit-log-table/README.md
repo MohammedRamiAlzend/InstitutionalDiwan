@@ -63,6 +63,7 @@ confirmation dialog.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-04 | Claude | User, department and employee references now render as «name + short id» (`UserLabel` / `DepartmentLabel` / `EmployeeLabel`) instead of a bare id. |
 | 2026-10-25 | Buffy | Documented the shared data-grid contract: table id `audit-logs`, URL filters/paging, `localStorage` column chooser, and row/header context menus. |
 | 2026-10-25 | Cursor | Added audit-log-table widget docs for Module 09. |
 | 2026-10-29 | Cursor | Implemented both tables with URL-driven filters, permission-filtered menus, and the copy/hash row actions. |

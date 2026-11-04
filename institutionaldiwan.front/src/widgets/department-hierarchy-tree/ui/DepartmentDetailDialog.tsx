@@ -1,12 +1,12 @@
 import type { ReactNode } from 'react'
 import { Copy, Hash, Pencil } from 'lucide-react'
-import { useDepartmentById } from '@/entities/department'
-import { useEmployeeById } from '@/entities/employee'
+import { useDepartmentById, DepartmentLabel } from '@/entities/department'
+import { useEmployeeById, EmployeeLabel } from '@/entities/employee'
 import { LookupLabel, LOOKUP_SLUGS } from '@/entities/lookup'
 import { useSessionStore } from '@/entities/user'
 import { toArabicErrorMessage } from '@/shared/api'
 import { Permissions } from '@/shared/config'
-import { formatDate, formatDateTime, formatShortId } from '@/shared/lib'
+import { formatDate, formatDateTime } from '@/shared/lib'
 import { Badge, Button, Dialog, Skeleton } from '@/shared/ui'
 import { copyDepartmentValue } from '../model/clipboard'
 import { DepartmentEmployeesSection } from './DepartmentEmployeesSection'
@@ -133,13 +133,7 @@ export function DepartmentDetailDialog({
                 parentName ? (
                   parentName
                 ) : (
-                  <span
-                    dir="ltr"
-                    title={department.parentDepartmentId}
-                    className="font-mono text-xs text-muted"
-                  >
-                    {formatShortId(department.parentDepartmentId)}
-                  </span>
+                  <DepartmentLabel departmentId={department.parentDepartmentId} />
                 )
               ) : (
                 <span className="text-muted">لا يتبع قسمًا أعلى</span>
@@ -155,13 +149,7 @@ export function DepartmentDetailDialog({
                     )}
                   </span>
                 ) : (
-                  <span
-                    dir="ltr"
-                    title={department.managerEmployeeId}
-                    className="font-mono text-xs"
-                  >
-                    {formatShortId(department.managerEmployeeId)}
-                  </span>
+                  <EmployeeLabel employeeId={department.managerEmployeeId} />
                 )
               ) : (
                 <span className="text-muted">غير محدد</span>

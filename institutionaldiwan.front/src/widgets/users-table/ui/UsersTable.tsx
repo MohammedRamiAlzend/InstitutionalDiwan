@@ -12,7 +12,7 @@ import {
   UserX,
 } from 'lucide-react'
 import { toast } from 'sonner'
-import { DepartmentBadge, useDepartmentOptions } from '@/entities/department'
+import { DepartmentBadge, useDepartmentOptions, DepartmentLabel } from '@/entities/department'
 import { useRoleOptions } from '@/entities/role'
 import {
   useSessionStore,
@@ -32,7 +32,6 @@ import { Permissions } from '@/shared/config'
 import {
   formatDate,
   formatDateTime,
-  formatShortId,
   useTableState,
 } from '@/shared/lib'
 import {
@@ -44,6 +43,7 @@ import {
   type DataTableColumn,
   type MenuEntry,
 } from '@/shared/ui'
+import { EmployeeLabel } from '@/entities/employee'
 
 /** Module 02 users administration grid (search, paging, row actions). */
 export function UsersTable() {
@@ -149,13 +149,7 @@ export function UsersTable() {
               isActive={department.isActive}
             />
           ) : (
-            <span
-              dir="ltr"
-              title={user.primaryDepartmentId}
-              className="font-mono text-xs text-muted"
-            >
-              {formatShortId(user.primaryDepartmentId)}
-            </span>
+            <DepartmentLabel departmentId={user.primaryDepartmentId} />
           )
         },
       },
@@ -208,13 +202,7 @@ export function UsersTable() {
         defaultHidden: true,
         cell: (user) =>
           user.employeeId ? (
-            <span
-              dir="ltr"
-              title={user.employeeId}
-              className="font-mono text-xs text-foreground"
-            >
-              {formatShortId(user.employeeId)}
-            </span>
+            <EmployeeLabel employeeId={user.employeeId} />
           ) : (
             <span className="text-muted">—</span>
           ),

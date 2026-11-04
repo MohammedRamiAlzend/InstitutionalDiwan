@@ -6,7 +6,7 @@ import {
   useAuditIntegrityReports,
   type AuditIntegrityCheckResponse,
 } from '@/entities/audit-log'
-import { useSessionStore } from '@/entities/user'
+import { useSessionStore, UserLabel } from '@/entities/user'
 import { RunIntegrityCheckDialog } from '@/features/audit-manage'
 import { Permissions } from '@/shared/config'
 import { formatDateTime, formatNumber, formatShortId, useTableState } from '@/shared/lib'
@@ -110,11 +110,7 @@ export function AuditIntegrityTable() {
         id: 'executedByUserId',
         header: 'المنفّذ',
         defaultHidden: true,
-        cell: (report) => (
-          <span dir="ltr" title={report.executedByUserId} className="font-mono text-xs text-muted">
-            {formatShortId(report.executedByUserId)}
-          </span>
-        ),
+        cell: (report) => <UserLabel userId={report.executedByUserId} />,
       },
     ],
     [],

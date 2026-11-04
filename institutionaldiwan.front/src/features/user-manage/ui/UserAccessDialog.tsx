@@ -3,7 +3,7 @@ import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { CalendarDays, KeyRound, Network } from 'lucide-react'
 import { toast } from 'sonner'
-import { useDepartmentOptions } from '@/entities/department'
+import { useDepartmentOptions, DepartmentLabel } from '@/entities/department'
 import {
   ASSIGNMENT_TYPE,
   LOOKUP_SLUGS,
@@ -19,7 +19,7 @@ import {
 } from '@/entities/user'
 import { toArabicErrorMessage } from '@/shared/api'
 import { Permissions } from '@/shared/config'
-import { formatDate, formatShortId } from '@/shared/lib'
+import { formatDate } from '@/shared/lib'
 import {
   Badge,
   Button,
@@ -332,9 +332,7 @@ export function UserAccessDialog({ open, onOpenChange, user }: UserAccessDialogP
                               </span>
                             </>
                           ) : (
-                            <span dir="ltr" className="font-mono text-xs text-muted">
-                              {formatShortId(assignment.departmentId)}
-                            </span>
+                            <DepartmentLabel departmentId={assignment.departmentId} />
                           )}
                           <Badge variant="neutral">{typeLabel}</Badge>
                           {assignment.includeSubtree && (

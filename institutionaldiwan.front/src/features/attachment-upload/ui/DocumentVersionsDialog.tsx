@@ -8,6 +8,7 @@ import {
 import { toArabicErrorMessage } from '@/shared/api'
 import { formatDateTime, formatFileSize, formatShortId } from '@/shared/lib'
 import { Badge, Button, Dialog } from '@/shared/ui'
+import { UserLabel } from '@/entities/user'
 
 interface DocumentVersionsDialogProps {
   file: DocumentFileResponse
@@ -94,7 +95,10 @@ export function DocumentVersionsDialog({
                 <VersionField label="الحجم" value={formatFileSize(version.fileSizeBytes)} />
                 <VersionField label="البصمة" value={formatShortId(version.checksumSha256)} />
                 <VersionField label="تاريخ الرفع" value={formatDateTime(version.uploadedAt)} />
-                <VersionField label="الرافع" value={formatShortId(version.uploadedByUserId)} />
+                <p className="flex flex-wrap items-baseline gap-1.5 text-xs">
+                  <span className="text-muted">الرافع:</span>
+                  <UserLabel userId={version.uploadedByUserId} />
+                </p>
               </div>
 
               <p className="text-xs text-muted">

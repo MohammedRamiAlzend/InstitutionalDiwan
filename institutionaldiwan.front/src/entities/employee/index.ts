@@ -4,3 +4,4 @@ export type {
 } from './model/types'
 export { employeeKeys, useEmployees, useEmployeeById } from './model/queries'
 export { EmployeePicker } from './ui/EmployeePicker'
+export { EmployeeLabel } from './ui/EmployeeLabel'

@@ -39,4 +39,41 @@ public sealed class IdentityOptionQueryHandlerTests
         Assert.Equal(3, page.Value.TotalCount);
         Assert.Equal("user.c", Assert.Single(page.Value.Items).Username);
     }
+
+    [Fact]
+    public async Task UserOptionsByIds_LabelsKnownIdsIncludingInactiveAndSkipsUnknownOnes()
+    {
+        var users = new FakeUserRepository();
+        var active = User.Create("qa.active", "hash", Guid.NewGuid()).Value;
+        var inactive = User.Create("qa.inactive", "hash", Guid.NewGuid()).Value;
+        inactive.Deactivate();
+        users.Add(active); users.Add(inactive);
+        users.Add(User.Create("other.user", "hash", Guid.NewGuid()).Value);
+
+        var result = await new GetUserOptionsByIdsQueryHandler(users).Handle(
+            new GetUserOptionsByIdsQuery(new[] { inactive.UserId, active.UserId, active.UserId, Guid.NewGuid(), Guid.Empty }),
+            default);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(new[] { "qa.active", "qa.inactive" }, result.Value.Select(u => u.Username));
+        Assert.False(result.Value.Single(u => u.UserId == inactive.UserId).IsActive);
+    }
+
+    [Fact]
+    public async Task UserOptionsByIds_ReadsAtMostTheDocumentedNumberOfIds()
+    {
+        var users = new FakeUserRepository();
+        var ids = new List<Guid>();
+        for (var i = 0; i < GetUserOptionsByIdsQuery.MaxIds + 5; i++)
+        {
+            var user = User.Create($"user.{i:D3}", "hash", Guid.NewGuid()).Value;
+            users.Add(user);
+            ids.Add(user.UserId);
+        }
+
+        var result = await new GetUserOptionsByIdsQueryHandler(users)
+            .Handle(new GetUserOptionsByIdsQuery(ids), default);
+
+        Assert.Equal(GetUserOptionsByIdsQuery.MaxIds, result.Value.Count);
+    }
 }

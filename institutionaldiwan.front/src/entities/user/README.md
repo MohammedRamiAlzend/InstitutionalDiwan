@@ -10,6 +10,8 @@ Models Module 02 `User` (`MeResponse`, `UserResponse`, `UserOption`) and owns th
 | `model/sessionStore.ts` | Zustand store holding the current `user`, `mustChangePassword` flag, `setSession`/`clear`, and `hasPermission(code)`. |
 | `model/queries.ts` | `userKeys` (`all`/`me`/`departmentScope`/`lists`/`list(params)`/`optionLists`/`options(params)`/`detail`/`effectivePermissions`), `useMeQuery`, `useCoversDepartment`, `useUsers`, `useUserById`, `useUserEffectivePermissions`, and `useUserOptions`. |
 | `api/userApi.ts` | Typed calls for `GET /api/auth/me`, paged `GET /api/users`, `GET /api/users/{id}`, `GET /api/users/{id}/effective-permissions`, and the paged `GET /api/identity-options/users` picker. |
+| `api/userLabelLoader.ts` | `loadUserLabel(userId)`: collects every id requested in the same tick and resolves them with one `GET /api/identity-options/users/by-ids` call (chunks of 100). A failed or forbidden read resolves `null` so the label falls back to the short id. |
+| `ui/UserLabel.tsx` | `UserLabel`: username plus short id for a user reference (`userKeys.label(id)`, 10 min stale time); used by tables and dialogs instead of a bare id. |
 | `ui/UserScopeBadge.tsx` | Renders the Arabic scope label (الدائرة / الدائرة والفروع / المؤسسة / النظام) from `scopeTypeId`, with a `نطاق #id` fallback. |
 | `index.ts` | Public barrel exporting types, session store, scope helpers, query hooks, and the badge. |
 ## Notes
@@ -27,6 +29,7 @@ Models Module 02 `User` (`MeResponse`, `UserResponse`, `UserOption`) and owns th
 ## Change Log
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-04 | Claude | Added `UserLabel` and the batching `loadUserLabel` loader (`userKeys.label`) so «executed by» style columns show the username with the short id. |
 | 2026-11-04 | Claude | `MeResponse.primaryDepartmentId` and the `useMyPrimaryDepartmentId` hook (returns `{ departmentId, isLoading }`; shares the scope query key with `useCoversDepartment`). |
 | 2026-11-03 | Claude | Added `accessibleDepartmentIds` to `MeResponse` and `useCoversDepartment`, which answers whether the caller's scope reaches a department. |
 | 2026-10-28 | agent | Module 03 Phase 4: added `UserOption`/`UserOptionParams`, the paged `GET /api/identity-options/users` call, `optionLists`/`options` query keys, and `useUserOptions` for the document access-grant picker. |

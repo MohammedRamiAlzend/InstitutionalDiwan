@@ -2,6 +2,7 @@ import { useExternalOrganizationById } from '@/entities/external-organization'
 import type { DocumentParticipantResponse } from '@/entities/document'
 import { Skeleton } from '@/shared/ui'
 import { formatShortId } from '@/shared/lib'
+import { DepartmentLabel } from '@/entities/department'
 
 interface ParticipantTargetProps {
   participant: DocumentParticipantResponse
@@ -15,7 +16,7 @@ export function ParticipantTarget({ participant, departmentName }: ParticipantTa
     return departmentName ? (
       <span className="text-sm text-foreground">{departmentName}</span>
     ) : (
-      <ShortId value={participant.internalDepartmentId} />
+      <DepartmentLabel departmentId={participant.internalDepartmentId} />
     )
   }
 

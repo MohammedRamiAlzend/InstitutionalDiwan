@@ -26,6 +26,8 @@ public interface IUserRepository
     Task<User?> GetByIdAsync(Guid userId, CancellationToken cancellationToken = default);
     Task<User?> GetByUsernameAsync(string username, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<User>> ListAllAsync(CancellationToken cancellationToken = default);
+    /// <summary>The users with the given ids (no related data), for labelling references.</summary>
+    Task<IReadOnlyList<User>> ListByIdsAsync(IReadOnlyCollection<Guid> userIds, CancellationToken cancellationToken = default);
     /// <summary>A page of users ordered by username, optionally filtered by a username search term.</summary>
     Task<PagedList<User>> ListPagedAsync(PageRequest page, CancellationToken cancellationToken = default);
     void Add(User user);

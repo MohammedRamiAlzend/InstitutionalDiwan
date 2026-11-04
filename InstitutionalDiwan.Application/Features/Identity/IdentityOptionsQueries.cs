@@ -25,6 +25,12 @@ public sealed record ListRoleOptionsQuery : IQuery<IReadOnlyCollection<RoleOptio
 public sealed record ListEmployeeOptionsQuery(int Page = 1, int PageSize = 20, string? Search = null)
     : IQuery<PagedResult<EmployeeOptionResponse>>;
 public sealed record GetEmployeeOptionQuery(Guid EmployeeId) : IQuery<EmployeeOptionResponse>;
+/// <summary>Labels for the given users (at most <see cref="MaxIds"/> distinct ids per call).</summary>
+public sealed record GetUserOptionsByIdsQuery(IReadOnlyCollection<Guid> Ids)
+    : IQuery<IReadOnlyCollection<UserOptionResponse>>
+{
+    public const int MaxIds = 100;
+}
 public sealed record ListUserOptionsQuery(int Page = 1, int PageSize = 20, string? Search = null)
     : IQuery<PagedResult<UserOptionResponse>>;
 
@@ -69,6 +75,23 @@ internal sealed class ListUserOptionsQueryHandler(IUserRepository users)
         var result = await users.ListPagedAsync(page, cancellationToken);
         return new PagedResult<UserOptionResponse>(result.Items.Select(UserOptionResponse.From).ToList(),
             page.NormalizedPage, page.NormalizedPageSize, result.TotalCount);
+    }
+}
+
+internal sealed class GetUserOptionsByIdsQueryHandler(IUserRepository users)
+    : IQueryHandler<GetUserOptionsByIdsQuery, IReadOnlyCollection<UserOptionResponse>>
+{
+    public async Task<Result<IReadOnlyCollection<UserOptionResponse>>> Handle(
+        GetUserOptionsByIdsQuery request, CancellationToken cancellationToken)
+    {
+        var ids = request.Ids
+            .Where(id => id != Guid.Empty)
+            .Distinct()
+            .Take(GetUserOptionsByIdsQuery.MaxIds)
+            .ToList();
+
+        var found = await users.ListByIdsAsync(ids, cancellationToken);
+        return found.OrderBy(user => user.Username).Select(UserOptionResponse.From).ToList();
     }
 }
 

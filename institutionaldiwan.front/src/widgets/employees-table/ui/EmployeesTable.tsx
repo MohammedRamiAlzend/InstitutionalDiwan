@@ -9,7 +9,7 @@ import {
   UserX,
 } from 'lucide-react'
 import { toast } from 'sonner'
-import { DepartmentBadge, useDepartmentOptions } from '@/entities/department'
+import { DepartmentBadge, useDepartmentOptions, DepartmentLabel } from '@/entities/department'
 import { useEmployees, type EmployeeResponse } from '@/entities/employee'
 import { useSessionStore } from '@/entities/user'
 import {
@@ -21,7 +21,6 @@ import { Permissions } from '@/shared/config'
 import {
   formatDate,
   formatDateTime,
-  formatShortId,
   useTableState,
 } from '@/shared/lib'
 import {
@@ -150,13 +149,7 @@ export function EmployeesTable() {
               isActive={department.isActive}
             />
           ) : (
-            <span
-              dir="ltr"
-              title={employee.departmentId}
-              className="font-mono text-xs text-muted"
-            >
-              {formatShortId(employee.departmentId)}
-            </span>
+            <DepartmentLabel departmentId={employee.departmentId} />
           )
         },
       },

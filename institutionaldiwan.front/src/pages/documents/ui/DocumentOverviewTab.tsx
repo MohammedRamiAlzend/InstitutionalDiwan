@@ -9,9 +9,11 @@ import {
   type DocumentTimelineEntryResponse,
 } from '@/entities/document'
 import { LOOKUP_SLUGS, LookupLabel } from '@/entities/lookup'
-import { formatDate, formatDateTime, formatShortId } from '@/shared/lib'
+import { formatDate, formatDateTime } from '@/shared/lib'
 import { Badge } from '@/shared/ui'
 import { DocumentTimeline } from './DocumentTimeline'
+import { DepartmentLabel } from '@/entities/department'
+import { UserLabel } from '@/entities/user'
 
 interface DocumentOverviewTabProps {
   document: DocumentResponse
@@ -76,7 +78,7 @@ export function DocumentOverviewTab({
             {owningDepartmentName ? (
               <span className="text-sm text-foreground">{owningDepartmentName}</span>
             ) : (
-              <ShortId value={document.owningDepartmentId} />
+              <DepartmentLabel departmentId={document.owningDepartmentId} />
             )}
           </Field>
           <Field label="تاريخ الإنشاء">
@@ -85,7 +87,7 @@ export function DocumentOverviewTab({
             </span>
           </Field>
           <Field label="أنشأها">
-            <ShortId value={document.createdByUserId} />
+            <UserLabel userId={document.createdByUserId} />
           </Field>
         </dl>
 
@@ -124,7 +126,7 @@ export function DocumentOverviewTab({
                   <span>{formatDateTime(entry.changedAt)}</span>
                   <span aria-hidden>·</span>
                   <span>بواسطة</span>
-                  <ShortId value={entry.changedByUserId} />
+                  <UserLabel userId={entry.changedByUserId} />
                 </div>
               </li>
             ))}
@@ -159,12 +161,3 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
   )
 }
 
-function ShortId({ value }: { value: string | null | undefined }) {
-  if (!value) return <span className="text-sm text-muted">—</span>
-
-  return (
-    <span dir="ltr" title={value} className="font-mono text-xs text-muted">
-      {formatShortId(value)}
-    </span>
-  )
-}

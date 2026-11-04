@@ -31,4 +31,5 @@ Module 07 grid on `/archive`.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-04 | Claude | User, department and employee references now render as «name + short id» (`UserLabel` / `DepartmentLabel` / `EmployeeLabel`) instead of a bare id. |
 | 2026-11-03 | agent | Implemented the archive grid and the saved-searches bar for Module 07. |

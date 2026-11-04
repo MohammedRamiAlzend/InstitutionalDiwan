@@ -47,6 +47,7 @@ debounced server search, paging, a column chooser, and row/header/empty context 
   wired through the grid toolbar and `GET /api/employees?sortBy=…&sortDescending=…&departmentId=…`.
 
 ## 6. Change Log
+- 2026-11-04: User, department and employee references now render as «name + short id» (`UserLabel` / `DepartmentLabel` / `EmployeeLabel`) instead of a bare id.
 
 - 2026-10-28: Added server sorting and a department filter, and switched department labels to the
   minimal `useDepartmentOptions` catalog so the grid works with `EMPLOYEE_MANAGE` alone.

@@ -10,7 +10,7 @@ import {
   type AuditLogSortKey,
 } from '@/entities/audit-log'
 import { LOOKUP_SLUGS, LookupLabel, useLookupEntries } from '@/entities/lookup'
-import { useSessionStore } from '@/entities/user'
+import { useSessionStore, UserLabel } from '@/entities/user'
 import {
   CreateCheckpointButton,
   CreateCheckpointDialog,
@@ -28,6 +28,7 @@ import {
   type DataTableColumn,
   type MenuEntry,
 } from '@/shared/ui'
+import { DepartmentLabel } from '@/entities/department'
 
 const MODULE_OPTIONS = [
   { value: 'all', label: 'كل الوحدات' },
@@ -179,29 +180,13 @@ export function AuditLogTable() {
         id: 'actorUserId',
         header: 'المستخدم المنفّذ',
         defaultHidden: true,
-        cell: (log) => (
-          <span
-            dir="ltr"
-            title={log.actorUserId ?? undefined}
-            className="font-mono text-xs text-muted"
-          >
-            {log.actorUserId ? formatShortId(log.actorUserId) : '—'}
-          </span>
-        ),
+        cell: (log) => <UserLabel userId={log.actorUserId} />,
       },
       {
         id: 'actorDepartmentId',
         header: 'قسم المنفّذ',
         defaultHidden: true,
-        cell: (log) => (
-          <span
-            dir="ltr"
-            title={log.actorDepartmentId ?? undefined}
-            className="font-mono text-xs text-muted"
-          >
-            {log.actorDepartmentId ? formatShortId(log.actorDepartmentId) : '—'}
-          </span>
-        ),
+        cell: (log) => <DepartmentLabel departmentId={log.actorDepartmentId} />,
       },
       {
         id: 'relatedDocumentId',

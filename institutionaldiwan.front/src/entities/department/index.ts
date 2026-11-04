@@ -8,3 +8,4 @@ export {
 export { useDepartmentOptions, type DepartmentOption } from './model/options'
 export { departmentTreeToMermaid } from './model/toMermaid'
 export { DepartmentBadge } from './ui/DepartmentBadge'
+export { DepartmentLabel } from './ui/DepartmentLabel'

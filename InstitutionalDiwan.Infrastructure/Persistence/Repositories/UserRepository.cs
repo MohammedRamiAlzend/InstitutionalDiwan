@@ -20,6 +20,16 @@ internal sealed class UserRepository : IUserRepository
     public async Task<IReadOnlyList<User>> ListAllAsync(CancellationToken cancellationToken = default) =>
         await Query().OrderBy(user => user.Username).ToListAsync(cancellationToken);
 
+    public async Task<IReadOnlyList<User>> ListByIdsAsync(
+        IReadOnlyCollection<Guid> userIds,
+        CancellationToken cancellationToken = default) =>
+        userIds.Count == 0
+            ? Array.Empty<User>()
+            : await _context.Users
+                .AsNoTracking()
+                .Where(user => userIds.Contains(user.UserId))
+                .ToListAsync(cancellationToken);
+
     public async Task<PagedList<User>> ListPagedAsync(
         PageRequest page,
         CancellationToken cancellationToken = default)

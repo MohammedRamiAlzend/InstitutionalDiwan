@@ -343,6 +343,7 @@ exposes full contact data, role permissions, or management rights:
   `{ userId, username, isActive }` (paged envelope; inactive included for labelling);
   `USER_MANAGE` **or** `ACCESS_GRANT_MANAGE` **or** `DOCUMENT_EDIT`. It is the picker for document
   access grants and movement assignees and returns no contact data, roles, or department history.
+- `GET /api/identity-options/users/by-ids?ids=…&ids=…` → `{ userId, username, isActive }[]` (at most 100 ids, unknown ids omitted); `USER_MANAGE` **or** `ACCESS_GRANT_MANAGE` **or** `DOCUMENT_EDIT` **or** `DOCUMENT_VIEW` **or** `AUDIT_VIEW`. The front end batches every user label on a page into one call (`UserLabel`).
 
 ### Roles & permissions — `/api/roles`, `/api/permissions`
 

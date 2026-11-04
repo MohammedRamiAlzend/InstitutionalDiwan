@@ -2,8 +2,9 @@ import { ArchiveEventTypeBadge, useDocumentArchiveEvents } from '@/entities/arch
 import { DocumentStatusBadge } from '@/entities/document'
 import { LOOKUP_SLUGS, LookupLabel } from '@/entities/lookup'
 import { toArabicErrorMessage } from '@/shared/api'
-import { formatDateTime, formatShortId } from '@/shared/lib'
+import { formatDateTime } from '@/shared/lib'
 import { Button, Skeleton } from '@/shared/ui'
+import { UserLabel } from '@/entities/user'
 
 interface DocumentArchiveTabProps {
   documentId: string
@@ -79,8 +80,8 @@ export function DocumentArchiveTab({ documentId }: DocumentArchiveTabProps) {
             )}
             <div className="flex items-baseline gap-1.5">
               <dt className="text-muted">المنفّذ:</dt>
-              <dd dir="ltr" title={event.actorUserId} className="font-mono text-xs">
-                {formatShortId(event.actorUserId)}
+              <dd className="text-xs">
+                <UserLabel userId={event.actorUserId} />
               </dd>
             </div>
             {event.reason && (

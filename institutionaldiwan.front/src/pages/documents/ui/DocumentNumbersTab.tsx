@@ -41,6 +41,7 @@ import {
   type DataTableColumn,
   type MenuEntry,
 } from '@/shared/ui'
+import { UserLabel } from '@/entities/user'
 
 const numberEventLabels: Record<number, string> = {
   [DOCUMENT_NUMBER_EVENT_TYPE.Issued]: 'صدر',
@@ -298,7 +299,7 @@ export function DocumentNumbersTab({
               )}
               {central && (
                 <span className="text-xs text-muted">
-                  أصدره: {formatShortId(central.issuedByUserId)} ·{' '}
+                  أصدره: <UserLabel userId={central.issuedByUserId} /> ·{' '}
                   <span dir="ltr">{formatDateTime(central.issuedAt)}</span>
                 </span>
               )}
@@ -363,7 +364,7 @@ export function DocumentNumbersTab({
                       </span>
                     )}
                     <span className="text-muted">
-                      بواسطة {formatShortId(event.actorUserId)}
+                      بواسطة <UserLabel userId={event.actorUserId} />
                     </span>
                     {event.notes && (
                       <span className="text-foreground">{formatNumberNote(event.notes)}</span>
@@ -441,7 +442,7 @@ export function DocumentNumbersTab({
                           {formatDateTime(event.occurredAt)}
                         </span>
                         <span className="text-muted">
-                          بواسطة {formatShortId(event.actorUserId)}
+                          بواسطة <UserLabel userId={event.actorUserId} />
                         </span>
                         {event.notes && (
                           <span className="text-foreground">{formatNumberNote(event.notes)}</span>

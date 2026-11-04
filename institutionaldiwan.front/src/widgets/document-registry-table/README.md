@@ -52,6 +52,7 @@ Composes the institutional correspondence registry through `shared/ui/data-table
 | Browser verification | ✅ Verified in-browser (2026-10-28) against the live API: seeded rows render with Arabic lookup labels and the resolved owning department; search, the status filter via URL, the empty state with «مسح البحث والمرشحات», and title sorting behave as specified; both creations (draft and registered) appear immediately without a reload (7 → 8 rows). |
 
 ## 6. Change Log
+- 2026-11-04: User, department and employee references now render as «name + short id» (`UserLabel` / `DepartmentLabel` / `EmployeeLabel`) instead of a bare id.
 - 2026-11-04: Registry filtering by dynamic field values (plan `plans/document-registry-field-filters.md`): filters live in the repeated `f` URL parameter, are dropped when the document type changes, and are sent as `fieldFilters` only with a type.
 
 - 2026-10-28: Module 03 Phase 3 — the title now links to `/documents/:documentId` and the row menu
