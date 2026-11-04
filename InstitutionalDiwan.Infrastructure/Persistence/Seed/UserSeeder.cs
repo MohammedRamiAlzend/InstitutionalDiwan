@@ -35,6 +35,9 @@ public sealed class UserSeeder : ISeeder
     public IReadOnlyCollection<string> Environments { get; } =
         new[] { SeedingEnvironments.Development, SeedingEnvironments.Staging };
 
+    /// <summary>Original demo data: only in <see cref="SeedingModes.Everything"/> mode.</summary>
+    public IReadOnlyCollection<string> Modes { get; } = new[] { SeedingModes.Everything };
+
     public async Task SeedAsync(SeederContext context, CancellationToken cancellationToken = default)
     {
         var db = context.Db;

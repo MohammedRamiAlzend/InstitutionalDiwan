@@ -142,6 +142,9 @@ public static class DependencyInjection
         services.AddScoped<ISeeder, InstitutionSettingSeeder>();
         services.AddScoped<ISeeder, DepartmentSeeder>();
         services.AddScoped<ISeeder, EmployeeSeeder>();
+        services.AddScoped<ISeeder, StandardDepartmentSeeder>();
+        services.AddScoped<ISeeder, SuperAdminSeeder>();
+        services.AddScoped<ISeeder, StandardAccountSeeder>();
 
         services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
         services.AddSingleton<IPasswordHasher, PasswordHasher>();

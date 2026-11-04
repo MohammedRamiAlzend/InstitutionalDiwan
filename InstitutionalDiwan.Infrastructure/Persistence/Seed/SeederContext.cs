@@ -5,8 +5,13 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Seed;
 /// <summary>Shared services handed to every <see cref="ISeeder"/> execution.</summary>
 public sealed class SeederContext
 {
-    public SeederContext(DiwanDbContext dbContext, IPasswordHasher passwordHasher, string environmentName)
+    public SeederContext(
+        DiwanDbContext dbContext,
+        IPasswordHasher passwordHasher,
+        string environmentName,
+        SeedingOptions? options = null)
     {
+        Options = options ?? SeedingOptions.Default;
         Db = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
         PasswordHasher = passwordHasher ?? throw new ArgumentNullException(nameof(passwordHasher));
         EnvironmentName = environmentName ?? throw new ArgumentNullException(nameof(environmentName));
@@ -20,4 +25,7 @@ public sealed class SeederContext
 
     /// <summary>Current host environment name (Development, Staging, Production, ...).</summary>
     public string EnvironmentName { get; }
+
+    /// <summary>Seeding mode and shared account password for this run.</summary>
+    public SeedingOptions Options { get; }
 }

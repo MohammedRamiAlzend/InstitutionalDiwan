@@ -93,6 +93,7 @@ Persistence/Configurations/
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-04 | Claude | Registered `StandardDepartmentSeeder`, `SuperAdminSeeder` and `StandardAccountSeeder`; seeders gained a `Modes` filter (see `Persistence/Seed/README.md`). |
 | 2026-11-04 | Claude | `NotificationRepository` applies the inbox search (LIKE with escaped wildcards) and sort keys, and gained `CountUnreadByTypeAsync`. No schema change. |
 | 2026-11-02 | Claude | Dynamic document fields, Phase 1: persistence for per-document-type field schemas with versions (configurations, DbSets, `DocumentFieldRepository`, `DocumentTypeSchemaVersionRepository`, `Add_Document_Dynamic_Fields` migration). See the Persistence README for detail. |
 | 2026-10-28 | Qoder | Added `Seed/EmployeeSeeder` (Order 97, Development/Staging) seeding 28 demo employees across the department tree, and extended `EmployeeRepository.ListPagedAsync` with an optional department-id set so `/api/employees` can list one department's roster (optionally including its descendants). |

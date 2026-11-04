@@ -21,6 +21,9 @@ public sealed class DepartmentSeeder : ISeeder
     public IReadOnlyCollection<string> Environments { get; } =
         new[] { SeedingEnvironments.Development, SeedingEnvironments.Staging };
 
+    /// <summary>Original demo data: only in <see cref="SeedingModes.Everything"/> mode.</summary>
+    public IReadOnlyCollection<string> Modes { get; } = new[] { SeedingModes.Everything };
+
     private sealed record DepartmentSeed(
         string Code,
         string NameAr,

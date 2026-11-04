@@ -23,6 +23,8 @@ public sealed class InstitutionSettingSeeder : ISeeder
 
     public IReadOnlyCollection<string> Environments { get; } = new[] { SeedingEnvironments.All };
 
+    public IReadOnlyCollection<string> Modes { get; } = SeedingModes.AnyMode;
+
     public async Task SeedAsync(SeederContext context, CancellationToken cancellationToken = default)
     {
         var db = context.Db;

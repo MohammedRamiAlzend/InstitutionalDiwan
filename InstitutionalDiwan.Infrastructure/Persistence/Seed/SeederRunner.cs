@@ -23,7 +23,7 @@ public static class SeederRunner
 
         foreach (var seeder in ordered)
         {
-            if (!seeder.RunsIn(context.EnvironmentName))
+            if (!seeder.RunsIn(context.EnvironmentName) || !seeder.RunsInMode(context.Options.Mode))
                 continue;
 
             await seeder.SeedAsync(context, cancellationToken);

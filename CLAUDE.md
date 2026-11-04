@@ -19,7 +19,7 @@ dotnet test InstitutionalDiwan.Tests --filter "FullyQualifiedName~OpenApiDocumen
 dotnet run --project InstitutionalDiwan.Server  # http://localhost:5028, https://localhost:7126, Scalar at /scalar/v1
 ```
 
-Development startup migrates and seeds SQL Server (`Server=.;Trusted_Connection=True`, db `InstitutionalDiwan`). Seeded accounts: `admin` / `12345678` (system scope), `user` / `12345678` (department scope).
+Development startup migrates and seeds SQL Server (`Server=.;Trusted_Connection=True`, db `InstitutionalDiwan`). Seeded accounts depend on `Seeding:Mode` in appsettings: `Everything` (default) gives `admin` / `user`; `Standard` gives `superadmin` plus six Arabic-named diwan accounts; `None` only `superadmin` — all with password `12345678`.
 
 Front end (`cd institutionaldiwan.front`):
 

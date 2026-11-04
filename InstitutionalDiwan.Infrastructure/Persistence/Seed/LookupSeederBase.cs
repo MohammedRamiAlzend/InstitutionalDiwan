@@ -12,6 +12,8 @@ public abstract class LookupSeederBase<TEntity> : ISeeder
 {
     public IReadOnlyCollection<string> Environments { get; } = new[] { SeedingEnvironments.All };
 
+    public IReadOnlyCollection<string> Modes { get; } = SeedingModes.AnyMode;
+
     public abstract int Order { get; }
 
     protected abstract IReadOnlyList<(int Id, string Desc, string DescAr)> Catalog { get; }

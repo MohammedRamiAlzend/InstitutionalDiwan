@@ -35,18 +35,24 @@ public static class DatabaseExtensions
             return;
         }
 
+        var seedingOptions = SeedingOptions.From(
+            app.Configuration["Seeding:Mode"],
+            app.Configuration["Seeding:DefaultPassword"]);
+
         var seedingContext = new SeederContext(
             context,
             scope.ServiceProvider.GetRequiredService<IPasswordHasher>(),
-            environmentName);
+            environmentName,
+            seedingOptions);
 
         var seeders = scope.ServiceProvider.GetServices<ISeeder>().ToArray();
         var executed = await SeederRunner.RunAsync(seeders, seedingContext);
 
         app.Logger.LogInformation(
-            "Seeding finished: {Executed} of {Total} seeder(s) executed in environment {Environment}.",
+            "Seeding finished: {Executed} of {Total} seeder(s) executed in environment {Environment}, mode {Mode}.",
             executed,
             seeders.Length,
-            environmentName);
+            environmentName,
+            seedingOptions.Mode);
     }
 }

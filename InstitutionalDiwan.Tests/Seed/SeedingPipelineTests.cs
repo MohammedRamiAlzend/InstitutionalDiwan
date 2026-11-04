@@ -51,6 +51,9 @@ public sealed class SeedingPipelineTests
         new DepartmentSeeder(),
         new EmployeeSeeder(),
         new UserSeeder(),
+        new StandardDepartmentSeeder(),
+        new SuperAdminSeeder(),
+        new StandardAccountSeeder(),
     };
 
     private static Task<int> RunAsync(DiwanDbContext db, string environment)

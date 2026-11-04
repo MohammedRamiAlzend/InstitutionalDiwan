@@ -55,6 +55,7 @@ The `ProblemDetails` body carries the domain error code as `Title` and its descr
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-04 | Claude | `InitializeDatabaseAsync` reads `Seeding:Mode` / `Seeding:DefaultPassword` into `SeedingOptions`, passes them to `SeederContext` and logs the mode. |
 | 2026-11-02 | Claude | Added `DocumentFieldMapping` (contract to application input mapping for dynamic fields). |
 | 2026-10-28 | Qoder | Validate live account activity and the mandatory shared HMAC session stamp in OnTokenValidated, revoking stale identity/role/permission tokens without schema or configuration changes. |
 | 2026-10-25 | opencode | Added `Error.ToActionResult()` so `DocumentFilesController.Download` can return a file stream on success and still map domain errors to ProblemDetails. |

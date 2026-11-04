@@ -19,6 +19,12 @@ public interface ISeeder
     /// </summary>
     IReadOnlyCollection<string> Environments { get; }
 
+    /// <summary>
+    /// Seeding modes (<see cref="SeedingModes"/>) this seeder runs in. Defaults to every mode, so
+    /// only seeders that add optional data have to override it.
+    /// </summary>
+    IReadOnlyCollection<string> Modes => SeedingModes.AnyMode;
+
     /// <summary>Applies the seed data. Must be safe to run repeatedly.</summary>
     Task SeedAsync(SeederContext context, CancellationToken cancellationToken = default);
 }
@@ -26,6 +32,10 @@ public interface ISeeder
 /// <summary>Environment-matching helpers for <see cref="ISeeder"/>.</summary>
 public static class SeederExtensions
 {
+    public static bool RunsInMode(this ISeeder seeder, string mode)
+        => seeder.Modes.Contains(SeedingModes.Any, StringComparer.OrdinalIgnoreCase)
+           || seeder.Modes.Contains(mode, StringComparer.OrdinalIgnoreCase);
+
     /// <summary>True when this seeder is allowed to run in the given host environment name.</summary>
     public static bool RunsIn(this ISeeder seeder, string environmentName)
         => seeder.Environments.Contains(SeedingEnvironments.All, StringComparer.OrdinalIgnoreCase)

@@ -73,7 +73,7 @@ documented with a summary, a description, and a concrete example for each parame
 `OpenApiDocumentationTests` fails the build if one is missing.
 
 The database is migrated and seeded on startup in the Development environment. Seeded demo
-accounts: `admin` / `12345678` (system scope) and `user` / `12345678` (department scope).
+accounts: `admin` / `12345678` (system scope) and `user` / `12345678` (department scope). `Seeding:Mode` in `appsettings.json` chooses the data: `Everything` (default, these demo accounts), `Standard` (three diwans, `superadmin` with all permissions and two Arabic-named accounts per diwan, password `12345678`) or `None` (reference data and `superadmin` only); see `InstitutionalDiwan.Infrastructure/Persistence/Seed/README.md`.
 
 ```bash
 # Front end — standalone Vite project, not part of the solution
@@ -158,6 +158,7 @@ have no `README.md` of their own yet — their content is documented in the encl
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-04 | Claude | Added seeding modes: `Seeding:Mode` in appsettings picks `Everything` (the former demo data, default), `Standard` (three diwans — الديوان المركزي, ديوان الفرد, ديوان التحقيق — with a `superadmin` account holding all 17 permissions plus two accounts per diwan, all with password `12345678`) or `None` (reference data and only `superadmin`). New seeders `StandardDepartmentSeeder` (98), `SuperAdminSeeder` (305), `StandardAccountSeeder` (310); the demo seeders now run only in `Everything`. 783 tests pass. |
 | 2026-11-04 | Claude | Implemented registry filtering by dynamic field values (plan `plans/document-registry-field-filters.md`): `fieldFilters` on `GET /api/documents`, six new `DocumentFields.Filter*` errors with Arabic messages, the «تصفية بالحقول» dialog and chips on `/documents`; 776 tests pass. |
 | 2026-11-04 | Claude | Added the Module 01 lookups-administration front-end plan `plans/module-01-lookups-frontend.md` (draft, awaiting approval; no code, no backend change required). |
 | 2026-11-04 | Claude | Added the Module 10 front-end plan `plans/module-10-notifications-frontend.md` (draft, awaiting approval; no code), including two small additive backend changes (inbox `search`/`sortBy`, unread count by type) scheduled before the front end. |

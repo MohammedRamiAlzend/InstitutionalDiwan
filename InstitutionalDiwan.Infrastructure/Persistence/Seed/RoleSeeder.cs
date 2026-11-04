@@ -15,6 +15,8 @@ public sealed class RoleSeeder : ISeeder
 
     public IReadOnlyCollection<string> Environments { get; } = new[] { SeedingEnvironments.All };
 
+    public IReadOnlyCollection<string> Modes { get; } = SeedingModes.AnyMode;
+
     private static readonly string[] AdminPermissions =
     {
         Permissions.DocumentView, Permissions.DocumentCreate, Permissions.DocumentEdit,

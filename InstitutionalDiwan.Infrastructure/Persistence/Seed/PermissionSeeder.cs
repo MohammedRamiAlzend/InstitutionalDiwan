@@ -15,6 +15,8 @@ public sealed class PermissionSeeder : ISeeder
 
     public IReadOnlyCollection<string> Environments { get; } = new[] { SeedingEnvironments.All };
 
+    public IReadOnlyCollection<string> Modes { get; } = SeedingModes.AnyMode;
+
     private static readonly (string Code, string NameAr, string NameEn, string Module, string Description)[] Catalog =
     {
         (Permissions.DocumentView, "عرض المستندات", "View documents", "CORRESPONDENCE", "View document details and content."),
