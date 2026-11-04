@@ -1,6 +1,13 @@
 export { Permissions, AllPermissions } from './permissions'
 export type { PermissionCode } from './permissions'
 export { ROUTES } from './routes'
+export {
+  LOOKUP_CATALOG_META,
+  LOOKUP_GROUP_ORDER,
+  LOOKUP_GROUP_OTHER,
+  lookupCatalogMeta,
+} from './lookupCatalogs'
+export type { LookupCatalogMeta } from './lookupCatalogs'
 export { ENV } from './env'
 export {
   USER_SCOPE_TYPE,

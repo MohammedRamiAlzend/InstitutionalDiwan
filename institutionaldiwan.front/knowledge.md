@@ -477,7 +477,7 @@ Error codes: `Relations.*` (`SelfRelation`, `RelationTypeNotFound`, `RelationTyp
 `POST`, `PUT /{lookup}/{id}`, `PATCH /{lookup}/{id}/deactivate`, `PATCH /{lookup}/{id}/activate` —
 `LOOKUP_MANAGE`. Unknown slug → 404.
 
-34 lookup slugs:
+33 lookup slugs (`GET /api/lookups`; `file-storage-providers` and `notification-types` reject `POST` with `400 Lookup.CatalogReadOnly`):
 
 `access-levels`, `archive-event-types`, `archive-locations`, `assignment-types`,
 `audit-action-types`, `audit-entity-types`, `department-types`,

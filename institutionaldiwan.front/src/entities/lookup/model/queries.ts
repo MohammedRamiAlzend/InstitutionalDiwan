@@ -5,6 +5,7 @@ import type { LookupEntryResponse } from './types'
 
 export const lookupKeys = {
   all: ['lookups'] as const,
+  catalogs: () => [...lookupKeys.all, 'catalogs'] as const,
   catalog: (lookup: string, includeInactive: boolean) =>
     [...lookupKeys.all, lookup, { includeInactive }] as const,
 }
@@ -38,5 +39,14 @@ export function useLookupEntries(
             isActive: true,
             createdAt: '',
           })),
+  })
+}
+
+/** Slugs of all catalogs the server supports (the administration picker). */
+export function useLookupCatalogs() {
+  return useQuery({
+    queryKey: lookupKeys.catalogs(),
+    queryFn: () => lookupApi.catalogs(),
+    staleTime: Infinity,
   })
 }

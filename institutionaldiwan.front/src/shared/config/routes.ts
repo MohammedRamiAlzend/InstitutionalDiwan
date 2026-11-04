@@ -10,6 +10,7 @@ export const ROUTES = {
   MOVEMENTS: '/movements',
   ARCHIVE: '/archive',
   NOTIFICATIONS: '/notifications',
+  LOOKUPS: '/lookups',
   DEPARTMENTS: '/departments',
   INSTITUTION_SETTINGS: '/institution-settings',
   USERS: '/users',

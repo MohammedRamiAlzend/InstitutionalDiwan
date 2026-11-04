@@ -8,7 +8,9 @@ Reads the seeded reference ("lookup") catalogs through `GET /api/lookups/{lookup
 | `model/types.ts` | `LookupEntryResponse` (API contract) and `LookupCatalogEntry` (`id`/`desc`/`descAr` fallback row). |
 | `model/constants.ts` | Re-exports shared scope/assignment/department/numbering/document/movement/archive ID maps; defines `LOOKUP_SLUGS` and seeded Arabic `LOOKUP_FALLBACKS` for the named catalogs. |
 | `api/lookupApi.ts` | `entries(lookup, includeInactive?)` → `GET /api/lookups/{lookup}`. |
+| `api/lookupApi.ts` (catalogs) | `catalogs()` → `GET /api/lookups` (slugs of every supported catalog). |
 | `model/queries.ts` | `lookupKeys` factory and `useLookupEntries(lookup, { includeInactive, enabled })` with `staleTime: Infinity` and seeded placeholder data (active-only reads). |
+| `model/queries.ts` (catalogs) | `useLookupCatalogs()` and `lookupKeys.catalogs()` feed the `/lookups` picker. |
 | `ui/LookupLabel.tsx` | Renders the Arabic label for an `(lookup, id)` pair from the live catalog, falling back to the seeded row, then `#id`; `null` renders `—`. |
 | `index.ts` | Public barrel exporting types, IDs/slugs/fallbacks (including the document enums and `DOCUMENT_TYPE_DIRECTION`), query keys/hook, and `LookupLabel`. |
 ## Notes
@@ -29,6 +31,7 @@ Reads the seeded reference ("lookup") catalogs through `GET /api/lookups/{lookup
 ## Change Log
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-04 | Claude | Module 01 lookups administration: added `lookupApi.catalogs`, `lookupKeys.catalogs` and `useLookupCatalogs`. |
 | 2026-11-03 | agent | Module 08: added `DocumentRelationTypes`/`RelationActionTypes` slugs, their ID re-exports and seeded Arabic fallbacks. |
 | 2026-11-03 | agent | Module 07: added `ArchiveEventTypes`/`ArchiveLocations` slugs, `ARCHIVE_EVENT_TYPE`/`ARCHIVE_LOCATION` re-exports and their seeded Arabic fallbacks. |
 | 2026-11-01 | agent | Module 06 Phase 2: the files grid became the first consumer of `document-file-types` — `LookupLabel` for the النوع column and `useLookupEntries` for the type filter options, so the seeded placeholders carry the labels before the catalog response arrives. |

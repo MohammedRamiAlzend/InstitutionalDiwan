@@ -47,6 +47,7 @@ error handling, and form/dialog UI.
 | `archive-manage/` | `POST /api/documents/{id}/archive`, `/unarchive`, `/api/saved-searches` (POST/PUT/DELETE) | `DOCUMENT_ARCHIVE` + `MANAGE` access for archive transitions; saved searches need only `DOCUMENT_VIEW` and are private |
 | `notification-manage/` | `POST /api/notifications/{recipientId}/read`, `/dismiss`, `POST /api/notifications/read-all` | No permission code; owner-only on the server; optimistic badge with rollback |
 | `notification-live/` | SignalR hub `/hubs/notifications` (`notificationReceived`) | Lazy-loaded client; reconnect with backoff; pushes only invalidate queries and raise a toast |
+| `lookup-manage/` | `POST/PUT /api/lookups/{lookup}`, `PATCH .../{id}/activate\|deactivate` | `LOOKUP_MANAGE`; invalidates `lookupKeys.all` |
 | `document-relation-manage/` | `POST /api/documents/{id}/relations`, `DELETE /api/documents/{id}/relations/{relationId}` | `DOCUMENT_EDIT`; document not archived or cancelled |
 | `document-schema-manage/` | `POST /api/document-types/{id}/fields`, `POST /api/document-types/{id}/schema-versions`, `DELETE /api/schema-versions/{id}`, `POST|PUT|DELETE /api/schema-versions/{id}/fields`, `POST /api/schema-versions/{id}/publish` | `LOOKUP_MANAGE`; draft-only edits; publish freezes the version |
 | `document-field-values/` | `PUT /api/documents/{id}/fields` | `DOCUMENT_EDIT` + DOWNLOAD access; draft documents only |
@@ -80,6 +81,7 @@ error handling, and form/dialog UI.
 | `archive-manage/` | ✅ Implemented (Module 07: archive dialog with location + optional reason, unarchive dialog with mandatory reason, save/rename/delete saved searches). |
 | `notification-manage/` | ✅ Mark read, dismiss and read-all with optimistic updates (Module 10). |
 | `notification-live/` | ✅ SignalR connection, reconnect, de-duplication and toast alerts (Module 10); mounted by `app/router/NotificationLiveLayout`. |
+| `lookup-manage/` | ✅ Add, relabel, activate and deactivate reference-catalog entries (Module 01). |
 | `document-relation-manage/` | ✅ Implemented (Module 08: add-link dialog with document picker, type and notes; remove-link dialog with mandatory reason). |
 | `attachment-upload/` | ✅ Implemented for Module 06 Phases 3–4 (atomic upload, version upload, archive confirmation, versions list with per-version download, checksum verify with three named digests). Browser-verified in Module 06 Phase 5 across manager, `USER`, and read-only roles. |
 | Final integration verification | Pending; Module 02 audit fixes still in progress. |
@@ -88,6 +90,7 @@ error handling, and form/dialog UI.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-04 | Claude | Module 01 lookups administration (plan `plans/module-01-lookups-frontend.md`): implemented `lookup-manage`. |
 | 2026-11-04 | Claude | Module 10 notifications front end (plan `plans/module-10-notifications-frontend.md`): implemented `notification-manage` and `notification-live`. |
 | 2026-11-03 | Claude | Added `document-schema-manage/` and `document-field-values/` for the dynamic document fields; `document-create` now renders the type's published schema. |
 | 2026-11-03 | agent | Module 08: implemented `document-relation-manage` — create/remove link mutations, schemas, document picker and two dialogs. |

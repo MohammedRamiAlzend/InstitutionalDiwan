@@ -54,6 +54,7 @@ export const ROUTES = {
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-04 | Claude | Added `ROUTES.LOOKUPS`, `lookupCatalogs.ts` (Arabic names, groups and `canCreate` for the 33 catalogs) and the `lookups` page guide. |
 | 2026-11-04 | Claude | Module 10 notifications front end (plan `plans/module-10-notifications-frontend.md`): added `ROUTES.NOTIFICATIONS`, `ENV.HUB_BASE_URL`, `NOTIFICATION_TYPE` (1–11), `NOTIFICATION_PRIORITY` (1–3), `NOTIFICATION_SORT_KEY`, and the `notifications` page guide. |
 | 2026-11-03 | Claude | Added `ROUTES.DOCUMENT_SCHEMAS` and the `document-schemas` page guide plus the `document-details.tab-fields` entry. |
 | 2026-11-03 | agent | Module 08: added `DOCUMENT_RELATION_TYPE` and `RELATION_ACTION_TYPE` to `lookupIds.ts` and the relations entries (`document-details.tab-relations`, `document-details.relations-*`) to the document-details guide. |

@@ -29,5 +29,5 @@ export {
   findLookupFallback,
 } from './model/constants'
 export type { LookupSlug } from './model/constants'
-export { lookupKeys, useLookupEntries } from './model/queries'
+export { lookupKeys, useLookupCatalogs, useLookupEntries } from './model/queries'
 export { LookupLabel } from './ui/LookupLabel'

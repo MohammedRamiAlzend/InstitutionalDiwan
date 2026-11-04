@@ -40,6 +40,7 @@ browser.
 | `archive-search-table/` | Access-filtered archive search grid with a saved-searches bar | `entities/archive` + `features/archive-manage` |
 | `notification-bell/` | Header bell: unread badge, live-connection line and the latest eight notifications | `entities/notification` + `features/notification-manage` + `features/notification-live` |
 | `notification-inbox/` | The `/notifications` grid with server search/sort/paging and unread/type filters | `entities/notification` + `features/notification-manage` + `features/notification-live` |
+| `lookup-admin/` | Catalog picker and entries grid for `/lookups` (Module 01). |
 | `document-relations-panel/` | Links grid, graph/tree views and relation history for one document | `entities/document-relation` + `features/document-relation-manage` |
 | `document-schema-editor/` | Schema version history and field grid of one document type with draft actions (new draft, add/edit/remove field, publish, delete) | `entities/document-schema` + `features/document-schema-manage` |
 | `document-fields-panel/` | A document's dynamic fields against its pinned schema version, editable while a draft | `entities/document-schema` + `features/document-field-values` |
@@ -89,6 +90,7 @@ browser.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-04 | Claude | Added `lookup-admin`. |
 | 2026-11-04 | Claude | Module 10 notifications front end (plan `plans/module-10-notifications-frontend.md`): implemented `notification-bell` and `notification-inbox`. |
 | 2026-11-03 | Claude | Added `document-schema-editor/` and `document-fields-panel/` for the dynamic document fields. |
 | 2026-11-03 | agent | Module 08: implemented `document-relations-panel` — the relations grid, Mermaid/tree views and history. |
