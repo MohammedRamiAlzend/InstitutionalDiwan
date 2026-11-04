@@ -469,7 +469,7 @@ Error codes (Arabic entries exist in `shared/api/errorMessages.ts`):
 
 Error codes: `Relations.*` (`SelfRelation`, `RelationTypeNotFound`, `RelationTypeInactive`, `DuplicateRelation`,
 `CycleDetected`, `DocumentCancelled`, `RelationNotFound`, `ReasonRequired`, `ReasonTooLong`, `NotesTooLong`,
-`GraphDepthInvalid`), plus `Correspondence.DocumentArchived`. No Arabic entries exist yet in `errorMessages.ts`.
+`GraphDepthInvalid`), plus `Correspondence.DocumentArchived`. All twelve `Relations.*` codes have Arabic entries in `errorMessages.ts` (Module 08 section).
 
 ### Lookups — `/api/lookups/{lookup}`
 
