@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>دورة حياة الوثيقة — الديوان المؤسساتي</title>
+  <meta name="description" content="شرح تفاعلي لدورة حياة الوثيقة وطريقة عمل نظام الديوان المؤسساتي: الإنشاء، التسجيل، الترقيم، الحركة بين الأقسام، الأرشفة، التدقيق والإشعارات.">
+  <script>
+    /* Apply the saved theme before first paint (storage may be blocked, so guard it). */
+    try { var t = localStorage.getItem('diwan.example.theme'); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
+  </script>
+  <link rel="stylesheet" href="workflow.css">
+  <script src="workflow.js" defer></script>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap">
+    <span class="brand">📨 الديوان المؤسساتي — مثال تفاعلي</span>
+    <nav aria-label="أقسام الصفحة">
+      <a href="#overview">نظرة عامة</a>
+      <a href="#lifecycle">دورة الحياة</a>
+      <a href="#modules">الوحدات</a>
+      <a href="#rules">القواعد</a>
+    </nav>
+    <button class="btn" id="themeBtn" type="button" aria-label="تبديل المظهر">🌓 المظهر</button>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <div class="hero">
+    <h1>كيف تمرّ الوثيقة داخل نظام الديوان؟</h1>
+    <p class="lead">
+      هذه الصفحة مستقلة (HTML + CSS + JavaScript فقط، بلا مكتبات ولا اتصال بالخادم). تشرح الفكرة العامة للنظام ثم تتيح لك
+      <strong>تشغيل دورة حياة وثيقة كاملة</strong> بنفسك: تبدّل الدور، تنفّذ الإجراءات، وترى ما يحدث للحالة والرقم الرسمي
+      وموقع الوثيقة والإشعارات وسلسلة التدقيق. المحاكاة مبسّطة، لكن قواعدها مأخوذة من
+      <span class="ltr">institutionaldiwan.front/knowledge.md</span>.
+    </p>
+  </div>
+
+  <!-- ===================== Overview ===================== -->
+  <section id="overview">
+    <h2>١ — الصورة العامة</h2>
+    <p class="muted">نظام مراسلات مؤسساتي يسجّل الوثائق، يمنحها أرقاماً رسمية، يوجّهها بين الأقسام، ويحتفظ بأثر تدقيق لا يمكن العبث به.</p>
+    <div class="arch" id="arch">
+      <div class="card layer">
+        <h3>🖥️ الواجهة <span class="tag">React 19</span></h3>
+        <ul><li>عربية أولاً (RTL) بمظهرين فاتح وداكن</li><li>تعرض الصلاحيات كأزرار مفعّلة أو مخفية</li><li>تعرض رسائل الخطأ بالعربية فقط</li></ul>
+      </div>
+      <div class="card layer">
+        <h3>🔌 الواجهة البرمجية <span class="tag">ASP.NET Core 10</span></h3>
+        <ul><li>مسارات <code>/api/...</code> ومحور <code>/hubs/notifications</code></li><li>تتحقق من الصلاحية ثم من نطاق القسم ثم من مستوى الوصول للوثيقة</li><li>أخطاء بصيغة RFC 7807</li></ul>
+      </div>
+      <div class="card layer">
+        <h3>⚙️ التطبيق والنطاق <span class="tag">CQRS</span></h3>
+        <ul><li>أوامر واستعلامات ومدقّقات</li><li>قواعد العمل (الحالات، الحركات، الترقيم)</li><li>أحداث نطاق تغذّي الإشعارات والتدقيق</li></ul>
+      </div>
+      <div class="card layer">
+        <h3>🗄️ البنية التحتية <span class="tag">SQL Server</span></h3>
+        <ul><li>EF Core والترحيلات</li><li>تخزين الملفات مع SHA-256 لكل نسخة</li><li>صندوق صادر (Outbox) ومهام خلفية</li></ul>
+      </div>
+    </div>
+    <p class="flow-note">اتجاه الاعتماد في الكود: <strong>Domain ← Application ← Infrastructure ← Server</strong>؛ والواجهة مشروع مستقل يتكلم مع الخادم عبر <code>/api</code> فقط.</p>
+  </section>
+
+  <!-- ===================== Lifecycle simulator ===================== -->
+  <section id="lifecycle">
+    <h2>٢ — دورة حياة الوثيقة (محاكاة تفاعلية)</h2>
+    <p class="muted">
+      ابدأ بـ«إنشاء مسودة»، أو اضغط «تشغيل السيناريو الكامل». جرّب أيضاً: الاستلام قبل تسجيل الوثيقة في سجل القسم (سيُرفض)،
+      أو إضافة مرفق بعد الأرشفة، أو الدخول بدور «مطّلع» لترى كيف تُعطَّل الأزرار.
+    </p>
+
+    <div class="card">
+      <div class="sim-controls">
+        <label for="roleSel">الدور الحالي:
+          <select id="roleSel"></select>
+        </label>
+        <button class="btn primary" id="playBtn" type="button">▶ تشغيل السيناريو الكامل</button>
+        <button class="btn" id="resetBtn" type="button">↺ إعادة الضبط</button>
+        <p class="role-info" id="roleInfo"></p>
+      </div>
+
+      <div class="sim-grid">
+        <!-- left column: state + actions -->
+        <div class="col">
+          <div class="card" style="box-shadow:none">
+            <div class="stepper-title">حالة الوثيقة</div>
+            <ol class="stepper" id="docStepper"></ol>
+            <div class="stepper-title">حالة الحركة بين الأقسام</div>
+            <ol class="stepper" id="mvStepper"></ol>
+            <div class="stepper-title">أين الوثيقة الآن؟</div>
+            <div class="map" id="map" aria-live="polite"></div>
+            <dl class="facts" id="facts"></dl>
+          </div>
+
+          <div class="card" style="box-shadow:none">
+            <h3>الإجراءات المتاحة الآن</h3>
+            <div id="actions"></div>
+          </div>
+        </div>
+
+        <!-- right column: log, audit, notifications, files -->
+        <div class="col">
+          <div class="card" style="box-shadow:none">
+            <h3>سجل التدقيق (سلسلة تجزئة)</h3>
+            <div class="audit-bar">
+              <button class="btn" id="checkBtn" type="button">🔍 فحص السلامة</button>
+              <button class="btn" id="tamperBtn" type="button">✏️ تلاعب بسجل قديم</button>
+              <span id="verdict" class="verdict" hidden></span>
+            </div>
+            <ul class="timeline" id="timeline"></ul>
+          </div>
+          <div class="card" style="box-shadow:none">
+            <h3>🔔 الإشعارات المرسلة</h3>
+            <ul class="notes" id="notes"></ul>
+          </div>
+          <div class="card" style="box-shadow:none">
+            <h3>📎 المرفقات</h3>
+            <ul class="files" id="files"></ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:14px">
+      <h3>شكل الخطأ عند الرفض</h3>
+      <p class="muted">كل خطأ في الخادم يعود بصيغة <span class="ltr">ProblemDetails</span>، وعنوانه (<code>title</code>) هو رمز الخطأ. الواجهة لا تعرض النص الإنجليزي أبداً بل تترجم الرمز إلى العربية. آخر خطأ في المحاكاة يظهر هنا (رمز «الاستلام قبل التسجيل» توضيحي، أما <code>Correspondence.DocumentArchived</code> فحقيقي):</p>
+      <pre class="problem" id="problem">// لم يحدث خطأ بعد — جرّب إضافة مرفق بعد الأرشفة.</pre>
+    </div>
+  </section>
+
+  <!-- ===================== Modules ===================== -->
+  <section id="modules">
+    <h2>٣ — وحدات النظام (Modules)</h2>
+    <p class="muted">كل وحدة مسؤولة عن جزء من الدورة. مرّر المؤشر على البطاقة لترى أين تظهر في المحاكاة أعلاه.</p>
+    <div class="modules" id="moduleGrid"></div>
+  </section>
+
+  <!-- ===================== Rules ===================== -->
+  <section id="rules">
+    <h2>٤ — القواعد التي تحكم كل خطوة</h2>
+
+    <div class="card" style="margin-bottom:14px">
+      <h3>ثلاث بوابات قبل أي إجراء</h3>
+      <ol>
+        <li><strong>الصلاحية:</strong> رمز مثل <code>DOCUMENT_EDIT</code> داخل الرمز المميّز (JWT). عددها ١٧ صلاحية ومصدرها الوحيد <code>Permissions.cs</code>.</li>
+        <li><strong>النطاق:</strong> المستخدم ذو نطاق «قسم» لا يتصرف إلا بالوثائق والحركات التي تمسّ قسمه؛ نطاق «النظام» يرى الجميع.</li>
+        <li><strong>مستوى الوصول للوثيقة:</strong> <code>VIEW</code> للقراءة، <code>DOWNLOAD</code> للتعديل والتنزيل، <code>MANAGE</code> للإلغاء ورفع المرفقات — ويُمنح بالإنشاء أو بمنح صريح.</li>
+      </ol>
+    </div>
+
+    <div class="card" style="margin-bottom:14px">
+      <h3>مصفوفة الأدوار في المحاكاة</h3>
+      <div class="table-wrap"><table id="matrix"></table></div>
+    </div>
+
+    <div class="card">
+      <h3>قواعد تستحق الانتباه</h3>
+      <ul>
+        <li>لا يمكن <strong>الاستلام</strong> في الحركة قبل تسجيل الوثيقة في <strong>سجل القسم المستلم</strong> (تسجيل القسم يتطلب <code>NUMBERING_MANAGE</code>).</li>
+        <li>الرقم الرسمي فريد لكل سنة؛ تكراره يُرجع <code>Numbering.OfficialNumberTaken</code> (409).</li>
+        <li>الوثيقة <strong>المؤرشفة مجمّدة</strong>: ترفض المشاركين والمرفقات والأرقام (<code>Correspondence.DocumentArchived</code>) حتى فك الأرشفة، بينما تبقى القراءة والتنزيل والتحقق من التجزئة.</li>
+        <li>الفاعل <strong>لا يُشعَر أبداً</strong> بإجرائه، والوثيقة السرية تُعلَن لمنشئها وأصحاب المنح فقط.</li>
+        <li>كل طلب مصادَق يُسجَّل في التدقيق — حتى القراءة والفشل — ويُربط بحلقة تجزئة؛ تعديل أي سطر قديم يكسر السلسلة ويكشفه فحص السلامة.</li>
+        <li>فحص السلامة يرجع بـ<strong>200</strong> حتى حين <code>isValid: false</code> — اقرأ المحتوى لا رمز الحالة.</li>
+      </ul>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    مثال توضيحي مستقل — لا يتصل بالخادم ولا يحفظ بيانات. الأسماء والأرقام وسلسلة التجزئة (FNV مبسّطة) وهمية للشرح؛
+    المرجع الفعلي للمسارات والصلاحيات هو <span class="ltr">knowledge.md</span>.
+  </div>
+</footer>
+
+<div id="toast" role="status" aria-live="polite"></div>
+</body>
+</html>
