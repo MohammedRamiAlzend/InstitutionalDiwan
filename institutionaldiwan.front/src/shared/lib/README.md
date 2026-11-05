@@ -14,6 +14,7 @@ Contains pure, framework-independent helper functions for class merging, `Asia/D
 | `download.ts` | `parseContentDisposition(header)` extracts a display file name, preferring RFC 5987 `filename*=UTF-8''…` over a plain `filename=` and stripping any path segments; `saveBlobAsFile(blob, fileName)` triggers the browser download through a temporary object URL. |
 | `arabic.ts` | Normalizes Arabic search strings (unified hamzas, taa marbuta, and Eastern/Western numerals). (❌ pending) |
 | `columnPreferences.ts` | Reads/writes the per-table column visibility selection in `localStorage` under `diwan.table.<tableId>.columns.v1`; parses defensively, merges with the table's default columns, and exposes a reset to defaults. View state only — never sent to the API. |
+| `formDraft.ts` | Form-draft persistence in `localStorage` under `diwan.formDraft.<formId>.<userId>.v1`: `readFormDraft`, `writeFormDraft`, `clearFormDraft` and `useFormDraftAutosave` (debounced save, flush on unmount, `discard()` after a successful submit). Unsent input only; never sent to the API. |
 | `useTableState.ts` | Table view state in URL search params (`page`, `pageSize`, `search`, `sort`, `dir`, plus caller-declared filter keys); resets to page 1 when search, filters, sort, or size change. Page size defaults to 10 and is clamped to `MIN_PAGE_SIZE`..`MAX_PAGE_SIZE` (1..100, the same ceiling as the server's `PageRequest.MaxPageSize`); both bounds are exported so the grid can offer them as input limits, and a value equal to the effective `defaultPageSize` stays out of the URL. `clearQuery()` removes the search and every filter in one URL write, because two sequential setters would each rebuild from the same stale params and restore what the other cleared. |
 | `useDebouncedValue.ts` | Generic debounce hook used by table search inputs. |
 | `jwt.ts` | Decodes the JWT payload (no signature verification) and exposes the `must_change_password` UX hint the `/api/auth/me` response omits. |
@@ -23,12 +24,13 @@ Contains pure, framework-independent helper functions for class merging, `Asia/D
 | Item | State |
 | --- | --- |
 | `cn.ts`, `theme.ts` | ✅ Implemented |
-| `date.ts`, `format.ts`, `columnPreferences.ts`, `useTableState.ts`, `useDebouncedValue.ts`, `jwt.ts`, `tutorial.ts` | ✅ Implemented |
+| `date.ts`, `format.ts`, `formDraft.ts`, `columnPreferences.ts`, `useTableState.ts`, `useDebouncedValue.ts`, `jwt.ts`, `tutorial.ts` | ✅ Implemented |
 | `crypto.ts`, `download.ts` | ✅ Implemented (Module 06 Phase 1) |
 | `arabic.ts` | ❌ Pending the search slice |
 ## Change Log
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-05 | Claude | Added `formDraft.ts` (`formDraftKey`, `readFormDraft`, `writeFormDraft`, `clearFormDraft`, `useFormDraftAutosave`). |
 | 2026-11-04 | Claude | Fixed scrambled dates everywhere in the SPA: `formatDate` / `formatDateTime` used the `ar-SY` locale, whose output carries right-to-left marks and an Arabic comma, so in an RTL page the time jumped before the date and the year lost its slashes. They now read the numeric parts through `en-US`, assemble `2026/11/04` and `2026/11/04 09:12` (Damascus time, 24-hour) and wrap the result in a left-to-right isolate, so every call site renders correctly with or without `dir="ltr"`. |
 | 2026-11-04 | Claude | Registry filtering by dynamic field values (plan `plans/document-registry-field-filters.md`): `useTableState` gained `repeatedKeys` (`repeated`, `setRepeated`, cleared with the filters) and `resetOnChange` (changing a filter key drops dependent parameters). |
 | 2026-11-04 | Claude | Module 10 notifications front end (plan `plans/module-10-notifications-frontend.md`): added `safeRelativeUrl`. |

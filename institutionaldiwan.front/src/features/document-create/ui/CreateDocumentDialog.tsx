@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Controller, useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Building2, FilePlus2, Hash, Landmark, Save, Search, UserRound } from 'lucide-react'
@@ -17,7 +17,14 @@ import { LOOKUP_SLUGS, useLookupEntries, usePreselectLookupDefault } from '@/ent
 import { useSessionStore } from '@/entities/user'
 import { ApiError, toArabicErrorMessage } from '@/shared/api'
 import { PARTICIPANT_ROLE, Permissions } from '@/shared/config'
-import { cn, useDebouncedValue } from '@/shared/lib'
+import {
+  clearFormDraft,
+  cn,
+  formDraftKey,
+  readFormDraft,
+  useDebouncedValue,
+  useFormDraftAutosave,
+} from '@/shared/lib'
 import {
   Button,
   Checkbox,
@@ -68,6 +75,53 @@ const RECIPIENT_TARGET_OPTIONS = [
   },
 ] as const
 
+interface SavedDraft {
+  values?: Partial<CreateDocumentFormValues>
+  fieldValues?: FieldValueMap
+}
+
+function buildEmptyValues(canManageNumbering: boolean): CreateDocumentFormValues {
+  return {
+    title: '',
+    documentTypeId: '',
+    subjectSummary: '',
+    registryNumberText: '',
+    registryDate: todayIso(),
+    destinationDepartmentId: '',
+    movementTypeId: '',
+    movementInstructions: '',
+    documentDate: '',
+    externalReferenceNumber: '',
+    externalDocumentDate: '',
+    mode: canManageNumbering ? 'register' : 'draft',
+    addRecipient: false,
+    recipientType: 'external',
+    recipientOrganizationId: '',
+    recipientDepartmentId: '',
+    recipientPersonName: '',
+  }
+}
+
+/** A draft is worth keeping once the user typed anything meaningful. */
+function hasDraftContent(
+  values: Partial<CreateDocumentFormValues> | undefined,
+  fieldValues: FieldValueMap,
+): boolean {
+  const typed = [
+    values?.title,
+    values?.subjectSummary,
+    values?.registryNumberText,
+    values?.movementInstructions,
+    values?.externalReferenceNumber,
+    values?.recipientPersonName,
+  ]
+  return (
+    typed.some((text) => Boolean(text?.trim())) ||
+    Boolean(values?.destinationDepartmentId) ||
+    Object.values(fieldValues).some((entry) => entry.trim())
+  )
+}
+
 /**
  * Two creation paths sharing one form: save as DRAFT, or register immediately
  * with the number and date written in the creator's department register (the system
@@ -80,6 +134,15 @@ export function CreateDocumentDialog({ open, onOpenChange }: CreateDocumentDialo
   )
   const canAddRecipient = useSessionStore((state) =>
     state.hasPermission(Permissions.DocumentEdit),
+  )
+
+  const userId = useSessionStore((state) => state.user?.userId)
+  // Unsent input survives an accidental close; it is dropped only after a successful submit.
+  const draftKey = formDraftKey('document-create', userId)
+  const [restored] = useState(() => readFormDraft<SavedDraft>(draftKey))
+  const [saveDraft, setSaveDraft] = useState(true)
+  const [restoredNoticeVisible, setRestoredNoticeVisible] = useState(() =>
+    hasDraftContent(restored?.values, restored?.fieldValues ?? {}),
   )
 
   const typesQuery = useLookupEntries(LOOKUP_SLUGS.DocumentTypes)
@@ -102,6 +165,7 @@ export function CreateDocumentDialog({ open, onOpenChange }: CreateDocumentDialo
 
   const {
     register,
+    reset,
     control,
     getValues,
     handleSubmit,
@@ -111,25 +175,7 @@ export function CreateDocumentDialog({ open, onOpenChange }: CreateDocumentDialo
     formState: { errors },
   } = useForm<CreateDocumentFormValues>({
     resolver: zodResolver(createDocumentSchema),
-    defaultValues: {
-      title: '',
-      documentTypeId: '',
-      subjectSummary: '',
-      registryNumberText: '',
-      registryDate: todayIso(),
-      destinationDepartmentId: '',
-      movementTypeId: '',
-      movementInstructions: '',
-      documentDate: '',
-      externalReferenceNumber: '',
-      externalDocumentDate: '',
-      mode: canManageNumbering ? 'register' : 'draft',
-      addRecipient: false,
-      recipientType: 'external',
-      recipientOrganizationId: '',
-      recipientDepartmentId: '',
-      recipientPersonName: '',
-    },
+    defaultValues: { ...buildEmptyValues(canManageNumbering), ...restored?.values },
   })
 
   usePreselectLookupDefault(typesQuery.data, getValues('documentTypeId'), (value) => setValue('documentTypeId', value))
@@ -145,8 +191,18 @@ export function CreateDocumentDialog({ open, onOpenChange }: CreateDocumentDialo
     enabled: open,
   })
   const schemaFields = schemaQuery.data?.schema?.fields ?? []
-  const [fieldValues, setFieldValues] = useState<FieldValueMap>({})
+  const [fieldValues, setFieldValues] = useState<FieldValueMap>(restored?.fieldValues ?? {})
   const [fieldErrors, setFieldErrors] = useState<FieldValueErrors>({})
+  const watched = useWatch({ control })
+  const draftHasContent = hasDraftContent(watched, fieldValues)
+  const draftAutosave = useFormDraftAutosave(
+    draftKey,
+    { values: watched, fieldValues },
+    saveDraft && draftHasContent,
+  )
+  useEffect(() => {
+    if (saveDraft && !draftHasContent) clearFormDraft(draftKey)
+  }, [draftKey, draftHasContent, saveDraft])
   const addRecipient = useWatch({ control, name: 'addRecipient' })
   const recipientType = useWatch({ control, name: 'recipientType' })
 
@@ -216,6 +272,14 @@ export function CreateDocumentDialog({ open, onOpenChange }: CreateDocumentDialo
   const changeMode = (nextMode: CreateDocumentMode) => {
     setValue('mode', nextMode)
     clearErrors(['registryNumberText', 'registryDate', 'movementTypeId'])
+  }
+
+  const discardRestoredDraft = () => {
+    clearFormDraft(draftKey)
+    reset(buildEmptyValues(canManageNumbering))
+    setFieldValues({})
+    setFieldErrors({})
+    setRestoredNoticeVisible(false)
   }
 
   const onSubmit = handleSubmit(async (values) => {
@@ -290,6 +354,8 @@ export function CreateDocumentDialog({ open, onOpenChange }: CreateDocumentDialo
         }
       }
 
+      setSaveDraft(false)
+      draftAutosave.discard()
       setFieldValues({})
       onOpenChange(false)
     } catch (error) {
@@ -339,6 +405,18 @@ export function CreateDocumentDialog({ open, onOpenChange }: CreateDocumentDialo
         noValidate
         className="grid gap-4 sm:grid-cols-2"
       >
+        {restoredNoticeVisible && (
+          <div
+            role="status"
+            className="sm:col-span-2 flex flex-wrap items-center justify-between gap-2 rounded-lg bg-accent/10 px-3 py-2 text-sm text-foreground"
+          >
+            <span>استُعيدت بياناتك غير المرسلة من المرة السابقة. تُحفظ تلقائيًا حتى تُرسل الوثيقة.</span>
+            <Button type="button" variant="ghost" size="sm" onClick={discardRestoredDraft} disabled={pending}>
+              مسح وبدء من جديد
+            </Button>
+          </div>
+        )}
+
         <div
           role="radiogroup"
           aria-label="طريقة إنشاء الوثيقة"
