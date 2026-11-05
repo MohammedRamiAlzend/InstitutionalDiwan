@@ -2,13 +2,20 @@
 export interface UpdateDraftDocumentRequest {
   title: string
   subjectSummary?: string | null
-  confidentialityLevelId?: number | null
-  priorityLevelId?: number | null
 }
 
-/** `POST /api/documents/{documentId}/register` — omit the year to use the document/current year. */
+/**
+ * `POST /api/documents/{documentId}/register` — the system issues the central number; the typed
+ * register number and date go into the caller's department register, optionally with a movement.
+ */
 export interface RegisterDraftDocumentRequest {
-  numberingYear?: number | null
+  departmentRegistryNumberText: string
+  departmentRegistryDate: string
+  movement?: {
+    destinationDepartmentId: string
+    movementTypeId: number
+    instructions?: string | null
+  } | null
 }
 
 /** `POST /api/documents/{documentId}/participants` — exactly one target must be supplied. */

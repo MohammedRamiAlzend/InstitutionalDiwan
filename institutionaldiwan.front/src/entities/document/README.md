@@ -61,6 +61,7 @@ paging/search/sort/filter params and keeps the previous page visible while the n
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-05 | Claude | `DocumentResponse.directionId/confidentialityLevelId/priorityLevelId` are now `number | null`; `DocumentDirectionBadge` and the `directionId` list param were removed (suspended). |
 | 2026-11-04 | Claude | Registry filtering by dynamic field values (plan `plans/document-registry-field-filters.md`): `DocumentListParams.fieldFilters`; `documentApi.list` serializes arrays as repeated keys (`paramsSerializer: { indexes: null }`). |
 | 2026-11-03 | Claude | Added `RestrictedDocumentLabel`, `isDocumentRestricted` and `documentRowLabel` for rows the API keeps but blanks when the caller cannot view the document. |
 | 2026-10-29 | agent | Module 04 Phase 4: `NumberStatusBadge` keys its Arabic labels off `DOCUMENT_NUMBER_STATUS` from `@/shared/config` instead of local numeric literals; behaviour and fallback unchanged. |

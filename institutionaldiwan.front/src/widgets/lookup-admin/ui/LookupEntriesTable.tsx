@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react'
-import { Copy, Pencil, Plus, Power, PowerOff, RefreshCw } from 'lucide-react'
+import { Copy, Pencil, Plus, Power, PowerOff, RefreshCw, Star, StarOff } from 'lucide-react'
 import { toast } from 'sonner'
 import { LOOKUP_FALLBACKS, useLookupEntries, type LookupEntryResponse } from '@/entities/lookup'
 import {
   LookupEntryFormDialog,
   useSetLookupEntryActiveMutation,
+  useSetLookupEntryDefaultMutation,
 } from '@/features/lookup-manage'
 import { toArabicErrorMessage } from '@/shared/api'
 import { lookupCatalogMeta } from '@/shared/config'
@@ -61,6 +62,7 @@ export function LookupEntriesTable({ lookup }: LookupEntriesTableProps) {
   const [statusEntryId, setStatusEntryId] = useState<number | null>(null)
   const statusEntry = allEntries.find((entry) => entry.id === statusEntryId) ?? null
   const statusMutation = useSetLookupEntryActiveMutation()
+  const defaultMutation = useSetLookupEntryDefaultMutation()
 
   const openCreate = () => {
     setFormEntry(null)
@@ -77,6 +79,15 @@ export function LookupEntriesTable({ lookup }: LookupEntriesTableProps) {
       toast.success('تم نسخ المعرّف.')
     } catch {
       toast.error('تعذّر النسخ إلى الحافظة.')
+    }
+  }
+
+  const handleToggleDefault = async (entry: LookupEntryResponse) => {
+    try {
+      await defaultMutation.mutateAsync({ lookup, id: entry.id, isDefault: !entry.isDefault })
+      toast.success(entry.isDefault ? 'تمت إزالة القيمة الافتراضية.' : 'تم تعيين القيمة الافتراضية.')
+    } catch (error) {
+      toast.error(toArabicErrorMessage(error))
     }
   }
 
@@ -120,6 +131,7 @@ export function LookupEntriesTable({ lookup }: LookupEntriesTableProps) {
           <span className="flex items-center gap-2 text-sm text-foreground">
             {entry.descAr}
             {systemIds.has(entry.id) && <Badge variant="outline">نظامية</Badge>}
+            {entry.isDefault && <Badge variant="accent">افتراضية</Badge>}
           </span>
         ),
       },
@@ -167,6 +179,17 @@ export function LookupEntriesTable({ lookup }: LookupEntriesTableProps) {
       label: 'تعديل التسمية',
       icon: <Pencil className="size-4" aria-hidden />,
       onSelect: () => openEdit(entry),
+    },
+    {
+      id: 'toggle-default',
+      label: entry.isDefault ? 'إزالة الافتراضية' : 'تعيين كقيمة افتراضية',
+      icon: entry.isDefault ? (
+        <StarOff className="size-4" aria-hidden />
+      ) : (
+        <Star className="size-4" aria-hidden />
+      ),
+      disabled: !entry.isDefault && !entry.isActive,
+      onSelect: () => void handleToggleDefault(entry),
     },
     {
       id: 'toggle-active',

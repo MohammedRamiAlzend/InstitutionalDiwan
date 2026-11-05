@@ -321,10 +321,10 @@ export function MovementQueueTable({ kind }: MovementQueueTableProps) {
           ]),
       {
         id: 'copy-number',
-        label: 'نسخ الرقم الرسمي',
+        label: 'نسخ رقم النظام',
         icon: <Hash className="size-4" aria-hidden />,
         disabled: !item.officialNumberText,
-        onSelect: () => void copyValue(item.officialNumberText ?? '', 'الرقم الرسمي'),
+        onSelect: () => void copyValue(item.officialNumberText ?? '', 'رقم النظام'),
       },
       {
         id: 'copy-id',

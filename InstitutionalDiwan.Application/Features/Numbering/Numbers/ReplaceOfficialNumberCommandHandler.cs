@@ -85,8 +85,7 @@ internal sealed class ReplaceOfficialNumberCommandHandler
         if (sequenceResult.IsFailure)
             return Result.Failure<DocumentNumberResponse>(sequenceResult.Error);
 
-        var numberText = OfficialNumberFormatter.Format(
-            registry.FormatPattern, numberingYear, sequenceResult.Value);
+        var numberText = OfficialNumberFormatter.NewSystemNumber();
 
         if (await _documentNumberRepository.ExistsByNumberAndYearAsync(
                 numberText, numberingYear, cancellationToken))

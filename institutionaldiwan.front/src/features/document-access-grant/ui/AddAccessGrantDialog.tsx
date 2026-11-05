@@ -3,7 +3,7 @@ import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Search } from 'lucide-react'
 import { toast } from 'sonner'
-import { LOOKUP_SLUGS, useLookupEntries } from '@/entities/lookup'
+import { LOOKUP_SLUGS, useLookupEntries, usePreselectLookupDefault } from '@/entities/lookup'
 import { useUserOptions } from '@/entities/user'
 import { toArabicErrorMessage } from '@/shared/api'
 import { useDebouncedValue } from '@/shared/lib'
@@ -36,12 +36,16 @@ export function AddAccessGrantDialog({
   const {
     register,
     control,
+    getValues,
+    setValue,
     handleSubmit,
     formState: { errors },
   } = useForm<GrantAccessFormValues>({
     resolver: zodResolver(grantAccessSchema),
     defaultValues: { userId: '', accessLevelId: '', reason: '', expiresAt: '' },
   })
+
+  usePreselectLookupDefault(levelsQuery.data, getValues('accessLevelId'), (value) => setValue('accessLevelId', value))
 
   const usersQuery = useUserOptions(
     {

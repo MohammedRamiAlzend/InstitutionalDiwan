@@ -26,12 +26,13 @@ public sealed class Document : AggregateRoot<Guid>
     public string? SubjectSummary { get; private set; }
     // FK → DocumentType.Id (InstitutionalDiwan.Domain.Entities.Correspondence.DocumentType)
     public int DocumentTypeId { get; private set; }
-    // FK → DocumentDirection.Id (InstitutionalDiwan.Domain.Entities.Correspondence.DocumentDirection)
-    public int DirectionId { get; private set; }
-    // FK → DocumentConfidentialityLevel.Id
-    public int ConfidentialityLevelId { get; private set; } = DocumentConfidentialityLevel.NormalId;
-    // FK → DocumentPriorityLevel.Id
-    public int PriorityLevelId { get; private set; } = DocumentPriorityLevel.NormalId;
+    // FK → DocumentDirection.Id. Suspended for now: null means "not classified" and is the default.
+    public int? DirectionId { get; private set; }
+    // FK → DocumentConfidentialityLevel.Id. Suspended for now: null is treated as normal. Values already
+    // stored (e.g. SECRET) keep restricting access.
+    public int? ConfidentialityLevelId { get; private set; }
+    // FK → DocumentPriorityLevel.Id. Suspended for now: null means "not set".
+    public int? PriorityLevelId { get; private set; }
     // FK → DocumentStatusType.Id (InstitutionalDiwan.Domain.Entities.Correspondence.DocumentStatusType)
     public int CurrentStatusId { get; private set; } = DocumentStatusType.DraftId;
     public int? StatusBeforeArchiveId { get; private set; }
@@ -75,12 +76,12 @@ public sealed class Document : AggregateRoot<Guid>
     public static Result<Document> CreateDraft(
         string? title,
         int documentTypeId,
-        int directionId,
+        int? directionId,
         Guid owningDepartmentId,
         Guid createdByUserId,
         string? subjectSummary = null,
-        int confidentialityLevelId = DocumentConfidentialityLevel.NormalId,
-        int priorityLevelId = DocumentPriorityLevel.NormalId,
+        int? confidentialityLevelId = null,
+        int? priorityLevelId = null,
         DateTime? documentDate = null,
         string? externalReferenceNumber = null,
         DateTime? externalDocumentDate = null,
@@ -96,7 +97,8 @@ public sealed class Document : AggregateRoot<Guid>
         if (documentTypeId <= 0)
             return Result.Failure<Document>(DomainErrors.Correspondence.TypeCodeEmpty);
 
-        if (directionId is not (DocumentDirection.InternalId or DocumentDirection.IncomingId or DocumentDirection.OutgoingId))
+        if (directionId is { } direction &&
+            direction is not (DocumentDirection.InternalId or DocumentDirection.IncomingId or DocumentDirection.OutgoingId))
             return Result.Failure<Document>(DomainErrors.Correspondence.DirectionInvalid);
 
         var doc = new Document
@@ -106,8 +108,8 @@ public sealed class Document : AggregateRoot<Guid>
             SubjectSummary = string.IsNullOrWhiteSpace(subjectSummary) ? null : subjectSummary.Trim(),
             DocumentTypeId = documentTypeId,
             DirectionId = directionId,
-            ConfidentialityLevelId = confidentialityLevelId <= 0 ? DocumentConfidentialityLevel.NormalId : confidentialityLevelId,
-            PriorityLevelId = priorityLevelId <= 0 ? DocumentPriorityLevel.NormalId : priorityLevelId,
+            ConfidentialityLevelId = confidentialityLevelId is > 0 ? confidentialityLevelId : null,
+            PriorityLevelId = priorityLevelId is > 0 ? priorityLevelId : null,
             CurrentStatusId = DocumentStatusType.DraftId,
             OwningDepartmentId = owningDepartmentId,
             CreatedByUserId = createdByUserId,

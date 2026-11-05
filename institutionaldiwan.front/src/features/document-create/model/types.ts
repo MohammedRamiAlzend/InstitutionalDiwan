@@ -1,15 +1,25 @@
 import type { FieldValueRequest } from '@/entities/document-schema'
 
-/** `POST /api/documents` — registers the document with a manual official number. */
+/** Optional routing sent together with the new document; the movement is opened and sent at once. */
+export interface CreateDocumentMovementRequest {
+  destinationDepartmentId: string
+  movementTypeId?: number
+  assignedToUserId?: string | null
+  instructions?: string | null
+  dueDate?: string | null
+}
+
+/**
+ * `POST /api/documents` — registers the document with a system-issued number, writes the
+ * department register line (number + date typed by the user) and optionally sends it on.
+ */
 export interface CreateDocumentRequest {
   title: string
   documentTypeId: number
-  directionId: number
-  officialNumberText: string
-  numberingYear: number
+  departmentRegistryNumberText: string
+  departmentRegistryDate: string
+  movement?: CreateDocumentMovementRequest | null
   subjectSummary?: string | null
-  confidentialityLevelId?: number | null
-  priorityLevelId?: number | null
   /** Dynamic field values for the type's published schema; omit when the type has none. */
   fieldValues?: FieldValueRequest[]
 }
@@ -18,10 +28,7 @@ export interface CreateDocumentRequest {
 export interface CreateDraftDocumentRequest {
   title: string
   documentTypeId: number
-  directionId: number
   subjectSummary?: string | null
-  confidentialityLevelId?: number | null
-  priorityLevelId?: number | null
   fieldValues?: FieldValueRequest[]
   documentDate?: string | null
   externalReferenceNumber?: string | null

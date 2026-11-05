@@ -4,5 +4,6 @@ export {
   useCreateLookupEntryMutation,
   useRelabelLookupEntryMutation,
   useSetLookupEntryActiveMutation,
+  useSetLookupEntryDefaultMutation,
 } from './api/lookupMutations'
 export { LookupEntryFormDialog } from './ui/LookupEntryFormDialog'

@@ -186,8 +186,8 @@ required for every table.
 | `POST` | `/api/documents/{documentId}/participants` | `DOCUMENT_EDIT` | + `DOWNLOAD` access. |
 | `POST` | `/api/documents/{documentId}/cancel` | `DOCUMENT_EDIT` | + `MANAGE` access: the author, a `MANAGE` grant, or an institution-wide scope. |
 
-`POST /api/documents` requires `title`, `documentTypeId`, `directionId`, `officialNumberText`, and
-`numberingYear`; `409` with `Numbering.OfficialNumberTaken` when the pair already exists.
+`POST /api/documents` requires `title`, `documentTypeId`, `officialNumberText`, and
+`numberingYear`; `409` with `Numbering.OfficialNumberTaken` when the pair already exists. `directionId`, `confidentialityLevelId` and `priorityLevelId` are suspended: optional on both create endpoints, stored as null and returned as null (null confidentiality counts as normal; stored SECRET/TOP_SECRET values still restrict access).
 
 ### Document access grants — `/api/documents/{documentId}/access-grants`
 
@@ -472,11 +472,21 @@ Error codes: `Relations.*` (`SelfRelation`, `RelationTypeNotFound`, `RelationTyp
 `CycleDetected`, `DocumentCancelled`, `RelationNotFound`, `ReasonRequired`, `ReasonTooLong`, `NotesTooLong`,
 `GraphDepthInvalid`), plus `Correspondence.DocumentArchived`. All twelve `Relations.*` codes have Arabic entries in `errorMessages.ts` (Module 08 section).
 
+### Create and register a document (system number)
+
+`POST /api/documents` body: `title`, `documentTypeId`, `departmentRegistryNumberText`, `departmentRegistryDate` (required,
+written into the caller's department register; `409 Numbering.DepartmentRegistryNotConfigured` if none), optional `movement`
+(`destinationDepartmentId`, `movementTypeId`, `instructions`) which opens and sends the movement at once. The central number is a
+server-issued GUID (`officialNumberText`); no number or year is accepted. `POST /api/documents/{id}/register` takes the same
+optional register line and movement.
+
 ### Lookups — `/api/lookups/{lookup}`
 
 `GET` (list, `?includeInactive=`), `GET /{lookup}/{id}` — `DOCUMENT_VIEW`;
 `POST`, `PUT /{lookup}/{id}`, `PATCH /{lookup}/{id}/deactivate`, `PATCH /{lookup}/{id}/activate` —
-`LOOKUP_MANAGE`. Unknown slug → 404.
+`PATCH /{lookup}/{id}/set-default`, `PATCH /{lookup}/{id}/clear-default` —
+`LOOKUP_MANAGE`. Unknown slug → 404. Entries carry `isDefault` (at most one per catalog; the SPA preselects it in
+create-form selects; an inactive entry cannot be default → `409 Lookup.DefaultMustBeActive`; deactivating clears it).
 
 33 lookup slugs (`GET /api/lookups`; `file-storage-providers` and `notification-types` reject `POST` with `400 Lookup.CatalogReadOnly`):
 

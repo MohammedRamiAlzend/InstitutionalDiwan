@@ -57,11 +57,7 @@ export const DOCUMENT_DIRECTION = {
 } as const
 
 export const DOCUMENT_TYPE = {
-  IncomingLetter: 1,
-  OutgoingLetter: 2,
-  InternalMemo: 3,
-  Circular: 4,
-  Decision: 5,
+  BaseRecord: 1,
 } as const
 
 export const DOCUMENT_STATUS = {
@@ -182,15 +178,6 @@ export const AUDIT_ENTITY_TYPE = {
   Operation: 13,
 } as const
 
-/**
- * Seeded document types that imply one direction; circulars and decisions use
- * `All directions`, so the form leaves their direction to the user.
- */
-export const DOCUMENT_TYPE_DIRECTION: Readonly<Record<number, number>> = {
-  [DOCUMENT_TYPE.IncomingLetter]: DOCUMENT_DIRECTION.Incoming,
-  [DOCUMENT_TYPE.OutgoingLetter]: DOCUMENT_DIRECTION.Outgoing,
-  [DOCUMENT_TYPE.InternalMemo]: DOCUMENT_DIRECTION.Internal,
-}
 
 /** `archive-event-types` — mirrors `ArchiveEventType` in the Domain. */
 export const ARCHIVE_EVENT_TYPE = {

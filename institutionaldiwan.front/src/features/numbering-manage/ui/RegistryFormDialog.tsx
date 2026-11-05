@@ -40,7 +40,6 @@ export function RegistryFormDialog({
 
   const departmentsQuery = useDepartmentOptions({ enabled: open })
   const documentTypesQuery = useLookupEntries(LOOKUP_SLUGS.DocumentTypes)
-  const directionsQuery = useLookupEntries(LOOKUP_SLUGS.DocumentDirections)
   const resetPoliciesQuery = useLookupEntries(LOOKUP_SLUGS.NumberingResetPolicies)
 
   const {
@@ -57,7 +56,6 @@ export function RegistryFormDialog({
       resetPolicyId: String(registry?.resetPolicyId ?? NUMBERING_RESET_POLICY.Yearly),
       departmentId: registry?.departmentId ?? NONE,
       documentTypeId: registry?.documentTypeId ? String(registry.documentTypeId) : NONE,
-      directionId: registry?.directionId ? String(registry.directionId) : NONE,
     },
   })
 
@@ -91,19 +89,6 @@ export function RegistryFormDialog({
     [documentTypesQuery.data],
   )
 
-  const directionOptions = useMemo(
-    () => [
-      { value: NONE, label: 'كل الاتجاهات' },
-      ...(directionsQuery.data ?? [])
-        .filter((entry) => entry.id !== 4)
-        .map((entry) => ({
-          value: String(entry.id),
-          label: entry.descAr,
-        })),
-    ],
-    [directionsQuery.data],
-  )
-
   const resetPolicyOptions = useMemo(
     () =>
       (resetPoliciesQuery.data ?? []).map((entry) => ({
@@ -132,7 +117,8 @@ export function RegistryFormDialog({
       resetPolicyId: Number(values.resetPolicyId),
       departmentId: values.departmentId === NONE ? null : values.departmentId,
       documentTypeId: values.documentTypeId === NONE ? null : Number(values.documentTypeId),
-      directionId: values.directionId === NONE ? null : Number(values.directionId),
+      // Direction scoping is suspended: the form no longer edits it, but an existing value is kept.
+      directionId: registry?.directionId ?? null,
     }
 
     try {
@@ -160,7 +146,7 @@ export function RegistryFormDialog({
       description={
         isEdit
           ? 'يمكنك تغيير النطاق وسياسة التصفير. يُقفل القالب بعد إصدار أول رقم من السجل.'
-          : 'يحدد السجل نطاق الأرقام (دائرة/نوع/اتجاه) وقالب صياغتها. الرمز لا يتغير بعد الإنشاء.'
+          : 'يحدد السجل نطاق الأرقام (دائرة/نوع) وقالب صياغتها. الرمز لا يتغير بعد الإنشاء.'
       }
       size="lg"
       footer={
@@ -251,21 +237,6 @@ export function RegistryFormDialog({
           />
         </FormField>
 
-        <FormField label="الاتجاه">
-          <Controller
-            control={control}
-            name="directionId"
-            render={({ field }) => (
-              <Select
-                value={field.value}
-                onValueChange={field.onChange}
-                options={directionOptions}
-                disabled={mutation.isPending || directionsQuery.isLoading}
-                aria-label="الاتجاه"
-              />
-            )}
-          />
-        </FormField>
 
         <FormField
           label="سياسة التصفير"

@@ -22,6 +22,9 @@ public static class DomainErrors
         public static Error EntryInUse(string lookup, int id) =>
             Error.Conflict("Lookup.EntryInUse", $"Lookup entry {id} in the '{lookup}' catalog is referenced by other records and cannot be deactivated.");
 
+        public static Error DefaultMustBeActive(string lookup, int id) =>
+            Error.Conflict("Lookup.DefaultMustBeActive", $"Lookup entry {id} in the '{lookup}' catalog is inactive and cannot be the default.");
+
         public static Error CatalogReadOnly(string lookup) =>
             Error.Validation("Lookup.CatalogReadOnly", $"The '{lookup}' catalog cannot be extended through the generic lookups endpoint because it requires additional fields.");
     }

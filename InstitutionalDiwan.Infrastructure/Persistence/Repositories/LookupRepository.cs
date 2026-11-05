@@ -107,6 +107,33 @@ internal sealed class LookupRepository : ILookupRepository
         return entry;
     }
 
+    public async Task<Result<LookupEntity?>> SetDefaultStateAsync(
+        string lookupKey,
+        int id,
+        bool isDefault,
+        CancellationToken cancellationToken = default)
+    {
+        if (!LookupCatalog.TryGet(lookupKey, out var catalog))
+            return Result.Success<LookupEntity?>(null);
+
+        var entry = await catalog.GetByIdAsync(_context, id, cancellationToken);
+        if (entry is null)
+            return Result.Success<LookupEntity?>(null);
+
+        if (!isDefault)
+        {
+            entry.ClearDefault();
+            return Result.Success<LookupEntity?>(entry);
+        }
+
+        if (!entry.IsActive)
+            return Result.Failure<LookupEntity?>(DomainErrors.Lookup.DefaultMustBeActive(lookupKey, id));
+
+        await catalog.ClearOtherDefaultsAsync(_context, id, cancellationToken);
+        entry.MarkDefault();
+        return Result.Success<LookupEntity?>(entry);
+    }
+
     public async Task<bool> IsInUseAsync(
         string lookupKey,
         int id,
@@ -208,8 +235,10 @@ public sealed class LookupDefinition
         Type entityType,
         LookupEntryFactory createAsync,
         Func<DiwanDbContext, bool, CancellationToken, Task<IReadOnlyList<LookupEntity>>> listAsync,
-        Func<DiwanDbContext, int, CancellationToken, Task<LookupEntity?>> getByIdAsync)
+        Func<DiwanDbContext, int, CancellationToken, Task<LookupEntity?>> getByIdAsync,
+        Func<DiwanDbContext, int, CancellationToken, Task> clearOtherDefaultsAsync)
     {
+        ClearOtherDefaultsAsync = clearOtherDefaultsAsync;
         EntityType = entityType;
         CreateAsync = createAsync;
         ListAsync = listAsync;
@@ -223,6 +252,9 @@ public sealed class LookupDefinition
     public Func<DiwanDbContext, bool, CancellationToken, Task<IReadOnlyList<LookupEntity>>> ListAsync { get; }
 
     public Func<DiwanDbContext, int, CancellationToken, Task<LookupEntity?>> GetByIdAsync { get; }
+
+    /// <summary>Clears the default mark on every entry except the given id.</summary>
+    public Func<DiwanDbContext, int, CancellationToken, Task> ClearOtherDefaultsAsync { get; }
 }
 
 /// <summary>
@@ -308,7 +340,9 @@ public static class LookupCatalog
             (context, includeInactive, cancellationToken) =>
                 ListCoreAsync<TEntity>(context, includeInactive, cancellationToken),
             (context, id, cancellationToken) =>
-                GetCoreAsync<TEntity>(context, id, cancellationToken));
+                GetCoreAsync<TEntity>(context, id, cancellationToken),
+            (context, id, cancellationToken) =>
+                ClearOtherDefaultsCoreAsync<TEntity>(context, id, cancellationToken));
 
     private static LookupDefinition DefineDepartmentTypes() =>
         Define<DepartmentType>(async (context, id, desc, descAr, cancellationToken) =>
@@ -332,7 +366,9 @@ public static class LookupCatalog
                 Result.Failure<LookupEntity>(DomainErrors.Lookup.CatalogReadOnly(slug))),
             (context, includeInactive, cancellationToken) =>
                 ListCoreAsync<TEntity>(context, includeInactive, cancellationToken),
-            (context, id, cancellationToken) => GetCoreAsync<TEntity>(context, id, cancellationToken));
+            (context, id, cancellationToken) => GetCoreAsync<TEntity>(context, id, cancellationToken),
+            (context, id, cancellationToken) =>
+                ClearOtherDefaultsCoreAsync<TEntity>(context, id, cancellationToken));
 
     private static async Task<IReadOnlyList<LookupEntity>> ListCoreAsync<TEntity>(
         DiwanDbContext context,
@@ -346,6 +382,20 @@ public static class LookupCatalog
 
         var entries = await query.OrderBy(entry => entry.Id).ToListAsync(cancellationToken);
         return entries.Cast<LookupEntity>().ToList();
+    }
+
+    private static async Task ClearOtherDefaultsCoreAsync<TEntity>(
+        DiwanDbContext context,
+        int keepId,
+        CancellationToken cancellationToken)
+        where TEntity : LookupEntity
+    {
+        var others = await context.Set<TEntity>()
+            .Where(entry => entry.IsDefault && entry.Id != keepId)
+            .ToListAsync(cancellationToken);
+
+        foreach (var other in others)
+            other.ClearDefault();
     }
 
     private static async Task<LookupEntity?> GetCoreAsync<TEntity>(

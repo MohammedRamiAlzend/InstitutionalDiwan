@@ -13,14 +13,7 @@ import {
   type FieldValueMap,
 } from '@/entities/document-schema'
 import { useExternalOrganizations } from '@/entities/external-organization'
-import {
-  DOCUMENT_CONFIDENTIALITY,
-  DOCUMENT_DIRECTION,
-  DOCUMENT_PRIORITY,
-  DOCUMENT_TYPE_DIRECTION,
-  LOOKUP_SLUGS,
-  useLookupEntries,
-} from '@/entities/lookup'
+import { LOOKUP_SLUGS, useLookupEntries, usePreselectLookupDefault } from '@/entities/lookup'
 import { useSessionStore } from '@/entities/user'
 import { ApiError, toArabicErrorMessage } from '@/shared/api'
 import { PARTICIPANT_ROLE, Permissions } from '@/shared/config'
@@ -50,7 +43,9 @@ interface CreateDocumentDialogProps {
   onOpenChange: (open: boolean) => void
 }
 
-const CURRENT_YEAR = new Date().getFullYear()
+const NO_DESTINATION = '__none__'
+
+const todayIso = () => new Date().toISOString().slice(0, 10)
 
 const RECIPIENT_TARGET_OPTIONS = [
   {
@@ -75,7 +70,8 @@ const RECIPIENT_TARGET_OPTIONS = [
 
 /**
  * Two creation paths sharing one form: save as DRAFT, or register immediately
- * with a manual official number for the numbering year. An optional recipient
+ * with the number and date written in the creator's department register (the system
+ * issues the central number itself) and an optional movement sent at once. An optional recipient
  * is attached as a RECEIVER participant right after the document is created.
  */
 export function CreateDocumentDialog({ open, onOpenChange }: CreateDocumentDialogProps) {
@@ -87,9 +83,7 @@ export function CreateDocumentDialog({ open, onOpenChange }: CreateDocumentDialo
   )
 
   const typesQuery = useLookupEntries(LOOKUP_SLUGS.DocumentTypes)
-  const directionsQuery = useLookupEntries(LOOKUP_SLUGS.DocumentDirections)
-  const confidentialityQuery = useLookupEntries(LOOKUP_SLUGS.DocumentConfidentialityLevels)
-  const priorityQuery = useLookupEntries(LOOKUP_SLUGS.DocumentPriorityLevels)
+  const movementTypesQuery = useLookupEntries(LOOKUP_SLUGS.MovementTypes)
 
   const typeOptions = useMemo(
     () =>
@@ -98,32 +92,6 @@ export function CreateDocumentDialog({ open, onOpenChange }: CreateDocumentDialo
         label: entry.descAr,
       })),
     [typesQuery.data],
-  )
-
-  const directionOptions = useMemo(
-    () =>
-      (directionsQuery.data ?? [])
-        .filter((entry) => entry.id !== DOCUMENT_DIRECTION.All)
-        .map((entry) => ({ value: String(entry.id), label: entry.descAr })),
-    [directionsQuery.data],
-  )
-
-  const confidentialityOptions = useMemo(
-    () =>
-      (confidentialityQuery.data ?? []).map((entry) => ({
-        value: String(entry.id),
-        label: entry.descAr,
-      })),
-    [confidentialityQuery.data],
-  )
-
-  const priorityOptions = useMemo(
-    () =>
-      (priorityQuery.data ?? []).map((entry) => ({
-        value: String(entry.id),
-        label: entry.descAr,
-      })),
-    [priorityQuery.data],
   )
 
   const createMutation = useCreateDocumentMutation()
@@ -135,6 +103,7 @@ export function CreateDocumentDialog({ open, onOpenChange }: CreateDocumentDialo
   const {
     register,
     control,
+    getValues,
     handleSubmit,
     setValue,
     setError,
@@ -145,12 +114,12 @@ export function CreateDocumentDialog({ open, onOpenChange }: CreateDocumentDialo
     defaultValues: {
       title: '',
       documentTypeId: '',
-      directionId: '',
       subjectSummary: '',
-      confidentialityLevelId: String(DOCUMENT_CONFIDENTIALITY.Normal),
-      priorityLevelId: String(DOCUMENT_PRIORITY.Normal),
-      officialNumberText: '',
-      numberingYear: String(CURRENT_YEAR),
+      registryNumberText: '',
+      registryDate: todayIso(),
+      destinationDepartmentId: '',
+      movementTypeId: '',
+      movementInstructions: '',
       documentDate: '',
       externalReferenceNumber: '',
       externalDocumentDate: '',
@@ -162,6 +131,11 @@ export function CreateDocumentDialog({ open, onOpenChange }: CreateDocumentDialo
       recipientPersonName: '',
     },
   })
+
+  usePreselectLookupDefault(typesQuery.data, getValues('documentTypeId'), (value) => setValue('documentTypeId', value))
+  usePreselectLookupDefault(movementTypesQuery.data, getValues('movementTypeId'), (value) =>
+    setValue('movementTypeId', value),
+  )
 
   const mode = useWatch({ control, name: 'mode' })
   const documentTypeId = useWatch({ control, name: 'documentTypeId' })
@@ -213,15 +187,35 @@ export function CreateDocumentDialog({ open, onOpenChange }: CreateDocumentDialo
         })),
     [recipientDepartmentsQuery.data],
   )
+  const destinationQuery = useDepartmentOptions({ enabled: open && mode === 'register' })
+  const destinationOptions = useMemo(
+    () =>
+      (destinationQuery.data ?? [])
+        .filter((department) => department.isActive)
+        .map((department) => ({
+          value: department.departmentId,
+          label: `${department.nameAr} · ${department.code}`,
+        })),
+    [destinationQuery.data],
+  )
+  const movementTypeOptions = useMemo(
+    () =>
+      (movementTypesQuery.data ?? []).map((entry) => ({
+        value: String(entry.id),
+        label: entry.descAr,
+      })),
+    [movementTypesQuery.data],
+  )
+  const destinationDepartmentId = useWatch({ control, name: 'destinationDepartmentId' })
   const mutationError = mode === 'register' ? createMutation.error : draftMutation.error
-  // The conflict is surfaced on the official-number field; repeating it in the
+  // A taken register number is surfaced on its own field; repeating it in the
   // form-level banner would show the same message twice.
-  const officialNumberConflict =
-    mutationError instanceof ApiError && mutationError.code === 'Numbering.OfficialNumberTaken'
+  const registryNumberConflict =
+    mutationError instanceof ApiError && mutationError.code === 'Numbering.RegistryNumberTaken'
 
   const changeMode = (nextMode: CreateDocumentMode) => {
     setValue('mode', nextMode)
-    clearErrors(['officialNumberText', 'numberingYear'])
+    clearErrors(['registryNumberText', 'registryDate', 'movementTypeId'])
   }
 
   const onSubmit = handleSubmit(async (values) => {
@@ -233,10 +227,7 @@ export function CreateDocumentDialog({ open, onOpenChange }: CreateDocumentDialo
       fieldValues: schemaFields.length > 0 ? toFieldValueRequests(schemaFields, fieldValues) : undefined,
       title: values.title.trim(),
       documentTypeId: Number(values.documentTypeId),
-      directionId: Number(values.directionId),
       subjectSummary: values.subjectSummary.trim() || null,
-      confidentialityLevelId: Number(values.confidentialityLevelId),
-      priorityLevelId: Number(values.priorityLevelId),
     }
 
     const recipientRequest =
@@ -258,8 +249,15 @@ export function CreateDocumentDialog({ open, onOpenChange }: CreateDocumentDialo
         values.mode === 'register'
           ? await createMutation.mutateAsync({
               ...shared,
-              officialNumberText: values.officialNumberText.trim(),
-              numberingYear: Number(values.numberingYear),
+              departmentRegistryNumberText: values.registryNumberText.trim(),
+              departmentRegistryDate: values.registryDate,
+              movement: values.destinationDepartmentId
+                ? {
+                    destinationDepartmentId: values.destinationDepartmentId,
+                    movementTypeId: Number(values.movementTypeId),
+                    instructions: values.movementInstructions.trim() || null,
+                  }
+                : null,
             })
           : await draftMutation.mutateAsync({
               ...shared,
@@ -270,7 +268,9 @@ export function CreateDocumentDialog({ open, onOpenChange }: CreateDocumentDialo
 
       const baseMessage =
         values.mode === 'register'
-          ? `تم تسجيل الوثيقة برقم ${values.officialNumberText.trim()}.`
+          ? values.destinationDepartmentId
+            ? 'تم تسجيل الوثيقة وإرسالها إلى القسم المحدد.'
+            : 'تم تسجيل الوثيقة وكتابة سطر السجل.'
           : 'تم حفظ الوثيقة كمسودة.'
 
       if (!recipientRequest) {
@@ -293,8 +293,8 @@ export function CreateDocumentDialog({ open, onOpenChange }: CreateDocumentDialo
       setFieldValues({})
       onOpenChange(false)
     } catch (error) {
-      if (error instanceof ApiError && error.code === 'Numbering.OfficialNumberTaken') {
-        setError('officialNumberText', {
+      if (error instanceof ApiError && error.code === 'Numbering.RegistryNumberTaken') {
+        setError('registryNumberText', {
           type: 'server',
           message: toArabicErrorMessage(error),
         })
@@ -315,7 +315,7 @@ export function CreateDocumentDialog({ open, onOpenChange }: CreateDocumentDialo
       open={open}
       onOpenChange={onOpenChange}
       title="وثيقة جديدة"
-      description="احفظ الوثيقة كمسودة لتسجيلها لاحقًا، أو سجّلها فورًا برقم رسمي. تُنسب الوثيقة إلى قسمك الأساسي تلقائيًا، ويمكنك إضافة مستلم اختياري الآن."
+      description="احفظ الوثيقة كمسودة لتسجيلها لاحقًا، أو سجّلها فورًا في سجل قسمك (يصدر النظام رقمه الخاص تلقائيًا) مع إرسالها إن أردت. تُنسب الوثيقة إلى قسمك الأساسي تلقائيًا، ويمكنك إضافة مستلم اختياري الآن."
       size="lg"
       footer={
         <>
@@ -356,7 +356,7 @@ export function CreateDocumentDialog({ open, onOpenChange }: CreateDocumentDialo
               <Save className="size-4" aria-hidden />
               حفظ كمسودة
             </span>
-            <span className="text-xs text-muted">بدون رقم رسمي؛ تُسجَّل لاحقًا من سجل الوثائق.</span>
+            <span className="text-xs text-muted">بدون رقم؛ تُسجَّل لاحقًا من سجل الوثائق.</span>
           </button>
           <button
             type="button"
@@ -368,10 +368,10 @@ export function CreateDocumentDialog({ open, onOpenChange }: CreateDocumentDialo
           >
             <span className="flex items-center gap-1.5 text-sm font-medium text-foreground">
               <FilePlus2 className="size-4" aria-hidden />
-              تسجيل فوري برقم
+              تسجيل فوري في السجل
             </span>
             <span className="text-xs text-muted">
-              حالة «مسجل» مع رقم رسمي وسنة ترقيم غير مستخدمة.
+              حالة «مسجل» برقم نظام تلقائي، مع رقمك وتاريخك في سجل القسم.
             </span>
           </button>
         </div>
@@ -418,12 +418,6 @@ export function CreateDocumentDialog({ open, onOpenChange }: CreateDocumentDialo
                   }
                   setFieldValues({})
                   setFieldErrors({})
-                  const impliedDirection = DOCUMENT_TYPE_DIRECTION[Number(value)]
-                  if (impliedDirection) {
-                    setValue('directionId', String(impliedDirection), {
-                      shouldValidate: true,
-                    })
-                  }
                 }}
                 options={typeOptions}
                 disabled={pending || typesQuery.isLoading}
@@ -456,91 +450,90 @@ export function CreateDocumentDialog({ open, onOpenChange }: CreateDocumentDialo
           </fieldset>
         )}
 
-        <FormField label="الاتجاه" required error={errors.directionId?.message}>
-          <Controller
-            control={control}
-            name="directionId"
-            render={({ field }) => (
-              <Select
-                value={field.value || undefined}
-                onValueChange={field.onChange}
-                options={directionOptions}
-                disabled={pending || directionsQuery.isLoading}
-                invalid={Boolean(errors.directionId)}
-                placeholder="اختر الاتجاه…"
-                aria-label="اتجاه الوثيقة"
-              />
-            )}
-          />
-        </FormField>
-
-        <FormField
-          label="مستوى السرية"
-          required
-          error={errors.confidentialityLevelId?.message}
-        >
-          <Controller
-            control={control}
-            name="confidentialityLevelId"
-            render={({ field }) => (
-              <Select
-                value={field.value || undefined}
-                onValueChange={field.onChange}
-                options={confidentialityOptions}
-                disabled={pending}
-                invalid={Boolean(errors.confidentialityLevelId)}
-                aria-label="مستوى السرية"
-              />
-            )}
-          />
-        </FormField>
-
-        <FormField label="درجة الأولوية" required error={errors.priorityLevelId?.message}>
-          <Controller
-            control={control}
-            name="priorityLevelId"
-            render={({ field }) => (
-              <Select
-                value={field.value || undefined}
-                onValueChange={field.onChange}
-                options={priorityOptions}
-                disabled={pending}
-                invalid={Boolean(errors.priorityLevelId)}
-                aria-label="درجة الأولوية"
-              />
-            )}
-          />
-        </FormField>
-
         {mode === 'register' ? (
           <>
             <FormField
-              label="الرقم الرسمي"
+              label="رقم السجل (في دفتر قسمك)"
               required
-              error={errors.officialNumberText?.message}
+              error={errors.registryNumberText?.message}
             >
               <Input
-                id="document-official-number"
+                id="document-registry-number"
                 dir="ltr"
                 placeholder="1447/2026"
                 startIcon={<Hash className="size-4" aria-hidden />}
-                invalid={Boolean(errors.officialNumberText)}
-                {...register('officialNumberText')}
+                invalid={Boolean(errors.registryNumberText)}
+                {...register('registryNumberText')}
               />
             </FormField>
 
-            <FormField label="سنة الترقيم" required error={errors.numberingYear?.message}>
+            <FormField label="تاريخ السجل" required error={errors.registryDate?.message}>
               <Input
-                id="document-numbering-year"
-                type="number"
-                inputMode="numeric"
+                id="document-registry-date"
+                type="date"
                 dir="ltr"
-                min={1900}
-                max={2200}
-                invalid={Boolean(errors.numberingYear)}
-                {...register('numberingYear')}
+                invalid={Boolean(errors.registryDate)}
+                {...register('registryDate')}
               />
             </FormField>
+
+            <fieldset className="sm:col-span-2 grid gap-3 rounded-lg border border-border p-3 sm:grid-cols-2">
+              <legend className="px-1 text-sm font-medium text-foreground">
+                إرسال الوثيقة (اختياري)
+              </legend>
+              <FormField
+                label="القسم المستلم (فارغ = تُفتح الحركة لاحقًا)"
+                className="sm:col-span-2"
+              >
+                <Controller
+                  control={control}
+                  name="destinationDepartmentId"
+                  render={({ field }) => (
+                    <Select
+                      value={field.value || undefined}
+                      onValueChange={(value) => field.onChange(value === NO_DESTINATION ? '' : value)}
+                      options={[{ value: NO_DESTINATION, label: 'بدون إرسال الآن' }, ...destinationOptions]}
+                      disabled={pending || destinationQuery.isLoading}
+                      placeholder={destinationQuery.isLoading ? 'جارٍ التحميل…' : 'بدون إرسال الآن'}
+                      aria-label="القسم المستلم للحركة"
+                    />
+                  )}
+                />
+              </FormField>
+
+              {destinationDepartmentId && (
+                <>
+                  <FormField label="نوع الحركة" required error={errors.movementTypeId?.message}>
+                    <Controller
+                      control={control}
+                      name="movementTypeId"
+                      render={({ field }) => (
+                        <Select
+                          value={field.value || undefined}
+                          onValueChange={field.onChange}
+                          options={movementTypeOptions}
+                          disabled={pending || movementTypesQuery.isLoading}
+                          invalid={Boolean(errors.movementTypeId)}
+                          placeholder="اختر النوع…"
+                          aria-label="نوع الحركة"
+                        />
+                      )}
+                    />
+                  </FormField>
+
+                  <FormField
+                    label="تعليمات (اختياري)"
+                    error={errors.movementInstructions?.message}
+                  >
+                    <Input
+                      id="document-movement-instructions"
+                      invalid={Boolean(errors.movementInstructions)}
+                      {...register('movementInstructions')}
+                    />
+                  </FormField>
+                </>
+              )}
+            </fieldset>
           </>
         ) : (
           <>
@@ -746,7 +739,7 @@ export function CreateDocumentDialog({ open, onOpenChange }: CreateDocumentDialo
           </div>
         )}
 
-        {mutationError && !officialNumberConflict && (
+        {mutationError && !registryNumberConflict && (
           <p
             role="alert"
             className="sm:col-span-2 rounded-lg bg-danger/10 px-3 py-2 text-sm text-danger"

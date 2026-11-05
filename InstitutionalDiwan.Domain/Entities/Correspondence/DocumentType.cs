@@ -7,6 +7,10 @@ namespace InstitutionalDiwan.Domain.Entities.Correspondence;
 /// </summary>
 public sealed class DocumentType : LookupEntity
 {
+    /// <summary>The only seeded type: the generic base record (سجل أساس).</summary>
+    public const int BaseRecordId = 1;
+
+    // Legacy ids kept for existing data and tests; no longer seeded.
     public const int IncomingLetterId = 1;
     public const int OutgoingLetterId = 2;
     public const int InternalMemoId = 3;

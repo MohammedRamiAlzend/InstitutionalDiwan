@@ -4,18 +4,12 @@ import { Copy, Eye, Hash, Plus, RefreshCw } from 'lucide-react'
 import { toast } from 'sonner'
 import { DepartmentBadge, useDepartmentOptions, DepartmentLabel } from '@/entities/department'
 import {
-  DocumentDirectionBadge,
   DocumentStatusBadge,
   OfficialNumberTag,
   useDocuments,
   type DocumentResponse,
 } from '@/entities/document'
-import {
-  DOCUMENT_DIRECTION,
-  LOOKUP_SLUGS,
-  LookupLabel,
-  useLookupEntries,
-} from '@/entities/lookup'
+import { LOOKUP_SLUGS, LookupLabel, useLookupEntries } from '@/entities/lookup'
 import { useSessionStore } from '@/entities/user'
 import { CreateDocumentDialog } from '@/features/document-create'
 import { toArabicErrorMessage } from '@/shared/api'
@@ -45,7 +39,7 @@ export function DocumentRegistryTable() {
   const table = useTableState({
     defaultSortKey: 'createdAt',
     defaultSortDirection: 'desc',
-    filterKeys: ['statusId', 'directionId', 'documentTypeId', 'owningDepartmentId'],
+    filterKeys: ['statusId', 'documentTypeId', 'owningDepartmentId'],
     // Field filters belong to one document type, so changing the type drops them.
     repeatedKeys: [FIELD_FILTER_PARAM],
     resetOnChange: { documentTypeId: [FIELD_FILTER_PARAM] },
@@ -59,7 +53,6 @@ export function DocumentRegistryTable() {
     sortBy: table.sortKey ?? 'createdAt',
     sortDescending: table.sortDirection === 'desc',
     statusId: optionalId(table.filters.statusId),
-    directionId: optionalId(table.filters.directionId),
     documentTypeId,
     fieldFilters: documentTypeId ? table.repeated[FIELD_FILTER_PARAM] : undefined,
     owningDepartmentId: table.filters.owningDepartmentId || undefined,
@@ -72,7 +65,6 @@ export function DocumentRegistryTable() {
   const departmentsQuery = useDepartmentOptions()
   const statusQuery = useLookupEntries(LOOKUP_SLUGS.DocumentStatusTypes)
   const typesQuery = useLookupEntries(LOOKUP_SLUGS.DocumentTypes)
-  const directionsQuery = useLookupEntries(LOOKUP_SLUGS.DocumentDirections)
 
   const departmentById = useMemo(
     () =>
@@ -105,16 +97,6 @@ export function DocumentRegistryTable() {
       })),
     ],
     [typesQuery.data],
-  )
-
-  const directionOptions = useMemo(
-    () => [
-      { value: 'all', label: 'كل الاتجاهات' },
-      ...(directionsQuery.data ?? [])
-        .filter((entry) => entry.id !== DOCUMENT_DIRECTION.All)
-        .map((entry) => ({ value: String(entry.id), label: entry.descAr })),
-    ],
-    [directionsQuery.data],
   )
 
   const departmentOptions = useMemo(
@@ -165,17 +147,12 @@ export function DocumentRegistryTable() {
       },
       {
         id: 'officialNumber',
-        header: 'الرقم الرسمي',
+        header: 'رقم النظام',
         sortable: true,
         sortKey: 'officialNumber',
         cell: (document) => (
           <OfficialNumberTag officialNumberText={document.officialNumberText} />
         ),
-      },
-      {
-        id: 'direction',
-        header: 'الاتجاه',
-        cell: (document) => <DocumentDirectionBadge directionId={document.directionId} />,
       },
       {
         id: 'documentType',
@@ -226,28 +203,6 @@ export function DocumentRegistryTable() {
         ),
       },
       {
-        id: 'confidentiality',
-        header: 'السرية',
-        defaultHidden: true,
-        cell: (document) => (
-          <LookupLabel
-            lookup={LOOKUP_SLUGS.DocumentConfidentialityLevels}
-            id={document.confidentialityLevelId}
-          />
-        ),
-      },
-      {
-        id: 'priority',
-        header: 'الأولوية',
-        defaultHidden: true,
-        cell: (document) => (
-          <LookupLabel
-            lookup={LOOKUP_SLUGS.DocumentPriorityLevels}
-            id={document.priorityLevelId}
-          />
-        ),
-      },
-      {
         id: 'createdAt',
         header: 'تاريخ الإنشاء',
         sortable: true,
@@ -272,11 +227,11 @@ export function DocumentRegistryTable() {
     },
     {
       id: 'copy-number',
-      label: 'نسخ الرقم الرسمي',
+      label: 'نسخ رقم النظام',
       icon: <Hash className="size-4" aria-hidden />,
       disabled: !document.officialNumberText,
       onSelect: () =>
-        void copyValue(document.officialNumberText ?? '', 'الرقم الرسمي'),
+        void copyValue(document.officialNumberText ?? '', 'رقم النظام'),
     },
     {
       id: 'copy-id',
@@ -327,7 +282,7 @@ export function DocumentRegistryTable() {
         sortKey={table.sortKey}
         sortDirection={table.sortDirection}
         onSortChange={table.setSort}
-        searchPlaceholder="ابحث بالعنوان أو الملخص أو الرقم الرسمي…"
+        searchPlaceholder="ابحث بالعنوان أو الملخص أو رقم النظام…"
         filters={
           <div className="flex flex-wrap items-center gap-2">
             <GuideChip id="documents.filters" />
@@ -339,15 +294,6 @@ export function DocumentRegistryTable() {
               }
               options={statusOptions}
               className="w-40"
-            />
-            <Select
-              aria-label="تصفية حسب الاتجاه"
-              value={table.filters.directionId || 'all'}
-              onValueChange={(value) =>
-                table.setFilter('directionId', value === 'all' ? null : value)
-              }
-              options={directionOptions}
-              className="w-36"
             />
             <Select
               aria-label="تصفية حسب النوع"
@@ -413,7 +359,7 @@ export function DocumentRegistryTable() {
           hasQuery
             ? 'جرّب تعديل البحث أو المرشحات لعرض وثائق أخرى.'
             : canCreate
-              ? 'ابدأ بحفظ أول وثيقة كمسودة أو تسجيلها برقم رسمي.'
+              ? 'ابدأ بحفظ أول وثيقة كمسودة أو تسجيلها برقم نظام.'
               : 'ستظهر الوثائق هنا بمجرد تسجيلها في أقسام المؤسسة.'
         }
         emptyAction={

@@ -12,11 +12,10 @@ Reads the seeded reference ("lookup") catalogs through `GET /api/lookups/{lookup
 | `model/queries.ts` | `lookupKeys` factory and `useLookupEntries(lookup, { includeInactive, enabled })` with `staleTime: Infinity` and seeded placeholder data (active-only reads). |
 | `model/queries.ts` (catalogs) | `useLookupCatalogs()` and `lookupKeys.catalogs()` feed the `/lookups` picker. |
 | `ui/LookupLabel.tsx` | Renders the Arabic label for an `(lookup, id)` pair from the live catalog, falling back to the seeded row, then `#id`; `null` renders `—`. |
-| `index.ts` | Public barrel exporting types, IDs/slugs/fallbacks (including the document enums and `DOCUMENT_TYPE_DIRECTION`), query keys/hook, and `LookupLabel`. |
+| `index.ts` | Public barrel exporting types, IDs/slugs/fallbacks (including the document enums), query keys/hook, and `LookupLabel`. |
 ## Notes
 - Deterministic IDs live in `src/shared/config/lookupIds.ts` so sibling entities (for example `entities/user`) can map `scopeTypeId` without importing another entity slice.
 - Fallbacks keep labels usable before the first response and for callers without `LOOKUP_MANAGE`; the server remains the source of truth.
-- `DOCUMENT_TYPE_DIRECTION` maps incoming/outgoing/internal-memo document types to their direction so the create dialog can pre-fill direction without a second lookup read.
 ## Implementation status
 | Item | State |
 | --- | --- |
@@ -31,6 +30,8 @@ Reads the seeded reference ("lookup") catalogs through `GET /api/lookups/{lookup
 ## Change Log
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-05 | Claude | Document-type fallbacks reduced to `سجل أساس`; removed `DOCUMENT_TYPE_DIRECTION`. |
+| 2026-11-05 | Claude | Added `isDefault` to `LookupEntryResponse`, `findDefaultLookupEntry` and `usePreselectLookupDefault` (preselects the catalog default in empty create-form selects). |
 | 2026-11-04 | Claude | Module 01 lookups administration: added `lookupApi.catalogs`, `lookupKeys.catalogs` and `useLookupCatalogs`. |
 | 2026-11-03 | agent | Module 08: added `DocumentRelationTypes`/`RelationActionTypes` slugs, their ID re-exports and seeded Arabic fallbacks. |
 | 2026-11-03 | agent | Module 07: added `ArchiveEventTypes`/`ArchiveLocations` slugs, `ARCHIVE_EVENT_TYPE`/`ARCHIVE_LOCATION` re-exports and their seeded Arabic fallbacks. |

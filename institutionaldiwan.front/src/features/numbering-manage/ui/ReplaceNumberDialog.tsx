@@ -1,10 +1,9 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Hash } from 'lucide-react'
 import { toast } from 'sonner'
 import type { DocumentNumberResponse } from '@/entities/document'
 import { toArabicErrorMessage } from '@/shared/api'
-import { Button, Dialog, FormField, Input, Textarea } from '@/shared/ui'
+import { Button, Dialog, FormField, Textarea } from '@/shared/ui'
 import { useReplaceOfficialNumberMutation } from '../api/numberMutations'
 import { replaceNumberSchema, type ReplaceNumberFormValues } from '../model/schemas'
 
@@ -53,7 +52,7 @@ export function ReplaceNumberDialog({
     <Dialog
       open={open}
       onOpenChange={onOpenChange}
-      title="استبدال الرقم الرسمي"
+      title="استبدال رقم النظام"
       description={`سيُخصص الرقم التالي ويُربط بالرقم «${number.officialNumberText}» الذي سيبقى في السجل بحالة «مُستبدل»، وتُحدَّث الوثيقة بالرقم الجديد.`}
       size="sm"
       footer={
@@ -79,20 +78,6 @@ export function ReplaceNumberDialog({
             placeholder="مثال: خطأ في السنة؛ صدر الرقم بسنة خاطئة."
             invalid={Boolean(errors.reason)}
             {...register('reason')}
-          />
-        </FormField>
-
-        <FormField label="سنة الترقيم البديلة (اختياري)" error={errors.numberingYear?.message}>
-          <Input
-            type="number"
-            inputMode="numeric"
-            dir="ltr"
-            min={1900}
-            max={2200}
-            placeholder="اتركها فارغة لسنة الوثيقة أو السنة الحالية"
-            startIcon={<Hash className="size-4" aria-hidden />}
-            invalid={Boolean(errors.numberingYear)}
-            {...register('numberingYear')}
           />
         </FormField>
 

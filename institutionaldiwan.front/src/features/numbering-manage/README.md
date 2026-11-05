@@ -56,6 +56,8 @@ another layer's surface by itself.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-05 | Claude | Issue and replace dialogs no longer ask for a numbering year; numbers are system GUIDs. |
+| 2026-11-05 | Claude | The registry form no longer edits the direction scope (suspended); an existing direction on a registry is kept unchanged on edit and new registries get none. |
 | 2026-11-04 | Claude | Department registration is now limited to the caller's own department (read-only field from `useMyPrimaryDepartmentId`) with a register select (`registryId`) when the department has more than one active register; added the Arabic `Numbering.DepartmentRegistrationOwnDepartmentOnly` and `DepartmentRegistryMismatch` messages. |
 | 2026-10-30 | agent | Module 04 Phase 5: the registry form keeps its own department in the scope select after that department is deactivated (option disabled and labelled «(موقوف)»), fixing a blank select that hid the registry's real scope; verified in-browser. |
 | 2026-10-29 | agent | Module 04 Phase 2: added a live next-number preview to the registry form and stricter pattern validation (unknown tokens and a missing `{SEQ}` are rejected in Arabic); verified in-browser. |

@@ -55,7 +55,6 @@ const scopeFilterOptions = [
   { value: 'global', label: 'شامل (بلا قيود)' },
   { value: 'department', label: 'مقيّد بدائرة' },
   { value: 'documentType', label: 'مقيّد بنوع وثيقة' },
-  { value: 'direction', label: 'مقيّد باتجاه' },
 ]
 
 /** `/numbering` grid: registry scope, template, counters, and status actions. */
@@ -122,7 +121,6 @@ export function NumberingRegistryTable() {
         if (scope === 'global' && registryScopeRank(registry) !== 0) return false
         if (scope === 'department' && registry.departmentId === null) return false
         if (scope === 'documentType' && registry.documentTypeId === null) return false
-        if (scope === 'direction' && registry.directionId === null) return false
         return true
       }),
     [registries, table.filters],
@@ -503,7 +501,7 @@ export function NumberingRegistryTable() {
           hasQuery
             ? 'جرّب تعديل البحث أو المرشحات لعرض سجلات أخرى.'
             : canManage
-              ? 'أنشئ سجلًا للترقيم ثم اربطه بدائرة أو نوع أو اتجاه، أو اتركه سجلًا شاملًا.'
+              ? 'أنشئ سجلًا للترقيم ثم اربطه بدائرة أو نوع، أو اتركه سجلًا شاملًا.'
               : 'تُدار سجلات الترقيم من قبل حاملي صلاحية إدارة الترقيم.'
         }
         emptyAction={

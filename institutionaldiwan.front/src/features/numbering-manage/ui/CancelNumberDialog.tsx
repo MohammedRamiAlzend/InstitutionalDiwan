@@ -38,7 +38,7 @@ export function CancelNumberDialog({
         documentNumberId: number.documentNumberId,
         reason: values.reason.trim(),
       })
-      toast.success('تم إلغاء الرقم الرسمي.')
+      toast.success('تم إلغاء رقم النظام.')
       onOpenChange(false)
     } catch {
       // The mutation error is rendered in the form-level banner below.
@@ -49,7 +49,7 @@ export function CancelNumberDialog({
     <Dialog
       open={open}
       onOpenChange={onOpenChange}
-      title="إلغاء الرقم الرسمي"
+      title="إلغاء رقم النظام"
       description={`سيُعلَّم الرقم «${number.officialNumberText}» ملغى مع سبب الإلغاء واسم المنفّذ، ويبقى في سجل الأرقام.`}
       size="sm"
       footer={

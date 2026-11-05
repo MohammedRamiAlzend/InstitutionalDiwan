@@ -17,7 +17,6 @@ export interface ArchiveSearchParams extends PagedQueryParams {
   sortBy?: ArchiveSortKey
   owningDepartmentId?: string
   documentTypeId?: number
-  directionId?: number
   archiveLocationId?: number
   archivedFromUtc?: string
   archivedToUtc?: string

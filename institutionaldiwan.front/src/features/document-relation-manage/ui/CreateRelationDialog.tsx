@@ -3,7 +3,7 @@ import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
 import type { DocumentResponse } from '@/entities/document'
-import { LOOKUP_SLUGS, useLookupEntries } from '@/entities/lookup'
+import { LOOKUP_SLUGS, useLookupEntries, usePreselectLookupDefault } from '@/entities/lookup'
 import { toArabicErrorMessage } from '@/shared/api'
 import { Button, Dialog, FormField, Select, Textarea } from '@/shared/ui'
 import { useCreateRelationMutation } from '../api/relationMutations'
@@ -35,6 +35,7 @@ export function CreateRelationDialog({
 
   const {
     control,
+    getValues,
     register,
     setValue,
     handleSubmit,
@@ -43,6 +44,8 @@ export function CreateRelationDialog({
     resolver: zodResolver(createRelationSchema),
     defaultValues: { targetDocumentId: '', relationTypeId: '', notes: '' },
   })
+
+  usePreselectLookupDefault(typesQuery.data, getValues('relationTypeId'), (value) => setValue('relationTypeId', value))
 
   const onSubmit = handleSubmit(async (values) => {
     try {

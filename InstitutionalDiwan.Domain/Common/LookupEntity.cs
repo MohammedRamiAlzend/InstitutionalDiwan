@@ -17,6 +17,12 @@ public abstract class LookupEntity : Entity<int>
     /// <summary>Whether the entry may still be referenced by new records.</summary>
     public bool IsActive { get; protected set; } = true;
 
+    /// <summary>
+    /// Whether this entry is preselected in selects. At most one entry per catalog is the default,
+    /// and only an active entry can be.
+    /// </summary>
+    public bool IsDefault { get; protected set; }
+
     public DateTime CreatedAt { get; protected set; }
 
     protected LookupEntity()
@@ -45,7 +51,17 @@ public abstract class LookupEntity : Entity<int>
     }
 
     /// <summary>Soft-deletes the entry so it can no longer be selected, without breaking existing FKs.</summary>
-    public void Deactivate() => IsActive = false;
+    public void Deactivate()
+    {
+        IsActive = false;
+        IsDefault = false;
+    }
+
+    /// <summary>Marks the entry as its catalog's default; the caller clears the previous default.</summary>
+    public void MarkDefault() => IsDefault = true;
+
+    /// <summary>Removes the default mark.</summary>
+    public void ClearDefault() => IsDefault = false;
 
     /// <summary>Re-enables a previously deactivated entry.</summary>
     public void Activate() => IsActive = true;

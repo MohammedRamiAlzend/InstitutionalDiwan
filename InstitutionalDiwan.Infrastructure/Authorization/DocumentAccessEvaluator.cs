@@ -143,7 +143,7 @@ public sealed class DocumentAccessEvaluator : IDocumentAccessEvaluator
             .Max();
     }
 
-    private static bool IsConfidentialRestricted(int confidentialityLevelId) =>
+    private static bool IsConfidentialRestricted(int? confidentialityLevelId) =>
         confidentialityLevelId is DocumentConfidentialityLevel.SecretId
             or DocumentConfidentialityLevel.TopSecretId;
 

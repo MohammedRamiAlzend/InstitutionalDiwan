@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react'
 import {
-  DocumentDirectionBadge,
   DocumentStatusBadge,
   OfficialNumberTag,
   type DocumentParticipantResponse,
@@ -43,25 +42,10 @@ export function DocumentOverviewTab({
           <Field label="نوع الوثيقة">
             <LookupLabel lookup={LOOKUP_SLUGS.DocumentTypes} id={document.documentTypeId} />
           </Field>
-          <Field label="الاتجاه">
-            <DocumentDirectionBadge directionId={document.directionId} />
-          </Field>
           <Field label="الحالة">
             <DocumentStatusBadge statusId={document.statusId} />
           </Field>
-          <Field label="مستوى السرية">
-            <LookupLabel
-              lookup={LOOKUP_SLUGS.DocumentConfidentialityLevels}
-              id={document.confidentialityLevelId}
-            />
-          </Field>
-          <Field label="درجة الأولوية">
-            <LookupLabel
-              lookup={LOOKUP_SLUGS.DocumentPriorityLevels}
-              id={document.priorityLevelId}
-            />
-          </Field>
-          <Field label="الرقم الرسمي">
+          <Field label="رقم النظام">
             <OfficialNumberTag officialNumberText={document.officialNumberText} />
           </Field>
           <Field label="تاريخ الوثيقة">

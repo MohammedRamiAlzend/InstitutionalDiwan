@@ -66,6 +66,8 @@ empty migration when the model changed.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-05 | Claude | Added `Add_Lookup_IsDefault`: `IsDefault bit NOT NULL DEFAULT 0` on all 33 lookup tables. |
+| 2026-11-05 | Claude | Added `Make_Document_Classification_Nullable`: `DOCUMENTS.DirectionId`, `ConfidentialityLevelId` and `PriorityLevelId` become nullable; existing values are kept. |
 | 2026-11-03 | Claude | Added `Add_Notifications_Constraints` (Module 10): FKs, inbox/retention/unique indexes, payload limit and the `IN_APP` channel fix; verified on a scratch database first. |
 | 2026-11-03 | Claude | Confirmed all 11 migrations are applied to the development database (`dotnet ef migrations list` shows none pending; `database update` was a no-op). |
 | 2026-11-03 | Claude | Added `Add_Relations_Constraints` for Module 08 (Phase 1). |

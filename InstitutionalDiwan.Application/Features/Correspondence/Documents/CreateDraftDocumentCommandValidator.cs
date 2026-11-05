@@ -21,6 +21,7 @@ public sealed class CreateDraftDocumentCommandValidator : AbstractValidator<Crea
             .Must(directionId => directionId is DocumentDirection.InternalId
                 or DocumentDirection.IncomingId
                 or DocumentDirection.OutgoingId)
+            .When(command => command.DirectionId.HasValue)
             .WithErrorCode("Correspondence.DirectionInvalid");
 
         RuleFor(command => command.SubjectSummary)

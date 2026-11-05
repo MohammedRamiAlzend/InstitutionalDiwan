@@ -44,7 +44,6 @@ export {
   DOCUMENT_PRIORITY,
   DOCUMENT_STATUS,
   DOCUMENT_TYPE,
-  DOCUMENT_TYPE_DIRECTION,
   MOVEMENT_EVENT_TYPE,
   MOVEMENT_STATUS,
   MOVEMENT_STEP_STATUS,
@@ -135,11 +134,7 @@ export const LOOKUP_FALLBACKS: Record<string, readonly LookupCatalogEntry[]> = {
     { id: DOCUMENT_DIRECTION.All, desc: 'All directions', descAr: 'كل الاتجاهات' },
   ],
   'document-types': [
-    { id: DOCUMENT_TYPE.IncomingLetter, desc: 'Incoming letter', descAr: 'كتاب وارد' },
-    { id: DOCUMENT_TYPE.OutgoingLetter, desc: 'Outgoing letter', descAr: 'كتاب صادر' },
-    { id: DOCUMENT_TYPE.InternalMemo, desc: 'Internal memo', descAr: 'مذكرة داخلية' },
-    { id: DOCUMENT_TYPE.Circular, desc: 'Circular', descAr: 'تعميم' },
-    { id: DOCUMENT_TYPE.Decision, desc: 'Decision', descAr: 'قرار' },
+    { id: DOCUMENT_TYPE.BaseRecord, desc: 'Base record', descAr: 'سجل أساس' },
   ],
   'document-status-types': [
     { id: DOCUMENT_STATUS.Draft, desc: 'Draft', descAr: 'مسودة' },

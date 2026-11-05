@@ -6,9 +6,9 @@ export interface DocumentResponse {
   title: string
   subjectSummary: string | null
   documentTypeId: number
-  directionId: number
-  confidentialityLevelId: number
-  priorityLevelId: number
+  directionId: number | null
+  confidentialityLevelId: number | null
+  priorityLevelId: number | null
   statusId: number
   owningDepartmentId: string
   createdByUserId: string
@@ -140,7 +140,6 @@ export interface DocumentAccessGrantResponse {
 export interface DocumentListParams extends PagedQueryParams {
   statusId?: number
   owningDepartmentId?: string
-  directionId?: number
   documentTypeId?: number
   /** `key:operator:value` dynamic-field filters; the server requires `documentTypeId` with them. */
   fieldFilters?: string[]

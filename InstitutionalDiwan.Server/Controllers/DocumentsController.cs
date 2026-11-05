@@ -207,10 +207,10 @@ public sealed class DocumentsController : ControllerBase
     /// <list type="bullet">
     /// <item><term>title</term><description>Document title (string, required). Example: <c>طلب تصريح زيارة لوفدة</c>.</description></item>
     /// <item><term>documentTypeId</term><description>Document type id (integer, required). Example: <c>1</c>.</description></item>
-    /// <item><term>directionId</term><description>Direction id (integer, required). Example: <c>1</c>.</description></item>
     /// <item><term>subjectSummary</term><description>Subject summary (string, optional). Example: <c>طلب تصريح زيارة لوفدة خارجية</c>.</description></item>
-    /// <item><term>confidentialityLevelId</term><description>Confidentiality level id (integer, optional). Example: <c>1</c>.</description></item>
-    /// <item><term>priorityLevelId</term><description>Priority level id (integer, optional). Example: <c>1</c>.</description></item>
+    /// <item><term>directionId</term><description>Direction id (integer, optional; suspended, leave it null). Example: <c>1</c>.</description></item>
+    /// <item><term>confidentialityLevelId</term><description>Confidentiality level id (integer, optional; suspended, leave it null). Example: <c>1</c>.</description></item>
+    /// <item><term>priorityLevelId</term><description>Priority level id (integer, optional; suspended, leave it null). Example: <c>1</c>.</description></item>
     /// <item><term>documentDate</term><description>Document date (date, optional). Example: <c>2026-01-15</c>.</description></item>
     /// <item><term>externalReferenceNumber</term><description>External reference number (string, optional). Example: <c>EXT-2026-114</c>.</description></item>
     /// <item><term>externalDocumentDate</term><description>External document date (date, optional). Example: <c>2026-01-10</c>.</description></item>
@@ -239,8 +239,8 @@ public sealed class DocumentsController : ControllerBase
             userId,
             request.Title,
             request.DocumentTypeId,
-            request.DirectionId,
             request.SubjectSummary,
+            request.DirectionId,
             request.ConfidentialityLevelId,
             request.PriorityLevelId,
             request.DocumentDate,
@@ -327,7 +327,21 @@ public sealed class DocumentsController : ControllerBase
             return Unauthorized();
 
         var result = await _sender.Send(
-            new RegisterDocumentCommand(documentId, userId, request.NumberingYear), cancellationToken);
+            new RegisterDocumentCommand(
+                documentId,
+                userId,
+                request.NumberingYear,
+                request.DepartmentRegistryNumberText,
+                request.DepartmentRegistryDate,
+                request.Movement is { } movement
+                    ? new CreateDocumentMovementInput(
+                        movement.DestinationDepartmentId,
+                        movement.MovementTypeId,
+                        movement.AssignedToUserId,
+                        movement.Instructions,
+                        movement.DueDate)
+                    : null),
+            cancellationToken);
 
         return result.ToActionResult();
     }
@@ -414,23 +428,23 @@ public sealed class DocumentsController : ControllerBase
         return result.ToActionResult();
     }
 
-    /// <summary>Creates a new document in the caller's department with the supplied official number.</summary>
+    /// <summary>Creates a document, registers it with a system number, writes the department register line and optionally sends it on.</summary>
     /// <remarks>
-    /// The document is persisted as REGISTERED when the official number + numbering year pair is free.
-    /// If the pair is already taken the endpoint responds with <c>409 Conflict</c>.
+    /// The central number is a GUID issued by the server. The department register number and date are written into the caller's own department register (the department must have an active register, otherwise <c>409</c>). When <c>movement</c> is supplied the document is routed and sent immediately; everything is atomic.
     /// </remarks>
     /// <param name="request">
     /// The request payload with the following fields:
     /// <list type="bullet">
     /// <item><term>title</term><description>Document title (string, required). Example: <c>طلب تصريح زيارة لوفدة</c>.</description></item>
     /// <item><term>documentTypeId</term><description>Document type id (integer, required). Example: <c>1</c>.</description></item>
-    /// <item><term>directionId</term><description>Direction id (integer, required). Example: <c>1</c>.</description></item>
-    /// <item><term>officialNumberText</term><description>Official number text (string, required). Example: <c>1447/2026</c>.</description></item>
-    /// <item><term>numberingYear</term><description>Numbering year (integer, required). Example: <c>2026</c>.</description></item>
+    /// <item><term>departmentRegistryNumberText</term><description>Number written in the caller's department register (string, required). Example: <c>1447/2026</c>.</description></item>
+    /// <item><term>departmentRegistryDate</term><description>Date written in the department register (ISO date, required). Example: <c>2026-11-05</c>.</description></item>
+    /// <item><term>movement</term><description>Optional routing: <c>{"destinationDepartmentId":"3fa85f64-5717-4562-b3fc-2c963f66afa6","movementTypeId":1}</c>; sent immediately.</description></item>
     /// <item><term>fieldValues</term><description>Dynamic field values as key and text value, validated against the published schema of the type (array, optional). Example: <c>[{"fieldKey":"session_no","value":"2026-14"}]</c>.</description></item>
     /// <item><term>subjectSummary</term><description>Subject summary (string, optional). Example: <c>طلب تصريح زيارة لوفدة خارجية</c>.</description></item>
-    /// <item><term>confidentialityLevelId</term><description>Confidentiality level id (integer, optional). Example: <c>1</c>.</description></item>
-    /// <item><term>priorityLevelId</term><description>Priority level id (integer, optional). Example: <c>1</c>.</description></item>
+    /// <item><term>directionId</term><description>Direction id (integer, optional; suspended, leave it null). Example: <c>1</c>.</description></item>
+    /// <item><term>confidentialityLevelId</term><description>Confidentiality level id (integer, optional; suspended, leave it null). Example: <c>1</c>.</description></item>
+    /// <item><term>priorityLevelId</term><description>Priority level id (integer, optional; suspended, leave it null). Example: <c>1</c>.</description></item>
     /// </list>
     /// </param>
     /// <param name="cancellationToken">Request cancellation token (optional).</param>
@@ -457,13 +471,21 @@ public sealed class DocumentsController : ControllerBase
             userId,
             request.Title,
             request.DocumentTypeId,
-            request.DirectionId,
-            request.OfficialNumberText,
-            request.NumberingYear,
+            request.DepartmentRegistryNumberText,
+            request.DepartmentRegistryDate,
             request.SubjectSummary,
+            request.DirectionId,
             request.ConfidentialityLevelId,
             request.PriorityLevelId,
-            request.FieldValues.ToInputs()), cancellationToken);
+            request.FieldValues.ToInputs(),
+            request.Movement is { } movement
+                ? new CreateDocumentMovementInput(
+                    movement.DestinationDepartmentId,
+                    movement.MovementTypeId,
+                    movement.AssignedToUserId,
+                    movement.Instructions,
+                    movement.DueDate)
+                : null), cancellationToken);
 
         return result.ToActionResult();
     }

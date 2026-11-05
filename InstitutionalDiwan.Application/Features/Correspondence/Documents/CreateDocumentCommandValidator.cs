@@ -21,14 +21,20 @@ public sealed class CreateDocumentCommandValidator : AbstractValidator<CreateDoc
             .Must(directionId => directionId is DocumentDirection.InternalId
                 or DocumentDirection.IncomingId
                 or DocumentDirection.OutgoingId)
+            .When(command => command.DirectionId.HasValue)
             .WithErrorCode("Correspondence.DirectionInvalid");
 
-        RuleFor(command => command.OfficialNumberText)
-            .Must(number => !string.IsNullOrWhiteSpace(number)).WithErrorCode("Numbering.OfficialNumberEmpty")
-            .MaximumLength(100).WithErrorCode("Numbering.OfficialNumberEmpty");
+        RuleFor(command => command.DepartmentRegistryNumberText)
+            .Must(number => !string.IsNullOrWhiteSpace(number)).WithErrorCode("Numbering.DepartmentNumberRequired")
+            .MaximumLength(100).WithErrorCode("Numbering.DepartmentNumberRequired");
 
-        RuleFor(command => command.NumberingYear)
-            .InclusiveBetween(1900, 2200).WithErrorCode("Numbering.YearInvalid");
+        RuleFor(command => command.DepartmentRegistryDate)
+            .Must(date => date != default && date.Year is >= 1900 and <= 2200)
+            .WithErrorCode("Numbering.RegistryDateInvalid");
+
+        RuleFor(command => command.Movement!.DestinationDepartmentId)
+            .NotEmpty().WithErrorCode("Department.NotFound")
+            .When(command => command.Movement is not null);
 
         RuleFor(command => command.ConfidentialityLevelId)
             .GreaterThan(0).When(command => command.ConfidentialityLevelId.HasValue);

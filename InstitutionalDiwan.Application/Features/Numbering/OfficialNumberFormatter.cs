@@ -12,6 +12,9 @@ internal static partial class OfficialNumberFormatter
 {
     public const string DefaultPattern = "{YEAR}/{SEQ:D6}";
 
+    /// <summary>The system-owned central number: a GUID, never typed by a user.</summary>
+    public static string NewSystemNumber() => Guid.NewGuid().ToString("D");
+
     public static string Format(string? pattern, int numberingYear, long sequenceValue)
     {
         var template = string.IsNullOrWhiteSpace(pattern) ? DefaultPattern : pattern.Trim();

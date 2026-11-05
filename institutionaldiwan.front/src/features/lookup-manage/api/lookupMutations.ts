@@ -70,3 +70,25 @@ export function useSetLookupEntryActiveMutation() {
     onSuccess: invalidate,
   })
 }
+
+/** `PATCH /api/lookups/{lookup}/{id}/set-default|clear-default` — one default per catalog. */
+export function useSetLookupEntryDefaultMutation() {
+  const invalidate = useInvalidateLookups()
+  return useMutation({
+    mutationFn: async ({
+      lookup,
+      id,
+      isDefault,
+    }: {
+      lookup: string
+      id: number
+      isDefault: boolean
+    }): Promise<LookupEntryResponse> => {
+      const { data } = await httpClient.patch<LookupEntryResponse>(
+        `${base(lookup)}/${id}/${isDefault ? 'set-default' : 'clear-default'}`,
+      )
+      return data
+    },
+    onSuccess: invalidate,
+  })
+}

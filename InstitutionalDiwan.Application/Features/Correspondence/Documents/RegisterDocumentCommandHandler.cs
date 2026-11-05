@@ -2,7 +2,10 @@ using InstitutionalDiwan.Application.Abstractions.Notifications;
 using InstitutionalDiwan.Domain.Entities.Notifications;
 using InstitutionalDiwan.Application.Abstractions.Authorization;
 using InstitutionalDiwan.Application.Abstractions.Messaging;
+using InstitutionalDiwan.Application.Features.Movements;
 using InstitutionalDiwan.Application.Features.Numbering;
+using InstitutionalDiwan.Application.Features.Numbering.Numbers;
+using ISender = MediatR.ISender;
 using InstitutionalDiwan.Domain.Common;
 using InstitutionalDiwan.Domain.Entities.Correspondence;
 using InstitutionalDiwan.Domain.Entities.Identity;
@@ -24,6 +27,7 @@ internal sealed class RegisterDocumentCommandHandler
     private readonly IUnitOfWork _unitOfWork;
     private readonly INotificationPublisher _notificationPublisher;
     private readonly IClock _clock;
+    private readonly ISender _sender;
 
     public RegisterDocumentCommandHandler(
         IDocumentRepository documentRepository,
@@ -33,7 +37,8 @@ internal sealed class RegisterDocumentCommandHandler
         IDocumentAccessEvaluator documentAccessEvaluator,
         IUnitOfWork unitOfWork,
         INotificationPublisher notificationPublisher,
-        IClock clock)
+        IClock clock,
+        ISender sender)
     {
         _documentAccessEvaluator = documentAccessEvaluator;
         _documentRepository = documentRepository;
@@ -43,6 +48,7 @@ internal sealed class RegisterDocumentCommandHandler
         _unitOfWork = unitOfWork;
         _notificationPublisher = notificationPublisher;
         _clock = clock;
+        _sender = sender;
     }
 
     public async Task<Result<DocumentResponse>> Handle(
@@ -95,8 +101,7 @@ internal sealed class RegisterDocumentCommandHandler
         if (sequenceResult.IsFailure)
             return Result.Failure<DocumentResponse>(sequenceResult.Error);
 
-        var numberText = OfficialNumberFormatter.Format(
-            registry.FormatPattern, numberingYear, sequenceResult.Value);
+        var numberText = OfficialNumberFormatter.NewSystemNumber();
 
         if (await _documentNumberRepository.ExistsByNumberAndYearAsync(
                 numberText, numberingYear, cancellationToken))
@@ -132,6 +137,37 @@ internal sealed class RegisterDocumentCommandHandler
         _documentNumberRepository.Add(numberResult.Value);
         await _notificationPublisher.PublishDocumentAsync(NotificationType.DocumentRegisteredId, document, request.UserId, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        if (request.DepartmentRegistryNumberText is { } registryNumber)
+        {
+            var line = await _sender.Send(new RecordDepartmentRegistrationCommand(
+                document.DocumentId,
+                document.OwningDepartmentId,
+                registryNumber.Trim(),
+                request.DepartmentRegistryDate ?? _unitOfWork.UtcNow.Date,
+                request.UserId), cancellationToken);
+            if (line.IsFailure)
+                return Result.Failure<DocumentResponse>(line.Error);
+        }
+
+        if (request.Movement is { } route)
+        {
+            var opened = await _sender.Send(new CreateMovementCommand(
+                document.DocumentId,
+                request.UserId,
+                route.DestinationDepartmentId,
+                route.MovementTypeId,
+                route.AssignedToUserId,
+                route.Instructions,
+                route.DueDate), cancellationToken);
+            if (opened.IsFailure)
+                return Result.Failure<DocumentResponse>(opened.Error);
+
+            var sent = await _sender.Send(
+                new SendMovementCommand(opened.Value.MovementId, request.UserId), cancellationToken);
+            if (sent.IsFailure)
+                return Result.Failure<DocumentResponse>(sent.Error);
+        }
 
         return DocumentResponse.From(document);
     }

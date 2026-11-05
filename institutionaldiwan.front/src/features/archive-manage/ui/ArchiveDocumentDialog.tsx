@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
-import { LOOKUP_SLUGS, useLookupEntries } from '@/entities/lookup'
+import { LOOKUP_SLUGS, useLookupEntries, usePreselectLookupDefault } from '@/entities/lookup'
 import { toArabicErrorMessage } from '@/shared/api'
 import { Button, Dialog, FormField, Select, Textarea } from '@/shared/ui'
 import { useArchiveDocumentMutation } from '../api/archiveMutations'
@@ -32,6 +32,8 @@ export function ArchiveDocumentDialog({
 
   const {
     control,
+    getValues,
+    setValue,
     register,
     handleSubmit,
     formState: { errors },
@@ -39,6 +41,8 @@ export function ArchiveDocumentDialog({
     resolver: zodResolver(archiveDocumentSchema),
     defaultValues: { archiveLocationId: '', reason: '' },
   })
+
+  usePreselectLookupDefault(locationsQuery.data, getValues('archiveLocationId'), (value) => setValue('archiveLocationId', value))
 
   const onSubmit = handleSubmit(async (values) => {
     try {

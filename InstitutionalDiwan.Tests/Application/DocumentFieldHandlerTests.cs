@@ -1,3 +1,4 @@
+using InstitutionalDiwan.Domain.Entities.Numbering;
 using InstitutionalDiwan.Application.Features.Correspondence.DocumentFields;
 using InstitutionalDiwan.Application.Features.Correspondence.Documents;
 using InstitutionalDiwan.Domain.Entities.Correspondence;
@@ -83,7 +84,7 @@ public sealed class DocumentFieldHandlerTests
         public async Task<DocumentResponse> CreateDraftDocumentAsync(params DocumentFieldValueInput[] values)
         {
             var result = await DraftHandler().Handle(
-                new CreateDraftDocumentCommand(Author.UserId, "قرار", TypeId, DocumentDirection.InternalId,
+                new CreateDraftDocumentCommand(Author.UserId, "قرار", TypeId, DirectionId: DocumentDirection.InternalId,
                     FieldValues: values),
                 CancellationToken.None);
             Assert.True(result.IsSuccess, result.IsFailure ? result.Error.Code : null);
@@ -214,14 +215,14 @@ public sealed class DocumentFieldHandlerTests
     {
         var world = new World();
         var noSchema = await world.DraftHandler().Handle(
-            new CreateDraftDocumentCommand(world.Author.UserId, "قرار", TypeId, DocumentDirection.InternalId,
+            new CreateDraftDocumentCommand(world.Author.UserId, "قرار", TypeId, DirectionId: DocumentDirection.InternalId,
                 FieldValues: new[] { new DocumentFieldValueInput("session_no", "1") }),
             CancellationToken.None);
         Assert.Equal("DocumentFields.UnknownField", noSchema.Error.Code);
 
         await world.PublishBasicSchemaAsync();
         var badPattern = await world.DraftHandler().Handle(
-            new CreateDraftDocumentCommand(world.Author.UserId, "قرار", TypeId, DocumentDirection.InternalId,
+            new CreateDraftDocumentCommand(world.Author.UserId, "قرار", TypeId, DirectionId: DocumentDirection.InternalId,
                 FieldValues: new[] { new DocumentFieldValueInput("session_no", "abc") }),
             CancellationToken.None);
         Assert.Equal("DocumentFields.ValuePatternMismatch", badPattern.Error.Code);
@@ -263,7 +264,7 @@ public sealed class DocumentFieldHandlerTests
         var numbers = new FakeDocumentNumberRepository();
         var handler = new RegisterDocumentCommandHandler(
             world.Documents, numbers, new FakeNumberingRegistryRepository(), world.Versions,
-            new FakeDocumentAccessEvaluator { AllowAll = true }, world.UnitOfWork, FakeNotificationPublisher.Instance, TestClock.Instance);
+            new FakeDocumentAccessEvaluator { AllowAll = true }, world.UnitOfWork, FakeNotificationPublisher.Instance, TestClock.Instance, new FakeSender());
 
         var blocked = await handler.Handle(
             new RegisterDocumentCommand(created.DocumentId, world.Author.UserId, 2026), CancellationToken.None);
@@ -279,19 +280,21 @@ public sealed class DocumentFieldHandlerTests
         var world = new World();
         await world.PublishBasicSchemaAsync();
         var numbers = new FakeDocumentNumberRepository();
+        var registries = new FakeNumberingRegistryRepository();
+        registries.Add(NumberingRegistry.Create("DEPT-BOOK", "دفتر القسم", departmentId: world.Author.PrimaryDepartmentId).Value);
         var handler = new CreateDocumentCommandHandler(
-            world.Users, world.Documents, world.Types, numbers, new FakeNumberingRegistryRepository(),
-            world.Versions, world.UnitOfWork);
+            world.Users, world.Documents, world.Types, numbers, registries,
+            world.Versions, world.UnitOfWork, new FakeSender());
 
         var missing = await handler.Handle(
-            new CreateDocumentCommand(world.Author.UserId, "قرار", TypeId, DocumentDirection.InternalId, "9/2026", 2026),
+            new CreateDocumentCommand(world.Author.UserId, "قرار", TypeId, "9/2026", new DateTime(2026, 3, 9), DirectionId: DocumentDirection.InternalId),
             CancellationToken.None);
         Assert.Equal("DocumentFields.ValueRequired", missing.Error.Code);
         Assert.Empty(world.Documents.Documents);
         Assert.Empty(numbers.DocumentNumbers);
 
         var created = await handler.Handle(
-            new CreateDocumentCommand(world.Author.UserId, "قرار", TypeId, DocumentDirection.InternalId, "9/2026", 2026,
+            new CreateDocumentCommand(world.Author.UserId, "قرار", TypeId, "9/2026", new DateTime(2026, 3, 9), DirectionId: DocumentDirection.InternalId,
                 FieldValues: new[] { new DocumentFieldValueInput("session_no", "4") }),
             CancellationToken.None);
         Assert.True(created.IsSuccess, created.IsFailure ? created.Error.Code : null);
@@ -345,7 +348,7 @@ public sealed class DocumentFieldHandlerTests
 
         var registered = await new RegisterDocumentCommandHandler(
             world.Documents, new FakeDocumentNumberRepository(), new FakeNumberingRegistryRepository(),
-            world.Versions, new FakeDocumentAccessEvaluator { AllowAll = true }, world.UnitOfWork, FakeNotificationPublisher.Instance, TestClock.Instance).Handle(
+            world.Versions, new FakeDocumentAccessEvaluator { AllowAll = true }, world.UnitOfWork, FakeNotificationPublisher.Instance, TestClock.Instance, new FakeSender()).Handle(
             new RegisterDocumentCommand(created.DocumentId, world.Author.UserId, 2026), CancellationToken.None);
 
         Assert.True(registered.IsSuccess, registered.IsFailure ? registered.Error.Code : null);
@@ -353,7 +356,7 @@ public sealed class DocumentFieldHandlerTests
         var newDocument = await world.CreateDraftDocumentAsync(new DocumentFieldValueInput("session_no", "6"));
         var blocked = await new RegisterDocumentCommandHandler(
             world.Documents, new FakeDocumentNumberRepository(), new FakeNumberingRegistryRepository(),
-            world.Versions, new FakeDocumentAccessEvaluator { AllowAll = true }, world.UnitOfWork, FakeNotificationPublisher.Instance, TestClock.Instance).Handle(
+            world.Versions, new FakeDocumentAccessEvaluator { AllowAll = true }, world.UnitOfWork, FakeNotificationPublisher.Instance, TestClock.Instance, new FakeSender()).Handle(
             new RegisterDocumentCommand(newDocument.DocumentId, world.Author.UserId, 2026), CancellationToken.None);
         Assert.Equal("DocumentFields.ValueRequired", blocked.Error.Code);
     }

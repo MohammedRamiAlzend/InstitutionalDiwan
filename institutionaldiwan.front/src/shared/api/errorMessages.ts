@@ -87,6 +87,7 @@ const CODE_MESSAGES: Record<string, string> = {
   'Lookup.EntryInUse': 'القيمة المرجعية مستخدمة في سجلات أخرى ولا يمكن إيقافها.',
   'Lookup.CatalogReadOnly': 'لا يمكن إضافة قيم إلى هذا الجدول المرجعي من الشاشة العامة.',
   'Lookup.IdAlreadyExists': 'يوجد عنصر آخر بنفس المعرّف في هذا الجدول المرجعي.',
+  'Lookup.DefaultMustBeActive': 'لا يمكن تعيين قيمة موقوفة كقيمة افتراضية؛ فعّلها أولاً.',
 
   // Module 03 — Correspondence documents and external organizations
   'Correspondence.AlreadyArchived': 'الوثيقة مؤرشفة مسبقًا.',
@@ -122,7 +123,7 @@ const CODE_MESSAGES: Record<string, string> = {
   'Correspondence.TypeCodeEmpty': 'رمز نوع الوثيقة مطلوب.',
 
   // Module 03/04 — Official numbering
-  'Numbering.AlreadyCancelled': 'الرقم الرسمي ملغى مسبقًا.',
+  'Numbering.AlreadyCancelled': 'رقم النظام ملغى مسبقًا.',
   'Numbering.CancelReasonRequired': 'سبب إلغاء الرقم مطلوب.',
   'Numbering.DepartmentNumberLocked': 'رقم تسجيل الدائرة مقفل ولا يمكن تعديله.',
   'Numbering.DepartmentNumberRequired': 'رقم تسجيل الدائرة مطلوب.',
@@ -133,10 +134,10 @@ const CODE_MESSAGES: Record<string, string> = {
   'Numbering.DepartmentScopeMismatch': 'يجب أن يتم التسجيل من الدائرة الوجهة نفسها.',
   'Numbering.DocumentAlreadyNumbered': 'للوثيقة رقم رسمي مسبقًا.',
   'Numbering.DocumentNotRegistered': 'يجب تسجيل الوثيقة قبل إصدار رقم رسمي.',
-  'Numbering.NumberNotActive': 'الرقم الرسمي غير فعّال.',
-  'Numbering.NumberNotFound': 'الرقم الرسمي غير موجود.',
-  'Numbering.OfficialNumberEmpty': 'الرقم الرسمي مطلوب.',
-  'Numbering.OfficialNumberTaken': 'الرقم الرسمي مستخدم مسبقًا في هذه السنة.',
+  'Numbering.NumberNotActive': 'رقم النظام غير فعّال.',
+  'Numbering.NumberNotFound': 'رقم النظام غير موجود.',
+  'Numbering.OfficialNumberEmpty': 'رقم النظام مطلوب.',
+  'Numbering.OfficialNumberTaken': 'رقم النظام مستخدم مسبقًا في هذه السنة.',
   'Numbering.RegistryCodeAlreadyExists': 'يوجد سجل ترقيم آخر بنفس الرمز.',
   'Numbering.RegistryCodeEmpty': 'رمز سجل الترقيم مطلوب.',
   'Numbering.RegistryDateInvalid': 'تاريخ سجل الترقيم غير صالح.',

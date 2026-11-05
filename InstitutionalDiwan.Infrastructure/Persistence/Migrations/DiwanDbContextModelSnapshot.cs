@@ -48,6 +48,9 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                         .HasColumnType("bit")
                         .HasColumnName("IsActive");
 
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit");
+
                     b.HasKey("Id");
 
                     b.ToTable("ARCHIVE_EVENT_TYPES", (string)null);
@@ -78,6 +81,9 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit")
                         .HasColumnName("IsActive");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit");
 
                     b.HasKey("Id");
 
@@ -277,6 +283,9 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                         .HasColumnType("bit")
                         .HasColumnName("IsActive");
 
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit");
+
                     b.Property<long>("MaxFileSizeBytes")
                         .HasColumnType("bigint")
                         .HasColumnName("MaxFileSizeBytes");
@@ -432,6 +441,9 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                         .HasColumnType("bit")
                         .HasColumnName("IsActive");
 
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit");
+
                     b.HasKey("Id");
 
                     b.ToTable("STORAGE_PROVIDER_TYPES", (string)null);
@@ -462,6 +474,9 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit")
                         .HasColumnName("IsActive");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit");
 
                     b.HasKey("Id");
 
@@ -529,6 +544,9 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit")
                         .HasColumnName("IsActive");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit");
 
                     b.HasKey("Id");
 
@@ -678,7 +696,7 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("ActiveOfficialNumberId");
 
-                    b.Property<int>("ConfidentialityLevelId")
+                    b.Property<int?>("ConfidentialityLevelId")
                         .HasColumnType("int")
                         .HasColumnName("ConfidentialityLevelId");
 
@@ -694,7 +712,7 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                         .HasColumnType("int")
                         .HasColumnName("CurrentStatusId");
 
-                    b.Property<int>("DirectionId")
+                    b.Property<int?>("DirectionId")
                         .HasColumnType("int")
                         .HasColumnName("DirectionId");
 
@@ -724,7 +742,7 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("OwningDepartmentId");
 
-                    b.Property<int>("PriorityLevelId")
+                    b.Property<int?>("PriorityLevelId")
                         .HasColumnType("int")
                         .HasColumnName("PriorityLevelId");
 
@@ -814,6 +832,9 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                         .HasColumnType("bit")
                         .HasColumnName("IsActive");
 
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit");
+
                     b.HasKey("Id");
 
                     b.ToTable("DOCUMENT_CONFIDENTIALITY_LEVELS", (string)null);
@@ -844,6 +865,9 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit")
                         .HasColumnName("IsActive");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit");
 
                     b.HasKey("Id");
 
@@ -1031,6 +1055,9 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                         .HasColumnType("bit")
                         .HasColumnName("IsActive");
 
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit");
+
                     b.HasKey("Id");
 
                     b.ToTable("DOCUMENT_PRIORITY_LEVELS", (string)null);
@@ -1104,6 +1131,9 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("IsSystemStatus")
                         .HasColumnType("bit")
                         .HasColumnName("IsSystemStatus");
@@ -1146,6 +1176,9 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit")
                         .HasColumnName("IsActive");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit");
 
                     b.Property<bool>("RequiresOfficialNumber")
                         .HasColumnType("bit")
@@ -1378,6 +1411,9 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                         .HasColumnType("bit")
                         .HasColumnName("IsActive");
 
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit");
+
                     b.HasKey("Id");
 
                     b.ToTable("ORGANIZATION_TYPES", (string)null);
@@ -1408,6 +1444,9 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit")
                         .HasColumnName("IsActive");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit");
 
                     b.HasKey("Id");
 
@@ -1440,6 +1479,9 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                         .HasColumnType("bit")
                         .HasColumnName("IsActive");
 
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit");
+
                     b.HasKey("Id");
 
                     b.ToTable("PARTICIPANT_TARGET_TYPES", (string)null);
@@ -1471,6 +1513,9 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                         .HasColumnType("bit")
                         .HasColumnName("IsActive");
 
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit");
+
                     b.HasKey("Id");
 
                     b.ToTable("ACCESS_LEVELS", (string)null);
@@ -1501,6 +1546,9 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit")
                         .HasColumnName("IsActive");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit");
 
                     b.HasKey("Id");
 
@@ -1893,6 +1941,9 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                         .HasColumnType("bit")
                         .HasColumnName("IsActive");
 
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit");
+
                     b.HasKey("Id");
 
                     b.ToTable("USER_SCOPE_TYPES", (string)null);
@@ -2116,6 +2167,9 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                         .HasColumnType("bit")
                         .HasColumnName("IsActive");
 
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit");
+
                     b.HasKey("Id");
 
                     b.ToTable("MOVEMENT_EVENT_TYPES", (string)null);
@@ -2146,6 +2200,9 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit")
                         .HasColumnName("IsActive");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit");
 
                     b.HasKey("Id");
 
@@ -2178,6 +2235,9 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                         .HasColumnType("bit")
                         .HasColumnName("IsActive");
 
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit");
+
                     b.HasKey("Id");
 
                     b.ToTable("MOVEMENT_STEP_STATUSES", (string)null);
@@ -2208,6 +2268,9 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit")
                         .HasColumnName("IsActive");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit");
 
                     b.HasKey("Id");
 
@@ -2299,6 +2362,9 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                         .HasColumnType("bit")
                         .HasColumnName("IsActive");
 
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit");
+
                     b.HasKey("Id");
 
                     b.ToTable("NOTIFICATION_CHANNELS", (string)null);
@@ -2387,6 +2453,9 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                         .HasColumnType("bit")
                         .HasColumnName("IsActive");
 
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit");
+
                     b.HasKey("Id");
 
                     b.ToTable("NOTIFICATION_OUTBOX_STATUSES", (string)null);
@@ -2417,6 +2486,9 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit")
                         .HasColumnName("IsActive");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit");
 
                     b.HasKey("Id");
 
@@ -2514,6 +2586,9 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit")
                         .HasColumnName("IsActive");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit");
 
                     b.Property<string>("TitleTemplateAr")
                         .IsRequired()
@@ -2650,6 +2725,9 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                         .HasColumnType("bit")
                         .HasColumnName("IsActive");
 
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit");
+
                     b.HasKey("Id");
 
                     b.ToTable("DOCUMENT_NUMBER_EVENT_TYPES", (string)null);
@@ -2721,6 +2799,9 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                         .HasColumnType("bit")
                         .HasColumnName("IsActive");
 
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit");
+
                     b.HasKey("Id");
 
                     b.ToTable("DOCUMENT_NUMBER_SCOPES", (string)null);
@@ -2751,6 +2832,9 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit")
                         .HasColumnName("IsActive");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit");
 
                     b.HasKey("Id");
 
@@ -2883,6 +2967,9 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                         .HasColumnType("bit")
                         .HasColumnName("IsActive");
 
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit");
+
                     b.HasKey("Id");
 
                     b.ToTable("NUMBERING_RESET_POLICIES", (string)null);
@@ -2993,6 +3080,9 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                         .HasColumnType("bit")
                         .HasColumnName("IsActive");
 
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit");
+
                     b.HasKey("Id");
 
                     b.ToTable("DEPARTMENT_TYPES", (string)null);
@@ -3085,6 +3175,9 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit")
                         .HasColumnName("IsActive");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit");
 
                     b.HasKey("Id");
 
@@ -3223,6 +3316,9 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                         .HasColumnType("bit")
                         .HasColumnName("IsActive");
 
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("IsSymmetric")
                         .HasColumnType("bit")
                         .HasColumnName("IsSymmetric");
@@ -3261,6 +3357,9 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit")
                         .HasColumnName("IsActive");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit");
 
                     b.HasKey("Id");
 
@@ -3367,8 +3466,7 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                     b.HasOne("InstitutionalDiwan.Domain.Entities.Correspondence.DocumentConfidentialityLevel", null)
                         .WithMany()
                         .HasForeignKey("ConfidentialityLevelId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("InstitutionalDiwan.Domain.Entities.Correspondence.DocumentStatusType", null)
                         .WithMany()
@@ -3379,8 +3477,7 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                     b.HasOne("InstitutionalDiwan.Domain.Entities.Correspondence.DocumentDirection", null)
                         .WithMany()
                         .HasForeignKey("DirectionId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("InstitutionalDiwan.Domain.Entities.Correspondence.DocumentType", null)
                         .WithMany()
@@ -3391,8 +3488,7 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                     b.HasOne("InstitutionalDiwan.Domain.Entities.Correspondence.DocumentPriorityLevel", null)
                         .WithMany()
                         .HasForeignKey("PriorityLevelId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("InstitutionalDiwan.Domain.Entities.Correspondence.DocumentTypeSchemaVersion", null)
                         .WithMany()

@@ -1,4 +1,6 @@
 using InstitutionalDiwan.Application.Features.Correspondence.Documents;
+using InstitutionalDiwan.Application.Features.Movements;
+using InstitutionalDiwan.Application.Features.Numbering.Numbers;
 using InstitutionalDiwan.Domain.Common;
 using InstitutionalDiwan.Domain.Entities.Correspondence;
 using InstitutionalDiwan.Domain.Entities.Identity;
@@ -10,15 +12,23 @@ namespace InstitutionalDiwan.Tests.Application;
 
 public sealed class CreateDocumentCommandHandlerTests
 {
-    private const string Number = "2026/000001";
-    private const int Year = 2026;
+    private const string RegisterNumber = "17/2026";
+    private static readonly DateTime RegisterDate = new(2026, 3, 9);
     private const int TypeId = DocumentType.OutgoingLetterId;
     private const int DirectionId = DocumentDirection.OutgoingId;
 
-    private static (User User, FakeUserRepository Users, FakeDocumentRepository Documents,
-            FakeDocumentTypeRepository Types, FakeDocumentNumberRepository Numbers,
-            FakeNumberingRegistryRepository Registries, FakeUnitOfWork Uow)
-        Setup(bool active = true)
+    private sealed record World(
+        User User,
+        FakeUserRepository Users,
+        FakeDocumentRepository Documents,
+        FakeDocumentTypeRepository Types,
+        FakeDocumentNumberRepository Numbers,
+        FakeNumberingRegistryRepository Registries,
+        FakeUnitOfWork Uow,
+        FakeSender Sender);
+
+    /// <summary>The creator's department owns an active register unless <paramref name="departmentRegistry"/> is false.</summary>
+    private static World Setup(bool active = true, bool departmentRegistry = true)
     {
         var user = User.Create("author", "hash", Guid.NewGuid(), mustChangePassword: false);
         Assert.True(user.IsSuccess);
@@ -27,213 +37,222 @@ public sealed class CreateDocumentCommandHandlerTests
 
         var users = new FakeUserRepository();
         users.Add(user.Value);
-        return (user.Value, users, new FakeDocumentRepository(), FakeDocumentTypeRepository.WithDefaultTypes(),
-            new FakeDocumentNumberRepository(), new FakeNumberingRegistryRepository(), new FakeUnitOfWork());
+
+        var registries = new FakeNumberingRegistryRepository();
+        if (departmentRegistry)
+        {
+            var register = NumberingRegistry.Create(
+                "DEPT-BOOK", "دفتر القسم", departmentId: user.Value.PrimaryDepartmentId);
+            Assert.True(register.IsSuccess);
+            registries.Add(register.Value);
+        }
+
+        return new World(user.Value, users, new FakeDocumentRepository(), FakeDocumentTypeRepository.WithDefaultTypes(),
+            new FakeDocumentNumberRepository(), registries, new FakeUnitOfWork(), new FakeSender());
     }
 
-    private static CreateDocumentCommandHandler CreateHandler(
-        FakeUserRepository users,
-        FakeDocumentRepository documents,
-        FakeDocumentTypeRepository types,
-        FakeDocumentNumberRepository numbers,
-        FakeNumberingRegistryRepository registries,
-        FakeUnitOfWork unitOfWork)
-        => new(users, documents, types, numbers, registries, new FakeDocumentTypeSchemaVersionRepository(), unitOfWork);
+    private static CreateDocumentCommandHandler CreateHandler(World w)
+        => new(w.Users, w.Documents, w.Types, w.Numbers, w.Registries,
+            new FakeDocumentTypeSchemaVersionRepository(), w.Uow, w.Sender);
 
     private static CreateDocumentCommand Command(
         Guid userId,
         string title = "طلب تجديد",
         int documentTypeId = TypeId,
         int directionId = DirectionId,
-        string number = Number,
-        int year = Year)
-        => new(userId, title, documentTypeId, directionId, number, year, SubjectSummary: "تجديد رخصة");
+        CreateDocumentMovementInput? movement = null)
+        => new(userId, title, documentTypeId, RegisterNumber, RegisterDate,
+            SubjectSummary: "تجديد رخصة", DirectionId: directionId, Movement: movement);
 
     [Fact]
-    public async Task Handle_WithFreeNumber_CreatesRegisteredDocumentWithOfficialNumber()
+    public async Task Handle_CreatesRegisteredDocumentWithSystemGuidNumber()
     {
-        var (user, users, documents, types, numbers, registries, unitOfWork) = Setup();
+        var w = Setup();
 
-        var result = await CreateHandler(users, documents, types, numbers, registries, unitOfWork).Handle(
-            Command(user.UserId),
-            CancellationToken.None);
+        var result = await CreateHandler(w).Handle(Command(w.User.UserId), CancellationToken.None);
 
         Assert.True(result.IsSuccess);
         Assert.Equal(Document.StatusRegistered, result.Value.StatusId);
-        Assert.Equal(Number, result.Value.OfficialNumberText);
+        Assert.True(Guid.TryParse(result.Value.OfficialNumberText, out _));
         Assert.NotNull(result.Value.RegistrationDate);
-        Assert.Equal(user.PrimaryDepartmentId, result.Value.OwningDepartmentId);
-        Assert.Equal(user.UserId, result.Value.CreatedByUserId);
+        Assert.Equal(w.User.PrimaryDepartmentId, result.Value.OwningDepartmentId);
+        Assert.Equal(w.User.UserId, result.Value.CreatedByUserId);
 
-        var stored = Assert.Single(documents.Documents);
-        Assert.Equal(result.Value.DocumentId, stored.DocumentId);
+        var stored = Assert.Single(w.Documents.Documents);
         Assert.Equal(2, stored.StatusHistory.Count);
 
-        var issued = Assert.Single(numbers.DocumentNumbers);
-        Assert.Equal(Number, issued.OfficialNumberText);
-        Assert.Equal(Year, issued.NumberingYear);
+        var issued = Assert.Single(w.Numbers.DocumentNumbers);
+        Assert.True(Guid.TryParse(issued.OfficialNumberText, out _));
+        Assert.Equal(w.Uow.UtcNow.Year, issued.NumberingYear);
         Assert.Equal(DocumentNumberStatus.ActiveId, issued.StatusId);
-
-        Assert.Single(registries.Registries);
-        Assert.Equal(1, unitOfWork.SaveChangesCallCount);
     }
 
     [Fact]
-    public async Task Handle_WhenNumberAndYearAlreadyTaken_ReturnsConflict()
+    public async Task Handle_TwoDocuments_GetDifferentSystemNumbers()
     {
-        var (user, users, documents, types, numbers, registries, unitOfWork) = Setup();
+        var w = Setup();
+        var handler = CreateHandler(w);
 
-        var taken = DocumentNumber.Issue(
-            Guid.NewGuid(), Guid.NewGuid(), Year, 1, Number, Guid.NewGuid());
-        Assert.True(taken.IsSuccess);
-        numbers.Add(taken.Value);
+        var first = await handler.Handle(Command(w.User.UserId), CancellationToken.None);
+        var second = await handler.Handle(Command(w.User.UserId), CancellationToken.None);
 
-        var result = await CreateHandler(users, documents, types, numbers, registries, unitOfWork).Handle(
-            Command(user.UserId),
+        Assert.True(first.IsSuccess && second.IsSuccess);
+        Assert.NotEqual(first.Value.OfficialNumberText, second.Value.OfficialNumberText);
+    }
+
+    [Fact]
+    public async Task Handle_WritesTheTypedNumberAndDateIntoTheCreatorsDepartmentRegister()
+    {
+        var w = Setup();
+
+        var result = await CreateHandler(w).Handle(Command(w.User.UserId), CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        var line = Assert.IsType<RecordDepartmentRegistrationCommand>(Assert.Single(w.Sender.Requests));
+        Assert.Equal(result.Value.DocumentId, line.DocumentId);
+        Assert.Equal(w.User.PrimaryDepartmentId, line.DepartmentId);
+        Assert.Equal(RegisterNumber, line.RegistryNumberText);
+        Assert.Equal(RegisterDate, line.RegistryDate);
+        Assert.Equal(w.Registries.Registries.Single(r => r.Code == "DEPT-BOOK").RegistryId, line.RegistryId);
+    }
+
+    [Fact]
+    public async Task Handle_WithoutDepartmentRegister_FailsBeforeCreatingAnything()
+    {
+        var w = Setup(departmentRegistry: false);
+
+        var result = await CreateHandler(w).Handle(Command(w.User.UserId), CancellationToken.None);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(DomainErrors.Numbering.DepartmentRegistryNotConfigured.Code, result.Error.Code);
+        Assert.Empty(w.Documents.Documents);
+        Assert.Empty(w.Numbers.DocumentNumbers);
+        Assert.Equal(0, w.Uow.SaveChangesCallCount);
+        Assert.Empty(w.Sender.Requests);
+    }
+
+    [Fact]
+    public async Task Handle_WithMovement_OpensAndSendsItAfterTheRegisterLine()
+    {
+        var w = Setup();
+        var destination = Guid.NewGuid();
+
+        var result = await CreateHandler(w).Handle(
+            Command(w.User.UserId, movement: new CreateDocumentMovementInput(destination, Instructions: "للمتابعة")),
+            CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Collection(
+            w.Sender.Requests,
+            first => Assert.IsType<RecordDepartmentRegistrationCommand>(first),
+            second =>
+            {
+                var open = Assert.IsType<CreateMovementCommand>(second);
+                Assert.Equal(destination, open.DestinationDepartmentId);
+                Assert.Equal("للمتابعة", open.Instructions);
+            },
+            third => Assert.IsType<SendMovementCommand>(third));
+    }
+
+    [Fact]
+    public async Task Handle_WithoutMovement_DoesNotOpenOne()
+    {
+        var w = Setup();
+
+        var result = await CreateHandler(w).Handle(Command(w.User.UserId), CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.DoesNotContain(w.Sender.Requests, request => request is CreateMovementCommand or SendMovementCommand);
+    }
+
+    [Fact]
+    public async Task Handle_WhenMovementFails_ReturnsItsError()
+    {
+        var w = Setup();
+        w.Sender.FailWith[typeof(CreateMovementCommand)] = DomainErrors.Movements.CentralDiwanRoutingRequired;
+
+        var result = await CreateHandler(w).Handle(
+            Command(w.User.UserId, movement: new CreateDocumentMovementInput(Guid.NewGuid())),
             CancellationToken.None);
 
         Assert.True(result.IsFailure);
-        Assert.Equal(DomainErrors.Numbering.OfficialNumberTaken.Code, result.Error.Code);
-        Assert.Equal(ErrorType.Conflict, result.Error.Type);
-        Assert.Empty(documents.Documents);
-        Assert.Equal(0, unitOfWork.SaveChangesCallCount);
+        Assert.Equal(DomainErrors.Movements.CentralDiwanRoutingRequired.Code, result.Error.Code);
+        Assert.DoesNotContain(w.Sender.Requests, request => request is SendMovementCommand);
     }
 
     [Fact]
-    public async Task Handle_WithSameNumberInDifferentYear_Succeeds()
+    public async Task Handle_WhenRegisterLineFails_ReturnsItsErrorAndSkipsTheMovement()
     {
-        var (user, users, documents, types, numbers, registries, unitOfWork) = Setup();
+        var w = Setup();
+        w.Sender.FailWith[typeof(RecordDepartmentRegistrationCommand)] = DomainErrors.Numbering.RegistryNumberTaken;
 
-        var taken = DocumentNumber.Issue(
-            Guid.NewGuid(), Guid.NewGuid(), Year, 1, Number, Guid.NewGuid());
-        Assert.True(taken.IsSuccess);
-        numbers.Add(taken.Value);
-
-        var result = await CreateHandler(users, documents, types, numbers, registries, unitOfWork).Handle(
-            Command(user.UserId, year: Year + 1),
-            CancellationToken.None);
-
-        Assert.True(result.IsSuccess);
-        Assert.Equal(
-            Year + 1,
-            Assert.Single(numbers.DocumentNumbers, n => n.NumberingYear == Year + 1).NumberingYear);
-    }
-
-    [Fact]
-    public async Task Handle_WithDifferentNumberInSameYear_Succeeds()
-    {
-        var (user, users, documents, types, numbers, registries, unitOfWork) = Setup();
-
-        var taken = DocumentNumber.Issue(
-            Guid.NewGuid(), Guid.NewGuid(), Year, 1, Number, Guid.NewGuid());
-        Assert.True(taken.IsSuccess);
-        numbers.Add(taken.Value);
-
-        var result = await CreateHandler(users, documents, types, numbers, registries, unitOfWork).Handle(
-            Command(user.UserId, number: "2026/000002"),
-            CancellationToken.None);
-
-        Assert.True(result.IsSuccess);
-        Assert.Equal(2, numbers.DocumentNumbers.Count);
-    }
-
-    [Fact]
-    public async Task Handle_WithExistingActiveRegistry_UsesThatRegistry()
-    {
-        var (user, users, documents, types, numbers, registries, unitOfWork) = Setup();
-
-        var registry = NumberingRegistry.Create("LETTER-INTERNAL", "سجل الخطابات الداخلية");
-        Assert.True(registry.IsSuccess);
-        registries.Add(registry.Value);
-
-        var result = await CreateHandler(users, documents, types, numbers, registries, unitOfWork).Handle(
-            Command(user.UserId),
-            CancellationToken.None);
-
-        Assert.True(result.IsSuccess);
-        Assert.Equal(registry.Value.RegistryId, Assert.Single(numbers.DocumentNumbers).RegistryId);
-        Assert.Single(registries.Registries);
-    }
-
-    [Fact]
-    public async Task Handle_WithBlankNumber_ReturnsOfficialNumberEmpty()
-    {
-        var (user, users, documents, types, numbers, registries, unitOfWork) = Setup();
-
-        var result = await CreateHandler(users, documents, types, numbers, registries, unitOfWork).Handle(
-            Command(user.UserId, number: "   "),
+        var result = await CreateHandler(w).Handle(
+            Command(w.User.UserId, movement: new CreateDocumentMovementInput(Guid.NewGuid())),
             CancellationToken.None);
 
         Assert.True(result.IsFailure);
-        Assert.Equal(DomainErrors.Numbering.OfficialNumberEmpty.Code, result.Error.Code);
-        Assert.Empty(documents.Documents);
+        Assert.Equal(DomainErrors.Numbering.RegistryNumberTaken.Code, result.Error.Code);
+        Assert.DoesNotContain(w.Sender.Requests, request => request is CreateMovementCommand);
     }
 
     [Fact]
     public async Task Handle_WithUnknownDocumentType_ReturnsValidationError()
     {
-        var (user, users, documents, types, numbers, registries, unitOfWork) = Setup();
+        var w = Setup();
 
-        var result = await CreateHandler(users, documents, types, numbers, registries, unitOfWork).Handle(
-            Command(user.UserId, documentTypeId: 987),
-            CancellationToken.None);
+        var result = await CreateHandler(w).Handle(
+            Command(w.User.UserId, documentTypeId: 987), CancellationToken.None);
 
         Assert.True(result.IsFailure);
         Assert.Equal(DomainErrors.Correspondence.DocumentTypeNotFound.Code, result.Error.Code);
-        Assert.Empty(documents.Documents);
+        Assert.Empty(w.Documents.Documents);
     }
 
     [Fact]
     public async Task Handle_WithInvalidDirection_ReturnsValidationError()
     {
-        var (user, users, documents, types, numbers, registries, unitOfWork) = Setup();
+        var w = Setup();
 
-        var result = await CreateHandler(users, documents, types, numbers, registries, unitOfWork).Handle(
-            Command(user.UserId, directionId: 99),
-            CancellationToken.None);
+        var result = await CreateHandler(w).Handle(
+            Command(w.User.UserId, directionId: 99), CancellationToken.None);
 
         Assert.True(result.IsFailure);
         Assert.Equal(DomainErrors.Correspondence.DirectionInvalid.Code, result.Error.Code);
-        Assert.Empty(documents.Documents);
+        Assert.Empty(w.Documents.Documents);
     }
 
     [Fact]
     public async Task Handle_WithWhitespaceTitle_ReturnsValidationError()
     {
-        var (user, users, documents, types, numbers, registries, unitOfWork) = Setup();
+        var w = Setup();
 
-        var result = await CreateHandler(users, documents, types, numbers, registries, unitOfWork).Handle(
-            Command(user.UserId, title: "   "),
-            CancellationToken.None);
+        var result = await CreateHandler(w).Handle(
+            Command(w.User.UserId, title: "   "), CancellationToken.None);
 
         Assert.True(result.IsFailure);
         Assert.Equal(DomainErrors.Correspondence.TitleEmpty.Code, result.Error.Code);
-        Assert.Empty(documents.Documents);
+        Assert.Empty(w.Documents.Documents);
     }
 
     [Fact]
     public async Task Handle_WhenUserIsMissing_ReturnsNotFound()
     {
-        var (_, users, documents, types, numbers, registries, unitOfWork) = Setup();
-        users.Users.Clear();
+        var w = Setup();
+        w.Users.Users.Clear();
 
-        var result = await CreateHandler(users, documents, types, numbers, registries, unitOfWork).Handle(
-            Command(Guid.NewGuid()),
-            CancellationToken.None);
+        var result = await CreateHandler(w).Handle(Command(Guid.NewGuid()), CancellationToken.None);
 
         Assert.True(result.IsFailure);
         Assert.Equal(DomainErrors.Identity.UserNotFound.Code, result.Error.Code);
-        Assert.Equal(0, unitOfWork.SaveChangesCallCount);
+        Assert.Equal(0, w.Uow.SaveChangesCallCount);
     }
 
     [Fact]
     public async Task Handle_WhenUserIsInactive_ReturnsForbidden()
     {
-        var (user, users, documents, types, numbers, registries, unitOfWork) = Setup(active: false);
+        var w = Setup(active: false);
 
-        var result = await CreateHandler(users, documents, types, numbers, registries, unitOfWork).Handle(
-            Command(user.UserId),
-            CancellationToken.None);
+        var result = await CreateHandler(w).Handle(Command(w.User.UserId), CancellationToken.None);
 
         Assert.True(result.IsFailure);
         Assert.Equal(DomainErrors.Identity.UserInactive.Code, result.Error.Code);

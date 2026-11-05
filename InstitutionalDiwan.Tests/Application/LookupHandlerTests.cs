@@ -284,4 +284,86 @@ public sealed class LookupHandlerTests
         Assert.True(result.IsFailure);
         Assert.Equal("Lookup.EntryNotFound", result.Error.Code);
     }
+
+    private const string PriorityLevels = "document-priority-levels";
+
+    private static async Task SeedPriorityAsync(LookupRepository repository, DiwanDbContext db, params int[] ids)
+    {
+        foreach (var id in ids)
+        {
+            var added = await repository.AddAsync(PriorityLevels, id, $"Level {id}", $"مستوى {id}");
+            Assert.True(added.IsSuccess);
+        }
+
+        await db.SaveChangesAsync();
+    }
+
+    private static Task<Result<LookupEntryResponse>> SetDefaultAsync(
+        LookupRepository repository, DiwanDbContext db, int id, bool isDefault) =>
+        new SetLookupEntryDefaultCommandHandler(repository, db)
+            .Handle(new SetLookupEntryDefaultCommand(PriorityLevels, id, isDefault), CancellationToken.None);
+
+    [Fact]
+    public async Task SetDefault_MarksOneEntryAndClearsThePreviousDefault()
+    {
+        var (db, repository) = await CreateAsync();
+        using var _ = db;
+        await SeedPriorityAsync(repository, db, 101, 102);
+
+        Assert.True((await SetDefaultAsync(repository, db, 101, true)).Value.IsDefault);
+        var second = await SetDefaultAsync(repository, db, 102, true);
+        Assert.True(second.IsSuccess);
+        Assert.True(second.Value.IsDefault);
+
+        var all = await new ListLookupEntriesQueryHandler(repository)
+            .Handle(new ListLookupEntriesQuery(PriorityLevels, IncludeInactive: true), CancellationToken.None);
+        var defaults = all.Value.Where(entry => entry.IsDefault).ToList();
+        Assert.Equal(102, Assert.Single(defaults).Id);
+    }
+
+    [Fact]
+    public async Task SetDefault_WhenEntryIsInactive_ReturnsConflict()
+    {
+        var (db, repository) = await CreateAsync();
+        using var _ = db;
+        await SeedPriorityAsync(repository, db, 101);
+        await new DeactivateLookupEntryCommandHandler(repository, db)
+            .Handle(new DeactivateLookupEntryCommand(PriorityLevels, 101), CancellationToken.None);
+
+        var result = await SetDefaultAsync(repository, db, 101, true);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("Lookup.DefaultMustBeActive", result.Error.Code);
+    }
+
+    [Fact]
+    public async Task Deactivate_ClearsTheDefaultMark()
+    {
+        var (db, repository) = await CreateAsync();
+        using var _ = db;
+        await SeedPriorityAsync(repository, db, 101);
+        await SetDefaultAsync(repository, db, 101, true);
+
+        var deactivated = await new DeactivateLookupEntryCommandHandler(repository, db)
+            .Handle(new DeactivateLookupEntryCommand(PriorityLevels, 101), CancellationToken.None);
+
+        Assert.True(deactivated.IsSuccess);
+        Assert.False(deactivated.Value.IsDefault);
+    }
+
+    [Fact]
+    public async Task ClearDefault_RemovesTheMarkAndMissingEntryIsNotFound()
+    {
+        var (db, repository) = await CreateAsync();
+        using var _ = db;
+        await SeedPriorityAsync(repository, db, 101);
+        await SetDefaultAsync(repository, db, 101, true);
+
+        var cleared = await SetDefaultAsync(repository, db, 101, false);
+        Assert.True(cleared.IsSuccess);
+        Assert.False(cleared.Value.IsDefault);
+
+        var missing = await SetDefaultAsync(repository, db, 404, true);
+        Assert.Equal("Lookup.EntryNotFound", missing.Error.Code);
+    }
 }

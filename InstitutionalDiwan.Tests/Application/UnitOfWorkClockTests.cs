@@ -3,6 +3,7 @@ using InstitutionalDiwan.Application.Features.Identity.ChangePassword;
 using InstitutionalDiwan.Application.Features.Identity.Login;
 using InstitutionalDiwan.Domain.Common;
 using InstitutionalDiwan.Domain.Entities.Correspondence;
+using InstitutionalDiwan.Domain.Entities.Numbering;
 using InstitutionalDiwan.Domain.Entities.Identity;
 using InstitutionalDiwan.Tests.Support;
 
@@ -29,6 +30,7 @@ public sealed class UnitOfWorkClockTests
         var documents = new FakeDocumentRepository();
         var numbers = new FakeDocumentNumberRepository();
         var registries = new FakeNumberingRegistryRepository();
+        registries.Add(NumberingRegistry.Create("DEPT-BOOK", "دفتر القسم", departmentId: user.Value.PrimaryDepartmentId).Value);
         var unitOfWork = new FakeUnitOfWork { UtcNow = FixedNow };
 
         var handler = new CreateDocumentCommandHandler(
@@ -38,16 +40,17 @@ public sealed class UnitOfWorkClockTests
             numbers,
             registries,
             new FakeDocumentTypeSchemaVersionRepository(),
-            unitOfWork);
+            unitOfWork,
+            new FakeSender());
 
         var result = await handler.Handle(
             new CreateDocumentCommand(
                 user.Value.UserId,
                 "طلب تجديد",
                 DocumentType.OutgoingLetterId,
-                DocumentDirection.OutgoingId,
-                "2026/000001",
-                2026),
+                "17/2026",
+                new DateTime(2026, 3, 9),
+                DirectionId: DocumentDirection.OutgoingId),
             CancellationToken.None);
 
         Assert.True(result.IsSuccess);
@@ -61,7 +64,7 @@ public sealed class UnitOfWorkClockTests
         Assert.Equal(FixedNow, number.IssuedAt);
         Assert.All(number.History, history => Assert.Equal(FixedNow, history.OccurredAt));
 
-        var registry = Assert.Single(registries.Registries);
+        var registry = Assert.Single(registries.Registries, r => r.Code == "DEFAULT");
         Assert.Equal(FixedNow, registry.CreatedAt);
     }
 

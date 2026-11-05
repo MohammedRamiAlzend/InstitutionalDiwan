@@ -15,7 +15,6 @@ export {
   DOCUMENT_STATUS,
   DOCUMENT_CONFIDENTIALITY,
   DOCUMENT_PRIORITY,
-  DOCUMENT_TYPE_DIRECTION,
   MOVEMENT_EVENT_TYPE,
   MOVEMENT_STATUS,
   MOVEMENT_STEP_STATUS,
@@ -29,5 +28,11 @@ export {
   findLookupFallback,
 } from './model/constants'
 export type { LookupSlug } from './model/constants'
-export { lookupKeys, useLookupCatalogs, useLookupEntries } from './model/queries'
+export {
+  findDefaultLookupEntry,
+  usePreselectLookupDefault,
+  lookupKeys,
+  useLookupCatalogs,
+  useLookupEntries,
+} from './model/queries'
 export { LookupLabel } from './ui/LookupLabel'

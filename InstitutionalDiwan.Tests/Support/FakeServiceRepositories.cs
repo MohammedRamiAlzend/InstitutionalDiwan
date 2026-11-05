@@ -209,6 +209,13 @@ internal sealed class FakeLookupRepository : ILookupRepository
         CancellationToken cancellationToken = default)
         => throw new NotSupportedException("The fake lookup catalog is read-only.");
 
+    public Task<Result<LookupEntity?>> SetDefaultStateAsync(
+        string lookupKey,
+        int id,
+        bool isDefault,
+        CancellationToken cancellationToken = default)
+        => throw new NotSupportedException("The fake lookup catalog is read-only.");
+
     public Task<bool> IsInUseAsync(string lookupKey, int id, CancellationToken cancellationToken = default)
         => Task.FromResult(false);
 }

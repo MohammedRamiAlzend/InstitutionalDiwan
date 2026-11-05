@@ -1,8 +1,5 @@
 import { z } from 'zod'
 
-const MIN_NUMBERING_YEAR = 1900
-const MAX_NUMBERING_YEAR = 2200
-
 /** Mirrors `UpdateDocumentMetadataRequest`; document type/direction stay immutable here. */
 export const editDraftSchema = z.object({
   title: z
@@ -14,29 +11,29 @@ export const editDraftSchema = z.object({
     .string()
     .trim()
     .max(2000, 'ملخص الموضوع يتجاوز الحد الأقصى للأحرف.'),
-  confidentialityLevelId: z.string().min(1, 'اختر مستوى السرية.'),
-  priorityLevelId: z.string().min(1, 'اختر درجة الأولوية.'),
 })
 
 export type EditDraftFormValues = z.infer<typeof editDraftSchema>
 
-/** The year is optional: blank lets the server use the document year, then the current year. */
+/** Register number and date are required; the movement is optional (blank destination = none). */
 export const registerDraftSchema = z
-  .object({ numberingYear: z.string() })
+  .object({
+    registryNumberText: z
+      .string()
+      .trim()
+      .min(1, 'رقم السجل مطلوب.')
+      .max(100, 'رقم السجل يتجاوز الحد الأقصى للأحرف.'),
+    registryDate: z.string().min(1, 'تاريخ السجل مطلوب.'),
+    destinationDepartmentId: z.string(),
+    movementTypeId: z.string(),
+    movementInstructions: z
+      .string()
+      .trim()
+      .max(1000, 'التعليمات تتجاوز الحد الأقصى للأحرف.'),
+  })
   .superRefine((values, ctx) => {
-    if (!values.numberingYear.trim()) return
-
-    const year = Number(values.numberingYear)
-    if (
-      !/^\d{4}$/.test(values.numberingYear.trim()) ||
-      year < MIN_NUMBERING_YEAR ||
-      year > MAX_NUMBERING_YEAR
-    ) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['numberingYear'],
-        message: `سنة الترقيم يجب أن تكون بين ${MIN_NUMBERING_YEAR} و${MAX_NUMBERING_YEAR}.`,
-      })
+    if (values.destinationDepartmentId && !values.movementTypeId) {
+      ctx.addIssue({ code: 'custom', path: ['movementTypeId'], message: 'اختر نوع الحركة.' })
     }
   })
 

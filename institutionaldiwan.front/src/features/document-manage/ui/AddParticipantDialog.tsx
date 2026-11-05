@@ -5,7 +5,7 @@ import { Building2, Landmark, Search, UserRound } from 'lucide-react'
 import { toast } from 'sonner'
 import { useDepartmentOptions } from '@/entities/department'
 import { useExternalOrganizations } from '@/entities/external-organization'
-import { LOOKUP_SLUGS, useLookupEntries } from '@/entities/lookup'
+import { LOOKUP_SLUGS, useLookupEntries, usePreselectLookupDefault } from '@/entities/lookup'
 import { toArabicErrorMessage } from '@/shared/api'
 import { cn, useDebouncedValue } from '@/shared/lib'
 import {
@@ -71,6 +71,7 @@ export function AddParticipantDialog({
   const {
     register,
     control,
+    getValues,
     handleSubmit,
     setValue,
     clearErrors,
@@ -87,6 +88,8 @@ export function AddParticipantDialog({
       notes: '',
     },
   })
+
+  usePreselectLookupDefault(rolesQuery.data, getValues('roleId'), (value) => setValue('roleId', value))
 
   const targetType = useWatch({ control, name: 'targetType' })
 

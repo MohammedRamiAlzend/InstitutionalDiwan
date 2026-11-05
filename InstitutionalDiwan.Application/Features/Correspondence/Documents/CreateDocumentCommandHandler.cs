@@ -1,4 +1,8 @@
 using InstitutionalDiwan.Application.Abstractions.Messaging;
+using InstitutionalDiwan.Application.Features.Movements;
+using InstitutionalDiwan.Application.Features.Numbering;
+using InstitutionalDiwan.Application.Features.Numbering.Numbers;
+using MediatR;
 using InstitutionalDiwan.Application.Features.Correspondence.DocumentFields;
 using InstitutionalDiwan.Domain.Common;
 using InstitutionalDiwan.Domain.Entities.Correspondence;
@@ -20,6 +24,7 @@ internal sealed class CreateDocumentCommandHandler : ICommandHandler<CreateDocum
     private readonly INumberingRegistryRepository _numberingRegistryRepository;
     private readonly IDocumentTypeSchemaVersionRepository _schemaVersionRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ISender _sender;
 
     public CreateDocumentCommandHandler(
         IUserRepository userRepository,
@@ -28,7 +33,8 @@ internal sealed class CreateDocumentCommandHandler : ICommandHandler<CreateDocum
         IDocumentNumberRepository documentNumberRepository,
         INumberingRegistryRepository numberingRegistryRepository,
         IDocumentTypeSchemaVersionRepository schemaVersionRepository,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        ISender sender)
     {
         _userRepository = userRepository;
         _documentRepository = documentRepository;
@@ -37,6 +43,7 @@ internal sealed class CreateDocumentCommandHandler : ICommandHandler<CreateDocum
         _numberingRegistryRepository = numberingRegistryRepository;
         _schemaVersionRepository = schemaVersionRepository;
         _unitOfWork = unitOfWork;
+        _sender = sender;
     }
 
     public async Task<Result<DocumentResponse>> Handle(
@@ -57,13 +64,15 @@ internal sealed class CreateDocumentCommandHandler : ICommandHandler<CreateDocum
         if (!documentType.IsActive)
             return Result.Failure<DocumentResponse>(DomainErrors.Correspondence.DocumentTypeInactive);
 
-        var numberText = (request.OfficialNumberText ?? string.Empty).Trim();
-        if (numberText.Length == 0)
-            return Result.Failure<DocumentResponse>(DomainErrors.Numbering.OfficialNumberEmpty);
+        // The creator's own department must keep a register: the typed number and date go into it.
+        var departmentRegistry = await NumberingRegistryResolver.RequireDepartmentRegistryAsync(
+            _numberingRegistryRepository, user.PrimaryDepartmentId, cancellationToken);
+        if (departmentRegistry.IsFailure)
+            return Result.Failure<DocumentResponse>(departmentRegistry.Error);
 
-        if (await _documentNumberRepository.ExistsByNumberAndYearAsync(
-                numberText, request.NumberingYear, cancellationToken))
-            return Result.Failure<DocumentResponse>(DomainErrors.Numbering.OfficialNumberTaken);
+        // The central number is system-owned: a GUID, issued in the current year.
+        var numberText = Guid.NewGuid().ToString("D");
+        var numberingYear = _unitOfWork.UtcNow.Year;
 
         // Pinned to the schema published right now; this flow registers immediately, so the values
         // are applied and the required fields checked before a number is consumed.
@@ -76,8 +85,8 @@ internal sealed class CreateDocumentCommandHandler : ICommandHandler<CreateDocum
             owningDepartmentId: user.PrimaryDepartmentId,
             createdByUserId: user.UserId,
             subjectSummary: request.SubjectSummary,
-            confidentialityLevelId: request.ConfidentialityLevelId ?? DocumentConfidentialityLevel.NormalId,
-            priorityLevelId: request.PriorityLevelId ?? DocumentPriorityLevel.NormalId,
+            confidentialityLevelId: request.ConfidentialityLevelId,
+            priorityLevelId: request.PriorityLevelId,
             utcNow: _unitOfWork.UtcNow,
             schemaVersionId: schema?.SchemaVersionId);
 
@@ -94,22 +103,23 @@ internal sealed class CreateDocumentCommandHandler : ICommandHandler<CreateDocum
         if (requiredResult.IsFailure)
             return Result.Failure<DocumentResponse>(requiredResult.Error);
 
+        // The system number always comes from a central registry, never from a department register.
         var registryResult = await ResolveRegistryAsync(
-            user.PrimaryDepartmentId, request.DocumentTypeId, request.DirectionId, cancellationToken);
+            null, request.DocumentTypeId, request.DirectionId, cancellationToken);
         if (registryResult.IsFailure)
             return Result.Failure<DocumentResponse>(registryResult.Error);
 
         var registry = registryResult.Value;
 
         var sequenceResult = registry.AllocateNextSequence(
-            request.NumberingYear, _unitOfWork.UtcNow);
+            numberingYear, _unitOfWork.UtcNow);
         if (sequenceResult.IsFailure)
             return Result.Failure<DocumentResponse>(sequenceResult.Error);
 
         var numberResult = DocumentNumber.Issue(
             document.DocumentId,
             registry.RegistryId,
-            request.NumberingYear,
+            numberingYear,
             sequenceResult.Value,
             numberText,
             user.UserId,
@@ -133,13 +143,42 @@ internal sealed class CreateDocumentCommandHandler : ICommandHandler<CreateDocum
         _documentNumberRepository.Add(numberResult.Value);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
+        var registration = await _sender.Send(new RecordDepartmentRegistrationCommand(
+            document.DocumentId,
+            user.PrimaryDepartmentId,
+            request.DepartmentRegistryNumberText.Trim(),
+            request.DepartmentRegistryDate,
+            user.UserId,
+            RegistryId: departmentRegistry.Value.RegistryId), cancellationToken);
+        if (registration.IsFailure)
+            return Result.Failure<DocumentResponse>(registration.Error);
+
+        if (request.Movement is { } route)
+        {
+            var opened = await _sender.Send(new CreateMovementCommand(
+                document.DocumentId,
+                user.UserId,
+                route.DestinationDepartmentId,
+                route.MovementTypeId,
+                route.AssignedToUserId,
+                route.Instructions,
+                route.DueDate), cancellationToken);
+            if (opened.IsFailure)
+                return Result.Failure<DocumentResponse>(opened.Error);
+
+            var sent = await _sender.Send(
+                new SendMovementCommand(opened.Value.MovementId, user.UserId), cancellationToken);
+            if (sent.IsFailure)
+                return Result.Failure<DocumentResponse>(sent.Error);
+        }
+
         return DocumentResponse.From(document);
     }
 
     private async Task<Result<NumberingRegistry>> ResolveRegistryAsync(
-        Guid departmentId,
+        Guid? departmentId,
         int documentTypeId,
-        int directionId,
+        int? directionId,
         CancellationToken cancellationToken)
     {
         var registry = await _numberingRegistryRepository.GetActiveForScopeAsync(

@@ -48,4 +48,5 @@ repository, and map the tracked `LookupEntity` into `LookupEntryResponse`.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-05 | Claude | Added `SetLookupEntryDefaultCommand` + handler and `IsDefault` on `LookupEntryResponse`; one default per catalog, inactive entries cannot be default (`Lookup.DefaultMustBeActive`). |
 | 2026-10-19 | opencode | Added the Lookups slice (`ListLookupEntriesQuery`, `GetLookupEntryByIdQuery`, `CreateLookupEntryCommand`, `RelabelLookupEntryCommand`, `DeactivateLookupEntryCommand`, `ActivateLookupEntryCommand` + validators/handlers) and `LookupEntryResponse` to expose the 33 seeded reference catalogs over HTTP. |

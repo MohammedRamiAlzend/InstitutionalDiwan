@@ -35,6 +35,9 @@ public sealed class CorrespondenceAuditIntegrationTests
         fixture.Authenticate();
 
         var registries = new NumberingRegistryRepository(db);
+        registries.Add(NumberingRegistry.Create(
+            "DEPT-BOOK", "دفتر القسم", departmentId: fixture.User.PrimaryDepartmentId).Value);
+        await db.SaveChangesAsync();
         var numbers = new DocumentNumberRepository(db);
         var handler = new CreateDocumentCommandHandler(
             new UserRepository(db),
@@ -43,17 +46,18 @@ public sealed class CorrespondenceAuditIntegrationTests
             numbers,
             registries,
             new DocumentTypeSchemaVersionRepository(db),
-            db);
+            db,
+            new FakeSender());
 
         var result = await handler.Handle(
             new CreateDocumentCommand(
                 fixture.User.UserId,
                 "طلب تجديد",
                 DocumentType.OutgoingLetterId,
-                DocumentDirection.OutgoingId,
-                Number,
-                Year,
-                SubjectSummary: "تجديد رخصة"),
+                "17/2026",
+                new DateTime(2026, 3, 9),
+                SubjectSummary: "تجديد رخصة",
+                DirectionId: DocumentDirection.OutgoingId),
             CancellationToken.None);
 
         Assert.True(result.IsSuccess);

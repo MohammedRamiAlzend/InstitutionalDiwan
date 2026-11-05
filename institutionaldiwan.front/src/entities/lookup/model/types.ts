@@ -4,6 +4,7 @@ export interface LookupEntryResponse {
   desc: string
   descAr: string
   isActive: boolean
+  isDefault: boolean
   createdAt: string
 }
 

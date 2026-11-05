@@ -3,7 +3,6 @@ import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-r
 import { Archive, ArchiveRestore, ArrowRight, Ban, FilePenLine, Hash, UserPlus } from 'lucide-react'
 import { useDepartmentOptions } from '@/entities/department'
 import {
-  DocumentDirectionBadge,
   DocumentStatusBadge,
   OfficialNumberTag,
   useDocumentDetails,
@@ -220,7 +219,6 @@ function DocumentDetailsView() {
         badge={
           <div className="flex flex-wrap items-center gap-2">
             <DocumentStatusBadge statusId={document.statusId} />
-            <DocumentDirectionBadge directionId={document.directionId} />
             <OfficialNumberTag officialNumberText={document.officialNumberText} />
           </div>
         }

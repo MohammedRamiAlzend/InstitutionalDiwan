@@ -18,7 +18,7 @@ internal static class NumberingRegistryResolver
         INumberingRegistryRepository registryRepository,
         Guid departmentId,
         int documentTypeId,
-        int directionId,
+        int? directionId,
         CancellationToken cancellationToken,
         DateTime? utcNow = null)
     {

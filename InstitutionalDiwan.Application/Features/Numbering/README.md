@@ -46,5 +46,6 @@ issued later behave identically.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-05 | Claude | Central numbers (create, register, issue, replace) are now system GUIDs (`OfficialNumberFormatter.NewSystemNumber`); the sequence is still allocated internally. Department register lines keep their typed number and date. |
 | 2026-10-20 | Buffy | Split registry resolution into central (`ResolveAsync`, default fallback allowed) and department (`RequireDepartmentRegistryAsync`, no fallback) so a document can only be received where a department register exists; documented the per-scope uniqueness rule. |
 | 2026-10-19 | Buffy | Created the folder README and added `OfficialNumberFormatter` + `NumberingRegistryResolver`, extracted from the register/issue flows so every number is allocated and rendered the same way. |

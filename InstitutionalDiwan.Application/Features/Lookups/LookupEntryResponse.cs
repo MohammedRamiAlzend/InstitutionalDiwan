@@ -8,6 +8,7 @@ public sealed record LookupEntryResponse(
     string Desc,
     string DescAr,
     bool IsActive,
+    bool IsDefault,
     DateTime CreatedAt)
 {
     public static LookupEntryResponse From(LookupEntity entry) => new(
@@ -15,5 +16,6 @@ public sealed record LookupEntryResponse(
         entry.Desc,
         entry.DescAr,
         entry.IsActive,
+        entry.IsDefault,
         entry.CreatedAt);
 }

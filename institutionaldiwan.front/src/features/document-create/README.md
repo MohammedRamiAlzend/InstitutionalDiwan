@@ -8,7 +8,7 @@
 ## 1. Purpose
 
 Owns the write side of document creation. The dialog collects the title, summary, seeded
-type/direction/confidentiality/priority catalogs, and either the draft-only metadata (document date,
+document-type catalog, and either the draft-only metadata (document date,
 external reference) or the registration pair (official number + numbering year). It invalidates
 `documentKeys.lists()` after either mutation so the registry refreshes immediately.
 
@@ -39,7 +39,7 @@ not ask for it.
 | `model/types.ts` | `CreateDocumentRequest` (`POST /api/documents`), `CreateDraftDocumentRequest` (`POST /api/documents/drafts`), and `CreateDocumentRecipientRequest` (`POST /api/documents/{documentId}/participants`), matching the server contracts. |
 | `model/schemas.ts` | `createDocumentSchema` — shared Arabic-validated fields plus a `mode: 'draft' \| 'register'` discriminator; the official number and a 4-digit 1900–2200 numbering year are required only when registering. When `addRecipient` is on, the selected target (`recipientType`) must be filled, with a per-type Arabic message. |
 | `api/documentMutations.ts` | `useCreateDocumentMutation` and `useCreateDraftDocumentMutation`, invalidating `documentKeys.lists()` on success, plus `useAddCreationRecipientMutation`, which posts the recipient after creation and invalidates the document detail and lists. |
-| `ui/CreateDocumentDialog.tsx` | Radix dialog with a two-card mode selector, seeded lookup selects (type, direction, confidentiality, priority), direction auto-filled from seeded document types, draft-only dates/reference, the optional recipient block (external/department/person, `DOCUMENT_EDIT` only), and field-level `Numbering.OfficialNumberTaken` feedback. |
+| `ui/CreateDocumentDialog.tsx` | Radix dialog with a two-card mode selector, the document-type select (direction, confidentiality and priority are suspended and not sent), draft-only dates/reference, the optional recipient block (external/department/person, `DOCUMENT_EDIT` only), and field-level `Numbering.OfficialNumberTaken` feedback. |
 | `index.ts` | Public barrel for the request/form types, the three mutations, and the dialog. |
 
 ## 4. Required Packages
@@ -49,8 +49,6 @@ not ask for it.
 ## 5. Behaviour notes
 
 - Default mode is **draft**; it starts on **register** only for callers holding `NUMBERING_MANAGE`.
-- Selecting كتاب وارد / كتاب صادر / مذكرة داخلية sets the matching direction; تعميم and قرار keep the
-  user's chosen direction because the seeded type allows all directions.
 - The dialog renders `toArabicErrorMessage` for other failures and stays open so the user can correct
   the input.
 - `Numbering.OfficialNumberTaken` is shown once, on the official-number field; the form-level alert is
@@ -72,10 +70,11 @@ not ask for it.
 | Create/draft mutations with query invalidation | ✅ Implemented |
 | Create dialog (both modes, lookups, Arabic errors) | ✅ Implemented |
 | Optional recipient at creation (external/department/person, `DOCUMENT_EDIT` only) | ✅ Implemented (2026-10-30) |
-| Browser verification | ✅ Verified in-browser (2026-10-28) against the live API: draft «مسودة تحقق Phase 2» saved as DRAFT with «بدون رقم»; registering an existing `15/2024` returned `409 Numbering.OfficialNumberTaken` as the Arabic field error «الرقم الرسمي مستخدم مسبقًا في هذه السنة.» with the dialog staying open; registering `999/2026` closed the dialog, showed the toast «تم تسجيل الوثيقة برقم 999/2026.», and the row appeared first in the registry; the numbering-year default rendered `2026` from the browser clock. |
+| Browser verification | ✅ Verified in-browser (2026-10-28) against the live API: draft «مسودة تحقق Phase 2» saved as DRAFT with «بدون رقم»; registering an existing `15/2024` returned `409 Numbering.OfficialNumberTaken` as the Arabic field error «رقم النظام مستخدم مسبقًا في هذه السنة.» with the dialog staying open; registering `999/2026` closed the dialog, showed the toast «تم تسجيل الوثيقة برقم 999/2026.», and the row appeared first in the registry; the numbering-year default rendered `2026` from the browser clock. |
 | Recipient browser verification | ✅ Verified in-browser (2026-10-30) as `admin`: ticking «إضافة مستلم للوثيقة» and submitting a department recipient without a department showed «اختر القسم المستلم.»; after choosing «قسم الموارد البشرية» the draft was created with the toast «تم حفظ الوثيقة كمسودة. وأُضيف المستلم.»; the detail page `?tab=participants` of document `596424ec-cb7c-4fa6-9ea2-a9537a4e65a2` showed «مستلم \| أساسي \| قسم داخلي · قسم الموارد البشرية». |
 
 ## 7. Change Log
+- 2026-11-05: Removed the direction, confidentiality and priority fields (suspended): the dialog no longer asks for them, no longer auto-fills the direction from the type, and sends none of the three, so the API stores null.
 | 2026-11-03 | Claude | The dialog now loads the chosen type's published schema, renders `DynamicFieldInputs` in a full-width fieldset, validates locally and sends `fieldValues`; changing the type clears the values. |
 
 - 2026-10-30: Added the optional recipient block to `CreateDocumentDialog` (checkbox + external/

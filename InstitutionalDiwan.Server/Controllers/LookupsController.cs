@@ -202,4 +202,52 @@ public sealed class LookupsController : ControllerBase
         var result = await _sender.Send(new ActivateLookupEntryCommand(lookup, id), cancellationToken);
         return result.ToActionResult();
     }
+
+    /// <summary>Makes a catalog entry the default that selects preselect, replacing the previous default.</summary>
+    /// <param name="lookup">Lookup catalog key (string, route). Example: <c>document-types</c>.</param>
+    /// <param name="id">Catalog entry id (integer, route). Example: <c>101</c>.</param>
+    /// <param name="cancellationToken">Request cancellation token (optional).</param>
+    /// <response code="200">The entry, now marked as the catalog default.</response>
+    /// <response code="403">The token lacks the LOOKUP_MANAGE permission.</response>
+    /// <response code="404">The catalog slug is unknown or the entry id does not exist.</response>
+    /// <response code="409">The entry is inactive and cannot be the default.</response>
+    [HttpPatch("{lookup}/{id:int}/set-default")]
+    [EndpointSummary("Makes a catalog entry the default that selects preselect, replacing the previous default.")]
+    [EndpointDescription("Makes a catalog entry the default that selects preselect, replacing the previous default. Only an active entry can be the default. Requires the LOOKUP_MANAGE permission. Responses: 200 (The entry, now marked as the catalog default.), 403 (The token lacks the LOOKUP_MANAGE permission.), 404 (The catalog slug is unknown or the entry id does not exist.), 409 (The entry is inactive and cannot be the default.)")]
+    [Authorize(Policy = Permissions.LookupManage)]
+    [ProducesResponseType<LookupEntryResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> SetDefault(
+        [Description("Lookup catalog key (string, route). Example: document-types.")] string lookup,
+        [Description("Catalog entry id (integer, route). Example: 101.")] int id,
+        CancellationToken cancellationToken)
+    {
+        var result = await _sender.Send(new SetLookupEntryDefaultCommand(lookup, id, true), cancellationToken);
+        return result.ToActionResult();
+    }
+
+    /// <summary>Removes the default mark from a catalog entry, leaving the catalog without a default.</summary>
+    /// <param name="lookup">Lookup catalog key (string, route). Example: <c>document-types</c>.</param>
+    /// <param name="id">Catalog entry id (integer, route). Example: <c>101</c>.</param>
+    /// <param name="cancellationToken">Request cancellation token (optional).</param>
+    /// <response code="200">The entry, no longer the catalog default.</response>
+    /// <response code="403">The token lacks the LOOKUP_MANAGE permission.</response>
+    /// <response code="404">The catalog slug is unknown or the entry id does not exist.</response>
+    [HttpPatch("{lookup}/{id:int}/clear-default")]
+    [EndpointSummary("Removes the default mark from a catalog entry, leaving the catalog without a default.")]
+    [EndpointDescription("Removes the default mark from a catalog entry, leaving the catalog without a default. Requires the LOOKUP_MANAGE permission. Responses: 200 (The entry, no longer the catalog default.), 403 (The token lacks the LOOKUP_MANAGE permission.), 404 (The catalog slug is unknown or the entry id does not exist.)")]
+    [Authorize(Policy = Permissions.LookupManage)]
+    [ProducesResponseType<LookupEntryResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> ClearDefault(
+        [Description("Lookup catalog key (string, route). Example: document-types.")] string lookup,
+        [Description("Catalog entry id (integer, route). Example: 101.")] int id,
+        CancellationToken cancellationToken)
+    {
+        var result = await _sender.Send(new SetLookupEntryDefaultCommand(lookup, id, false), cancellationToken);
+        return result.ToActionResult();
+    }
 }

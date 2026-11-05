@@ -23,7 +23,6 @@ export {
   useDocumentRegistryNumbers,
 } from './model/queries'
 export { DocumentStatusBadge } from './ui/DocumentStatusBadge'
-export { DocumentDirectionBadge } from './ui/DocumentDirectionBadge'
 export { OfficialNumberTag } from './ui/OfficialNumberTag'
 export { NumberStatusBadge } from './ui/NumberStatusBadge'
 export { RestrictedDocumentLabel } from './ui/RestrictedDocumentLabel'

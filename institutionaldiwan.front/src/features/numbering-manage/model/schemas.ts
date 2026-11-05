@@ -67,7 +67,6 @@ export const registryFormSchema = z.object({
   resetPolicyId: z.string().min(1, 'اختر سياسة التصفير.'),
   departmentId: z.string(),
   documentTypeId: z.string(),
-  directionId: z.string(),
 })
 
 export type RegistryFormValues = z.infer<typeof registryFormSchema>

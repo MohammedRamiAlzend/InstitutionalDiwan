@@ -157,7 +157,7 @@ export function RelationsGrid({
   const copyNumber = async (value: string) => {
     try {
       await navigator.clipboard.writeText(value)
-      toast.success('تم نسخ الرقم الرسمي.')
+      toast.success('تم نسخ رقم النظام.')
     } catch {
       toast.error('تعذّر النسخ إلى الحافظة.')
     }
@@ -174,7 +174,7 @@ export function RelationsGrid({
       },
       {
         id: 'copy-number',
-        label: 'نسخ الرقم الرسمي',
+        label: 'نسخ رقم النظام',
         icon: <Hash className="size-4" aria-hidden />,
         disabled: !number,
         onSelect: () => void copyNumber(number ?? ''),

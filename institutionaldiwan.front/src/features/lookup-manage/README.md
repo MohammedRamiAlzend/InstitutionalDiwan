@@ -35,4 +35,5 @@ administrator-chosen id, relabel it, deactivate and reactivate it. Complements t
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-05 | Claude | Added `useSetLookupEntryDefaultMutation` (`PATCH .../set-default` and `.../clear-default`). |
 | 2026-11-04 | Claude | Added the Module 01 lookups administration writes (plan `plans/module-01-lookups-frontend.md`). |

@@ -1,9 +1,8 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Hash } from 'lucide-react'
 import { toast } from 'sonner'
 import { toArabicErrorMessage } from '@/shared/api'
-import { Button, Dialog, FormField, Input } from '@/shared/ui'
+import { Button, Dialog } from '@/shared/ui'
 import { useIssueOfficialNumberMutation } from '../api/numberMutations'
 import { issueNumberSchema, type IssueNumberFormValues } from '../model/schemas'
 
@@ -21,11 +20,7 @@ export function IssueNumberDialog({
 }: IssueNumberDialogProps) {
   const mutation = useIssueOfficialNumberMutation(documentId)
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<IssueNumberFormValues>({
+  const { handleSubmit } = useForm<IssueNumberFormValues>({
     resolver: zodResolver(issueNumberSchema),
     defaultValues: { numberingYear: '' },
   })
@@ -51,7 +46,7 @@ export function IssueNumberDialog({
       open={open}
       onOpenChange={onOpenChange}
       title="إصدار رقم رسمي"
-      description="سيُخصص الرقم التالي من سجل الترقيم المطابق لدائرة الوثيقة ونوعها واتجاهها، وتنتقل الوثيقة من المسودة إلى «مسجل»."
+      description="سيُخصص الرقم التالي من سجل الترقيم المطابق لدائرة الوثيقة ونوعها، وتنتقل الوثيقة من المسودة إلى «مسجل»."
       size="sm"
       footer={
         <>
@@ -70,20 +65,6 @@ export function IssueNumberDialog({
       }
     >
       <form id="issue-number-form" onSubmit={onSubmit} noValidate>
-        <FormField label="سنة الترقيم (اختياري)" error={errors.numberingYear?.message}>
-          <Input
-            type="number"
-            inputMode="numeric"
-            dir="ltr"
-            min={1900}
-            max={2200}
-            placeholder="اتركها فارغة لسنة الوثيقة أو السنة الحالية"
-            startIcon={<Hash className="size-4" aria-hidden />}
-            invalid={Boolean(errors.numberingYear)}
-            {...register('numberingYear')}
-          />
-        </FormField>
-
         {mutation.error && (
           <p
             role="alert"

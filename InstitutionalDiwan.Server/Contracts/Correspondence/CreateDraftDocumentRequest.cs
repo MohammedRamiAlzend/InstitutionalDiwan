@@ -7,8 +7,8 @@ namespace InstitutionalDiwan.Server.Contracts.Correspondence;
 public sealed record CreateDraftDocumentRequest(
     string Title,
     int DocumentTypeId,
-    int DirectionId,
     string? SubjectSummary = null,
+    int? DirectionId = null,
     int? ConfidentialityLevelId = null,
     int? PriorityLevelId = null,
     DateTime? DocumentDate = null,

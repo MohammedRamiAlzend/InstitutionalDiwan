@@ -499,6 +499,16 @@ public interface ILookupRepository
         bool isActive,
         CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Makes an active entry the catalog's only default (clearing the previous one), or removes its default
+    /// mark. Returns null when the entry does not exist.
+    /// </summary>
+    Task<Result<LookupEntity?>> SetDefaultStateAsync(
+        string lookupKey,
+        int id,
+        bool isDefault,
+        CancellationToken cancellationToken = default);
+
     /// <summary>True when any table holds a foreign key to this entry, so it must not be deactivated.</summary>
     Task<bool> IsInUseAsync(string lookupKey, int id, CancellationToken cancellationToken = default);
 }

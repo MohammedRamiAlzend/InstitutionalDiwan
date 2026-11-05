@@ -26,20 +26,15 @@ public sealed class DocumentTypeSeeder : LookupSeederBase<DocumentType>
 
     protected override IReadOnlyList<(int Id, string Desc, string DescAr)> Catalog { get; } = new (int, string, string)[]
     {
-        (DocumentType.IncomingLetterId, "Incoming letter", "كتاب وارد"),
-        (DocumentType.OutgoingLetterId, "Outgoing letter", "كتاب صادر"),
-        (DocumentType.InternalMemoId, "Internal memo", "مذكرة داخلية"),
-        (DocumentType.CircularId, "Circular", "تعميم"),
-        (DocumentType.DecisionId, "Decision", "قرار"),
+        (DocumentType.BaseRecordId, "Base record", "سجل أساس"),
     };
 
-    protected override DocumentType BuildItem(int id, string desc, string descAr) => id switch
+    protected override DocumentType BuildItem(int id, string desc, string descAr)
     {
-        DocumentType.IncomingLetterId => DocumentType.Create(id, desc, descAr, DocumentDirection.IncomingId).Value,
-        DocumentType.OutgoingLetterId => DocumentType.Create(id, desc, descAr, DocumentDirection.OutgoingId).Value,
-        DocumentType.InternalMemoId => DocumentType.Create(id, desc, descAr, DocumentDirection.InternalId, requiresOfficialNumber: false).Value,
-        _ => DocumentType.Create(id, desc, descAr, DocumentDirection.AllId).Value,
-    };
+        var type = DocumentType.Create(id, desc, descAr, DocumentDirection.AllId).Value;
+        type.MarkDefault();
+        return type;
+    }
 }
 
 /// <summary>Seeds the document status lookup (Order 65, every environment).</summary>

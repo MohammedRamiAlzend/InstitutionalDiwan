@@ -1,8 +1,5 @@
 import { z } from 'zod'
 
-const MIN_NUMBERING_YEAR = 1900
-const MAX_NUMBERING_YEAR = 2200
-
 const documentFields = {
   title: z
     .string()
@@ -10,18 +7,21 @@ const documentFields = {
     .min(1, 'عنوان الوثيقة مطلوب.')
     .max(500, 'عنوان الوثيقة يتجاوز الحد الأقصى للأحرف.'),
   documentTypeId: z.string().min(1, 'اختر نوع الوثيقة.'),
-  directionId: z.string().min(1, 'اختر اتجاه الوثيقة.'),
   subjectSummary: z
     .string()
     .trim()
     .max(2000, 'ملخص الموضوع يتجاوز الحد الأقصى للأحرف.'),
-  confidentialityLevelId: z.string().min(1, 'اختر مستوى السرية.'),
-  priorityLevelId: z.string().min(1, 'اختر درجة الأولوية.'),
-  officialNumberText: z
+  registryNumberText: z
     .string()
     .trim()
-    .max(100, 'الرقم الرسمي يتجاوز الحد الأقصى للأحرف.'),
-  numberingYear: z.string(),
+    .max(100, 'رقم السجل يتجاوز الحد الأقصى للأحرف.'),
+  registryDate: z.string(),
+  destinationDepartmentId: z.string(),
+  movementTypeId: z.string(),
+  movementInstructions: z
+    .string()
+    .trim()
+    .max(1000, 'التعليمات تتجاوز الحد الأقصى للأحرف.'),
   documentDate: z.string(),
   externalReferenceNumber: z
     .string()
@@ -67,30 +67,27 @@ export const createDocumentSchema = z.object(documentFields).superRefine((values
 
   if (values.mode !== 'register') return
 
-  if (!values.officialNumberText) {
+  if (!values.registryNumberText) {
     ctx.addIssue({
       code: 'custom',
-      path: ['officialNumberText'],
-      message: 'الرقم الرسمي مطلوب عند التسجيل الفوري.',
+      path: ['registryNumberText'],
+      message: 'رقم السجل مطلوب عند التسجيل الفوري.',
     })
   }
 
-  const year = Number(values.numberingYear)
-  if (!values.numberingYear.trim()) {
+  if (!values.registryDate) {
     ctx.addIssue({
       code: 'custom',
-      path: ['numberingYear'],
-      message: 'سنة الترقيم مطلوبة.',
+      path: ['registryDate'],
+      message: 'تاريخ السجل مطلوب عند التسجيل الفوري.',
     })
-  } else if (
-    !/^\d{4}$/.test(values.numberingYear.trim()) ||
-    year < MIN_NUMBERING_YEAR ||
-    year > MAX_NUMBERING_YEAR
-  ) {
+  }
+
+  if (values.destinationDepartmentId && !values.movementTypeId) {
     ctx.addIssue({
       code: 'custom',
-      path: ['numberingYear'],
-      message: `سنة الترقيم يجب أن تكون بين ${MIN_NUMBERING_YEAR} و${MAX_NUMBERING_YEAR}.`,
+      path: ['movementTypeId'],
+      message: 'اختر نوع الحركة.',
     })
   }
 })

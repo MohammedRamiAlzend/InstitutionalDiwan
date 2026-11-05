@@ -17,9 +17,9 @@ public sealed class DocumentConfiguration : IEntityTypeConfiguration<Document>
         builder.Property(x => x.Title).HasColumnName("Title").HasMaxLength(500).IsRequired();
         builder.Property(x => x.SubjectSummary).HasColumnName("SubjectSummary").HasMaxLength(2000);
         builder.Property(x => x.DocumentTypeId).HasColumnName("DocumentTypeId").IsRequired();
-        builder.Property(x => x.DirectionId).HasColumnName("DirectionId").IsRequired();
-        builder.Property(x => x.ConfidentialityLevelId).HasColumnName("ConfidentialityLevelId").IsRequired();
-        builder.Property(x => x.PriorityLevelId).HasColumnName("PriorityLevelId").IsRequired();
+        builder.Property(x => x.DirectionId).HasColumnName("DirectionId");
+        builder.Property(x => x.ConfidentialityLevelId).HasColumnName("ConfidentialityLevelId");
+        builder.Property(x => x.PriorityLevelId).HasColumnName("PriorityLevelId");
         builder.Property(x => x.CurrentStatusId).HasColumnName("CurrentStatusId").IsRequired();
         builder.Property(x => x.StatusBeforeArchiveId).HasColumnName("StatusBeforeArchiveId");
         builder.Property(x => x.OwningDepartmentId).HasColumnName("OwningDepartmentId").IsRequired();

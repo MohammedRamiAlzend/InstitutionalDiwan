@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { lookupApi } from '../api/lookupApi'
 import { LOOKUP_FALLBACKS } from './constants'
@@ -37,6 +38,7 @@ export function useLookupEntries(
           LOOKUP_FALLBACKS[lookup]?.map((entry) => ({
             ...entry,
             isActive: true,
+            isDefault: false,
             createdAt: '',
           })),
   })
@@ -49,4 +51,29 @@ export function useLookupCatalogs() {
     queryFn: () => lookupApi.catalogs(),
     staleTime: Infinity,
   })
+}
+
+/** The active entry flagged as the catalog default, or `undefined` when none is set. */
+export function findDefaultLookupEntry(
+  entries: readonly LookupEntryResponse[] | undefined,
+): LookupEntryResponse | undefined {
+  return entries?.find((entry) => entry.isDefault && entry.isActive)
+}
+
+/**
+ * Preselects the catalog default in an empty select. Call it from create forms
+ * only; `apply` receives the entry id as a string (the select value format).
+ */
+export function usePreselectLookupDefault(
+  entries: readonly LookupEntryResponse[] | undefined,
+  currentValue: string | undefined,
+  apply: (value: string) => void,
+  enabled = true,
+) {
+  const defaultId = findDefaultLookupEntry(entries)?.id
+  useEffect(() => {
+    if (enabled && !currentValue && defaultId !== undefined) apply(String(defaultId))
+    // Only re-run when the default or the enabled flag changes, not on every keystroke.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [defaultId, enabled])
 }

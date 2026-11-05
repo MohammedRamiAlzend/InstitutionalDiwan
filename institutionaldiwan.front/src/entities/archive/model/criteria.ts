@@ -9,7 +9,6 @@ export const ARCHIVE_CRITERIA_KEYS = [
   'dir',
   'owningDepartmentId',
   'documentTypeId',
-  'directionId',
   'archiveLocationId',
   'archivedFrom',
   'archivedTo',

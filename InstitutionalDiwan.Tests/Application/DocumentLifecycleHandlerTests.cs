@@ -52,7 +52,7 @@ public sealed class DocumentLifecycleHandlerTests
             new(Users, Documents, DocumentTypes, new FakeDocumentTypeSchemaVersionRepository(), UnitOfWork);
 
         public RegisterDocumentCommandHandler RegisterHandler() =>
-            new(Documents, Numbers, Registries, new FakeDocumentTypeSchemaVersionRepository(), Access, UnitOfWork, FakeNotificationPublisher.Instance, TestClock.Instance);
+            new(Documents, Numbers, Registries, new FakeDocumentTypeSchemaVersionRepository(), Access, UnitOfWork, FakeNotificationPublisher.Instance, TestClock.Instance, new FakeSender());
 
         public UpdateDraftMetadataCommandHandler UpdateHandler() =>
             new(Documents, Access, UnitOfWork);
@@ -70,8 +70,8 @@ public sealed class DocumentLifecycleHandlerTests
             world.User.UserId,
             "طلب إحاطة",
             DocumentType.InternalMemoId,
-            DocumentDirection.InternalId,
-            "ملخص"), CancellationToken.None);
+            "ملخص",
+            DocumentDirection.InternalId), CancellationToken.None);
 
         Assert.True(result.IsSuccess);
         return result.Value;
@@ -103,7 +103,7 @@ public sealed class DocumentLifecycleHandlerTests
 
         Assert.True(result.IsSuccess);
         Assert.Equal(DocumentStatusType.RegisteredId, result.Value.StatusId);
-        Assert.Equal($"{NumberingYear}/000001", result.Value.OfficialNumberText);
+        Assert.True(Guid.TryParse(result.Value.OfficialNumberText, out _));
         Assert.NotNull(result.Value.RegistrationDate);
 
         var number = Assert.Single(world.Numbers.DocumentNumbers);

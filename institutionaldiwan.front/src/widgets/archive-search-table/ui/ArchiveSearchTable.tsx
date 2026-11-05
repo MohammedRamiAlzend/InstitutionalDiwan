@@ -14,13 +14,11 @@ import {
 } from '@/entities/archive'
 import { DepartmentBadge, useDepartmentOptions, DepartmentLabel } from '@/entities/department'
 import {
-  DocumentDirectionBadge,
   OfficialNumberTag,
   documentRowLabel,
   isDocumentRestricted,
 } from '@/entities/document'
 import {
-  DOCUMENT_DIRECTION,
   LOOKUP_SLUGS,
   LookupLabel,
   useLookupEntries,
@@ -68,7 +66,6 @@ export function ArchiveSearchTable() {
     filterKeys: [
       'owningDepartmentId',
       'documentTypeId',
-      'directionId',
       'archiveLocationId',
       'archivedFrom',
       'archivedTo',
@@ -85,7 +82,6 @@ export function ArchiveSearchTable() {
     sortDescending: table.sortDirection === 'desc',
     owningDepartmentId: table.filters.owningDepartmentId || undefined,
     documentTypeId: optionalId(table.filters.documentTypeId),
-    directionId: optionalId(table.filters.directionId),
     archiveLocationId: optionalId(table.filters.archiveLocationId),
     archivedFromUtc: dayBoundaryUtc(table.filters.archivedFrom, false),
     archivedToUtc: dayBoundaryUtc(table.filters.archivedTo, true),
@@ -93,7 +89,6 @@ export function ArchiveSearchTable() {
 
   const departmentsQuery = useDepartmentOptions()
   const typesQuery = useLookupEntries(LOOKUP_SLUGS.DocumentTypes)
-  const directionsQuery = useLookupEntries(LOOKUP_SLUGS.DocumentDirections)
   const locationsQuery = useLookupEntries(LOOKUP_SLUGS.ArchiveLocations)
   const savedQuery = useSavedSearches()
 
@@ -109,15 +104,6 @@ export function ArchiveSearchTable() {
       ...(typesQuery.data ?? []).map((entry) => ({ value: String(entry.id), label: entry.descAr })),
     ],
     [typesQuery.data],
-  )
-  const directionOptions = useMemo(
-    () => [
-      allOption('كل الاتجاهات'),
-      ...(directionsQuery.data ?? [])
-        .filter((entry) => entry.id !== DOCUMENT_DIRECTION.All)
-        .map((entry) => ({ value: String(entry.id), label: entry.descAr })),
-    ],
-    [directionsQuery.data],
   )
   const locationOptions = useMemo(
     () => [
@@ -207,7 +193,7 @@ export function ArchiveSearchTable() {
       },
       {
         id: 'officialNumber',
-        header: 'الرقم الرسمي',
+        header: 'رقم النظام',
         sortable: true,
         sortKey: 'officialNumber',
         cell: ({ document }) => <OfficialNumberTag officialNumberText={document.officialNumberText} />,
@@ -232,11 +218,6 @@ export function ArchiveSearchTable() {
             {formatDateTime(archivedAt)}
           </span>
         ),
-      },
-      {
-        id: 'direction',
-        header: 'الاتجاه',
-        cell: ({ document }) => <DocumentDirectionBadge directionId={document.directionId} />,
       },
       {
         id: 'documentType',
@@ -298,10 +279,10 @@ export function ArchiveSearchTable() {
     },
     {
       id: 'copy-number',
-      label: 'نسخ الرقم الرسمي',
+      label: 'نسخ رقم النظام',
       icon: <Hash className="size-4" aria-hidden />,
       disabled: !document.officialNumberText,
-      onSelect: () => void copyValue(document.officialNumberText ?? '', 'الرقم الرسمي'),
+      onSelect: () => void copyValue(document.officialNumberText ?? '', 'رقم النظام'),
     },
     {
       id: 'copy-id',
@@ -357,7 +338,7 @@ export function ArchiveSearchTable() {
         sortKey={table.sortKey}
         sortDirection={table.sortDirection}
         onSortChange={table.setSort}
-        searchPlaceholder="ابحث بالعنوان أو الملخص أو الرقم الرسمي…"
+        searchPlaceholder="ابحث بالعنوان أو الملخص أو رقم النظام…"
         filters={
           <div className="flex flex-wrap items-center gap-2">
             <GuideChip id="archive.filters" />
@@ -369,13 +350,6 @@ export function ArchiveSearchTable() {
               }
               options={locationOptions}
               className="w-40"
-            />
-            <Select
-              aria-label="تصفية حسب الاتجاه"
-              value={table.filters.directionId || 'all'}
-              onValueChange={(value) => table.setFilter('directionId', value === 'all' ? null : value)}
-              options={directionOptions}
-              className="w-36"
             />
             <Select
               aria-label="تصفية حسب النوع"

@@ -71,7 +71,7 @@ public sealed class OfficialNumberLifecycleHandlerTests
 
         var number = await IssueAsync(world);
 
-        Assert.Equal($"{NumberingYear}/000001", number.OfficialNumberText);
+        Assert.True(Guid.TryParse(number.OfficialNumberText, out _));
         Assert.Equal(1, number.SequenceValue);
         Assert.Equal(DocumentNumberStatus.ActiveId, number.StatusId);
         Assert.Equal(DocumentStatusType.RegisteredId, world.Document.CurrentStatusId);
@@ -88,7 +88,7 @@ public sealed class OfficialNumberLifecycleHandlerTests
 
         Assert.Single(world.Registries.Registries);
         Assert.Equal("DEFAULT", world.Registries.Registries.Single().Code);
-        Assert.Equal($"{NumberingYear}/000001", number.OfficialNumberText);
+        Assert.True(Guid.TryParse(number.OfficialNumberText, out _));
     }
 
     [Fact]
@@ -175,7 +175,7 @@ public sealed class OfficialNumberLifecycleHandlerTests
             CancellationToken.None);
 
         Assert.True(result.IsSuccess);
-        Assert.Equal($"{NumberingYear}/000002", result.Value.OfficialNumberText);
+        Assert.True(Guid.TryParse(result.Value.OfficialNumberText, out _));
         Assert.Equal(2, result.Value.SequenceValue);
 
         var replaced = world.Numbers.DocumentNumbers.Single(number =>
@@ -224,8 +224,8 @@ public sealed class OfficialNumberLifecycleHandlerTests
 
         Assert.True(result.IsSuccess);
         Assert.Equal(2, result.Value.Count);
-        Assert.Equal($"{NumberingYear}/000001", result.Value.First().OfficialNumberText);
-        Assert.Equal($"{NumberingYear}/000002", result.Value.Last().OfficialNumberText);
+        Assert.True(Guid.TryParse(result.Value.First().OfficialNumberText, out _));
+        Assert.NotEqual(result.Value.First().OfficialNumberText, result.Value.Last().OfficialNumberText);
     }
 
     [Fact]
