@@ -31,6 +31,7 @@ Write side of Module 08: link the current document to another one and remove a l
 
 ## Change Log
 
+- 2026-11-05: Unsent form input is now kept (per user, per form) after an accidental close or cancel and restored with a toast; it is cleared only after a successful submit (`useDraftForm`).
 | Date | Author | Change |
 | --- | --- | --- |
 | 2026-11-03 | agent | Implemented `document-relation-manage` for Module 08. |

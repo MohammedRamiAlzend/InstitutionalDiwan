@@ -26,6 +26,8 @@ export {
   clearFormDraft,
   formDraftKey,
   readFormDraft,
+  setFormDraftScope,
+  useDraftForm,
   useFormDraftAutosave,
   writeFormDraft,
 } from './formDraft'

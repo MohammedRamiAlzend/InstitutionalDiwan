@@ -50,6 +50,7 @@ reactivate a ministry, company, or individual that documents can address. Comple
 
 ## Change Log
 
+- 2026-11-05: Unsent form input is now kept (per user, per form) after an accidental close or cancel and restored with a toast; it is cleared only after a successful submit (`useDraftForm`).
 | Date | Author | Change |
 | --- | --- | --- |
 | 2026-10-29 | agent | Implemented the feature: request types, Zod schema, create/update/toggle-active mutations with prefix invalidation, and the create/edit dialog wired to the `organization-types` lookup. |

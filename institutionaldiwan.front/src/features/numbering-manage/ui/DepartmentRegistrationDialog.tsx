@@ -1,5 +1,6 @@
 import { useEffect, useMemo } from 'react'
-import { Controller, useForm } from 'react-hook-form'
+import { Controller } from 'react-hook-form'
+import { useDraftForm } from '@/shared/lib'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
 import { useDepartmentOptions } from '@/entities/department'
@@ -50,7 +51,8 @@ export function DepartmentRegistrationDialog({
     setValue,
     setError,
     formState: { errors },
-  } = useForm<DepartmentRegistrationFormValues>({
+    draft,
+  } = useDraftForm<DepartmentRegistrationFormValues>({ formId: `department-registration:${documentId}` }, {
     resolver: zodResolver(departmentRegistrationSchema),
     defaultValues: {
       departmentId: '',
@@ -104,6 +106,7 @@ export function DepartmentRegistrationDialog({
         notes: values.notes.trim() || null,
       })
       toast.success('تم تسجيل رقم الدائرة في سجلها.')
+      draft.discard()
       onOpenChange(false)
     } catch {
       // The mutation error is rendered in the form-level banner below.

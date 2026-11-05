@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
-import { Controller, useForm, useWatch } from 'react-hook-form'
+import { Controller, useWatch } from 'react-hook-form'
+import { useDraftForm } from '@/shared/lib'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
 import { useDepartmentOptions } from '@/entities/department'
@@ -47,7 +48,8 @@ export function RegistryFormDialog({
     control,
     handleSubmit,
     formState: { errors },
-  } = useForm<RegistryFormValues>({
+    draft,
+  } = useDraftForm<RegistryFormValues>({ formId: `registry-form:${registry?.registryId ?? 'new'}` }, {
     resolver: zodResolver(registryFormSchema),
     defaultValues: {
       code: registry?.code ?? '',
@@ -132,6 +134,7 @@ export function RegistryFormDialog({
         })
         toast.success('تم إنشاء سجل الترقيم.')
       }
+      draft.discard()
       onOpenChange(false)
     } catch {
       // The mutation error is rendered in the form-level banner below.

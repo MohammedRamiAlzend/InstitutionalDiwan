@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
-import { Controller, useForm } from 'react-hook-form'
+import { Controller } from 'react-hook-form'
+import { useDraftForm } from '@/shared/lib'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
 import { LOOKUP_SLUGS, useLookupEntries, usePreselectLookupDefault } from '@/entities/lookup'
@@ -37,7 +38,8 @@ export function ArchiveDocumentDialog({
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<ArchiveDocumentFormValues>({
+    draft,
+  } = useDraftForm<ArchiveDocumentFormValues>({ formId: `archive-document:${documentId}` }, {
     resolver: zodResolver(archiveDocumentSchema),
     defaultValues: { archiveLocationId: '', reason: '' },
   })
@@ -51,6 +53,7 @@ export function ArchiveDocumentDialog({
         reason: values.reason.trim() || undefined,
       })
       toast.success('تمت أرشفة الوثيقة.')
+      draft.discard()
       onOpenChange(false)
     } catch {
       // The mutation error is rendered in the form-level banner below.

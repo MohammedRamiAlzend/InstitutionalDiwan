@@ -1,5 +1,6 @@
 import { useEffect, useMemo } from 'react'
-import { Controller, useForm } from 'react-hook-form'
+import { Controller } from 'react-hook-form'
+import { useDraftForm } from '@/shared/lib'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Building2, Hash, UserRound } from 'lucide-react'
 import { toast } from 'sonner'
@@ -85,7 +86,8 @@ function DepartmentFormDialogContent({
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm<DepartmentFormValues>({
+    draft,
+  } = useDraftForm<DepartmentFormValues>({ formId: `department-form:${editingId ?? 'new'}`, enabled: !(isEdit && detailQuery.isLoading) }, {
     resolver: zodResolver(departmentFormSchema),
     defaultValues: {
       code: '',
@@ -180,6 +182,7 @@ function DepartmentFormDialogContent({
         })
         toast.success('تم إنشاء القسم بنجاح.')
       }
+      draft.discard()
       onOpenChange(false)
     } catch {
       // The mutation error is rendered below in Arabic.

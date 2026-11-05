@@ -37,4 +37,5 @@ The form dialog is mounted by `widgets/employees-table`; the slice renders no pa
 
 ## 6. Change Log
 
+- 2026-11-05: Unsent form input is now kept (per user, per form) after an accidental close or cancel and restored with a toast; it is cleared only after a successful submit (`useDraftForm`).
 - 2026-10-28: Implemented Phase 5 — employee request types, Zod schema, three mutations, and the create/edit dialog; created this README.

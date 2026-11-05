@@ -48,6 +48,7 @@ this feature owns write requests and the create/edit form.
 | Final browser/build/test verification | Pending main-agent verification. |
 
 ## 6. Change Log
+- 2026-11-05: Unsent form input is now kept (per user, per form) after an accidental close or cancel and restored with a toast; it is cleared only after a successful submit (`useDraftForm`).
 - 2026-10-28: Document the implemented Module 01 form and mutations, immutable code/type, edit-only manager picker, parent/cycle safeguards, and central Diwan protection; replace planned filenames with actual contents.
 - 2026-10-22: Converted this `README.md` from the Word document it was authored in to markdown, so the `README.md`-per-folder rule in `AGENT.md` holds and the content is diffable and agent-editable.
 - 2026-10-19: Created `features/department-manage` slice folder and `README.md`.

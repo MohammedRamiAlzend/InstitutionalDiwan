@@ -1,4 +1,4 @@
-import { useForm } from 'react-hook-form'
+import { useDraftForm } from '@/shared/lib'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
 import type { DocumentResponse } from '@/entities/document'
@@ -21,7 +21,8 @@ export function EditDraftDialog({ document, open, onOpenChange }: EditDraftDialo
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<EditDraftFormValues>({
+    draft,
+  } = useDraftForm<EditDraftFormValues>({ formId: `edit-draft:${document.documentId}` }, {
     resolver: zodResolver(editDraftSchema),
     defaultValues: {
       title: document.title,
@@ -36,6 +37,7 @@ export function EditDraftDialog({ document, open, onOpenChange }: EditDraftDialo
         subjectSummary: values.subjectSummary.trim() || null,
       })
       toast.success('تم تحديث بيانات المسودة.')
+      draft.discard()
       onOpenChange(false)
     } catch {
       // The mutation error is rendered in the form-level banner below.

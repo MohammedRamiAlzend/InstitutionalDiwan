@@ -51,6 +51,7 @@ revoker and timestamp). Listing stays in `entities/document` (`useDocumentAccess
 
 ## 6. Change Log
 
+- 2026-11-05: Unsent form input is now kept (per user, per form) after an accidental close or cancel and restored with a toast; it is cleared only after a successful submit (`useDraftForm`).
 | Date | Author | Change |
 | --- | --- | --- |
 | 2026-10-28 | agent | Verified Module 03 Phase 4 in-browser against the live API: required-field and past-expiry Arabic validation, a successful grant rendered immediately with level, state, grantee, grantor and expiry, revoke kept the row as a record with timestamp + revoker, and a caller without `ACCESS_GRANT_MANAGE` had no tab and got 403 from the endpoint. |

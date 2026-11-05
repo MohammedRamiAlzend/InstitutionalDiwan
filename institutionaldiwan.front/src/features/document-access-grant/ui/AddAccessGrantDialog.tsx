@@ -1,12 +1,12 @@
 import { useMemo, useState } from 'react'
-import { Controller, useForm } from 'react-hook-form'
+import { Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Search } from 'lucide-react'
 import { toast } from 'sonner'
 import { LOOKUP_SLUGS, useLookupEntries, usePreselectLookupDefault } from '@/entities/lookup'
 import { useUserOptions } from '@/entities/user'
 import { toArabicErrorMessage } from '@/shared/api'
-import { useDebouncedValue } from '@/shared/lib'
+import { useDebouncedValue, useDraftForm } from '@/shared/lib'
 import { Button, Dialog, FormField, Input, Select, Textarea } from '@/shared/ui'
 import { useGrantDocumentAccessMutation } from '../api/accessGrantMutations'
 import { grantAccessSchema, type GrantAccessFormValues } from '../model/schemas'
@@ -40,7 +40,8 @@ export function AddAccessGrantDialog({
     setValue,
     handleSubmit,
     formState: { errors },
-  } = useForm<GrantAccessFormValues>({
+    draft,
+  } = useDraftForm<GrantAccessFormValues>({ formId: `access-grant:${documentId}` }, {
     resolver: zodResolver(grantAccessSchema),
     defaultValues: { userId: '', accessLevelId: '', reason: '', expiresAt: '' },
   })
@@ -85,6 +86,7 @@ export function AddAccessGrantDialog({
         expiresAt: values.expiresAt || null,
       })
       toast.success('تم منح الوصول إلى الوثيقة.')
+      draft.discard()
       onOpenChange(false)
     } catch {
       // The mutation error is rendered in the form-level banner below.

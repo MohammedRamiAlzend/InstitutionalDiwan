@@ -1,4 +1,4 @@
-import { useForm } from 'react-hook-form'
+import { useDraftForm } from '@/shared/lib'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
 import { toArabicErrorMessage } from '@/shared/api'
@@ -29,7 +29,8 @@ export function CancelDocumentDialog({
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<CancelDocumentFormValues>({
+    draft,
+  } = useDraftForm<CancelDocumentFormValues>({ formId: `cancel-document:${documentId}` }, {
     resolver: zodResolver(cancelDocumentSchema),
     defaultValues: { reason: '' },
   })
@@ -38,6 +39,7 @@ export function CancelDocumentDialog({
     try {
       await mutation.mutateAsync({ reason: values.reason.trim() })
       toast.success('تم إلغاء الوثيقة.')
+      draft.discard()
       onOpenChange(false)
     } catch {
       // The mutation error is rendered in the form-level banner below.

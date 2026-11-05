@@ -1,4 +1,4 @@
-import { useForm } from 'react-hook-form'
+import { useDraftForm } from '@/shared/lib'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
 import { toArabicErrorMessage } from '@/shared/api'
@@ -24,15 +24,14 @@ export function RemoveRelationDialog({
   const {
     register,
     handleSubmit,
-    reset,
+    draft,
     formState: { errors },
-  } = useForm<RemoveRelationFormValues>({
+  } = useDraftForm<RemoveRelationFormValues>({ formId: `remove-relation:${relation?.relationId ?? 'none'}`, enabled: relation !== null }, {
     resolver: zodResolver(removeRelationSchema),
     defaultValues: { reason: '' },
   })
 
   const close = () => {
-    reset()
     mutation.reset()
     onOpenChange(false)
   }
@@ -42,6 +41,7 @@ export function RemoveRelationDialog({
     try {
       await mutation.mutateAsync({ relationId: relation.relationId, reason: values.reason.trim() })
       toast.success('أُزيل الرابط.')
+      draft.discard()
       close()
     } catch {
       // The mutation error is rendered in the form-level banner below.

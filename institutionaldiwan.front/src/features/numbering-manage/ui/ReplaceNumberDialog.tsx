@@ -1,4 +1,4 @@
-import { useForm } from 'react-hook-form'
+import { useDraftForm } from '@/shared/lib'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
 import type { DocumentNumberResponse } from '@/entities/document'
@@ -27,7 +27,8 @@ export function ReplaceNumberDialog({
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<ReplaceNumberFormValues>({
+    draft,
+  } = useDraftForm<ReplaceNumberFormValues>({ formId: `replace-number:${number.documentNumberId}` }, {
     resolver: zodResolver(replaceNumberSchema),
     defaultValues: { reason: '', numberingYear: '' },
   })
@@ -42,6 +43,7 @@ export function ReplaceNumberDialog({
           : null,
       })
       toast.success(`تم استبدال الرقم بالرقم ${replacement.officialNumberText}.`)
+      draft.discard()
       onOpenChange(false)
     } catch {
       // The mutation error is rendered in the form-level banner below.

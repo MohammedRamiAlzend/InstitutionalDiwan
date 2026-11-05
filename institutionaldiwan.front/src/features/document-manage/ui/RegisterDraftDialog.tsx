@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
-import { Controller, useForm, useWatch } from 'react-hook-form'
+import { Controller, useWatch } from 'react-hook-form'
+import { useDraftForm } from '@/shared/lib'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Hash } from 'lucide-react'
 import { toast } from 'sonner'
@@ -44,7 +45,8 @@ export function RegisterDraftDialog({
     setValue,
     handleSubmit,
     formState: { errors },
-  } = useForm<RegisterDraftFormValues>({
+    draft,
+  } = useDraftForm<RegisterDraftFormValues>({ formId: `register-draft:${document.documentId}` }, {
     resolver: zodResolver(registerDraftSchema),
     defaultValues: {
       registryNumberText: '',
@@ -100,6 +102,7 @@ export function RegisterDraftDialog({
           ? 'تم تسجيل الوثيقة وإرسالها إلى القسم المحدد.'
           : 'تم تسجيل الوثيقة وكتابة سطر السجل.',
       )
+      draft.discard()
       onOpenChange(false)
     } catch {
       // The mutation error is rendered in the form-level banner below.

@@ -1,4 +1,5 @@
-import { Controller, useForm } from 'react-hook-form'
+import { Controller } from 'react-hook-form'
+import { useDraftForm } from '@/shared/lib'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
 import type { SavedSearchResponse } from '@/entities/archive'
@@ -35,7 +36,8 @@ export function SaveSearchDialog({
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<SaveSearchFormValues>({
+    draft,
+  } = useDraftForm<SaveSearchFormValues>({ formId: 'save-search' }, {
     resolver: zodResolver(saveSearchSchema),
     defaultValues: { name: existing?.name ?? '', isDefault: existing?.isDefault ?? false },
   })
@@ -48,6 +50,7 @@ export function SaveSearchDialog({
         isDefault: values.isDefault,
       })
       toast.success(existing ? 'حُدّث البحث المحفوظ.' : 'حُفظ البحث.')
+      draft.discard()
       onOpenChange(false)
     } catch {
       // The mutation error is rendered in the form-level banner below.

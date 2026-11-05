@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
-import { Controller, useForm } from 'react-hook-form'
+import { Controller } from 'react-hook-form'
+import { useDraftForm } from '@/shared/lib'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Building2, Contact, Hash } from 'lucide-react'
 import { toast } from 'sonner'
@@ -52,7 +53,8 @@ export function ExternalOrganizationFormDialog({
     control,
     handleSubmit,
     formState: { errors },
-  } = useForm<ExternalOrganizationFormValues>({
+    draft,
+  } = useDraftForm<ExternalOrganizationFormValues>({ formId: `organization-form:${organization?.externalOrganizationId ?? 'new'}` }, {
     resolver: zodResolver(externalOrganizationFormSchema),
     defaultValues: {
       code: organization?.code ?? '',
@@ -88,6 +90,7 @@ export function ExternalOrganizationFormDialog({
         })
         toast.success('تمت إضافة الجهة الخارجية.')
       }
+      draft.discard()
       onOpenChange(false)
     } catch {
       // The mutation error is rendered below in Arabic.

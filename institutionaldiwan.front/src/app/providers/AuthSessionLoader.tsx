@@ -1,5 +1,6 @@
 import { useEffect, type ReactNode } from 'react'
 import { tokenStorage } from '@/shared/api'
+import { setFormDraftScope } from '@/shared/lib'
 import { useMeQuery, useSessionStore } from '@/entities/user'
 
 /**
@@ -11,6 +12,11 @@ export function AuthSessionLoader({ children }: { children: ReactNode }) {
   const hasUser = useSessionStore((state) => state.user !== null)
   const setSession = useSessionStore((state) => state.setSession)
   const clear = useSessionStore((state) => state.clear)
+
+  const userId = useSessionStore((state) => state.user?.userId)
+  useEffect(() => {
+    setFormDraftScope(userId)
+  }, [userId])
 
   const meQuery = useMeQuery({ enabled: tokenStorage.has() && !hasUser })
 

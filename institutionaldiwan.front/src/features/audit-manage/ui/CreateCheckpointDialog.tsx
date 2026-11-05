@@ -1,9 +1,8 @@
-import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Hash } from 'lucide-react'
 import { toast } from 'sonner'
 import { toArabicErrorMessage } from '@/shared/api'
-import { formatNumber } from '@/shared/lib'
+import { formatNumber, useDraftForm } from '@/shared/lib'
 import { Button, Dialog, FormField, Input } from '@/shared/ui'
 import { useCreateCheckpointMutation } from '../api/createCheckpoint'
 import { checkpointSchema, type CheckpointFormValues } from '../model/checkpoint.schema'
@@ -27,7 +26,8 @@ export function CreateCheckpointDialog({
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<CheckpointFormValues>({
+    draft,
+  } = useDraftForm<CheckpointFormValues>({ formId: 'audit-checkpoint' }, {
     resolver: zodResolver(checkpointSchema),
     defaultValues: { toAuditLogId: toAuditLogId ? String(toAuditLogId) : '' },
   })
@@ -40,6 +40,7 @@ export function CreateCheckpointDialog({
       toast.success(
         `تم إنشاء نقطة تحقق تضم ${formatNumber(checkpoint.recordCount)} سجلًا (حتى السجل #${formatNumber(checkpoint.toAuditLogId)}).`,
       )
+      draft.discard()
       onOpenChange(false)
     } catch {
       // The mutation error is rendered in the banner below.

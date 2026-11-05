@@ -1,4 +1,4 @@
-import { useForm } from 'react-hook-form'
+import { useDraftForm } from '@/shared/lib'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Hash } from 'lucide-react'
 import { toast } from 'sonner'
@@ -27,7 +27,8 @@ export function RoleFormDialog({ open, onOpenChange, role }: RoleFormDialogProps
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<RoleFormValues>({
+    draft,
+  } = useDraftForm<RoleFormValues>({ formId: `role-form:${role?.roleId ?? 'new'}` }, {
     resolver: zodResolver(roleFormSchema),
     defaultValues: {
       code: role?.code ?? '',
@@ -57,6 +58,7 @@ export function RoleFormDialog({ open, onOpenChange, role }: RoleFormDialogProps
         })
         toast.success('تم إنشاء الدور بنجاح.')
       }
+      draft.discard()
       onOpenChange(false)
     } catch {
       // The mutation error is rendered below in Arabic.

@@ -1,4 +1,4 @@
-import { useForm } from 'react-hook-form'
+import { useDraftForm } from '@/shared/lib'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Hash, Languages } from 'lucide-react'
 import { toast } from 'sonner'
@@ -39,7 +39,8 @@ export function LookupEntryFormDialog({
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<LookupEntryFormValues>({
+    draft,
+  } = useDraftForm<LookupEntryFormValues>({ formId: `lookup-entry:${lookup}:${entry?.id ?? 'new'}` }, {
     resolver: zodResolver(lookupEntryFormSchema),
     defaultValues: {
       id: String(entry?.id ?? suggestedId),
@@ -64,6 +65,7 @@ export function LookupEntryFormDialog({
         })
         toast.success('تمت إضافة القيمة.')
       }
+      draft.discard()
       onOpenChange(false)
     } catch {
       // The mutation error is rendered below in Arabic.

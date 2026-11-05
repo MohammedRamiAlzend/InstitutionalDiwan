@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Controller, useForm, useWatch } from 'react-hook-form'
+import { Controller, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Building2, Landmark, Search, UserRound } from 'lucide-react'
 import { toast } from 'sonner'
@@ -7,7 +7,7 @@ import { useDepartmentOptions } from '@/entities/department'
 import { useExternalOrganizations } from '@/entities/external-organization'
 import { LOOKUP_SLUGS, useLookupEntries, usePreselectLookupDefault } from '@/entities/lookup'
 import { toArabicErrorMessage } from '@/shared/api'
-import { cn, useDebouncedValue } from '@/shared/lib'
+import { cn, useDebouncedValue, useDraftForm } from '@/shared/lib'
 import {
   Button,
   Checkbox,
@@ -76,7 +76,8 @@ export function AddParticipantDialog({
     setValue,
     clearErrors,
     formState: { errors },
-  } = useForm<AddParticipantFormValues>({
+    draft,
+  } = useDraftForm<AddParticipantFormValues>({ formId: `add-participant:${documentId}` }, {
     resolver: zodResolver(addParticipantSchema),
     defaultValues: {
       roleId: '',
@@ -151,6 +152,7 @@ export function AddParticipantDialog({
         ...target,
       })
       toast.success('تمت إضافة المشارك إلى الوثيقة.')
+      draft.discard()
       onOpenChange(false)
     } catch {
       // The mutation error is rendered in the form-level banner below.

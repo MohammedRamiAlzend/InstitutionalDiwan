@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { Controller, useForm } from 'react-hook-form'
+import { Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Briefcase, Hash, Mail, Phone, UserRound } from 'lucide-react'
 import { toast } from 'sonner'
@@ -8,7 +8,7 @@ import type { EmployeeResponse } from '@/entities/employee'
 import { useSessionStore } from '@/entities/user'
 import { toArabicErrorMessage } from '@/shared/api'
 import { Permissions } from '@/shared/config'
-import { formatShortId } from '@/shared/lib'
+import { formatShortId, useDraftForm } from '@/shared/lib'
 import { Button, Dialog, FormField, Input, Select } from '@/shared/ui'
 import { employeeFormSchema, type EmployeeFormValues } from '../model/schemas'
 import {
@@ -59,7 +59,8 @@ export function EmployeeFormDialog({
     control,
     handleSubmit,
     formState: { errors },
-  } = useForm<EmployeeFormValues>({
+    draft,
+  } = useDraftForm<EmployeeFormValues>({ formId: `employee-form:${employee?.employeeId ?? 'new'}` }, {
     resolver: zodResolver(employeeFormSchema),
     defaultValues: {
       fullNameAr: employee?.fullNameAr ?? '',
@@ -94,6 +95,7 @@ export function EmployeeFormDialog({
         await createMutation.mutateAsync(request)
         toast.success('تم إنشاء الموظف بنجاح.')
       }
+      draft.discard()
       onOpenChange(false)
     } catch {
       // The mutation error is rendered below in Arabic.

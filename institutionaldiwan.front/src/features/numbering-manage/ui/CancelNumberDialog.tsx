@@ -1,4 +1,4 @@
-import { useForm } from 'react-hook-form'
+import { useDraftForm } from '@/shared/lib'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
 import type { DocumentNumberResponse } from '@/entities/document'
@@ -27,7 +27,8 @@ export function CancelNumberDialog({
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<CancelNumberFormValues>({
+    draft,
+  } = useDraftForm<CancelNumberFormValues>({ formId: `cancel-number:${number.documentNumberId}` }, {
     resolver: zodResolver(cancelNumberSchema),
     defaultValues: { reason: '' },
   })
@@ -39,6 +40,7 @@ export function CancelNumberDialog({
         reason: values.reason.trim(),
       })
       toast.success('تم إلغاء رقم النظام.')
+      draft.discard()
       onOpenChange(false)
     } catch {
       // The mutation error is rendered in the form-level banner below.

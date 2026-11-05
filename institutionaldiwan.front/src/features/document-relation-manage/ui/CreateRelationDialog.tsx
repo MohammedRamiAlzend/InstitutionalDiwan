@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
-import { Controller, useForm } from 'react-hook-form'
+import { Controller } from 'react-hook-form'
+import { useDraftForm } from '@/shared/lib'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
 import type { DocumentResponse } from '@/entities/document'
@@ -40,7 +41,8 @@ export function CreateRelationDialog({
     setValue,
     handleSubmit,
     formState: { errors },
-  } = useForm<CreateRelationFormValues>({
+    draft,
+  } = useDraftForm<CreateRelationFormValues>({ formId: `create-relation:${documentId}` }, {
     resolver: zodResolver(createRelationSchema),
     defaultValues: { targetDocumentId: '', relationTypeId: '', notes: '' },
   })
@@ -55,6 +57,7 @@ export function CreateRelationDialog({
         notes: values.notes.trim() || undefined,
       })
       toast.success('تمت إضافة الرابط.')
+      draft.discard()
       onOpenChange(false)
     } catch {
       // The mutation error is rendered in the form-level banner below.

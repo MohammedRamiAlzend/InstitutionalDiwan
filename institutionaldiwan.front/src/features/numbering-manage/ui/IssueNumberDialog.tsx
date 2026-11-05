@@ -1,4 +1,4 @@
-import { useForm } from 'react-hook-form'
+import { useDraftForm } from '@/shared/lib'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
 import { toArabicErrorMessage } from '@/shared/api'
@@ -20,7 +20,7 @@ export function IssueNumberDialog({
 }: IssueNumberDialogProps) {
   const mutation = useIssueOfficialNumberMutation(documentId)
 
-  const { handleSubmit } = useForm<IssueNumberFormValues>({
+  const { handleSubmit, draft } = useDraftForm<IssueNumberFormValues>({ formId: `issue-number:${documentId}` }, {
     resolver: zodResolver(issueNumberSchema),
     defaultValues: { numberingYear: '' },
   })
@@ -35,6 +35,7 @@ export function IssueNumberDialog({
       toast.success(
         `تم إصدار الرقم ${issued.officialNumberText} وتسجيل الوثيقة.`,
       )
+      draft.discard()
       onOpenChange(false)
     } catch {
       // The mutation error is rendered in the form-level banner below.

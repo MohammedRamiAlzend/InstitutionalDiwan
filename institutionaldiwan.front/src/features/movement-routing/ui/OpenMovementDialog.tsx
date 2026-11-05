@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
-import { Controller, useForm } from 'react-hook-form'
+import { Controller } from 'react-hook-form'
+import { useDraftForm } from '@/shared/lib'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Route, Search } from 'lucide-react'
 import { toast } from 'sonner'
@@ -47,7 +48,8 @@ export function OpenMovementDialog({
     control,
     handleSubmit,
     formState: { errors },
-  } = useForm<OpenMovementFormValues>({
+    draft,
+  } = useDraftForm<OpenMovementFormValues>({ formId: `open-movement:${documentId}` }, {
     resolver: zodResolver(openMovementSchema),
     defaultValues: {
       destinationDepartmentId: '',
@@ -89,6 +91,7 @@ export function OpenMovementDialog({
         dueDate: values.dueDate || null,
       })
       toast.success('فُتحت الحركة كمسودة. أرسلها الآن لتصل إلى القسم الوجهة.')
+      draft.discard()
       onOpenChange(false)
     } catch {
       // The mutation error is rendered in the form-level banner below.

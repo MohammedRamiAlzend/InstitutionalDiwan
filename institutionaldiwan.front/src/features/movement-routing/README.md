@@ -45,6 +45,7 @@ inbox, outbox, and the document timeline refresh together.
 
 ## Change Log
 
+- 2026-11-05: Unsent form input is now kept (per user, per form) after an accidental close or cancel and restored with a toast; it is cleared only after a successful submit (`useDraftForm`).
 | Date | Author | Change |
 | --- | --- | --- |
 | 2026-10-29 | Cursor | Implemented the feature: mutation hooks, Zod schemas, action dialogs, and the inline action cluster; moved exported constants out of the component for `react-refresh`. |

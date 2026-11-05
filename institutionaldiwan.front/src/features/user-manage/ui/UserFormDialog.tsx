@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { Controller, useForm } from 'react-hook-form'
+import { Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Lock, User } from 'lucide-react'
 import { toast } from 'sonner'
@@ -8,7 +8,7 @@ import { EmployeePicker } from '@/entities/employee'
 import { LOOKUP_SLUGS, useLookupEntries } from '@/entities/lookup'
 import { type UserResponse } from '@/entities/user'
 import { toArabicErrorMessage } from '@/shared/api'
-import { formatShortId } from '@/shared/lib'
+import { formatShortId, useDraftForm } from '@/shared/lib'
 import { Button, Checkbox, Dialog, FormField, Input, Select } from '@/shared/ui'
 import {
   createUserFormSchema,
@@ -65,7 +65,8 @@ export function UserFormDialog({ open, onOpenChange, user }: UserFormDialogProps
     control,
     handleSubmit,
     formState: { errors },
-  } = useForm<UserFormValues>({
+    draft,
+  } = useDraftForm<UserFormValues>({ formId: `user-form:${user?.userId ?? 'new'}` }, {
     resolver: zodResolver(isEdit ? updateUserFormSchema : createUserFormSchema),
     defaultValues: {
       username: user?.username ?? '',
@@ -104,6 +105,7 @@ export function UserFormDialog({ open, onOpenChange, user }: UserFormDialogProps
         })
         toast.success('تم إنشاء المستخدم بنجاح.')
       }
+      draft.discard()
       onOpenChange(false)
     } catch {
       // The mutation error is rendered below in Arabic.

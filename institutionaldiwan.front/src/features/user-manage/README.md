@@ -83,6 +83,7 @@ Public barrel for the request/form types, the eight mutation hooks, and the four
 - ✅ Authorization alignment: the roles/access dialogs and the users grid gate on `USER_MANAGE` (the server policy) instead of the unrelated `ROLE_MANAGE`/`DEPARTMENT_MANAGE`, and reads go through the minimal `identity-options` catalog.
 
 ## 6. Change Log
+- 2026-11-05: Unsent form input is now kept (per user, per form) after an accidental close or cancel and restored with a toast; it is cleared only after a successful submit (`useDraftForm`).
 - 2026-11-04: User, department and employee references now render as «name + short id» (`UserLabel` / `DepartmentLabel` / `EmployeeLabel`) instead of a bare id.
 
 - 2026-11-01: Tutorial mode Phase 0: the create-user form's «اسم المستخدم», «كلمة المرور المؤقتة», and «نطاق المستخدم» fields carry `guideId` (`users.form-username`, `users.form-password`, `users.form-scope`), so tutorial mode puts a help chip beside each label. The copy lives in `shared/config/guides/users.ts`; nothing changes with the mode off.

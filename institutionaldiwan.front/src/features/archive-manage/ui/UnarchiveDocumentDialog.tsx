@@ -1,4 +1,4 @@
-import { useForm } from 'react-hook-form'
+import { useDraftForm } from '@/shared/lib'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
 import { toArabicErrorMessage } from '@/shared/api'
@@ -26,7 +26,8 @@ export function UnarchiveDocumentDialog({
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<UnarchiveDocumentFormValues>({
+    draft,
+  } = useDraftForm<UnarchiveDocumentFormValues>({ formId: `unarchive-document:${documentId}` }, {
     resolver: zodResolver(unarchiveDocumentSchema),
     defaultValues: { reason: '' },
   })
@@ -35,6 +36,7 @@ export function UnarchiveDocumentDialog({
     try {
       await mutation.mutateAsync({ reason: values.reason.trim() })
       toast.success('أُلغيت أرشفة الوثيقة.')
+      draft.discard()
       onOpenChange(false)
     } catch {
       // The mutation error is rendered in the form-level banner below.
