@@ -1,5 +1,6 @@
-import { Component, type ReactNode } from 'react'
+import { Component, type ErrorInfo, type ReactNode } from 'react'
 import { AlertTriangle, Home, RefreshCw } from 'lucide-react'
+import { CLIENT_ERROR_KIND, reportClientError } from '@/shared/api'
 import { ROUTES } from '@/shared/config'
 import { cn } from '@/shared/lib'
 import { Button } from './button'
@@ -14,23 +15,38 @@ interface ErrorBoundaryProps {
 
 interface ErrorBoundaryState {
   failed: boolean
+  error?: unknown
+  componentStack?: string
+}
+
+function describeError(error: unknown): string {
+  return error instanceof Error ? (error.stack ?? `${error.name}: ${error.message}`) : String(error)
 }
 
 /**
  * Shows an Arabic error screen instead of a blank page when rendering throws. React has no hook for
- * this, so it is the one class component here. The error itself stays in the browser console; its
- * text is English and technical, so it is not shown.
+ * this, so it is the one class component here. Developers also see the technical error on
+ * `npm run dev`; a production build never renders it, so users are not shown code details.
  */
 export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   state: ErrorBoundaryState = { failed: false }
 
-  static getDerivedStateFromError(): ErrorBoundaryState {
-    return { failed: true }
+  static getDerivedStateFromError(error: unknown): ErrorBoundaryState {
+    return { failed: true, error }
+  }
+
+  componentDidCatch(error: unknown, info: ErrorInfo) {
+    reportClientError({
+      kind: CLIENT_ERROR_KIND.Render,
+      message: error instanceof Error ? error.message : String(error),
+      details: `${describeError(error)}${info.componentStack ?? ''}`,
+    })
+    if (import.meta.env.DEV) this.setState({ componentStack: info.componentStack ?? undefined })
   }
 
   componentDidUpdate(previous: ErrorBoundaryProps) {
     if (this.state.failed && previous.resetKey !== this.props.resetKey) {
-      this.setState({ failed: false })
+      this.setState({ failed: false, error: undefined, componentStack: undefined })
     }
   }
 
@@ -63,6 +79,15 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             الذهاب إلى لوحة التحكم
           </Button>
         </div>
+        {import.meta.env.DEV && (
+          <pre
+            dir="ltr"
+            className="max-h-96 w-full max-w-4xl overflow-auto rounded-lg border border-border bg-surface-muted p-3 text-start text-xs text-danger"
+          >
+            {describeError(this.state.error)}
+            {this.state.componentStack}
+          </pre>
+        )}
       </div>
     )
   }

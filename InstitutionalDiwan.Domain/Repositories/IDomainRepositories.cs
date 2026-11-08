@@ -1,3 +1,4 @@
+using InstitutionalDiwan.Domain.Entities.Diagnostics;
 
 
 using InstitutionalDiwan.Domain.ValueObjects;
@@ -126,6 +127,23 @@ public interface IDocumentTypeRepository
     Task<DocumentType?> GetByIdAsync(int documentTypeId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<DocumentType>> ListAllAsync(CancellationToken cancellationToken = default);
     void Add(DocumentType documentType);
+}
+
+public sealed record SystemErrorFilter(
+    SystemErrorStatus? Status = null,
+    SystemErrorSource? Source = null,
+    SystemErrorKind? Kind = null,
+    DateTime? LastSeenFromUtc = null,
+    DateTime? LastSeenToUtc = null);
+
+public interface ISystemErrorRepository
+{
+    Task<SystemError?> GetByIdAsync(Guid systemErrorId, CancellationToken cancellationToken = default);
+    Task<PagedList<SystemError>> ListPagedAsync(PageRequest page, SystemErrorFilter filter, CancellationToken cancellationToken = default);
+    /// <summary>Filtered and sorted like the list, without paging, up to <paramref name="maxRows"/>.</summary>
+    Task<IReadOnlyList<SystemError>> ListForExportAsync(PageRequest page, SystemErrorFilter filter, int maxRows, CancellationToken cancellationToken = default);
+    /// <summary>Permanently deletes the errors last seen before the cutoff and returns how many.</summary>
+    Task<int> DeleteLastSeenBeforeAsync(DateTime cutoffUtc, CancellationToken cancellationToken = default);
 }
 
 public interface IDocumentFieldRepository

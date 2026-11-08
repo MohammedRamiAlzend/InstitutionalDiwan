@@ -36,6 +36,7 @@ browser.
 | `movement-inbox/` | Inbox/outbox queue with search, status/type filters, overdue highlighting, and routing action menus | `entities/movement` + `features/movement-routing` | ✅ Implemented (Phase 6) |
 | `external-organizations-table/` | External correspondents admin grid (server search/paging, active/all filter, status badges, copy actions) | `entities/{external-organization,lookup,user}` + `features/external-organization-manage` | ✅ Implemented (Phase 7) |
 | `movement-timeline/` | Vertical step chain for one document | `entities/movement` + `features/movement-routing` | Deferred — the timeline lives in `pages/documents` until Module 05's visualization panel lands |
+| `system-errors-table/` | The developer's grid of captured errors with details, Excel export and purge. | — | — |
 | `audit-log-table/` | Paged audit search (hash columns, module/action/date filters) plus the integrity-report list, with checkpoint/checks toolbar | `entities/audit-log` + `features/audit-manage` | ✅ Implemented (Module 09) |
 | `archive-search-table/` | Access-filtered archive search grid with a saved-searches bar | `entities/archive` + `features/archive-manage` |
 | `notification-bell/` | Header bell: unread badge, live-connection line and the latest eight notifications | `entities/notification` + `features/notification-manage` + `features/notification-live` |
@@ -90,6 +91,7 @@ browser.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-08 | Claude | Added `system-errors-table/`. |
 | 2026-11-04 | Claude | Added `lookup-admin`. |
 | 2026-11-04 | Claude | Module 10 notifications front end (plan `plans/module-10-notifications-frontend.md`): implemented `notification-bell` and `notification-inbox`. |
 | 2026-11-03 | Claude | Added `document-schema-editor/` and `document-fields-panel/` for the dynamic document fields. |

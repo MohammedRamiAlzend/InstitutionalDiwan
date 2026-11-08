@@ -12,7 +12,7 @@ never use magic strings.
 
 | File | Purpose |
 | --- | --- |
-| `permissions.ts` | Exports `Permissions` with all **17** codes (incl. `DOCUMENT_ARCHIVE`, `AUDIT_VIEW`, `AUDIT_MANAGE`), `PermissionCode`, and `AllPermissions`. Exact shape is specified in root `AGENTS.md`. |
+| `permissions.ts` | Exports `Permissions` with all **18** codes (incl. `DOCUMENT_ARCHIVE`, `AUDIT_VIEW`, `AUDIT_MANAGE`), `PermissionCode`, and `AllPermissions`. Exact shape is specified in root `AGENTS.md`. |
 | `routes.ts` | Typed builders: `LOGIN`, `CHANGE_PASSWORD`, `DASHBOARD`, `DOCUMENTS`, `DOCUMENT_DETAIL(id)`, `DOCUMENT_DETAIL_PATTERN`, `MOVEMENTS`, `DEPARTMENTS`, `INSTITUTION_SETTINGS`, `USERS`, `ROLES`, `EMPLOYEES`, `NUMBERING`, `AUDIT` (no `/archive` until Module 07). |
 | `lookupIds.ts` | Seeded IDs shared across entities: `USER_SCOPE_TYPE` (1–4), `ASSIGNMENT_TYPE` (1–2), `DEPARTMENT_TYPE` (1–5), `NUMBERING_MODE` (Automatic 1 / Manual 2), `NUMBERING_RESET_POLICY` (Yearly 1 / Monthly 2 / Never 3), `DOCUMENT_NUMBER_STATUS` (Active 1 / Cancelled 2 / Replaced 3), `DOCUMENT_NUMBER_EVENT_TYPE` (Issued 1 … ReRegisteredInDepartment 5), `DOCUMENT_DIRECTION` (Internal 1 / Incoming 2 / Outgoing 3 / All 4), `DOCUMENT_TYPE` (BaseRecord 1), `DOCUMENT_STATUS` (Draft 1 / Registered 2 / InMovement 3 / Archived 4 / Canceled 5), `DOCUMENT_CONFIDENTIALITY` (Normal 1 … TopSecret 4), `DOCUMENT_PRIORITY` (Normal 1 / Urgent 2 / Immediate 3), `PARTICIPANT_ROLE` (Sender 1 / Receiver 2 / Cc 3 / Signatory 4) with `PARTICIPANT_TARGET_TYPE` (ExternalOrganization 1 / InternalDepartment 2 / Person 3), `ORGANIZATION_TYPE` (Government 1 / Private 2 / International 3 / Individual 4), and the movement catalogs — `MOVEMENT_TYPE` (Referral 1 / Transfer 2 / Cc 3 / Return 4), `MOVEMENT_STATUS` (Draft 1 … Canceled 10), `MOVEMENT_STEP_STATUS` (Pending 1 … Redirected 7), `MOVEMENT_EVENT_TYPE` (Created 1 … Canceled 9), and the audit catalogs — `AUDIT_ACTION_TYPE` (Create 1 … Execute 8) and `AUDIT_ENTITY_TYPE` (Document 1 … Operation 13), plus the Module 06 `DOCUMENT_FILE_TYPE` (Scan 1 / Attachment 2 / Signature 3 / Other 4). Must match API seeds. |
 | `env.ts` | Typed `import.meta.env` access (`API_BASE_URL` optional; default relative `/api`), `DEFAULT_TIMEZONE = 'Asia/Damascus'`. |
@@ -54,6 +54,7 @@ export const ROUTES = {
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-08 | Claude | `SYSTEM_ERRORS_VIEW` (18 codes), `ROUTES.SYSTEM_ERRORS` and the `system-errors` guide. |
 | 2026-11-08 | Claude | Guide entry `archive.field-filters`; `documents.field-filters` describes the filters on the bar. |
 | 2026-11-05 | Claude | `DOCUMENT_TYPE` is now `BaseRecord` (1) only; removed `DOCUMENT_TYPE_DIRECTION`. |
 | 2026-11-04 | Claude | Registry filtering by dynamic field values (plan `plans/document-registry-field-filters.md`): added the `documents.field-filters` guide entry. |

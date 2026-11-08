@@ -2,6 +2,7 @@ import axios, { type AxiosProgressEvent } from 'axios'
 import { ENV } from '@/shared/config'
 import { tokenStorage } from './tokenStorage'
 import { ApiError, toApiErrorAsync } from './problemDetails'
+import { CLIENT_ERROR_KIND, reportClientError } from './errorReporter'
 
 /**
  * The single Axios instance for all API calls. Attaches the bearer token,
@@ -24,6 +25,19 @@ httpClient.interceptors.response.use(
   (response) => response,
   async (error) => {
     const apiError = await toApiErrorAsync(error)
+
+    // 0 means no answer at all; the deliberate cancel of a superseded query is not a failure.
+    if ((apiError.status === 0 || apiError.status >= 500) && !axios.isCancel(error)) {
+      const method = axios.isAxiosError(error) ? error.config?.method?.toUpperCase() : undefined
+      const url = axios.isAxiosError(error) ? error.config?.url : undefined
+      reportClientError({
+        kind: CLIENT_ERROR_KIND.Network,
+        message: `${method ?? 'Request'} ${url?.split('?')[0] ?? ''} failed (${apiError.status || 'no response'})`,
+        path: url,
+        httpMethod: method,
+        statusCode: apiError.status || undefined,
+      })
+    }
 
     if (apiError.status === 401 && !window.location.pathname.startsWith('/login')) {
       tokenStorage.clear()

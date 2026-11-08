@@ -19,6 +19,7 @@ export const ROUTES = {
   NUMBERING: '/numbering',
   DOCUMENT_SCHEMAS: '/document-schemas',
   AUDIT: '/audit',
+  SYSTEM_ERRORS: '/system-errors',
 } as const
 
 export type RoutePath = (typeof ROUTES)[keyof typeof ROUTES] | string

@@ -139,6 +139,7 @@ indexes) runs against a private SQLite in-memory database through `Support/TestC
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-08 | Claude | Added `SystemErrorStoreTests`; permission counts are now 18. |
 | 2026-11-08 | Claude | Added `DocumentFieldBehaviorDomainTests` and `DocumentFieldBehaviorPersistenceTests`; `FakeDocumentFieldOptionResolver` for handlers that resolve sourced options. |
 | 2026-11-04 | Claude | `Persistence/NotificationsTests.cs` gained three tests (inbox search with literal wildcards, every sort key with stable paging, per-type unread counts). 743 tests pass. |
 | 2026-11-03 | Claude | Added `Persistence/NotificationsTests.cs` (22 tests: aggregate limits and URL rules, publisher recipient rules incl. confidentiality and inactive users, owner-only inbox commands, purge, outbox delivery, backoff and dead letter) plus `Support/FakeNotificationPublisher.cs` and `Support/ThrowingLogger.cs`. Seeding tests now expect 11 notification types. 740 tests pass. |

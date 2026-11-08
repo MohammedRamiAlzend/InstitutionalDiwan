@@ -93,6 +93,7 @@ Persistence/Configurations/
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-08 | Claude | Added `Diagnostics/` (error queue, background writer, repository, Excel writer with ClosedXML). |
 | 2026-11-04 | Claude | Registered `StandardDepartmentSeeder`, `SuperAdminSeeder` and `StandardAccountSeeder`; seeders gained a `Modes` filter (see `Persistence/Seed/README.md`). |
 | 2026-11-04 | Claude | `NotificationRepository` applies the inbox search (LIKE with escaped wildcards) and sort keys, and gained `CountUnreadByTypeAsync`. No schema change. |
 | 2026-11-02 | Claude | Dynamic document fields, Phase 1: persistence for per-document-type field schemas with versions (configurations, DbSets, `DocumentFieldRepository`, `DocumentTypeSchemaVersionRepository`, `Add_Document_Dynamic_Fields` migration). See the Persistence README for detail. |

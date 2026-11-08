@@ -24,12 +24,13 @@ public static class Permissions
     public const string LookupManage = "LOOKUP_MANAGE";
     public const string AuditView = "AUDIT_VIEW";
     public const string AuditManage = "AUDIT_MANAGE";
+    public const string SystemErrorsView = "SYSTEM_ERRORS_VIEW";
 
     /// <summary>Every known permission — used to register one authorization policy per permission.</summary>
     public static readonly IReadOnlyCollection<string> All = new[]
     {
         DocumentView, DocumentCreate, DocumentEdit, DocumentDelete, DocumentApprove, DocumentArchive,
         NumberingView, NumberingManage, DepartmentManage, RoleManage, UserManage, EmployeeManage,
-        AccessGrantManage, ReportView, LookupManage, AuditView, AuditManage,
+        AccessGrantManage, ReportView, LookupManage, AuditView, AuditManage, SystemErrorsView,
     };
 }

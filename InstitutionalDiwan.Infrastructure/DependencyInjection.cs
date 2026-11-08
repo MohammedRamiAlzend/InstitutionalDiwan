@@ -62,6 +62,11 @@ public static class DependencyInjection
         services.Configure<NotificationJobsOptions>(configuration.GetSection(NotificationJobsOptions.SectionName));
         services.AddHostedService<OutboxProcessorJob>();
         services.AddHostedService<NotificationRetentionJob>();
+        services.AddSingleton<Diagnostics.SystemErrorQueue>();
+        services.AddSingleton<Application.Features.Diagnostics.SystemErrors.ISystemErrorQueue>(
+            provider => provider.GetRequiredService<Diagnostics.SystemErrorQueue>());
+        services.AddHostedService<Diagnostics.SystemErrorWriterJob>();
+        services.AddSingleton<Application.Features.Diagnostics.SystemErrors.ISystemErrorExcelWriter, Diagnostics.SystemErrorExcelWriter>();
 
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IRoleRepository, RoleRepository>();
@@ -73,6 +78,7 @@ public static class DependencyInjection
         services.AddScoped<IDocumentRepository, DocumentRepository>();
         services.AddScoped<IDocumentTypeRepository, DocumentTypeRepository>();
         services.AddScoped<IDocumentFieldRepository, DocumentFieldRepository>();
+        services.AddScoped<ISystemErrorRepository, Diagnostics.SystemErrorRepository>();
         services.AddScoped<IDocumentTypeSchemaVersionRepository, DocumentTypeSchemaVersionRepository>();
         services.AddScoped<IDocumentNumberRepository, DocumentNumberRepository>();
         services.AddScoped<INumberingRegistryRepository, NumberingRegistryRepository>();

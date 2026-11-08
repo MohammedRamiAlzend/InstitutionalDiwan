@@ -361,6 +361,7 @@ them, while listing, relabelling and (de)activation keep working.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-08 | Claude | Added `SystemError`, `SystemErrorOccurrence` and the `SYSTEM_ERRORS_VIEW` permission (18 codes) for the developer's error log. |
 | 2026-11-08 | Claude | Field behavior (`DocumentFieldBehavior`: default, read-only, filterable, table column, hints, min length, date limits, visibility condition, layout, option source), the `MultiSelect` data type and `DocumentFieldSort`; `BuildValues` writes read-only values and drops hidden fields. |
 | 2026-11-04 | Claude | `INotificationRepository` gained `CountUnreadByTypeAsync` and the `UnreadTypeCount` record; `GetInboxAsync` now honours `PageRequest.Search`/`SortBy`. |
 | 2026-11-03 | Claude | Module 08 Relations, Phase 0: added `DocumentRelation.Remove`, the note and reason length limits, the new `Relations.*` errors, and the extended `IDocumentRelationRepository` contract (type lookup, duplicate and cycle checks, neighbour and history reads). |

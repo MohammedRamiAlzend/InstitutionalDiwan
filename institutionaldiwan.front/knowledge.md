@@ -103,7 +103,7 @@
   `useMutation`, `ui/` forms/dialogs).
 - Arabic-first UI: `dir="rtl"` on the document root, `dir="ltr"` on codes, ids, and official numbers.
 
-## Canonical permissions (17)
+## Canonical permissions (18)
 
 Must match the external API's `InstitutionalDiwan.Domain/Common/Permissions.cs` exactly. Front-end
 source of truth: `src/shared/config/permissions.ts`.
@@ -126,8 +126,11 @@ source of truth: `src/shared/config/permissions.ts`.
 | `LOOKUP_MANAGE` | Mutating reference catalogs |
 | `AUDIT_VIEW` | Search audit log + list integrity reports |
 | `AUDIT_MANAGE` | Create checkpoints + run integrity checks |
+| `SYSTEM_ERRORS_VIEW` | The developer's error log: browse, export, set status and notes, purge |
 
 ## Live Backend Endpoints (external `InstitutionalDiwan.Server`)
+
+**System errors** (`SYSTEM_ERRORS_VIEW`): `GET /api/system-errors` (paged; `search`, `sortBy` lastSeenAt/firstSeenAt/occurrenceCount/title/status, `status`, `source`, `kind`, `lastSeenFromUtc`, `lastSeenToUtc`), `GET /api/system-errors/export` (same filters, `.xlsx`, 10000 rows), `GET`/`PUT /api/system-errors/{id}` (`status` 1 new, 2 in progress, 3 resolved; `notes`), `POST /api/system-errors/purge` (`olderThanDays` 1-3650, returns the count). `POST /api/system-errors/client-reports` is open to any signed-in user (`kind` 3 render, 4 script, 5 network).
 
 The catalog below records the module APIs, including the `identity-options` picker reads. Every route
 except `POST /api/auth/login`, `POST /api/auth/register`, and lookup reads marked public by the server
@@ -347,7 +350,7 @@ exposes full contact data, role permissions, or management rights:
 
 ### Roles & permissions — `/api/roles`, `/api/permissions`
 
-`GET /api/permissions` — `ROLE_MANAGE`. Returns the flat 17-code catalog with `code`, `nameAr`,
+`GET /api/permissions` — `ROLE_MANAGE`. Returns the flat 18-code catalog with `code`, `nameAr`,
 `nameEn`, `moduleName`, and `description`; the SPA groups it by `moduleName` through
 `permissionModuleLabel`.
 Roles: `GET /api/roles` (plain array), `GET /api/roles/{id}`, `POST /api/roles`

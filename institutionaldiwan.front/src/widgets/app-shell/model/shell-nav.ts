@@ -1,6 +1,7 @@
 import type { LucideIcon } from 'lucide-react'
 import {
   Archive,
+  Bug,
   Building2,
   FileText,
   Hash,
@@ -171,6 +172,14 @@ export const SHELL_NAV_GROUPS: readonly ShellNavGroup[] = [
         to: ROUTES.AUDIT,
         icon: ScrollText,
         permission: Permissions.AuditView,
+        available: true,
+      },
+      {
+        id: 'system-errors',
+        label: 'الأخطاء البرمجية',
+        to: ROUTES.SYSTEM_ERRORS,
+        icon: Bug,
+        permission: Permissions.SystemErrorsView,
         available: true,
       },
     ],

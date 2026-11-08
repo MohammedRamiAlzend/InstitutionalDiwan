@@ -66,6 +66,7 @@ empty migration when the model changed.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-08 | Claude | Added `Add_System_Errors`: `SYSTEM_ERRORS` with a unique fingerprint and an index on the last occurrence. |
 | 2026-11-08 | Claude | Added `Add_Document_Field_Behavior`: JSON `Behavior` column on `DOCUMENT_TYPE_SCHEMA_VERSION_FIELDS`; existing rows default to filterable, as every field was offered as a filter before. |
 | 2026-11-08 | Claude | Added `Department_Register_Visits`: `DOCUMENT_REGISTRY_VISITS` with backfill from register history, `RegistryVisitId` on steps, and `UX_DOC_NUMBERS_DOC_DEPT` widened to include the year. |
 | 2026-11-05 | Claude | Added `Add_Lookup_IsDefault`: `IsDefault bit NOT NULL DEFAULT 0` on all 33 lookup tables. |

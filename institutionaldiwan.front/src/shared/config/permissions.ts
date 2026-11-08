@@ -20,6 +20,7 @@ export const Permissions = {
   LookupManage: 'LOOKUP_MANAGE',
   AuditView: 'AUDIT_VIEW',
   AuditManage: 'AUDIT_MANAGE',
+  SystemErrorsView: 'SYSTEM_ERRORS_VIEW',
 } as const
 
 export type PermissionCode = (typeof Permissions)[keyof typeof Permissions]

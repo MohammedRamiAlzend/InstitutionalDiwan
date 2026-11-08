@@ -1,4 +1,5 @@
 using InstitutionalDiwan.Domain.Common;
+using InstitutionalDiwan.Server.Middleware;
 using Microsoft.AspNetCore.Mvc;
 
 namespace InstitutionalDiwan.Server.Extensions;
@@ -34,7 +35,7 @@ public static class ResultExtensions
             _ => StatusCodes.Status500InternalServerError
         };
 
-        return new ObjectResult(new ProblemDetails
+        return new ProblemResult(new ProblemDetails
         {
             Status = statusCode,
             Title = error.Code,
@@ -44,5 +45,19 @@ public static class ResultExtensions
         {
             StatusCode = statusCode
         };
+    }
+
+    /// <summary>Leaves the error code where the error log can read it once the response is done.</summary>
+    private sealed class ProblemResult : ObjectResult
+    {
+        private readonly ProblemDetails _problem;
+
+        public ProblemResult(ProblemDetails problem) : base(problem) => _problem = problem;
+
+        public override Task ExecuteResultAsync(ActionContext context)
+        {
+            context.HttpContext.Items[SystemErrorCapture.ProblemItemKey] = _problem;
+            return base.ExecuteResultAsync(context);
+        }
     }
 }

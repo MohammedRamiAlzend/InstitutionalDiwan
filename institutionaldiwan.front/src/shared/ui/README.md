@@ -7,7 +7,7 @@ Holds reusable, domain-agnostic UI primitives (Tailwind CSS v4 + Radix UI where 
 | --- | --- |
 | `button.tsx` | Accessible button (CVA variants `primary`, `secondary`, `outline`, `ghost`, `destructive`; sizes `sm`/`md`/`lg`/`icon`) with a loading spinner state. |
 | `input.tsx` | Form input with logical `ps-*`/`pe-*` spacing, start/end icons (mirrors in RTL automatically), and an invalid state. |
-| `error-boundary.tsx` | `ErrorBoundary`: Arabic error screen instead of a blank page when rendering throws; `resetKey` recovers on navigation and `fullPage` fills the window. |
+| `error-boundary.tsx` | `ErrorBoundary`: Arabic error screen instead of a blank page when rendering throws; `resetKey` recovers on navigation and `fullPage` fills the window. The technical error appears on the dev server only. |
 | `form-field.tsx` | Label + required marker + control + Arabic error message wrapper integrating with `react-hook-form`. With `guideId` and tutorial mode on, a help chip sits after the label (outside it, so the accessible name of the control is unchanged); with the mode off the label renders exactly as before. |
 | `guide-tour.ts` | Driver.js adapter: `showGuidePopover(entry)` (one entry, pointed at its region or chip), `showGuideTour(intro, entries)` (centered introduction then each on-screen entry; entries not in the DOM are skipped), `destroyGuideTour()`. Text is HTML-escaped before it reaches Driver.js. Driver's overlay makes the page unclickable, so `app/styles/guide-tour.css` lifts the sidebar above the overlay and re-enables its pointer events: one click on a nav link closes the tour by leaving the page. |
 | `guide.tsx` | The tutorial primitives, all content-free (text comes from `@/shared/config/guides`). `GuideProvider` wraps a page and records which guide entries are currently in the DOM, so the walkthrough explains only what this user can see — a control hidden by a missing permission is not in the DOM and therefore not in the guide. `GuideRegion` marks a block (dashed `outline`, no layout shift) and puts a chip at its corner; `GuideChip` is the inline «؟» control opening one entry; `PageGuideTrigger` is the header button, silent outside a matching provider. Every one of them returns `null` / bare children when `useTutorial()` is `off`, and none is ever placed inside a Radix menu. Popovers and the page tour are Driver.js (`guide-tour.ts`), anchored through `data-guide-region` / `data-guide-chip`; their animation stays on under the motion switch. |
@@ -46,6 +46,8 @@ Holds reusable, domain-agnostic UI primitives (Tailwind CSS v4 + Radix UI where 
 ## Change Log
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-08 | Claude | `ErrorBoundary` reports render failures to the developer's error log. |
+| 2026-11-08 | Claude | `ErrorBoundary` shows the technical error and component stack on the dev server only. |
 | 2026-11-08 | Claude | Added `error-boundary.tsx` (`ErrorBoundary`). |
 | 2026-11-08 | Claude | `FormField` gained a `hint` line. |
 | 2026-11-04 | Claude | Added `name-with-id.tsx` (`NameWithId`) for «name + short id» references, exported through the barrel. |

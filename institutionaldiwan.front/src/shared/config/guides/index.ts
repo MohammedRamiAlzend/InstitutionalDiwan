@@ -1,5 +1,6 @@
 import { ARCHIVE_GUIDE, ARCHIVE_GUIDE_ENTRIES } from './archive'
 import { AUDIT_GUIDE, AUDIT_GUIDE_ENTRIES } from './audit'
+import { SYSTEM_ERRORS_GUIDE, SYSTEM_ERRORS_GUIDE_ENTRIES } from './systemErrors'
 import { COMMON_GUIDE_ENTRIES } from './common'
 import { DASHBOARD_GUIDE, DASHBOARD_GUIDE_ENTRIES } from './dashboard'
 import { DEPARTMENTS_GUIDE, DEPARTMENTS_GUIDE_ENTRIES } from './departments'
@@ -42,6 +43,7 @@ const ALL_ENTRIES: readonly GuideEntry[] = [
   ...LOOKUPS_GUIDE_ENTRIES,
   ...NOTIFICATIONS_GUIDE_ENTRIES,
   ...AUDIT_GUIDE_ENTRIES,
+  ...SYSTEM_ERRORS_GUIDE_ENTRIES,
   ...DASHBOARD_GUIDE_ENTRIES,
 ]
 
@@ -60,6 +62,7 @@ const ALL_PAGES: readonly PageGuide[] = [
   LOOKUPS_GUIDE,
   NOTIFICATIONS_GUIDE,
   AUDIT_GUIDE,
+  SYSTEM_ERRORS_GUIDE,
   DASHBOARD_GUIDE,
 ]
 

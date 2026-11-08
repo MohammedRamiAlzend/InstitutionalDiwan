@@ -33,9 +33,11 @@ public sealed class GlobalExceptionHandlingMiddleware
         try
         {
             await _next(context);
+            SystemErrorCapture.RecordRefusal(context);
         }
         catch (DbUpdateException exception) when (IsUniqueViolation(exception))
         {
+            SystemErrorCapture.RecordException(context, exception, StatusCodes.Status409Conflict);
             _logger.LogWarning(exception, "Unique-key violation while processing {Method} {Path}.",
                 context.Request.Method, context.Request.Path);
 
@@ -55,6 +57,7 @@ public sealed class GlobalExceptionHandlingMiddleware
         }
         catch (DbUpdateConcurrencyException exception)
         {
+            SystemErrorCapture.RecordException(context, exception, StatusCodes.Status409Conflict);
             _logger.LogWarning(exception, "Concurrency conflict while processing {Method} {Path}.",
                 context.Request.Method, context.Request.Path);
 
@@ -74,6 +77,7 @@ public sealed class GlobalExceptionHandlingMiddleware
         }
         catch (Exception exception)
         {
+            SystemErrorCapture.RecordException(context, exception, StatusCodes.Status500InternalServerError);
             _logger.LogError(exception, "Unhandled exception while processing {Method} {Path}.",
                 context.Request.Method, context.Request.Path);
 

@@ -34,6 +34,7 @@ read-only presentational UI. Entities never perform write mutations.
 | `document-file/` | Module 06 file + version + checksum responses (`GET /api/documents/{id}/files`, `/document-files/{id}/download`, `/document-files/{id}/verify`) | `useDocumentFiles`, `useVerifyChecksum`, `documentFileKeys`, `documentFileApi.download`, `ChecksumBadge`, `FileArchivedBadge` | ✅ Reads implemented (Module 06 Phases 0 and 2) and mounted by `widgets/document-attachments-panel`; writes land in `features/attachment-upload` (Phase 3). |
 | `numbering-registry/` | Registry/counter responses, department register book (`/numbering/registries`, `/departments/{id}/register`) | `useNumberingRegistries`, `useNumberingRegistryById`, `useDepartmentRegister`, `RegistryScopeCard`, pure `renderNumberPattern`/scope helpers | ✅ Reads implemented (Phase 5); pure template/scope model added in Module 04 Phase 1. |
 | `movement/` | `MovementQueueItemResponse`, `MovementResponse` (steps/events) (`GET /api/movements/inbox`, `/outbox`, `/by-document/{documentId}`, `/{movementId}`) | `useMovementQueue`, `useMovementInbox`, `useMovementOutbox`, `useDocumentMovements`, `useMovementById`, `getMovementActions`/`hasActiveMovement` rules, `MovementStatusBadge`, `MovementStepStatusBadge`, `MovementTypeBadge` | ✅ Reads, transition rules, and badges implemented (Phase 6). |
+| `system-error/` | `SystemErrorSummaryResponse`, `SystemErrorDetailsResponse` (`/system-errors`): list, details, Excel export, keys and labels. | — | — |
 | `audit-log/` | `AuditLogResponse`, `AuditIntegrityCheckResponse` (paged `/audit-logs`, `/audit-logs/integrity-checks`) | `useAuditLogs`, `useAuditIntegrityReports`, `AUDIT_MODULES`/`auditModuleLabel`, `HashChainPill`, `IntegrityStatusBadge` | ✅ Reads, Arabic module labels, and badges implemented; writes live in `features/audit-manage`. |
 | `archive/` | `ArchivedDocumentResponse`, `DocumentArchiveEventResponse`, `SavedSearchResponse` (`GET /api/archive/documents`, `/api/documents/{id}/archive-events`, `/api/saved-searches`) | `useArchivedDocuments`, `useDocumentArchiveEvents`, `useSavedSearches`, `archiveKeys`, `ArchiveEventTypeBadge` |
 | `notification/` | `NotificationResponse`, `UnreadCountResponse` (`GET /api/notifications`, `/api/notifications/unread-count`) | `useNotifications`, `useUnreadCount`, `notificationKeys`, `NotificationItem`, `NotificationPriorityBadge`, `NotificationTypeIcon` |
@@ -76,6 +77,7 @@ read-only presentational UI. Entities never perform write mutations.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-08 | Claude | Added `system-error/`. |
 | 2026-11-04 | Claude | Module 10 notifications front end (plan `plans/module-10-notifications-frontend.md`): implemented the `notification` read slice. |
 | 2026-11-03 | Claude | Added `document-schema/` for the dynamic document fields: reads, types, value helpers and the shared `DynamicFieldInputs` control set. |
 | 2026-11-03 | agent | Module 08: implemented the `document-relation` read slice. |

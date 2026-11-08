@@ -14,6 +14,7 @@ import { EmployeesPage } from '@/pages/employees'
 import { DocumentSchemasPage } from '@/pages/document-schemas'
 import { NumberingPage } from '@/pages/numbering'
 import { AuditPage } from '@/pages/audit'
+import { SystemErrorsPage } from '@/pages/system-errors'
 import { NotificationsPage } from '@/pages/notifications'
 import { LookupsPage } from '@/pages/lookups'
 import { AppShell } from '@/widgets/app-shell'
@@ -44,6 +45,7 @@ export function AppRouter() {
             <Route path={ROUTES.DOCUMENT_SCHEMAS} element={<DocumentSchemasPage />} />
             <Route path={ROUTES.LOOKUPS} element={<LookupsPage />} />
             <Route path={ROUTES.AUDIT} element={<AuditPage />} />
+            <Route path={ROUTES.SYSTEM_ERRORS} element={<SystemErrorsPage />} />
             <Route path={ROUTES.NOTIFICATIONS} element={<NotificationsPage />} />
           </Route>
           </Route>

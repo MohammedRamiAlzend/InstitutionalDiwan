@@ -37,6 +37,7 @@ entrances and colour transitions with it — from the display-settings dialog or
 | Module 09 audit navigation | «سجل التدقيق» available under الرقابة والتدقيق for `AUDIT_VIEW`; verified for both a manager and a view-only role. |
 | Department badge / SignalR bell | Pending their slices. |
 ## 6. Change Log
+- 2026-11-08: Added the «الأخطاء البرمجية» navigation entry.
 - 2026-11-08: Pages render inside an `ErrorBoundary` that keeps the navigation and clears when the URL changes.
 - 2026-11-03: Added the «مخططات الحقول» entry under الرقابة والتدقيق for `LOOKUP_MANAGE` (dynamic document fields).
 - 2026-11-04: Added the «الجداول المرجعية» item (`LOOKUP_MANAGE`, `ROUTES.LOOKUPS`) to the governance group of `shell-nav.ts`.

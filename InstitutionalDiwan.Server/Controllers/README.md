@@ -144,6 +144,7 @@ plain JSON array.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-08 | Claude | Added `SystemErrorsController`: list, details, Excel export, status and notes, manual purge, and browser reports. |
 | 2026-11-08 | Claude | `GET /api/departments/{id}/documents` and `GET /api/archive/documents` accept `fieldFilters`. |
 | 2026-11-08 | Claude | Create, register and receive accept the chosen department register. |
 | 2026-11-08 | Claude | Movement receive endpoints accept `registryDate` and `registryNumberText`. |

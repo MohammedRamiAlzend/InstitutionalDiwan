@@ -55,6 +55,7 @@ The `ProblemDetails` body carries the domain error code as `Title` and its descr
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-08 | Claude | `ResultExtensions` leaves the problem details where the error log can read the domain code. |
 | 2026-11-08 | Claude | `DocumentFieldMapping` carries the field `Behavior`. |
 | 2026-11-04 | Claude | `InitializeDatabaseAsync` reads `Seeding:Mode` / `Seeding:DefaultPassword` into `SeedingOptions`, passes them to `SeederContext` and logs the mode. |
 | 2026-11-02 | Claude | Added `DocumentFieldMapping` (contract to application input mapping for dynamic fields). |

@@ -87,6 +87,7 @@ the exception, record the failure, and rethrow.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-08 | Claude | Added `SystemErrorCapture`; `GlobalExceptionHandlingMiddleware` feeds it with exceptions and refused API requests. |
 | 2026-11-03 | Claude | `AuditActionMiddleware` skips actions marked `[SkipActionAudit]`; used by `GET /api/notifications/unread-count`, which the bell polls. |
 | 2026-11-03 | Claude | `AuditActionMiddleware` maps the `DocumentRelations` controller to the `RELATIONS` module (Module 08, Phase 3). |
 | 2026-11-03 | Claude | `GlobalExceptionHandlingMiddleware` now answers `DbUpdateConcurrencyException` with 409 and the title `Common.ConcurrencyConflict` instead of 500, for every endpoint that writes a row with a `RowVersion`. `AuditActionMiddleware` maps `DocumentArchive` and `SavedSearches` to the `ARCHIVING` module and classifies `Unarchive` as an update. |

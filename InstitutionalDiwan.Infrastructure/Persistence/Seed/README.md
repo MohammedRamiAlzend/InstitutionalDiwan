@@ -4,7 +4,7 @@ Ordered, environment-aware database seeding.
 
 > **Status:** Implemented — three seeding modes (`Everything`, `Standard`, `None`), 33 reference-catalog seeders, the institution-settings singleton, a
 > 15-department demo organization tree (Development/Staging), 28 demo employees attached to that
-> tree (Development/Staging), 17 permissions, system roles with 20 grants, and demo users.
+> tree (Development/Staging), 18 permissions, system roles with 20 grants, and demo users.
 
 ## How it works
 
@@ -32,7 +32,7 @@ Development, Production, etc.
 | 96 | `DepartmentSeeder` | Development, Staging; mode `Everything` | A demo organization tree of 15 departments across four levels: the `CENTRAL_DIWAN` root (reused from Order 95), four directorates, seven departments, and three sections (e.g. `DIR-ADMIN` → `DEP-HR` → `SEC-PAYROLL`), so the departments screen has a realistic hierarchy to display. Idempotent by `Code`. |
 | 97 | `EmployeeSeeder` | Development, Staging; mode `Everything` | 28 demo employees attached by department code — the Central Diwan office, every directorate, department, and section — so a department card can list the people who belong to it. Includes Arabic/English names, employee numbers (`EMP-0001`…), job titles, and a few contact details. Idempotent by `EmployeeNumber`. |
 | 98 | `StandardDepartmentSeeder` | All; mode `Standard` | `INDIVIDUAL_DIWAN` (ديوان الفرد) and `INVESTIGATION_DIWAN` (ديوان التحقيق), directorates under `CENTRAL_DIWAN`. Idempotent by `Code`. |
-| 100 | `PermissionSeeder` | All | Permission catalog — the 17 codes in `Permissions.All`, including `DOCUMENT_ARCHIVE`, `LOOKUP_MANAGE`, `NUMBERING_MANAGE`, `AUDIT_VIEW`, and `AUDIT_MANAGE`. |
+| 100 | `PermissionSeeder` | All | Permission catalog — the 18 codes in `Permissions.All`, including `DOCUMENT_ARCHIVE`, `LOOKUP_MANAGE`, `NUMBERING_MANAGE`, `AUDIT_VIEW`, and `AUDIT_MANAGE`. |
 | 200 | `RoleSeeder` | All | `ADMIN` / `USER` roles plus their permission grants (ADMIN receives all 17, USER the three document permissions; 20 grants total). |
 | 300 | `UserSeeder` | Development, Staging; mode `Everything` | Demo accounts `admin` / `user` (password `12345678`) with role assignments. `admin` belongs to the Central Diwan and `user` to `DEP-HR`. Idempotent by username; existing accounts are never changed. |
 | 305 | `SuperAdminSeeder` | All; modes `Standard`, `None` | Role `SUPER_ADMIN` with every code in `Permissions.All` (re-synced each startup) and the `superadmin` account (system scope, Central Diwan, password from `Seeding:DefaultPassword`). An existing account is never changed. |
@@ -66,6 +66,7 @@ Production requires opting in by adding `SeedingEnvironments.Production` to
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-08 | Claude | Permission catalog gained `SYSTEM_ERRORS_VIEW` (18 codes). |
 | 2026-11-04 | Claude | Standard-mode diwan accounts now get a new `DIWAN_OPERATOR` role (document view/create/edit plus `NUMBERING_VIEW` and `NUMBERING_MANAGE`) instead of `USER`: a department must write its own register number (numbers tab, `POST /api/document-numbers/department-registration`) before it can receive a document, and `USER` could neither see the tab nor register. `StandardAccountSeeder` also moves already-seeded accounts to the new role on the next startup (users must log in again for the new permissions). |
 | 2026-11-04 | Claude | Added seeding modes: `Seeding:Mode` in appsettings picks `Everything` (the former demo data, default), `Standard` (three diwans — الديوان المركزي, ديوان الفرد, ديوان التحقيق — with a `superadmin` account holding all 17 permissions plus two accounts per diwan, all with password `12345678`) or `None` (reference data and only `superadmin`). New seeders `StandardDepartmentSeeder` (98), `SuperAdminSeeder` (305), `StandardAccountSeeder` (310); the demo seeders now run only in `Everything`. |
 | 2026-11-03 | Claude | `UserSeeder` now places `admin` in the Central Diwan and `user` in `DEP-HR` instead of a fixed department id with no row, so documents they create have a real owning department. Existing accounts and documents are not changed. |

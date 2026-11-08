@@ -36,6 +36,7 @@ public sealed class PermissionSeeder : ISeeder
         (Permissions.LookupManage, "إدارة القوائم المرجعية", "Manage reference lookups", "LOOKUPS", "Add, relabel, activate and deactivate reference lookup entries."),
         (Permissions.AuditView, "عرض سجل التدقيق", "View audit log", "AUDIT", "Browse and verify the tamper-evident audit log."),
         (Permissions.AuditManage, "إدارة سلامة سجل التدقيق", "Manage audit integrity", "AUDIT", "Create checkpoints and run integrity verification over the audit log."),
+        (Permissions.SystemErrorsView, "متابعة الأخطاء البرمجية", "Track system errors", "DIAGNOSTICS", "Browse, export, annotate and purge captured application errors."),
     };
 
     public async Task SeedAsync(SeederContext context, CancellationToken cancellationToken = default)

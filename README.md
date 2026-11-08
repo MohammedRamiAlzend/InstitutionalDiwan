@@ -84,7 +84,7 @@ npm run build   # tsc -b && vite build
 npm run lint
 ```
 
-> The front end's architecture, implemented slices, 17 permissions, UI/design contract, and live
+> The front end's architecture, implemented slices, 18 permissions, UI/design contract, and live
 > endpoint catalog are documented in
 > [`institutionaldiwan.front/README.md`](institutionaldiwan.front/README.md),
 > [`AGENTS.md`](institutionaldiwan.front/AGENTS.md), and
@@ -158,6 +158,7 @@ have no `README.md` of their own yet — their content is documented in the encl
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-08 | Claude | Added the developer's error log: captured server and browser errors, grouped with status and notes, Excel export and manual purge, behind `SYSTEM_ERRORS_VIEW`. |
 | 2026-11-08 | Claude | Dynamic field behavior (plan `plans/document-field-behavior.md`): default values, read-only fields enforced on the server, filterable fields and table columns, placeholder and help text, minimum length and date limits, conditional visibility, form layout, multi-select fields and options fed by departments, organizations or lookups; field filters on the archive and department queries. |
 | 2026-11-04 | Claude | Fixed scrambled dates everywhere in the SPA: `formatDate` / `formatDateTime` used the `ar-SY` locale, whose output carries right-to-left marks and an Arabic comma, so in an RTL page the time jumped before the date and the year lost its slashes. They now read the numeric parts through `en-US`, assemble `2026/11/04` and `2026/11/04 09:12` (Damascus time, 24-hour) and wrap the result in a left-to-right isolate, so every call site renders correctly with or without `dir="ltr"`. Front build and lint pass. |
 | 2026-11-04 | Claude | Fixed a returned or rejected movement showing in the sender's inbox as a locked «وثيقة مقيّدة» row: movement-based reading access (`DocumentAccessEvaluator` and the list predicate `DocumentViewAccessQuery`) now also covers the sending department of a step whose status is returned or rejected, matching what `ListInboxAsync` already shows; the receiving side loses access as before. Parity test and evaluator tests extended. 791 tests pass. |

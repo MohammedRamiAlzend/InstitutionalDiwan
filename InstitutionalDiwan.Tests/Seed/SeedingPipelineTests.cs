@@ -115,7 +115,7 @@ public sealed class SeedingPipelineTests
         Assert.Equal(5, await db.DocumentNumberEventTypes.CountAsync());
         Assert.Equal(2, await db.DocumentNumberScopes.CountAsync());
         Assert.Equal(3, await db.NumberingResetPolicies.CountAsync());
-        Assert.Equal(17, await db.Permissions.CountAsync());
+        Assert.Equal(18, await db.Permissions.CountAsync());
         Assert.Equal(2, await db.Roles.CountAsync());
         Assert.Equal(20, await db.RolePermissions.CountAsync());
 
@@ -145,7 +145,7 @@ public sealed class SeedingPipelineTests
         Assert.Equal(5, await db.DocumentStatusTypes.CountAsync());
         Assert.Equal(4, await db.UserScopeTypes.CountAsync());
         Assert.Equal(11, await db.NotificationTypes.CountAsync());
-        Assert.Equal(17, await db.Permissions.CountAsync());
+        Assert.Equal(18, await db.Permissions.CountAsync());
         Assert.Equal(2, await db.Roles.CountAsync());
         Assert.Equal(20, await db.RolePermissions.CountAsync());
         Assert.Equal(1, await db.Departments.CountAsync());
@@ -168,7 +168,7 @@ public sealed class SeedingPipelineTests
         Assert.Equal(4, await db.UserScopeTypes.CountAsync());
         Assert.Equal(1, await db.DocumentTypes.CountAsync());
         Assert.Equal(7, await db.MovementStepStatuses.CountAsync());
-        Assert.Equal(17, await db.Permissions.CountAsync());
+        Assert.Equal(18, await db.Permissions.CountAsync());
         Assert.Equal(20, await db.RolePermissions.CountAsync());
         Assert.Equal(1, await db.InstitutionSettings.CountAsync());
         Assert.Equal(15, await db.Departments.CountAsync());

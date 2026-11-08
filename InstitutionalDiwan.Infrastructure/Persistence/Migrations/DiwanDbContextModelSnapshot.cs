@@ -1494,6 +1494,121 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                     b.ToTable("PARTICIPANT_TARGET_TYPES", (string)null);
                 });
 
+            modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Diagnostics.SystemError", b =>
+                {
+                    b.Property<Guid>("SystemErrorId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("SystemErrorId");
+
+                    b.Property<string>("Details")
+                        .HasMaxLength(16000)
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("Details");
+
+                    b.Property<string>("Fingerprint")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)")
+                        .HasColumnName("Fingerprint");
+
+                    b.Property<DateTime>("FirstSeenAt")
+                        .HasColumnType("datetime2(3)")
+                        .HasColumnName("FirstSeenAt");
+
+                    b.Property<string>("HttpMethod")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)")
+                        .HasColumnName("HttpMethod");
+
+                    b.Property<int>("Kind")
+                        .HasColumnType("int")
+                        .HasColumnName("Kind");
+
+                    b.Property<DateTime>("LastSeenAt")
+                        .HasColumnType("datetime2(3)")
+                        .HasColumnName("LastSeenAt");
+
+                    b.Property<Guid?>("LastUserId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("LastUserId");
+
+                    b.Property<string>("LastUsername")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)")
+                        .HasColumnName("LastUsername");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)")
+                        .HasColumnName("Message");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)")
+                        .HasColumnName("Notes");
+
+                    b.Property<int>("OccurrenceCount")
+                        .HasColumnType("int")
+                        .HasColumnName("OccurrenceCount");
+
+                    b.Property<string>("Path")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)")
+                        .HasColumnName("Path");
+
+                    b.Property<DateTime?>("ResolvedAt")
+                        .HasColumnType("datetime2(3)")
+                        .HasColumnName("ResolvedAt");
+
+                    b.Property<int>("Source")
+                        .HasColumnType("int")
+                        .HasColumnName("Source");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int")
+                        .HasColumnName("Status");
+
+                    b.Property<int?>("StatusCode")
+                        .HasColumnType("int")
+                        .HasColumnName("StatusCode");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)")
+                        .HasColumnName("Title");
+
+                    b.Property<string>("TraceId")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("TraceId");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2(3)")
+                        .HasColumnName("UpdatedAt");
+
+                    b.Property<Guid?>("UpdatedByUserId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("UpdatedByUserId");
+
+                    b.Property<string>("UserAgent")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)")
+                        .HasColumnName("UserAgent");
+
+                    b.HasKey("SystemErrorId");
+
+                    b.HasIndex("Fingerprint")
+                        .IsUnique()
+                        .HasDatabaseName("UX_SYSTEM_ERRORS_FINGERPRINT");
+
+                    b.HasIndex("LastSeenAt")
+                        .HasDatabaseName("IX_SYSTEM_ERRORS_LAST_SEEN");
+
+                    b.ToTable("SYSTEM_ERRORS", (string)null);
+                });
+
             modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Identity.AccessLevel", b =>
                 {
                     b.Property<int>("Id")

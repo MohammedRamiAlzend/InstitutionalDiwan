@@ -228,6 +228,15 @@ public static class DomainErrors
         public static readonly Error GraphDepthInvalid = Error.Validation("Relations.GraphDepthInvalid", "The relations graph depth must be between 1 and 3.");
     }
 
+    public static class SystemErrors
+    {
+        public static readonly Error NotFound = Error.NotFound("SystemErrors.NotFound", "The captured error was not found.");
+        public static readonly Error StatusInvalid = Error.Validation("SystemErrors.StatusInvalid", "The work status is not supported.");
+        public static readonly Error NotesTooLong = Error.Validation("SystemErrors.NotesTooLong", "The notes cannot exceed 4000 characters.");
+        public static readonly Error PurgeDaysInvalid = Error.Validation("SystemErrors.PurgeDaysInvalid", "The number of days must be between 1 and 3650.");
+        public static readonly Error ReportInvalid = Error.Validation("SystemErrors.ReportInvalid", "A client error report needs a browser error kind and a message.");
+    }
+
     public static class Archiving
     {
         public static readonly Error EventTypeInvalid = Error.Validation("Archiving.EventTypeInvalid", "Archive event type must be ARCHIVED, UNARCHIVED, or RETAINED.");
