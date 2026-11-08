@@ -4,6 +4,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { CircleHelp, Pause, Play, RefreshCw, Rows3, Settings2 } from 'lucide-react'
 import {
   ContextMenu,
+  ErrorBoundary,
   dispatchContextMenu,
   isContextMenuShortcut,
   type MenuEntry,
@@ -173,7 +174,10 @@ export function AppShell({ headerSlot }: AppShellProps = {}) {
               key={location.pathname}
               className="mx-auto flex w-full max-w-7xl flex-col gap-6 animate-page-in"
             >
-              <Outlet />
+              {/* One page failing keeps the navigation, so the user can simply go elsewhere. */}
+              <ErrorBoundary resetKey={location.pathname + location.search}>
+                <Outlet />
+              </ErrorBoundary>
             </div>
           </main>
         </ContextMenu>

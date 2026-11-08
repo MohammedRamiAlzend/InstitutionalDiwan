@@ -10,6 +10,7 @@ export type { DataTableColumn, DataTableMode, DataTableProps } from './data-tabl
 export { Dialog } from './dialog'
 export type { DialogSize } from './dialog'
 export { DropdownMenu } from './dropdown-menu'
+export { ErrorBoundary } from './error-boundary'
 export { FormField } from './form-field'
 export {
   GuideChip,

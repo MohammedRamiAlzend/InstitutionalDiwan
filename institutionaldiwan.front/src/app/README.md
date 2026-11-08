@@ -44,6 +44,7 @@
 ## Change Log
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-08 | Claude | `App` wraps the tree in a full-page `ErrorBoundary`, so a failure outside the shell no longer leaves a blank page. |
 | 2026-11-04 | Claude | Corrected the status line: the Module 06 attachments tab is complete and role-matrix verified, so nothing about it remains pending. |
 | 2026-11-01 | agent | Documented the shell page-transition animation and the `html[data-motion]` preference in the `styles/index.css` entry. |
 | 2026-11-01 | agent | Module 06 Phase 2: corrected the status line — the attachments tab is live inside the already-registered `/documents/:documentId`, so no route was added and only the upload action (Phase 3) stays planned. |
