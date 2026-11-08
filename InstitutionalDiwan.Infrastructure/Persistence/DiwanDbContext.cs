@@ -65,6 +65,7 @@ public sealed class DiwanDbContext : DbContext, IUnitOfWork
     public DbSet<NumberingRegistry> NumberingRegistries => Set<NumberingRegistry>();
     public DbSet<NumberingCounter> NumberingCounters => Set<NumberingCounter>();
     public DbSet<DocumentNumberHistory> DocumentNumberHistories => Set<DocumentNumberHistory>();
+    public DbSet<DocumentRegistryVisit> DocumentRegistryVisits => Set<DocumentRegistryVisit>();
     public DbSet<DocumentNumberStatus> DocumentNumberStatuses => Set<DocumentNumberStatus>();
     public DbSet<DocumentNumberEventType> DocumentNumberEventTypes => Set<DocumentNumberEventType>();
     public DbSet<DocumentNumberScope> DocumentNumberScopes => Set<DocumentNumberScope>();

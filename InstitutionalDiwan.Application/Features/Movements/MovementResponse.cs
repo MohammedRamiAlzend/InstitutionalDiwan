@@ -1,4 +1,5 @@
 using InstitutionalDiwan.Domain.Entities.Movements;
+using InstitutionalDiwan.Domain.Entities.Numbering;
 
 namespace InstitutionalDiwan.Application.Features.Movements;
 
@@ -45,6 +46,12 @@ public sealed record MovementResponse(
             .OrderBy(movementEvent => movementEvent.OccurredAt)
             .Select(MovementEventResponse.From)
             .ToList());
+
+    /// <summary>Fills each received step with the register number and visit date it was written under.</summary>
+    public MovementResponse WithRegistry(IReadOnlyCollection<DocumentNumber> numbers) => this with
+    {
+        Steps = Steps.Select(step => step.WithRegistry(numbers)).ToList()
+    };
 }
 
 /// <summary>One hop of a movement: the department pair and what happened to the step.</summary>
@@ -62,7 +69,10 @@ public sealed record MovementStepResponse(
     Guid? ReceivedByUserId,
     Guid? RegistryNumberId,
     DateTime? CompletedAt,
-    DateTime? DueDate)
+    DateTime? DueDate,
+    Guid? RegistryVisitId = null,
+    string? RegistryNumberText = null,
+    DateTime? RegistryDate = null)
 {
     public static MovementStepResponse From(DocumentMovementStep step) => new(
         step.StepId,
@@ -78,7 +88,19 @@ public sealed record MovementStepResponse(
         step.ReceivedByUserId,
         step.RegistryNumberId,
         step.CompletedAt,
-        step.DueDate);
+        step.DueDate,
+        step.RegistryVisitId);
+
+    internal MovementStepResponse WithRegistry(IReadOnlyCollection<DocumentNumber> numbers)
+    {
+        var number = numbers.FirstOrDefault(candidate => candidate.DocumentNumberId == RegistryNumberId);
+        if (number is null)
+            return this;
+
+        // Steps received before visits existed may have no visit; they show the number without a date.
+        var visit = number.Visits.FirstOrDefault(candidate => candidate.VisitId == RegistryVisitId);
+        return this with { RegistryNumberText = number.OfficialNumberText, RegistryDate = visit?.RegistryDate };
+    }
 }
 
 /// <summary>One entry of a movement's audit trail.</summary>

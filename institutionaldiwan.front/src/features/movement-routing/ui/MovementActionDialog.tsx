@@ -18,7 +18,6 @@ import {
   useCancelMovementMutation,
   useCloseMovementMutation,
   useCompleteMovementMutation,
-  useReceiveMovementMutation,
   useRedirectMovementMutation,
   useRejectMovementMutation,
   useReturnMovementMutation,
@@ -34,6 +33,7 @@ import {
 } from '../model/schemas'
 import { useAssigneeOptions } from '../model/useAssigneeOptions'
 import { MOVEMENT_ACTION_LABELS } from '../model/constants'
+import { ReceiveMovementDialog } from './ReceiveMovementDialog'
 
 interface MovementActionDialogProps {
   action: MovementAction
@@ -60,7 +60,7 @@ export function MovementActionDialog({
       )
     case 'receive':
       return (
-        <ReceiveActionDialog
+        <ReceiveMovementDialog
           movementId={movementId}
           open={open}
           onOpenChange={onOpenChange}
@@ -138,7 +138,7 @@ interface NotesFormDialogProps {
   onSubmit: (notes: string | null) => Promise<void>
 }
 
-/** Shared optional-notes dialog for send, receive, complete, and close. */
+/** Shared optional-notes dialog for send, complete, and close. */
 function NotesFormDialog({
   open,
   onOpenChange,
@@ -323,35 +323,6 @@ function SendActionDialog({ movementId, open, onOpenChange }: ActionDialogBasePr
       onSubmit={async (notes) => {
         await mutation.mutateAsync({ movementId, notes })
         toast.success('تم إرسال الحركة إلى القسم الوجهة.')
-        onOpenChange(false)
-      }}
-    />
-  )
-}
-
-function ReceiveActionDialog({
-  movementId,
-  open,
-  onOpenChange,
-}: ActionDialogBaseProps) {
-  const mutation = useReceiveMovementMutation()
-
-  return (
-    <NotesFormDialog
-      open={open}
-      onOpenChange={onOpenChange}
-      title={MOVEMENT_ACTION_LABELS.receive}
-      description="يشترط الاستلام أن يكون القسم الوجهة قد سجّل رقمه في سجلّه لهذه الوثيقة؛ سيُربط الاستلام برقم التسجيل."
-      notesLabel="ملاحظات الاستلام (اختياري)"
-      placeholder="ملاحظة اختيارية تُرفق بالاستلام…"
-      submitLabel="استلام الوثيقة"
-      isPending={mutation.isPending}
-      error={mutation.error}
-      onSubmit={async (notes) => {
-        const receipt = await mutation.mutateAsync({ movementId, notes })
-        toast.success(
-          `تم استلام الوثيقة برقم الدائرة ${receipt.registryNumberText}.`,
-        )
         onOpenChange(false)
       }}
     />

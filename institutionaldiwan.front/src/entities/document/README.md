@@ -22,6 +22,7 @@ paging/search/sort/filter params and keeps the previous page visible while the n
 | --- | --- |
 | `model/types.ts` | `DocumentResponse`, `DocumentParticipantResponse`, `DocumentStatusHistoryResponse`, `DocumentDetailResponse`, `DocumentTimelineEntryResponse`, `DocumentAccessGrantResponse`, `DocumentNumberResponse` with its dated history events, `DepartmentRegistryNumberResponse`, `DocumentRegistryNumbersResponse`, and `DocumentListParams` matching `InstitutionalDiwan.Application`. |
 | `model/queries.ts` | `documentKeys` factory plus `useDocuments`, `useDocumentById`, `useDocumentDetails`, `useDocumentTimeline`, `useDocumentAccessGrants`, `useDocumentNumberHistory`, and `useDocumentRegistryNumbers`. |
+| `model/registryEntries.ts` | `findDepartmentEntry` picks a department's register line for a document in a given year. |
 | `api/documentApi.ts` | Typed `GET` calls through `httpClient` from `@/shared/api`; blank search and department filters are dropped. |
 | `ui/DocumentStatusBadge.tsx` | Arabic badges for `Draft`, `Registered`, `InMovement`, `Archived`, `Canceled` with a `#id` fallback. |
 | `ui/DocumentDirectionBadge.tsx` | Arabic badges for `Internal`, `Incoming`, `Outgoing` with direction icons. |
@@ -61,6 +62,7 @@ paging/search/sort/filter params and keeps the previous page visible while the n
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-08 | Claude | Added `visits` on register lines and the `findDepartmentEntry` selector. |
 | 2026-11-05 | Claude | `DocumentResponse.directionId/confidentialityLevelId/priorityLevelId` are now `number | null`; `DocumentDirectionBadge` and the `directionId` list param were removed (suspended). |
 | 2026-11-04 | Claude | Registry filtering by dynamic field values (plan `plans/document-registry-field-filters.md`): `DocumentListParams.fieldFilters`; `documentApi.list` serializes arrays as repeated keys (`paramsSerializer: { indexes: null }`). |
 | 2026-11-03 | Claude | Added `RestrictedDocumentLabel`, `isDocumentRestricted` and `documentRowLabel` for rows the API keeps but blanks when the caller cannot view the document. |

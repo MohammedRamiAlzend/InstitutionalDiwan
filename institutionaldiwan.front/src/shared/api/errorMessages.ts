@@ -126,6 +126,8 @@ const CODE_MESSAGES: Record<string, string> = {
   'Numbering.AlreadyCancelled': 'رقم النظام ملغى مسبقًا.',
   'Numbering.CancelReasonRequired': 'سبب إلغاء الرقم مطلوب.',
   'Numbering.DepartmentNumberLocked': 'رقم تسجيل الدائرة مقفل ولا يمكن تعديله.',
+  'Numbering.VisitDateDuplicate': 'سُجّل وصول هذه الوثيقة بهذا التاريخ مسبقًا؛ اختر تاريخًا آخر.',
+  'Numbering.VisitYearMismatch': 'يجب أن يكون تاريخ الوصول في نفس سنة رقم الدائرة.',
   'Numbering.DepartmentNumberRequired': 'رقم تسجيل الدائرة مطلوب.',
   'Numbering.DepartmentRegistrationOwnDepartmentOnly': 'لا يمكنك تسجيل رقم إلا في سجل دائرتك أنت.',
   'Numbering.DepartmentRegistryMismatch': 'السجل المختار غير نشط أو لا يتبع هذه الدائرة.',

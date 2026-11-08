@@ -16,6 +16,7 @@ public sealed class DepartmentRegisterNumberingTests
     private const int NumberingYear = 2026;
     private static readonly DateTime FirstVisit = new(2026, 3, 14);
     private static readonly DateTime SecondVisit = new(2026, 5, 1);
+    private static readonly DateTime NextYearVisit = new(2027, 2, 3);
 
     private sealed class World
     {
@@ -85,7 +86,10 @@ public sealed class DepartmentRegisterNumberingTests
         }
 
         public RecordDepartmentRegistrationCommandHandler RecordHandler() =>
-            new(Documents, Numbers, Departments, Registries, CustodyScope, UnitOfWork);
+            new(Documents, RegistrationService(), UnitOfWork);
+
+        public DepartmentRegistrationService RegistrationService() =>
+            new(Numbers, Departments, Registries, CustodyScope, UnitOfWork);
 
         public FakeDepartmentScopeEvaluator CustodyScope { get; } = new() { InstitutionWide = true };
 
@@ -99,7 +103,16 @@ public sealed class DepartmentRegisterNumberingTests
                 CancellationToken.None);
 
         public ReceiveDocumentCommandHandler ReceiveHandler() =>
-            new(Movements, Documents, CustodyScope, UnitOfWork, FakeNotificationPublisher.Instance, TestClock.Instance);
+            new(Movements, Documents, CustodyScope, UnitOfWork, FakeNotificationPublisher.Instance, RegistrationService(), TestClock.Instance);
+
+        public Task<Result<MovementStepReceiptResponse>> ReceiveAsync(
+            DocumentMovement movement,
+            DateTime registryDate,
+            string? numberText = null) =>
+            ReceiveHandler().Handle(
+                new ReceiveDocumentCommand(
+                    movement.MovementId, UserId, RegistryDate: registryDate, RegistryNumberText: numberText),
+                CancellationToken.None);
 
         public DocumentNumber? DepartmentEntry(Guid departmentId) =>
             Numbers.DocumentNumbers.SingleOrDefault(number =>
@@ -342,13 +355,12 @@ public sealed class DepartmentRegisterNumberingTests
 
         var movement = CreateSentMovement(world);
 
-        var result = await world.ReceiveHandler().Handle(
-            new ReceiveDocumentCommand(movement.MovementId, world.UserId), CancellationToken.None);
+        var result = await world.ReceiveAsync(movement, SecondVisit);
 
         Assert.True(result.IsSuccess, result.Error?.Code);
         Assert.Equal(entry.Value.DocumentNumberId, result.Value.RegistryNumberId);
         Assert.Equal("45", result.Value.RegistryNumberText);
-        Assert.Equal(FirstVisit, result.Value.RegistryDate);
+        Assert.Equal(SecondVisit, result.Value.RegistryDate);
         Assert.Equal(DocumentMovement.StatusReceived, movement.StatusId);
 
         var step = movement.Steps.Single(current => current.StepNo == movement.CurrentStepNo);
@@ -435,6 +447,152 @@ public sealed class DepartmentRegisterNumberingTests
             scope,
             new FakeUserContext { IsAuthenticated = true, UserId = Guid.NewGuid() },
             TestClock.Instance);
+
+    [Fact]
+    public async Task Receive_OnReturnToADepartment_KeepsTheNumberAndAddsAVisit()
+    {
+        var world = new World();
+        await world.IssueCentralAsync();
+
+        var first = await world.ReceiveAsync(CreateSentMovement(world), FirstVisit, "45");
+        Assert.True(first.IsSuccess, first.Error?.Code);
+        Assert.False(first.Value.IsReturnVisit);
+
+        var returnMovement = CreateSentMovement(world);
+        var second = await world.ReceiveAsync(returnMovement, SecondVisit);
+
+        Assert.True(second.IsSuccess, second.Error?.Code);
+        Assert.True(second.Value.IsReturnVisit);
+        Assert.Equal("45", second.Value.RegistryNumberText);
+        Assert.Equal(first.Value.RegistryNumberId, second.Value.RegistryNumberId);
+
+        var entry = world.DepartmentEntry(world.HrId)!;
+        Assert.Equal(new[] { FirstVisit, SecondVisit }, entry.Visits.Select(visit => visit.RegistryDate).OrderBy(date => date));
+        Assert.Equal(SecondVisit, entry.RegistryDate);
+
+        var step = returnMovement.Steps.Single();
+        Assert.Equal(second.Value.RegistryVisitId, step.RegistryVisitId);
+        Assert.Equal(step.StepId, entry.Visits.Single(visit => visit.RegistryDate == SecondVisit).MovementStepId);
+    }
+
+    [Fact]
+    public async Task Receive_OnReturnWithTheSameDate_IsRefusedAndLeavesTheStepWaiting()
+    {
+        var world = new World();
+        await world.IssueCentralAsync();
+        await world.ReceiveAsync(CreateSentMovement(world), FirstVisit, "45");
+
+        var returnMovement = CreateSentMovement(world);
+        var result = await world.ReceiveAsync(returnMovement, FirstVisit);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(DomainErrors.Numbering.VisitDateDuplicate.Code, result.Error.Code);
+        Assert.Equal(DocumentMovement.StatusSent, returnMovement.StatusId);
+        Assert.Single(world.DepartmentEntry(world.HrId)!.Visits);
+    }
+
+    [Fact]
+    public async Task Receive_OnTheDateTheClerkJustRegisteredForThisStep_UsesThatVisit()
+    {
+        var world = new World();
+        await world.IssueCentralAsync();
+        var movement = CreateSentMovement(world);
+        world.UnitOfWork.UtcNow = DateTime.UtcNow.AddMinutes(1);
+        var entry = await world.RecordAsync(world.HrId, "45", FirstVisit);
+        Assert.True(entry.IsSuccess, entry.Error?.Code);
+
+        var result = await world.ReceiveAsync(movement, FirstVisit);
+
+        Assert.True(result.IsSuccess, result.Error?.Code);
+        var visit = Assert.Single(world.DepartmentEntry(world.HrId)!.Visits);
+        Assert.Equal(movement.Steps.Single().StepId, visit.MovementStepId);
+        Assert.Equal(visit.VisitId, result.Value.RegistryVisitId);
+    }
+
+    [Fact]
+    public async Task Record_WithADateAlreadyInTheRegister_ReturnsConflict()
+    {
+        var world = new World();
+        await world.IssueCentralAsync();
+        await world.RecordAsync(world.HrId, "45", FirstVisit);
+
+        var result = await world.RecordAsync(world.HrId, "45", FirstVisit);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(DomainErrors.Numbering.VisitDateDuplicate.Code, result.Error.Code);
+    }
+
+    [Fact]
+    public async Task Receive_InANewYearWithoutANumber_RequiresRegistration()
+    {
+        var world = new World();
+        await world.IssueCentralAsync();
+        await world.ReceiveAsync(CreateSentMovement(world), FirstVisit, "45");
+
+        var result = await world.ReceiveAsync(CreateSentMovement(world), NextYearVisit);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(DomainErrors.Numbering.DepartmentRegistrationRequired.Code, result.Error.Code);
+    }
+
+    [Fact]
+    public async Task Receive_InANewYearWithANumber_OpensALineForThatYear()
+    {
+        var world = new World();
+        await world.IssueCentralAsync();
+        await world.ReceiveAsync(CreateSentMovement(world), FirstVisit, "45");
+
+        var result = await world.ReceiveAsync(CreateSentMovement(world), NextYearVisit, "7");
+
+        Assert.True(result.IsSuccess, result.Error?.Code);
+        Assert.False(result.Value.IsReturnVisit);
+        Assert.Equal(
+            new[] { ("45", 2026), ("7", 2027) },
+            world.Numbers.DocumentNumbers
+                .Where(number => number.IsDepartmentEntry)
+                .Select(number => (number.OfficialNumberText, number.NumberingYear))
+                .OrderBy(line => line.NumberingYear));
+    }
+
+    [Fact]
+    public async Task Receive_WithADifferentNumberOnAnExistingLine_ReturnsConflict()
+    {
+        var world = new World();
+        await world.IssueCentralAsync();
+        await world.ReceiveAsync(CreateSentMovement(world), FirstVisit, "45");
+
+        var result = await world.ReceiveAsync(CreateSentMovement(world), SecondVisit, "46");
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(DomainErrors.Numbering.DepartmentNumberLocked.Code, result.Error.Code);
+    }
+
+    [Fact]
+    public async Task Receive_WithANumberAnotherDocumentHoldsThatYear_ReturnsConflict()
+    {
+        var world = new World();
+        await world.IssueCentralAsync();
+        await world.ReceiveAsync(CreateSentMovement(world), FirstVisit, "45");
+        var entry = world.DepartmentEntry(world.HrId)!;
+
+        var other = Document.CreateDraft(
+            "كتاب آخر", DocumentType.InternalMemoId, DocumentDirection.InternalId, world.DiwanId, world.UserId).Value;
+        world.Documents.Add(other);
+        var issued = await new IssueOfficialNumberCommandHandler(
+                world.Documents, world.Numbers, world.Registries,
+                new FakeDocumentAccessEvaluator { AllowAll = true }, world.UnitOfWork, TestClock.Instance)
+            .Handle(new IssueOfficialNumberCommand(other.DocumentId, world.UserId, NumberingYear), CancellationToken.None);
+        Assert.True(issued.IsSuccess, issued.Error?.Code);
+        var otherMovement = DocumentMovement.Create(other.DocumentId, world.DiwanId, world.HrId, world.UserId).Value;
+        world.Movements.Add(otherMovement);
+        Assert.True(otherMovement.Send(world.UserId).IsSuccess);
+
+        var sameYear = await world.ReceiveAsync(otherMovement, SecondVisit, entry.OfficialNumberText);
+        Assert.Equal(DomainErrors.Numbering.RegistryNumberTaken.Code, sameYear.Error.Code);
+
+        var otherYear = await world.ReceiveAsync(otherMovement, NextYearVisit, entry.OfficialNumberText);
+        Assert.True(otherYear.IsSuccess, otherYear.Error?.Code);
+    }
 
     private static DocumentMovement CreateSentMovement(World world)
     {

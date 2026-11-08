@@ -6,6 +6,7 @@ namespace InstitutionalDiwan.Domain.Entities.Numbering;
 public sealed class DocumentNumber : AggregateRoot<Guid>
 {
     private readonly List<DocumentNumberHistory> _history = new();
+    private readonly List<DocumentRegistryVisit> _visits = new();
 
     public Guid DocumentNumberId
     {
@@ -39,6 +40,9 @@ public sealed class DocumentNumber : AggregateRoot<Guid>
     public DateTime? RegistryDate { get; private set; }
 
     public IReadOnlyCollection<DocumentNumberHistory> History => _history.AsReadOnly();
+
+    /// <summary>Every dated arrival recorded on this department line. Empty for a central number.</summary>
+    public IReadOnlyCollection<DocumentRegistryVisit> Visits => _visits.AsReadOnly();
 
     public bool IsDepartmentEntry => ScopeId == DocumentNumberScope.DepartmentId;
 
@@ -107,7 +111,8 @@ public sealed class DocumentNumber : AggregateRoot<Guid>
         DateTime registryDate,
         Guid recordedByUserId,
         string? notes = null,
-        DateTime? utcNow = null)
+        DateTime? utcNow = null,
+        Guid? movementStepId = null)
     {
         var now = utcNow ?? DateTime.UtcNow;
         if (departmentId == Guid.Empty)
@@ -144,14 +149,68 @@ public sealed class DocumentNumber : AggregateRoot<Guid>
             registryDate,
             now));
 
+        entry._visits.Add(DocumentRegistryVisit.Create(
+            entry.DocumentNumberId, registryDate, recordedByUserId, movementStepId, notes, now));
+
         return Result.Success(entry);
     }
 
     /// <summary>
-    /// Records another arrival in a department that already registered this document. The number
-    /// stays the same — only a new date and a history line are added.
+    /// Records another arrival in a department that already registered this document in this year.
+    /// The number stays the same; a new dated visit is added. The same date cannot be used twice.
     /// </summary>
-    public Result ReRegisterInDepartment(Guid actorUserId, DateTime registryDate, string? notes = null, DateTime? utcNow = null)
+    public Result<DocumentRegistryVisit> RecordVisit(
+        Guid actorUserId,
+        DateTime registryDate,
+        Guid? movementStepId = null,
+        string? notes = null,
+        DateTime? utcNow = null)
+    {
+        var guard = EnsureCanAddVisit(registryDate);
+        if (guard.IsFailure)
+            return Result.Failure<DocumentRegistryVisit>(guard.Error);
+
+        if (FindVisit(registryDate) is not null)
+            return Result.Failure<DocumentRegistryVisit>(DomainErrors.Numbering.VisitDateDuplicate);
+
+        return Result.Success(AddVisit(actorUserId, registryDate, movementStepId, notes, utcNow ?? DateTime.UtcNow));
+    }
+
+    /// <summary>
+    /// Records the visit for a receipt. A visit on the same date that the clerk wrote while this step
+    /// was on its way (at or after <paramref name="stepSentAt"/>) and that no receipt has used yet is
+    /// the same arrival, so it is linked to the step instead of being rejected as a duplicate.
+    /// </summary>
+    public Result<DocumentRegistryVisit> RecordReceiptVisit(
+        Guid actorUserId,
+        DateTime registryDate,
+        Guid movementStepId,
+        DateTime? stepSentAt,
+        string? notes = null,
+        DateTime? utcNow = null)
+    {
+        var guard = EnsureCanAddVisit(registryDate);
+        if (guard.IsFailure)
+            return Result.Failure<DocumentRegistryVisit>(guard.Error);
+
+        var sameDate = FindVisit(registryDate);
+        if (sameDate is null)
+            return Result.Success(AddVisit(actorUserId, registryDate, movementStepId, notes, utcNow ?? DateTime.UtcNow));
+
+        var writtenForThisStep = sameDate.MovementStepId is null
+            && stepSentAt is { } sentAt
+            && sameDate.RecordedAt >= sentAt;
+        if (!writtenForThisStep)
+            return Result.Failure<DocumentRegistryVisit>(DomainErrors.Numbering.VisitDateDuplicate);
+
+        sameDate.LinkToStep(movementStepId);
+        return Result.Success(sameDate);
+    }
+
+    private DocumentRegistryVisit? FindVisit(DateTime registryDate) =>
+        _visits.FirstOrDefault(visit => visit.RegistryDate == registryDate.Date);
+
+    private Result EnsureCanAddVisit(DateTime registryDate)
     {
         if (!IsDepartmentEntry)
             return Result.Failure(DomainErrors.Numbering.DepartmentScopeMismatch);
@@ -162,16 +221,31 @@ public sealed class DocumentNumber : AggregateRoot<Guid>
         if (!IsValidRegistryDate(registryDate))
             return Result.Failure(DomainErrors.Numbering.RegistryDateInvalid);
 
-        RegistryDate = registryDate;
+        return registryDate.Year == NumberingYear
+            ? Result.Success()
+            : Result.Failure(DomainErrors.Numbering.VisitYearMismatch);
+    }
+
+    private DocumentRegistryVisit AddVisit(
+        Guid actorUserId, DateTime registryDate, Guid? movementStepId, string? notes, DateTime now)
+    {
+        var visit = DocumentRegistryVisit.Create(
+            DocumentNumberId, registryDate, actorUserId, movementStepId, notes, now);
+        _visits.Add(visit);
+
+        // RegistryDate is the latest arrival, so a back-dated visit must not move it backwards.
+        if (RegistryDate is null || registryDate >= RegistryDate)
+            RegistryDate = registryDate;
+
         _history.Add(DocumentNumberHistory.Create(
             DocumentNumberId,
             DocumentNumberEventType.ReRegisteredInDepartmentId,
             actorUserId,
             notes,
             registryDate,
-            utcNow));
+            now));
 
-        return Result.Success();
+        return visit;
     }
 
     public Result Cancel(Guid actorUserId, string? reason, DateTime? utcNow = null)

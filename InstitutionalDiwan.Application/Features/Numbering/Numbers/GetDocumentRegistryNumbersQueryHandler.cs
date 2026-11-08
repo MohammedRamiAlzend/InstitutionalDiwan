@@ -69,6 +69,16 @@ internal sealed class GetDocumentRegistryNumbersQueryHandler
                         history.OccurredAt,
                         history.ActorUserId,
                         history.Notes))
+                    .ToList(),
+                number.Visits
+                    .OrderBy(visit => visit.RegistryDate)
+                    .Select(visit => new DepartmentRegistryVisitResponse(
+                        visit.VisitId,
+                        visit.RegistryDate,
+                        visit.MovementStepId,
+                        visit.RecordedByUserId,
+                        visit.RecordedAt,
+                        visit.Notes))
                     .ToList()))
             .ToList();
 

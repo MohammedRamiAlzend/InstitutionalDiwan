@@ -12,13 +12,16 @@ internal sealed class ListDocumentMovementsQueryHandler
 {
     private readonly IDocumentMovementRepository _movementRepository;
     private readonly IDocumentRepository _documentRepository;
+    private readonly IDocumentNumberRepository _documentNumberRepository;
     private readonly IDocumentAccessEvaluator _documentAccessEvaluator;
 
     public ListDocumentMovementsQueryHandler(
         IDocumentMovementRepository movementRepository,
         IDocumentRepository documentRepository,
+        IDocumentNumberRepository documentNumberRepository,
         IDocumentAccessEvaluator documentAccessEvaluator)
     {
+        _documentNumberRepository = documentNumberRepository;
         _movementRepository = movementRepository;
         _documentRepository = documentRepository;
         _documentAccessEvaluator = documentAccessEvaluator;
@@ -43,7 +46,9 @@ internal sealed class ListDocumentMovementsQueryHandler
         var movements = await _movementRepository.ListByDocumentAsync(
             request.DocumentId, cancellationToken);
 
+        var numbers = await _documentNumberRepository.ListByDocumentAsync(request.DocumentId, cancellationToken);
+
         return Result.Success<IReadOnlyCollection<MovementResponse>>(
-            movements.Select(MovementResponse.From).ToList());
+            movements.Select(movement => MovementResponse.From(movement).WithRegistry(numbers)).ToList());
     }
 }

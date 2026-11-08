@@ -50,8 +50,8 @@ public sealed class DocumentNumberConfiguration : IEntityTypeConfiguration<Docum
             .HasFilter("[ScopeId] = 2")
             .HasDatabaseName("UX_DOC_NUMBERS_DEPT_TEXT_YEAR");
 
-        // One register line per document per department; later arrivals add history, not rows.
-        builder.HasIndex(x => new { x.DocumentId, x.DepartmentId })
+        // One register line per document per department per year; later arrivals in the year add visits.
+        builder.HasIndex(x => new { x.DocumentId, x.DepartmentId, x.NumberingYear })
             .IsUnique()
             .HasFilter("[DepartmentId] IS NOT NULL")
             .HasDatabaseName("UX_DOC_NUMBERS_DOC_DEPT");
@@ -73,6 +73,37 @@ public sealed class DocumentNumberConfiguration : IEntityTypeConfiguration<Docum
 
         builder.Navigation(x => x.History)
             .UsePropertyAccessMode(PropertyAccessMode.Field);
+
+        builder.HasMany(x => x.Visits)
+            .WithOne()
+            .HasForeignKey(x => x.DocumentNumberId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Navigation(x => x.Visits)
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
+    }
+}
+
+public sealed class DocumentRegistryVisitConfiguration : IEntityTypeConfiguration<DocumentRegistryVisit>
+{
+    public void Configure(EntityTypeBuilder<DocumentRegistryVisit> builder)
+    {
+        builder.ToTable("DOCUMENT_REGISTRY_VISITS");
+        builder.Ignore(x => x.Id);
+
+        builder.HasKey(x => x.VisitId);
+        builder.Property(x => x.VisitId).HasColumnName("VisitId").ValueGeneratedNever();
+        builder.Property(x => x.DocumentNumberId).HasColumnName("DocumentNumberId").IsRequired();
+        builder.Property(x => x.RegistryDate).HasColumnName("RegistryDate").HasColumnType("date").IsRequired();
+        builder.Property(x => x.MovementStepId).HasColumnName("MovementStepId");
+        builder.Property(x => x.RecordedByUserId).HasColumnName("RecordedByUserId").IsRequired();
+        builder.Property(x => x.RecordedAt).HasColumnName("RecordedAt").HasColumnType("datetime2(3)").IsRequired();
+        builder.Property(x => x.Notes).HasColumnName("Notes").HasMaxLength(500);
+
+        // The same date can only be written once on a register line.
+        builder.HasIndex(x => new { x.DocumentNumberId, x.RegistryDate })
+            .IsUnique()
+            .HasDatabaseName("UX_DOC_REG_VISITS_NUMBER_DATE");
     }
 }
 

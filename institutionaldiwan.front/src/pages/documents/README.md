@@ -124,6 +124,7 @@ mounted dialog.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-08 | Claude | Movements tab shows the register number and visit date per step; numbers tab lists each line's arrival dates. |
 | 2026-11-05 | Claude | The overview tab and the page header badge no longer show direction, confidentiality or priority (suspended). |
 | 2026-11-04 | Claude | User, department and employee references now render as «name + short id» (`UserLabel` / `DepartmentLabel` / `EmployeeLabel`) instead of a bare id. |
 | 2026-11-03 | Claude | Added the «الحقول» tab for the dynamic document fields. |

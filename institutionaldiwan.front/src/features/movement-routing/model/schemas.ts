@@ -30,6 +30,16 @@ export const movementNotesSchema = z.object({
 
 export type MovementNotesFormValues = z.infer<typeof movementNotesSchema>
 
+export const receiveMovementSchema = z.object({
+  registryDate: z
+    .string()
+    .regex(OPTIONAL_DATE_PATTERN, 'تاريخ التسجيل مطلوب.'),
+  registryNumberText: z.string().trim().max(100, 'رقم سجل الدائرة يتجاوز الحد الأقصى للأحرف.'),
+  notes: z.string().trim().max(1000, 'الملاحظات تتجاوز الحد الأقصى للأحرف.'),
+})
+
+export type ReceiveMovementFormValues = z.infer<typeof receiveMovementSchema>
+
 export const movementReasonSchema = z.object({
   reason: z
     .string()

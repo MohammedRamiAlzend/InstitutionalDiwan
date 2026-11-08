@@ -1,9 +1,10 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { Controller } from 'react-hook-form'
 import { useDraftForm } from '@/shared/lib'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
 import { useDepartmentOptions } from '@/entities/department'
+import { findDepartmentEntry, useDocumentRegistryNumbers } from '@/entities/document'
 import { useNumberingRegistries } from '@/entities/numbering-registry'
 import { useMyPrimaryDepartmentId } from '@/entities/user'
 import { toArabicErrorMessage } from '@/shared/api'
@@ -30,8 +31,8 @@ interface DepartmentRegistrationDialogProps {
 /**
  * Records the number and date the caller's own department wrote in one of its registers. The
  * department is fixed (a department can only number in its own register); when it has several
- * active registers the clerk picks the one the number was written in. Repeating the same number
- * for the same department appends a dated registration event.
+ * active registers the clerk picks the one the number was written in. When the department already
+ * has a number for the document in the date's year, the number is locked and only a new date is added.
  */
 export function DepartmentRegistrationDialog({
   documentId,
@@ -50,6 +51,7 @@ export function DepartmentRegistrationDialog({
     handleSubmit,
     setValue,
     setError,
+    watch,
     formState: { errors },
     draft,
   } = useDraftForm<DepartmentRegistrationFormValues>({ formId: `department-registration:${documentId}` }, {
@@ -66,6 +68,25 @@ export function DepartmentRegistrationDialog({
   useEffect(() => {
     if (ownDepartmentId) setValue('departmentId', ownDepartmentId)
   }, [ownDepartmentId, setValue])
+
+  const entriesQuery = useDocumentRegistryNumbers(documentId, { enabled: open })
+  const existingLine = findDepartmentEntry(
+    entriesQuery.data,
+    ownDepartmentId,
+    Number(watch('registryDate').slice(0, 4)),
+  )
+  const lockedNumber = existingLine?.registryNumberText
+  const hadLockedNumber = useRef(false)
+
+  // A locked number fills the field; moving the date to a year without a line empties it again.
+  useEffect(() => {
+    if (lockedNumber) {
+      setValue('registryNumberText', lockedNumber, { shouldValidate: true })
+    } else if (hadLockedNumber.current) {
+      setValue('registryNumberText', '')
+    }
+    hadLockedNumber.current = Boolean(lockedNumber)
+  }, [lockedNumber, setValue])
 
   const ownDepartment = (departmentsQuery.data ?? []).find(
     (department) => department.departmentId === ownDepartmentId,
@@ -118,7 +139,7 @@ export function DepartmentRegistrationDialog({
       open={open}
       onOpenChange={onOpenChange}
       title="تسجيل رقم الدائرة"
-      description="يُسجَّل الرقم الذي كتبته دائرتك في سجلها الخاص مع تاريخه، ولا يتغيّر رقم الديوان المركزي. لا يمكن التسجيل إلا باسم دائرتك. تكرار التسجيل لنفس الدائرة يضيف حدثًا مؤرخًا."
+      description="يُسجَّل الرقم الذي كتبته دائرتك في سجلها الخاص مع تاريخه، ولا يتغيّر رقم الديوان المركزي. لا يمكن التسجيل إلا باسم دائرتك. للوثيقة رقم واحد في السنة، وكل وصول جديد يضيف تاريخًا فقط."
       size="lg"
       footer={
         <>
@@ -208,9 +229,15 @@ export function DepartmentRegistrationDialog({
             className="font-mono"
             placeholder="FIN-001/2026"
             disabled={mutation.isPending}
+            readOnly={Boolean(lockedNumber)}
             invalid={Boolean(errors.registryNumberText)}
             {...register('registryNumberText')}
           />
+          {lockedNumber && (
+            <p className="text-xs text-muted">
+              لدائرتك رقم لهذه الوثيقة في هذه السنة؛ سيُضاف تاريخ جديد فقط.
+            </p>
+          )}
         </FormField>
 
         <FormField

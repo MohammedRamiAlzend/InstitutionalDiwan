@@ -13,6 +13,12 @@ export interface MovementNotesRequest {
   notes?: string | null
 }
 
+/** `POST /api/movements/{id}/receive` — the number is needed only for a department's first arrival in a year. */
+export interface ReceiveMovementRequest extends MovementNotesRequest {
+  registryDate: string
+  registryNumberText?: string | null
+}
+
 /** Required reason carried by reject/return/cancel. */
 export interface MovementReasonRequest {
   reason: string

@@ -97,6 +97,7 @@ together with the `DocumentNumber` id it was dated by.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-08 | Claude | Receive writes the dated register visit itself: it reuses the department number for the date's year or takes a new number, and step responses carry the register number and date. |
 | 2026-11-03 | Claude | Added custody rules to the workflow commands, as the project owner chose: opening requires `DOWNLOAD` on the document; send and cancel require scope over the current step's sender; receive, complete, reject, return and redirect the receiver; close either side. Redirecting a draft belongs to the sender, because it has not left them. |
 | 2026-11-03 | Claude | Added document-level `VIEW` access to the movement reads, and hid the title, official number and instructions of queue rows the caller cannot view. |
 | 2026-10-25 | opencode | Closed the Module 05 gaps: added `CentralDiwanRouting` to open/send/redirect, routed rejections back to the Central Diwan as a new sent step, added `MovementStepGuard` for current-step validation, and added the planned step/department/document route aliases. |

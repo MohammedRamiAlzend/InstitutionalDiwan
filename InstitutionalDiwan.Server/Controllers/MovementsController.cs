@@ -245,6 +245,8 @@ public sealed class MovementsController : ControllerBase
     /// The request payload with the following fields:
     /// <list type="bullet">
     /// <item><term>notes</term><description>Notes (string, optional). Example: <c>Reviewed and forwarded to the responsible department.</c>.</description></item>
+    /// <item><term>registryDate</term><description>Date written in the department register (date, optional, today when omitted). Example: <c>2026-11-08</c>.</description></item>
+    /// <item><term>registryNumberText</term><description>Department register number, required only when the department has no number for this document in that year (string, optional). Example: <c>1457/ص</c>.</description></item>
     /// </list>
     /// </param>
     /// <param name="cancellationToken">Request cancellation token (optional).</param>
@@ -256,7 +258,7 @@ public sealed class MovementsController : ControllerBase
     /// is missing — record it first.</response>
     [HttpPost("{movementId:guid}/receive")]
     [EndpointSummary("Receives the movement's current step at the destination department.")]
-    [EndpointDescription("Receives the movement's current step at the destination department. Requires the DOCUMENT_EDIT permission and a scope covering the receiving department of the current step. Responses: 200 (The recorded receipt.), 401 (The token is missing, expired, or invalid.), 403 (The token lacks the DOCUMENT_EDIT permission, or the caller's scope does not cover the receiving department.), 404 (No movement with that id exists.), 409 (The step is not awaiting receipt, or the department's register entry is missing — record it first.)")]
+    [EndpointDescription("Receives the movement's current step at the destination department and writes a dated visit in that department's register: an existing number for the year of registryDate is reused, otherwise registryNumberText is required. Requires the DOCUMENT_EDIT permission and a scope covering the receiving department of the current step. Responses: 200 (The recorded receipt.), 401 (The token is missing, expired, or invalid.), 403 (The token lacks the DOCUMENT_EDIT permission, or the caller's scope does not cover the receiving department.), 404 (No movement with that id exists.), 409 (The step is not awaiting receipt, or the department's register entry is missing — record it first.)")]
     [Authorize(Policy = Permissions.DocumentEdit)]
     [ProducesResponseType<MovementStepReceiptResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
@@ -272,7 +274,7 @@ public sealed class MovementsController : ControllerBase
             return Unauthorized();
 
         var result = await _sender.Send(
-            new ReceiveDocumentCommand(movementId, userId, request.Notes), cancellationToken);
+            new ReceiveDocumentCommand(movementId, userId, request.Notes, null, request.RegistryDate, request.RegistryNumberText), cancellationToken);
 
         return result.ToActionResult();
     }
@@ -582,6 +584,8 @@ public sealed class MovementsController : ControllerBase
     /// The request payload with the following fields:
     /// <list type="bullet">
     /// <item><term>notes</term><description>Notes (string, optional). Example: <c>تم الاستلام</c>.</description></item>
+    /// <item><term>registryDate</term><description>Date written in the department register (date, optional, today when omitted). Example: <c>2026-11-08</c>.</description></item>
+    /// <item><term>registryNumberText</term><description>Department register number, required only when the department has no number for this document in that year (string, optional). Example: <c>1457/ص</c>.</description></item>
     /// </list>
     /// </param>
     /// <param name="cancellationToken">Request cancellation token (optional).</param>
@@ -592,7 +596,7 @@ public sealed class MovementsController : ControllerBase
     /// <response code="409">The step is not current or awaiting receipt, or the department register entry is missing.</response>
     [HttpPost("{movementId:guid}/steps/{stepId:guid}/receive")]
     [EndpointSummary("Receives a named step when it is the movement's current step.")]
-    [EndpointDescription("Receives a named step when it is the movement's current step. The destination department must first record its own register number. Requires the DOCUMENT_EDIT permission and a scope covering the receiving department of the current step. Responses: 200 (The recorded receipt.), 401 (The token is missing, expired, or invalid.), 403 (The token lacks the DOCUMENT_EDIT permission, or the caller's scope does not cover the receiving department.), 404 (No movement with that id exists.), 409 (The step is not current or awaiting receipt, or the department register entry is missing.)")]
+    [EndpointDescription("Receives a named step when it is the movement's current step. Writes a dated visit in the destination department's register: an existing number for the year of registryDate is reused, otherwise registryNumberText is required. Requires the DOCUMENT_EDIT permission and a scope covering the receiving department of the current step. Responses: 200 (The recorded receipt.), 401 (The token is missing, expired, or invalid.), 403 (The token lacks the DOCUMENT_EDIT permission, or the caller's scope does not cover the receiving department.), 404 (No movement with that id exists.), 409 (The step is not current or awaiting receipt, or the department register entry is missing.)")]
     [Authorize(Policy = Permissions.DocumentEdit)]
     [ProducesResponseType<MovementStepReceiptResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
@@ -609,7 +613,7 @@ public sealed class MovementsController : ControllerBase
             return Unauthorized();
 
         var result = await _sender.Send(
-            new ReceiveDocumentCommand(movementId, userId, request.Notes, stepId), cancellationToken);
+            new ReceiveDocumentCommand(movementId, userId, request.Notes, stepId, request.RegistryDate, request.RegistryNumberText), cancellationToken);
         return result.ToActionResult();
     }
 

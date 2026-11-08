@@ -424,9 +424,20 @@ export function DocumentNumbersTab({
                     </span>
                   )}
                   <span className="text-xs text-muted">
-                    {line.registrations.length} تسجيل
+                    {line.visits.length} زيارة
                   </span>
                 </div>
+
+                {line.visits.length > 0 && (
+                  <div className="flex flex-wrap items-center gap-1.5 text-xs">
+                    <span className="text-muted">تواريخ الوصول:</span>
+                    {line.visits.map((visit) => (
+                      <Badge key={visit.visitId} variant="outline">
+                        <span dir="ltr">{formatDate(visit.registryDate)}</span>
+                      </Badge>
+                    ))}
+                  </div>
+                )}
 
                 {line.registrations.length > 0 && (
                   <ul className="flex flex-col gap-1.5 border-s-2 border-border ps-3">

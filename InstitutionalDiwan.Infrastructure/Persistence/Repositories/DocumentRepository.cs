@@ -27,6 +27,9 @@ internal sealed class DocumentRepository : IDocumentRepository
         _context.Documents
             .Include(document => document.Numbers)
                 .ThenInclude(number => number.History)
+            .Include(document => document.Numbers)
+                .ThenInclude(number => number.Visits)
+            .AsSplitQuery()
             .FirstOrDefaultAsync(document => document.DocumentId == documentId, cancellationToken);
 
     public async Task<PagedList<Document>> ListPagedAsync(

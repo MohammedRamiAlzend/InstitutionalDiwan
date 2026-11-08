@@ -223,7 +223,7 @@ Each version stores a **64-char hex SHA-256**. Max upload ~50 MB (+ multipart ov
 | `POST` | `.../numbers/{documentNumberId}/replace` | `NUMBERING_MANAGE` | + `DOWNLOAD` access. |
 | `POST` | `.../numbers/department-registration` | `NUMBERING_MANAGE` | Body `{ departmentId, registryNumberText, registryDate, notes?, registryId? }`. `departmentId` must be the caller's own primary department (else 403 `Numbering.DepartmentRegistrationOwnDepartmentOnly`); `registryId` picks one of that department's active registers (404 `Numbering.RegistryNotFound`, 409 `Numbering.DepartmentRegistryMismatch`), omitted = best match. |
 
-`department-registration` must exist before `receive` on a movement is allowed.
+A department has one number per document per year (`DepartmentNumberLocked` if a different one is sent); each arrival adds a dated entry in `visits[]` on `registry-entries`, and a repeated date returns 409 `Numbering.VisitDateDuplicate`. `receive` writes the visit itself, so `department-registration` is only needed to register without receiving.
 
 ### Numbering registries — `/api/numbering/registries`
 
@@ -245,7 +245,7 @@ Each version stores a **64-char hex SHA-256**. Max upload ~50 MB (+ multipart ov
 | `GET` | `/api/movements/by-document/{documentId}` | `DOCUMENT_VIEW` | + `VIEW` access. |
 | `POST` | `/api/movements` | `DOCUMENT_EDIT` | + `DOWNLOAD` access. |
 | `POST` | `/api/movements/{movementId}/send` | `DOCUMENT_EDIT` | Custody: scope covers the current step's sender; otherwise 403 `Movements.DepartmentOutOfScope`. |
-| `POST` | `/api/movements/{movementId}/receive` | `DOCUMENT_EDIT` | Custody: the current step's receiver. |
+| `POST` | `/api/movements/{movementId}/receive` | `DOCUMENT_EDIT` | Custody: the current step's receiver. Body `{ notes?, registryDate?, registryNumberText? }`; the number is required only when the department has none for the document in that year (409 `Numbering.DepartmentRegistrationRequired`). |
 | `POST` | `/api/movements/{movementId}/complete` | `DOCUMENT_EDIT` | Custody: the receiver. |
 | `POST` | `/api/movements/{movementId}/reject` | `DOCUMENT_EDIT` | Custody: the receiver. |
 | `POST` | `/api/movements/{movementId}/return` | `DOCUMENT_EDIT` | Custody: the receiver. |

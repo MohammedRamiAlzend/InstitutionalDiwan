@@ -1,8 +1,5 @@
-using InstitutionalDiwan.Application.Abstractions.Authorization;
 using InstitutionalDiwan.Application.Abstractions.Messaging;
-using InstitutionalDiwan.Application.Features.Numbering;
 using InstitutionalDiwan.Domain.Common;
-using InstitutionalDiwan.Domain.Entities.Numbering;
 using InstitutionalDiwan.Domain.Errors;
 using InstitutionalDiwan.Domain.Repositories;
 
@@ -12,46 +9,17 @@ internal sealed class RecordDepartmentRegistrationCommandHandler
     : ICommandHandler<RecordDepartmentRegistrationCommand, DocumentNumberResponse>
 {
     private readonly IDocumentRepository _documentRepository;
-    private readonly IDocumentNumberRepository _documentNumberRepository;
-    private readonly IDepartmentRepository _departmentRepository;
-    private readonly INumberingRegistryRepository _numberingRegistryRepository;
-    private readonly IDepartmentScopeEvaluator _departmentScopeEvaluator;
+    private readonly DepartmentRegistrationService _registrationService;
     private readonly IUnitOfWork _unitOfWork;
 
     public RecordDepartmentRegistrationCommandHandler(
         IDocumentRepository documentRepository,
-        IDocumentNumberRepository documentNumberRepository,
-        IDepartmentRepository departmentRepository,
-        INumberingRegistryRepository numberingRegistryRepository,
-        IDepartmentScopeEvaluator departmentScopeEvaluator,
+        DepartmentRegistrationService registrationService,
         IUnitOfWork unitOfWork)
     {
         _documentRepository = documentRepository;
-        _documentNumberRepository = documentNumberRepository;
-        _departmentRepository = departmentRepository;
-        _numberingRegistryRepository = numberingRegistryRepository;
-        _departmentScopeEvaluator = departmentScopeEvaluator;
+        _registrationService = registrationService;
         _unitOfWork = unitOfWork;
-    }
-
-    private async Task<Result<NumberingRegistry>> ResolveRegistryAsync(
-        RecordDepartmentRegistrationCommand request,
-        CancellationToken cancellationToken)
-    {
-        if (request.RegistryId is not { } registryId)
-        {
-            return await NumberingRegistryResolver.RequireDepartmentRegistryAsync(
-                _numberingRegistryRepository, request.DepartmentId, cancellationToken);
-        }
-
-        var chosen = await _numberingRegistryRepository.GetByIdAsync(registryId, cancellationToken);
-        if (chosen is null)
-            return Result.Failure<NumberingRegistry>(DomainErrors.Numbering.RegistryNotFound);
-
-        if (!chosen.IsActive || chosen.DepartmentId != request.DepartmentId)
-            return Result.Failure<NumberingRegistry>(DomainErrors.Numbering.DepartmentRegistryMismatch);
-
-        return Result.Success(chosen);
     }
 
     public async Task<Result<DocumentNumberResponse>> Handle(
@@ -62,77 +30,47 @@ internal sealed class RecordDepartmentRegistrationCommandHandler
         if (document is null)
             return Result.Failure<DocumentNumberResponse>(DomainErrors.Correspondence.DocumentNotFound);
 
-        if (!await _departmentScopeEvaluator.CanAccessDepartmentAsync(request.DepartmentId, cancellationToken))
-            return Result.Failure<DocumentNumberResponse>(DomainErrors.Correspondence.DepartmentOutOfScope);
+        var canRegister = await _registrationService.EnsureCanRegisterAsync(
+            document, request.DepartmentId, cancellationToken);
+        if (canRegister.IsFailure)
+            return Result.Failure<DocumentNumberResponse>(canRegister.Error);
 
-        if (!await _departmentScopeEvaluator.IsPrimaryDepartmentAsync(request.DepartmentId, cancellationToken))
-            return Result.Failure<DocumentNumberResponse>(DomainErrors.Numbering.DepartmentRegistrationOwnDepartmentOnly);
-
-        var notArchived = document.EnsureNotArchived();
-        if (notArchived.IsFailure)
-            return Result.Failure<DocumentNumberResponse>(notArchived.Error);
-
-        if (await _departmentRepository.GetByIdAsync(request.DepartmentId, cancellationToken) is null)
-            return Result.Failure<DocumentNumberResponse>(DomainErrors.Department.NotFound);
-
-        var registryResult = await ResolveRegistryAsync(request, cancellationToken);
-
+        var registryResult = await _registrationService.ResolveRegistryAsync(
+            request.DepartmentId, request.RegistryId, cancellationToken);
         if (registryResult.IsFailure)
             return Result.Failure<DocumentNumberResponse>(registryResult.Error);
 
-        var registry = registryResult.Value;
         var numberText = request.RegistryNumberText?.Trim() ?? string.Empty;
-        var numberingYear = request.RegistryDate.Year;
-
-        var existing = document.FindDepartmentNumber(request.DepartmentId);
+        var existing = document.FindDepartmentNumber(request.DepartmentId, request.RegistryDate.Year);
 
         if (existing is not null)
         {
             if (!string.Equals(existing.OfficialNumberText, numberText, StringComparison.OrdinalIgnoreCase))
                 return Result.Failure<DocumentNumberResponse>(DomainErrors.Numbering.DepartmentNumberLocked);
 
-            var reRegister = existing.ReRegisterInDepartment(
-                request.UserId, request.RegistryDate, request.Notes, _unitOfWork.UtcNow);
-
-            if (reRegister.IsFailure)
-                return Result.Failure<DocumentNumberResponse>(reRegister.Error);
+            var visit = existing.RecordVisit(
+                request.UserId, request.RegistryDate, notes: request.Notes, utcNow: _unitOfWork.UtcNow);
+            if (visit.IsFailure)
+                return Result.Failure<DocumentNumberResponse>(visit.Error);
 
             await _unitOfWork.SaveChangesAsync(cancellationToken);
             return DocumentNumberResponse.From(existing);
         }
 
-        if (document.ActiveOfficialNumberId is null)
-            return Result.Failure<DocumentNumberResponse>(DomainErrors.Numbering.DocumentNotRegistered);
-
-        if (string.IsNullOrWhiteSpace(numberText))
-            return Result.Failure<DocumentNumberResponse>(DomainErrors.Numbering.DepartmentNumberRequired);
-
-        if (await _documentNumberRepository.ExistsInScopeAsync(
-                DocumentNumberScope.DepartmentId, registry.RegistryId, numberText, numberingYear, cancellationToken))
-        {
-            return Result.Failure<DocumentNumberResponse>(DomainErrors.Numbering.RegistryNumberTaken);
-        }
-
-        var entryResult = DocumentNumber.CreateDepartmentEntry(
-            document.DocumentId,
+        var entryResult = await _registrationService.CreateEntryAsync(
+            document,
             request.DepartmentId,
-            registry.RegistryId,
+            registryResult.Value,
             numberText,
             request.RegistryDate,
             request.UserId,
             request.Notes,
-            utcNow: _unitOfWork.UtcNow);
-
+            movementStepId: null,
+            cancellationToken);
         if (entryResult.IsFailure)
             return Result.Failure<DocumentNumberResponse>(entryResult.Error);
 
-        var attachResult = document.AddDepartmentNumber(entryResult.Value, _unitOfWork.UtcNow);
-        if (attachResult.IsFailure)
-            return Result.Failure<DocumentNumberResponse>(attachResult.Error);
-
-        _documentNumberRepository.Add(entryResult.Value);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
-
         return DocumentNumberResponse.From(entryResult.Value);
     }
 }

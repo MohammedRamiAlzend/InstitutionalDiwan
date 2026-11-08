@@ -122,7 +122,12 @@ public sealed class DocumentMovement : AggregateRoot<Guid>
     /// line the destination department wrote for this document, so a department can never take
     /// custody without numbering it in its own register.
     /// </summary>
-    public Result ReceiveStep(Guid actorUserId, Guid departmentRegistryNumberId, string? notes = null, DateTime? utcNow = null)
+    public Result ReceiveStep(
+        Guid actorUserId,
+        Guid departmentRegistryNumberId,
+        string? notes = null,
+        DateTime? utcNow = null,
+        Guid? registryVisitId = null)
     {
         var now = utcNow ?? DateTime.UtcNow;
         if (StatusId != StatusSent)
@@ -135,7 +140,7 @@ public sealed class DocumentMovement : AggregateRoot<Guid>
         if (step is null)
             return Result.Failure(DomainErrors.Movements.NoActiveStep);
 
-        step.MarkReceived(actorUserId, departmentRegistryNumberId, now);
+        step.MarkReceived(actorUserId, departmentRegistryNumberId, registryVisitId, now);
         StatusId = StatusReceived;
         AppendEvent(CurrentStepNo, MovementEventType.ReceivedId, actorUserId, notes, now);
         RaiseDomainEvent(new MovementReceivedEvent(MovementId, DocumentId, CurrentStepNo, actorUserId));

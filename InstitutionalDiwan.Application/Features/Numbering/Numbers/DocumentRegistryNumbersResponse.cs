@@ -20,7 +20,17 @@ public sealed record DepartmentRegistryNumberResponse(
     int NumberingYear,
     DateTime? RegistryDate,
     int StatusId,
-    IReadOnlyCollection<DepartmentRegistrationEventResponse> Registrations);
+    IReadOnlyCollection<DepartmentRegistrationEventResponse> Registrations,
+    IReadOnlyCollection<DepartmentRegistryVisitResponse> Visits);
+
+/// <summary>One dated arrival on a department register line, and the movement step that used it.</summary>
+public sealed record DepartmentRegistryVisitResponse(
+    Guid VisitId,
+    DateTime RegistryDate,
+    Guid? MovementStepId,
+    Guid RecordedByUserId,
+    DateTime RecordedAt,
+    string? Notes);
 
 /// <summary>A single visit to a department register, dated the way that department dated it.</summary>
 public sealed record DepartmentRegistrationEventResponse(

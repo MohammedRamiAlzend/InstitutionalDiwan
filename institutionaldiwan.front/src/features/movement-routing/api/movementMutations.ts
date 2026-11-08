@@ -10,6 +10,7 @@ import type {
   CreateMovementRequest,
   MovementNotesRequest,
   MovementReasonRequest,
+  ReceiveMovementRequest,
   RedirectMovementRequest,
 } from '../model/types'
 
@@ -55,12 +56,12 @@ export function useSendMovementMutation() {
   })
 }
 
-/** The receipt carries the destination department's register number. */
+/** The receipt writes the dated visit in the destination department's register. */
 export function useReceiveMovementMutation() {
   const invalidate = useMovementInvalidation()
 
   return useMutation({
-    mutationFn: ({ movementId, ...body }: { movementId: string } & MovementNotesRequest) =>
+    mutationFn: ({ movementId, ...body }: { movementId: string } & ReceiveMovementRequest) =>
       postMovementAction<MovementReceiptResponse>(movementId, 'receive', body),
     onSuccess: invalidate,
   })

@@ -272,14 +272,16 @@ public sealed class Document : AggregateRoot<Guid>
         return Result.Success();
     }
 
-    /// <summary>The department-register line for <paramref name="departmentId"/>, if any.</summary>
-    public DocumentNumber? FindDepartmentNumber(Guid departmentId) =>
+    /// <summary>The department-register line for <paramref name="departmentId"/> in <paramref name="year"/>, if any.</summary>
+    public DocumentNumber? FindDepartmentNumber(Guid departmentId, int year) =>
         _numbers.FirstOrDefault(number =>
-            number.IsDepartmentEntry && number.DepartmentId == departmentId);
+            number.IsDepartmentEntry
+            && number.DepartmentId == departmentId
+            && number.NumberingYear == year);
 
     /// <summary>
-    /// Attaches a department-register entry to this document. One line per department: the second
-    /// and later arrivals reuse the existing number and only add a dated history event.
+    /// Attaches a department-register entry to this document. One line per department per year:
+    /// later arrivals in that year reuse the number and only add a dated visit.
     /// </summary>
     public Result AddDepartmentNumber(DocumentNumber number, DateTime? utcNow = null)
     {
@@ -294,7 +296,9 @@ public sealed class Document : AggregateRoot<Guid>
             return Result.Failure(DomainErrors.Numbering.DepartmentScopeMismatch);
 
         if (_numbers.Any(existing =>
-                existing.IsDepartmentEntry && existing.DepartmentId == number.DepartmentId))
+                existing.IsDepartmentEntry
+                && existing.DepartmentId == number.DepartmentId
+                && existing.NumberingYear == number.NumberingYear))
         {
             return Result.Failure(DomainErrors.Numbering.DepartmentNumberLocked);
         }

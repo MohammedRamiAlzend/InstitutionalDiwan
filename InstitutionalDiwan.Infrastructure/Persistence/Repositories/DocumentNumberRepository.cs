@@ -66,6 +66,8 @@ internal sealed class DocumentNumberRepository : IDocumentNumberRepository
         CancellationToken cancellationToken = default) =>
         await _context.DocumentNumbers
             .Include(number => number.History)
+            .Include(number => number.Visits)
+            .AsSplitQuery()
             .Where(number => number.DocumentId == documentId)
             .OrderBy(number => number.IssuedAt)
             .ToListAsync(cancellationToken);

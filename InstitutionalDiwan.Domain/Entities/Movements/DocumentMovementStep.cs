@@ -27,6 +27,8 @@ public sealed class DocumentMovementStep : Entity<Guid>
     public Guid? ReceivedByUserId { get; private set; }
     // FK → DocumentNumber.DocumentNumberId — the department register line written on receipt
     public Guid? RegistryNumberId { get; private set; }
+    // FK → DocumentRegistryVisit.VisitId — the dated visit written on receipt
+    public Guid? RegistryVisitId { get; private set; }
     public DateTime? CompletedAt { get; private set; }
     public DateTime? DueDate { get; private set; }
 
@@ -63,12 +65,13 @@ public sealed class DocumentMovementStep : Entity<Guid>
         SentAt = utcNow ?? DateTime.UtcNow;
     }
 
-    internal void MarkReceived(Guid receivedByUserId, Guid registryNumberId, DateTime? utcNow = null)
+    internal void MarkReceived(Guid receivedByUserId, Guid registryNumberId, Guid? registryVisitId, DateTime? utcNow = null)
     {
         StepStatusId = MovementStepStatus.ReceivedId;
         ReceivedAt = utcNow ?? DateTime.UtcNow;
         ReceivedByUserId = receivedByUserId;
         RegistryNumberId = registryNumberId;
+        RegistryVisitId = registryVisitId;
     }
 
     internal void MarkCompleted(string? notes, DateTime? utcNow = null)

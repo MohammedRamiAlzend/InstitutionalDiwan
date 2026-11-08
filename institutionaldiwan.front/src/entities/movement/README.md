@@ -83,6 +83,7 @@ The status list is then narrowed to the caller's side of the current step:
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-08 | Claude | Steps carry the register number and visit date; the receipt reports `registryVisitId` and `isReturnVisit`. |
 | 2026-11-03 | Claude | `getMovementActions` now takes the caller's custody of the current step, built by the new `getMovementCustody`, and mirrors the API's sender and receiver checks. |
 | 2026-10-29 | Cursor | Implemented the read model: API client, query keys/hooks, rules, and three badges; documented the deferred Mermaid/tree builders. |
 | 2026-10-25 | Buffy | Added pure `toMermaid` / `toTree` builders for the document movement chain. |

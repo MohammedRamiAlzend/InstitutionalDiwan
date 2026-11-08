@@ -1,4 +1,5 @@
 using InstitutionalDiwan.Domain.Entities.Movements;
+using InstitutionalDiwan.Domain.Entities.Numbering;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -80,6 +81,7 @@ public sealed class DocumentMovementStepConfiguration : IEntityTypeConfiguration
         builder.Property(x => x.ReceivedAt).HasColumnName("ReceivedAt").HasColumnType("datetime2(3)");
         builder.Property(x => x.ReceivedByUserId).HasColumnName("ReceivedByUserId");
         builder.Property(x => x.RegistryNumberId).HasColumnName("RegistryNumberId");
+        builder.Property(x => x.RegistryVisitId).HasColumnName("RegistryVisitId");
         builder.Property(x => x.CompletedAt).HasColumnName("CompletedAt").HasColumnType("datetime2(3)");
         builder.Property(x => x.DueDate).HasColumnName("DueDate").HasColumnType("datetime2(3)");
 
@@ -88,6 +90,11 @@ public sealed class DocumentMovementStepConfiguration : IEntityTypeConfiguration
         builder.HasOne<MovementStepStatus>()
             .WithMany()
             .HasForeignKey(x => x.StepStatusId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne<DocumentRegistryVisit>()
+            .WithMany()
+            .HasForeignKey(x => x.RegistryVisitId)
             .OnDelete(DeleteBehavior.Restrict);
     }
 }

@@ -1,5 +1,6 @@
 using InstitutionalDiwan.Application.Features.Correspondence.Documents;
 using InstitutionalDiwan.Application.Features.Movements;
+using InstitutionalDiwan.Application.Features.Numbering.Numbers;
 using InstitutionalDiwan.Domain.Common;
 using InstitutionalDiwan.Domain.Entities.Correspondence;
 using InstitutionalDiwan.Domain.Entities.Identity;
@@ -85,7 +86,10 @@ public sealed class MovementWorkflowHandlerTests
             new(Movements, Routing(), CustodyScope, UnitOfWork, FakeNotificationPublisher.Instance);
 
         public ReceiveDocumentCommandHandler ReceiveHandler() =>
-            new(Movements, Documents, CustodyScope, UnitOfWork, FakeNotificationPublisher.Instance, TestClock.Instance);
+            new(
+                Movements, Documents, CustodyScope, UnitOfWork, FakeNotificationPublisher.Instance,
+                new DepartmentRegistrationService(Numbers, Departments, Registries, CustodyScope, UnitOfWork),
+                TestClock.Instance);
 
         public CompleteMovementStepCommandHandler CompleteHandler() =>
             new(Movements, CustodyScope, UnitOfWork, FakeNotificationPublisher.Instance);
@@ -106,10 +110,10 @@ public sealed class MovementWorkflowHandlerTests
             new(Movements, Documents, CustodyScope, UnitOfWork, FakeNotificationPublisher.Instance);
 
         public GetMovementByIdQueryHandler GetByIdHandler() =>
-            new(Movements, new FakeDocumentAccessEvaluator { AllowAll = true });
+            new(Movements, Numbers, new FakeDocumentAccessEvaluator { AllowAll = true });
 
         public ListDocumentMovementsQueryHandler ListByDocumentHandler() =>
-            new(Movements, Documents, new FakeDocumentAccessEvaluator { AllowAll = true });
+            new(Movements, Documents, Numbers, new FakeDocumentAccessEvaluator { AllowAll = true });
 
         public GetDepartmentInboxQueryHandler InboxHandler() =>
             new(Movements, Documents, Users, Scope, TestClock.Instance);
@@ -660,9 +664,9 @@ public sealed class MovementWorkflowHandlerTests
         var movement = await CreateMovement(world);
         var denied = new FakeDocumentAccessEvaluator();
 
-        var get = await new GetMovementByIdQueryHandler(world.Movements, denied).Handle(
+        var get = await new GetMovementByIdQueryHandler(world.Movements, world.Numbers, denied).Handle(
             new GetMovementByIdQuery(movement.MovementId), CancellationToken.None);
-        var list = await new ListDocumentMovementsQueryHandler(world.Movements, world.Documents, denied).Handle(
+        var list = await new ListDocumentMovementsQueryHandler(world.Movements, world.Documents, world.Numbers, denied).Handle(
             new ListDocumentMovementsQuery(world.Document.DocumentId), CancellationToken.None);
 
         Assert.Equal(DomainErrors.Correspondence.DocumentAccessDenied.Code, get.Error.Code);

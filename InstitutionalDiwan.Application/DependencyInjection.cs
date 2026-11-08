@@ -23,6 +23,7 @@ public static class DependencyInjection
 
         // Cross-cutting rules shared by the movement and attachment command handlers.
         services.AddScoped<Features.Movements.CentralDiwanRouting>();
+        services.AddScoped<Features.Numbering.Numbers.DepartmentRegistrationService>();
         services.AddScoped<Features.Attachments.AttachmentUploader>();
         services.AddScoped<Features.Audit.AuditLogAppender>();
         services.AddScoped<Abstractions.Notifications.INotificationPublisher, Features.Notifications.NotificationPublisher>();

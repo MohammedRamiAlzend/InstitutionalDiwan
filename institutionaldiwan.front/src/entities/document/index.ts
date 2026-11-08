@@ -22,6 +22,7 @@ export {
   useDocumentNumberHistory,
   useDocumentRegistryNumbers,
 } from './model/queries'
+export { findDepartmentEntry } from './model/registryEntries'
 export { DocumentStatusBadge } from './ui/DocumentStatusBadge'
 export { OfficialNumberTag } from './ui/OfficialNumberTag'
 export { NumberStatusBadge } from './ui/NumberStatusBadge'

@@ -375,8 +375,11 @@ public sealed class ArchivingHandlerTests
         await world.ArchiveAsync();
 
         var result = await new RecordDepartmentRegistrationCommandHandler(
-                world.Documents, world.Numbers, world.Departments, world.Registries,
-                new FakeDepartmentScopeEvaluator { InstitutionWide = true }, world.UnitOfWork)
+                world.Documents,
+                new DepartmentRegistrationService(
+                    world.Numbers, world.Departments, world.Registries,
+                    new FakeDepartmentScopeEvaluator { InstitutionWide = true }, world.UnitOfWork),
+                world.UnitOfWork)
             .Handle(
                 new RecordDepartmentRegistrationCommand(
                     world.Document.DocumentId, Guid.NewGuid(), "45", TestClock.Instance.UtcNow, world.Clerk.UserId),

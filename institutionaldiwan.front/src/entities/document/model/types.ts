@@ -100,7 +100,17 @@ export interface DepartmentRegistrationEventResponse {
   notes: string | null
 }
 
-/** A department's register line for the document, with its dated registrations. */
+/** One dated arrival on a department register line. */
+export interface DepartmentRegistryVisitResponse {
+  visitId: string
+  registryDate: string
+  movementStepId: string | null
+  recordedByUserId: string
+  recordedAt: string
+  notes: string | null
+}
+
+/** A department's register line for the document in one year, with its dated visits. */
 export interface DepartmentRegistryNumberResponse {
   documentNumberId: string
   departmentId: string
@@ -110,6 +120,7 @@ export interface DepartmentRegistryNumberResponse {
   registryDate: string | null
   statusId: number
   registrations: DepartmentRegistrationEventResponse[]
+  visits: DepartmentRegistryVisitResponse[]
 }
 
 /** Central number plus every department register line (`GET .../numbers/registry-entries`). */

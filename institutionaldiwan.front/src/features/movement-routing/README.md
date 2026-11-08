@@ -19,6 +19,7 @@ inbox, outbox, and the document timeline refresh together.
 | `model/useAssigneeOptions.ts` | Assignee search options for redirect/open |
 | `ui/OpenMovementDialog.tsx` | Opens a movement from a registered document |
 | `ui/MovementActionDialog.tsx` | One dialog per action (optional notes, required reason, redirect form) |
+| `ui/ReceiveMovementDialog.tsx` | Receives a movement with its register date, showing the department's number locked or asking for one when the year has none. |
 | `ui/MovementActionButtons.tsx` | Inline action cluster filtered by `getMovementActions` |
 | `index.ts` | Public barrel |
 
@@ -48,5 +49,6 @@ inbox, outbox, and the document timeline refresh together.
 - 2026-11-05: Unsent form input is now kept (per user, per form) after an accidental close or cancel and restored with a toast; it is cleared only after a successful submit (`useDraftForm`).
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-08 | Claude | Receive has its own dialog with a date and a locked or typed department number. |
 | 2026-10-29 | Cursor | Implemented the feature: mutation hooks, Zod schemas, action dialogs, and the inline action cluster; moved exported constants out of the component for `react-refresh`. |
 | 2026-10-25 | Cursor | Added movement-routing feature docs for live Module 05 workflow commands. |

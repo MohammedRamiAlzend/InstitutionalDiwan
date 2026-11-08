@@ -14,6 +14,9 @@ export interface MovementStepResponse {
   registryNumberId: string | null
   completedAt: string | null
   dueDate: string | null
+  registryVisitId: string | null
+  registryNumberText: string | null
+  registryDate: string | null
 }
 
 /** One entry of a movement's audit trail. */
@@ -75,6 +78,9 @@ export interface MovementReceiptResponse {
   registryNumberText: string
   registryDate: string | null
   receivedAt: string
+  registryVisitId: string
+  /** True when the department already had this number and the receipt added a new date. */
+  isReturnVisit: boolean
 }
 
 export type MovementQueueKind = 'inbox' | 'outbox'

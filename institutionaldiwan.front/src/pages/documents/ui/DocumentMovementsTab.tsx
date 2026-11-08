@@ -373,7 +373,14 @@ function StepTimelineItem({
           )}
           {step.registryNumberId && (
             <span>
-              رقم الدائرة: <span dir="ltr">{formatShortId(step.registryNumberId)}</span>
+              رقم الدائرة:{' '}
+              <span dir="ltr">{step.registryNumberText ?? formatShortId(step.registryNumberId)}</span>
+              {step.registryDate && (
+                <>
+                  {' '}
+                  بتاريخ <span dir="ltr">{formatDate(step.registryDate)}</span>
+                </>
+              )}
             </span>
           )}
           {step.dueDate && (

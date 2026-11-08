@@ -2114,6 +2114,10 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("RegistryNumberId");
 
+                    b.Property<Guid?>("RegistryVisitId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("RegistryVisitId");
+
                     b.Property<DateTime?>("SentAt")
                         .HasColumnType("datetime2(3)")
                         .HasColumnName("SentAt");
@@ -2131,6 +2135,8 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                         .HasColumnName("ToDepartmentId");
 
                     b.HasKey("StepId");
+
+                    b.HasIndex("RegistryVisitId");
 
                     b.HasIndex("StepStatusId");
 
@@ -2673,11 +2679,6 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                     b.HasIndex("DepartmentId", "RegistryDate")
                         .HasDatabaseName("IX_DOC_NUMBERS_DEPT_REG_DATE");
 
-                    b.HasIndex("DocumentId", "DepartmentId")
-                        .IsUnique()
-                        .HasDatabaseName("UX_DOC_NUMBERS_DOC_DEPT")
-                        .HasFilter("[DepartmentId] IS NOT NULL");
-
                     b.HasIndex("OfficialNumberText", "NumberingYear")
                         .IsUnique()
                         .HasDatabaseName("UX_DOC_NUMBERS_TEXT_YEAR")
@@ -2685,6 +2686,11 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("RegistryId", "NumberingYear")
                         .HasDatabaseName("IX_DOC_NUMBERS_REG_YEAR");
+
+                    b.HasIndex("DocumentId", "DepartmentId", "NumberingYear")
+                        .IsUnique()
+                        .HasDatabaseName("UX_DOC_NUMBERS_DOC_DEPT")
+                        .HasFilter("[DepartmentId] IS NOT NULL");
 
                     b.HasIndex("RegistryId", "NumberingYear", "SequenceValue")
                         .IsUnique()
@@ -2839,6 +2845,46 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("DOCUMENT_NUMBER_STATUSES", (string)null);
+                });
+
+            modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Numbering.DocumentRegistryVisit", b =>
+                {
+                    b.Property<Guid>("VisitId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("VisitId");
+
+                    b.Property<Guid>("DocumentNumberId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("DocumentNumberId");
+
+                    b.Property<Guid?>("MovementStepId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("MovementStepId");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)")
+                        .HasColumnName("Notes");
+
+                    b.Property<DateTime>("RecordedAt")
+                        .HasColumnType("datetime2(3)")
+                        .HasColumnName("RecordedAt");
+
+                    b.Property<Guid>("RecordedByUserId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("RecordedByUserId");
+
+                    b.Property<DateTime>("RegistryDate")
+                        .HasColumnType("date")
+                        .HasColumnName("RegistryDate");
+
+                    b.HasKey("VisitId");
+
+                    b.HasIndex("DocumentNumberId", "RegistryDate")
+                        .IsUnique()
+                        .HasDatabaseName("UX_DOC_REG_VISITS_NUMBER_DATE");
+
+                    b.ToTable("DOCUMENT_REGISTRY_VISITS", (string)null);
                 });
 
             modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Numbering.NumberingCounter", b =>
@@ -3692,6 +3738,11 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("InstitutionalDiwan.Domain.Entities.Numbering.DocumentRegistryVisit", null)
+                        .WithMany()
+                        .HasForeignKey("RegistryVisitId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("InstitutionalDiwan.Domain.Entities.Movements.MovementStepStatus", null)
                         .WithMany()
                         .HasForeignKey("StepStatusId")
@@ -3803,6 +3854,15 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                         .WithMany()
                         .HasForeignKey("EventTypeId")
                         .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Numbering.DocumentRegistryVisit", b =>
+                {
+                    b.HasOne("InstitutionalDiwan.Domain.Entities.Numbering.DocumentNumber", null)
+                        .WithMany("Visits")
+                        .HasForeignKey("DocumentNumberId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
@@ -3983,6 +4043,8 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Numbering.DocumentNumber", b =>
                 {
                     b.Navigation("History");
+
+                    b.Navigation("Visits");
                 });
 
             modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Numbering.NumberingRegistry", b =>

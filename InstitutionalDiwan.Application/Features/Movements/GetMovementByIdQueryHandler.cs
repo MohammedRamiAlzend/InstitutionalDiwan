@@ -11,13 +11,16 @@ internal sealed class GetMovementByIdQueryHandler
     : IQueryHandler<GetMovementByIdQuery, MovementResponse>
 {
     private readonly IDocumentMovementRepository _movementRepository;
+    private readonly IDocumentNumberRepository _documentNumberRepository;
     private readonly IDocumentAccessEvaluator _documentAccessEvaluator;
 
     public GetMovementByIdQueryHandler(
         IDocumentMovementRepository movementRepository,
+        IDocumentNumberRepository documentNumberRepository,
         IDocumentAccessEvaluator documentAccessEvaluator)
     {
         _movementRepository = movementRepository;
+        _documentNumberRepository = documentNumberRepository;
         _documentAccessEvaluator = documentAccessEvaluator;
     }
 
@@ -35,6 +38,7 @@ internal sealed class GetMovementByIdQueryHandler
             return Result.Failure<MovementResponse>(DomainErrors.Correspondence.DocumentAccessDenied);
         }
 
-        return MovementResponse.From(movement);
+        var numbers = await _documentNumberRepository.ListByDocumentAsync(movement.DocumentId, cancellationToken);
+        return MovementResponse.From(movement).WithRegistry(numbers);
     }
 }

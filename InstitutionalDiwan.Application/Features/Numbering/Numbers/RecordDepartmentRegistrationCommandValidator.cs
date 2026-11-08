@@ -1,11 +1,12 @@
 using FluentValidation;
+using InstitutionalDiwan.Domain.Common;
 
 namespace InstitutionalDiwan.Application.Features.Numbering.Numbers;
 
 public sealed class RecordDepartmentRegistrationCommandValidator
     : AbstractValidator<RecordDepartmentRegistrationCommand>
 {
-    public RecordDepartmentRegistrationCommandValidator()
+    public RecordDepartmentRegistrationCommandValidator(IClock clock)
     {
         RuleFor(command => command.DocumentId)
             .NotEmpty().WithErrorCode("Correspondence.DocumentNotFound");
@@ -21,7 +22,7 @@ public sealed class RecordDepartmentRegistrationCommandValidator
             .MaximumLength(100);
 
         RuleFor(command => command.RegistryDate)
-            .Must(date => date != default && date.Year is >= 1900 and <= 2200)
+            .Must(date => date != default && date.Year is >= 1900 and <= 2200 && !RegistryDateRules.IsFuture(date, clock))
             .WithErrorCode("Numbering.RegistryDateInvalid");
 
         RuleFor(command => command.Notes)

@@ -31,6 +31,8 @@ one document.
 | `RecordDepartmentRegistrationCommand.cs` | CQRS command carrying document id, department, the typed register number, the register date, and the actor. |
 | `RecordDepartmentRegistrationCommandHandler.cs` | Requires the department's own active registry (never the shared default), rejects a draft without a central number, keeps one line per department, and either creates the entry or re-dates the existing one. |
 | `RecordDepartmentRegistrationCommandValidator.cs` | FluentValidation rules: ids required, non-blank number ≤ 100 chars, plausible register date, notes ≤ 1000 chars. |
+| `RegistryDateRules.cs` | The not-in-the-future check for dates written in a department register. |
+| `DepartmentRegistrationService.cs` | Shared rules for writing a document into a department register, used by the registration endpoint and by a receipt carrying a new number. |
 | `DocumentRegistryNumbersResponse.cs` | Read model pairing the central number with per-department register lines and their dated registration events. |
 | `GetDocumentRegistryNumbersQuery.cs` / `GetDocumentRegistryNumbersQueryHandler.cs` | Returns the central number plus every department register line for a document (404 when missing, 403 without `VIEW` access to it). |
 
@@ -62,6 +64,7 @@ one document.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-08 | Claude | A department number now covers one document per year; each arrival adds a dated visit, a repeated date is refused, and `registry-entries` returns `visits`. |
 | 2026-11-04 | Claude | Department register numbers can only be recorded for the caller's own primary department (new `IDepartmentScopeEvaluator.IsPrimaryDepartmentAsync`, error `Numbering.DepartmentRegistrationOwnDepartmentOnly`, 403, whatever the caller's scope), and `RecordDepartmentRegistrationCommand` / the request body take an optional `registryId` to choose one of the department's registers (`Numbering.RegistryNotFound`, `Numbering.DepartmentRegistryMismatch`); without it the best matching active register is used as before. `GET /api/auth/me` now also returns `primaryDepartmentId`. |
 | 2026-11-03 | Claude | Issue, cancel and replace now require `DOWNLOAD` access to the document, and recording a department registration requires scope over that department (403 `Correspondence.DepartmentOutOfScope`), so a department can record a SECRET document it receives without being able to read it. |
 | 2026-11-03 | Claude | The number history and registry entries reads now require `VIEW` access to the document (403 `Correspondence.DocumentAccessDenied`). |

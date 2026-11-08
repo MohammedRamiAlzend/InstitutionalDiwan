@@ -163,6 +163,8 @@ public static class DomainErrors
         public static readonly Error DepartmentRegistryNotConfigured = Error.Conflict("Numbering.DepartmentRegistryNotConfigured", "The department has no active numbering registry configured.");
         public static readonly Error DepartmentRegistrationRequired = Error.Conflict("Numbering.DepartmentRegistrationRequired", "Record the department register number and date before receiving the document.");
         public static readonly Error RegistryNumberTaken = Error.Conflict("Numbering.RegistryNumberTaken", "This number is already used in the department register for that year.");
+        public static readonly Error VisitDateDuplicate = Error.Conflict("Numbering.VisitDateDuplicate", "This document already has a visit with that date in the department register.");
+        public static readonly Error VisitYearMismatch = Error.Validation("Numbering.VisitYearMismatch", "The visit date must be in the same year as the department register number.");
         public static readonly Error DepartmentNumberLocked = Error.Conflict("Numbering.DepartmentNumberLocked", "The document is already registered in this department under a different number.");
         public static readonly Error DocumentNotRegistered = Error.Conflict("Numbering.DocumentNotRegistered", "Issue the central official number before recording a department register entry.");
         public static readonly Error DepartmentRegistrationOwnDepartmentOnly = Error.Forbidden("Numbering.DepartmentRegistrationOwnDepartmentOnly", "A department register number can only be recorded for the caller's own department.");
