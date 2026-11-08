@@ -15,7 +15,12 @@ public sealed record ArchiveSearchCriteria(
     int? DirectionId = null,
     int? ArchiveLocationId = null,
     DateTime? ArchivedFromUtc = null,
-    DateTime? ArchivedToUtc = null)
+    DateTime? ArchivedToUtc = null,
+    string? F = null,
+    string? Sort = null,
+    string? Dir = null,
+    DateOnly? ArchivedFrom = null,
+    DateOnly? ArchivedTo = null)
 {
     private static readonly string[] SortKeys = { "archivedAt", "title", "officialNumber" };
 
@@ -34,13 +39,17 @@ public sealed record ArchiveSearchCriteria(
         {
             var criteria = JsonSerializer.Deserialize<ArchiveSearchCriteria>(criteriaJson, JsonOptions);
 
-            return criteria is not null &&
-                   (criteria.SortBy is null ||
-                    SortKeys.Contains(criteria.SortBy, StringComparer.OrdinalIgnoreCase));
+            return criteria is not null
+                   && IsKnownSortKey(criteria.SortBy)
+                   && IsKnownSortKey(criteria.Sort)
+                   && criteria.Dir is null or "asc" or "desc";
         }
         catch (JsonException)
         {
             return false;
         }
     }
+
+    private static bool IsKnownSortKey(string? key) =>
+        key is null || SortKeys.Contains(key, StringComparer.OrdinalIgnoreCase);
 }

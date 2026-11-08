@@ -50,7 +50,7 @@ public sealed class DocumentFieldHandlerTests
         public async Task<SchemaVersionResponse> AddFieldAsync(
             Guid versionId, Guid fieldId, DocumentFieldSettingsInput settings)
         {
-            var result = await new AddFieldToDraftCommandHandler(Versions, Fields, UnitOfWork)
+            var result = await new AddFieldToDraftCommandHandler(Versions, Fields, new FakeDocumentFieldOptionResolver(), UnitOfWork)
                 .Handle(new AddFieldToDraftCommand(versionId, fieldId, settings), CancellationToken.None);
             Assert.True(result.IsSuccess, result.IsFailure ? result.Error.Code : null);
             return result.Value;
@@ -79,7 +79,7 @@ public sealed class DocumentFieldHandlerTests
         }
 
         public CreateDraftDocumentCommandHandler DraftHandler() =>
-            new(Users, Documents, Types, Versions, UnitOfWork);
+            new(Users, Documents, Types, Versions, new FakeDocumentFieldOptionResolver(), UnitOfWork);
 
         public async Task<DocumentResponse> CreateDraftDocumentAsync(params DocumentFieldValueInput[] values)
         {
@@ -154,7 +154,7 @@ public sealed class DocumentFieldHandlerTests
         var world = new World();
         var amount = await world.CreateFieldAsync("amount", DocumentFieldDataType.Number);
         var draft = await world.CreateDraftAsync();
-        var add = new AddFieldToDraftCommandHandler(world.Versions, world.Fields, world.UnitOfWork);
+        var add = new AddFieldToDraftCommandHandler(world.Versions, world.Fields, new FakeDocumentFieldOptionResolver(), world.UnitOfWork);
 
         var badRegex = await add.Handle(
             new AddFieldToDraftCommand(draft.SchemaVersionId, amount.DocumentFieldId,
@@ -163,7 +163,7 @@ public sealed class DocumentFieldHandlerTests
         Assert.Equal("DocumentFields.RegexNotAllowed", badRegex.Error.Code);
 
         await world.AddFieldAsync(draft.SchemaVersionId, amount.DocumentFieldId, new DocumentFieldSettingsInput("المبلغ"));
-        var update = new UpdateDraftFieldCommandHandler(world.Versions, world.UnitOfWork);
+        var update = new UpdateDraftFieldCommandHandler(world.Versions, new FakeDocumentFieldOptionResolver(), world.UnitOfWork);
         var updated = await update.Handle(
             new UpdateDraftFieldCommand(draft.SchemaVersionId, amount.DocumentFieldId,
                 new DocumentFieldSettingsInput("المبلغ الكلي", IsRequired: true, MinNumber: 1, MaxNumber: 5)),
@@ -200,7 +200,7 @@ public sealed class DocumentFieldHandlerTests
         Assert.Equal(v1.SchemaVersionId, document.SchemaVersionId);
         var access = new FakeDocumentAccessEvaluator();
         access.ViewableDocuments.Add(document.DocumentId);
-        var fields = await new GetDocumentFieldsQueryHandler(world.Documents, world.Versions, access)
+        var fields = await new GetDocumentFieldsQueryHandler(world.Documents, world.Versions, access, new FakeDocumentFieldOptionResolver())
             .Handle(new GetDocumentFieldsQuery(document.DocumentId), CancellationToken.None);
         Assert.Equal(1, fields.Value.VersionNumber);
         Assert.Equal("12", fields.Value.Fields.Single(f => f.Field.Key == "session_no").Value);
@@ -236,7 +236,7 @@ public sealed class DocumentFieldHandlerTests
         await world.PublishBasicSchemaAsync();
         var created = await world.CreateDraftDocumentAsync(new DocumentFieldValueInput("session_no", "1"));
         var handler = new SetDocumentFieldValuesCommandHandler(
-            world.Documents, world.Versions, new FakeDocumentAccessEvaluator { AllowAll = true }, world.UnitOfWork);
+            world.Documents, world.Versions, new FakeDocumentAccessEvaluator { AllowAll = true }, new FakeDocumentFieldOptionResolver(), world.UnitOfWork);
 
         var set = await handler.Handle(
             new SetDocumentFieldValuesCommand(created.DocumentId, new[]
@@ -284,7 +284,7 @@ public sealed class DocumentFieldHandlerTests
         registries.Add(NumberingRegistry.Create("DEPT-BOOK", "دفتر القسم", departmentId: world.Author.PrimaryDepartmentId).Value);
         var handler = new CreateDocumentCommandHandler(
             world.Users, world.Documents, world.Types, numbers, registries,
-            world.Versions, world.UnitOfWork, new FakeSender());
+            world.Versions, new FakeDocumentFieldOptionResolver(), world.UnitOfWork, new FakeSender());
 
         var missing = await handler.Handle(
             new CreateDocumentCommand(world.Author.UserId, "قرار", TypeId, "9/2026", new DateTime(2026, 3, 9), DirectionId: DocumentDirection.InternalId),
@@ -308,14 +308,14 @@ public sealed class DocumentFieldHandlerTests
     public async Task Queries_ReturnTheTypeSchema_TheHistoryAndTheFieldList()
     {
         var world = new World();
-        var empty = await new GetDocumentTypeSchemaQueryHandler(world.Types, world.Versions)
+        var empty = await new GetDocumentTypeSchemaQueryHandler(world.Types, world.Versions, new FakeDocumentFieldOptionResolver())
             .Handle(new GetDocumentTypeSchemaQuery(TypeId), CancellationToken.None);
         Assert.Null(empty.Value.Schema);
 
         var v1 = await world.PublishBasicSchemaAsync();
         await world.CreateDraftAsync();
 
-        var schema = await new GetDocumentTypeSchemaQueryHandler(world.Types, world.Versions)
+        var schema = await new GetDocumentTypeSchemaQueryHandler(world.Types, world.Versions, new FakeDocumentFieldOptionResolver())
             .Handle(new GetDocumentTypeSchemaQuery(TypeId), CancellationToken.None);
         Assert.Equal(v1.SchemaVersionId, schema.Value.Schema!.SchemaVersionId);
 
@@ -328,7 +328,7 @@ public sealed class DocumentFieldHandlerTests
             .Handle(new ListDocumentFieldsQuery(TypeId), CancellationToken.None);
         Assert.Equal(2, fields.Value.Count);
 
-        var missing = await new GetSchemaVersionQueryHandler(world.Versions)
+        var missing = await new GetSchemaVersionQueryHandler(world.Versions, new FakeDocumentFieldOptionResolver())
             .Handle(new GetSchemaVersionQuery(Guid.NewGuid()), CancellationToken.None);
         Assert.Equal("DocumentFields.SchemaVersionNotFound", missing.Error.Code);
     }

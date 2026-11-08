@@ -2,6 +2,8 @@ import type { PagedQueryParams } from '@/shared/types'
 
 /** `DocumentResponse` — the flat document row returned by list and get endpoints. */
 export interface DocumentResponse {
+  /** Values of the schema's table columns by field key; only when the list was filtered by a type. */
+  fieldValues?: Record<string, string | null> | null
   documentId: string
   title: string
   subjectSummary: string | null

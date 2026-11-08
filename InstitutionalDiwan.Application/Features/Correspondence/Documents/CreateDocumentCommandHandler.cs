@@ -23,6 +23,7 @@ internal sealed class CreateDocumentCommandHandler : ICommandHandler<CreateDocum
     private readonly IDocumentNumberRepository _documentNumberRepository;
     private readonly INumberingRegistryRepository _numberingRegistryRepository;
     private readonly IDocumentTypeSchemaVersionRepository _schemaVersionRepository;
+    private readonly IDocumentFieldOptionResolver _optionResolver;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ISender _sender;
 
@@ -33,6 +34,7 @@ internal sealed class CreateDocumentCommandHandler : ICommandHandler<CreateDocum
         IDocumentNumberRepository documentNumberRepository,
         INumberingRegistryRepository numberingRegistryRepository,
         IDocumentTypeSchemaVersionRepository schemaVersionRepository,
+        IDocumentFieldOptionResolver optionResolver,
         IUnitOfWork unitOfWork,
         ISender sender)
     {
@@ -42,6 +44,7 @@ internal sealed class CreateDocumentCommandHandler : ICommandHandler<CreateDocum
         _documentNumberRepository = documentNumberRepository;
         _numberingRegistryRepository = numberingRegistryRepository;
         _schemaVersionRepository = schemaVersionRepository;
+        _optionResolver = optionResolver;
         _unitOfWork = unitOfWork;
         _sender = sender;
     }
@@ -95,7 +98,8 @@ internal sealed class CreateDocumentCommandHandler : ICommandHandler<CreateDocum
 
         var document = documentResult.Value;
 
-        var valuesResult = DocumentSchemaPinning.ApplyValues(document, schema, request.FieldValues, _unitOfWork.UtcNow);
+        var sourcedOptions = schema is null ? null : await _optionResolver.ResolveAsync(schema, cancellationToken);
+        var valuesResult = DocumentSchemaPinning.ApplyValues(document, schema, request.FieldValues, sourcedOptions, _unitOfWork.UtcNow);
         if (valuesResult.IsFailure)
             return Result.Failure<DocumentResponse>(valuesResult.Error);
 

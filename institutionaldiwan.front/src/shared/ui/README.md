@@ -45,6 +45,7 @@ Holds reusable, domain-agnostic UI primitives (Tailwind CSS v4 + Radix UI where 
 ## Change Log
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-08 | Claude | `FormField` gained a `hint` line. |
 | 2026-11-04 | Claude | Added `name-with-id.tsx` (`NameWithId`) for «name + short id» references, exported through the barrel. |
 | 2026-11-02 | agent | Fixed the sidebar during a Driver.js tour. Driver disables pointer events on the page and keeps its overlay path clickable, so `guide-tour.css` now raises the sidebar above the overlay and re-enables pointer events inside `aside`. `GuideProvider` also tracks visible entries in a ref instead of state: the state-driven context rebuilt on every chip mount and sent the chips' effects into an infinite update loop (`Maximum update depth exceeded`), which stalled navigation and rendering. |
 | 2026-11-02 | agent | Guide explanations moved from `Dialog` to Driver.js: chips open an anchored popover, the page button runs a spotlight tour. Added `guide-tour.ts`; `Dialog` ignores outside interaction and Esc while `body.driver-active` so a popover over a form dialog does not close it. |

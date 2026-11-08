@@ -62,6 +62,7 @@ public sealed class DocumentArchiveController : ControllerBase
         [Description("Filter by archive location id (integer, optional). Example: 2.")] [FromQuery] int? archiveLocationId = null,
         [Description("Archived at or after this UTC time (date-time, optional). Example: 2026-01-01T00:00:00Z.")] [FromQuery] DateTime? archivedFromUtc = null,
         [Description("Archived at or before this UTC time (date-time, optional). Example: 2026-12-31T23:59:59Z.")] [FromQuery] DateTime? archivedToUtc = null,
+        [Description("Dynamic-field filters as key:operator:value, repeated up to 5 times and combined with AND; requires documentTypeId (string array, optional, query parameter). Example: contract_number:contains:A-12.")] [FromQuery] string[]? fieldFilters = null,
         CancellationToken cancellationToken = default)
     {
         var result = await _sender.Send(
@@ -76,7 +77,8 @@ public sealed class DocumentArchiveController : ControllerBase
                 directionId,
                 archiveLocationId,
                 archivedFromUtc,
-                archivedToUtc),
+                archivedToUtc,
+                fieldFilters),
             cancellationToken);
 
         return result.ToActionResult();

@@ -33,5 +33,6 @@ caller's saved searches. Writes live in `features/archive-manage`.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-08 | Claude | `fieldFilters` search parameter; saved searches keep the field filters (`f`) through `archiveCriteriaFromParams` / `archiveCriteriaToParams`. |
 | 2026-11-05 | Claude | Removed `directionId` from the archive search params and the saved-search criteria keys (suspended). |
 | 2026-11-03 | agent | Implemented the Module 07 read slice. |

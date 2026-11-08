@@ -64,9 +64,15 @@ internal sealed class ListSchemaVersionsQueryHandler
 internal sealed class GetSchemaVersionQueryHandler : IQueryHandler<GetSchemaVersionQuery, SchemaVersionResponse>
 {
     private readonly IDocumentTypeSchemaVersionRepository _versionRepository;
+    private readonly IDocumentFieldOptionResolver _optionResolver;
 
-    public GetSchemaVersionQueryHandler(IDocumentTypeSchemaVersionRepository versionRepository) =>
+    public GetSchemaVersionQueryHandler(
+        IDocumentTypeSchemaVersionRepository versionRepository,
+        IDocumentFieldOptionResolver optionResolver)
+    {
         _versionRepository = versionRepository;
+        _optionResolver = optionResolver;
+    }
 
     public async Task<Result<SchemaVersionResponse>> Handle(
         GetSchemaVersionQuery request,
@@ -75,7 +81,7 @@ internal sealed class GetSchemaVersionQueryHandler : IQueryHandler<GetSchemaVers
         var version = await _versionRepository.GetByIdAsync(request.SchemaVersionId, cancellationToken);
         return version is null
             ? Result.Failure<SchemaVersionResponse>(DomainErrors.DocumentFields.SchemaVersionNotFound)
-            : SchemaVersionResponse.From(version);
+            : SchemaVersionResponse.From(version, await _optionResolver.ResolveAsync(version, cancellationToken));
     }
 }
 
@@ -84,13 +90,16 @@ internal sealed class GetDocumentTypeSchemaQueryHandler
 {
     private readonly IDocumentTypeRepository _documentTypeRepository;
     private readonly IDocumentTypeSchemaVersionRepository _versionRepository;
+    private readonly IDocumentFieldOptionResolver _optionResolver;
 
     public GetDocumentTypeSchemaQueryHandler(
         IDocumentTypeRepository documentTypeRepository,
-        IDocumentTypeSchemaVersionRepository versionRepository)
+        IDocumentTypeSchemaVersionRepository versionRepository,
+        IDocumentFieldOptionResolver optionResolver)
     {
         _documentTypeRepository = documentTypeRepository;
         _versionRepository = versionRepository;
+        _optionResolver = optionResolver;
     }
 
     public async Task<Result<DocumentTypeSchemaResponse>> Handle(
@@ -103,7 +112,9 @@ internal sealed class GetDocumentTypeSchemaQueryHandler
         var published = await _versionRepository.GetPublishedAsync(request.DocumentTypeId, cancellationToken);
         return new DocumentTypeSchemaResponse(
             request.DocumentTypeId,
-            published is null ? null : SchemaVersionResponse.From(published));
+            published is null
+                ? null
+                : SchemaVersionResponse.From(published, await _optionResolver.ResolveAsync(published, cancellationToken)));
     }
 }
 
@@ -112,12 +123,15 @@ internal sealed class GetDocumentFieldsQueryHandler : IQueryHandler<GetDocumentF
     private readonly IDocumentRepository _documentRepository;
     private readonly IDocumentTypeSchemaVersionRepository _versionRepository;
     private readonly IDocumentAccessEvaluator _documentAccessEvaluator;
+    private readonly IDocumentFieldOptionResolver _optionResolver;
 
     public GetDocumentFieldsQueryHandler(
         IDocumentRepository documentRepository,
         IDocumentTypeSchemaVersionRepository versionRepository,
-        IDocumentAccessEvaluator documentAccessEvaluator)
+        IDocumentAccessEvaluator documentAccessEvaluator,
+        IDocumentFieldOptionResolver optionResolver)
     {
+        _optionResolver = optionResolver;
         _documentRepository = documentRepository;
         _versionRepository = versionRepository;
         _documentAccessEvaluator = documentAccessEvaluator;
@@ -141,6 +155,9 @@ internal sealed class GetDocumentFieldsQueryHandler : IQueryHandler<GetDocumentF
             ? await _versionRepository.GetByIdAsync(schemaVersionId, cancellationToken)
             : null;
 
-        return DocumentFieldsResponse.From(document, schema);
+        return DocumentFieldsResponse.From(
+            document,
+            schema,
+            schema is null ? null : await _optionResolver.ResolveAsync(schema, cancellationToken));
     }
 }

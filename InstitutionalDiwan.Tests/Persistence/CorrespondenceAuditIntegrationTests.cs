@@ -46,6 +46,7 @@ public sealed class CorrespondenceAuditIntegrationTests
             numbers,
             registries,
             new DocumentTypeSchemaVersionRepository(db),
+            new FakeDocumentFieldOptionResolver(),
             db,
             new FakeSender());
 
@@ -143,7 +144,7 @@ public sealed class CorrespondenceAuditIntegrationTests
             CancellationToken.None);
         var draft = await new CreateSchemaDraftCommandHandler(types, versions, db).Handle(
             new CreateSchemaDraftCommand(userId, DocumentType.OutgoingLetterId), CancellationToken.None);
-        var added = await new AddFieldToDraftCommandHandler(versions, fields, db).Handle(
+        var added = await new AddFieldToDraftCommandHandler(versions, fields, new FakeDocumentFieldOptionResolver(), db).Handle(
             new AddFieldToDraftCommand(draft.Value.SchemaVersionId, field.Value.DocumentFieldId,
                 new DocumentFieldSettingsInput("رقم الجلسة", IsRequired: true)),
             CancellationToken.None);

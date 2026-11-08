@@ -27,3 +27,6 @@ public sealed record DocumentFieldFilter(
     DateTime? Date = null,
     bool? Boolean = null,
     string? OptionKey = null);
+
+/// <summary>Orders the registry by one dynamic field's value; documents without a value sort together.</summary>
+public sealed record DocumentFieldSort(Guid DocumentFieldId, DocumentFieldDataType DataType);

@@ -17,6 +17,18 @@ internal sealed class FakeDocumentRepository : IDocumentRepository
     public Task<Document?> GetWithNumbersAsync(Guid documentId, CancellationToken cancellationToken = default)
         => Task.FromResult(Documents.FirstOrDefault(document => document.DocumentId == documentId));
 
+    public InstitutionalDiwan.Domain.ValueObjects.DocumentFieldSort? LastFieldSort { get; private set; }
+
+    public Task<IReadOnlyList<DocumentFieldValue>> ListFieldValuesAsync(
+        IReadOnlyCollection<Guid> documentIds,
+        IReadOnlyCollection<Guid> documentFieldIds,
+        CancellationToken cancellationToken = default) =>
+        Task.FromResult<IReadOnlyList<DocumentFieldValue>>(Documents
+            .Where(document => documentIds.Contains(document.DocumentId))
+            .SelectMany(document => document.FieldValues)
+            .Where(value => documentFieldIds.Contains(value.DocumentFieldId))
+            .ToList());
+
     public Task<PagedList<Document>> ListPagedAsync(
         PageRequest page,
         DocumentViewAccess access,
@@ -25,8 +37,10 @@ internal sealed class FakeDocumentRepository : IDocumentRepository
         int? directionId = null,
         int? documentTypeId = null,
         IReadOnlyList<InstitutionalDiwan.Domain.ValueObjects.DocumentFieldFilter>? fieldFilters = null,
+        InstitutionalDiwan.Domain.ValueObjects.DocumentFieldSort? fieldSort = null,
         CancellationToken cancellationToken = default)
     {
+        LastFieldSort = fieldSort;
         LastViewAccess = access;
 
         var query = Documents.Where(document => IsViewable(document, access));

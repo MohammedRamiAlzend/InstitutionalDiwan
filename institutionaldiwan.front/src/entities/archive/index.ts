@@ -6,7 +6,8 @@ export type {
   SavedSearchResponse,
 } from './model/types'
 export {
-  ARCHIVE_CRITERIA_KEYS,
+  archiveCriteriaFromParams,
+  archiveCriteriaToParams,
   parseArchiveCriteria,
   serializeArchiveCriteria,
 } from './model/criteria'

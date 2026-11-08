@@ -1,3 +1,6 @@
+using InstitutionalDiwan.Domain.Common;
+using InstitutionalDiwan.Domain.Errors;
+using InstitutionalDiwan.Domain.ValueObjects;
 using InstitutionalDiwan.Domain.Entities.Correspondence;
 using InstitutionalDiwan.Domain.Repositories;
 
@@ -53,4 +56,20 @@ internal sealed class FakeDocumentTypeSchemaVersionRepository : IDocumentTypeSch
     public void Add(DocumentTypeSchemaVersion version) => Versions.Add(version);
 
     public void Remove(DocumentTypeSchemaVersion version) => Versions.Remove(version);
+}
+
+internal sealed class FakeDocumentFieldOptionResolver
+    : InstitutionalDiwan.Application.Features.Correspondence.DocumentFields.IDocumentFieldOptionResolver
+{
+    public Dictionary<Guid, IReadOnlyList<DocumentFieldOption>> Options { get; } = new();
+
+    public Result EnsureSourceSupported(DocumentFieldBehavior behavior) =>
+        behavior.OptionSource == DocumentFieldOptionSource.Lookup && behavior.LookupCatalog == "unknown"
+            ? Result.Failure(DomainErrors.DocumentFields.OptionSourceInvalid)
+            : Result.Success();
+
+    public Task<IReadOnlyDictionary<Guid, IReadOnlyList<DocumentFieldOption>>> ResolveAsync(
+        DocumentTypeSchemaVersion schema,
+        CancellationToken cancellationToken) =>
+        Task.FromResult<IReadOnlyDictionary<Guid, IReadOnlyList<DocumentFieldOption>>>(Options);
 }

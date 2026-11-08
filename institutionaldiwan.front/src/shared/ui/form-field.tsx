@@ -9,6 +9,8 @@ interface FormFieldProps {
   htmlFor?: string
   /** Explains this field in tutorial mode; the control itself keeps the label. */
   guideId?: string
+  /** Quiet explanation under the control; hidden while an error is shown in its place. */
+  hint?: string
   children: ReactNode
   className?: string
 }
@@ -20,6 +22,7 @@ export function FormField({
   error,
   htmlFor,
   guideId,
+  hint,
   children,
   className,
 }: FormFieldProps) {
@@ -45,6 +48,7 @@ export function FormField({
         labelElement
       )}
       {children}
+      {hint && !error && <p className="text-xs text-muted">{hint}</p>}
       {error && (
         <p role="alert" className="text-xs text-danger">
           {error}

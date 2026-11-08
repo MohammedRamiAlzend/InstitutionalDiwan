@@ -139,6 +139,7 @@ indexes) runs against a private SQLite in-memory database through `Support/TestC
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-08 | Claude | Added `DocumentFieldBehaviorDomainTests` and `DocumentFieldBehaviorPersistenceTests`; `FakeDocumentFieldOptionResolver` for handlers that resolve sourced options. |
 | 2026-11-04 | Claude | `Persistence/NotificationsTests.cs` gained three tests (inbox search with literal wildcards, every sort key with stable paging, per-type unread counts). 743 tests pass. |
 | 2026-11-03 | Claude | Added `Persistence/NotificationsTests.cs` (22 tests: aggregate limits and URL rules, publisher recipient rules incl. confidentiality and inactive users, owner-only inbox commands, purge, outbox delivery, backoff and dead letter) plus `Support/FakeNotificationPublisher.cs` and `Support/ThrowingLogger.cs`. Seeding tests now expect 11 notification types. 740 tests pass. |
 | 2026-11-03 | Claude | Added `Persistence/RelationsTests.cs` (Module 08 on a real SQLite database with the real repositories: create and remove rules, symmetric and duplicate links, direct and indirect cycles per type, archived and cancelled documents, access checks, list, graph and history reads with hidden documents, foreign keys, unique and CHECK constraints, and the audit rows for create and remove) and `Server/DocumentRelationsControllerTests.cs` (permissions and routes). `dotnet test` now 718. The cycle lock (`sp_getapplock`) only runs on SQL Server, so it is not exercised here. |

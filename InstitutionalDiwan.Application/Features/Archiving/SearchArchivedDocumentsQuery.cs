@@ -18,4 +18,5 @@ public sealed record SearchArchivedDocumentsQuery(
     int? DirectionId = null,
     int? ArchiveLocationId = null,
     DateTime? ArchivedFromUtc = null,
-    DateTime? ArchivedToUtc = null) : IQuery<PagedResult<ArchivedDocumentResponse>>;
+    DateTime? ArchivedToUtc = null,
+    IReadOnlyList<string>? FieldFilters = null) : IQuery<PagedResult<ArchivedDocumentResponse>>;

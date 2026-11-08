@@ -6,12 +6,14 @@ import { toast } from 'sonner'
 import {
   FIELD_DATA_TYPE,
   FIELD_DATA_TYPE_LABELS,
+  FIELD_OPTION_SOURCE,
   type DocumentFieldResponse,
   type FieldDataType,
   type SchemaFieldResponse,
   type SchemaVersionResponse,
 } from '@/entities/document-schema'
 import { toArabicErrorMessage } from '@/shared/api'
+import { LOOKUP_CATALOG_META } from '@/shared/config'
 import { Button, Checkbox, Dialog, FormField, Input, Select, Textarea } from '@/shared/ui'
 import {
   useAddVersionFieldMutation,
@@ -24,12 +26,25 @@ import {
   type FieldSettingsFormValues,
 } from '../model/schemas'
 import { defaultSettingsValues, toSettingsRequest } from '../model/toRequest'
+import { FieldBehaviorSection } from './FieldBehaviorSection'
 
 const NEW_FIELD = 'new'
 
 const DATA_TYPE_OPTIONS = Object.values(FIELD_DATA_TYPE).map((value) => ({
   value: String(value),
   label: FIELD_DATA_TYPE_LABELS[value],
+}))
+
+const OPTION_SOURCE_OPTIONS = [
+  { value: String(FIELD_OPTION_SOURCE.Static), label: 'قائمة يدوية' },
+  { value: String(FIELD_OPTION_SOURCE.Departments), label: 'الدوائر' },
+  { value: String(FIELD_OPTION_SOURCE.ExternalOrganizations), label: 'الجهات الخارجية' },
+  { value: String(FIELD_OPTION_SOURCE.Lookup), label: 'قائمة مرجعية' },
+]
+
+const LOOKUP_OPTIONS = Object.entries(LOOKUP_CATALOG_META).map(([value, meta]) => ({
+  value,
+  label: meta.labelAr,
 }))
 
 interface FieldSettingsDialogProps {
@@ -92,6 +107,7 @@ export function FieldSettingsDialog({
   })
   const options = useFieldArray({ control, name: 'options' })
   const regexPattern = useWatch({ control, name: 'regexPattern' })
+  const optionSource = useWatch({ control, name: 'optionSource' })
 
   const pending = createField.isPending || addField.isPending || updateField.isPending
   const error = createField.error ?? addField.error ?? updateField.error
@@ -148,6 +164,11 @@ export function FieldSettingsDialog({
   })
 
   const isText = dataType === FIELD_DATA_TYPE.Text || dataType === FIELD_DATA_TYPE.LongText
+  const isChoice = dataType === FIELD_DATA_TYPE.Select || dataType === FIELD_DATA_TYPE.MultiSelect
+  const isStaticChoice = isChoice && optionSource === String(FIELD_OPTION_SOURCE.Static)
+  const otherFields = (version?.fields ?? []).filter(
+    (entry) => entry.documentFieldId !== field?.documentFieldId,
+  )
   const sourceOptions = [
     { value: NEW_FIELD, label: 'حقل جديد' },
     ...available.map((entry) => ({ value: entry.documentFieldId, label: entry.key })),
@@ -288,7 +309,43 @@ export function FieldSettingsDialog({
           </div>
         )}
 
-        {dataType === FIELD_DATA_TYPE.Select && (
+        {isChoice && (
+          <div className="grid gap-4 sm:grid-cols-2">
+            <FormField label="مصدر الخيارات" required>
+              <Controller
+                control={control}
+                name="optionSource"
+                render={({ field: control }) => (
+                  <Select
+                    aria-label="مصدر الخيارات"
+                    value={control.value}
+                    onValueChange={control.onChange}
+                    options={OPTION_SOURCE_OPTIONS}
+                  />
+                )}
+              />
+            </FormField>
+            {optionSource === String(FIELD_OPTION_SOURCE.Lookup) && (
+              <FormField label="القائمة المرجعية" required error={errors.lookupCatalog?.message}>
+                <Controller
+                  control={control}
+                  name="lookupCatalog"
+                  render={({ field: control }) => (
+                    <Select
+                      aria-label="القائمة المرجعية"
+                      value={control.value || undefined}
+                      onValueChange={control.onChange}
+                      options={LOOKUP_OPTIONS}
+                      invalid={Boolean(errors.lookupCatalog)}
+                    />
+                  )}
+                />
+              </FormField>
+            )}
+          </div>
+        )}
+
+        {isStaticChoice && (
           <FormField
             label="الخيارات"
             required
@@ -339,6 +396,14 @@ export function FieldSettingsDialog({
             </div>
           </FormField>
         )}
+
+        <FieldBehaviorSection
+          control={control}
+          register={register}
+          errors={errors}
+          dataType={dataType}
+          otherFields={otherFields}
+        />
 
         {error && (
           <p role="alert" className="rounded-lg bg-danger/10 px-3 py-2 text-sm text-danger">

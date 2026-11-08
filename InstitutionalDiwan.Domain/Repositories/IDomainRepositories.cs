@@ -100,6 +100,7 @@ public interface IDocumentRepository
         int? directionId = null,
         int? documentTypeId = null,
         IReadOnlyList<DocumentFieldFilter>? fieldFilters = null,
+        DocumentFieldSort? fieldSort = null,
         CancellationToken cancellationToken = default);
     Task<IReadOnlyList<Document>> GetByIdsAsync(
         IReadOnlyCollection<Guid> documentIds,
@@ -111,6 +112,11 @@ public interface IDocumentRepository
     Task<IReadOnlySet<Guid>> ListViewableIdsAsync(
         IReadOnlyCollection<Guid> documentIds,
         DocumentViewAccess access,
+        CancellationToken cancellationToken = default);
+    /// <summary>The stored values of the given fields for the given documents; callers pass only documents the caller may view.</summary>
+    Task<IReadOnlyList<DocumentFieldValue>> ListFieldValuesAsync(
+        IReadOnlyCollection<Guid> documentIds,
+        IReadOnlyCollection<Guid> documentFieldIds,
         CancellationToken cancellationToken = default);
     void Add(Document document);
 }
@@ -270,7 +276,8 @@ public sealed record ArchiveSearchFilter(
     int? DirectionId = null,
     int? ArchiveLocationId = null,
     DateTime? ArchivedFromUtc = null,
-    DateTime? ArchivedToUtc = null);
+    DateTime? ArchivedToUtc = null,
+    IReadOnlyList<DocumentFieldFilter>? FieldFilters = null);
 
 /// <summary>An archived document together with the details of the event that archived it.</summary>
 public sealed record ArchivedDocumentRow(

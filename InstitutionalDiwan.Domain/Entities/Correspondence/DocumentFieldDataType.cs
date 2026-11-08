@@ -11,5 +11,7 @@ public enum DocumentFieldDataType
     Number = 3,
     Date = 4,
     Boolean = 5,
-    Select = 6
+    Select = 6,
+    /// <summary>Several option keys in one value, stored as <c>|a|b|</c> in the text column.</summary>
+    MultiSelect = 7
 }

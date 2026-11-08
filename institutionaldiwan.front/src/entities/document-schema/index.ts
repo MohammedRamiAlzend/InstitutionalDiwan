@@ -3,14 +3,22 @@ export type {
   DocumentFieldsResponse,
   DocumentFieldValueResponse,
   DocumentTypeSchemaResponse,
+  FieldBehavior,
   FieldDataType,
   FieldOption,
+  FieldOptionSource,
   SchemaFieldResponse,
   SchemaStatus,
   SchemaVersionResponse,
   SchemaVersionSummaryResponse,
 } from './model/types'
-export { FIELD_DATA_TYPE, FIELD_LIMITS, SCHEMA_STATUS } from './model/types'
+export {
+  FIELD_DATA_TYPE,
+  FIELD_LIMITS,
+  FIELD_OPTION_SOURCE,
+  SCHEMA_STATUS,
+  TODAY_TOKEN,
+} from './model/types'
 export {
   FIELD_FILTER_OPERATOR,
   MAX_FIELD_FILTERS,
@@ -32,10 +40,18 @@ export {
 } from './model/queries'
 export { FieldTypeBadge, SchemaStatusBadge } from './ui/SchemaBadges'
 export {
+  formatFieldValue,
+  localToday,
   normalizeNumberText,
+  splitChoices,
   toFieldValueMap,
   toFieldValueRequests,
   validateFieldValues,
+  visibleFields,
+  withFieldDefaults,
+  withFixedValues,
 } from './model/values'
 export type { FieldValueErrors, FieldValueMap, FieldValueRequest } from './model/values'
 export { DynamicFieldInputs } from './ui/DynamicFieldInputs'
+export { FieldValueControl } from './ui/FieldValueControl'
+export { FieldFilterBar } from './ui/FieldFilterBar'

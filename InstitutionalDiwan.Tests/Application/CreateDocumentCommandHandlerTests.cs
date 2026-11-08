@@ -53,7 +53,7 @@ public sealed class CreateDocumentCommandHandlerTests
 
     private static CreateDocumentCommandHandler CreateHandler(World w)
         => new(w.Users, w.Documents, w.Types, w.Numbers, w.Registries,
-            new FakeDocumentTypeSchemaVersionRepository(), w.Uow, w.Sender);
+            new FakeDocumentTypeSchemaVersionRepository(), new FakeDocumentFieldOptionResolver(), w.Uow, w.Sender);
 
     private static CreateDocumentCommand Command(
         Guid userId,

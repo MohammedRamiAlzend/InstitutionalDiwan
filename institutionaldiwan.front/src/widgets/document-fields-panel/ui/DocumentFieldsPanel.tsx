@@ -1,14 +1,13 @@
 import { useState } from 'react'
 import { Pencil } from 'lucide-react'
 import {
-  FIELD_DATA_TYPE,
-  normalizeNumberText,
+  formatFieldValue,
+  toFieldValueMap,
   useDocumentFields,
-  type DocumentFieldValueResponse,
+  visibleFields,
 } from '@/entities/document-schema'
 import { EditFieldValuesForm } from '@/features/document-field-values'
 import { toArabicErrorMessage } from '@/shared/api'
-import { formatDate } from '@/shared/lib'
 import { Badge, Button, Skeleton } from '@/shared/ui'
 
 interface DocumentFieldsPanelProps {
@@ -17,22 +16,6 @@ interface DocumentFieldsPanelProps {
   canEdit: boolean
   /** Why editing is unavailable, shown next to the values when the caller could otherwise edit. */
   lockedReason?: string
-}
-
-function displayValue({ field, value }: DocumentFieldValueResponse): string {
-  if (!value) return '—'
-  switch (field.dataType) {
-    case FIELD_DATA_TYPE.Boolean:
-      return value === 'true' ? 'نعم' : 'لا'
-    case FIELD_DATA_TYPE.Select:
-      return field.options.find((option) => option.key === value)?.labelAr ?? value
-    case FIELD_DATA_TYPE.Date:
-      return formatDate(value)
-    case FIELD_DATA_TYPE.Number:
-      return normalizeNumberText(value)
-    default:
-      return value
-  }
 }
 
 /** The document's dynamic fields against the schema version it was pinned to at creation. */
@@ -53,6 +36,13 @@ export function DocumentFieldsPanel({ documentId, canEdit, lockedReason }: Docum
   if (!data || data.schemaVersionId === null) {
     return <p className="text-sm text-muted">لا حقول إضافية لهذه الوثيقة.</p>
   }
+
+  // A field hidden by its condition has nothing to say on this document.
+  const shown = new Set(
+    visibleFields(data.fields.map((entry) => entry.field), toFieldValueMap(data.fields)).map(
+      (field) => field.key,
+    ),
+  )
 
   return (
     <section className="flex flex-col gap-4">
@@ -77,13 +67,13 @@ export function DocumentFieldsPanel({ documentId, canEdit, lockedReason }: Docum
         <EditFieldValuesForm documentId={documentId} fields={data} onDone={() => setEditing(false)} />
       ) : (
         <dl className="grid gap-x-6 gap-y-3 sm:grid-cols-2">
-          {data.fields.map((entry) => (
+          {data.fields.filter((entry) => shown.has(entry.field.key)).map((entry) => (
             <div key={entry.field.documentFieldId} className="flex flex-col gap-0.5">
               <dt className="text-xs text-muted">
                 {entry.field.labelAr}
                 {entry.field.isRequired && <span className="text-danger"> *</span>}
               </dt>
-              <dd className="whitespace-pre-wrap text-sm text-foreground">{displayValue(entry)}</dd>
+              <dd className="whitespace-pre-wrap text-sm text-foreground">{formatFieldValue(entry.field, entry.value)}</dd>
             </div>
           ))}
         </dl>

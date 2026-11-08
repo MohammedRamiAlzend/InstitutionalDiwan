@@ -3,11 +3,12 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { BookmarkPlus, Copy, Eye, Hash, History, RefreshCw } from 'lucide-react'
 import { toast } from 'sonner'
 import {
+  archiveCriteriaFromParams,
+  archiveCriteriaToParams,
   parseArchiveCriteria,
   serializeArchiveCriteria,
   useArchivedDocuments,
   useSavedSearches,
-  ARCHIVE_CRITERIA_KEYS,
   type ArchivedDocumentResponse,
   type ArchiveSortKey,
   type SavedSearchResponse,
@@ -18,6 +19,7 @@ import {
   documentRowLabel,
   isDocumentRestricted,
 } from '@/entities/document'
+import { FieldFilterBar } from '@/entities/document-schema'
 import {
   LOOKUP_SLUGS,
   LookupLabel,
@@ -38,6 +40,9 @@ import {
 } from '@/shared/ui'
 import { SavedSearchesBar } from './SavedSearchesBar'
 import { UserLabel } from '@/entities/user'
+
+/** URL parameter holding the repeated `key:operator:value` dynamic-field filters. */
+const FIELD_FILTER_PARAM = 'f'
 
 const SORT_KEYS: readonly ArchiveSortKey[] = ['archivedAt', 'title', 'officialNumber']
 
@@ -70,7 +75,11 @@ export function ArchiveSearchTable() {
       'archivedFrom',
       'archivedTo',
     ],
+    // Field filters belong to one document type, so changing the type drops them.
+    repeatedKeys: [FIELD_FILTER_PARAM],
+    resetOnChange: { documentTypeId: [FIELD_FILTER_PARAM] },
   })
+  const documentTypeId = optionalId(table.filters.documentTypeId)
   const [searchParams, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
 
@@ -81,7 +90,8 @@ export function ArchiveSearchTable() {
     sortBy: resolveSortKey(table.sortKey),
     sortDescending: table.sortDirection === 'desc',
     owningDepartmentId: table.filters.owningDepartmentId || undefined,
-    documentTypeId: optionalId(table.filters.documentTypeId),
+    documentTypeId,
+    fieldFilters: documentTypeId ? table.repeated[FIELD_FILTER_PARAM] : undefined,
     archiveLocationId: optionalId(table.filters.archiveLocationId),
     archivedFromUtc: dayBoundaryUtc(table.filters.archivedFrom, false),
     archivedToUtc: dayBoundaryUtc(table.filters.archivedTo, true),
@@ -124,16 +134,11 @@ export function ArchiveSearchTable() {
   )
 
   // The grid's criteria are exactly its URL params, so saving and restoring is a copy in/out.
-  const currentCriteriaJson = serializeArchiveCriteria(
-    Object.fromEntries(ARCHIVE_CRITERIA_KEYS.map((key) => [key, searchParams.get(key)])),
-  )
+  const currentCriteriaJson = serializeArchiveCriteria(archiveCriteriaFromParams(searchParams))
   const hasCriteria = currentCriteriaJson !== '{}'
 
   const applySavedSearch = (search: SavedSearchResponse) => {
-    const criteria = parseArchiveCriteria(search.criteriaJson)
-    const next = new URLSearchParams()
-    for (const [key, value] of Object.entries(criteria)) next.set(key, value)
-    setSearchParams(next, { replace: true })
+    setSearchParams(archiveCriteriaToParams(parseArchiveCriteria(search.criteriaJson)), { replace: true })
   }
 
   // A default saved search opens the page for a caller who arrived without any criteria — once.
@@ -144,10 +149,9 @@ export function ArchiveSearchTable() {
 
     const defaultSearch = savedQuery.data.find((search) => search.isDefault)
     if (defaultSearch && ![...searchParams.keys()].length) {
-      const criteria = parseArchiveCriteria(defaultSearch.criteriaJson)
-      const next = new URLSearchParams()
-      for (const [key, value] of Object.entries(criteria)) next.set(key, value)
-      setSearchParams(next, { replace: true })
+      setSearchParams(archiveCriteriaToParams(parseArchiveCriteria(defaultSearch.criteriaJson)), {
+        replace: true,
+      })
     }
   }, [savedQuery.data, searchParams, setSearchParams])
 
@@ -357,6 +361,12 @@ export function ArchiveSearchTable() {
               onValueChange={(value) => table.setFilter('documentTypeId', value === 'all' ? null : value)}
               options={typeOptions}
               className="w-40"
+            />
+            <GuideChip id="archive.field-filters" />
+            <FieldFilterBar
+              documentTypeId={documentTypeId}
+              raw={table.repeated[FIELD_FILTER_PARAM] ?? []}
+              onChange={(raw) => table.setRepeated(FIELD_FILTER_PARAM, raw)}
             />
             <Select
               aria-label="تصفية حسب القسم المالك"

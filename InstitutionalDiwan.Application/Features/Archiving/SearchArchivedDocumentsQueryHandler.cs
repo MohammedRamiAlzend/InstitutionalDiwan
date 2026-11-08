@@ -2,6 +2,7 @@ using InstitutionalDiwan.Application.Abstractions.Authentication;
 using InstitutionalDiwan.Application.Abstractions.Authorization;
 using InstitutionalDiwan.Application.Abstractions.Messaging;
 using InstitutionalDiwan.Application.Common;
+using InstitutionalDiwan.Application.Features.Correspondence.Documents;
 using InstitutionalDiwan.Domain.Common;
 using InstitutionalDiwan.Domain.Repositories;
 
@@ -11,17 +12,20 @@ internal sealed class SearchArchivedDocumentsQueryHandler
     : IQueryHandler<SearchArchivedDocumentsQuery, PagedResult<ArchivedDocumentResponse>>
 {
     private readonly IDocumentArchiveRepository _documentArchiveRepository;
+    private readonly IDocumentFieldRepository _documentFieldRepository;
     private readonly IDepartmentScopeEvaluator _departmentScopeEvaluator;
     private readonly IUserContext _userContext;
     private readonly IClock _clock;
 
     public SearchArchivedDocumentsQueryHandler(
         IDocumentArchiveRepository documentArchiveRepository,
+        IDocumentFieldRepository documentFieldRepository,
         IDepartmentScopeEvaluator departmentScopeEvaluator,
         IUserContext userContext,
         IClock clock)
     {
         _documentArchiveRepository = documentArchiveRepository;
+        _documentFieldRepository = documentFieldRepository;
         _departmentScopeEvaluator = departmentScopeEvaluator;
         _userContext = userContext;
         _clock = clock;
@@ -38,6 +42,11 @@ internal sealed class SearchArchivedDocumentsQueryHandler
             request.SortBy,
             request.SortDescending);
 
+        var fieldFilters = await DocumentFieldFilterParser.ResolveAsync(
+            request.FieldFilters, request.DocumentTypeId, _documentFieldRepository, cancellationToken);
+        if (fieldFilters.IsFailure)
+            return Result.Failure<PagedResult<ArchivedDocumentResponse>>(fieldFilters.Error);
+
         var accessibleDepartmentIds = await _departmentScopeEvaluator.GetAccessibleDepartmentIdsAsync(
             cancellationToken);
 
@@ -51,7 +60,8 @@ internal sealed class SearchArchivedDocumentsQueryHandler
                 request.DirectionId,
                 request.ArchiveLocationId,
                 request.ArchivedFromUtc,
-                request.ArchivedToUtc),
+                request.ArchivedToUtc,
+                fieldFilters.Value),
             page,
             cancellationToken);
 

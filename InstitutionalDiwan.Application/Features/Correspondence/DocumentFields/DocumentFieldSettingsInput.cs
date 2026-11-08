@@ -17,11 +17,12 @@ public sealed record DocumentFieldSettingsInput(
     decimal? MinNumber = null,
     decimal? MaxNumber = null,
     int? MaxLength = null,
-    IReadOnlyList<DocumentFieldOption>? Options = null)
+    IReadOnlyList<DocumentFieldOption>? Options = null,
+    DocumentFieldBehavior? Behavior = null)
 {
     /// <summary>Validates the input against <paramref name="dataType"/> and builds the domain settings.</summary>
     public Result<DocumentFieldSettings> ToSettings(DocumentFieldDataType dataType) =>
         DocumentFieldSettings.Create(
             dataType, LabelAr, IsRequired, DisplayOrder, RegexPattern, RegexErrorMessageAr,
-            MinNumber, MaxNumber, MaxLength, Options);
+            MinNumber, MaxNumber, MaxLength, Options, Behavior);
 }

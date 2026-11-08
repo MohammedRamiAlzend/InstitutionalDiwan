@@ -13,6 +13,12 @@ export const ARCHIVE_GUIDE_ENTRIES: readonly GuideEntry[] = [
     body: 'ضيّق النتائج بموقع الأرشفة أو النوع أو القسم المالك أو مدى تاريخ الأرشفة. المرشحات تُحفظ في العنوان فيمكن مشاركة الرابط.',
   },
   {
+    id: 'archive.field-filters',
+    title: 'التصفية بقيم الحقول',
+    body: 'بعد اختيار نوع الوثيقة تظهر حقوله المعلَّمة «قابلة للتصفية» مباشرة في الشريط، ومن «تصفية بالحقول» تصل إلى معاملات أكثر مثل نطاق المبلغ أو التاريخ. تجتمع المرشحات بـ «و» (حتى 5)، وتُحفظ مع البحث المحفوظ.',
+    note: 'تغيير النوع يمسح مرشحات الحقول لأن لكل نوع حقوله.',
+  },
+  {
     id: 'archive.save-search',
     title: 'حفظ البحث',
     body: 'يحفظ البحث والمرشحات الحالية باسم تختاره لتعيدها بنقرة واحدة. عمليات البحث المحفوظة خاصة بك وحدك، وأقصاها 50.',
@@ -37,6 +43,7 @@ export const ARCHIVE_GUIDE: PageGuide = {
   entryIds: [
     'archive.grid',
     'archive.filters',
+    'archive.field-filters',
     'archive.save-search',
     'archive.saved-searches',
     'table.search',

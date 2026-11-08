@@ -1,4 +1,4 @@
-import type { FieldDataType, FieldOption } from '@/entities/document-schema'
+import type { FieldBehavior, FieldDataType, FieldOption } from '@/entities/document-schema'
 
 /** `DocumentFieldSettingsRequest`. */
 export interface FieldSettingsRequest {
@@ -11,6 +11,7 @@ export interface FieldSettingsRequest {
   maxNumber?: number
   maxLength?: number
   options?: FieldOption[]
+  behavior: FieldBehavior
 }
 
 /** `CreateDocumentFieldRequest`. */

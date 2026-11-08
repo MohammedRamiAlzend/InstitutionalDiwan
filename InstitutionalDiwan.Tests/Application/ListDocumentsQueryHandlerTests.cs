@@ -21,6 +21,7 @@ public sealed class ListDocumentsQueryHandlerTests
         new(
             documents,
             new FakeDocumentFieldRepository(),
+            new FakeDocumentTypeSchemaVersionRepository(),
             scope ?? new FakeDepartmentScopeEvaluator { InstitutionWide = true },
             new FakeUserContext { IsAuthenticated = true, UserId = callerId ?? Guid.NewGuid() },
             TestClock.Instance);

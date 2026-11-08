@@ -21,6 +21,7 @@ every other slice; handlers take the acting `UserId` explicitly.
 | `DocumentFieldQueries.cs` | The query records: `ListDocumentFieldsQuery`, `ListSchemaVersionsQuery`, `GetSchemaVersionQuery`, `GetDocumentTypeSchemaQuery` (the published schema a new document gets) and `GetDocumentFieldsQuery` (a document's pinned schema with its values). |
 | `DocumentFieldSettingsInput.cs` | The administrator-editable configuration of a field (label, requiredness, order, regex, range, max length, options) and its conversion to the validated domain `DocumentFieldSettings` using the field's own data type. |
 | `DocumentFieldResponses.cs` | Read models: `DocumentFieldResponse`, `SchemaFieldResponse`, `SchemaVersionResponse`, `SchemaVersionSummaryResponse`, `DocumentTypeSchemaResponse`, `DocumentFieldValueResponse` and `DocumentFieldsResponse` (values formatted as text in the form the input accepts). |
+| `DocumentFieldOptionResolver.cs` | Reads the current choices of select fields fed by departments, external organizations or a lookup catalog. |
 | `SchemaFieldCommandHandlers.cs` | Handlers for creating a field identity (unique key per type) and adding, updating and removing a field in a schema draft. |
 | `SchemaDraftCommandHandlers.cs` | Handlers for starting a draft (a copy of the published version, numbered next), discarding a draft, and publishing — which retires the previously published version, read before the draft is published. |
 | `SetDocumentFieldValuesCommandHandler.cs` | Replaces a draft document's values against its pinned schema, after a `DOWNLOAD` access check; also holds `DocumentSchemaPinning`, the helper the create flows share to apply values (rejecting any value when the type has no schema). |
@@ -50,6 +51,7 @@ every other slice; handlers take the acting `UserId` explicitly.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-08 | Claude | Field settings carry `Behavior`; added `DocumentFieldOptionResolver`; `DocumentSchemaPinning.ApplyValues` passes sourced options and writes read-only values even when no values are submitted. |
 | 2026-11-03 | Claude | `SetDocumentFieldValuesCommandHandler` now requires `DOWNLOAD` access to the document (403 `Correspondence.DocumentAccessDenied`), matching draft metadata edits. |
 | 2026-11-03 | Claude | `GetDocumentFieldsQueryHandler` now requires `VIEW` access to the document, because the values are document content. `SetDocumentFieldValuesCommandHandler` still has no document-level check; it waits for the access levels of the write handlers to be decided. |
 | 2026-11-02 | Claude | Created the slice (dynamic document fields, Phase 2): schema administration commands and queries, document value command, and the shared pinning helper. |

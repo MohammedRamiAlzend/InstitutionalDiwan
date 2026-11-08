@@ -1,3 +1,4 @@
+using InstitutionalDiwan.Domain.ValueObjects;
 using InstitutionalDiwan.Domain.Entities.Correspondence;
 
 namespace InstitutionalDiwan.Server.Contracts.Correspondence;
@@ -18,11 +19,12 @@ public sealed record DocumentFieldSettingsRequest(
     decimal? MinNumber = null,
     decimal? MaxNumber = null,
     int? MaxLength = null,
-    IReadOnlyList<DocumentFieldOptionRequest>? Options = null);
+    IReadOnlyList<DocumentFieldOptionRequest>? Options = null,
+    DocumentFieldBehavior? Behavior = null);
 
 /// <summary>
 /// Payload submitted to <c>POST /api/document-types/{documentTypeId}/fields</c>. The data type is
-/// the integer value of <c>DocumentFieldDataType</c> (1 Text, 2 LongText, 3 Number, 4 Date, 5 Boolean, 6 Select)
+/// the integer value of <c>DocumentFieldDataType</c> (1 Text, 2 LongText, 3 Number, 4 Date, 5 Boolean, 6 Select, 7 MultiSelect)
 /// and can never change afterwards.
 /// </summary>
 public sealed record CreateDocumentFieldRequest(string Key, DocumentFieldDataType DataType);
@@ -30,7 +32,7 @@ public sealed record CreateDocumentFieldRequest(string Key, DocumentFieldDataTyp
 /// <summary>Payload submitted to <c>POST /api/schema-versions/{schemaVersionId}/fields</c>.</summary>
 public sealed record AddSchemaFieldRequest(Guid DocumentFieldId, DocumentFieldSettingsRequest Settings);
 
-/// <summary>One dynamic-field value as text (numbers invariant, dates ISO 8601, booleans true/false, selects the option key).</summary>
+/// <summary>One dynamic-field value as text (numbers invariant, dates ISO 8601, booleans true/false, selects the option key, multi-selects the keys joined by commas).</summary>
 public sealed record DocumentFieldValueRequest(string FieldKey, string? Value);
 
 /// <summary>Payload submitted to <c>PUT /api/documents/{documentId}/fields</c>; replaces all values of the draft.</summary>

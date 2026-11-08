@@ -426,9 +426,11 @@ Document side:
   `DocumentFields.ValueRequired` before any number is consumed.
 
 Error codes:
-`DocumentFields.*` — see `InstitutionalDiwan.Domain/Errors/DomainErrors.cs`; all 40 have Arabic entries in
+`DocumentFields.*` — see `InstitutionalDiwan.Domain/Errors/DomainErrors.cs`; all 65 have Arabic entries in
 `shared/api/errorMessages.ts`. Error bodies carry no structured field key, so the SPA validates values locally
 first. Registry filtering: `GET /api/documents?documentTypeId=N&fieldFilters=key:op:value` (repeat up to 5, AND; requires `documentTypeId`). Operators: text/long text `eq`, `contains`; number and date `eq`, `gt`, `gte`, `lt`, `lte` (dates compare by calendar day, UTC); boolean and select `eq`. Documents without a value for the field never match. Errors: `DocumentFields.FilterRequiresDocumentType`, `FilterMalformed`, `FilterFieldNotFound`, `FilterOperatorNotSupported`, `FilterValueInvalid`, `TooManyFilters` (all with Arabic entries). The SPA keeps the filters in the repeated `f` URL parameter on `/documents`. The department register does not accept them yet.
+
+**Field behavior** (`settings.behavior`, `DocumentFieldBehavior`, stored as JSON on the schema-version field): `defaultValue` (`@today` on dates), `isReadOnly` (needs a default; the server writes it and answers `DocumentFields.FieldReadOnly` for another value), `isFilterable`, `showInTable`, `placeholderAr`, `helpTextAr`, `minLength`, `minDate`/`maxDate` (ISO or `@today`), `visibleWhenFieldKey`/`visibleWhenValue` (boolean, select or multi-select controller; a hidden field is neither required nor stored), `isHalfWidth`, `sectionTitleAr`, `optionSource` (0 static, 1 departments, 2 external organizations, 3 lookup with `lookupCatalog`; the schema reads return the resolved `options`, inactive entries flagged `isActive: false`). Data type 7 `MultiSelect` exchanges option keys joined by commas; its `eq` filter means "among the choices". `fieldFilters` also works on `GET /api/departments/{id}/documents` and `GET /api/archive/documents`. With `documentTypeId`, `GET /api/documents` accepts `sortBy=field:<key>` (text, number, date, boolean) and returns `fieldValues` for the columns marked `showInTable`.
 
 ### Archiving (Module 07) — implemented in the SPA (`/archive`, document details)
 

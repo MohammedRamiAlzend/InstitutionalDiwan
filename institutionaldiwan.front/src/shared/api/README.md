@@ -68,6 +68,7 @@ Used by documents, users, employees, external organizations, audit logs, and int
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-08 | Claude | Added Arabic messages for the field behavior errors (`DocumentFields.FieldReadOnly`, `ConditionCycle`, `DefaultValueInvalid` and related). |
 | 2026-11-08 | Claude | Added Arabic messages for `Numbering.VisitDateDuplicate` and `Numbering.VisitYearMismatch`. |
 | 2026-11-04 | Claude | Added Arabic messages for `Numbering.DepartmentRegistrationOwnDepartmentOnly` and `Numbering.DepartmentRegistryMismatch`. |
 | 2026-11-04 | Claude | Registry filtering by dynamic field values (plan `plans/document-registry-field-filters.md`): added the six Arabic `DocumentFields.Filter*` / `TooManyFilters` messages. |

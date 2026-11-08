@@ -97,6 +97,10 @@ public sealed class DocumentTypeSchemaVersion : AggregateRoot<Guid>
         if (_fields.Count >= MaxFields)
             return Result.Failure(DomainErrors.DocumentFields.TooManyFields);
 
+        var conditions = CheckConditions(field.DocumentFieldId, field.Key, field.DataType, settings);
+        if (conditions.IsFailure)
+            return conditions;
+
         _fields.Add(DocumentTypeSchemaVersionField.Create(SchemaVersionId, field, settings));
         UpdatedAt = utcNow ?? DateTime.UtcNow;
         return Result.Success();
@@ -115,6 +119,10 @@ public sealed class DocumentTypeSchemaVersion : AggregateRoot<Guid>
         if (settings.DataType != field.DataType)
             return Result.Failure(DomainErrors.DocumentFields.FieldTypeMismatch);
 
+        var conditions = CheckConditions(field.DocumentFieldId, field.FieldKey, field.DataType, settings);
+        if (conditions.IsFailure)
+            return conditions;
+
         field.Apply(settings);
         UpdatedAt = utcNow ?? DateTime.UtcNow;
         return Result.Success();
@@ -130,6 +138,9 @@ public sealed class DocumentTypeSchemaVersion : AggregateRoot<Guid>
         var field = _fields.FirstOrDefault(f => f.DocumentFieldId == documentFieldId);
         if (field is null)
             return Result.Failure(DomainErrors.DocumentFields.FieldNotInVersion);
+
+        if (_fields.Any(other => other.Behavior.VisibleWhenFieldKey == field.FieldKey))
+            return Result.Failure(DomainErrors.DocumentFields.FieldHasDependents);
 
         _fields.Remove(field);
         UpdatedAt = utcNow ?? DateTime.UtcNow;
@@ -167,14 +178,25 @@ public sealed class DocumentTypeSchemaVersion : AggregateRoot<Guid>
     /// <summary>
     /// Validates raw submitted values against this version and returns the typed rows to store.
     /// Blank values are skipped (a draft may be incomplete); an unknown or repeated key is rejected.
+    /// Read-only fields always get their fixed value and fields hidden by a condition are not kept.
     /// Required-field completeness is a separate gate, <see cref="CheckRequiredFields"/>.
     /// </summary>
+    /// <param name="existing">The document's stored values, so a read-only "today" keeps its original date.</param>
+    /// <param name="sourcedOptions">Current choices of the fields fed by a source, by field id.</param>
     public Result<IReadOnlyList<DocumentFieldValue>> BuildValues(
         Guid documentId,
-        IReadOnlyCollection<DocumentFieldValueInput> inputs)
+        IReadOnlyCollection<DocumentFieldValueInput> inputs,
+        IReadOnlyCollection<DocumentFieldValue>? existing = null,
+        IReadOnlyDictionary<Guid, IReadOnlyList<DocumentFieldOption>>? sourcedOptions = null,
+        DateTime? utcNow = null)
     {
-        var values = new List<DocumentFieldValue>(inputs.Count);
+        var now = utcNow ?? DateTime.UtcNow;
+        var built = new Dictionary<Guid, DocumentFieldValue>(inputs.Count);
         var seen = new HashSet<string>(StringComparer.Ordinal);
+
+        var fixedValues = BuildFixedValues(documentId, existing, now);
+        if (fixedValues.IsFailure)
+            return Result.Failure<IReadOnlyList<DocumentFieldValue>>(fixedValues.Error);
 
         foreach (var input in inputs)
         {
@@ -189,28 +211,173 @@ public sealed class DocumentTypeSchemaVersion : AggregateRoot<Guid>
             if (string.IsNullOrWhiteSpace(input.Value))
                 continue;
 
-            var valueResult = field.BuildValue(documentId, input.Value);
+            var valueResult = field.BuildValue(documentId, input.Value, OptionsOf(field, sourcedOptions), now);
             if (valueResult.IsFailure)
                 return Result.Failure<IReadOnlyList<DocumentFieldValue>>(valueResult.Error);
 
-            values.Add(valueResult.Value);
+            if (field.Behavior.IsReadOnly)
+            {
+                if (!valueResult.Value.HasSameContent(fixedValues.Value[field.DocumentFieldId]))
+                    return Result.Failure<IReadOnlyList<DocumentFieldValue>>(DomainErrors.DocumentFields.FieldReadOnly(key));
+                continue;
+            }
+
+            built[field.DocumentFieldId] = valueResult.Value;
         }
 
-        return Result.Success<IReadOnlyList<DocumentFieldValue>>(values);
+        foreach (var (fieldId, value) in fixedValues.Value)
+            built[fieldId] = value;
+
+        return Result.Success<IReadOnlyList<DocumentFieldValue>>(
+            _fields.Where(field => built.ContainsKey(field.DocumentFieldId) && IsVisible(field, built))
+                .Select(field => built[field.DocumentFieldId])
+                .ToList());
     }
 
-    /// <summary>Fails with the first required field that has no stored value; run before registering a document.</summary>
+    /// <summary>The read-only values a document lacks; a document created without inputs still needs them.</summary>
+    public Result<IReadOnlyList<DocumentFieldValue>> BuildMissingFixedValues(
+        Guid documentId,
+        IReadOnlyCollection<DocumentFieldValue> existing,
+        DateTime utcNow)
+    {
+        var fixedValues = BuildFixedValues(documentId, existing, utcNow);
+        if (fixedValues.IsFailure)
+            return Result.Failure<IReadOnlyList<DocumentFieldValue>>(fixedValues.Error);
+
+        var known = existing.ToDictionary(value => value.DocumentFieldId);
+        foreach (var (fieldId, value) in fixedValues.Value)
+            known[fieldId] = value;
+
+        return Result.Success<IReadOnlyList<DocumentFieldValue>>(
+            _fields.Where(field => field.Behavior.IsReadOnly && IsVisible(field, known))
+                .Select(field => known[field.DocumentFieldId])
+                .Where(value => existing.All(stored => stored.DocumentFieldId != value.DocumentFieldId))
+                .ToList());
+    }
+
+    /// <summary>Fails with the first required visible field that has no stored value; run before registering a document.</summary>
     public Result CheckRequiredFields(IEnumerable<DocumentFieldValue> values)
     {
-        var present = values.Select(v => v.DocumentFieldId).ToHashSet();
+        var present = values.ToDictionary(value => value.DocumentFieldId);
         var missing = _fields
-            .Where(f => f.IsRequired && !present.Contains(f.DocumentFieldId))
+            .Where(f => f.IsRequired && !present.ContainsKey(f.DocumentFieldId) && IsVisible(f, present))
             .OrderBy(f => f.DisplayOrder)
             .FirstOrDefault();
 
         return missing is null
             ? Result.Success()
             : Result.Failure(DomainErrors.DocumentFields.ValueRequired(missing.FieldKey));
+    }
+
+    private Result<Dictionary<Guid, DocumentFieldValue>> BuildFixedValues(
+        Guid documentId,
+        IReadOnlyCollection<DocumentFieldValue>? existing,
+        DateTime utcNow)
+    {
+        var values = new Dictionary<Guid, DocumentFieldValue>();
+        foreach (var field in _fields.Where(f => f.Behavior.IsReadOnly))
+        {
+            var stored = existing?.FirstOrDefault(value => value.DocumentFieldId == field.DocumentFieldId);
+            if (stored is not null)
+            {
+                values[field.DocumentFieldId] = stored;
+                continue;
+            }
+
+            var built = field.BuildFixedValue(documentId, utcNow);
+            if (built.IsFailure)
+                return Result.Failure<Dictionary<Guid, DocumentFieldValue>>(built.Error);
+
+            values[field.DocumentFieldId] = built.Value;
+        }
+
+        return Result.Success(values);
+    }
+
+    private static IReadOnlyList<DocumentFieldOption>? OptionsOf(
+        DocumentTypeSchemaVersionField field,
+        IReadOnlyDictionary<Guid, IReadOnlyList<DocumentFieldOption>>? sourcedOptions) =>
+        sourcedOptions is not null && sourcedOptions.TryGetValue(field.DocumentFieldId, out var options)
+            ? options
+            : null;
+
+    /// <summary>A field shows when its condition holds and the field it depends on shows too.</summary>
+    private bool IsVisible(
+        DocumentTypeSchemaVersionField field,
+        IReadOnlyDictionary<Guid, DocumentFieldValue> values)
+    {
+        // Every link was checked to be acyclic when configured, so this walk ends within the field count.
+        var current = field;
+        for (var hop = 0; hop <= _fields.Count; hop++)
+        {
+            if (current.Behavior.VisibleWhenFieldKey is not { } controllerKey)
+                return true;
+
+            var controller = _fields.FirstOrDefault(f => f.FieldKey == controllerKey);
+            if (controller is null)
+                return true;
+
+            if (!values.TryGetValue(controller.DocumentFieldId, out var value)
+                || !value.MatchesChoice(current.Behavior.VisibleWhenValue!))
+            {
+                return false;
+            }
+
+            current = controller;
+        }
+
+        return false;
+    }
+
+    private sealed record ConditionNode(
+        string Key,
+        DocumentFieldDataType DataType,
+        DocumentFieldBehavior Behavior,
+        IReadOnlyList<DocumentFieldOption> Options);
+
+    /// <summary>Checks every visibility condition as it would stand once the changed field is applied.</summary>
+    private Result CheckConditions(
+        Guid changedFieldId,
+        string changedKey,
+        DocumentFieldDataType changedType,
+        DocumentFieldSettings settings)
+    {
+        var nodes = _fields
+            .Where(field => field.DocumentFieldId != changedFieldId)
+            .Select(field => new ConditionNode(field.FieldKey, field.DataType, field.Behavior, field.Options))
+            .Append(new ConditionNode(changedKey, changedType, settings.Behavior, settings.Options))
+            .ToDictionary(node => node.Key, StringComparer.Ordinal);
+
+        foreach (var node in nodes.Values.Where(node => node.Behavior.VisibleWhenFieldKey is not null))
+        {
+            if (node.Behavior.VisibleWhenFieldKey == node.Key
+                || !nodes.TryGetValue(node.Behavior.VisibleWhenFieldKey!, out var controller)
+                || controller.DataType is not (DocumentFieldDataType.Boolean or DocumentFieldDataType.Select or DocumentFieldDataType.MultiSelect))
+            {
+                return Result.Failure(DomainErrors.DocumentFields.ConditionFieldInvalid);
+            }
+
+            var value = node.Behavior.VisibleWhenValue!;
+            var valid = controller.DataType == DocumentFieldDataType.Boolean
+                ? value is "true" or "false"
+                : controller.Behavior.OptionSource != DocumentFieldOptionSource.Static
+                    || controller.Options.Any(option => option.Key == value);
+            if (!valid)
+                return Result.Failure(DomainErrors.DocumentFields.ConditionValueInvalid);
+
+            var visited = new HashSet<string>(StringComparer.Ordinal) { node.Key };
+            var cursor = controller;
+            while (true)
+            {
+                if (!visited.Add(cursor.Key))
+                    return Result.Failure(DomainErrors.DocumentFields.ConditionCycle);
+                if (cursor.Behavior.VisibleWhenFieldKey is not { } next || !nodes.TryGetValue(next, out var parent))
+                    break;
+                cursor = parent;
+            }
+        }
+
+        return Result.Success();
     }
 
     private Result EnsureDraft() =>

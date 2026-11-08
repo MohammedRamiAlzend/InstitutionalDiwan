@@ -54,6 +54,7 @@ export const ROUTES = {
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-08 | Claude | Guide entry `archive.field-filters`; `documents.field-filters` describes the filters on the bar. |
 | 2026-11-05 | Claude | `DOCUMENT_TYPE` is now `BaseRecord` (1) only; removed `DOCUMENT_TYPE_DIRECTION`. |
 | 2026-11-04 | Claude | Registry filtering by dynamic field values (plan `plans/document-registry-field-filters.md`): added the `documents.field-filters` guide entry. |
 | 2026-11-04 | Claude | Added `ROUTES.LOOKUPS`, `lookupCatalogs.ts` (Arabic names, groups and `canCreate` for the 33 catalogs) and the `lookups` page guide. |

@@ -311,6 +311,32 @@ public static class DomainErrors
         public static readonly Error TooManyFilters = Error.Validation("DocumentFields.TooManyFilters", "A registry query accepts at most 5 field filters.");
         public static readonly Error TooManyFields = Error.Conflict("DocumentFields.TooManyFields", "A schema version cannot have more than 50 fields.");
         public static readonly Error DuplicateValue = Error.Validation("DocumentFields.DuplicateValue", "A field value was supplied more than once.");
+        public static readonly Error BehaviorTextTooLong = Error.Validation("DocumentFields.BehaviorTextTooLong", "The placeholder (200), help text (500) or section title (100) is too long.");
+        public static readonly Error MinLengthNotAllowed = Error.Validation("DocumentFields.MinLengthNotAllowed", "A minimum length can only be set on text fields.");
+        public static readonly Error MinLengthInvalid = Error.Validation("DocumentFields.MinLengthInvalid", "The minimum length must be at least 1 and not exceed the maximum length.");
+        public static readonly Error DateRangeNotAllowed = Error.Validation("DocumentFields.DateRangeNotAllowed", "A date range can only be set on date fields.");
+        public static readonly Error DateRangeInvalid = Error.Validation("DocumentFields.DateRangeInvalid", "A date limit must be a valid date or @today, and the earliest cannot be after the latest.");
+        public static readonly Error DefaultValueInvalid = Error.Validation("DocumentFields.DefaultValueInvalid", "The default value does not satisfy the field's own rules, or the field takes its options from a source.");
+        public static readonly Error ReadOnlyRequiresDefault = Error.Validation("DocumentFields.ReadOnlyRequiresDefault", "A read-only field needs a default value.");
+        public static readonly Error OptionSourceNotAllowed = Error.Validation("DocumentFields.OptionSourceNotAllowed", "An option source can only be set on select and multi-select fields.");
+        public static readonly Error OptionSourceInvalid = Error.Validation("DocumentFields.OptionSourceInvalid", "The option source is not supported or its lookup catalog is unknown.");
+        public static readonly Error ConditionIncomplete = Error.Validation("DocumentFields.ConditionIncomplete", "A visibility condition needs both a field and a value.");
+        public static readonly Error ConditionFieldInvalid = Error.Validation("DocumentFields.ConditionFieldInvalid", "A visibility condition must name another boolean, select or multi-select field of this version.");
+        public static readonly Error ConditionValueInvalid = Error.Validation("DocumentFields.ConditionValueInvalid", "The visibility condition value is not a value of the field it depends on.");
+        public static readonly Error ConditionCycle = Error.Validation("DocumentFields.ConditionCycle", "Visibility conditions cannot depend on each other in a circle.");
+        public static readonly Error FieldHasDependents = Error.Conflict("DocumentFields.FieldHasDependents", "Another field's visibility depends on this field.");
+
+        public static Error FieldReadOnly(string key) =>
+            Error.Validation("DocumentFields.FieldReadOnly", $"The field '{key}' is read-only and keeps its fixed value.");
+
+        public static Error ValueTooShort(string key, int minLength) =>
+            Error.Validation("DocumentFields.ValueTooShort", $"The value of field '{key}' must be at least {minLength} characters.");
+
+        public static Error ValueDateOutOfRange(string key) =>
+            Error.Validation("DocumentFields.ValueDateOutOfRange", $"The value of field '{key}' is outside its allowed dates.");
+
+        public static Error TooManySelections(string key) =>
+            Error.Validation("DocumentFields.TooManySelections", $"The value of field '{key}' holds too many choices.");
 
         public static Error UnknownField(string key) =>
             Error.Validation("DocumentFields.UnknownField", $"The field '{key}' is not part of the document's schema version.");

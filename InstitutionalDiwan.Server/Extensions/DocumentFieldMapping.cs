@@ -15,7 +15,8 @@ internal static class DocumentFieldMapping
         request.MinNumber,
         request.MaxNumber,
         request.MaxLength,
-        request.Options?.Select(option => new DocumentFieldOption(option.Key, option.LabelAr)).ToList());
+        request.Options?.Select(option => new DocumentFieldOption(option.Key, option.LabelAr)).ToList(),
+        request.Behavior);
 
     public static IReadOnlyList<DocumentFieldValueInput>? ToInputs(
         this IReadOnlyList<DocumentFieldValueRequest>? values) =>

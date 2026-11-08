@@ -2,6 +2,7 @@ using System.Globalization;
 using InstitutionalDiwan.Domain.Common;
 using InstitutionalDiwan.Domain.Entities.Correspondence;
 using InstitutionalDiwan.Domain.Errors;
+using InstitutionalDiwan.Domain.Repositories;
 using InstitutionalDiwan.Domain.ValueObjects;
 
 namespace InstitutionalDiwan.Application.Features.Correspondence.Documents;
@@ -14,6 +15,29 @@ internal static class DocumentFieldFilterParser
 {
     public const int MaxFilters = 5;
     private const int MaxValueLength = 500;
+
+    /// <summary>
+    /// Validates the raw filters of a table query against the fields of its document type; a query
+    /// with no filters needs no document type and loads nothing.
+    /// </summary>
+    public static async Task<Result<IReadOnlyList<DocumentFieldFilter>?>> ResolveAsync(
+        IReadOnlyList<string>? raw,
+        int? documentTypeId,
+        IDocumentFieldRepository fieldRepository,
+        CancellationToken cancellationToken)
+    {
+        if (raw is not { Count: > 0 })
+            return Result.Success<IReadOnlyList<DocumentFieldFilter>?>(null);
+
+        if (documentTypeId is not { } typeId)
+            return Result.Failure<IReadOnlyList<DocumentFieldFilter>?>(DomainErrors.DocumentFields.FilterRequiresDocumentType);
+
+        var fields = await fieldRepository.ListByDocumentTypeAsync(typeId, cancellationToken);
+        var parsed = Parse(raw, fields);
+        return parsed.IsFailure
+            ? Result.Failure<IReadOnlyList<DocumentFieldFilter>?>(parsed.Error)
+            : Result.Success<IReadOnlyList<DocumentFieldFilter>?>(parsed.Value);
+    }
 
     public static Result<IReadOnlyList<DocumentFieldFilter>> Parse(
         IReadOnlyList<string> raw,
@@ -87,6 +111,7 @@ internal static class DocumentFieldFilterParser
                 return Result.Success(new DocumentFieldFilter(field.DocumentFieldId, field.DataType, op, Boolean: boolean));
 
             case DocumentFieldDataType.Select:
+            case DocumentFieldDataType.MultiSelect:
                 // Option keys differ between schema versions, so an unknown key simply matches nothing.
                 if (op != FieldFilterOperator.Equals)
                     return NotSupported();

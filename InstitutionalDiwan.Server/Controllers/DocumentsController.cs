@@ -120,6 +120,7 @@ public sealed class DocumentsController : ControllerBase
         [Description("Filter by document status id (integer, optional). Example: 2.")] [FromQuery] int? statusId = null,
         [Description("Filter by direction id (integer, optional). Example: 1.")] [FromQuery] int? directionId = null,
         [Description("Filter by document type id (integer, optional). Example: 1.")] [FromQuery] int? documentTypeId = null,
+        [Description("Dynamic-field filters as key:operator:value, repeated up to 5 times and combined with AND; requires documentTypeId (string array, optional, query parameter). Example: contract_number:contains:A-12.")] [FromQuery] string[]? fieldFilters = null,
         CancellationToken cancellationToken = default)
     {
         var result = await _sender.Send(
@@ -132,7 +133,8 @@ public sealed class DocumentsController : ControllerBase
                 sortDescending,
                 statusId,
                 directionId,
-                documentTypeId),
+                documentTypeId,
+                fieldFilters),
             cancellationToken);
 
         return result.ToActionResult();

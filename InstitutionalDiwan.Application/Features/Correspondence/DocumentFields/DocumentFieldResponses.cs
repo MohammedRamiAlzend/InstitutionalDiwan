@@ -29,12 +29,21 @@ public sealed record SchemaFieldResponse(
     decimal? MinNumber,
     decimal? MaxNumber,
     int? MaxLength,
-    IReadOnlyList<DocumentFieldOption> Options)
+    IReadOnlyList<DocumentFieldOption> Options,
+    DocumentFieldBehavior Behavior)
 {
-    public static SchemaFieldResponse From(DocumentTypeSchemaVersionField field) => new(
+    /// <param name="field">The configured field.</param>
+    /// <param name="sourcedOptions">Replaces <c>Options</c> when the field takes its choices from a source.</param>
+    public static SchemaFieldResponse From(
+        DocumentTypeSchemaVersionField field,
+        IReadOnlyDictionary<Guid, IReadOnlyList<DocumentFieldOption>>? sourcedOptions = null) => new(
         field.DocumentFieldId, field.FieldKey, field.DataType, field.LabelAr, field.IsRequired,
         field.DisplayOrder, field.RegexPattern, field.RegexErrorMessageAr, field.MinNumber,
-        field.MaxNumber, field.MaxLength, field.Options);
+        field.MaxNumber, field.MaxLength,
+        sourcedOptions is not null && sourcedOptions.TryGetValue(field.DocumentFieldId, out var options)
+            ? options
+            : field.Options,
+        field.Behavior);
 }
 
 /// <summary>One schema version with its fields in display order.</summary>
@@ -48,13 +57,15 @@ public sealed record SchemaVersionResponse(
     Guid? PublishedByUserId,
     IReadOnlyList<SchemaFieldResponse> Fields)
 {
-    public static SchemaVersionResponse From(DocumentTypeSchemaVersion version) => new(
+    public static SchemaVersionResponse From(
+        DocumentTypeSchemaVersion version,
+        IReadOnlyDictionary<Guid, IReadOnlyList<DocumentFieldOption>>? sourcedOptions = null) => new(
         version.SchemaVersionId, version.DocumentTypeId, version.VersionNumber, version.Status,
         version.CreatedAt, version.PublishedAt, version.PublishedByUserId,
         version.Fields
             .OrderBy(field => field.DisplayOrder)
             .ThenBy(field => field.FieldKey, StringComparer.Ordinal)
-            .Select(SchemaFieldResponse.From)
+            .Select(field => SchemaFieldResponse.From(field, sourcedOptions))
             .ToList());
 }
 
@@ -90,29 +101,36 @@ public sealed record DocumentFieldsResponse(
     IReadOnlyList<DocumentFieldValueResponse> Fields)
 {
     /// <summary>A document with no pinned schema has no dynamic fields.</summary>
-    public static DocumentFieldsResponse From(Document document, DocumentTypeSchemaVersion? schema)
+    public static DocumentFieldsResponse From(
+        Document document,
+        DocumentTypeSchemaVersion? schema,
+        IReadOnlyDictionary<Guid, IReadOnlyList<DocumentFieldOption>>? sourcedOptions = null)
     {
         if (schema is null)
             return new DocumentFieldsResponse(document.DocumentId, document.SchemaVersionId, null, Array.Empty<DocumentFieldValueResponse>());
 
         var values = document.FieldValues.ToDictionary(value => value.DocumentFieldId);
-        var fields = SchemaVersionResponse.From(schema).Fields
+        var fields = SchemaVersionResponse.From(schema, sourcedOptions).Fields
             .Select(field => new DocumentFieldValueResponse(
                 field,
-                values.TryGetValue(field.DocumentFieldId, out var value) ? FormatValue(field.DataType, value) : null))
+                values.TryGetValue(field.DocumentFieldId, out var value) ? DocumentFieldValueText.Format(field.DataType, value) : null))
             .ToList();
 
         return new DocumentFieldsResponse(document.DocumentId, schema.SchemaVersionId, schema.VersionNumber, fields);
     }
+}
 
-    /// <summary>Formats a stored value in the same text form <see cref="DocumentFieldValueInput"/> accepts.</summary>
-    private static string? FormatValue(DocumentFieldDataType dataType, DocumentFieldValue value) => dataType switch
+/// <summary>The text form of a stored value, the same one <see cref="DocumentFieldValueInput"/> accepts.</summary>
+public static class DocumentFieldValueText
+{
+    public static string? Format(DocumentFieldDataType dataType, DocumentFieldValue value) => dataType switch
     {
         DocumentFieldDataType.Text or DocumentFieldDataType.LongText => value.TextValue,
         DocumentFieldDataType.Number => value.NumberValue?.ToString(CultureInfo.InvariantCulture),
         DocumentFieldDataType.Date => value.DateValue?.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture),
         DocumentFieldDataType.Boolean => value.BoolValue is { } flag ? (flag ? "true" : "false") : null,
         DocumentFieldDataType.Select => value.OptionKey,
+        DocumentFieldDataType.MultiSelect => value.TextValue?.Trim('|').Replace('|', ','),
         _ => null
     };
 }

@@ -1258,6 +1258,13 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("SchemaVersionFieldId");
 
+                    b.Property<string>("Behavior")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("nvarchar(max)")
+                        .HasDefaultValue("{\"DefaultValue\":null,\"IsReadOnly\":false,\"IsFilterable\":true,\"ShowInTable\":false,\"PlaceholderAr\":null,\"HelpTextAr\":null,\"MinLength\":null,\"MinDate\":null,\"MaxDate\":null,\"VisibleWhenFieldKey\":null,\"VisibleWhenValue\":null,\"IsHalfWidth\":false,\"SectionTitleAr\":null,\"OptionSource\":0,\"LookupCatalog\":null}")
+                        .HasColumnName("Behavior");
+
                     b.Property<int>("DataType")
                         .HasColumnType("int")
                         .HasColumnName("DataType");

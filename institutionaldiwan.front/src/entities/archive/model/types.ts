@@ -20,6 +20,8 @@ export interface ArchiveSearchParams extends PagedQueryParams {
   archiveLocationId?: number
   archivedFromUtc?: string
   archivedToUtc?: string
+  /** Repeated `key:operator:value` dynamic-field filters; needs `documentTypeId`. */
+  fieldFilters?: string[]
 }
 
 /** One archive transition from `GET /api/documents/{id}/archive-events`. */

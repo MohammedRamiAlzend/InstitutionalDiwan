@@ -7,6 +7,7 @@ export const FIELD_DATA_TYPE_LABELS: Record<FieldDataType, string> = {
   [FIELD_DATA_TYPE.Date]: 'تاريخ',
   [FIELD_DATA_TYPE.Boolean]: 'نعم / لا',
   [FIELD_DATA_TYPE.Select]: 'قائمة اختيار',
+  [FIELD_DATA_TYPE.MultiSelect]: 'اختيار متعدد',
 }
 
 export const SCHEMA_STATUS_LABELS: Record<SchemaStatus, string> = {

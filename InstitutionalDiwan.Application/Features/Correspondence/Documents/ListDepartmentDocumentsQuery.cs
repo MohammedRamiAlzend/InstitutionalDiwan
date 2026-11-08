@@ -18,4 +18,5 @@ public sealed record ListDepartmentDocumentsQuery(
     bool SortDescending = true,
     int? StatusId = null,
     int? DirectionId = null,
-    int? DocumentTypeId = null) : IQuery<PagedResult<DocumentResponse>>;
+    int? DocumentTypeId = null,
+    IReadOnlyList<string>? FieldFilters = null) : IQuery<PagedResult<DocumentResponse>>;

@@ -17,7 +17,8 @@ public sealed record DocumentResponse(
     DateTime DocumentDate,
     DateTime CreatedAt,
     string? OfficialNumberText = null,
-    DateTime? RegistrationDate = null)
+    DateTime? RegistrationDate = null,
+    IReadOnlyDictionary<string, string?>? FieldValues = null)
 {
     public static DocumentResponse From(Document document) => new(
         document.DocumentId,

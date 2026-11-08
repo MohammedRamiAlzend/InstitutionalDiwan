@@ -12,7 +12,8 @@ export const archiveApi = {
   async search(params: ArchiveSearchParams): Promise<PagedResult<ArchivedDocumentResponse>> {
     const { data } = await httpClient.get<PagedResult<ArchivedDocumentResponse>>(
       '/archive/documents',
-      { params },
+      // ASP.NET binds repeated keys (`fieldFilters=a&fieldFilters=b`), not `fieldFilters[]`.
+      { params, paramsSerializer: { indexes: null } },
     )
     return data
   },

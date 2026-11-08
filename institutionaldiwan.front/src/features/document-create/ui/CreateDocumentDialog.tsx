@@ -9,6 +9,7 @@ import {
   toFieldValueRequests,
   useDocumentTypeSchema,
   validateFieldValues,
+  withFieldDefaults,
   type FieldValueErrors,
   type FieldValueMap,
 } from '@/entities/document-schema'
@@ -204,6 +205,10 @@ export function CreateDocumentDialog({ open, onOpenChange }: CreateDocumentDialo
   const schemaFields = schemaQuery.data?.schema?.fields ?? []
   const [fieldValues, setFieldValues] = useState<FieldValueMap>(restored?.fieldValues ?? {})
   const [fieldErrors, setFieldErrors] = useState<FieldValueErrors>({})
+  const effectiveFieldValues = useMemo(
+    () => withFieldDefaults(schemaQuery.data?.schema?.fields ?? [], fieldValues),
+    [schemaQuery.data, fieldValues],
+  )
   const watched = useWatch({ control })
   const draftHasContent = hasDraftContent(watched, fieldValues)
   const draftAutosave = useFormDraftAutosave(
@@ -299,12 +304,12 @@ export function CreateDocumentDialog({ open, onOpenChange }: CreateDocumentDialo
       return
     }
 
-    const dynamicErrors = validateFieldValues(schemaFields, fieldValues)
+    const dynamicErrors = validateFieldValues(schemaFields, effectiveFieldValues)
     setFieldErrors(dynamicErrors)
     if (Object.keys(dynamicErrors).length > 0) return
 
     const shared = {
-      fieldValues: schemaFields.length > 0 ? toFieldValueRequests(schemaFields, fieldValues) : undefined,
+      fieldValues: schemaFields.length > 0 ? toFieldValueRequests(schemaFields, effectiveFieldValues) : undefined,
       title: values.title.trim(),
       documentTypeId: Number(values.documentTypeId),
       subjectSummary: values.subjectSummary.trim() || null,
@@ -531,7 +536,7 @@ export function CreateDocumentDialog({ open, onOpenChange }: CreateDocumentDialo
             </legend>
             <DynamicFieldInputs
               fields={schemaFields}
-              values={fieldValues}
+              values={effectiveFieldValues}
               errors={fieldErrors}
               disabled={pending}
               onChange={(key, value) => {

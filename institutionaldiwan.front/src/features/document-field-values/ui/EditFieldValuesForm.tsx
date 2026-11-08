@@ -5,6 +5,7 @@ import {
   toFieldValueMap,
   toFieldValueRequests,
   validateFieldValues,
+  withFixedValues,
   type DocumentFieldsResponse,
   type FieldValueErrors,
   type FieldValueMap,
@@ -23,7 +24,9 @@ interface EditFieldValuesFormProps {
 export function EditFieldValuesForm({ documentId, fields, onDone }: EditFieldValuesFormProps) {
   const mutation = useSetDocumentFieldValuesMutation(documentId)
   const schemaFields = fields.fields.map((entry) => entry.field)
-  const [values, setValues] = useState<FieldValueMap>(() => toFieldValueMap(fields.fields))
+  const [values, setValues] = useState<FieldValueMap>(() =>
+    withFixedValues(schemaFields, toFieldValueMap(fields.fields)),
+  )
   const [errors, setErrors] = useState<FieldValueErrors>({})
 
   const submit = () => {

@@ -26,6 +26,7 @@ public static class DependencyInjection
         services.AddScoped<Features.Numbering.Numbers.DepartmentRegistrationService>();
         services.AddScoped<Features.Attachments.AttachmentUploader>();
         services.AddScoped<Features.Audit.AuditLogAppender>();
+        services.AddScoped<Features.Correspondence.DocumentFields.IDocumentFieldOptionResolver, Features.Correspondence.DocumentFields.DocumentFieldOptionResolver>();
         services.AddScoped<Abstractions.Notifications.INotificationPublisher, Features.Notifications.NotificationPublisher>();
 
         // Action-level audit writes use an isolated scope, so this recorder is stateless.

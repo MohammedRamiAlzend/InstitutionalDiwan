@@ -40,6 +40,7 @@ public sealed class UnitOfWorkClockTests
             numbers,
             registries,
             new FakeDocumentTypeSchemaVersionRepository(),
+            new FakeDocumentFieldOptionResolver(),
             unitOfWork,
             new FakeSender());
 

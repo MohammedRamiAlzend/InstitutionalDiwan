@@ -29,4 +29,5 @@ Saves the dynamic field values of a draft document. The shared inputs and valida
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-08 | Claude | Read-only fields show their fixed value and are not sent. |
 | 2026-11-03 | Claude | Implemented per plan `plans/document-dynamic-fields-frontend.md`. |

@@ -14,6 +14,7 @@ internal sealed class CreateDraftDocumentCommandHandler
     private readonly IDocumentRepository _documentRepository;
     private readonly IDocumentTypeRepository _documentTypeRepository;
     private readonly IDocumentTypeSchemaVersionRepository _schemaVersionRepository;
+    private readonly IDocumentFieldOptionResolver _optionResolver;
     private readonly IUnitOfWork _unitOfWork;
 
     public CreateDraftDocumentCommandHandler(
@@ -21,12 +22,14 @@ internal sealed class CreateDraftDocumentCommandHandler
         IDocumentRepository documentRepository,
         IDocumentTypeRepository documentTypeRepository,
         IDocumentTypeSchemaVersionRepository schemaVersionRepository,
+        IDocumentFieldOptionResolver optionResolver,
         IUnitOfWork unitOfWork)
     {
         _userRepository = userRepository;
         _documentRepository = documentRepository;
         _documentTypeRepository = documentTypeRepository;
         _schemaVersionRepository = schemaVersionRepository;
+        _optionResolver = optionResolver;
         _unitOfWork = unitOfWork;
     }
 
@@ -70,8 +73,9 @@ internal sealed class CreateDraftDocumentCommandHandler
         if (documentResult.IsFailure)
             return Result.Failure<DocumentResponse>(documentResult.Error);
 
+        var sourcedOptions = schema is null ? null : await _optionResolver.ResolveAsync(schema, cancellationToken);
         var valuesResult = DocumentSchemaPinning.ApplyValues(
-            documentResult.Value, schema, request.FieldValues, _unitOfWork.UtcNow);
+            documentResult.Value, schema, request.FieldValues, sourcedOptions, _unitOfWork.UtcNow);
         if (valuesResult.IsFailure)
             return Result.Failure<DocumentResponse>(valuesResult.Error);
 

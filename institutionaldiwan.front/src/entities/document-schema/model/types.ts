@@ -6,6 +6,7 @@ export const FIELD_DATA_TYPE = {
   Date: 4,
   Boolean: 5,
   Select: 6,
+  MultiSelect: 7,
 } as const
 
 export type FieldDataType = (typeof FIELD_DATA_TYPE)[keyof typeof FIELD_DATA_TYPE]
@@ -19,6 +20,19 @@ export const SCHEMA_STATUS = {
 
 export type SchemaStatus = (typeof SCHEMA_STATUS)[keyof typeof SCHEMA_STATUS]
 
+/** `DocumentFieldOptionSource` — where the choices of a select or multi-select field come from. */
+export const FIELD_OPTION_SOURCE = {
+  Static: 0,
+  Departments: 1,
+  ExternalOrganizations: 2,
+  Lookup: 3,
+} as const
+
+export type FieldOptionSource = (typeof FIELD_OPTION_SOURCE)[keyof typeof FIELD_OPTION_SOURCE]
+
+/** Stands for the current date in a default value or a date limit. */
+export const TODAY_TOKEN = '@today'
+
 /** Limits mirrored from the backend rules (DomainErrors.DocumentFields). */
 export const FIELD_LIMITS = {
   maxFieldsPerVersion: 50,
@@ -29,6 +43,10 @@ export const FIELD_LIMITS = {
   maxKeyLength: 50,
   maxTextLength: 500,
   maxLongTextLength: 4000,
+  maxPlaceholderLength: 200,
+  maxHelpTextLength: 500,
+  maxSectionTitleLength: 100,
+  maxSelections: 50,
 } as const
 
 /** `DocumentFieldResponse` — the stable identity of a field of a document type. */
@@ -43,6 +61,27 @@ export interface DocumentFieldResponse {
 export interface FieldOption {
   key: string
   labelAr: string
+  /** False only for a sourced choice whose entry was deactivated: readable, no longer offered. */
+  isActive?: boolean
+}
+
+/** `DocumentFieldBehavior` — how a field behaves in forms and document tables. */
+export interface FieldBehavior {
+  defaultValue: string | null
+  isReadOnly: boolean
+  isFilterable: boolean
+  showInTable: boolean
+  placeholderAr: string | null
+  helpTextAr: string | null
+  minLength: number | null
+  minDate: string | null
+  maxDate: string | null
+  visibleWhenFieldKey: string | null
+  visibleWhenValue: string | null
+  isHalfWidth: boolean
+  sectionTitleAr: string | null
+  optionSource: FieldOptionSource
+  lookupCatalog: string | null
 }
 
 /** `SchemaFieldResponse` — a field as configured inside one schema version. */
@@ -59,6 +98,7 @@ export interface SchemaFieldResponse {
   maxNumber: number | null
   maxLength: number | null
   options: FieldOption[]
+  behavior: FieldBehavior
 }
 
 /** `SchemaVersionResponse` — one version with its fields in display order. */

@@ -51,15 +51,18 @@ internal sealed class AddFieldToDraftCommandHandler
 {
     private readonly IDocumentTypeSchemaVersionRepository _versionRepository;
     private readonly IDocumentFieldRepository _fieldRepository;
+    private readonly IDocumentFieldOptionResolver _optionResolver;
     private readonly IUnitOfWork _unitOfWork;
 
     public AddFieldToDraftCommandHandler(
         IDocumentTypeSchemaVersionRepository versionRepository,
         IDocumentFieldRepository fieldRepository,
+        IDocumentFieldOptionResolver optionResolver,
         IUnitOfWork unitOfWork)
     {
         _versionRepository = versionRepository;
         _fieldRepository = fieldRepository;
+        _optionResolver = optionResolver;
         _unitOfWork = unitOfWork;
     }
 
@@ -79,6 +82,10 @@ internal sealed class AddFieldToDraftCommandHandler
         if (settings.IsFailure)
             return Result.Failure<SchemaVersionResponse>(settings.Error);
 
+        var source = _optionResolver.EnsureSourceSupported(settings.Value.Behavior);
+        if (source.IsFailure)
+            return Result.Failure<SchemaVersionResponse>(source.Error);
+
         var added = version.AddField(field, settings.Value, _unitOfWork.UtcNow);
         if (added.IsFailure)
             return Result.Failure<SchemaVersionResponse>(added.Error);
@@ -92,13 +99,16 @@ internal sealed class UpdateDraftFieldCommandHandler
     : ICommandHandler<UpdateDraftFieldCommand, SchemaVersionResponse>
 {
     private readonly IDocumentTypeSchemaVersionRepository _versionRepository;
+    private readonly IDocumentFieldOptionResolver _optionResolver;
     private readonly IUnitOfWork _unitOfWork;
 
     public UpdateDraftFieldCommandHandler(
         IDocumentTypeSchemaVersionRepository versionRepository,
+        IDocumentFieldOptionResolver optionResolver,
         IUnitOfWork unitOfWork)
     {
         _versionRepository = versionRepository;
+        _optionResolver = optionResolver;
         _unitOfWork = unitOfWork;
     }
 
@@ -117,6 +127,10 @@ internal sealed class UpdateDraftFieldCommandHandler
         var settings = request.Settings.ToSettings(existing.DataType);
         if (settings.IsFailure)
             return Result.Failure<SchemaVersionResponse>(settings.Error);
+
+        var source = _optionResolver.EnsureSourceSupported(settings.Value.Behavior);
+        if (source.IsFailure)
+            return Result.Failure<SchemaVersionResponse>(source.Error);
 
         var updated = version.UpdateField(request.DocumentFieldId, settings.Value, _unitOfWork.UtcNow);
         if (updated.IsFailure)

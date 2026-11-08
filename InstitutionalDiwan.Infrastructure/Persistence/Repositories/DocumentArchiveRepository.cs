@@ -44,6 +44,9 @@ internal sealed class DocumentArchiveRepository : IDocumentArchiveRepository
         if (filter.DirectionId is { } direction)
             documents = documents.Where(document => document.DirectionId == direction);
 
+        foreach (var fieldFilter in filter.FieldFilters ?? [])
+            documents = documents.WhereFieldMatches(_context, fieldFilter);
+
         if (page.NormalizedSearch is { } search)
         {
             var pattern = $"%{search}%";

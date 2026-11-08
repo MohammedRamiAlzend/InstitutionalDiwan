@@ -58,6 +58,7 @@ public sealed class ListDepartmentDocumentsQueryHandlerTests
         return new ListDepartmentDocumentsQueryHandler(
             documents,
             departments,
+            new FakeDocumentFieldRepository(),
             scope,
             new FakeUserContext { IsAuthenticated = true, UserId = CallerId },
             TestClock.Instance);

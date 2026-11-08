@@ -17,7 +17,7 @@ public sealed class DocumentFieldValue : Entity<Guid>
     public Guid DocumentId { get; private set; }
     // FK → DocumentField.DocumentFieldId (InstitutionalDiwan.Domain.Entities.Correspondence.DocumentField)
     public Guid DocumentFieldId { get; private set; }
-    /// <summary>Text and long-text fields.</summary>
+    /// <summary>Text and long-text fields, and multi-select keys as <c>|a|b|</c>.</summary>
     public string? TextValue { get; private set; }
     public decimal? NumberValue { get; private set; }
     public DateTime? DateValue { get; private set; }
@@ -48,4 +48,21 @@ public sealed class DocumentFieldValue : Entity<Guid>
             BoolValue = boolean,
             OptionKey = optionKey
         };
+
+    /// <summary>True when this value carries <paramref name="choice"/>; used by visibility conditions.</summary>
+    internal bool MatchesChoice(string choice)
+    {
+        if (BoolValue is { } boolean)
+            return (boolean ? "true" : "false") == choice;
+        if (OptionKey is not null)
+            return OptionKey == choice;
+        return TextValue?.Contains($"|{choice}|", StringComparison.Ordinal) == true;
+    }
+
+    internal bool HasSameContent(DocumentFieldValue other) =>
+        TextValue == other.TextValue
+        && NumberValue == other.NumberValue
+        && DateValue?.Date == other.DateValue?.Date
+        && BoolValue == other.BoolValue
+        && OptionKey == other.OptionKey;
 }

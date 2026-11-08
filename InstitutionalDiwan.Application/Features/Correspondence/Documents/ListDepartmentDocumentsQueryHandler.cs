@@ -19,6 +19,7 @@ internal sealed class ListDepartmentDocumentsQueryHandler
 {
     private readonly IDocumentRepository _documentRepository;
     private readonly IDepartmentRepository _departmentRepository;
+    private readonly IDocumentFieldRepository _documentFieldRepository;
     private readonly IDepartmentScopeEvaluator _departmentScopeEvaluator;
     private readonly IUserContext _userContext;
     private readonly IClock _clock;
@@ -26,12 +27,14 @@ internal sealed class ListDepartmentDocumentsQueryHandler
     public ListDepartmentDocumentsQueryHandler(
         IDocumentRepository documentRepository,
         IDepartmentRepository departmentRepository,
+        IDocumentFieldRepository documentFieldRepository,
         IDepartmentScopeEvaluator departmentScopeEvaluator,
         IUserContext userContext,
         IClock clock)
     {
         _documentRepository = documentRepository;
         _departmentRepository = departmentRepository;
+        _documentFieldRepository = documentFieldRepository;
         _departmentScopeEvaluator = departmentScopeEvaluator;
         _userContext = userContext;
         _clock = clock;
@@ -54,6 +57,11 @@ internal sealed class ListDepartmentDocumentsQueryHandler
             return Result.Failure<PagedResult<DocumentResponse>>(
                 DomainErrors.Correspondence.DepartmentOutOfScope);
 
+        var fieldFilters = await DocumentFieldFilterParser.ResolveAsync(
+            request.FieldFilters, request.DocumentTypeId, _documentFieldRepository, cancellationToken);
+        if (fieldFilters.IsFailure)
+            return Result.Failure<PagedResult<DocumentResponse>>(fieldFilters.Error);
+
         var page = new PageRequest(
             request.Page,
             request.PageSize,
@@ -71,7 +79,7 @@ internal sealed class ListDepartmentDocumentsQueryHandler
             request.DepartmentId,
             request.DirectionId,
             request.DocumentTypeId,
-            fieldFilters: null,
+            fieldFilters: fieldFilters.Value,
             cancellationToken: cancellationToken);
 
         return Result.Success(new PagedResult<DocumentResponse>(

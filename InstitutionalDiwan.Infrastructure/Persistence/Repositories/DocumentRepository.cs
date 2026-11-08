@@ -3,7 +3,6 @@ using InstitutionalDiwan.Domain.Entities.Correspondence;
 using InstitutionalDiwan.Domain.Repositories;
 using InstitutionalDiwan.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
-using System.Linq.Expressions;
 
 namespace InstitutionalDiwan.Infrastructure.Persistence.Repositories;
 
@@ -40,6 +39,7 @@ internal sealed class DocumentRepository : IDocumentRepository
         int? directionId = null,
         int? documentTypeId = null,
         IReadOnlyList<DocumentFieldFilter>? fieldFilters = null,
+        DocumentFieldSort? fieldSort = null,
         CancellationToken cancellationToken = default)
     {
         var query = _context.Documents.AsNoTracking().WhereViewableBy(_context, access);
@@ -58,7 +58,7 @@ internal sealed class DocumentRepository : IDocumentRepository
 
         // Filters run after the visibility predicate, so they can only narrow what the caller may see.
         foreach (var filter in fieldFilters ?? [])
-            query = ApplyFieldFilter(query, filter);
+            query = query.WhereFieldMatches(_context, filter);
 
         if (page.NormalizedSearch is { } search)
         {
@@ -69,7 +69,7 @@ internal sealed class DocumentRepository : IDocumentRepository
                 (document.OfficialNumberText != null && EF.Functions.Like(document.OfficialNumberText, pattern)));
         }
 
-        query = (page.NormalizedSortBy, page.SortDescending) switch
+        query = fieldSort is not null ? OrderByField(query, fieldSort, page.SortDescending) : (page.NormalizedSortBy, page.SortDescending) switch
         {
             ("title", true) => query.OrderByDescending(document => document.Title),
             ("title", false) => query.OrderBy(document => document.Title),
@@ -102,6 +102,15 @@ internal sealed class DocumentRepository : IDocumentRepository
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<DocumentFieldValue>> ListFieldValuesAsync(
+        IReadOnlyCollection<Guid> documentIds,
+        IReadOnlyCollection<Guid> documentFieldIds,
+        CancellationToken cancellationToken = default) =>
+        await _context.DocumentFieldValues
+            .AsNoTracking()
+            .Where(value => documentIds.Contains(value.DocumentId) && documentFieldIds.Contains(value.DocumentFieldId))
+            .ToListAsync(cancellationToken);
+
     public async Task<IReadOnlySet<Guid>> ListViewableIdsAsync(
         IReadOnlyCollection<Guid> documentIds,
         DocumentViewAccess access,
@@ -121,85 +130,23 @@ internal sealed class DocumentRepository : IDocumentRepository
 
     public void Add(Document document) => _context.Documents.Add(document);
 
-    /// <summary>
-    /// Keeps documents that store a value for the filtered field satisfying the comparison. Dates are
-    /// compared by calendar day: <c>eq</c> matches the whole day, <c>gt</c> starts after it and
-    /// <c>lte</c> ends with it.
-    /// </summary>
-    private IQueryable<Document> ApplyFieldFilter(IQueryable<Document> query, DocumentFieldFilter filter)
+    /// <summary>Orders by the value of one dynamic field; documents without a value keep their place together.</summary>
+    private IQueryable<Document> OrderByField(IQueryable<Document> query, DocumentFieldSort sort, bool descending)
     {
-        var fieldId = filter.DocumentFieldId;
-        Expression<Func<DocumentFieldValue, bool>> predicate;
+        var values = _context.DocumentFieldValues.Where(value => value.DocumentFieldId == sort.DocumentFieldId);
 
-        switch (filter.DataType)
+        var ordered = (sort.DataType, descending) switch
         {
-            case DocumentFieldDataType.Text:
-            case DocumentFieldDataType.LongText:
-            {
-                var text = filter.Text!;
-                if (filter.Operator == FieldFilterOperator.Contains)
-                {
-                    var pattern = $"%{EscapeLike(text)}%";
-                    predicate = v => v.TextValue != null && EF.Functions.Like(v.TextValue, pattern, "\\");
-                }
-                else
-                {
-                    predicate = v => v.TextValue == text;
-                }
-                break;
-            }
+            (DocumentFieldDataType.Number, true) => query.OrderByDescending(d => values.Where(v => v.DocumentId == d.DocumentId).Select(v => v.NumberValue).FirstOrDefault()),
+            (DocumentFieldDataType.Number, false) => query.OrderBy(d => values.Where(v => v.DocumentId == d.DocumentId).Select(v => v.NumberValue).FirstOrDefault()),
+            (DocumentFieldDataType.Date, true) => query.OrderByDescending(d => values.Where(v => v.DocumentId == d.DocumentId).Select(v => v.DateValue).FirstOrDefault()),
+            (DocumentFieldDataType.Date, false) => query.OrderBy(d => values.Where(v => v.DocumentId == d.DocumentId).Select(v => v.DateValue).FirstOrDefault()),
+            (DocumentFieldDataType.Boolean, true) => query.OrderByDescending(d => values.Where(v => v.DocumentId == d.DocumentId).Select(v => v.BoolValue).FirstOrDefault()),
+            (DocumentFieldDataType.Boolean, false) => query.OrderBy(d => values.Where(v => v.DocumentId == d.DocumentId).Select(v => v.BoolValue).FirstOrDefault()),
+            (_, true) => query.OrderByDescending(d => values.Where(v => v.DocumentId == d.DocumentId).Select(v => v.TextValue).FirstOrDefault()),
+            _ => query.OrderBy(d => values.Where(v => v.DocumentId == d.DocumentId).Select(v => v.TextValue).FirstOrDefault())
+        };
 
-            case DocumentFieldDataType.Number:
-            {
-                var number = filter.Number!.Value;
-                predicate = filter.Operator switch
-                {
-                    FieldFilterOperator.GreaterThan => v => v.NumberValue > number,
-                    FieldFilterOperator.GreaterThanOrEqual => v => v.NumberValue >= number,
-                    FieldFilterOperator.LessThan => v => v.NumberValue < number,
-                    FieldFilterOperator.LessThanOrEqual => v => v.NumberValue <= number,
-                    _ => v => v.NumberValue == number
-                };
-                break;
-            }
-
-            case DocumentFieldDataType.Date:
-            {
-                var dayStart = filter.Date!.Value.Date;
-                var dayEnd = dayStart.AddDays(1);
-                predicate = filter.Operator switch
-                {
-                    FieldFilterOperator.GreaterThan => v => v.DateValue >= dayEnd,
-                    FieldFilterOperator.GreaterThanOrEqual => v => v.DateValue >= dayStart,
-                    FieldFilterOperator.LessThan => v => v.DateValue < dayStart,
-                    FieldFilterOperator.LessThanOrEqual => v => v.DateValue < dayEnd,
-                    _ => v => v.DateValue >= dayStart && v.DateValue < dayEnd
-                };
-                break;
-            }
-
-            case DocumentFieldDataType.Boolean:
-            {
-                var boolean = filter.Boolean!.Value;
-                predicate = v => v.BoolValue == boolean;
-                break;
-            }
-
-            default:
-            {
-                var optionKey = filter.OptionKey!;
-                predicate = v => v.OptionKey == optionKey;
-                break;
-            }
-        }
-
-        return query.Where(document => _context.DocumentFieldValues
-            .Where(value => value.DocumentFieldId == fieldId)
-            .Where(predicate)
-            .Any(value => value.DocumentId == document.DocumentId));
+        return ordered.ThenByDescending(document => document.CreatedAt);
     }
-
-    /// <summary>Escapes the LIKE wildcards so a filter for "100%" matches the literal text.</summary>
-    private static string EscapeLike(string term) =>
-        term.Replace("\\", "\\\\").Replace("%", "\\%").Replace("_", "\\_").Replace("[", "\\[");
 }

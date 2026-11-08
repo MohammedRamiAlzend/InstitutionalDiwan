@@ -28,4 +28,5 @@ The «الحقول» tab of a document: values against the schema version the do
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-08 | Claude | Uses `formatFieldValue` and hides fields whose condition does not hold. |
 | 2026-11-03 | Claude | Implemented per plan `plans/document-dynamic-fields-frontend.md`. |

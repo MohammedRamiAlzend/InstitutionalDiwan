@@ -49,7 +49,7 @@ public sealed class DocumentWriteAccessHandlerTests
 
         public async Task<Result> SetFieldsAsync(Guid? documentId = null) =>
             await new SetDocumentFieldValuesCommandHandler(
-                Documents, new FakeDocumentTypeSchemaVersionRepository(), Access, UnitOfWork).Handle(
+                Documents, new FakeDocumentTypeSchemaVersionRepository(), Access, new FakeDocumentFieldOptionResolver(), UnitOfWork).Handle(
                 new SetDocumentFieldValuesCommand(documentId ?? Document.DocumentId, Array.Empty<DocumentFieldValueInput>()),
                 CancellationToken.None);
 

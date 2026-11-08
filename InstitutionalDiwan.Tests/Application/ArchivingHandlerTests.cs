@@ -296,7 +296,7 @@ public sealed class ArchivingHandlerTests
         world.Archive.Rows.Add(new ArchivedDocumentRow(world.Document, archivedAt, world.Clerk.UserId, Location));
         var caller = new FakeUserContext { IsAuthenticated = true, UserId = Guid.NewGuid() };
 
-        var result = await new SearchArchivedDocumentsQueryHandler(world.Archive, world.Scope, caller, TestClock.Instance)
+        var result = await new SearchArchivedDocumentsQueryHandler(world.Archive, new FakeDocumentFieldRepository(), world.Scope, caller, TestClock.Instance)
             .Handle(new SearchArchivedDocumentsQuery(ArchiveLocationId: Location), CancellationToken.None);
 
         Assert.True(result.IsSuccess, result.Error?.Code);

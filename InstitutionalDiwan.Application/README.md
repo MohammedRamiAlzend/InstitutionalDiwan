@@ -58,6 +58,7 @@ See each subfolder's README for the full design and per-folder status tables.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-08 | Claude | Registered `IDocumentFieldOptionResolver` for select fields fed by departments, external organizations or lookup catalogs. |
 | 2026-11-03 | Claude | Module 07 Archiving, Phase 2: new `Features/Archiving` slice, and archived documents are now frozen in the Attachments and Numbering write handlers. No HTTP endpoint yet. |
 | 2026-11-02 | Claude | Dynamic document fields, Phase 2: new `Features/Correspondence/DocumentFields` slice; document create/register handlers now depend on `IDocumentTypeSchemaVersionRepository`. |
 | 2026-10-26 | Qoder | Added `AuditActionRecorder` and the `Abstractions/Audit` contract so every authenticated controller action can be recorded as an `Operation` audit row through an isolated scope, independent of the request's tracked changes. |

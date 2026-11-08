@@ -9,6 +9,13 @@ import {
   useDocuments,
   type DocumentResponse,
 } from '@/entities/document'
+import {
+  FIELD_DATA_TYPE,
+  FieldFilterBar,
+  formatFieldValue,
+  useDocumentTypeSchema,
+  type SchemaFieldResponse,
+} from '@/entities/document-schema'
 import { LOOKUP_SLUGS, LookupLabel, useLookupEntries } from '@/entities/lookup'
 import { useSessionStore } from '@/entities/user'
 import { CreateDocumentDialog } from '@/features/document-create'
@@ -23,10 +30,32 @@ import {
   type DataTableColumn,
   type MenuEntry,
 } from '@/shared/ui'
-import { FieldFilterBar } from './FieldFilterBar'
 
 /** URL parameter holding the repeated `key:operator:value` dynamic-field filters. */
 const FIELD_FILTER_PARAM = 'f'
+
+/** Sorting on the server works on the stored column, which only these types order meaningfully. */
+const SORTABLE_FIELD_TYPES: ReadonlySet<number> = new Set([
+  FIELD_DATA_TYPE.Text,
+  FIELD_DATA_TYPE.Number,
+  FIELD_DATA_TYPE.Date,
+  FIELD_DATA_TYPE.Boolean,
+])
+
+function fieldColumn(field: SchemaFieldResponse): DataTableColumn<DocumentResponse> {
+  const latin = field.dataType === FIELD_DATA_TYPE.Number || field.dataType === FIELD_DATA_TYPE.Date
+  return {
+    id: `field.${field.key}`,
+    header: field.labelAr,
+    sortable: SORTABLE_FIELD_TYPES.has(field.dataType),
+    sortKey: `field:${field.key}`,
+    cell: (document) => (
+      <span dir={latin ? 'ltr' : undefined} className="whitespace-nowrap text-xs text-foreground">
+        {formatFieldValue(field, document.fieldValues?.[field.key])}
+      </span>
+    ),
+  }
+}
 
 function optionalId(value: string | undefined): number | undefined {
   if (!value) return undefined
@@ -121,6 +150,13 @@ export function DocumentRegistryTable() {
     }
   }
 
+  // Columns follow the chosen type's published schema, like the field filters.
+  const schemaQuery = useDocumentTypeSchema(documentTypeId)
+  const fieldColumns = useMemo(
+    () => (schemaQuery.data?.schema?.fields ?? []).filter((field) => field.behavior.showInTable).map(fieldColumn),
+    [schemaQuery.data],
+  )
+
   const columns = useMemo<DataTableColumn<DocumentResponse>[]>(
     () => [
       {
@@ -182,6 +218,7 @@ export function DocumentRegistryTable() {
           )
         },
       },
+      ...fieldColumns,
       {
         id: 'documentDate',
         header: 'تاريخ الوثيقة',
@@ -215,7 +252,7 @@ export function DocumentRegistryTable() {
         ),
       },
     ],
-    [departmentById],
+    [departmentById, fieldColumns],
   )
 
   const buildRowMenu = (document: DocumentResponse): MenuEntry[] => [
@@ -304,6 +341,7 @@ export function DocumentRegistryTable() {
               options={typeOptions}
               className="w-40"
             />
+            <GuideChip id="documents.field-filters" />
             <FieldFilterBar
               documentTypeId={documentTypeId}
               raw={table.repeated[FIELD_FILTER_PARAM] ?? []}

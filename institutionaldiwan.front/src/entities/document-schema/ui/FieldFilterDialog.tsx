@@ -1,16 +1,15 @@
 import { useState } from 'react'
 import { Plus, Trash2 } from 'lucide-react'
+import { Button, Dialog, Input, Select } from '@/shared/ui'
 import {
-  FIELD_DATA_TYPE,
   MAX_FIELD_FILTERS,
   fieldFilterOperatorLabel,
   operatorsFor,
   validateFieldFilterValue,
   type FieldFilterOperator,
   type FieldFilterValue,
-  type SchemaFieldResponse,
-} from '@/entities/document-schema'
-import { Button, Dialog, Input, Select } from '@/shared/ui'
+} from '../model/filters'
+import { FIELD_DATA_TYPE, type SchemaFieldResponse } from '../model/types'
 
 interface FieldFilterDialogProps {
   open: boolean
@@ -128,7 +127,8 @@ export function FieldFilterDialog({
                   onValueChange={(value) => patch(index, { value })}
                   options={BOOLEAN_OPTIONS}
                 />
-              ) : field?.dataType === FIELD_DATA_TYPE.Select ? (
+              ) : field?.dataType === FIELD_DATA_TYPE.Select ||
+                field?.dataType === FIELD_DATA_TYPE.MultiSelect ? (
                 <Select
                   aria-label="القيمة"
                   value={row.value || undefined}

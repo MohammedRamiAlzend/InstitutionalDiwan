@@ -15,17 +15,20 @@ internal sealed class SetDocumentFieldValuesCommandHandler
     private readonly IDocumentRepository _documentRepository;
     private readonly IDocumentTypeSchemaVersionRepository _versionRepository;
     private readonly IDocumentAccessEvaluator _documentAccessEvaluator;
+    private readonly IDocumentFieldOptionResolver _optionResolver;
     private readonly IUnitOfWork _unitOfWork;
 
     public SetDocumentFieldValuesCommandHandler(
         IDocumentRepository documentRepository,
         IDocumentTypeSchemaVersionRepository versionRepository,
         IDocumentAccessEvaluator documentAccessEvaluator,
+        IDocumentFieldOptionResolver optionResolver,
         IUnitOfWork unitOfWork)
     {
         _documentRepository = documentRepository;
         _versionRepository = versionRepository;
         _documentAccessEvaluator = documentAccessEvaluator;
+        _optionResolver = optionResolver;
         _unitOfWork = unitOfWork;
     }
 
@@ -51,12 +54,15 @@ internal sealed class SetDocumentFieldValuesCommandHandler
         if (document.CurrentStatusId != DocumentStatusType.DraftId)
             return Result.Failure<DocumentFieldsResponse>(DomainErrors.Correspondence.OnlyDraftEditable);
 
-        var applied = DocumentSchemaPinning.ApplyValues(document, schema, request.Values, _unitOfWork.UtcNow);
+        var sourcedOptions = schema is null
+            ? null
+            : await _optionResolver.ResolveAsync(schema, cancellationToken);
+        var applied = DocumentSchemaPinning.ApplyValues(document, schema, request.Values, sourcedOptions, _unitOfWork.UtcNow);
         if (applied.IsFailure)
             return Result.Failure<DocumentFieldsResponse>(applied.Error);
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
-        return DocumentFieldsResponse.From(document, schema);
+        return DocumentFieldsResponse.From(document, schema, sourcedOptions);
     }
 }
 
@@ -69,19 +75,21 @@ internal static class DocumentSchemaPinning
     /// <summary>
     /// Sets <paramref name="values"/> on the document against its pinned <paramref name="schema"/>.
     /// With no schema there is nothing a value could belong to, so any supplied value is rejected.
+    /// With no values, the read-only fields still receive their fixed values.
     /// </summary>
     public static Result ApplyValues(
         Document document,
         DocumentTypeSchemaVersion? schema,
         IReadOnlyList<DocumentFieldValueInput>? values,
+        IReadOnlyDictionary<Guid, IReadOnlyList<DocumentFieldOption>>? sourcedOptions,
         DateTime utcNow)
     {
         if (values is null || values.Count == 0)
-            return Result.Success();
+            return schema is null ? Result.Success() : document.AddMissingFixedFieldValues(schema, utcNow);
 
         if (schema is null)
             return Result.Failure(DomainErrors.DocumentFields.UnknownField(values[0].FieldKey));
 
-        return document.SetFieldValues(schema, values, utcNow);
+        return document.SetFieldValues(schema, values, utcNow, sourcedOptions);
     }
 }

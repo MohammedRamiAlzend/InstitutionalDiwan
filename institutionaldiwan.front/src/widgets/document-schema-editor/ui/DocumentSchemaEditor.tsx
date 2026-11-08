@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import { Pencil, Plus, RefreshCw, Rocket, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import {
+  FIELD_OPTION_SOURCE,
   FieldTypeBadge,
   SCHEMA_STATUS,
   SchemaStatusBadge,
@@ -50,6 +51,15 @@ function constraintsOf(field: SchemaFieldResponse): string {
   if (field.maxNumber !== null) parts.push(`إلى ${field.maxNumber}`)
   if (field.options.length > 0) parts.push(`${field.options.length} خيارًا`)
   if (field.regexPattern) parts.push('نمط Regex')
+  const { behavior } = field
+  if (behavior.minLength !== null) parts.push(`الطول ≥ ${behavior.minLength}`)
+  if (behavior.minDate || behavior.maxDate) parts.push('حدود تاريخ')
+  if (behavior.isReadOnly) parts.push('للقراءة فقط')
+  else if (behavior.defaultValue) parts.push('قيمة افتراضية')
+  if (behavior.visibleWhenFieldKey) parts.push('مشروط')
+  if (behavior.isFilterable) parts.push('قابل للتصفية')
+  if (behavior.showInTable) parts.push('عمود')
+  if (behavior.optionSource !== FIELD_OPTION_SOURCE.Static) parts.push('خيارات مرتبطة')
   return parts.join(' · ') || '—'
 }
 

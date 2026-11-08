@@ -43,7 +43,7 @@ public sealed class DocumentReadAccessHandlerTests
                 .Handle(new GetDocumentTimelineQuery(documentId), CancellationToken.None);
 
         public Task<Result<DocumentFieldsResponse>> GetFieldsAsync(Guid documentId) =>
-            new GetDocumentFieldsQueryHandler(Documents, new FakeDocumentTypeSchemaVersionRepository(), Access)
+            new GetDocumentFieldsQueryHandler(Documents, new FakeDocumentTypeSchemaVersionRepository(), Access, new FakeDocumentFieldOptionResolver())
                 .Handle(new GetDocumentFieldsQuery(documentId), CancellationToken.None);
     }
 

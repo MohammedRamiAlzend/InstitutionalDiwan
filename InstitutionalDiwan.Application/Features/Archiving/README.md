@@ -26,7 +26,7 @@ searches what is archived. Each transition changes the document, its status hist
 | `SearchArchivedDocumentsQueryHandler.cs` | Passes the caller, their accessible departments and the current time to the repository, which applies the `VIEW` rule in SQL. |
 | `ArchivedDocumentResponse.cs` | Search row: the `DocumentResponse` plus who archived it, when, and the location. |
 | `DocumentArchiveEventResponse.cs` | Read model for one archive transition. |
-| `ArchiveSearchCriteria.cs` | The stored shape of a saved search; `IsValid` rejects malformed JSON, unknown fields and unknown sort keys. |
+| `ArchiveSearchCriteria.cs` | The stored shape of a saved search; `IsValid` rejects malformed JSON, unknown fields, unknown sort keys or directions and unreadable dates. |
 
 ## Conventions / Notes
 
@@ -52,4 +52,6 @@ searches what is archived. Each transition changes the document, its status hist
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-08 | Claude | `ArchiveSearchCriteria` accepts the keys the archive grid saves (`sort`, `dir`, `archivedFrom`, `archivedTo`); a saved search with a sort or archive dates was rejected as invalid. |
+| 2026-11-08 | Claude | `SearchArchivedDocumentsQuery` accepts `FieldFilters`; saved-search criteria accept the joined field filters (`F`). |
 | 2026-11-03 | Claude | Added the slice for Module 07, Phase 2: archive and unarchive commands, archive history and access-filtered search queries, and the saved search criteria check. |

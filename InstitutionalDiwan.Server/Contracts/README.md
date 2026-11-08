@@ -59,6 +59,7 @@ commands/queries map between them and the domain.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-08 | Claude | `DocumentFieldSettingsRequest` gained `Behavior`; data type 7 (MultiSelect). |
 | 2026-11-05 | Claude | `CreateDocumentRequest` now carries `DepartmentRegistryNumberText`, `DepartmentRegistryDate` and optional `Movement` instead of `OfficialNumberText`/`NumberingYear`; `RegisterDocumentRequest` gained the same optional fields. |
 | 2026-11-03 | Claude | Added `Relations/` with the Module 08 requests. |
 | 2026-11-03 | Claude | Added `Archiving/` with the Module 07 requests. |

@@ -133,7 +133,8 @@ public sealed class Document : AggregateRoot<Guid>
     public Result SetFieldValues(
         DocumentTypeSchemaVersion schemaVersion,
         IReadOnlyCollection<DocumentFieldValueInput> inputs,
-        DateTime? utcNow = null)
+        DateTime? utcNow = null,
+        IReadOnlyDictionary<Guid, IReadOnlyList<DocumentFieldOption>>? sourcedOptions = null)
     {
         if (CurrentStatusId != DocumentStatusType.DraftId)
             return Result.Failure(DomainErrors.Correspondence.OnlyDraftEditable);
@@ -141,13 +142,30 @@ public sealed class Document : AggregateRoot<Guid>
         if (SchemaVersionId is null || SchemaVersionId != schemaVersion.SchemaVersionId)
             return Result.Failure(DomainErrors.DocumentFields.SchemaVersionMismatch);
 
-        var built = schemaVersion.BuildValues(DocumentId, inputs);
+        var built = schemaVersion.BuildValues(DocumentId, inputs, _fieldValues, sourcedOptions, utcNow);
         if (built.IsFailure)
             return built;
 
         _fieldValues.Clear();
         _fieldValues.AddRange(built.Value);
         UpdatedAt = utcNow ?? DateTime.UtcNow;
+        return Result.Success();
+    }
+
+    /// <summary>
+    /// Writes the read-only values of the pinned schema that are still missing and leaves every other
+    /// value alone. Covers a document created without any submitted field values.
+    /// </summary>
+    public Result AddMissingFixedFieldValues(DocumentTypeSchemaVersion schemaVersion, DateTime utcNow)
+    {
+        if (SchemaVersionId is null || SchemaVersionId != schemaVersion.SchemaVersionId)
+            return Result.Failure(DomainErrors.DocumentFields.SchemaVersionMismatch);
+
+        var missing = schemaVersion.BuildMissingFixedValues(DocumentId, _fieldValues, utcNow);
+        if (missing.IsFailure)
+            return missing;
+
+        _fieldValues.AddRange(missing.Value);
         return Result.Success();
     }
 

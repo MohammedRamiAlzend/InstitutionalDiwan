@@ -61,6 +61,7 @@ GlobalUsing.cs Global usings for entities, common, and errors
 | `OfficialNumberValue` | Non-empty, trimmed, max 100 chars. |
 | `ParticipantTarget` | Exactly one of `External(orgId)`, `Internal(departmentId)`, or `Person(name)` via `ParticipantTargetKind`. |
 | `DocumentFieldSettings` | Validated per-version configuration of a dynamic field: Arabic label (max 200), requiredness, order, and type-specific constraints — a regex (text only, max 500 chars, compiled once with a 250 ms timeout, Arabic error message required), a max length (text 500 / long text 4000), a number range, or 1–100 unique options (select only). Also defines `DocumentFieldOption`. |
+| `DocumentFieldBehavior` | Per-version form and table behavior of a field, stored as one JSON value: default value (`@today` on dates), read-only, filterable, table column, placeholder and help text, minimum length, date limits, visibility condition, half width, section title and option source. |
 | `DocumentFieldValueInput` | One raw submitted dynamic value `(FieldKey, Value as text)`; a blank value means "clear". |
 
 ### `Errors/DomainErrors.cs`
@@ -360,6 +361,7 @@ them, while listing, relabelling and (de)activation keep working.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-08 | Claude | Field behavior (`DocumentFieldBehavior`: default, read-only, filterable, table column, hints, min length, date limits, visibility condition, layout, option source), the `MultiSelect` data type and `DocumentFieldSort`; `BuildValues` writes read-only values and drops hidden fields. |
 | 2026-11-04 | Claude | `INotificationRepository` gained `CountUnreadByTypeAsync` and the `UnreadTypeCount` record; `GetInboxAsync` now honours `PageRequest.Search`/`SortBy`. |
 | 2026-11-03 | Claude | Module 08 Relations, Phase 0: added `DocumentRelation.Remove`, the note and reason length limits, the new `Relations.*` errors, and the extended `IDocumentRelationRepository` contract (type lookup, duplicate and cycle checks, neighbour and history reads). |
 | 2026-11-03 | Claude | Added `IDocumentRepository.ListViewableIdsAsync` for rows that stay listed but may only show a document's content to someone who can read it. |

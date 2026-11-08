@@ -144,6 +144,7 @@ plain JSON array.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-08 | Claude | `GET /api/departments/{id}/documents` and `GET /api/archive/documents` accept `fieldFilters`. |
 | 2026-11-08 | Claude | Create, register and receive accept the chosen department register. |
 | 2026-11-08 | Claude | Movement receive endpoints accept `registryDate` and `registryNumberText`. |
 | 2026-11-04 | Claude | Registry filtering by dynamic field values (plan `plans/document-registry-field-filters.md`): `GET /api/documents` accepts repeated `fieldFilters=key:operator:value` and documents the new 400 responses. |

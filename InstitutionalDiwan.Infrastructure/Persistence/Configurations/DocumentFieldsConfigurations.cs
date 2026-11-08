@@ -109,6 +109,19 @@ public sealed class DocumentTypeSchemaVersionFieldConfiguration : IEntityTypeCon
                     options => options.Aggregate(0, (hash, option) => HashCode.Combine(hash, option)),
                     options => options.ToList()));
 
+        // Existing rows are migrated as filterable: every field was offered as a filter before this option.
+        builder.Property(x => x.Behavior)
+            .HasColumnName("Behavior")
+            .IsRequired()
+            .HasDefaultValue(new DocumentFieldBehavior(IsFilterable: true))
+            .HasConversion(
+                behavior => JsonSerializer.Serialize(behavior, OptionsJson),
+                json => JsonSerializer.Deserialize<DocumentFieldBehavior>(json, OptionsJson) ?? new DocumentFieldBehavior(),
+                new ValueComparer<DocumentFieldBehavior>(
+                    (left, right) => Equals(left, right),
+                    behavior => behavior.GetHashCode(),
+                    behavior => behavior));
+
         builder.HasIndex(x => new { x.SchemaVersionId, x.DocumentFieldId })
             .IsUnique()
             .HasDatabaseName("UX_DOC_SCHEMA_VERSION_FIELDS_VERSION_FIELD");

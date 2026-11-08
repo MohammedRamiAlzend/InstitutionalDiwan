@@ -22,6 +22,7 @@ public sealed class ListDocumentsFieldFilterTests
         var handler = new ListDocumentsQueryHandler(
             documents,
             fields,
+            new FakeDocumentTypeSchemaVersionRepository(),
             new FakeDepartmentScopeEvaluator { InstitutionWide = true },
             new FakeUserContext { IsAuthenticated = true, UserId = Guid.NewGuid() },
             TestClock.Instance);

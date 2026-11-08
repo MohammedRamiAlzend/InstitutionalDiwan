@@ -28,6 +28,7 @@ Concrete EF Core implementations of the repository interfaces declared in
 | `DepartmentRepository.cs` | Loads `Department` aggregates (by id, code, listing), implements `HasActiveChildrenAsync` (deactivation guard) and `GetDescendantIdsAsync` (cycle detection when moving a department under a new parent). |
 | `DepartmentTypeRepository.cs` | Loads `DepartmentType` by code so department create/update can validate the type exists and is active. |
 | `DocumentRepository.cs` | Loads `Document` with `Participants`, `StatusHistory` and the dynamic `FieldValues` (split query, so the collections do not multiply rows); `GetWithNumbersAsync` adds the central + department numbers (with their history) for the record/receive flows, `GetByIdsAsync` batches the register-book join, and `ListPagedAsync` backs the listing with the caller's `VIEW` access, its status/department/direction/type filters, free-text search, sort keys, and `Skip`/`Take`. |
+| `DocumentFieldFilterQuery.cs` | The dynamic-field filter predicate shared by the document registry and the archive search. |
 | `DocumentViewAccessQuery.cs` | `WhereViewableBy`, the `VIEW` rule of `DocumentAccessEvaluator` as a query filter (authorship, a valid grant, or scope or current-movement participation for documents confidentiality does not restrict), shared by the document list and the archive search so there is one SQL copy of the rule; persistence tests hold it equal to the evaluator. |
 | `DocumentFieldRepository.cs` | Dynamic document fields: `GetByIdAsync`, `GetByKeyAsync` (the unique key per document type), `ListByDocumentTypeAsync` (no-tracking) and `Add`. |
 | `DocumentTypeSchemaVersionRepository.cs` | Field-schema versions of a document type, always loaded with their `Fields`: `GetByIdAsync`, the single editable `GetDraftAsync`, the current `GetPublishedAsync`, `GetLatestVersionNumberAsync` (0 when none) for numbering the next draft, `ListByDocumentTypeAsync` (newest first), `Add` and `Remove` (discarding a draft). |
@@ -93,6 +94,7 @@ Concrete EF Core implementations of the repository interfaces declared in
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-08 | Claude | Moved the field-filter predicate to `DocumentFieldFilterQuery` (registry and archive, multi-select match); `DocumentRepository` sorts by a field and adds `ListFieldValuesAsync`. |
 | 2026-11-08 | Claude | Document and number reads now include register visits. |
 | 2026-11-04 | Claude | `DocumentViewAccessQuery` grants movement-based reading to the sending department of a returned or rejected current step, in line with the inbox and `DocumentAccessEvaluator`. |
 | 2026-11-04 | Claude | Registry filtering by dynamic field values (plan `plans/document-registry-field-filters.md`): `DocumentRepository.ListPagedAsync` takes `DocumentFieldFilter`s and adds one `EXISTS` over `DocumentFieldValues` per filter after the visibility predicate (LIKE escaping for text, calendar-day comparison for dates). |
