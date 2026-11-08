@@ -301,6 +301,7 @@ public sealed class DocumentsController : ControllerBase
     /// The request payload with the following fields:
     /// <list type="bullet">
     /// <item><term>numberingYear</term><description>Numbering year (integer, optional). Example: <c>2026</c>.</description></item>
+    /// <item><term>departmentRegistryId</term><description>Register of the caller's department to write the number in (GUID, optional, best matching active register when omitted). Example: <c>3f6b2a10-7c44-4e19-9a52-1d8e6f0b7c21</c>.</description></item>
     /// </list>
     /// </param>
     /// <param name="cancellationToken">Request cancellation token (optional).</param>
@@ -340,7 +341,8 @@ public sealed class DocumentsController : ControllerBase
                         movement.AssignedToUserId,
                         movement.Instructions,
                         movement.DueDate)
-                    : null),
+                    : null,
+                request.DepartmentRegistryId),
             cancellationToken);
 
         return result.ToActionResult();
@@ -439,6 +441,7 @@ public sealed class DocumentsController : ControllerBase
     /// <item><term>documentTypeId</term><description>Document type id (integer, required). Example: <c>1</c>.</description></item>
     /// <item><term>departmentRegistryNumberText</term><description>Number written in the caller's department register (string, required). Example: <c>1447/2026</c>.</description></item>
     /// <item><term>departmentRegistryDate</term><description>Date written in the department register (ISO date, required). Example: <c>2026-11-05</c>.</description></item>
+    /// <item><term>departmentRegistryId</term><description>Register of the caller's department to write the number in (GUID, optional, best matching active register when omitted). Example: <c>3f6b2a10-7c44-4e19-9a52-1d8e6f0b7c21</c>.</description></item>
     /// <item><term>movement</term><description>Optional routing: <c>{"destinationDepartmentId":"3fa85f64-5717-4562-b3fc-2c963f66afa6","movementTypeId":1}</c>; sent immediately.</description></item>
     /// <item><term>fieldValues</term><description>Dynamic field values as key and text value, validated against the published schema of the type (array, optional). Example: <c>[{"fieldKey":"session_no","value":"2026-14"}]</c>.</description></item>
     /// <item><term>subjectSummary</term><description>Subject summary (string, optional). Example: <c>طلب تصريح زيارة لوفدة خارجية</c>.</description></item>
@@ -485,7 +488,8 @@ public sealed class DocumentsController : ControllerBase
                     movement.AssignedToUserId,
                     movement.Instructions,
                     movement.DueDate)
-                : null), cancellationToken);
+                : null,
+            request.DepartmentRegistryId), cancellationToken);
 
         return result.ToActionResult();
     }

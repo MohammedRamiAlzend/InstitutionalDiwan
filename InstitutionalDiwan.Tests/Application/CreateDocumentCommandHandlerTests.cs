@@ -117,6 +117,20 @@ public sealed class CreateDocumentCommandHandlerTests
     }
 
     [Fact]
+    public async Task Handle_WithAChosenRegister_WritesTheLineInThatRegister()
+    {
+        var w = Setup();
+        var chosen = Guid.NewGuid();
+
+        var result = await CreateHandler(w).Handle(
+            Command(w.User.UserId) with { DepartmentRegistryId = chosen }, CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        var line = Assert.IsType<RecordDepartmentRegistrationCommand>(Assert.Single(w.Sender.Requests));
+        Assert.Equal(chosen, line.RegistryId);
+    }
+
+    [Fact]
     public async Task Handle_WithoutDepartmentRegister_FailsBeforeCreatingAnything()
     {
         var w = Setup(departmentRegistry: false);

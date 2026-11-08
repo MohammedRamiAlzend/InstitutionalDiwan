@@ -74,6 +74,7 @@ not ask for it.
 | Recipient browser verification | ✅ Verified in-browser (2026-10-30) as `admin`: ticking «إضافة مستلم للوثيقة» and submitting a department recipient without a department showed «اختر القسم المستلم.»; after choosing «قسم الموارد البشرية» the draft was created with the toast «تم حفظ الوثيقة كمسودة. وأُضيف المستلم.»; the detail page `?tab=participants` of document `596424ec-cb7c-4fa6-9ea2-a9537a4e65a2` showed «مستلم \| أساسي \| قسم داخلي · قسم الموارد البشرية». |
 
 ## 7. Change Log
+- 2026-11-08: Registering asks for the department register before the number and date.
 - 2026-11-05: Removed the direction, confidentiality and priority fields (suspended): the dialog no longer asks for them, no longer auto-fills the direction from the type, and sends none of the three, so the API stores null.
 | 2026-11-03 | Claude | The dialog now loads the chosen type's published schema, renders `DynamicFieldInputs` in a full-width fieldset, validates locally and sends `fieldValues`; changing the type clears the values. |
 

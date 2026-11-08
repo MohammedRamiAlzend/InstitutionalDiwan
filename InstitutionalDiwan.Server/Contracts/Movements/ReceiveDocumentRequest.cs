@@ -8,4 +8,5 @@ namespace InstitutionalDiwan.Server.Contracts.Movements;
 public sealed record ReceiveDocumentRequest(
     string? Notes = null,
     DateTime? RegistryDate = null,
-    string? RegistryNumberText = null);
+    string? RegistryNumberText = null,
+    Guid? RegistryId = null);

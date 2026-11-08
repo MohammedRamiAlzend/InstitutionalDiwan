@@ -449,6 +449,47 @@ public sealed class DepartmentRegisterNumberingTests
             TestClock.Instance);
 
     [Fact]
+    public async Task Receive_WithAChosenRegister_WritesTheNumberInThatRegister()
+    {
+        var world = new World();
+        await world.IssueCentralAsync();
+        var second = world.CreateRegistry("HR2", "سجل الموارد الثاني", world.HrId);
+        world.Registries.Add(second);
+
+        var result = await world.ReceiveHandler().Handle(
+            new ReceiveDocumentCommand(
+                CreateSentMovement(world).MovementId,
+                world.UserId,
+                RegistryDate: FirstVisit,
+                RegistryNumberText: "45",
+                RegistryId: second.RegistryId),
+            CancellationToken.None);
+
+        Assert.True(result.IsSuccess, result.Error?.Code);
+        Assert.Equal(second.RegistryId, world.DepartmentEntry(world.HrId)!.RegistryId);
+    }
+
+    [Fact]
+    public async Task Receive_WithAnotherDepartmentsRegister_ReturnsConflict()
+    {
+        var world = new World();
+        await world.IssueCentralAsync();
+        var financeRegistry = world.Registries.Registries.Single(registry => registry.DepartmentId == world.FinanceId);
+
+        var result = await world.ReceiveHandler().Handle(
+            new ReceiveDocumentCommand(
+                CreateSentMovement(world).MovementId,
+                world.UserId,
+                RegistryDate: FirstVisit,
+                RegistryNumberText: "45",
+                RegistryId: financeRegistry.RegistryId),
+            CancellationToken.None);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(DomainErrors.Numbering.DepartmentRegistryMismatch.Code, result.Error.Code);
+    }
+
+    [Fact]
     public async Task Receive_OnReturnToADepartment_KeepsTheNumberAndAddsAVisit()
     {
         var world = new World();

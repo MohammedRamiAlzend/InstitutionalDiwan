@@ -11,6 +11,8 @@ export interface UpdateDraftDocumentRequest {
 export interface RegisterDraftDocumentRequest {
   departmentRegistryNumberText: string
   departmentRegistryDate: string
+  /** Register of the caller's department; omitted = the best matching active one. */
+  departmentRegistryId?: string | null
   movement?: {
     destinationDepartmentId: string
     movementTypeId: number

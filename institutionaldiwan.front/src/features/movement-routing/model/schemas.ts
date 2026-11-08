@@ -31,6 +31,7 @@ export const movementNotesSchema = z.object({
 export type MovementNotesFormValues = z.infer<typeof movementNotesSchema>
 
 export const receiveMovementSchema = z.object({
+  registryId: z.string(),
   registryDate: z
     .string()
     .regex(OPTIONAL_DATE_PATTERN, 'تاريخ التسجيل مطلوب.'),

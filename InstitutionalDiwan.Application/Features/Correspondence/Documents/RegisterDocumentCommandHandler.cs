@@ -145,7 +145,8 @@ internal sealed class RegisterDocumentCommandHandler
                 document.OwningDepartmentId,
                 registryNumber.Trim(),
                 request.DepartmentRegistryDate ?? _unitOfWork.UtcNow.Date,
-                request.UserId), cancellationToken);
+                request.UserId,
+                RegistryId: request.DepartmentRegistryId), cancellationToken);
             if (line.IsFailure)
                 return Result.Failure<DocumentResponse>(line.Error);
         }

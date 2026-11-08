@@ -49,6 +49,7 @@ permissions allow the transition, so the slice itself renders no permission bann
 - 2026-11-05: Unsent form input is now kept (per user, per form) after an accidental close or cancel and restored with a toast; it is cleared only after a successful submit (`useDraftForm`).
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-08 | Claude | Registering asks for the department register before the number and date. |
 | 2026-11-05 | Claude | `RegisterDraftDialog` now collects the register number/date and an optional movement; the year field is gone. |
 | 2026-11-05 | Claude | The draft edit dialog no longer edits confidentiality or priority (suspended); it sends only title and summary, and the stored values are left untouched. |
 | 2026-10-28 | agent | Verified the four commands in-browser: draft edit persisted title/summary/priority, registration allocated `2026/000004` and flipped the header to «مسجل», participants resolved to «خالد الحلبي» and «قسم الموارد البشرية», and cancel recorded the Arabic reason and produced «ملغي». |

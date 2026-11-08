@@ -17,10 +17,12 @@ Writes live in `features/numbering-manage`.
 | --- | --- |
 | `model/types.ts` | `NumberingRegistryResponse`, `NumberingCounterResponse`, `DepartmentRegisterLineResponse`, and `DepartmentRegisterParams` TypeScript contracts. |
 | `model/queries.ts` | `numberingRegistryKeys` factory and `useNumberingRegistries`, `useNumberingRegistryById`, `useDepartmentRegister` hooks. |
+| `model/departmentRegistries.ts` | `useDepartmentRegistryOptions` lists a department's active registers as options for choosing where a number is written. |
 | `model/format.ts` | Pure `renderNumberPattern(pattern, { numberingYear, sequenceValue })` mirroring `OfficialNumberFormatter` (`{YEAR}`, `{SEQ}`, `{SEQ:Dn}`, case-insensitive, `DEFAULT_NUMBER_PATTERN` on blank), the default template constant, and `unknownPatternTokens` (tokens the formatter cannot expand) for form validation. |
 | `model/scope.ts` | Pure scope helpers: `registryScopeRank` (constrained dimensions 0–3; ordering only, never asserted as server precedence), `registryScopeKey`, `describeRegistryScope` (Arabic summary), and `findDuplicateActiveScopes` (active registries sharing one scope triple). |
 | `api/numberingRegistryApi.ts` | Typed `GET` calls to `/api/numbering/registries` and `/api/departments/{id}/register` (blank department skips the call). |
 | `ui/RegistryScopeCard.tsx` | Displays registry code, format pattern, reset policy, and per-year sequence counters. |
+| `ui/DepartmentRegistrySelect.tsx` | Register picker that preselects and locks a single register and clears a choice that is no longer available. |
 | `index.ts` | Public barrel exporting types, query keys, hooks, and UI components. |
 
 ## Query keys
@@ -48,6 +50,7 @@ affected `detail(id)`.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-08 | Claude | Added the shared department register picker. |
 | 2026-10-29 | agent | Module 04 Phase 2: added `unknownPatternTokens` to `model/format.ts` and exported it through the barrel; documented that `registryScopeRank` is ordering-only, not a server-precedence claim. |
 | 2026-10-29 | agent | Module 04 Phase 1: added the pure `model/format.ts` (`renderNumberPattern`, `DEFAULT_NUMBER_PATTERN`) and `model/scope.ts` (`registryScopeRank`, `registryScopeKey`, `describeRegistryScope`, `findDuplicateActiveScopes`) helpers through the public barrel; no UI change yet. |
 | 2026-10-29 | agent | Module 03 Phase 5: implemented the read slice — registry/counter and department-register types, query keys/hooks, typed GETs, and `RegistryScopeCard`; verified against the live API from `/numbering`. |

@@ -57,6 +57,7 @@ another layer's surface by itself.
 - 2026-11-05: Unsent form input is now kept (per user, per form) after an accidental close or cancel and restored with a toast; it is cleared only after a successful submit (`useDraftForm`).
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-08 | Claude | Department registration uses the shared register picker and locks the register of an existing number. |
 | 2026-11-08 | Claude | Department registration locks the number when the department already has one for the date's year. |
 | 2026-11-05 | Claude | Issue and replace dialogs no longer ask for a numbering year; numbers are system GUIDs. |
 | 2026-11-05 | Claude | The registry form no longer edits the direction scope (suspended); an existing direction on a registry is kept unchanged on edit and new registries get none. |

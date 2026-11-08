@@ -14,7 +14,8 @@ import {
 } from '@/entities/document-schema'
 import { useExternalOrganizations } from '@/entities/external-organization'
 import { LOOKUP_SLUGS, useLookupEntries, usePreselectLookupDefault } from '@/entities/lookup'
-import { useSessionStore } from '@/entities/user'
+import { DepartmentRegistrySelect, useDepartmentRegistryOptions } from '@/entities/numbering-registry'
+import { useMyPrimaryDepartmentId, useSessionStore } from '@/entities/user'
 import { ApiError, toArabicErrorMessage } from '@/shared/api'
 import { PARTICIPANT_ROLE, Permissions } from '@/shared/config'
 import {
@@ -85,6 +86,7 @@ function buildEmptyValues(canManageNumbering: boolean): CreateDocumentFormValues
     title: '',
     documentTypeId: '',
     subjectSummary: '',
+    registryId: '',
     registryNumberText: '',
     registryDate: todayIso(),
     destinationDepartmentId: '',
@@ -186,6 +188,15 @@ export function CreateDocumentDialog({ open, onOpenChange }: CreateDocumentDialo
   const mode = useWatch({ control, name: 'mode' })
   const documentTypeId = useWatch({ control, name: 'documentTypeId' })
 
+  // Without NUMBERING_VIEW the registers cannot be listed, so the server picks the best match.
+  const canViewNumbering = useSessionStore((state) =>
+    state.hasPermission(Permissions.NumberingView),
+  )
+  const { departmentId: ownDepartmentId } = useMyPrimaryDepartmentId()
+  const registries = useDepartmentRegistryOptions(ownDepartmentId, {
+    enabled: open && mode === 'register' && canViewNumbering,
+  })
+
   // Dynamic fields follow the chosen type's published schema; a type without one shows no section.
   const schemaQuery = useDocumentTypeSchema(documentTypeId ? Number(documentTypeId) : undefined, {
     enabled: open,
@@ -271,7 +282,7 @@ export function CreateDocumentDialog({ open, onOpenChange }: CreateDocumentDialo
 
   const changeMode = (nextMode: CreateDocumentMode) => {
     setValue('mode', nextMode)
-    clearErrors(['registryNumberText', 'registryDate', 'movementTypeId'])
+    clearErrors(['registryId', 'registryNumberText', 'registryDate', 'movementTypeId'])
   }
 
   const discardRestoredDraft = () => {
@@ -283,6 +294,11 @@ export function CreateDocumentDialog({ open, onOpenChange }: CreateDocumentDialo
   }
 
   const onSubmit = handleSubmit(async (values) => {
+    if (values.mode === 'register' && registries.options.length > 1 && !values.registryId) {
+      setError('registryId', { message: 'اختر السجل الذي سُجّل فيه الرقم.' })
+      return
+    }
+
     const dynamicErrors = validateFieldValues(schemaFields, fieldValues)
     setFieldErrors(dynamicErrors)
     if (Object.keys(dynamicErrors).length > 0) return
@@ -315,6 +331,7 @@ export function CreateDocumentDialog({ open, onOpenChange }: CreateDocumentDialo
               ...shared,
               departmentRegistryNumberText: values.registryNumberText.trim(),
               departmentRegistryDate: values.registryDate,
+              departmentRegistryId: values.registryId || null,
               movement: values.destinationDepartmentId
                 ? {
                     destinationDepartmentId: values.destinationDepartmentId,
@@ -530,6 +547,29 @@ export function CreateDocumentDialog({ open, onOpenChange }: CreateDocumentDialo
 
         {mode === 'register' ? (
           <>
+            {canViewNumbering && (
+              <FormField
+                label="السجل"
+                required={registries.options.length > 1}
+                error={errors.registryId?.message}
+                className="sm:col-span-2"
+              >
+                <Controller
+                  control={control}
+                  name="registryId"
+                  render={({ field }) => (
+                    <DepartmentRegistrySelect
+                      registries={registries}
+                      value={field.value}
+                      onChange={field.onChange}
+                      disabled={pending}
+                      invalid={Boolean(errors.registryId)}
+                    />
+                  )}
+                />
+              </FormField>
+            )}
+
             <FormField
               label="رقم السجل (في دفتر قسمك)"
               required

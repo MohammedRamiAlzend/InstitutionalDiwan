@@ -94,6 +94,7 @@ commands the API actually walks: `CreateDraftDocumentCommand` → `UpdateDraftMe
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-08 | Claude | Create and register accept `DepartmentRegistryId` to choose the department register. |
 | 2026-11-05 | Claude | `CreateDocumentCommand` no longer takes a typed number or year: the system issues a GUID central number, writes the creator department register line (typed number + date, register mandatory) and optionally opens and sends a movement, all in one transaction. `RegisterDocumentCommand` gained the same optional register line and movement. |
 | 2026-11-05 | Claude | Direction, confidentiality and priority are suspended: `CreateDocumentCommand`/`CreateDraftDocumentCommand` take them as optional (null by default, `DirectionId` moved after `SubjectSummary`), handlers no longer default confidentiality/priority to NORMAL, and `DocumentResponse` returns them as nullable. A stored SECRET/TOP_SECRET value still restricts access; null counts as normal. |
 | 2026-11-04 | Claude | Registry filtering by dynamic field values (plan `plans/document-registry-field-filters.md`): `ListDocumentsQuery.FieldFilters`, `DocumentFieldFilterParser` (splits `key:operator:value` at the first two colons, validates the operator and value against the field's data type, max 5) and `ListDocumentsQueryHandler` now resolves the type's fields; new `DocumentFields.Filter*` and `TooManyFilters` errors. |

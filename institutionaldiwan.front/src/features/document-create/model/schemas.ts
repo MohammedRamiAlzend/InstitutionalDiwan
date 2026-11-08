@@ -11,6 +11,7 @@ const documentFields = {
     .string()
     .trim()
     .max(2000, 'ملخص الموضوع يتجاوز الحد الأقصى للأحرف.'),
+  registryId: z.string(),
   registryNumberText: z
     .string()
     .trim()

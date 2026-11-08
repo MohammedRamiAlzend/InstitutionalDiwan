@@ -149,7 +149,7 @@ internal sealed class CreateDocumentCommandHandler : ICommandHandler<CreateDocum
             request.DepartmentRegistryNumberText.Trim(),
             request.DepartmentRegistryDate,
             user.UserId,
-            RegistryId: departmentRegistry.Value.RegistryId), cancellationToken);
+            RegistryId: request.DepartmentRegistryId ?? departmentRegistry.Value.RegistryId), cancellationToken);
         if (registration.IsFailure)
             return Result.Failure<DocumentResponse>(registration.Error);
 

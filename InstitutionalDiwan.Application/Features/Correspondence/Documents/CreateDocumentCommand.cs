@@ -30,7 +30,8 @@ public sealed record CreateDocumentCommand(
     int? ConfidentialityLevelId = null,
     int? PriorityLevelId = null,
     IReadOnlyList<DocumentFieldValueInput>? FieldValues = null,
-    CreateDocumentMovementInput? Movement = null) : ICommand<DocumentResponse>;
+    CreateDocumentMovementInput? Movement = null,
+    Guid? DepartmentRegistryId = null) : ICommand<DocumentResponse>;
 
 /// <summary>Where the new document is sent as soon as it is created.</summary>
 public sealed record CreateDocumentMovementInput(

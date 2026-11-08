@@ -18,6 +18,8 @@ export interface CreateDocumentRequest {
   documentTypeId: number
   departmentRegistryNumberText: string
   departmentRegistryDate: string
+  /** Register of the creator's department; omitted = the best matching active one. */
+  departmentRegistryId?: string | null
   movement?: CreateDocumentMovementRequest | null
   subjectSummary?: string | null
   /** Dynamic field values for the type's published schema; omit when the type has none. */

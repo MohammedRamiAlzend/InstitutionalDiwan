@@ -130,7 +130,7 @@ internal sealed class ReceiveDocumentCommandHandler
         if (canRegister.IsFailure)
             return Result.Failure<(DocumentNumber, DocumentRegistryVisit)>(canRegister.Error);
 
-        var registry = await _registrationService.ResolveRegistryAsync(departmentId, null, cancellationToken);
+        var registry = await _registrationService.ResolveRegistryAsync(departmentId, request.RegistryId, cancellationToken);
         if (registry.IsFailure)
             return Result.Failure<(DocumentNumber, DocumentRegistryVisit)>(registry.Error);
 

@@ -17,6 +17,8 @@ export interface MovementNotesRequest {
 export interface ReceiveMovementRequest extends MovementNotesRequest {
   registryDate: string
   registryNumberText?: string | null
+  /** Register for a new number; omitted = the best matching active one. */
+  registryId?: string | null
 }
 
 /** Required reason carried by reject/return/cancel. */

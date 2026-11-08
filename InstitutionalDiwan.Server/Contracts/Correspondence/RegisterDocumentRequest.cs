@@ -8,4 +8,5 @@ public sealed record RegisterDocumentRequest(
     int? NumberingYear = null,
     string? DepartmentRegistryNumberText = null,
     DateTime? DepartmentRegistryDate = null,
-    CreateDocumentMovementRequest? Movement = null);
+    CreateDocumentMovementRequest? Movement = null,
+    Guid? DepartmentRegistryId = null);

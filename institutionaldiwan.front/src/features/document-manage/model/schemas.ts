@@ -18,6 +18,7 @@ export type EditDraftFormValues = z.infer<typeof editDraftSchema>
 /** Register number and date are required; the movement is optional (blank destination = none). */
 export const registerDraftSchema = z
   .object({
+    registryId: z.string(),
     registryNumberText: z
       .string()
       .trim()

@@ -7,7 +7,10 @@ import { toast } from 'sonner'
 import { useDepartmentOptions } from '@/entities/department'
 import type { DocumentResponse } from '@/entities/document'
 import { LOOKUP_SLUGS, useLookupEntries, usePreselectLookupDefault } from '@/entities/lookup'
+import { DepartmentRegistrySelect, useDepartmentRegistryOptions } from '@/entities/numbering-registry'
+import { useSessionStore } from '@/entities/user'
 import { toArabicErrorMessage } from '@/shared/api'
+import { Permissions } from '@/shared/config'
 import { Button, Dialog, FormField, Input, Select } from '@/shared/ui'
 import { useRegisterDraftDocumentMutation } from '../api/documentMutations'
 import {
@@ -43,12 +46,14 @@ export function RegisterDraftDialog({
     control,
     getValues,
     setValue,
+    setError,
     handleSubmit,
     formState: { errors },
     draft,
   } = useDraftForm<RegisterDraftFormValues>({ formId: `register-draft:${document.documentId}` }, {
     resolver: zodResolver(registerDraftSchema),
     defaultValues: {
+      registryId: '',
       registryNumberText: '',
       registryDate: todayIso(),
       destinationDepartmentId: '',
@@ -62,6 +67,14 @@ export function RegisterDraftDialog({
   )
 
   const destinationDepartmentId = useWatch({ control, name: 'destinationDepartmentId' })
+
+  // Without NUMBERING_VIEW the registers cannot be listed, so the server picks the best match.
+  const canViewNumbering = useSessionStore((state) =>
+    state.hasPermission(Permissions.NumberingView),
+  )
+  const registries = useDepartmentRegistryOptions(document.owningDepartmentId, {
+    enabled: open && canViewNumbering,
+  })
 
   const destinationOptions = useMemo(
     () => [
@@ -85,10 +98,16 @@ export function RegisterDraftDialog({
   )
 
   const onSubmit = handleSubmit(async (values) => {
+    if (registries.options.length > 1 && !values.registryId) {
+      setError('registryId', { message: 'اختر السجل الذي سُجّل فيه الرقم.' })
+      return
+    }
+
     try {
       await mutation.mutateAsync({
         departmentRegistryNumberText: values.registryNumberText.trim(),
         departmentRegistryDate: values.registryDate,
+        departmentRegistryId: values.registryId || null,
         movement: values.destinationDepartmentId
           ? {
               destinationDepartmentId: values.destinationDepartmentId,
@@ -133,6 +152,28 @@ export function RegisterDraftDialog({
       }
     >
       <form id="document-register-form" onSubmit={onSubmit} noValidate className="grid gap-4">
+        {canViewNumbering && (
+          <FormField
+            label="السجل"
+            required={registries.options.length > 1}
+            error={errors.registryId?.message}
+          >
+            <Controller
+              control={control}
+              name="registryId"
+              render={({ field }) => (
+                <DepartmentRegistrySelect
+                  registries={registries}
+                  value={field.value}
+                  onChange={field.onChange}
+                  disabled={mutation.isPending}
+                  invalid={Boolean(errors.registryId)}
+                />
+              )}
+            />
+          </FormField>
+        )}
+
         <FormField
           label="رقم السجل (في دفتر قسمك)"
           required

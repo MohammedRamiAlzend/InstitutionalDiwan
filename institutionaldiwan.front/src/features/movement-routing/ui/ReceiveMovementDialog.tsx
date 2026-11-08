@@ -1,8 +1,9 @@
-import { useForm, useWatch } from 'react-hook-form'
+import { Controller, useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
 import { findDepartmentEntry, useDocumentRegistryNumbers } from '@/entities/document'
 import { useMovementById } from '@/entities/movement'
+import { DepartmentRegistrySelect, useDepartmentRegistryOptions } from '@/entities/numbering-registry'
 import { useSessionStore } from '@/entities/user'
 import { ApiError, toArabicErrorMessage } from '@/shared/api'
 import { Permissions } from '@/shared/config'
@@ -53,7 +54,7 @@ export function ReceiveMovementDialog({
     formState: { errors },
   } = useForm<ReceiveMovementFormValues>({
     resolver: zodResolver(receiveMovementSchema),
-    defaultValues: { registryDate: todayIsoDate(), registryNumberText: '', notes: '' },
+    defaultValues: { registryId: '', registryNumberText: '', registryDate: todayIsoDate(), notes: '' },
   })
 
   const year = Number(useWatch({ control, name: 'registryDate' }).slice(0, 4))
@@ -62,11 +63,23 @@ export function ReceiveMovementDialog({
     movementQuery.data?.destinationDepartmentId,
     year,
   )
+  const registries = useDepartmentRegistryOptions(movementQuery.data?.destinationDepartmentId, {
+    enabled: open && canViewNumbering,
+  })
+  const existingRegistryLabel = registries.options.find(
+    (option) => option.value === existingLine?.registryId,
+  )?.label
   const linesKnown = canViewNumbering && entriesQuery.isSuccess
-  const loading = movementQuery.isLoading || (canViewNumbering && entriesQuery.isLoading)
+  const loading =
+    movementQuery.isLoading ||
+    (canViewNumbering && (entriesQuery.isLoading || registries.isLoading))
 
   const submit = handleSubmit(async (values) => {
     const typedNumber = values.registryNumberText.trim()
+    if (!existingLine && registries.options.length > 1 && !values.registryId) {
+      setError('registryId', { message: 'اختر السجل الذي سُجّل فيه الرقم.' })
+      return
+    }
     if (linesKnown && !existingLine && !typedNumber) {
       setError('registryNumberText', { message: 'أدخل رقم سجل الدائرة لهذه السنة.' })
       return
@@ -78,6 +91,7 @@ export function ReceiveMovementDialog({
         notes: values.notes.trim() || null,
         registryDate: values.registryDate,
         registryNumberText: existingLine ? null : typedNumber || null,
+        registryId: existingLine ? null : values.registryId || null,
       })
       toast.success(
         receipt.isReturnVisit
@@ -88,7 +102,9 @@ export function ReceiveMovementDialog({
     } catch (error) {
       if (!(error instanceof ApiError)) return
       const message = toArabicErrorMessage(error)
-      if (error.code === 'Numbering.VisitDateDuplicate' || error.code === 'Numbering.RegistryDateInvalid') {
+      if (error.code === 'Numbering.DepartmentRegistryMismatch') {
+        setError('registryId', { type: 'server', message })
+      } else if (error.code === 'Numbering.VisitDateDuplicate' || error.code === 'Numbering.RegistryDateInvalid') {
         setError('registryDate', { type: 'server', message })
       } else if (
         error.code === 'Numbering.RegistryNumberTaken' ||
@@ -100,7 +116,7 @@ export function ReceiveMovementDialog({
     }
   })
 
-  const fieldErrorShown = Boolean(errors.registryDate || errors.registryNumberText)
+  const fieldErrorShown = Boolean(errors.registryId || errors.registryDate || errors.registryNumberText)
 
   return (
     <Dialog
@@ -136,21 +152,36 @@ export function ReceiveMovementDialog({
         noValidate
         className="flex flex-col gap-4"
       >
-        <FormField
-          label="تاريخ التسجيل"
-          required
-          error={errors.registryDate?.message}
-          htmlFor="movement-receive-date"
-        >
-          <Input
-            id="movement-receive-date"
-            type="date"
-            dir="ltr"
-            disabled={mutation.isPending}
-            invalid={Boolean(errors.registryDate)}
-            {...register('registryDate')}
-          />
-        </FormField>
+        {existingLine ? (
+          existingRegistryLabel && (
+            <FormField key="registry-locked" label="السجل" htmlFor="movement-receive-registry-locked">
+              <Input id="movement-receive-registry-locked" value={existingRegistryLabel} readOnly />
+            </FormField>
+          )
+        ) : (
+          canViewNumbering && (
+            <FormField
+              key="registry-choice"
+              label="السجل"
+              required={registries.options.length > 1}
+              error={errors.registryId?.message}
+            >
+              <Controller
+                control={control}
+                name="registryId"
+                render={({ field }) => (
+                  <DepartmentRegistrySelect
+                    registries={registries}
+                    value={field.value}
+                    onChange={field.onChange}
+                    disabled={mutation.isPending || loading}
+                    invalid={Boolean(errors.registryId)}
+                  />
+                )}
+              />
+            </FormField>
+          )
+        )}
 
         {existingLine ? (
           <FormField key="locked" label="رقم سجل الدائرة" htmlFor="movement-receive-number-locked">
@@ -187,6 +218,22 @@ export function ReceiveMovementDialog({
             )}
           </FormField>
         )}
+
+        <FormField
+          label="تاريخ التسجيل"
+          required
+          error={errors.registryDate?.message}
+          htmlFor="movement-receive-date"
+        >
+          <Input
+            id="movement-receive-date"
+            type="date"
+            dir="ltr"
+            disabled={mutation.isPending}
+            invalid={Boolean(errors.registryDate)}
+            {...register('registryDate')}
+          />
+        </FormField>
 
         <FormField label="ملاحظات الاستلام (اختياري)" error={errors.notes?.message}>
           <Textarea

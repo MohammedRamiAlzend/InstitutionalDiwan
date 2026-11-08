@@ -17,7 +17,8 @@ public sealed record CreateDocumentRequest(
     int? ConfidentialityLevelId = null,
     int? PriorityLevelId = null,
     IReadOnlyList<DocumentFieldValueRequest>? FieldValues = null,
-    CreateDocumentMovementRequest? Movement = null);
+    CreateDocumentMovementRequest? Movement = null,
+    Guid? DepartmentRegistryId = null);
 
 /// <summary>Destination of the movement opened and sent together with the new document.</summary>
 public sealed record CreateDocumentMovementRequest(

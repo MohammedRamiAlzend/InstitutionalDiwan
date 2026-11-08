@@ -16,4 +16,5 @@ public sealed record RegisterDocumentCommand(
     int? NumberingYear = null,
     string? DepartmentRegistryNumberText = null,
     DateTime? DepartmentRegistryDate = null,
-    CreateDocumentMovementInput? Movement = null) : ICommand<DocumentResponse>;
+    CreateDocumentMovementInput? Movement = null,
+    Guid? DepartmentRegistryId = null) : ICommand<DocumentResponse>;

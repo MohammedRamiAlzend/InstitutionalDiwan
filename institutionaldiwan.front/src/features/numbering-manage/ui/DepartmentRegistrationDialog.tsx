@@ -1,14 +1,14 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import { Controller } from 'react-hook-form'
 import { useDraftForm } from '@/shared/lib'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
 import { useDepartmentOptions } from '@/entities/department'
 import { findDepartmentEntry, useDocumentRegistryNumbers } from '@/entities/document'
-import { useNumberingRegistries } from '@/entities/numbering-registry'
+import { DepartmentRegistrySelect, useDepartmentRegistryOptions } from '@/entities/numbering-registry'
 import { useMyPrimaryDepartmentId } from '@/entities/user'
 import { toArabicErrorMessage } from '@/shared/api'
-import { Button, Dialog, FormField, Input, Select, Textarea } from '@/shared/ui'
+import { Button, Dialog, FormField, Input, Textarea } from '@/shared/ui'
 import { useRecordDepartmentRegistrationMutation } from '../api/numberMutations'
 import {
   departmentRegistrationSchema,
@@ -41,7 +41,6 @@ export function DepartmentRegistrationDialog({
 }: DepartmentRegistrationDialogProps) {
   const mutation = useRecordDepartmentRegistrationMutation(documentId)
   const departmentsQuery = useDepartmentOptions({ enabled: open })
-  const registriesQuery = useNumberingRegistries({ enabled: open })
   const { departmentId: ownDepartmentId, isLoading: profileLoading } =
     useMyPrimaryDepartmentId()
 
@@ -69,6 +68,8 @@ export function DepartmentRegistrationDialog({
     if (ownDepartmentId) setValue('departmentId', ownDepartmentId)
   }, [ownDepartmentId, setValue])
 
+  const registries = useDepartmentRegistryOptions(ownDepartmentId, { enabled: open })
+  const registryOptions = registries.options
   const entriesQuery = useDocumentRegistryNumbers(documentId, { enabled: open })
   const existingLine = findDepartmentEntry(
     entriesQuery.data,
@@ -88,32 +89,24 @@ export function DepartmentRegistrationDialog({
     hadLockedNumber.current = Boolean(lockedNumber)
   }, [lockedNumber, setValue])
 
+  // A locked number stays in the register it was first written in.
+  const lockedRegistryId = existingLine?.registryId
+  useEffect(() => {
+    if (lockedRegistryId && registryOptions.some((option) => option.value === lockedRegistryId)) {
+      setValue('registryId', lockedRegistryId)
+    }
+  }, [lockedRegistryId, registryOptions, setValue])
+
   const ownDepartment = (departmentsQuery.data ?? []).find(
     (department) => department.departmentId === ownDepartmentId,
   )
 
-  const registryOptions = useMemo(
-    () =>
-      (registriesQuery.data ?? [])
-        .filter((registry) => registry.isActive && registry.departmentId === ownDepartmentId)
-        .map((registry) => ({
-          value: registry.registryId,
-          label: `${registry.code} — ${registry.nameAr}`,
-        })),
-    [registriesQuery.data, ownDepartmentId],
-  )
-
-  // A single register needs no choice: it is preselected and shown read-only.
-  useEffect(() => {
-    if (registryOptions.length === 1) setValue('registryId', registryOptions[0].value)
-  }, [registryOptions, setValue])
-
-  const loading = departmentsQuery.isLoading || registriesQuery.isLoading || profileLoading
+  const loading = departmentsQuery.isLoading || registries.isLoading || profileLoading
   // The profile finished loading without a department: an outdated session or API.
   const missingOwnDepartment = !profileLoading && !ownDepartmentId
 
   const onSubmit = handleSubmit(async (values) => {
-    if (registryOptions.length > 1 && !values.registryId) {
+    if (!lockedNumber && registryOptions.length > 1 && !values.registryId) {
       setError('registryId', { message: 'اختر السجل الذي سُجّل فيه الرقم.' })
       return
     }
@@ -191,30 +184,16 @@ export function DepartmentRegistrationDialog({
             control={control}
             name="registryId"
             render={({ field }) => (
-              <Select
-                value={field.value || undefined}
-                onValueChange={field.onChange}
-                options={registryOptions}
-                disabled={
-                  mutation.isPending || loading || registryOptions.length <= 1
-                }
+              <DepartmentRegistrySelect
+                registries={registries}
+                value={field.value}
+                onChange={field.onChange}
+                disabled={mutation.isPending || loading || Boolean(lockedNumber)}
                 invalid={Boolean(errors.registryId)}
-                placeholder={
-                  loading
-                    ? 'جارٍ التحميل…'
-                    : registryOptions.length === 0
-                      ? 'لا يوجد سجل نشط'
-                      : 'اختر السجل…'
-                }
-                aria-label="السجل"
+                hideEmptyHint={missingOwnDepartment}
               />
             )}
           />
-          {!loading && !missingOwnDepartment && registryOptions.length === 0 && (
-            <p className="text-xs text-danger">
-              لا يوجد لدائرتك سجل ترقيم نشط؛ يضيفه المسؤول من صفحة «الترقيم».
-            </p>
-          )}
         </FormField>
 
         <FormField

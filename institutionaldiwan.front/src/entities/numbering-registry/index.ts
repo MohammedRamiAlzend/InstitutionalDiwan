@@ -10,6 +10,9 @@ export {
   useNumberingRegistryById,
   useDepartmentRegister,
 } from './model/queries'
+export { useDepartmentRegistryOptions } from './model/departmentRegistries'
+export type { DepartmentRegistryOptions } from './model/departmentRegistries'
+export { DepartmentRegistrySelect } from './ui/DepartmentRegistrySelect'
 export { RegistryScopeCard } from './ui/RegistryScopeCard'
 export {
   DEFAULT_NUMBER_PATTERN,

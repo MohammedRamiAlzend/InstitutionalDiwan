@@ -247,6 +247,7 @@ public sealed class MovementsController : ControllerBase
     /// <item><term>notes</term><description>Notes (string, optional). Example: <c>Reviewed and forwarded to the responsible department.</c>.</description></item>
     /// <item><term>registryDate</term><description>Date written in the department register (date, optional, today when omitted). Example: <c>2026-11-08</c>.</description></item>
     /// <item><term>registryNumberText</term><description>Department register number, required only when the department has no number for this document in that year (string, optional). Example: <c>1457/ص</c>.</description></item>
+    /// <item><term>registryId</term><description>Register of the department to write a new number in (GUID, optional, best matching active register when omitted; ignored when the number already exists). Example: <c>3f6b2a10-7c44-4e19-9a52-1d8e6f0b7c21</c>.</description></item>
     /// </list>
     /// </param>
     /// <param name="cancellationToken">Request cancellation token (optional).</param>
@@ -274,7 +275,7 @@ public sealed class MovementsController : ControllerBase
             return Unauthorized();
 
         var result = await _sender.Send(
-            new ReceiveDocumentCommand(movementId, userId, request.Notes, null, request.RegistryDate, request.RegistryNumberText), cancellationToken);
+            new ReceiveDocumentCommand(movementId, userId, request.Notes, null, request.RegistryDate, request.RegistryNumberText, request.RegistryId), cancellationToken);
 
         return result.ToActionResult();
     }
@@ -586,6 +587,7 @@ public sealed class MovementsController : ControllerBase
     /// <item><term>notes</term><description>Notes (string, optional). Example: <c>تم الاستلام</c>.</description></item>
     /// <item><term>registryDate</term><description>Date written in the department register (date, optional, today when omitted). Example: <c>2026-11-08</c>.</description></item>
     /// <item><term>registryNumberText</term><description>Department register number, required only when the department has no number for this document in that year (string, optional). Example: <c>1457/ص</c>.</description></item>
+    /// <item><term>registryId</term><description>Register of the department to write a new number in (GUID, optional, best matching active register when omitted; ignored when the number already exists). Example: <c>3f6b2a10-7c44-4e19-9a52-1d8e6f0b7c21</c>.</description></item>
     /// </list>
     /// </param>
     /// <param name="cancellationToken">Request cancellation token (optional).</param>
@@ -613,7 +615,7 @@ public sealed class MovementsController : ControllerBase
             return Unauthorized();
 
         var result = await _sender.Send(
-            new ReceiveDocumentCommand(movementId, userId, request.Notes, stepId, request.RegistryDate, request.RegistryNumberText), cancellationToken);
+            new ReceiveDocumentCommand(movementId, userId, request.Notes, stepId, request.RegistryDate, request.RegistryNumberText, request.RegistryId), cancellationToken);
         return result.ToActionResult();
     }
 

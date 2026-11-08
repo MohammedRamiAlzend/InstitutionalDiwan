@@ -14,7 +14,8 @@ public sealed record ReceiveDocumentCommand(
     string? Notes = null,
     Guid? StepId = null,
     DateTime? RegistryDate = null,
-    string? RegistryNumberText = null) : ICommand<MovementStepReceiptResponse>;
+    string? RegistryNumberText = null,
+    Guid? RegistryId = null) : ICommand<MovementStepReceiptResponse>;
 
 /// <summary>What a completed receipt recorded.</summary>
 public sealed record MovementStepReceiptResponse(
