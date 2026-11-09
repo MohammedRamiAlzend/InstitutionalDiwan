@@ -22,11 +22,11 @@ export const PERSONS_GUIDE_ENTRIES: readonly GuideEntry[] = [
 export const PERSONS_GUIDE: PageGuide = {
   pageId: 'persons',
   intro: 'سجل الأشخاص الواردة أسماؤهم في الوثائق من غير مستخدمي النظام، كالمدعى عليهم والمدعين.',
-  entryIds: ['persons.grid', 'table.search', 'table.columns', 'table.pageSize', 'table.refresh', 'table.rowMenu', 'table.empty'],
+  entryIds: ['persons.grid', 'table.search', 'table.columns', 'table.export', 'table.pageSize', 'table.refresh', 'table.rowMenu', 'table.empty'],
 }
 
 export const PERSON_DETAILS_GUIDE: PageGuide = {
   pageId: 'person-details',
   intro: 'ملف شخص واحد: وثائقه وما جرى عليها.',
-  entryIds: ['person-details.documents', 'person-details.timeline', 'table.search', 'table.columns', 'table.pageSize', 'table.refresh', 'table.rowMenu', 'table.empty'],
+  entryIds: ['person-details.documents', 'person-details.timeline', 'table.search', 'table.columns', 'table.export', 'table.pageSize', 'table.refresh', 'table.rowMenu', 'table.empty'],
 }

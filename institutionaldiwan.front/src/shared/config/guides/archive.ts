@@ -48,6 +48,7 @@ export const ARCHIVE_GUIDE: PageGuide = {
     'archive.saved-searches',
     'table.search',
     'table.columns',
+    'table.export',
     'table.pageSize',
     'table.refresh',
     'table.rowMenu',

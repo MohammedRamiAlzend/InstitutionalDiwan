@@ -29,6 +29,7 @@ export const MOVEMENTS_GUIDE: PageGuide = {
     'movements.filters',
     'table.search',
     'table.columns',
+    'table.export',
     'table.pageSize',
     'table.refresh',
     'table.rowMenu',

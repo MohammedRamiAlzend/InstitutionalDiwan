@@ -37,6 +37,7 @@ export const LOOKUPS_GUIDE: PageGuide = {
     'lookups.status',
     'table.search',
     'table.columns',
+    'table.export',
     'table.pageSize',
     'table.refresh',
     'table.rowMenu',

@@ -38,12 +38,17 @@ internal sealed class FakeDocumentRepository : IDocumentRepository
         int? documentTypeId = null,
         IReadOnlyList<InstitutionalDiwan.Domain.ValueObjects.DocumentFieldFilter>? fieldFilters = null,
         InstitutionalDiwan.Domain.ValueObjects.DocumentFieldSort? fieldSort = null,
+        string? registerNumber = null,
         CancellationToken cancellationToken = default)
     {
         LastFieldSort = fieldSort;
         LastViewAccess = access;
 
         var query = Documents.Where(document => IsViewable(document, access));
+
+        if (!string.IsNullOrWhiteSpace(registerNumber))
+            query = query.Where(document => document.Numbers.Any(number =>
+                number.IsDepartmentEntry && number.OfficialNumberText.Contains(registerNumber.Trim(), StringComparison.Ordinal)));
 
         if (statusId is { } status)
             query = query.Where(document => document.CurrentStatusId == status);

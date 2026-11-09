@@ -42,6 +42,7 @@ atomic first upload).
 | `ui/DocumentArchiveTab.tsx` | Archive-history tab: event type, status transition, location, actor and reason, newest first, with loading/error/empty states. |
 | `ui/DocumentDetailsPage.tsx` («الروابط» tab) | Mounts `DocumentRelationsPanel` for `?tab=relations`; writes need `DOCUMENT_EDIT` and a document that is neither archived nor cancelled. |
 | `ui/DocumentDetailsPage.tsx` («الحقول» tab) | Mounts `DocumentFieldsPanel` for `?tab=fields`; the tab is hidden when the document has no pinned schema, and values are editable only for a draft with `DOCUMENT_EDIT`. |
+| `ui/DocumentDetailsPage.tsx` («تصدير PDF») | Header action that mounts `DocumentPrintSheet` until the print dialog closes. |
 | `ui/DocumentNumbersTab.tsx` | Numbers tab: central number card (status, registration date, issuer, cancellation reason, replace/cancel actions, dated event list), department register cards, and the «سجل الأرقام» history grid on the shared `DataTable` (`tableId="document-numbers"`, client mode, column chooser, sorting, URL-backed search, row menu نسخ الرقم/نسخ المعرّف); statuses and event labels come from `DOCUMENT_NUMBER_STATUS`/`DOCUMENT_NUMBER_EVENT_TYPE`, and the API's English `Replaces …` note is translated to «يستبدل الرقم …». |
 | `ui/DocumentMovementsTab.tsx` | Movements tab: one `MovementCard` per movement (type/status badges, action buttons from `getMovementActions`, ordered step chain with per-step outcome label, registry number and department, and the event log), plus the open-movement and action dialogs. |
 | `ui/DocumentFilesTab.tsx` | Files tab: the section card (heading plus the archiving-does-not-hide note and the versions/verify mention) around `widgets/document-attachments-panel`; receives `canManage` from the page and passes it down, otherwise carries no state — the grid owns the query, filters, download, and the five dialogs. |
@@ -125,6 +126,7 @@ mounted dialog.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-09 | Claude | Document page gained the «تصدير PDF» header action. |
 | 2026-11-09 | Claude | The participants tab and the add-participant action are hidden while `FEATURES.participants` is off. |
 | 2026-11-09 | Claude | The external organizations tab and the tab bar are hidden while `FEATURES.externalOrganizations` is off. |
 | 2026-11-09 | Claude | Removed «تاريخ الوثيقة» from the overview; the creation date remains. |

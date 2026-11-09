@@ -94,6 +94,7 @@ commands the API actually walks: `CreateDraftDocumentCommand` → `UpdateDraftMe
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-09 | Claude | `ListDocumentsQuery` accepts `RegisterNumber`. |
 | 2026-11-09 | Claude | Removed the document date and external reference inputs; `DocumentResponse` no longer has `DocumentDate`, and the numbering year falls back to the creation year. |
 | 2026-11-09 | Claude | Title and summary are optional on create; `DocumentResponse.Title` now carries `Document.DisplayName`. |
 | 2026-11-09 | Claude | `CreateDocumentCommand` and `CreateDraftDocumentCommand` accept `Persons`, named through `DocumentPersonLinker` inside the same transaction. |

@@ -29,6 +29,7 @@ export const DOCUMENT_SCHEMAS_GUIDE: PageGuide = {
     'document-schemas.fields',
     'table.search',
     'table.columns',
+    'table.export',
     'table.pageSize',
     'table.refresh',
     'table.rowMenu',

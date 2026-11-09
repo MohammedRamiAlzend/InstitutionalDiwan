@@ -22,6 +22,7 @@ export const documentApi = {
         sortDescending: params.sortDescending,
         statusId: params.statusId,
         owningDepartmentId: params.owningDepartmentId || undefined,
+        registerNumber: params.registerNumber?.trim() || undefined,
         documentTypeId: params.documentTypeId,
         fieldFilters: params.fieldFilters?.length ? params.fieldFilters : undefined,
       },

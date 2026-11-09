@@ -68,6 +68,7 @@ Used by documents, users, employees, external organizations, audit logs, and int
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-09 | Claude | Added the `Exports.*` Arabic error messages. |
 | 2026-11-09 | Claude | Added Arabic messages for the `Persons.*` error codes. |
 | 2026-11-08 | Claude | Added `errorReporter.ts`; `httpClient` reports 5xx and network failures. |
 | 2026-11-08 | Claude | Added Arabic messages for the field behavior errors (`DocumentFields.FieldReadOnly`, `ConditionCycle`, `DefaultValueInvalid` and related). |

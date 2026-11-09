@@ -35,6 +35,7 @@ export const SYSTEM_ERRORS_GUIDE: PageGuide = {
     'system-errors.purge',
     'table.search',
     'table.columns',
+    'table.export',
     'table.pageSize',
     'table.refresh',
     'table.rowMenu',

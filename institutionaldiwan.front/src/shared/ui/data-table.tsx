@@ -39,6 +39,7 @@ import {
 } from './menu'
 import { Button } from './button'
 import { ContextMenu } from './context-menu'
+import { DataTableExport } from './data-table-export'
 import { DropdownMenu } from './dropdown-menu'
 import { GuideChip } from './guide'
 import { Input } from './input'
@@ -154,6 +155,7 @@ export function DataTable<T>({
   emptyAction,
   className,
 }: DataTableProps<T>) {
+  const tableRef = useRef<HTMLTableElement>(null)
   const [visibility, setVisibility] = useState<Record<string, boolean>>(() =>
     loadColumnVisibility(tableId, columns),
   )
@@ -372,7 +374,7 @@ export function DataTable<T>({
             </>
           )}
           {toolbar}
-          <div className="ms-auto flex items-center gap-2">
+          <div className="ms-auto flex flex-wrap items-center gap-2">
             {onRefresh && (
               <>
                 <Button
@@ -399,6 +401,15 @@ export function DataTable<T>({
               label="تخصيص الجدول"
             />
             <GuideChip id="table.columns" />
+            <DataTableExport
+              tableRef={tableRef}
+              title={caption ?? 'جدول البيانات'}
+              headers={visibleColumns.map((column) => column.header)}
+              shownRows={pagedRows.length}
+              totalRows={effectiveTotal}
+              disabled={isLoading || pagedRows.length === 0}
+            />
+            <GuideChip id="table.export" />
           </div>
         </div>
         {filters}
@@ -422,7 +433,7 @@ export function DataTable<T>({
         {/* `relative` keeps the absolutely placed sr-only cells inside this scroller; without it
             they escape the clip and widen the whole page on a phone. */}
         <div className="relative overflow-x-auto">
-          <table className="w-full border-collapse text-sm">
+          <table ref={tableRef} className="w-full border-collapse text-sm">
             <caption className="sr-only">{caption ?? 'جدول البيانات'}</caption>
             {headerMenu && headerMenu.length > 0 ? (
               <ContextMenu entries={headerMenu}>{header}</ContextMenu>

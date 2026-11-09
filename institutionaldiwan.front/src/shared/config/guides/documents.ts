@@ -16,7 +16,7 @@ export const DOCUMENTS_GUIDE_ENTRIES: readonly GuideEntry[] = [
   {
     id: 'documents.filters',
     title: 'مرشحات الوثائق',
-    body: 'اجمع بين الحالة والنوع والقسم المالك لتضييق السجل. المرشحات تُحفظ في العنوان، وزر «مسح» يعيد عرض كل الوثائق.',
+    body: 'اجمع بين الحالة والنوع ورقم السجل والقسم المالك لتضييق السجل. المرشحات تُحفظ في العنوان، وزر «مسح» يعيد عرض كل الوثائق.',
   },
   {
     id: 'documents.field-filters',
@@ -27,7 +27,7 @@ export const DOCUMENTS_GUIDE_ENTRIES: readonly GuideEntry[] = [
   {
     id: 'documents.create',
     title: 'وثيقة جديدة',
-    body: 'تنشئ وثيقة كمسودة قابلة للتعديل، أو تسجلها مباشرة؛ يصدر النظام رقمها تلقائيًا (GUID) وتكتب أنت رقم وتاريخ سطرها في سجل قسمك، مع إمكانية إرسالها فورًا. رقم النظام لا يُغيَّر ولا يُحذف بعد إصداره.',
+    body: 'تسجّل وثيقة جديدة؛ يصدر النظام رقمها تلقائيًا (GUID) وتكتب أنت رقم وتاريخ سطرها في سجل قسمك، مع إمكانية إرسالها فورًا. رقم النظام لا يُغيَّر ولا يُحذف بعد إصداره.',
     note: 'يتطلب صلاحية إنشاء الوثائق.',
   },
   {
@@ -55,6 +55,7 @@ export const DOCUMENTS_GUIDE: PageGuide = {
     'documents.create',
     'table.search',
     'table.columns',
+    'table.export',
     'table.pageSize',
     'table.refresh',
     'table.rowMenu',
@@ -80,6 +81,12 @@ export const DOCUMENT_DETAILS_GUIDE_ENTRIES: readonly GuideEntry[] = [
     title: 'إلغاء الوثيقة',
     body: 'يلغي الوثيقة مع تسجيل سبب الإلغاء. تبقى الوثيقة وأرقامها محفوظة في السجل وتُوسَم ملغاة، ولا يمكن التراجع عن الإلغاء.',
     note: 'يتطلب صلاحية تعديل الوثائق، ولا يظهر لوثيقة ملغاة أو مؤرشفة.',
+  },
+  {
+    id: 'document-details.export-pdf',
+    title: 'تصدير PDF',
+    body: 'يجهّز الوثيقة بكل معلوماتها في قالب مرتب ويفتح نافذة الطباعة؛ اختر «حفظ بصيغة PDF» لحفظها.',
+    note: 'الأقسام الفارغة أو التي لا تملك صلاحية عرضها لا تظهر في الملف.',
   },
   {
     id: 'document-details.archive',
@@ -203,6 +210,7 @@ export const DOCUMENT_DETAILS_GUIDE: PageGuide = {
     'document-details.register',
     ...(FEATURES.participants ? ['document-details.add-participant', 'document-details.tab-participants'] : []),
     'document-details.cancel',
+    'document-details.export-pdf',
     'document-details.archive',
     'document-details.unarchive',
     'document-details.tabs',

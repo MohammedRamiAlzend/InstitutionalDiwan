@@ -145,6 +145,50 @@
   }
 }
 
+/* `PrintSheet`: while one is mounted, printing shows that sheet and nothing else. Outside
+   @layer base so these win over the app's own layout utilities. */
+.print-sheet {
+  display: none;
+}
+
+/* Shared labels carry their own on-screen text size; on paper they follow the table or field. */
+.print-sheet td *,
+.print-sheet dd * {
+  font-size: inherit;
+}
+
+@media print {
+  html:has(> body.printing),
+  body.printing {
+    height: auto !important;
+    overflow: visible !important;
+    background: var(--color-surface) !important;
+  }
+
+  body.printing > *:not(.print-sheet) {
+    display: none !important;
+  }
+
+  body.printing > .print-sheet {
+    display: block;
+    color: var(--color-text);
+    print-color-adjust: exact;
+  }
+
+  .print-sheet thead {
+    display: table-header-group;
+  }
+
+  .print-sheet tr,
+  .print-sheet .print-keep {
+    break-inside: avoid;
+  }
+
+  .print-sheet h2 {
+    break-after: avoid;
+  }
+}
+
 /* Motion stopped from the display settings. These rules are deliberately outside
    @layer base so they win over the generated animate-* utilities.
    `[data-state]` covers the Radix surfaces whose exit animation sits behind a

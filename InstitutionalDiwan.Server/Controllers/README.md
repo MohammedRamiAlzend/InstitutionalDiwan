@@ -23,6 +23,7 @@ access live here.
 | `ExternalOrganizationsController.cs` | `api/external-organizations` | `DOCUMENT_VIEW` reads; `DOCUMENT_EDIT` writes | External correspondent CRUD: paged/searchable list (incl. `includeInactive`), get, create, update, deactivate, activate. |
 | `PersonsController.cs` | `api/persons` | `PERSON_VIEW` reads; `PERSON_MANAGE` update; suggestions need `DOCUMENT_CREATE` or `DOCUMENT_EDIT` | People named on documents: suggestions, access-filtered list, full record, documents, merged timeline. |
 | `DocumentPersonsController.cs` | `api/documents/{documentId}/persons` | `DOCUMENT_VIEW` reads; `DOCUMENT_EDIT` writes | Lists, adds, re-roles and removes the people named on one document. |
+| `ExportsController.cs` | `api/exports` | Any signed-in user; reads no stored data | `POST table` returns an Excel workbook of the headers and rows sent. |
 | `DocumentFieldsController.cs` | `api` (`document-types/{id}/fields`, `document-types/{id}/schema`, `document-types/{id}/schema-versions`, `schema-versions/{id}[/fields[/{fieldId}]|/publish]`, `documents/{id}/fields`) | `LOOKUP_MANAGE` for schema administration; `DOCUMENT_VIEW` for the published schema and a document's values; `DOCUMENT_EDIT` to set draft values | Dynamic document fields: define fields, run the schema draft/publish lifecycle, read the published schema, read and replace a draft document's values. |
 | `DocumentArchiveController.cs` | `api` (`archive/documents`, `documents/{id}/archive-events`, `documents/{id}/archive`, `documents/{id}/unarchive`) | `DOCUMENT_VIEW` reads; `DOCUMENT_ARCHIVE` writes; per-document access in the handlers | Module 07: archive and restore documents, a document's archive history, and the access-filtered archive search. |
 | `SavedSearchesController.cs` | `api/saved-searches` | `DOCUMENT_VIEW`; owner only in the handlers | Module 07: the caller's personal saved archive searches (list, create, replace, delete). |
@@ -146,6 +147,8 @@ plain JSON array.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-09 | Claude | Added `ExportsController` (`POST api/exports/table`). |
+| 2026-11-09 | Claude | `GET /api/documents` accepts `registerNumber`. |
 | 2026-11-09 | Claude | `POST /api/documents/drafts` no longer accepts the document date or external reference. |
 | 2026-11-09 | Claude | Document create endpoints no longer require `title`; `title` in responses is the system-written document name. |
 | 2026-11-09 | Claude | Added `PersonsController` and `DocumentPersonsController`; document create endpoints accept `persons`. |

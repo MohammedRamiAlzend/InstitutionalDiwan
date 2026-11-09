@@ -122,6 +122,10 @@ const CODE_MESSAGES: Record<string, string> = {
   'Correspondence.TitleTooLong': 'عنوان الوثيقة يتجاوز الحد الأقصى للأحرف.',
   'Correspondence.TypeCodeEmpty': 'رمز نوع الوثيقة مطلوب.',
 
+  // Table exports
+  'Exports.Invalid': 'تعذّر تصدير الجدول بصيغته الحالية.',
+  'Exports.TooManyRows': 'عدد الصفوف أكبر من الحد المسموح للتصدير.',
+
   // Module 03/04 — Official numbering
   'Numbering.AlreadyCancelled': 'رقم النظام ملغى مسبقًا.',
   'Numbering.CancelReasonRequired': 'سبب إلغاء الرقم مطلوب.',

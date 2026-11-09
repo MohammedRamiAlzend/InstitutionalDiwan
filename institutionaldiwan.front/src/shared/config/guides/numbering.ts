@@ -42,6 +42,7 @@ export const NUMBERING_GUIDE: PageGuide = {
     'numbering.register-book',
     'table.search',
     'table.columns',
+    'table.export',
     'table.pageSize',
     'table.refresh',
     'table.rowMenu',

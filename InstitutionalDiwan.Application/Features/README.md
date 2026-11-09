@@ -32,6 +32,10 @@ grouping by technical type, so a slice can be read top-to-bottom.
 
 People named on documents who are not system users. See [`Persons/README.md`](Persons/README.md).
 
+### Exports (cross-module)
+
+Excel workbook of a table the caller has on screen. See [`Exports/README.md`](Exports/README.md).
+
 - **Implemented:** `ListLookupEntriesQuery` ✅, `GetLookupEntryByIdQuery` ✅, `CreateLookupEntryCommand` ✅,
   `RelabelLookupEntryCommand` ✅, `DeactivateLookupEntryCommand` ✅ (rejects an entry that is still
   referenced by another table with `Lookup.EntryInUse`), `ActivateLookupEntryCommand` ✅; see
@@ -157,6 +161,7 @@ registries, per-document grants/movements) still returns a plain collection on p
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-09 | Claude | Added `Exports/`: Excel workbook of a displayed table. |
 | 2026-11-09 | Claude | Numbering handlers take the fallback year from `Document.CreatedAt` and no longer depend on `IClock`. |
 | 2026-11-09 | Claude | Added `Persons/`: people named on documents, their suggestions, list, file, documents and merged timeline, and the shared `DocumentPersonLinker`. |
 | 2026-11-08 | Claude | Added `Diagnostics/SystemErrors` for the developer's error log. |

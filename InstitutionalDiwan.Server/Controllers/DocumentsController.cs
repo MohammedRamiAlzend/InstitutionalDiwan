@@ -38,6 +38,7 @@ public sealed class DocumentsController : ControllerBase
     /// <param name="owningDepartmentId">Filter by owning department id (GUID, optional). Example: <c>e7a62f43-9b82-4d01-8c2e-7ab91e506d42</c>.</param>
     /// <param name="directionId">Filter by direction id (integer, optional). Example: <c>1</c>.</param>
     /// <param name="documentTypeId">Filter by document type id (integer, optional). Example: <c>1</c>.</param>
+    /// <param name="registerNumber">Part of a number written in any department register for the document (string, optional). Example: <c>1447/2026</c>.</param>
     /// <param name="cancellationToken">Request cancellation token (optional).</param>
     /// <response code="200">One page of documents with the paging counters.</response>
     /// <response code="401">The token is missing, expired, or invalid.</response>
@@ -61,6 +62,7 @@ public sealed class DocumentsController : ControllerBase
         [Description("Filter by direction id (integer, optional). Example: 1.")] [FromQuery] int? directionId = null,
         [Description("Filter by document type id (integer, optional). Example: 1.")] [FromQuery] int? documentTypeId = null,
         [Description("Dynamic-field filters as key:operator:value, repeated up to 5 times and combined with AND; requires documentTypeId (string array, optional, query parameter). Example: contract_number:contains:A-12.")] [FromQuery] string[]? fieldFilters = null,
+        [Description("Part of a number written in any department register for the document (string, optional). Example: 1447/2026.")] [FromQuery] string? registerNumber = null,
         CancellationToken cancellationToken = default)
     {
         var result = await _sender.Send(
@@ -74,7 +76,8 @@ public sealed class DocumentsController : ControllerBase
                 owningDepartmentId,
                 directionId,
                 documentTypeId,
-                fieldFilters),
+                fieldFilters,
+                registerNumber),
             cancellationToken);
 
         return result.ToActionResult();

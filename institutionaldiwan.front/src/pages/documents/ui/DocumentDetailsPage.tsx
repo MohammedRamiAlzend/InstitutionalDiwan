@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { Archive, ArchiveRestore, ArrowRight, Ban, Hash, UserPlus } from 'lucide-react'
+import { Archive, ArchiveRestore, ArrowRight, Ban, FileDown, Hash, UserPlus } from 'lucide-react'
 import { useDepartmentOptions } from '@/entities/department'
 import {
   DocumentStatusBadge,
@@ -34,6 +34,7 @@ import {
   Skeleton,
 } from '@/shared/ui'
 import { DocumentFieldsPanel } from '@/widgets/document-fields-panel'
+import { DocumentPrintSheet } from '@/widgets/document-print-sheet'
 import { DocumentRelationsPanel } from '@/widgets/document-relations-panel'
 import { DocumentArchiveTab } from './DocumentArchiveTab'
 import { DocumentFilesTab } from './DocumentFilesTab'
@@ -130,6 +131,7 @@ function DocumentDetailsView() {
   const [cancelOpen, setCancelOpen] = useState(false)
   const [archiveOpen, setArchiveOpen] = useState(false)
   const [unarchiveOpen, setUnarchiveOpen] = useState(false)
+  const [printOpen, setPrintOpen] = useState(false)
 
   const departmentNames = useMemo(
     () =>
@@ -232,6 +234,16 @@ function DocumentDetailsView() {
               </Button>
             )}
             {isDraft && canCreate && <GuideChip id="document-details.register" />}
+            <Button
+              type="button"
+              variant="outline"
+              disabled={printOpen}
+              onClick={() => setPrintOpen(true)}
+            >
+              <FileDown className="size-4" aria-hidden />
+              {printOpen ? 'جارٍ التجهيز…' : 'تصدير PDF'}
+            </Button>
+            <GuideChip id="document-details.export-pdf" />
             {FEATURES.participants && canManageParticipants && (
               <Button
                 type="button"
@@ -420,6 +432,13 @@ function DocumentDetailsView() {
         </GuideRegion>
       )}
 
+      {printOpen && (
+        <DocumentPrintSheet
+          details={details}
+          canViewNumbering={canViewNumbering}
+          onDone={() => setPrintOpen(false)}
+        />
+      )}
       {registerOpen && (
         <RegisterDraftDialog
           document={document}

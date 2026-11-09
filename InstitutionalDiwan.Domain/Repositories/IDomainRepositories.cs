@@ -92,6 +92,7 @@ public interface IDocumentRepository
     /// include a document the caller cannot see. <see cref="PageRequest.SortBy"/> accepts
     /// <c>createdAt</c>, <c>title</c>, <c>registrationDate</c>, and <c>officialNumber</c>; the
     /// default is newest first.
+    /// <c>registerNumber</c> keeps documents with a line in any department register whose number contains it.
     /// </summary>
     Task<PagedList<Document>> ListPagedAsync(
         PageRequest page,
@@ -102,6 +103,7 @@ public interface IDocumentRepository
         int? documentTypeId = null,
         IReadOnlyList<DocumentFieldFilter>? fieldFilters = null,
         DocumentFieldSort? fieldSort = null,
+        string? registerNumber = null,
         CancellationToken cancellationToken = default);
     Task<IReadOnlyList<Document>> GetByIdsAsync(
         IReadOnlyCollection<Guid> documentIds,

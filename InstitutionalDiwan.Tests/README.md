@@ -139,6 +139,8 @@ indexes) runs against a private SQLite in-memory database through `Support/TestC
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-09 | Claude | Added `TableExcelWriterTests`. |
+| 2026-11-09 | Claude | Added `DocumentRegisterNumberFilterTests`. |
 | 2026-11-09 | Claude | Added `DocumentDisplayNameTests`. |
 | 2026-11-09 | Claude | Added `PersonDomainTests`, `PersonRepositoryTests` (real SQLite: access limits, spelling folding, timeline merge) and `FakePersonRepository`. |
 | 2026-11-08 | Claude | Added `SystemErrorStoreTests`; permission counts are now 18. |

@@ -67,6 +67,7 @@ internal sealed class ListDocumentsQueryHandler
             request.DocumentTypeId,
             fieldFilters.Value,
             await ResolveFieldSortAsync(request, cancellationToken),
+            request.RegisterNumber,
             cancellationToken);
 
         return Result.Success(new PagedResult<DocumentResponse>(

@@ -24,6 +24,7 @@ All code uses the `InstitutionalDiwan.*` namespaces — the legacy `NewDiwan.*` 
 | [`Authentication/`](Authentication/README.md) | JWT token generation, password hashing, HTTP `UserContext` | ✅ `PasswordHasher` + `JwtProvider` + `UserContext` implemented |
 | [`Context/`](Context/README.md) | Ambient request metadata (`IRequestContext`) | ✅ `HttpRequestContext` implemented |
 | [`Authorization/`](Authorization/README.md) | Permission-based RBAC + organizational scope and document-access evaluators | ✅ `DepartmentScopeEvaluator` + `DocumentAccessEvaluator` implemented |
+| [`Exports/`](Exports/README.md) | Excel files of displayed tables | ✅ `TableExcelWriter` implemented |
 | [`Storage/`](Storage/README.md) | Local binary file storage, streamed SHA-256, and magic-byte validation | ✅ `LocalFileStorageService` + `FileSignatureValidator` (S3/MinIO still planned) |
 | [`Outbox/`](Outbox/README.md) | Transactional outbox processor and domain-event dispatcher | ❌ Empty |
 | [`BackgroundJobs/`](BackgroundJobs/README.md) | Scheduled integrity checks, audit checkpoints, SLA escalations | 🟡 `AuditChainIntegrityVerificationJob` + `DailyAuditCheckpointJob` implemented; outbox/SLA jobs pending |
@@ -93,6 +94,7 @@ Persistence/Configurations/
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-09 | Claude | Added `Exports/` with `TableExcelWriter`. |
 | 2026-11-08 | Claude | Added `Diagnostics/` (error queue, background writer, repository, Excel writer with ClosedXML). |
 | 2026-11-04 | Claude | Registered `StandardDepartmentSeeder`, `SuperAdminSeeder` and `StandardAccountSeeder`; seeders gained a `Modes` filter (see `Persistence/Seed/README.md`). |
 | 2026-11-04 | Claude | `NotificationRepository` applies the inbox search (LIKE with escaped wildcards) and sort keys, and gained `CountUnreadByTypeAsync`. No schema change. |

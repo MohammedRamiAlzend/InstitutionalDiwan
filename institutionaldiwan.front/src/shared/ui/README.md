@@ -25,6 +25,8 @@ Holds reusable, domain-agnostic UI primitives (Tailwind CSS v4 + Radix UI where 
 | `badge.tsx` | Status/classification badge with `neutral`, `accent`, `success`, `warning`, `danger`, and `outline` variants. |
 | `skeleton.tsx` | Pulse placeholder used for table and region loading states. |
 | `page-header.tsx` | Page title, optional description/actions, and badge cluster. `pageGuide` adds the «شرح هذه الصفحة» button at the head of the action cluster — it renders nothing when tutorial mode is off or when no `GuideProvider` with that page id wraps the page. |
+| `data-table-export.tsx` | The «تصدير» menu of every table: reads the table as displayed and exports it to Excel through the API or to PDF through `print-sheet`. |
+| `print-sheet.tsx` | Prints only its children through the browser's "Save as PDF" dialog, once pending requests settle. |
 | `data-table.tsx` | The only real table: URL-driven filters/search/sort/pagination via `useTableState`, server and client modes, column chooser persisted per table in `localStorage` via `@/shared/lib/columnPreferences`, row/header/empty context menus, overflow row trigger, keyboard access, and Arabic loading/empty/error states. Page size is a typed number field («صفوف في الصفحة», `dir="ltr"`, 1..`MAX_PAGE_SIZE`=100) rather than a fixed option list: keystrokes stay in a local draft and only commit on blur or `Enter`, clamped to the same window `useTableState` uses, so one request fires per accepted value. In tutorial mode it also supplies its own tool chips — `table.search` beside the search box, `table.refresh` beside the refresh button, `table.columns` after «الأعمدة», `table.pageSize` after the page-size field, `table.rowMenu` in the actions header, and `table.empty` in the empty state — so all eleven grids are explained from this one component. |
 | `mermaid-view.tsx` | The only `mermaid` importer: lazily loads the package, renders sanitized SVG (`securityLevel: 'strict'`, HTML labels off, 20,000-character source cap), reads theme tokens as `themeVariables` and re-renders on light/dark change, keeps geometric layout LTR, and shows Arabic loading / empty / invalid-syntax states (parser detail in an LTR `<pre>`). Optional `onNodeClick` marks flowchart nodes activatable (click, `Enter`, `Space`, focusable with the node label as its accessible name) and reports the Mermaid node id — never Mermaid `click` directives, which `securityLevel: 'strict'` strips. The owning widget supplies the diagram / chart / tree switcher. |
 | `index.ts` | Public barrel exporting the implemented primitives. |
@@ -41,11 +43,13 @@ Holds reusable, domain-agnostic UI primitives (Tailwind CSS v4 + Radix UI where 
 | Overlays (`dialog`, `confirm-dialog`, `select`, `checkbox`) | ✅ Implemented |
 | Menus (`menu`, `context-menu`, `dropdown-menu`) | ✅ Implemented |
 | Data grid (`data-table` with URL state and persisted columns) | ✅ Implemented (server + client modes) |
+| Table export and `print-sheet` | ✅ Implemented |
 | `mermaid-view` (lazy, strict, theme-aware, Arabic error states, optional activatable nodes) | ✅ Implemented |
 | Tutorial primitives (`guide`: provider, region, chip, page trigger, Driver.js popovers and tour) | ✅ Implemented (Phase 0) — pages opt in one by one in the following phases |
 ## Change Log
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-09 | Claude | Added `data-table-export` (the «تصدير» menu on every `DataTable`) and `print-sheet`. |
 | 2026-11-09 | Claude | `DataTable`'s scroller is positioned, so its sr-only cells no longer widen the whole page on a phone. |
 | 2026-11-08 | Claude | `ErrorBoundary` reports render failures to the developer's error log. |
 | 2026-11-08 | Claude | `ErrorBoundary` shows the technical error and component stack on the dev server only. |

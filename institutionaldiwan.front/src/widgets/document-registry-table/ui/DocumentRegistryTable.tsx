@@ -19,8 +19,9 @@ import {
 import { LOOKUP_SLUGS, LookupLabel, useLookupEntries } from '@/entities/lookup'
 import { useSessionStore } from '@/entities/user'
 import { CreateDocumentDialog } from '@/features/document-create'
+import { RegisterNumberFilter } from './RegisterNumberFilter'
 import { toArabicErrorMessage } from '@/shared/api'
-import { Permissions, ROUTES } from '@/shared/config'
+import { FEATURES, Permissions, ROUTES } from '@/shared/config'
 import { formatDate, formatDateTime, useTableState } from '@/shared/lib'
 import {
   Button,
@@ -68,7 +69,7 @@ export function DocumentRegistryTable() {
   const table = useTableState({
     defaultSortKey: 'createdAt',
     defaultSortDirection: 'desc',
-    filterKeys: ['statusId', 'documentTypeId', 'owningDepartmentId'],
+    filterKeys: ['statusId', 'documentTypeId', 'owningDepartmentId', 'registerNumber'],
     // Field filters belong to one document type, so changing the type drops them.
     repeatedKeys: [FIELD_FILTER_PARAM],
     resetOnChange: { documentTypeId: [FIELD_FILTER_PARAM] },
@@ -85,6 +86,7 @@ export function DocumentRegistryTable() {
     documentTypeId,
     fieldFilters: documentTypeId ? table.repeated[FIELD_FILTER_PARAM] : undefined,
     owningDepartmentId: table.filters.owningDepartmentId || undefined,
+    registerNumber: table.filters.registerNumber || undefined,
   })
 
   const hasPermission = useSessionStore((state) => state.hasPermission)
@@ -327,6 +329,10 @@ export function DocumentRegistryTable() {
               options={typeOptions}
               className="w-40"
             />
+            <RegisterNumberFilter
+              value={table.filters.registerNumber ?? ''}
+              onChange={(value) => table.setFilter('registerNumber', value)}
+            />
             <GuideChip id="documents.field-filters" />
             <FieldFilterBar
               documentTypeId={documentTypeId}
@@ -383,7 +389,9 @@ export function DocumentRegistryTable() {
           hasQuery
             ? 'جرّب تعديل البحث أو المرشحات لعرض وثائق أخرى.'
             : canCreate
-              ? 'ابدأ بحفظ أول وثيقة كمسودة أو تسجيلها برقم نظام.'
+              ? FEATURES.drafts
+                ? 'ابدأ بحفظ أول وثيقة كمسودة أو تسجيلها برقم نظام.'
+                : 'ابدأ بتسجيل أول وثيقة.'
               : 'ستظهر الوثائق هنا بمجرد تسجيلها في أقسام المؤسسة.'
         }
         emptyAction={

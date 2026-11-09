@@ -6,6 +6,7 @@ export const FEATURES: {
   readonly externalOrganizations: boolean
   readonly personParticipants: boolean
   readonly participants: boolean
+  readonly drafts: boolean
 } = {
   /** The external organizations tab, and choosing an organization as a participant or field source. */
   externalOrganizations: false,
@@ -13,4 +14,6 @@ export const FEATURES: {
   personParticipants: false,
   /** A document's participants tab and its add-participant action. */
   participants: false,
+  /** Saving a new document as a draft. While off, every new document is registered at once. */
+  drafts: false,
 }

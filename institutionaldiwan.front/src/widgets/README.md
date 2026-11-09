@@ -40,6 +40,7 @@ browser.
 | `persons-table/` | Grid of the people named on visible documents. | — | — |
 | `person-documents-table/` | A person's documents with role, status, current location and last action. | — | — |
 | `person-timeline/` | Paged merged history of a person's documents. | — | — |
+| `document-print-sheet/` | Whole-document PDF template | `entities/*` + `shared/ui` print sheet | ✅ Implemented |
 | `audit-log-table/` | Paged audit search (hash columns, module/action/date filters) plus the integrity-report list, with checkpoint/checks toolbar | `entities/audit-log` + `features/audit-manage` | ✅ Implemented (Module 09) |
 | `archive-search-table/` | Access-filtered archive search grid with a saved-searches bar | `entities/archive` + `features/archive-manage` |
 | `notification-bell/` | Header bell: unread badge, live-connection line and the latest eight notifications | `entities/notification` + `features/notification-manage` + `features/notification-live` |
@@ -83,6 +84,7 @@ browser.
 | `archive-search-table/` | ✅ Implemented (Module 07; build and lint pass, verified against the live API) |
 | `notification-bell/`, `notification-inbox/` | ✅ Implemented (Module 10; build and lint pass, exercised against the live API). |
 | `document-relations-panel/` | ✅ Implemented (Module 08; build and lint pass, accepted as verified by the project owner, 2026-11-03) |
+| `document-print-sheet/` | ✅ Implemented |
 | `document-schema-editor/` | ✅ Implemented and verified in-browser (dynamic fields plan Phases 1–2) |
 | `document-fields-panel/` | ✅ Implemented and verified in-browser (plan Phase 4) |
 | `document-attachments-panel/` | ✅ Grid, filters, download, upload, versions, archive, and verify implemented (Module 06 Phases 2–4) and browser-verified in Phase 5 across manager, `USER`, and read-only roles. |
@@ -94,6 +96,7 @@ browser.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-09 | Claude | Added `document-print-sheet/`. |
 | 2026-11-09 | Claude | The document registry drops the document date column. |
 | 2026-11-09 | Claude | The document grids drop the summary line and search by document name. |
 | 2026-11-09 | Claude | Added `persons-table/`, `person-documents-table/`, `person-timeline/`. |

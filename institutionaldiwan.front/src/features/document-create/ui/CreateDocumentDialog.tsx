@@ -18,7 +18,7 @@ import { LOOKUP_SLUGS, useLookupEntries, usePreselectLookupDefault } from '@/ent
 import { DepartmentRegistrySelect, useDepartmentRegistryOptions } from '@/entities/numbering-registry'
 import { useMyPrimaryDepartmentId, useSessionStore } from '@/entities/user'
 import { ApiError, toArabicErrorMessage } from '@/shared/api'
-import { Permissions } from '@/shared/config'
+import { FEATURES, Permissions } from '@/shared/config'
 import {
   clearFormDraft,
   formDraftKey,
@@ -68,7 +68,7 @@ function buildEmptyValues(canManageNumbering: boolean): CreateDocumentFormValues
     destinationDepartmentId: '',
     movementTypeId: '',
     movementInstructions: '',
-    mode: canManageNumbering ? 'register' : 'draft',
+    mode: !FEATURES.drafts || canManageNumbering ? 'register' : 'draft',
     persons: [],
   }
 }
@@ -140,7 +140,12 @@ export function CreateDocumentDialog({ open, onOpenChange }: CreateDocumentDialo
     formState: { errors },
   } = useForm<CreateDocumentFormValues>({
     resolver: zodResolver(createDocumentSchema),
-    defaultValues: { ...buildEmptyValues(canManageNumbering), ...restored?.values },
+    defaultValues: {
+      ...buildEmptyValues(canManageNumbering),
+      ...restored?.values,
+      // An unsent form saved while drafts were available must not come back as one.
+      ...(FEATURES.drafts ? {} : { mode: 'register' as const }),
+    },
   })
 
   usePreselectLookupDefault(typesQuery.data, getValues('documentTypeId'), (value) => setValue('documentTypeId', value))
@@ -290,7 +295,7 @@ export function CreateDocumentDialog({ open, onOpenChange }: CreateDocumentDialo
       open={open}
       onOpenChange={onOpenChange}
       title="وثيقة جديدة"
-      description="اختر طريقة الحفظ ثم عبّئ البيانات. تُنسب الوثيقة إلى قسمك الأساسي تلقائيًا."
+      description={`${FEATURES.drafts ? 'اختر طريقة الحفظ ثم عبّئ البيانات.' : 'عبّئ البيانات لتسجيل الوثيقة.'} تُنسب الوثيقة إلى قسمك الأساسي تلقائيًا.`}
       size="lg"
       footer={
         <>
@@ -327,6 +332,7 @@ export function CreateDocumentDialog({ open, onOpenChange }: CreateDocumentDialo
           </div>
         )}
 
+        {FEATURES.drafts && (
         <div role="radiogroup" aria-label="طريقة إنشاء الوثيقة" className="grid gap-3 sm:grid-cols-2">
           <ChoiceCard
             icon={Save}
@@ -345,6 +351,55 @@ export function CreateDocumentDialog({ open, onOpenChange }: CreateDocumentDialo
             disabled={pending}
           />
         </div>
+        )}
+
+        {mode === 'register' && (
+          <FormSection icon={BookOpen} title="سجل القسم" hint="الرقم والتاريخ كما كُتبا في دفتر قسمك.">
+            {canViewNumbering && (
+              <FormField
+                label="السجل"
+                required={registries.options.length > 1}
+                error={errors.registryId?.message}
+                className="sm:col-span-2"
+              >
+                <Controller
+                  control={control}
+                  name="registryId"
+                  render={({ field }) => (
+                    <DepartmentRegistrySelect
+                      registries={registries}
+                      value={field.value}
+                      onChange={field.onChange}
+                      disabled={pending}
+                      invalid={Boolean(errors.registryId)}
+                    />
+                  )}
+                />
+              </FormField>
+            )}
+  
+            <FormField label="رقم السجل" required error={errors.registryNumberText?.message}>
+              <Input
+                id="document-registry-number"
+                dir="ltr"
+                placeholder="1447/2026"
+                startIcon={<Hash className="size-4" aria-hidden />}
+                invalid={Boolean(errors.registryNumberText)}
+                {...register('registryNumberText')}
+              />
+            </FormField>
+  
+            <FormField label="تاريخ السجل" required error={errors.registryDate?.message}>
+              <Input
+                id="document-registry-date"
+                type="date"
+                dir="ltr"
+                invalid={Boolean(errors.registryDate)}
+                {...register('registryDate')}
+              />
+            </FormField>
+          </FormSection>
+        )}
 
         <FormSection icon={FileText} title="بيانات الوثيقة">
           <FormField
@@ -425,52 +480,6 @@ export function CreateDocumentDialog({ open, onOpenChange }: CreateDocumentDialo
 
         {mode === 'register' && (
           <>
-            <FormSection icon={BookOpen} title="سجل القسم" hint="الرقم والتاريخ كما كُتبا في دفتر قسمك.">
-              {canViewNumbering && (
-                <FormField
-                  label="السجل"
-                  required={registries.options.length > 1}
-                  error={errors.registryId?.message}
-                  className="sm:col-span-2"
-                >
-                  <Controller
-                    control={control}
-                    name="registryId"
-                    render={({ field }) => (
-                      <DepartmentRegistrySelect
-                        registries={registries}
-                        value={field.value}
-                        onChange={field.onChange}
-                        disabled={pending}
-                        invalid={Boolean(errors.registryId)}
-                      />
-                    )}
-                  />
-                </FormField>
-              )}
-
-              <FormField label="رقم السجل" required error={errors.registryNumberText?.message}>
-                <Input
-                  id="document-registry-number"
-                  dir="ltr"
-                  placeholder="1447/2026"
-                  startIcon={<Hash className="size-4" aria-hidden />}
-                  invalid={Boolean(errors.registryNumberText)}
-                  {...register('registryNumberText')}
-                />
-              </FormField>
-
-              <FormField label="تاريخ السجل" required error={errors.registryDate?.message}>
-                <Input
-                  id="document-registry-date"
-                  type="date"
-                  dir="ltr"
-                  invalid={Boolean(errors.registryDate)}
-                  {...register('registryDate')}
-                />
-              </FormField>
-            </FormSection>
-
             <FormSection
               icon={Send}
               title="إرسال الوثيقة"

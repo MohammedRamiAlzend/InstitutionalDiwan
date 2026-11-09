@@ -1,5 +1,6 @@
 using InstitutionalDiwan.Domain.Common;
 using InstitutionalDiwan.Domain.Entities.Correspondence;
+using InstitutionalDiwan.Domain.Entities.Numbering;
 using InstitutionalDiwan.Domain.Repositories;
 using InstitutionalDiwan.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
@@ -41,6 +42,7 @@ internal sealed class DocumentRepository : IDocumentRepository
         int? documentTypeId = null,
         IReadOnlyList<DocumentFieldFilter>? fieldFilters = null,
         DocumentFieldSort? fieldSort = null,
+        string? registerNumber = null,
         CancellationToken cancellationToken = default)
     {
         var query = _context.Documents.AsNoTracking().WhereViewableBy(_context, access);
@@ -60,6 +62,15 @@ internal sealed class DocumentRepository : IDocumentRepository
         // Filters run after the visibility predicate, so they can only narrow what the caller may see.
         foreach (var filter in fieldFilters ?? [])
             query = query.WhereFieldMatches(_context, filter);
+
+        if (!string.IsNullOrWhiteSpace(registerNumber))
+        {
+            var number = registerNumber.Trim();
+            var matching = _context.DocumentNumbers
+                .Where(line => line.ScopeId == DocumentNumberScope.DepartmentId && line.OfficialNumberText.Contains(number))
+                .Select(line => line.DocumentId);
+            query = query.Where(document => matching.Contains(document.DocumentId));
+        }
 
         if (page.NormalizedSearch is { } search)
         {

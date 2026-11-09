@@ -151,6 +151,8 @@ export interface DocumentAccessGrantResponse {
 export interface DocumentListParams extends PagedQueryParams {
   statusId?: number
   owningDepartmentId?: string
+  /** Part of a number written in any department register for the document. */
+  registerNumber?: string
   documentTypeId?: number
   /** `key:operator:value` dynamic-field filters; the server requires `documentTypeId` with them. */
   fieldFilters?: string[]

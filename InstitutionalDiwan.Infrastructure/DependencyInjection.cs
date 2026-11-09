@@ -67,6 +67,7 @@ public static class DependencyInjection
             provider => provider.GetRequiredService<Diagnostics.SystemErrorQueue>());
         services.AddHostedService<Diagnostics.SystemErrorWriterJob>();
         services.AddSingleton<Application.Features.Diagnostics.SystemErrors.ISystemErrorExcelWriter, Diagnostics.SystemErrorExcelWriter>();
+        services.AddSingleton<Application.Features.Exports.ITableExcelWriter, Exports.TableExcelWriter>();
 
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IRoleRepository, RoleRepository>();

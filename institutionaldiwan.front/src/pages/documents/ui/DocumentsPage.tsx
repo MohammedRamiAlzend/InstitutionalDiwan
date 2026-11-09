@@ -52,7 +52,7 @@ function DocumentsView() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="الوثائق"
-        description={`استعرض الوثائق الصادرة والواردة والداخلية، أو أنشئ وثيقة جديدة كمسودة أو برقم رسمي${FEATURES.externalOrganizations ? '، وأدر جهات المراسلة الخارجية' : ''}.`}
+        description={`استعرض الوثائق الصادرة والواردة والداخلية، أو أنشئ وثيقة جديدة${FEATURES.drafts ? ' كمسودة أو برقم رسمي' : ''}${FEATURES.externalOrganizations ? '، وأدر جهات المراسلة الخارجية' : ''}.`}
         pageGuide="documents"
       />
 

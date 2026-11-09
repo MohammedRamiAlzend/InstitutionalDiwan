@@ -23,6 +23,7 @@ export const EMPLOYEES_GUIDE: PageGuide = {
     'employees.create',
     'table.search',
     'table.columns',
+    'table.export',
     'table.pageSize',
     'table.refresh',
     'table.rowMenu',
