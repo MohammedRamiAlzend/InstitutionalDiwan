@@ -17,22 +17,19 @@ internal sealed class ReplaceOfficialNumberCommandHandler
     private readonly INumberingRegistryRepository _numberingRegistryRepository;
     private readonly IDocumentAccessEvaluator _documentAccessEvaluator;
     private readonly IUnitOfWork _unitOfWork;
-    private readonly IClock _clock;
 
     public ReplaceOfficialNumberCommandHandler(
         IDocumentRepository documentRepository,
         IDocumentNumberRepository documentNumberRepository,
         INumberingRegistryRepository numberingRegistryRepository,
         IDocumentAccessEvaluator documentAccessEvaluator,
-        IUnitOfWork unitOfWork,
-        IClock clock)
+        IUnitOfWork unitOfWork)
     {
         _documentRepository = documentRepository;
         _documentNumberRepository = documentNumberRepository;
         _numberingRegistryRepository = numberingRegistryRepository;
         _documentAccessEvaluator = documentAccessEvaluator;
         _unitOfWork = unitOfWork;
-        _clock = clock;
     }
 
     public async Task<Result<DocumentNumberResponse>> Handle(
@@ -78,8 +75,7 @@ internal sealed class ReplaceOfficialNumberCommandHandler
         var registry = registryResult.Value;
 
         var numberingYear = request.NumberingYear
-            ?? document.DocumentDate?.Year
-            ?? _clock.UtcNow.Year;
+            ?? document.CreatedAt.Year;
 
         var sequenceResult = registry.AllocateNextSequence(numberingYear, _unitOfWork.UtcNow);
         if (sequenceResult.IsFailure)

@@ -94,6 +94,7 @@ browser.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-09 | Claude | The document registry drops the document date column. |
 | 2026-11-09 | Claude | The document grids drop the summary line and search by document name. |
 | 2026-11-09 | Claude | Added `persons-table/`, `person-documents-table/`, `person-timeline/`. |
 | 2026-11-08 | Claude | Added `system-errors-table/`. |

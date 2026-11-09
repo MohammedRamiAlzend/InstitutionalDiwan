@@ -13,7 +13,7 @@ import {
   type SchemaVersionResponse,
 } from '@/entities/document-schema'
 import { toArabicErrorMessage } from '@/shared/api'
-import { LOOKUP_CATALOG_META } from '@/shared/config'
+import { FEATURES, LOOKUP_CATALOG_META, isLookupCatalogEnabled } from '@/shared/config'
 import { Button, Checkbox, Dialog, FormField, Input, Select, Textarea } from '@/shared/ui'
 import {
   useAddVersionFieldMutation,
@@ -38,11 +38,15 @@ const DATA_TYPE_OPTIONS = Object.values(FIELD_DATA_TYPE).map((value) => ({
 const OPTION_SOURCE_OPTIONS = [
   { value: String(FIELD_OPTION_SOURCE.Static), label: 'قائمة يدوية' },
   { value: String(FIELD_OPTION_SOURCE.Departments), label: 'الدوائر' },
-  { value: String(FIELD_OPTION_SOURCE.ExternalOrganizations), label: 'الجهات الخارجية' },
+  ...(FEATURES.externalOrganizations
+    ? [{ value: String(FIELD_OPTION_SOURCE.ExternalOrganizations), label: 'الجهات الخارجية' }]
+    : []),
   { value: String(FIELD_OPTION_SOURCE.Lookup), label: 'قائمة مرجعية' },
 ]
 
-const LOOKUP_OPTIONS = Object.entries(LOOKUP_CATALOG_META).map(([value, meta]) => ({
+const LOOKUP_OPTIONS = Object.entries(LOOKUP_CATALOG_META)
+  .filter(([slug]) => isLookupCatalogEnabled(slug))
+  .map(([value, meta]) => ({
   value,
   label: meta.labelAr,
 }))

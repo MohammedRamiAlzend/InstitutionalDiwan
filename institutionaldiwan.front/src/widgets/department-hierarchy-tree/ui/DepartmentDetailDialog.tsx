@@ -5,7 +5,7 @@ import { useEmployeeById, EmployeeLabel } from '@/entities/employee'
 import { LookupLabel, LOOKUP_SLUGS } from '@/entities/lookup'
 import { useSessionStore } from '@/entities/user'
 import { toArabicErrorMessage } from '@/shared/api'
-import { Permissions } from '@/shared/config'
+import { FEATURES, Permissions } from '@/shared/config'
 import { formatDate, formatDateTime } from '@/shared/lib'
 import { Badge, Button, Dialog, Skeleton } from '@/shared/ui'
 import { copyDepartmentValue } from '../model/clipboard'
@@ -160,6 +160,7 @@ export function DepartmentDetailDialog({
                 {department.isActive ? 'نشط' : 'موقوف'}
               </Badge>
             </DetailItem>
+            {FEATURES.externalOrganizations && (
             <DetailItem label="المراسلات الخارجية">
               <span className="flex flex-wrap gap-1.5">
                 <Badge variant={department.canSendExternal ? 'success' : 'outline'}>
@@ -170,6 +171,7 @@ export function DepartmentDetailDialog({
                 </Badge>
               </span>
             </DetailItem>
+            )}
             <DetailItem label="تاريخ الإنشاء">
               <span dir="ltr">{formatDate(department.createdAt)}</span>
             </DetailItem>

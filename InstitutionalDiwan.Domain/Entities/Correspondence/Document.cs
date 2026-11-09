@@ -56,10 +56,7 @@ public sealed class Document : AggregateRoot<Guid>
     // FK → DocumentNumber.DocumentNumberId (InstitutionalDiwan.Domain.Entities.Numbering.DocumentNumber)
     public Guid? ActiveOfficialNumberId { get; private set; }
     public string? OfficialNumberText { get; private set; }
-    public DateTime? DocumentDate { get; private set; }
     public DateTime? RegistrationDate { get; private set; }
-    public string? ExternalReferenceNumber { get; private set; }
-    public DateTime? ExternalDocumentDate { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public DateTime? UpdatedAt { get; private set; }
     public byte[]? RowVersion { get; private set; }
@@ -99,9 +96,6 @@ public sealed class Document : AggregateRoot<Guid>
         string? subjectSummary = null,
         int? confidentialityLevelId = null,
         int? priorityLevelId = null,
-        DateTime? documentDate = null,
-        string? externalReferenceNumber = null,
-        DateTime? externalDocumentDate = null,
         DateTime? utcNow = null,
         Guid? schemaVersionId = null,
         string? displayName = null)
@@ -142,9 +136,6 @@ public sealed class Document : AggregateRoot<Guid>
             CurrentStatusId = DocumentStatusType.DraftId,
             OwningDepartmentId = owningDepartmentId,
             CreatedByUserId = createdByUserId,
-            DocumentDate = documentDate ?? now,
-            ExternalReferenceNumber = externalReferenceNumber,
-            ExternalDocumentDate = externalDocumentDate,
             SchemaVersionId = schemaVersionId,
             CreatedAt = now
         };

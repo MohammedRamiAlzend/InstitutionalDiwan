@@ -214,9 +214,6 @@ public sealed class DocumentsController : ControllerBase
     /// <item><term>directionId</term><description>Direction id (integer, optional; suspended, leave it null). Example: <c>1</c>.</description></item>
     /// <item><term>confidentialityLevelId</term><description>Confidentiality level id (integer, optional; suspended, leave it null). Example: <c>1</c>.</description></item>
     /// <item><term>priorityLevelId</term><description>Priority level id (integer, optional; suspended, leave it null). Example: <c>1</c>.</description></item>
-    /// <item><term>documentDate</term><description>Document date (date, optional). Example: <c>2026-01-15</c>.</description></item>
-    /// <item><term>externalReferenceNumber</term><description>External reference number (string, optional). Example: <c>EXT-2026-114</c>.</description></item>
-    /// <item><term>externalDocumentDate</term><description>External document date (date, optional). Example: <c>2026-01-10</c>.</description></item>
     /// <item><term>fieldValues</term><description>Dynamic field values as key and text value, validated against the published schema of the type (array, optional). Example: <c>[{"fieldKey":"session_no","value":"2026-14"}]</c>.</description></item>
     /// <item><term>persons</term><description>People to name on the document: each an existing <c>personId</c> or a new <c>fullName</c>, with an optional <c>roleId</c> (array, optional). Example: <c>[{"fullName":"أحمد محمد علي"}]</c>.</description></item>
     /// </list>
@@ -247,9 +244,6 @@ public sealed class DocumentsController : ControllerBase
             request.DirectionId,
             request.ConfidentialityLevelId,
             request.PriorityLevelId,
-            request.DocumentDate,
-            request.ExternalReferenceNumber,
-            request.ExternalDocumentDate,
             request.FieldValues.ToInputs(),
             request.Persons.ToInputs()), cancellationToken);
 

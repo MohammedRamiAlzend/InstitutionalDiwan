@@ -18,22 +18,19 @@ internal sealed class IssueOfficialNumberCommandHandler
     private readonly INumberingRegistryRepository _numberingRegistryRepository;
     private readonly IDocumentAccessEvaluator _documentAccessEvaluator;
     private readonly IUnitOfWork _unitOfWork;
-    private readonly IClock _clock;
 
     public IssueOfficialNumberCommandHandler(
         IDocumentRepository documentRepository,
         IDocumentNumberRepository documentNumberRepository,
         INumberingRegistryRepository numberingRegistryRepository,
         IDocumentAccessEvaluator documentAccessEvaluator,
-        IUnitOfWork unitOfWork,
-        IClock clock)
+        IUnitOfWork unitOfWork)
     {
         _documentRepository = documentRepository;
         _documentNumberRepository = documentNumberRepository;
         _numberingRegistryRepository = numberingRegistryRepository;
         _documentAccessEvaluator = documentAccessEvaluator;
         _unitOfWork = unitOfWork;
-        _clock = clock;
     }
 
     public async Task<Result<DocumentNumberResponse>> Handle(
@@ -59,8 +56,7 @@ internal sealed class IssueOfficialNumberCommandHandler
                 DomainErrors.Correspondence.OnlyDraftRegisterable);
 
         var numberingYear = request.NumberingYear
-            ?? document.DocumentDate?.Year
-            ?? _clock.UtcNow.Year;
+            ?? document.CreatedAt.Year;
 
         var registryResult = await NumberingRegistryResolver.ResolveAsync(
             _numberingRegistryRepository,

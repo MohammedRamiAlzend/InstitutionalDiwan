@@ -5,10 +5,12 @@ export {
   LOOKUP_CATALOG_META,
   LOOKUP_GROUP_ORDER,
   LOOKUP_GROUP_OTHER,
+  isLookupCatalogEnabled,
   lookupCatalogMeta,
 } from './lookupCatalogs'
 export type { LookupCatalogMeta } from './lookupCatalogs'
 export { ENV } from './env'
+export { FEATURES } from './features'
 export {
   USER_SCOPE_TYPE,
   ASSIGNMENT_TYPE,

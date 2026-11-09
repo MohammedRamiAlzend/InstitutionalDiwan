@@ -265,7 +265,7 @@ public sealed class DocumentFieldHandlerTests
         var numbers = new FakeDocumentNumberRepository();
         var handler = new RegisterDocumentCommandHandler(
             world.Documents, numbers, new FakeNumberingRegistryRepository(), world.Versions,
-            new FakeDocumentAccessEvaluator { AllowAll = true }, world.UnitOfWork, FakeNotificationPublisher.Instance, TestClock.Instance, new FakeSender());
+            new FakeDocumentAccessEvaluator { AllowAll = true }, world.UnitOfWork, FakeNotificationPublisher.Instance, new FakeSender());
 
         var blocked = await handler.Handle(
             new RegisterDocumentCommand(created.DocumentId, world.Author.UserId, 2026), CancellationToken.None);
@@ -350,7 +350,7 @@ public sealed class DocumentFieldHandlerTests
 
         var registered = await new RegisterDocumentCommandHandler(
             world.Documents, new FakeDocumentNumberRepository(), new FakeNumberingRegistryRepository(),
-            world.Versions, new FakeDocumentAccessEvaluator { AllowAll = true }, world.UnitOfWork, FakeNotificationPublisher.Instance, TestClock.Instance, new FakeSender()).Handle(
+            world.Versions, new FakeDocumentAccessEvaluator { AllowAll = true }, world.UnitOfWork, FakeNotificationPublisher.Instance, new FakeSender()).Handle(
             new RegisterDocumentCommand(created.DocumentId, world.Author.UserId, 2026), CancellationToken.None);
 
         Assert.True(registered.IsSuccess, registered.IsFailure ? registered.Error.Code : null);
@@ -358,7 +358,7 @@ public sealed class DocumentFieldHandlerTests
         var newDocument = await world.CreateDraftDocumentAsync(new DocumentFieldValueInput("session_no", "6"));
         var blocked = await new RegisterDocumentCommandHandler(
             world.Documents, new FakeDocumentNumberRepository(), new FakeNumberingRegistryRepository(),
-            world.Versions, new FakeDocumentAccessEvaluator { AllowAll = true }, world.UnitOfWork, FakeNotificationPublisher.Instance, TestClock.Instance, new FakeSender()).Handle(
+            world.Versions, new FakeDocumentAccessEvaluator { AllowAll = true }, world.UnitOfWork, FakeNotificationPublisher.Instance, new FakeSender()).Handle(
             new RegisterDocumentCommand(newDocument.DocumentId, world.Author.UserId, 2026), CancellationToken.None);
         Assert.Equal("DocumentFields.ValueRequired", blocked.Error.Code);
     }

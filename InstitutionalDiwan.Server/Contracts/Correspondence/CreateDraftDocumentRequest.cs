@@ -11,8 +11,5 @@ public sealed record CreateDraftDocumentRequest(
     int? DirectionId = null,
     int? ConfidentialityLevelId = null,
     int? PriorityLevelId = null,
-    DateTime? DocumentDate = null,
-    string? ExternalReferenceNumber = null,
-    DateTime? ExternalDocumentDate = null,
     IReadOnlyList<DocumentFieldValueRequest>? FieldValues = null,
     IReadOnlyList<InstitutionalDiwan.Server.Contracts.Persons.DocumentPersonRequest>? Persons = null);

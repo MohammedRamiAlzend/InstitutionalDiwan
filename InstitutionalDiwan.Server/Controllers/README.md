@@ -146,6 +146,7 @@ plain JSON array.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-09 | Claude | `POST /api/documents/drafts` no longer accepts the document date or external reference. |
 | 2026-11-09 | Claude | Document create endpoints no longer require `title`; `title` in responses is the system-written document name. |
 | 2026-11-09 | Claude | Added `PersonsController` and `DocumentPersonsController`; document create endpoints accept `persons`. |
 | 2026-11-08 | Claude | Added `SystemErrorsController`: list, details, Excel export, status and notes, manual purge, and browser reports. |

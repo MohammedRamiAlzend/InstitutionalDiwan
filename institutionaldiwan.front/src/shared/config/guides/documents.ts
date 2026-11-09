@@ -1,3 +1,4 @@
+import { FEATURES } from '../features'
 import type { GuideEntry, PageGuide } from './types'
 
 export const DOCUMENTS_GUIDE_ENTRIES: readonly GuideEntry[] = [
@@ -45,15 +46,13 @@ export const DOCUMENTS_GUIDE_ENTRIES: readonly GuideEntry[] = [
 export const DOCUMENTS_GUIDE: PageGuide = {
   pageId: 'documents',
   intro:
-    'الوثائق هي قلب النظام: مراسلة لها نوع وحالة ومشاركون وحركات. استعرضها وصفّها من هنا، وأنشئ وثيقة جديدة، وأدر الجهات الخارجية.',
+    'الوثائق هي قلب النظام: مراسلة لها نوع وحالة وحركات. استعرضها وصفّها من هنا، وأنشئ وثيقة جديدة.',
   entryIds: [
-    'documents.tabs',
+    ...(FEATURES.externalOrganizations ? ['documents.tabs', 'documents.organizations', 'documents.org-create'] : []),
     'documents.registry',
     'documents.filters',
     'documents.field-filters',
     'documents.create',
-    'documents.organizations',
-    'documents.org-create',
     'table.search',
     'table.columns',
     'table.pageSize',
@@ -73,7 +72,7 @@ export const DOCUMENT_DETAILS_GUIDE_ENTRIES: readonly GuideEntry[] = [
   {
     id: 'document-details.add-participant',
     title: 'إضافة مشارك',
-    body: 'تُدخل قسمًا أو موظفًا أو جهة خارجية طرفًا في الوثيقة مع دوره فيها، وعلى هذا يُبنى ظهور الوثيقة للأطراف وتوجيه حركاتها.',
+    body: 'تُدخل قسمًا طرفًا في الوثيقة مع دوره فيها، وعلى هذا يُبنى ظهور الوثيقة للأطراف وتوجيه حركاتها.',
     note: 'يتطلب صلاحية تعديل الوثائق، ولا يظهر في وثيقة ملغاة.',
   },
   {
@@ -97,7 +96,7 @@ export const DOCUMENT_DETAILS_GUIDE_ENTRIES: readonly GuideEntry[] = [
   {
     id: 'document-details.tabs',
     title: 'تبويبات الوثيقة',
-    body: 'تتوزع معلومات الوثيقة على تبويبات: التفاصيل والمشاركون والأرقام والحركات والملفات والتصاريح. التبويب المختار يُحفظ في العنوان فتشارك الرابط على اللوحة نفسها.',
+    body: 'تتوزع معلومات الوثيقة على تبويبات: التفاصيل والأرقام والحركات والملفات والتصاريح. التبويب المختار يُحفظ في العنوان فتشارك الرابط على اللوحة نفسها.',
     note: 'تبويبا «الأرقام» و«التصاريح» يظهران لمن يملك صلاحيتهما فقط.',
   },
   {
@@ -202,13 +201,12 @@ export const DOCUMENT_DETAILS_GUIDE: PageGuide = {
     'هذه صفحة وثيقة واحدة. الأزرار في الأعلى هي إجراءات دورة حياة الوثيقة بحسب حالتها وصلاحيتك، والتبويبات تعرض كل جانب منها.',
   entryIds: [
     'document-details.register',
-    'document-details.add-participant',
+    ...(FEATURES.participants ? ['document-details.add-participant', 'document-details.tab-participants'] : []),
     'document-details.cancel',
     'document-details.archive',
     'document-details.unarchive',
     'document-details.tabs',
     'document-details.tab-details',
-    'document-details.tab-participants',
     'document-details.tab-persons',
     'document-details.tab-numbers',
     'document-details.tab-movements',

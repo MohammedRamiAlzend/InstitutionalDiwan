@@ -722,22 +722,9 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                         .HasColumnType("nvarchar(300)")
                         .HasColumnName("DisplayName");
 
-                    b.Property<DateTime?>("DocumentDate")
-                        .HasColumnType("datetime2(3)")
-                        .HasColumnName("DocumentDate");
-
                     b.Property<int>("DocumentTypeId")
                         .HasColumnType("int")
                         .HasColumnName("DocumentTypeId");
-
-                    b.Property<DateTime?>("ExternalDocumentDate")
-                        .HasColumnType("datetime2(3)")
-                        .HasColumnName("ExternalDocumentDate");
-
-                    b.Property<string>("ExternalReferenceNumber")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)")
-                        .HasColumnName("ExternalReferenceNumber");
 
                     b.Property<string>("OfficialNumberText")
                         .HasMaxLength(100)

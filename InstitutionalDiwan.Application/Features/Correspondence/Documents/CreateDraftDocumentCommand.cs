@@ -16,8 +16,5 @@ public sealed record CreateDraftDocumentCommand(
     int? DirectionId = null,
     int? ConfidentialityLevelId = null,
     int? PriorityLevelId = null,
-    DateTime? DocumentDate = null,
-    string? ExternalReferenceNumber = null,
-    DateTime? ExternalDocumentDate = null,
     IReadOnlyList<DocumentFieldValueInput>? FieldValues = null,
     IReadOnlyList<DocumentPersonInput>? Persons = null) : ICommand<DocumentResponse>;

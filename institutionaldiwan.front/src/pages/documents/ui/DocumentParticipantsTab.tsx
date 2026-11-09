@@ -1,6 +1,7 @@
 import { UserPlus } from 'lucide-react'
 import type { DocumentParticipantResponse } from '@/entities/document'
 import { LOOKUP_SLUGS, LookupLabel } from '@/entities/lookup'
+import { FEATURES } from '@/shared/config'
 import { formatDateTime } from '@/shared/lib'
 import { Badge, Button } from '@/shared/ui'
 import { ParticipantTarget } from './ParticipantTarget'
@@ -38,8 +39,8 @@ export function DocumentParticipantsTab({
         <div className="mt-6 flex flex-col items-center gap-2 rounded-lg border border-dashed border-border px-4 py-10 text-center">
           <p className="text-sm font-medium text-foreground">لا يوجد مشاركون بعد.</p>
           <p className="max-w-md text-xs text-muted">
-            أضف الجهة المرسلة أو المستلمة أو نسخة إلى الوثيقة. تُقبل جهة خارجية واحدة فقط لكل
-            وثيقة.
+            أضف الجهة المرسلة أو المستلمة أو نسخة إلى الوثيقة.
+            {FEATURES.externalOrganizations && ' تُقبل جهة خارجية واحدة فقط لكل وثيقة.'}
           </p>
           {canAdd && (
             <Button type="button" size="sm" variant="outline" onClick={onAdd}>

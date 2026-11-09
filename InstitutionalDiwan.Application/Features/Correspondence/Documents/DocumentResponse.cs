@@ -14,7 +14,6 @@ public sealed record DocumentResponse(
     int StatusId,
     Guid OwningDepartmentId,
     Guid CreatedByUserId,
-    DateTime DocumentDate,
     DateTime CreatedAt,
     string? OfficialNumberText = null,
     DateTime? RegistrationDate = null,
@@ -31,7 +30,6 @@ public sealed record DocumentResponse(
         document.CurrentStatusId,
         document.OwningDepartmentId,
         document.CreatedByUserId,
-        document.DocumentDate ?? document.CreatedAt,
         document.CreatedAt,
         document.OfficialNumberText,
         document.RegistrationDate);

@@ -5,6 +5,7 @@ import { toArabicErrorMessage } from '@/shared/api'
 import {
   LOOKUP_GROUP_ORDER,
   LOOKUP_GROUP_OTHER,
+  isLookupCatalogEnabled,
   lookupCatalogMeta,
 } from '@/shared/config'
 import { cn } from '@/shared/lib'
@@ -23,7 +24,7 @@ export function LookupCatalogPicker({ selected, onSelect }: LookupCatalogPickerP
   const groups = useMemo(() => {
     const needle = filter.trim().toLocaleLowerCase('ar')
     const byGroup = new Map<string, { slug: string; labelAr: string }[]>()
-    for (const slug of catalogsQuery.data ?? []) {
+    for (const slug of (catalogsQuery.data ?? []).filter(isLookupCatalogEnabled)) {
       const { labelAr, group } = lookupCatalogMeta(slug)
       if (needle && !`${labelAr} ${slug}`.toLocaleLowerCase('ar').includes(needle)) continue
       byGroup.set(group, [...(byGroup.get(group) ?? []), { slug, labelAr }])

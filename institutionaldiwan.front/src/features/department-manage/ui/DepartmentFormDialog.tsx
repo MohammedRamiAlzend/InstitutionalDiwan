@@ -9,7 +9,7 @@ import { EmployeePicker } from '@/entities/employee'
 import { LOOKUP_SLUGS, useLookupEntries } from '@/entities/lookup'
 import { useSessionStore } from '@/entities/user'
 import { toArabicErrorMessage } from '@/shared/api'
-import { Permissions } from '@/shared/config'
+import { FEATURES, Permissions } from '@/shared/config'
 import {
   Button,
   Checkbox,
@@ -364,6 +364,7 @@ function DepartmentFormDialogContent({
             </FormField>
           )}
 
+          {FEATURES.externalOrganizations && (
           <div className="flex flex-col gap-3 sm:col-span-2">
             <Controller
               control={control}
@@ -390,6 +391,7 @@ function DepartmentFormDialogContent({
               )}
             />
           </div>
+          )}
 
           <FormField
             label="ملاحظات"

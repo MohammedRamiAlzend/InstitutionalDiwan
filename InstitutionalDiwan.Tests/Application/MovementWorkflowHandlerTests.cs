@@ -126,7 +126,7 @@ public sealed class MovementWorkflowHandlerTests
     {
         var result = await new RegisterDocumentCommandHandler(
                 world.Documents, world.Numbers, world.Registries, new FakeDocumentTypeSchemaVersionRepository(),
-                new FakeDocumentAccessEvaluator { AllowAll = true }, world.UnitOfWork, FakeNotificationPublisher.Instance, TestClock.Instance, new FakeSender())
+                new FakeDocumentAccessEvaluator { AllowAll = true }, world.UnitOfWork, FakeNotificationPublisher.Instance, new FakeSender())
             .Handle(new RegisterDocumentCommand(world.Document.DocumentId, world.Clerk.UserId, 2026),
                 CancellationToken.None);
 

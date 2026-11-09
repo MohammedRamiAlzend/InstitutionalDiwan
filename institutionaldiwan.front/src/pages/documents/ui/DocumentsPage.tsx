@@ -1,7 +1,7 @@
 import { useSearchParams } from 'react-router-dom'
 import { Building2, ScrollText } from 'lucide-react'
 import { RequirePermission } from '@/features/auth'
-import { Permissions } from '@/shared/config'
+import { FEATURES, Permissions } from '@/shared/config'
 import { cn } from '@/shared/lib'
 import { GuideProvider, GuideRegion, PageHeader } from '@/shared/ui'
 import { DocumentRegistryTable } from '@/widgets/document-registry-table'
@@ -25,7 +25,7 @@ const TABS = [
 type TabKey = (typeof TABS)[number]['key']
 
 function resolveTab(raw: string | null): TabKey {
-  return raw === 'organizations' ? 'organizations' : 'registry'
+  return raw === 'organizations' && FEATURES.externalOrganizations ? 'organizations' : 'registry'
 }
 
 /** `/documents` — Module 03 correspondence registry plus the external-organizations admin tab. */
@@ -52,10 +52,11 @@ function DocumentsView() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="الوثائق"
-        description="استعرض الوثائق الصادرة والواردة والداخلية، أو أنشئ وثيقة جديدة كمسودة أو برقم رسمي، وأدر جهات المراسلة الخارجية."
+        description={`استعرض الوثائق الصادرة والواردة والداخلية، أو أنشئ وثيقة جديدة كمسودة أو برقم رسمي${FEATURES.externalOrganizations ? '، وأدر جهات المراسلة الخارجية' : ''}.`}
         pageGuide="documents"
       />
 
+      {FEATURES.externalOrganizations && (
       <GuideRegion id="documents.tabs">
       <div
         role="tablist"
@@ -95,6 +96,7 @@ function DocumentsView() {
         })}
       </div>
       </GuideRegion>
+      )}
 
       <div role="tabpanel">
         {activeTab === 'registry' ? (

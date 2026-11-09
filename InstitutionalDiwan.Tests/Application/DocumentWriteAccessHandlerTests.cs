@@ -55,7 +55,7 @@ public sealed class DocumentWriteAccessHandlerTests
 
         public async Task<Result> RegisterAsync(Guid? documentId = null) =>
             await new RegisterDocumentCommandHandler(
-                Documents, Numbers, Registries, new FakeDocumentTypeSchemaVersionRepository(), Access, UnitOfWork, FakeNotificationPublisher.Instance, TestClock.Instance, new FakeSender()).Handle(
+                Documents, Numbers, Registries, new FakeDocumentTypeSchemaVersionRepository(), Access, UnitOfWork, FakeNotificationPublisher.Instance, new FakeSender()).Handle(
                 new RegisterDocumentCommand(documentId ?? Document.DocumentId, ActorId, 2026),
                 CancellationToken.None);
 

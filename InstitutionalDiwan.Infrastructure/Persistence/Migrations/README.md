@@ -66,6 +66,7 @@ empty migration when the model changed.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-09 | Claude | Added `Remove_Document_Date_And_External_Reference`, dropping those three columns from `DOCUMENTS`. |
 | 2026-11-09 | Claude | Added `Add_Document_DisplayName`: `Title` becomes nullable, and `DisplayName` is added and filled for existing documents. |
 | 2026-11-09 | Claude | Added `Add_Persons`: `PERSONS`, `DOCUMENT_PERSONS`, `DOCUMENT_PERSON_ROLES`, `GENDERS`, `NATIONALITIES`, a filtered unique index on the national number, and a unique (document, person) index. |
 | 2026-11-08 | Claude | Added `Add_System_Errors`: `SYSTEM_ERRORS` with a unique fingerprint and an index on the last occurrence. |

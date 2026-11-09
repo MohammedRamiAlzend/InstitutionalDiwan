@@ -27,10 +27,7 @@ public sealed class DocumentConfiguration : IEntityTypeConfiguration<Document>
         builder.Property(x => x.CreatedByUserId).HasColumnName("CreatedByUserId").IsRequired();
         builder.Property(x => x.ActiveOfficialNumberId).HasColumnName("ActiveOfficialNumberId");
         builder.Property(x => x.OfficialNumberText).HasColumnName("OfficialNumberText").HasMaxLength(100);
-        builder.Property(x => x.DocumentDate).HasColumnName("DocumentDate").HasColumnType("datetime2(3)");
         builder.Property(x => x.RegistrationDate).HasColumnName("RegistrationDate").HasColumnType("datetime2(3)");
-        builder.Property(x => x.ExternalReferenceNumber).HasColumnName("ExternalReferenceNumber").HasMaxLength(100);
-        builder.Property(x => x.ExternalDocumentDate).HasColumnName("ExternalDocumentDate").HasColumnType("datetime2(3)");
         builder.Property(x => x.CreatedAt).HasColumnName("CreatedAt").HasColumnType("datetime2(3)").IsRequired();
         builder.Property(x => x.UpdatedAt).HasColumnName("UpdatedAt").HasColumnType("datetime2(3)");
         builder.Property(x => x.RowVersion).HasColumnName("RowVersion").IsRowVersion();

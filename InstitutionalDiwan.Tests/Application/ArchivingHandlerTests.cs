@@ -72,7 +72,7 @@ public sealed class ArchivingHandlerTests
         public async Task<DocumentNumberResponse> RegisterAsync()
         {
             var result = await new IssueOfficialNumberCommandHandler(
-                    Documents, Numbers, Registries, new FakeDocumentAccessEvaluator { AllowAll = true }, UnitOfWork, TestClock.Instance)
+                    Documents, Numbers, Registries, new FakeDocumentAccessEvaluator { AllowAll = true }, UnitOfWork)
                 .Handle(new IssueOfficialNumberCommand(Document.DocumentId, Clerk.UserId, 2026), CancellationToken.None);
             Assert.True(result.IsSuccess, result.Error?.Code);
             return result.Value;
@@ -358,7 +358,7 @@ public sealed class ArchivingHandlerTests
 
         var result = await new ReplaceOfficialNumberCommandHandler(
                 world.Documents, world.Numbers, world.Registries,
-                new FakeDocumentAccessEvaluator { AllowAll = true }, world.UnitOfWork, TestClock.Instance)
+                new FakeDocumentAccessEvaluator { AllowAll = true }, world.UnitOfWork)
             .Handle(
                 new ReplaceOfficialNumberCommand(world.Document.DocumentId, number.DocumentNumberId, world.Clerk.UserId, "تصحيح"),
                 CancellationToken.None);

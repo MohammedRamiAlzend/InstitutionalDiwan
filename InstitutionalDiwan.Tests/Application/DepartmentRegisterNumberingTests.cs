@@ -76,7 +76,7 @@ public sealed class DepartmentRegisterNumberingTests
         public async Task<DocumentNumberResponse> IssueCentralAsync()
         {
             var result = await new IssueOfficialNumberCommandHandler(
-                    Documents, Numbers, Registries, new FakeDocumentAccessEvaluator { AllowAll = true }, UnitOfWork, TestClock.Instance)
+                    Documents, Numbers, Registries, new FakeDocumentAccessEvaluator { AllowAll = true }, UnitOfWork)
                 .Handle(new IssueOfficialNumberCommand(Document.DocumentId, UserId, NumberingYear),
                     CancellationToken.None);
 
@@ -298,7 +298,7 @@ public sealed class DepartmentRegisterNumberingTests
 
         var issue = await new IssueOfficialNumberCommandHandler(
                 world.Documents, world.Numbers, world.Registries,
-                new FakeDocumentAccessEvaluator { AllowAll = true }, world.UnitOfWork, TestClock.Instance)
+                new FakeDocumentAccessEvaluator { AllowAll = true }, world.UnitOfWork)
             .Handle(new IssueOfficialNumberCommand(second.Value.DocumentId, world.UserId, NumberingYear),
                 CancellationToken.None);
         Assert.True(issue.IsSuccess, issue.Error?.Code);
@@ -621,7 +621,7 @@ public sealed class DepartmentRegisterNumberingTests
         world.Documents.Add(other);
         var issued = await new IssueOfficialNumberCommandHandler(
                 world.Documents, world.Numbers, world.Registries,
-                new FakeDocumentAccessEvaluator { AllowAll = true }, world.UnitOfWork, TestClock.Instance)
+                new FakeDocumentAccessEvaluator { AllowAll = true }, world.UnitOfWork)
             .Handle(new IssueOfficialNumberCommand(other.DocumentId, world.UserId, NumberingYear), CancellationToken.None);
         Assert.True(issued.IsSuccess, issued.Error?.Code);
         var otherMovement = DocumentMovement.Create(other.DocumentId, world.DiwanId, world.HrId, world.UserId).Value;

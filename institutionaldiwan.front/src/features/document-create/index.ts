@@ -1,5 +1,4 @@
 export type {
-  CreateDocumentRecipientRequest,
   CreateDocumentRequest,
   CreateDraftDocumentRequest,
 } from './model/types'
@@ -8,7 +7,6 @@ export type {
   CreateDocumentMode,
 } from './model/schemas'
 export {
-  useAddCreationRecipientMutation,
   useCreateDocumentMutation,
   useCreateDraftDocumentMutation,
 } from './api/documentMutations'

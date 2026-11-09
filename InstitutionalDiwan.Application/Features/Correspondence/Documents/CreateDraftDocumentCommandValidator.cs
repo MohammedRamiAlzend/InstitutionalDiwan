@@ -26,9 +26,6 @@ public sealed class CreateDraftDocumentCommandValidator : AbstractValidator<Crea
         RuleFor(command => command.SubjectSummary)
             .MaximumLength(2000);
 
-        RuleFor(command => command.ExternalReferenceNumber)
-            .MaximumLength(100);
-
         RuleFor(command => command.ConfidentialityLevelId)
             .GreaterThan(0).When(command => command.ConfidentialityLevelId.HasValue);
 

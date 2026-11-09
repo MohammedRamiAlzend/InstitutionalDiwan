@@ -26,7 +26,6 @@ internal sealed class RegisterDocumentCommandHandler
     private readonly IDocumentAccessEvaluator _documentAccessEvaluator;
     private readonly IUnitOfWork _unitOfWork;
     private readonly INotificationPublisher _notificationPublisher;
-    private readonly IClock _clock;
     private readonly ISender _sender;
 
     public RegisterDocumentCommandHandler(
@@ -37,7 +36,6 @@ internal sealed class RegisterDocumentCommandHandler
         IDocumentAccessEvaluator documentAccessEvaluator,
         IUnitOfWork unitOfWork,
         INotificationPublisher notificationPublisher,
-        IClock clock,
         ISender sender)
     {
         _documentAccessEvaluator = documentAccessEvaluator;
@@ -47,7 +45,6 @@ internal sealed class RegisterDocumentCommandHandler
         _schemaVersionRepository = schemaVersionRepository;
         _unitOfWork = unitOfWork;
         _notificationPublisher = notificationPublisher;
-        _clock = clock;
         _sender = sender;
     }
 
@@ -81,8 +78,7 @@ internal sealed class RegisterDocumentCommandHandler
             return Result.Failure<DocumentResponse>(requiredResult.Error);
 
         var numberingYear = request.NumberingYear
-            ?? document.DocumentDate?.Year
-            ?? _clock.UtcNow.Year;
+            ?? document.CreatedAt.Year;
 
         var registryResult = await NumberingRegistryResolver.ResolveAsync(
             _numberingRegistryRepository,

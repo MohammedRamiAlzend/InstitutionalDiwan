@@ -68,9 +68,6 @@ internal sealed class CreateDraftDocumentCommandHandler
             request.SubjectSummary,
             request.ConfidentialityLevelId,
             request.PriorityLevelId,
-            request.DocumentDate,
-            request.ExternalReferenceNumber,
-            request.ExternalDocumentDate,
             utcNow: _unitOfWork.UtcNow,
             schemaVersionId: schema?.SchemaVersionId,
             displayName: Document.BuildDisplayName(documentType.DescAr, null, _unitOfWork.UtcNow));

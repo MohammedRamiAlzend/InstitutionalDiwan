@@ -45,13 +45,13 @@ public sealed class OfficialNumberLifecycleHandlerTests
         public FakeDocumentAccessEvaluator Access { get; } = new() { AllowAll = true };
 
         public IssueOfficialNumberCommandHandler IssueHandler() =>
-            new(Documents, Numbers, Registries, Access, UnitOfWork, TestClock.Instance);
+            new(Documents, Numbers, Registries, Access, UnitOfWork);
 
         public CancelOfficialNumberCommandHandler CancelHandler() =>
             new(Documents, Numbers, Access, UnitOfWork);
 
         public ReplaceOfficialNumberCommandHandler ReplaceHandler() =>
-            new(Documents, Numbers, Registries, Access, UnitOfWork, TestClock.Instance);
+            new(Documents, Numbers, Registries, Access, UnitOfWork);
     }
 
     private static async Task<DocumentNumberResponse> IssueAsync(World world)

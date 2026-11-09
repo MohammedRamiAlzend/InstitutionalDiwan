@@ -215,15 +215,6 @@ export function DocumentRegistryTable() {
       },
       ...fieldColumns,
       {
-        id: 'documentDate',
-        header: 'تاريخ الوثيقة',
-        cell: (document) => (
-          <span dir="ltr" className="whitespace-nowrap text-xs text-foreground">
-            {formatDate(document.documentDate)}
-          </span>
-        ),
-      },
-      {
         id: 'registrationDate',
         header: 'تاريخ التسجيل',
         sortable: true,

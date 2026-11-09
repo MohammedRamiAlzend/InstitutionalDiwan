@@ -36,17 +36,5 @@ export interface CreateDraftDocumentRequest {
   documentTypeId: number
   fieldValues?: FieldValueRequest[]
   persons?: CreateDocumentPersonRequest[]
-  documentDate?: string | null
-  externalReferenceNumber?: string | null
-  externalDocumentDate?: string | null
 }
 
-/** `POST /api/documents/{documentId}/participants` — optional recipient captured at creation. */
-export interface CreateDocumentRecipientRequest {
-  roleId: number
-  externalOrganizationId?: string | null
-  internalDepartmentId?: string | null
-  personName?: string | null
-  isPrimary?: boolean
-  notes?: string | null
-}

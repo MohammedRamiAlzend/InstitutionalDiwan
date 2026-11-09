@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Controller, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Building2, Landmark, Search, UserRound } from 'lucide-react'
@@ -7,6 +7,7 @@ import { useDepartmentOptions } from '@/entities/department'
 import { useExternalOrganizations } from '@/entities/external-organization'
 import { LOOKUP_SLUGS, useLookupEntries, usePreselectLookupDefault } from '@/entities/lookup'
 import { toArabicErrorMessage } from '@/shared/api'
+import { FEATURES } from '@/shared/config'
 import { cn, useDebouncedValue, useDraftForm } from '@/shared/lib'
 import {
   Button,
@@ -56,6 +57,12 @@ const TARGET_OPTIONS: ReadonlyArray<{
   },
 ]
 
+const VISIBLE_TARGET_OPTIONS = TARGET_OPTIONS.filter(
+  (option) =>
+    (option.key !== 'external' || FEATURES.externalOrganizations) &&
+    (option.key !== 'person' || FEATURES.personParticipants),
+)
+
 /** Adds one participant; the server allows only one external party per document. */
 export function AddParticipantDialog({
   documentId,
@@ -81,7 +88,7 @@ export function AddParticipantDialog({
     resolver: zodResolver(addParticipantSchema),
     defaultValues: {
       roleId: '',
-      targetType: 'external',
+      targetType: VISIBLE_TARGET_OPTIONS[0].key,
       externalOrganizationId: '',
       internalDepartmentId: '',
       personName: '',
@@ -93,6 +100,13 @@ export function AddParticipantDialog({
   usePreselectLookupDefault(rolesQuery.data, getValues('roleId'), (value) => setValue('roleId', value))
 
   const targetType = useWatch({ control, name: 'targetType' })
+
+  // A form restored from before a type was suspended must not stay on a choice that is gone.
+  useEffect(() => {
+    if (!VISIBLE_TARGET_OPTIONS.some((option) => option.key === targetType)) {
+      setValue('targetType', VISIBLE_TARGET_OPTIONS[0].key)
+    }
+  }, [targetType, setValue])
 
   const organizationsQuery = useExternalOrganizations(
     {
@@ -172,7 +186,13 @@ export function AddParticipantDialog({
       open={open}
       onOpenChange={onOpenChange}
       title="إضافة مشارك"
-      description="اختر دور المشارك ونوعه. تُحدَّد الجهة المشاركة بمُعرّف مسجَّل؛ تسمح الوثيقة بجهة خارجية واحدة فقط."
+      description={
+        FEATURES.externalOrganizations
+          ? 'اختر دور المشارك ونوعه. تُحدَّد الجهة المشاركة بمُعرّف مسجَّل؛ تسمح الوثيقة بجهة خارجية واحدة فقط.'
+          : VISIBLE_TARGET_OPTIONS.length > 1
+            ? 'اختر دور المشارك ونوعه.'
+            : 'اختر القسم المشارك ودوره في الوثيقة.'
+      }
       size="lg"
       footer={
         <>
@@ -219,6 +239,7 @@ export function AddParticipantDialog({
           />
         </FormField>
 
+        {VISIBLE_TARGET_OPTIONS.length > 1 && (
         <div className="flex flex-col gap-1.5 sm:col-span-2">
           <span className="text-sm font-medium text-foreground">
             نوع المشارك <span className="text-danger">*</span>
@@ -226,9 +247,9 @@ export function AddParticipantDialog({
           <div
             role="radiogroup"
             aria-label="نوع المشارك"
-            className="grid gap-2 sm:grid-cols-3"
+            className={cn('grid gap-2', VISIBLE_TARGET_OPTIONS.length === 3 ? 'sm:grid-cols-3' : 'sm:grid-cols-2')}
           >
-            {TARGET_OPTIONS.map((option) => {
+            {VISIBLE_TARGET_OPTIONS.map((option) => {
               const Icon = option.icon
               return (
                 <button
@@ -257,6 +278,7 @@ export function AddParticipantDialog({
             })}
           </div>
         </div>
+        )}
 
         {targetType === 'external' && (
           <>

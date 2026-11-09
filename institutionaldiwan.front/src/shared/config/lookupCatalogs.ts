@@ -1,3 +1,5 @@
+import { FEATURES } from './features'
+
 /** Display metadata for the reference catalogs administered on `/lookups`. */
 export interface LookupCatalogMeta {
   labelAr: string
@@ -73,4 +75,9 @@ export const LOOKUP_CATALOG_META: Record<string, LookupCatalogMeta> = {
 /** Unknown slugs (a catalog added server-side) still show, under «أخرى». */
 export function lookupCatalogMeta(slug: string): LookupCatalogMeta {
   return LOOKUP_CATALOG_META[slug] ?? meta(slug, LOOKUP_GROUP_OTHER)
+}
+
+/** False for a catalog that belongs to a suspended part of the product. */
+export function isLookupCatalogEnabled(slug: string): boolean {
+  return slug !== 'organization-types' || FEATURES.externalOrganizations
 }

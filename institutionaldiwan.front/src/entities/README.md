@@ -78,6 +78,7 @@ read-only presentational UI. Entities never perform write mutations.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-09 | Claude | `DocumentResponse` no longer has `documentDate`. |
 | 2026-11-09 | Claude | Added `person/`. |
 | 2026-11-08 | Claude | Added `system-error/`. |
 | 2026-11-04 | Claude | Module 10 notifications front end (plan `plans/module-10-notifications-frontend.md`): implemented the `notification` read slice. |

@@ -34,6 +34,8 @@ Write side of the per-document-type field schemas: define a field, start/delete 
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-09 | Claude | The `organization-types` lookup source is hidden while `FEATURES.externalOrganizations` is off. |
+| 2026-11-09 | Claude | The external organizations option source is hidden while `FEATURES.externalOrganizations` is off. |
 | 2026-11-08 | Claude | Field settings gained `FieldBehaviorSection` (default, read-only, hints, limits, condition, table use, layout) and the option source for select and multi-select fields. |
 | 2026-11-03 | Claude | Fixed the edit dialog opening empty: the editor now mounts it per target field. |
 | 2026-11-03 | Claude | Implemented per plan `plans/document-dynamic-fields-frontend.md`. |

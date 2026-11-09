@@ -68,7 +68,7 @@ export function ArchiveDocumentDialog({
         onOpenChange(nextOpen)
       }}
       title="أرشفة الوثيقة"
-      description={`ستُؤرشف «${documentTitle}» ولن تقبل إضافة مشاركين أو مرفقات أو أرقام حتى تُلغى أرشفتها. القراءة والتنزيل يبقيان متاحين.`}
+      description={`ستُؤرشف «${documentTitle}» ولن تقبل إضافة أشخاص أو مرفقات أو أرقام حتى تُلغى أرشفتها. القراءة والتنزيل يبقيان متاحين.`}
       size="sm"
       footer={
         <>

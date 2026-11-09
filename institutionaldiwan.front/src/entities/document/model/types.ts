@@ -13,7 +13,6 @@ export interface DocumentResponse {
   statusId: number
   owningDepartmentId: string
   createdByUserId: string
-  documentDate: string
   createdAt: string
   officialNumberText: string | null
   registrationDate: string | null

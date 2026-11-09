@@ -29,6 +29,9 @@ import {
 } from '@/shared/ui'
 import { copyDepartmentValue } from '../model/clipboard'
 import { EmployeeLabel } from '@/entities/employee'
+import { FEATURES } from '@/shared/config'
+
+const EXTERNAL_COLUMN_IDS = new Set(['canSendExternal', 'canReceiveExternal'])
 
 interface DepartmentTableProps {
   table: TableState
@@ -247,7 +250,7 @@ export function DepartmentTable({
       tableId="departments"
       mode="client"
       caption="أقسام التنظيم"
-      columns={columns}
+      columns={FEATURES.externalOrganizations ? columns : columns.filter((column) => !EXTERNAL_COLUMN_IDS.has(column.id))}
       rows={query.data}
       rowKey={(department) => department.departmentId}
       isLoading={query.isLoading}

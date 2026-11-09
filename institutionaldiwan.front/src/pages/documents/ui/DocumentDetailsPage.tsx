@@ -22,7 +22,7 @@ import {
   RegisterDraftDialog,
 } from '@/features/document-manage'
 import { toArabicErrorMessage } from '@/shared/api'
-import { Permissions, ROUTES } from '@/shared/config'
+import { FEATURES, Permissions, ROUTES } from '@/shared/config'
 import { cn } from '@/shared/lib'
 import {
   Badge,
@@ -76,7 +76,7 @@ function resolveTab(
   canManageGrants: boolean,
   canViewNumbering: boolean,
 ): AvailableTabKey {
-  if (raw === 'participants') return 'participants'
+  if (raw === 'participants' && FEATURES.participants) return 'participants'
   if (raw === 'persons') return 'persons'
   if (raw === 'numbers' && canViewNumbering) return 'numbers'
   if (raw === 'movements') return 'movements'
@@ -232,7 +232,7 @@ function DocumentDetailsView() {
               </Button>
             )}
             {isDraft && canCreate && <GuideChip id="document-details.register" />}
-            {canManageParticipants && (
+            {FEATURES.participants && canManageParticipants && (
               <Button
                 type="button"
                 variant="outline"
@@ -242,7 +242,7 @@ function DocumentDetailsView() {
                 إضافة مشارك
               </Button>
             )}
-            {canManageParticipants && <GuideChip id="document-details.add-participant" />}
+            {FEATURES.participants && canManageParticipants && <GuideChip id="document-details.add-participant" />}
             {canCancel && (
               <Button
                 type="button"
@@ -280,6 +280,7 @@ function DocumentDetailsView() {
       >
         {TABS.filter(
           (tab) =>
+            (tab.key !== 'participants' || FEATURES.participants) &&
             (tab.key !== 'grants' || canManageGrants) &&
             (tab.key !== 'numbers' || canViewNumbering) &&
             (tab.key !== 'fields' || hasDynamicFields),

@@ -419,7 +419,9 @@ export function DataTable<T>({
       )}
 
       <div className="overflow-hidden rounded-xl border border-border bg-surface">
-        <div className="overflow-x-auto">
+        {/* `relative` keeps the absolutely placed sr-only cells inside this scroller; without it
+            they escape the clip and widen the whole page on a phone. */}
+        <div className="relative overflow-x-auto">
           <table className="w-full border-collapse text-sm">
             <caption className="sr-only">{caption ?? 'جدول البيانات'}</caption>
             {headerMenu && headerMenu.length > 0 ? (

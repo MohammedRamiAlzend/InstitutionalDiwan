@@ -8,6 +8,7 @@ import {
   type DocumentTimelineEntryResponse,
 } from '@/entities/document'
 import { LOOKUP_SLUGS, LookupLabel } from '@/entities/lookup'
+import { FEATURES } from '@/shared/config'
 import { formatDate, formatDateTime } from '@/shared/lib'
 import { Badge } from '@/shared/ui'
 import { DocumentTimeline } from './DocumentTimeline'
@@ -47,11 +48,6 @@ export function DocumentOverviewTab({
           </Field>
           <Field label="رقم النظام">
             <OfficialNumberTag officialNumberText={document.officialNumberText} />
-          </Field>
-          <Field label="تاريخ الوثيقة">
-            <span dir="ltr" className="text-sm text-foreground">
-              {formatDate(document.documentDate)}
-            </span>
           </Field>
           <Field label="تاريخ التسجيل">
             <span dir="ltr" className="text-sm text-foreground">
@@ -115,7 +111,7 @@ export function DocumentOverviewTab({
       <section className="rounded-xl border border-border bg-surface p-5">
         <div className="flex flex-wrap items-center gap-2">
           <h2 className="text-base font-semibold text-foreground">الخط الزمني</h2>
-          <Badge variant="outline">حالة · مشاركون · أرقام</Badge>
+          <Badge variant="outline">{FEATURES.participants ? 'حالة · مشاركون · أرقام' : 'حالة · أرقام'}</Badge>
         </div>
         <div className="mt-4">
           <DocumentTimeline

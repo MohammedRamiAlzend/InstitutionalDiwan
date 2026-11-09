@@ -46,6 +46,7 @@ Holds reusable, domain-agnostic UI primitives (Tailwind CSS v4 + Radix UI where 
 ## Change Log
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-09 | Claude | `DataTable`'s scroller is positioned, so its sr-only cells no longer widen the whole page on a phone. |
 | 2026-11-08 | Claude | `ErrorBoundary` reports render failures to the developer's error log. |
 | 2026-11-08 | Claude | `ErrorBoundary` shows the technical error and component stack on the dev server only. |
 | 2026-11-08 | Claude | Added `error-boundary.tsx` (`ErrorBoundary`). |
