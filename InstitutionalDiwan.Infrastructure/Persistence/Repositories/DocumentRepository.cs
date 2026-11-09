@@ -65,15 +65,14 @@ internal sealed class DocumentRepository : IDocumentRepository
         {
             var pattern = $"%{search}%";
             query = query.Where(document =>
-                EF.Functions.Like(document.Title, pattern) ||
-                (document.SubjectSummary != null && EF.Functions.Like(document.SubjectSummary, pattern)) ||
+                EF.Functions.Like(document.DisplayName, pattern) ||
                 (document.OfficialNumberText != null && EF.Functions.Like(document.OfficialNumberText, pattern)));
         }
 
         query = fieldSort is not null ? OrderByField(query, fieldSort, page.SortDescending) : (page.NormalizedSortBy, page.SortDescending) switch
         {
-            ("title", true) => query.OrderByDescending(document => document.Title),
-            ("title", false) => query.OrderBy(document => document.Title),
+            ("title", true) => query.OrderByDescending(document => document.DisplayName),
+            ("title", false) => query.OrderBy(document => document.DisplayName),
             ("registrationdate", true) => query.OrderByDescending(document => document.RegistrationDate),
             ("registrationdate", false) => query.OrderBy(document => document.RegistrationDate),
             ("officialnumber", true) => query.OrderByDescending(document => document.OfficialNumberText),

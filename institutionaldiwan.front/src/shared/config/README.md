@@ -54,6 +54,7 @@ export const ROUTES = {
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-09 | Claude | Removed the `document-details.edit` guide entry. |
 | 2026-11-09 | Claude | Added `PERSON_VIEW`/`PERSON_MANAGE` (20 codes), the persons routes and lookup catalog labels, and `guides/persons.ts`. |
 | 2026-11-08 | Claude | `SYSTEM_ERRORS_VIEW` (18 codes), `ROUTES.SYSTEM_ERRORS` and the `system-errors` guide. |
 | 2026-11-08 | Claude | Guide entry `archive.field-filters`; `documents.field-filters` describes the filters on the bar. |

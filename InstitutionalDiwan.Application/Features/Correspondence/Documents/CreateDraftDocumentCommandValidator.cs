@@ -11,7 +11,6 @@ public sealed class CreateDraftDocumentCommandValidator : AbstractValidator<Crea
             .NotEmpty().WithErrorCode("Identity.UserIdEmpty");
 
         RuleFor(command => command.Title)
-            .Must(title => !string.IsNullOrWhiteSpace(title)).WithErrorCode("Correspondence.TitleEmpty")
             .MaximumLength(500).WithErrorCode("Correspondence.TitleTooLong");
 
         RuleFor(command => command.DocumentTypeId)

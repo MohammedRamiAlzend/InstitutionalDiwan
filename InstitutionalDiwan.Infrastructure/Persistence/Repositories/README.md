@@ -95,6 +95,7 @@ Concrete EF Core implementations of the repository interfaces declared in
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-09 | Claude | Document search and the `title` sort use `DisplayName`; search no longer reads the hidden title or summary. |
 | 2026-11-09 | Claude | Added `PersonRepository`; `DocumentRepository.GetByIdAsync` includes `Persons`; `LookupCatalog` gained `document-person-roles`, `genders`, `nationalities`. |
 | 2026-11-08 | Claude | Moved the field-filter predicate to `DocumentFieldFilterQuery` (registry and archive, multi-select match); `DocumentRepository` sorts by a field and adds `ListFieldValuesAsync`. |
 | 2026-11-08 | Claude | Document and number reads now include register visits. |

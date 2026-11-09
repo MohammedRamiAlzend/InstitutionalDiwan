@@ -1,20 +1,5 @@
 import { z } from 'zod'
 
-/** Mirrors `UpdateDocumentMetadataRequest`; document type/direction stay immutable here. */
-export const editDraftSchema = z.object({
-  title: z
-    .string()
-    .trim()
-    .min(1, 'عنوان الوثيقة مطلوب.')
-    .max(500, 'عنوان الوثيقة يتجاوز الحد الأقصى للأحرف.'),
-  subjectSummary: z
-    .string()
-    .trim()
-    .max(2000, 'ملخص الموضوع يتجاوز الحد الأقصى للأحرف.'),
-})
-
-export type EditDraftFormValues = z.infer<typeof editDraftSchema>
-
 /** Register number and date are required; the movement is optional (blank destination = none). */
 export const registerDraftSchema = z
   .object({

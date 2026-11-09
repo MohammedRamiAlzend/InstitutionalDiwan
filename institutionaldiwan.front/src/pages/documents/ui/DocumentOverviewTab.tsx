@@ -75,12 +75,6 @@ export function DocumentOverviewTab({
           </Field>
         </dl>
 
-        {document.subjectSummary && (
-          <div className="mt-4 flex flex-col gap-1 border-t border-border pt-4">
-            <span className="text-xs text-muted">ملخص الموضوع</span>
-            <p className="text-sm leading-7 text-foreground">{document.subjectSummary}</p>
-          </div>
-        )}
       </section>
 
       <section className="rounded-xl border border-border bg-surface p-5">

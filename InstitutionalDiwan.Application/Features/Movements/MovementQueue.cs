@@ -93,7 +93,7 @@ internal static class MovementQueue
 
                 return MovementQueueItemResponse.From(
                     movement,
-                    document?.Title ?? string.Empty,
+                    document?.DisplayName ?? string.Empty,
                     document?.OfficialNumberText);
             })
             .ToList();

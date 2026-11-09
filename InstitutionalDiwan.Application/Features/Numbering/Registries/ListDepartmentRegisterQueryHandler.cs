@@ -86,7 +86,7 @@ internal sealed class ListDepartmentRegisterQueryHandler
                 return new DepartmentRegisterLineResponse(
                     number.DocumentNumberId,
                     number.DocumentId,
-                    document?.Title ?? string.Empty,
+                    document?.DisplayName ?? string.Empty,
                     document?.OfficialNumberText,
                     number.OfficialNumberText,
                     number.NumberingYear,

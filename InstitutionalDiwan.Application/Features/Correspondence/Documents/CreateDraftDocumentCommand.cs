@@ -10,7 +10,7 @@ namespace InstitutionalDiwan.Application.Features.Correspondence.Documents;
 /// </summary>
 public sealed record CreateDraftDocumentCommand(
     Guid UserId,
-    string Title,
+    string? Title,
     int DocumentTypeId,
     string? SubjectSummary = null,
     int? DirectionId = null,

@@ -5,7 +5,7 @@ namespace InstitutionalDiwan.Server.Contracts.Correspondence;
 /// and receives no official number until it is registered.
 /// </summary>
 public sealed record CreateDraftDocumentRequest(
-    string Title,
+    string? Title,
     int DocumentTypeId,
     string? SubjectSummary = null,
     int? DirectionId = null,

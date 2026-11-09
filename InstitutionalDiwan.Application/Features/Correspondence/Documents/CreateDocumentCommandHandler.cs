@@ -95,7 +95,8 @@ internal sealed class CreateDocumentCommandHandler : ICommandHandler<CreateDocum
             confidentialityLevelId: request.ConfidentialityLevelId,
             priorityLevelId: request.PriorityLevelId,
             utcNow: _unitOfWork.UtcNow,
-            schemaVersionId: schema?.SchemaVersionId);
+            schemaVersionId: schema?.SchemaVersionId,
+            displayName: Document.BuildDisplayName(documentType.DescAr, request.DepartmentRegistryNumberText, _unitOfWork.UtcNow));
 
         if (documentResult.IsFailure)
             return Result.Failure<DocumentResponse>(documentResult.Error);

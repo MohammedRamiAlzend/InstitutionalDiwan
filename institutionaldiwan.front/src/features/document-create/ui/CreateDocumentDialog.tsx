@@ -35,7 +35,6 @@ import {
   FormField,
   Input,
   Select,
-  Textarea,
 } from '@/shared/ui'
 import {
   createDocumentSchema,
@@ -85,9 +84,7 @@ interface SavedDraft {
 
 function buildEmptyValues(canManageNumbering: boolean): CreateDocumentFormValues {
   return {
-    title: '',
     documentTypeId: '',
-    subjectSummary: '',
     registryId: '',
     registryNumberText: '',
     registryDate: todayIso(),
@@ -113,8 +110,6 @@ function hasDraftContent(
   fieldValues: FieldValueMap,
 ): boolean {
   const typed = [
-    values?.title,
-    values?.subjectSummary,
     values?.registryNumberText,
     values?.movementInstructions,
     values?.externalReferenceNumber,
@@ -315,9 +310,7 @@ export function CreateDocumentDialog({ open, onOpenChange }: CreateDocumentDialo
 
     const shared = {
       fieldValues: schemaFields.length > 0 ? toFieldValueRequests(schemaFields, effectiveFieldValues) : undefined,
-      title: values.title.trim(),
       documentTypeId: Number(values.documentTypeId),
-      subjectSummary: values.subjectSummary.trim() || null,
       persons:
         values.persons.length > 0
           ? values.persons.map((person) =>
@@ -486,34 +479,6 @@ export function CreateDocumentDialog({ open, onOpenChange }: CreateDocumentDialo
             </span>
           </button>
         </div>
-
-        <FormField
-          label="عنوان الوثيقة"
-          required
-          error={errors.title?.message}
-          className="sm:col-span-2"
-        >
-          <Input
-            id="document-title"
-            placeholder="مثال: طلب تصريح زيارة لوفد خارجي"
-            invalid={Boolean(errors.title)}
-            {...register('title')}
-          />
-        </FormField>
-
-        <FormField
-          label="ملخص الموضوع"
-          error={errors.subjectSummary?.message}
-          className="sm:col-span-2"
-        >
-          <Textarea
-            id="document-summary"
-            rows={3}
-            placeholder="ملخص اختياري لمحتوى الوثيقة…"
-            invalid={Boolean(errors.subjectSummary)}
-            {...register('subjectSummary')}
-          />
-        </FormField>
 
         <FormField label="نوع الوثيقة" required error={errors.documentTypeId?.message}>
           <Controller

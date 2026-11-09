@@ -1,16 +1,7 @@
 import { z } from 'zod'
 
 const documentFields = {
-  title: z
-    .string()
-    .trim()
-    .min(1, 'عنوان الوثيقة مطلوب.')
-    .max(500, 'عنوان الوثيقة يتجاوز الحد الأقصى للأحرف.'),
   documentTypeId: z.string().min(1, 'اختر نوع الوثيقة.'),
-  subjectSummary: z
-    .string()
-    .trim()
-    .max(2000, 'ملخص الموضوع يتجاوز الحد الأقصى للأحرف.'),
   registryId: z.string(),
   registryNumberText: z
     .string()

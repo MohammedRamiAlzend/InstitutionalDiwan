@@ -4,8 +4,8 @@ using InstitutionalDiwan.Application.Common;
 namespace InstitutionalDiwan.Application.Features.Correspondence.Documents;
 
 /// <summary>
-/// A page of documents, newest first by default. <paramref name="Search"/> matches the title, the
-/// subject summary, and the official number; the remaining parameters narrow the result by status,
+/// A page of documents, newest first by default. <paramref name="Search"/> matches the document name and
+/// the official number; the remaining parameters narrow the result by status,
 /// owning department, direction, and document type.
 /// </summary>
 public sealed record ListDocumentsQuery(

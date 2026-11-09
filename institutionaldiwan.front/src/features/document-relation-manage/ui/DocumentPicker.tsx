@@ -61,7 +61,7 @@ export function DocumentPicker({
     <div className="flex flex-col gap-2">
       <Input
         aria-label="بحث عن وثيقة"
-        placeholder="ابحث بالعنوان أو رقم النظام"
+        placeholder="ابحث باسم الوثيقة أو رقم النظام"
         startIcon={<Search className="size-4" aria-hidden />}
         value={term}
         invalid={invalid}

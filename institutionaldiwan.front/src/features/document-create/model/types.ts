@@ -20,14 +20,12 @@ export interface CreateDocumentMovementRequest {
  * department register line (number + date typed by the user) and optionally sends it on.
  */
 export interface CreateDocumentRequest {
-  title: string
   documentTypeId: number
   departmentRegistryNumberText: string
   departmentRegistryDate: string
   /** Register of the creator's department; omitted = the best matching active one. */
   departmentRegistryId?: string | null
   movement?: CreateDocumentMovementRequest | null
-  subjectSummary?: string | null
   /** Dynamic field values for the type's published schema; omit when the type has none. */
   fieldValues?: FieldValueRequest[]
   persons?: CreateDocumentPersonRequest[]
@@ -35,9 +33,7 @@ export interface CreateDocumentRequest {
 
 /** `POST /api/documents/drafts` — creates a DRAFT without consuming a number. */
 export interface CreateDraftDocumentRequest {
-  title: string
   documentTypeId: number
-  subjectSummary?: string | null
   fieldValues?: FieldValueRequest[]
   persons?: CreateDocumentPersonRequest[]
   documentDate?: string | null

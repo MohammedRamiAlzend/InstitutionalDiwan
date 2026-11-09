@@ -11,6 +11,9 @@ public sealed class Document : AggregateRoot<Guid>
     public const int StatusInMovement = DocumentStatusType.InMovementId;
     public const int StatusArchived = DocumentStatusType.ArchivedId;
     public const int StatusCanceled = DocumentStatusType.CanceledId;
+    public const int MaxDisplayNameLength = 300;
+
+    private const string DisplayNameSeparator = " · ";
 
     private readonly List<DocumentParticipant> _participants = new();
     private readonly List<DocumentPerson> _persons = new();
@@ -23,8 +26,17 @@ public sealed class Document : AggregateRoot<Guid>
         get => Id;
         private set => Id = value;
     }
-    public string Title { get; private set; } = null!;
+    /// <summary>No longer asked for or shown; kept so the text of older documents is not lost.</summary>
+    public string? Title { get; private set; }
+
+    /// <summary>No longer asked for or shown; kept so the text of older documents is not lost.</summary>
     public string? SubjectSummary { get; private set; }
+
+    /// <summary>
+    /// What the document is called everywhere: its type and its number in the owning department's
+    /// register, or its type and creation date until it has one. Written by the system.
+    /// </summary>
+    public string DisplayName { get; private set; } = null!;
     // FK → DocumentType.Id (InstitutionalDiwan.Domain.Entities.Correspondence.DocumentType)
     public int DocumentTypeId { get; private set; }
     // FK → DocumentDirection.Id. Suspended for now: null means "not classified" and is the default.
@@ -91,13 +103,24 @@ public sealed class Document : AggregateRoot<Guid>
         string? externalReferenceNumber = null,
         DateTime? externalDocumentDate = null,
         DateTime? utcNow = null,
-        Guid? schemaVersionId = null)
+        Guid? schemaVersionId = null,
+        string? displayName = null)
     {
         var now = utcNow ?? DateTime.UtcNow;
 
-        var titleResult = DocumentTitle.Create(title);
-        if (titleResult.IsFailure)
-            return Result.Failure<Document>(titleResult.Error);
+        string? cleanTitle = null;
+        if (!string.IsNullOrWhiteSpace(title))
+        {
+            var titleResult = DocumentTitle.Create(title);
+            if (titleResult.IsFailure)
+                return Result.Failure<Document>(titleResult.Error);
+
+            cleanTitle = titleResult.Value.Value;
+        }
+
+        var name = string.IsNullOrWhiteSpace(displayName) ? cleanTitle : displayName.Trim();
+        if (name is null)
+            return Result.Failure<Document>(DomainErrors.Correspondence.DisplayNameEmpty);
 
         if (documentTypeId <= 0)
             return Result.Failure<Document>(DomainErrors.Correspondence.TypeCodeEmpty);
@@ -109,7 +132,8 @@ public sealed class Document : AggregateRoot<Guid>
         var doc = new Document
         {
             DocumentId = Guid.NewGuid(),
-            Title = titleResult.Value.Value,
+            Title = cleanTitle,
+            DisplayName = name,
             SubjectSummary = string.IsNullOrWhiteSpace(subjectSummary) ? null : subjectSummary.Trim(),
             DocumentTypeId = documentTypeId,
             DirectionId = directionId,
@@ -363,6 +387,27 @@ public sealed class Document : AggregateRoot<Guid>
         return Result.Success();
     }
 
+    /// <summary>The name of a document of this type: with its register number, or its date until it has one.</summary>
+    public static string BuildDisplayName(string typeLabel, string? registerNumber, DateTime createdAtUtc) =>
+        $"{typeLabel}{DisplayNameSeparator}{(string.IsNullOrWhiteSpace(registerNumber) ? createdAtUtc.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture) : registerNumber.Trim())}";
+
+    /// <summary>
+    /// Names the document after its first line in the owning department's register. Later lines (a
+    /// new year, another department) leave the name alone, so a document keeps the name it is known by.
+    /// </summary>
+    private void TakeNameFromFirstOwnRegisterLine(DocumentNumber number)
+    {
+        if (number.DepartmentId != OwningDepartmentId)
+            return;
+
+        if (_numbers.Count(existing => existing.IsDepartmentEntry && existing.DepartmentId == OwningDepartmentId) != 1)
+            return;
+
+        var separatorIndex = DisplayName.IndexOf(DisplayNameSeparator, StringComparison.Ordinal);
+        if (separatorIndex >= 0)
+            DisplayName = $"{DisplayName[..separatorIndex]}{DisplayNameSeparator}{number.OfficialNumberText}";
+    }
+
     /// <summary>The department-register line for <paramref name="departmentId"/> in <paramref name="year"/>, if any.</summary>
     public DocumentNumber? FindDepartmentNumber(Guid departmentId, int year) =>
         _numbers.FirstOrDefault(number =>
@@ -395,6 +440,7 @@ public sealed class Document : AggregateRoot<Guid>
         }
 
         _numbers.Add(number);
+        TakeNameFromFirstOwnRegisterLine(number);
         UpdatedAt = now;
         return Result.Success();
     }

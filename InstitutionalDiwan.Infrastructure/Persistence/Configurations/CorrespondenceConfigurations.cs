@@ -14,7 +14,8 @@ public sealed class DocumentConfiguration : IEntityTypeConfiguration<Document>
 
         builder.HasKey(x => x.DocumentId);
         builder.Property(x => x.DocumentId).HasColumnName("DocumentId").ValueGeneratedNever();
-        builder.Property(x => x.Title).HasColumnName("Title").HasMaxLength(500).IsRequired();
+        builder.Property(x => x.Title).HasColumnName("Title").HasMaxLength(500);
+        builder.Property(x => x.DisplayName).HasColumnName("DisplayName").HasMaxLength(Document.MaxDisplayNameLength).IsRequired();
         builder.Property(x => x.SubjectSummary).HasColumnName("SubjectSummary").HasMaxLength(2000);
         builder.Property(x => x.DocumentTypeId).HasColumnName("DocumentTypeId").IsRequired();
         builder.Property(x => x.DirectionId).HasColumnName("DirectionId");

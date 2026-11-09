@@ -38,7 +38,7 @@ public sealed record RelatedDocumentSummary(
 {
     public static RelatedDocumentSummary From(Document document) => new(
         document.DocumentId,
-        document.Title,
+        document.DisplayName,
         document.OfficialNumberText,
         document.CurrentStatusId,
         document.CurrentStatusId == DocumentStatusType.ArchivedId);

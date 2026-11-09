@@ -15,10 +15,9 @@ permissions allow the transition, so the slice itself renders no permission bann
 
 | File | Purpose |
 | --- | --- |
-| `model/types.ts` | `UpdateDraftDocumentRequest`, `RegisterDraftDocumentRequest`, `AddDocumentParticipantRequest`, `CancelDocumentRequest` matching `InstitutionalDiwan.Server.Contracts.Correspondence`. |
+| `model/types.ts` | `RegisterDraftDocumentRequest`, `AddDocumentParticipantRequest`, `CancelDocumentRequest` matching `InstitutionalDiwan.Server.Contracts.Correspondence`. |
 | `model/schemas.ts` | Zod schemas and Arabic validation for the edit, register, participant, and cancel forms; participant `superRefine` requires exactly the field matching the chosen target kind. |
-| `api/documentMutations.ts` | `useUpdateDraftDocumentMutation`, `useRegisterDraftDocumentMutation`, `useAddDocumentParticipantMutation`, `useCancelDocumentMutation`; all invalidate `documentKeys.detail(documentId)` and the registry lists after writes. |
-| `ui/EditDraftDialog.tsx` | Title/summary/confidentiality/priority only (type and direction stay immutable); surfaces `Correspondence.OnlyDraftEditable` in Arabic. |
+| `api/documentMutations.ts` | `useRegisterDraftDocumentMutation`, `useAddDocumentParticipantMutation`, `useCancelDocumentMutation`; all invalidate `documentKeys.detail(documentId)` and the registry lists after writes. |
 | `ui/RegisterDraftDialog.tsx` | Optional numbering year (blank = document year, then current year); success toast quotes the allocated `officialNumberText` and surfaces `Numbering.RegistryNotFound`/`Numbering.OfficialNumberTaken`. |
 | `ui/AddParticipantDialog.tsx` | Role lookup, three target kinds (external organization, internal department, person), primary flag, notes; external organizations come from a debounced search over `GET /api/external-organizations`, departments from `identity-options`. |
 | `ui/CancelDocumentDialog.tsx` | Destructive confirmation with a required reason; surfaces `Correspondence.HasActiveMovements` and `Correspondence.AlreadyCanceled`. |
@@ -49,6 +48,7 @@ permissions allow the transition, so the slice itself renders no permission bann
 - 2026-11-05: Unsent form input is now kept (per user, per form) after an accidental close or cancel and restored with a toast; it is cleared only after a successful submit (`useDraftForm`).
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-09 | Claude | Removed `EditDraftDialog`: a draft had only its title and summary to edit. |
 | 2026-11-08 | Claude | Registering asks for the department register before the number and date. |
 | 2026-11-05 | Claude | `RegisterDraftDialog` now collects the register number/date and an optional movement; the year field is gone. |
 | 2026-11-05 | Claude | The draft edit dialog no longer edits confidentiality or priority (suspended); it sends only title and summary, and the stored values are left untouched. |

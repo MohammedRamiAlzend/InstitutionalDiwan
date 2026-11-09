@@ -241,7 +241,7 @@ export function RelationsGrid({
       onPageSizeChange={table.setPageSize}
       search={table.search}
       onSearchChange={table.setSearch}
-      searchPlaceholder="ابحث بعنوان الوثيقة أو رقمها…"
+      searchPlaceholder="ابحث باسم الوثيقة أو رقمها…"
       sortKey={table.sortKey}
       sortDirection={table.sortDirection}
       onSortChange={table.setSort}

@@ -8,7 +8,7 @@ namespace InstitutionalDiwan.Server.Contracts.Correspondence;
 /// the document on immediately.
 /// </summary>
 public sealed record CreateDocumentRequest(
-    string Title,
+    string? Title,
     int DocumentTypeId,
     string DepartmentRegistryNumberText,
     DateTime DepartmentRegistryDate,

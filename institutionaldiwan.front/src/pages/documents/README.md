@@ -125,6 +125,7 @@ mounted dialog.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-09 | Claude | Removed the summary from the header and overview, and the edit-draft action. |
 | 2026-11-09 | Claude | Added the «الأشخاص المرتبطون» tab (`ui/DocumentPersonsTab.tsx`). |
 | 2026-11-08 | Claude | Movements tab shows the register number and visit date per step; numbers tab lists each line's arrival dates. |
 | 2026-11-05 | Claude | The overview tab and the page header badge no longer show direction, confidentiality or priority (suspended). |

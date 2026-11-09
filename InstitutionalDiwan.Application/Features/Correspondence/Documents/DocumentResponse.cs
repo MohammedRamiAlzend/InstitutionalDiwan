@@ -22,7 +22,7 @@ public sealed record DocumentResponse(
 {
     public static DocumentResponse From(Document document) => new(
         document.DocumentId,
-        document.Title,
+        document.DisplayName,
         document.SubjectSummary,
         document.DocumentTypeId,
         document.DirectionId,

@@ -51,8 +51,7 @@ internal sealed class DocumentArchiveRepository : IDocumentArchiveRepository
         {
             var pattern = $"%{search}%";
             documents = documents.Where(document =>
-                EF.Functions.Like(document.Title, pattern) ||
-                (document.SubjectSummary != null && EF.Functions.Like(document.SubjectSummary, pattern)) ||
+                EF.Functions.Like(document.DisplayName, pattern) ||
                 (document.OfficialNumberText != null && EF.Functions.Like(document.OfficialNumberText, pattern)));
         }
 
@@ -80,8 +79,8 @@ internal sealed class DocumentArchiveRepository : IDocumentArchiveRepository
 
         query = (page.NormalizedSortBy, page.SortDescending) switch
         {
-            ("title", true) => query.OrderByDescending(row => row.Document.Title),
-            ("title", false) => query.OrderBy(row => row.Document.Title),
+            ("title", true) => query.OrderByDescending(row => row.Document.DisplayName),
+            ("title", false) => query.OrderBy(row => row.Document.DisplayName),
             ("officialnumber", true) => query.OrderByDescending(row => row.Document.OfficialNumberText),
             ("officialnumber", false) => query.OrderBy(row => row.Document.OfficialNumberText),
             (_, true) => query.OrderByDescending(row => row.Event.OccurredAt),

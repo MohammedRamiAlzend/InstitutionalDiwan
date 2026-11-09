@@ -65,12 +65,6 @@ export const DOCUMENTS_GUIDE: PageGuide = {
 
 export const DOCUMENT_DETAILS_GUIDE_ENTRIES: readonly GuideEntry[] = [
   {
-    id: 'document-details.edit',
-    title: 'تعديل المسودة',
-    body: 'تغيّر عنوان المسودة وملخصها وبياناتها قبل تسجيلها. بعد التسجيل برقم نظام تُغلق المسودة للتعديل، فراجعها جيدًا قبل ذلك.',
-    note: 'يظهر للمسودات فقط ويتطلب صلاحية تعديل الوثائق.',
-  },
-  {
     id: 'document-details.register',
     title: 'تسجيل برقم',
     body: 'يحوّل المسودة إلى وثيقة مسجلة برقم نظام من سجل الترقيم الذي تختاره. الرقم يُحفظ ولا يُعاد استخدامه حتى لو أُلغيت الوثيقة لاحقًا.',
@@ -109,7 +103,7 @@ export const DOCUMENT_DETAILS_GUIDE_ENTRIES: readonly GuideEntry[] = [
   {
     id: 'document-details.tab-details',
     title: 'تفاصيل الوثيقة',
-    body: 'ملخص الوثيقة وبياناتها الأساسية، وسجل تغيّر حالتها، والخط الزمني لما جرى عليها من إجراءات بالترتيب.',
+    body: 'بيانات الوثيقة الأساسية، وسجل تغيّر حالتها، والخط الزمني لما جرى عليها من إجراءات بالترتيب.',
   },
   {
     id: 'document-details.tab-participants',
@@ -197,7 +191,7 @@ export const DOCUMENT_DETAILS_GUIDE_ENTRIES: readonly GuideEntry[] = [
   {
     id: 'document-details.relations-target',
     title: 'الوثيقة المراد ربطها',
-    body: 'ابحث بالعنوان أو رقم النظام واختر الوثيقة المقابلة. تظهر لك الوثائق التي تملك صلاحية الاطلاع عليها فقط.',
+    body: 'ابحث باسم الوثيقة أو رقم النظام واختر الوثيقة المقابلة. تظهر لك الوثائق التي تملك صلاحية الاطلاع عليها فقط.',
     note: 'لا يمكن ربط الوثيقة بنفسها ولا بوثيقة ملغاة.',
   },
 ]
@@ -207,7 +201,6 @@ export const DOCUMENT_DETAILS_GUIDE: PageGuide = {
   intro:
     'هذه صفحة وثيقة واحدة. الأزرار في الأعلى هي إجراءات دورة حياة الوثيقة بحسب حالتها وصلاحيتك، والتبويبات تعرض كل جانب منها.',
   entryIds: [
-    'document-details.edit',
     'document-details.register',
     'document-details.add-participant',
     'document-details.cancel',

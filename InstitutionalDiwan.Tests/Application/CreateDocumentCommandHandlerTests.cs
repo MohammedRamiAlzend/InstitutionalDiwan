@@ -237,16 +237,16 @@ public sealed class CreateDocumentCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_WithWhitespaceTitle_ReturnsValidationError()
+    public async Task Handle_WithoutTitle_NamesTheDocumentFromTypeAndRegisterNumber()
     {
         var w = Setup();
 
         var result = await CreateHandler(w).Handle(
             Command(w.User.UserId, title: "   "), CancellationToken.None);
 
-        Assert.True(result.IsFailure);
-        Assert.Equal(DomainErrors.Correspondence.TitleEmpty.Code, result.Error.Code);
-        Assert.Empty(w.Documents.Documents);
+        Assert.True(result.IsSuccess);
+        Assert.EndsWith(RegisterNumber, result.Value.Title);
+        Assert.Null(Assert.Single(w.Documents.Documents).Title);
     }
 
     [Fact]

@@ -716,6 +716,12 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                         .HasColumnType("int")
                         .HasColumnName("DirectionId");
 
+                    b.Property<string>("DisplayName")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)")
+                        .HasColumnName("DisplayName");
+
                     b.Property<DateTime?>("DocumentDate")
                         .HasColumnType("datetime2(3)")
                         .HasColumnName("DocumentDate");
@@ -770,7 +776,6 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                         .HasColumnName("SubjectSummary");
 
                     b.Property<string>("Title")
-                        .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)")
                         .HasColumnName("Title");

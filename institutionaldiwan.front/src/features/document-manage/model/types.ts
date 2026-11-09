@@ -1,8 +1,3 @@
-/** `PUT /api/documents/{documentId}` — metadata edit accepted only while the document is a DRAFT. */
-export interface UpdateDraftDocumentRequest {
-  title: string
-  subjectSummary?: string | null
-}
 
 /**
  * `POST /api/documents/{documentId}/register` — the system issues the central number; the typed

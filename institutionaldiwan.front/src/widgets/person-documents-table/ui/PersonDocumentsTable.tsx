@@ -173,7 +173,7 @@ export function PersonDocumentsTable({ personId }: PersonDocumentsTableProps) {
       onPageSizeChange={table.setPageSize}
       search={table.search}
       onSearchChange={table.setSearch}
-      searchPlaceholder="ابحث بالعنوان أو الرقم…"
+      searchPlaceholder="ابحث باسم الوثيقة أو الرقم…"
       sortKey={table.sortKey}
       sortDirection={table.sortDirection}
       onSortChange={table.setSort}

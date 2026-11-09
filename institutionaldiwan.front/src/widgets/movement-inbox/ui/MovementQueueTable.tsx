@@ -372,7 +372,7 @@ export function MovementQueueTable({ kind }: MovementQueueTableProps) {
         sortKey={table.sortKey}
         sortDirection={table.sortDirection}
         onSortChange={table.setSort}
-        searchPlaceholder="ابحث بعنوان الوثيقة أو رقمها أو التعليمات…"
+        searchPlaceholder="ابحث باسم الوثيقة أو رقمها أو التعليمات…"
         rowSearchText={(item) =>
           [documentRowLabel(item.documentTitle), item.officialNumberText, item.instructions]
             .filter(Boolean)

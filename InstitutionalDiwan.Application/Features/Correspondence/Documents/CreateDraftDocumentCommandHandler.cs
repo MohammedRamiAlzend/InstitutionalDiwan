@@ -72,7 +72,8 @@ internal sealed class CreateDraftDocumentCommandHandler
             request.ExternalReferenceNumber,
             request.ExternalDocumentDate,
             utcNow: _unitOfWork.UtcNow,
-            schemaVersionId: schema?.SchemaVersionId);
+            schemaVersionId: schema?.SchemaVersionId,
+            displayName: Document.BuildDisplayName(documentType.DescAr, null, _unitOfWork.UtcNow));
 
         if (documentResult.IsFailure)
             return Result.Failure<DocumentResponse>(documentResult.Error);

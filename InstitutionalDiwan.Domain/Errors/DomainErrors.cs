@@ -123,6 +123,7 @@ public static class DomainErrors
     public static class Correspondence
     {
         public static readonly Error TitleEmpty = Error.Validation("Correspondence.TitleEmpty", "Document title is required.");
+        public static readonly Error DisplayNameEmpty = Error.Validation("Correspondence.DisplayNameEmpty", "A document needs a name to be listed under.");
         public static readonly Error TitleTooLong = Error.Validation("Correspondence.TitleTooLong", "Document title cannot exceed 500 characters.");
         public static readonly Error TypeCodeEmpty = Error.Validation("Correspondence.TypeCodeEmpty", "Document type code is required.");
         public static readonly Error DocumentTypeNotFound = Error.Validation("Correspondence.DocumentTypeNotFound", "The specified document type does not exist.");

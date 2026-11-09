@@ -9,7 +9,6 @@ import type {
   AddDocumentParticipantRequest,
   CancelDocumentRequest,
   RegisterDraftDocumentRequest,
-  UpdateDraftDocumentRequest,
 } from '../model/types'
 
 /** Shared invalidation for commands that change one document (and its timeline). */
@@ -22,23 +21,6 @@ function useDocumentInvalidation(documentId: string) {
   }
 }
 
-/** `PUT /api/documents/{documentId}` — rejected by the server once the draft is registered. */
-export function useUpdateDraftDocumentMutation(documentId: string) {
-  const invalidate = useDocumentInvalidation(documentId)
-
-  return useMutation({
-    mutationFn: async (
-      request: UpdateDraftDocumentRequest,
-    ): Promise<DocumentResponse> => {
-      const { data } = await httpClient.put<DocumentResponse>(
-        `/documents/${documentId}`,
-        request,
-      )
-      return data
-    },
-    onSuccess: invalidate,
-  })
-}
 
 /** `POST /api/documents/{documentId}/register` — allocates the next official number. */
 export function useRegisterDraftDocumentMutation(documentId: string) {

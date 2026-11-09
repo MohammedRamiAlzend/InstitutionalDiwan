@@ -31,7 +31,7 @@ public sealed class DocumentsController : ControllerBase
     /// </remarks>
     /// <param name="page">Page number (integer, optional, 1-based). Example: <c>2</c>.</param>
     /// <param name="pageSize">Rows per page (integer, optional, 1-100). Example: <c>20</c>.</param>
-    /// <param name="search">Free-text search across title, summary, and official number (string, optional). Example: <c>2026</c>.</param>
+    /// <param name="search">Free-text search across the document name and official number (string, optional). Example: <c>2026</c>.</param>
     /// <param name="sortBy">Sort key: <c>createdAt</c>, <c>title</c>, <c>registrationDate</c>, or <c>officialNumber</c> (string, optional). Example: <c>title</c>.</param>
     /// <param name="sortDescending">Sort descending when true (boolean, optional). Example: <c>true</c>.</param>
     /// <param name="statusId">Filter by document status id (integer, optional). Example: <c>2</c>.</param>
@@ -44,7 +44,7 @@ public sealed class DocumentsController : ControllerBase
     /// <response code="403">The token lacks the DOCUMENT_VIEW permission.</response>
     [HttpGet]
     [EndpointSummary("Lists a page of documents, newest first by default.")]
-    [EndpointDescription("Lists a page of documents, newest first by default. Supports server-side paging, a free-text search across the title, subject summary, and official number, and filters by status, owning department, direction, and document type. With a document type, repeat fieldFilters=key:operator:value (at most 5, combined with AND) to filter by dynamic field values: eq/contains for text, eq/gt/gte/lt/lte for numbers and dates, eq for booleans and select options. Only documents the caller has VIEW access to are returned or counted. Requires the DOCUMENT_VIEW permission. Responses: 200 (One page of documents with the paging counters.), 400 (A field filter is malformed, names an unknown field, uses an unsupported operator, has an invalid value, or no document type was supplied.), 401 (The token is missing, expired, or invalid.), 403 (The token lacks the DOCUMENT_VIEW permission.)")]
+    [EndpointDescription("Lists a page of documents, newest first by default. Supports server-side paging, a free-text search across the document name and official number, and filters by status, owning department, direction, and document type. With a document type, repeat fieldFilters=key:operator:value (at most 5, combined with AND) to filter by dynamic field values: eq/contains for text, eq/gt/gte/lt/lte for numbers and dates, eq for booleans and select options. Only documents the caller has VIEW access to are returned or counted. Requires the DOCUMENT_VIEW permission. Responses: 200 (One page of documents with the paging counters.), 400 (A field filter is malformed, names an unknown field, uses an unsupported operator, has an invalid value, or no document type was supplied.), 401 (The token is missing, expired, or invalid.), 403 (The token lacks the DOCUMENT_VIEW permission.)")]
     [Produces("application/json", Type = typeof(PagedResult<DocumentResponse>))]
     [ProducesResponseType<PagedResult<DocumentResponse>>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
@@ -53,7 +53,7 @@ public sealed class DocumentsController : ControllerBase
     public async Task<IActionResult> List(
         [Description("Page number (integer, optional, 1-based). Example: 2.")] [FromQuery] int page = 1,
         [Description("Rows per page (integer, optional, 1-100). Example: 20.")] [FromQuery] int pageSize = 20,
-        [Description("Free-text search across title, summary, and official number (string, optional). Example: 2026.")] [FromQuery] string? search = null,
+        [Description("Free-text search across the document name and official number (string, optional). Example: 2026.")] [FromQuery] string? search = null,
         [Description("Sort key: createdAt, title, registrationDate, officialNumber (string, optional). Example: title.")] [FromQuery] string? sortBy = null,
         [Description("Sort descending when true (boolean, optional). Example: true.")] [FromQuery] bool sortDescending = true,
         [Description("Filter by document status id (integer, optional). Example: 2.")] [FromQuery] int? statusId = null,
@@ -92,7 +92,7 @@ public sealed class DocumentsController : ControllerBase
     /// <param name="departmentId">Department unique identifier (GUID, route). Example: <c>e7a62f43-9b82-4d01-8c2e-7ab91e506d42</c>.</param>
     /// <param name="page">Page number (integer, optional, 1-based). Example: <c>2</c>.</param>
     /// <param name="pageSize">Rows per page (integer, optional, 1-100). Example: <c>20</c>.</param>
-    /// <param name="search">Free-text search across title, summary, and official number (string, optional). Example: <c>2026</c>.</param>
+    /// <param name="search">Free-text search across the document name and official number (string, optional). Example: <c>2026</c>.</param>
     /// <param name="sortBy">Sort key: <c>createdAt</c>, <c>title</c>, <c>registrationDate</c>, or <c>officialNumber</c> (string, optional). Example: <c>title</c>.</param>
     /// <param name="sortDescending">Sort descending when true (boolean, optional). Example: <c>true</c>.</param>
     /// <param name="statusId">Filter by document status id (integer, optional). Example: <c>2</c>.</param>
@@ -115,7 +115,7 @@ public sealed class DocumentsController : ControllerBase
         [Description("Department unique identifier (GUID, route). Example: e7a62f43-9b82-4d01-8c2e-7ab91e506d42.")] Guid departmentId,
         [Description("Page number (integer, optional, 1-based). Example: 2.")] [FromQuery] int page = 1,
         [Description("Rows per page (integer, optional, 1-100). Example: 20.")] [FromQuery] int pageSize = 20,
-        [Description("Free-text search across title, summary, and official number (string, optional). Example: 2026.")] [FromQuery] string? search = null,
+        [Description("Free-text search across the document name and official number (string, optional). Example: 2026.")] [FromQuery] string? search = null,
         [Description("Sort key: createdAt, title, registrationDate, officialNumber (string, optional). Example: title.")] [FromQuery] string? sortBy = null,
         [Description("Sort descending when true (boolean, optional). Example: true.")] [FromQuery] bool sortDescending = true,
         [Description("Filter by document status id (integer, optional). Example: 2.")] [FromQuery] int? statusId = null,
@@ -208,7 +208,7 @@ public sealed class DocumentsController : ControllerBase
     /// <param name="request">
     /// The request payload with the following fields:
     /// <list type="bullet">
-    /// <item><term>title</term><description>Document title (string, required). Example: <c>طلب تصريح زيارة لوفدة</c>.</description></item>
+    /// <item><term>title</term><description>Legacy title, no longer shown (string, optional). Example: <c>طلب تصريح زيارة لوفدة</c>.</description></item>
     /// <item><term>documentTypeId</term><description>Document type id (integer, required). Example: <c>1</c>.</description></item>
     /// <item><term>subjectSummary</term><description>Subject summary (string, optional). Example: <c>طلب تصريح زيارة لوفدة خارجية</c>.</description></item>
     /// <item><term>directionId</term><description>Direction id (integer, optional; suspended, leave it null). Example: <c>1</c>.</description></item>
@@ -442,7 +442,7 @@ public sealed class DocumentsController : ControllerBase
     /// <param name="request">
     /// The request payload with the following fields:
     /// <list type="bullet">
-    /// <item><term>title</term><description>Document title (string, required). Example: <c>طلب تصريح زيارة لوفدة</c>.</description></item>
+    /// <item><term>title</term><description>Legacy title, no longer shown (string, optional). Example: <c>طلب تصريح زيارة لوفدة</c>.</description></item>
     /// <item><term>documentTypeId</term><description>Document type id (integer, required). Example: <c>1</c>.</description></item>
     /// <item><term>departmentRegistryNumberText</term><description>Number written in the caller's department register (string, required). Example: <c>1447/2026</c>.</description></item>
     /// <item><term>departmentRegistryDate</term><description>Date written in the department register (ISO date, required). Example: <c>2026-11-05</c>.</description></item>

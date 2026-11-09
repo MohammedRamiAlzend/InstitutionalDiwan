@@ -167,7 +167,7 @@ public sealed class DocumentLifecycleHandlerTests
             CancellationToken.None);
 
         Assert.True(result.IsSuccess);
-        Assert.Equal("عنوان معدل", result.Value.Title);
+        Assert.Equal("عنوان معدل", world.Documents.Documents.Single().Title);
         Assert.Equal(DocumentConfidentialityLevel.SecretId, result.Value.ConfidentialityLevelId);
         Assert.Equal(DocumentPriorityLevel.UrgentId, result.Value.PriorityLevelId);
     }

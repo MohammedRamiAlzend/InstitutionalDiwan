@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { Archive, ArchiveRestore, ArrowRight, Ban, FilePenLine, Hash, UserPlus } from 'lucide-react'
+import { Archive, ArchiveRestore, ArrowRight, Ban, Hash, UserPlus } from 'lucide-react'
 import { useDepartmentOptions } from '@/entities/department'
 import {
   DocumentStatusBadge,
@@ -19,7 +19,6 @@ import { RequirePermission } from '@/features/auth'
 import {
   AddParticipantDialog,
   CancelDocumentDialog,
-  EditDraftDialog,
   RegisterDraftDialog,
 } from '@/features/document-manage'
 import { toArabicErrorMessage } from '@/shared/api'
@@ -126,7 +125,6 @@ function DocumentDetailsView() {
   const hasDynamicFields = Boolean(fieldsQuery.data?.schemaVersionId)
   const departmentsQuery = useDepartmentOptions()
 
-  const [editOpen, setEditOpen] = useState(false)
   const [registerOpen, setRegisterOpen] = useState(false)
   const [participantOpen, setParticipantOpen] = useState(false)
   const [cancelOpen, setCancelOpen] = useState(false)
@@ -218,7 +216,6 @@ function DocumentDetailsView() {
 
       <PageHeader
         title={document.title}
-        description={document.subjectSummary ?? undefined}
         pageGuide="document-details"
         badge={
           <div className="flex flex-wrap items-center gap-2">
@@ -228,17 +225,6 @@ function DocumentDetailsView() {
         }
         actions={
           <>
-            {isDraft && canEdit && (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setEditOpen(true)}
-              >
-                <FilePenLine className="size-4" aria-hidden />
-                تعديل المسودة
-              </Button>
-            )}
-            {isDraft && canEdit && <GuideChip id="document-details.edit" />}
             {isDraft && canCreate && (
               <Button type="button" onClick={() => setRegisterOpen(true)}>
                 <Hash className="size-4" aria-hidden />
@@ -433,13 +419,6 @@ function DocumentDetailsView() {
         </GuideRegion>
       )}
 
-      {editOpen && (
-        <EditDraftDialog
-          document={document}
-          open
-          onOpenChange={setEditOpen}
-        />
-      )}
       {registerOpen && (
         <RegisterDraftDialog
           document={document}

@@ -361,6 +361,7 @@ them, while listing, relabelling and (de)activation keep working.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-09 | Claude | `Document.Title` is optional and no longer shown; `Document.DisplayName` (type and owning register number, or type and date) names the document, written by the system. |
 | 2026-11-09 | Claude | Added `Entities/Persons/` (`Person`, `PersonDetails`, `PersonNameNormalizer`, `DocumentPersonRole`, `Gender`, `Nationality`), `Correspondence/DocumentPerson`, `Document.LinkPerson`/`ChangePersonRole`/`UnlinkPerson`, `Repositories/IPersonRepository.cs`, the `Persons` errors and events, and `PERSON_VIEW`/`PERSON_MANAGE` (20 codes). |
 | 2026-11-08 | Claude | Added `SystemError`, `SystemErrorOccurrence` and the `SYSTEM_ERRORS_VIEW` permission (18 codes) for the developer's error log. |
 | 2026-11-08 | Claude | Field behavior (`DocumentFieldBehavior`: default, read-only, filterable, table column, hints, min length, date limits, visibility condition, layout, option source), the `MultiSelect` data type and `DocumentFieldSort`; `BuildValues` writes read-only values and drops hidden fields. |

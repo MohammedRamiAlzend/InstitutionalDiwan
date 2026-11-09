@@ -20,12 +20,11 @@ public sealed class CreateDocumentCommandValidatorTests
     [Theory]
     [InlineData("")]
     [InlineData("   ")]
-    public void MissingTitle_Fails(string title)
+    public void MissingTitle_IsAccepted(string title)
     {
         var result = Validator.Validate(Valid() with { Title = title });
 
-        Assert.False(result.IsValid);
-        Assert.Contains(result.Errors, error => error.ErrorCode == "Correspondence.TitleEmpty");
+        Assert.DoesNotContain(result.Errors, error => error.PropertyName == nameof(CreateDocumentCommand.Title));
     }
 
     [Theory]

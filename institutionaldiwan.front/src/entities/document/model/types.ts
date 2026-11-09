@@ -6,7 +6,6 @@ export interface DocumentResponse {
   fieldValues?: Record<string, string | null> | null
   documentId: string
   title: string
-  subjectSummary: string | null
   documentTypeId: number
   directionId: number | null
   confidentialityLevelId: number | null

@@ -177,6 +177,6 @@ internal sealed class NotificationPublisher : INotificationPublisher
 
     private static string Fill(string template, Document document) =>
         template
-            .Replace("{Title}", document.Title, StringComparison.Ordinal)
+            .Replace("{Title}", document.DisplayName, StringComparison.Ordinal)
             .Replace("{Number}", document.OfficialNumberText ?? string.Empty, StringComparison.Ordinal);
 }

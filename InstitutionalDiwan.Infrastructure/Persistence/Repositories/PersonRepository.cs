@@ -162,14 +162,14 @@ internal sealed class PersonRepository : IPersonRepository
         {
             var pattern = $"%{search}%";
             query = query.Where(row =>
-                EF.Functions.Like(row.Document.Title, pattern) ||
+                EF.Functions.Like(row.Document.DisplayName, pattern) ||
                 (row.Document.OfficialNumberText != null && EF.Functions.Like(row.Document.OfficialNumberText, pattern)));
         }
 
         query = (page.NormalizedSortBy, page.SortDescending) switch
         {
-            ("title", true) => query.OrderByDescending(row => row.Document.Title),
-            ("title", false) => query.OrderBy(row => row.Document.Title),
+            ("title", true) => query.OrderByDescending(row => row.Document.DisplayName),
+            ("title", false) => query.OrderBy(row => row.Document.DisplayName),
             ("status", true) => query.OrderByDescending(row => row.Document.CurrentStatusId),
             ("status", false) => query.OrderBy(row => row.Document.CurrentStatusId),
             (_, true) => query.OrderByDescending(row => row.Link.CreatedAt),
@@ -196,7 +196,7 @@ internal sealed class PersonRepository : IPersonRepository
 
             return new PersonDocumentRow(
                 document.DocumentId,
-                document.Title,
+                document.DisplayName,
                 document.DocumentTypeId,
                 document.OfficialNumberText,
                 document.CurrentStatusId,
@@ -411,7 +411,7 @@ internal sealed class PersonRepository : IPersonRepository
 
         var titles = await _context.Documents.AsNoTracking()
             .Where(document => documentIds.Contains(document.DocumentId))
-            .ToDictionaryAsync(document => document.DocumentId, document => document.Title, cancellationToken);
+            .ToDictionaryAsync(document => document.DocumentId, document => document.DisplayName, cancellationToken);
 
         var rows = new Dictionary<Guid, PersonTimelineRow>();
 

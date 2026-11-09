@@ -22,7 +22,7 @@ namespace InstitutionalDiwan.Application.Features.Correspondence.Documents;
 /// </summary>
 public sealed record CreateDocumentCommand(
     Guid UserId,
-    string Title,
+    string? Title,
     int DocumentTypeId,
     string DepartmentRegistryNumberText,
     DateTime DepartmentRegistryDate,

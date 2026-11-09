@@ -161,7 +161,7 @@ export function DocumentRegistryTable() {
     () => [
       {
         id: 'title',
-        header: 'عنوان الوثيقة',
+        header: 'الوثيقة',
         sortable: true,
         sortKey: 'title',
         hideable: false,
@@ -173,11 +173,6 @@ export function DocumentRegistryTable() {
             >
               {document.title}
             </Link>
-            {document.subjectSummary && (
-              <span className="line-clamp-2 text-xs text-muted">
-                {document.subjectSummary}
-              </span>
-            )}
           </div>
         ),
       },
@@ -319,7 +314,7 @@ export function DocumentRegistryTable() {
         sortKey={table.sortKey}
         sortDirection={table.sortDirection}
         onSortChange={table.setSort}
-        searchPlaceholder="ابحث بالعنوان أو الملخص أو رقم النظام…"
+        searchPlaceholder="ابحث باسم الوثيقة أو رقم النظام…"
         filters={
           <div className="flex flex-wrap items-center gap-2">
             <GuideChip id="documents.filters" />
