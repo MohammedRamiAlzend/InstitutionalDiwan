@@ -2,6 +2,7 @@ using InstitutionalDiwan.Application.Common;
 using InstitutionalDiwan.Application.Features.Correspondence.Documents;
 using InstitutionalDiwan.Domain.Common;
 using InstitutionalDiwan.Server.Contracts.Correspondence;
+using InstitutionalDiwan.Server.Contracts.Persons;
 using InstitutionalDiwan.Server.Extensions;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -217,6 +218,7 @@ public sealed class DocumentsController : ControllerBase
     /// <item><term>externalReferenceNumber</term><description>External reference number (string, optional). Example: <c>EXT-2026-114</c>.</description></item>
     /// <item><term>externalDocumentDate</term><description>External document date (date, optional). Example: <c>2026-01-10</c>.</description></item>
     /// <item><term>fieldValues</term><description>Dynamic field values as key and text value, validated against the published schema of the type (array, optional). Example: <c>[{"fieldKey":"session_no","value":"2026-14"}]</c>.</description></item>
+    /// <item><term>persons</term><description>People to name on the document: each an existing <c>personId</c> or a new <c>fullName</c>, with an optional <c>roleId</c> (array, optional). Example: <c>[{"fullName":"أحمد محمد علي"}]</c>.</description></item>
     /// </list>
     /// </param>
     /// <param name="cancellationToken">Request cancellation token (optional).</param>
@@ -248,7 +250,8 @@ public sealed class DocumentsController : ControllerBase
             request.DocumentDate,
             request.ExternalReferenceNumber,
             request.ExternalDocumentDate,
-            request.FieldValues.ToInputs()), cancellationToken);
+            request.FieldValues.ToInputs(),
+            request.Persons.ToInputs()), cancellationToken);
 
         return result.ToActionResult();
     }
@@ -446,6 +449,7 @@ public sealed class DocumentsController : ControllerBase
     /// <item><term>departmentRegistryId</term><description>Register of the caller's department to write the number in (GUID, optional, best matching active register when omitted). Example: <c>3f6b2a10-7c44-4e19-9a52-1d8e6f0b7c21</c>.</description></item>
     /// <item><term>movement</term><description>Optional routing: <c>{"destinationDepartmentId":"3fa85f64-5717-4562-b3fc-2c963f66afa6","movementTypeId":1}</c>; sent immediately.</description></item>
     /// <item><term>fieldValues</term><description>Dynamic field values as key and text value, validated against the published schema of the type (array, optional). Example: <c>[{"fieldKey":"session_no","value":"2026-14"}]</c>.</description></item>
+    /// <item><term>persons</term><description>People to name on the document: each an existing <c>personId</c> or a new <c>fullName</c>, with an optional <c>roleId</c> (array, optional). Example: <c>[{"fullName":"أحمد محمد علي"}]</c>.</description></item>
     /// <item><term>subjectSummary</term><description>Subject summary (string, optional). Example: <c>طلب تصريح زيارة لوفدة خارجية</c>.</description></item>
     /// <item><term>directionId</term><description>Direction id (integer, optional; suspended, leave it null). Example: <c>1</c>.</description></item>
     /// <item><term>confidentialityLevelId</term><description>Confidentiality level id (integer, optional; suspended, leave it null). Example: <c>1</c>.</description></item>
@@ -491,7 +495,8 @@ public sealed class DocumentsController : ControllerBase
                     movement.Instructions,
                     movement.DueDate)
                 : null,
-            request.DepartmentRegistryId), cancellationToken);
+            request.DepartmentRegistryId,
+            request.Persons.ToInputs()), cancellationToken);
 
         return result.ToActionResult();
     }

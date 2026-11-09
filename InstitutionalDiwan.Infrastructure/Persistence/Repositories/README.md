@@ -39,6 +39,7 @@ Concrete EF Core implementations of the repository interfaces declared in
 | `LookupRepository.cs` | The one generic repository: resolves a kebab-case lookup slug to its `DbSet<TLookup>` through `LookupCatalog`, then lists/fetches/creates/relabels/(de)activates entries and answers `IsInUseAsync` from EF foreign-key metadata. Backs `/api/lookups/{lookup}`. |
 | `InstitutionSettingRepository.cs` | Loads the single `InstitutionSetting` row (table is a singleton by convention; the seeder owns the first insert) and attaches updates. |
 | `ExternalOrganizationRepository.cs` | Loads `ExternalOrganization` by id or normalized (upper-cased) code and lists them by code; `ListPagedAsync` adds the active filter, a code/name search, and `Skip`/`Take` for the external-correspondent CRUD endpoints. |
+| `PersonRepository.cs` | Persons and their read models: name suggestions, the access-filtered list, a person's documents with current location and last action, and the timeline merged from five sources. |
 | `DocumentMovementRepository.cs` | Loads a `DocumentMovement` with `Steps`/`Events`, answers `HasActiveMovementsAsync(documentId)` (true while the status is not `CLOSED`/`CANCELED`; backs the document cancel/archive guard), and returns `GetActiveByDocumentIdAsync` for the access evaluator's movement participation. `ListByDocumentAsync` gives a document's routing history; `ListInboxAsync`/`ListOutboxAsync` give a department's two queues, both keyed on the **current step** so a rejection routed to the Central Diwan or a redirect moves the custody with the document. |
 | `DocumentFileRepository.cs` | Loads a `DocumentFile` with its full `Versions` chain by id or per document (oldest first), so the Attachments handlers can append versions and project history. Also holds `DocumentFileTypeRepository` (file-type extension/size limits) and `FileStorageProviderRepository` (by id or active default) in the same file. |
 | `DocumentArchiveRepository.cs` | Module 07 archive access: appends `DocumentArchiveEvent` rows, lists a document's events newest first, and `SearchAsync` pages archived documents with their latest archive event. The `VIEW` rule (`DocumentViewAccessQuery`) is part of the query, so paging counters never include a document the caller cannot see; a persistence test holds the two rules equal. |
@@ -94,6 +95,7 @@ Concrete EF Core implementations of the repository interfaces declared in
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-09 | Claude | Added `PersonRepository`; `DocumentRepository.GetByIdAsync` includes `Persons`; `LookupCatalog` gained `document-person-roles`, `genders`, `nationalities`. |
 | 2026-11-08 | Claude | Moved the field-filter predicate to `DocumentFieldFilterQuery` (registry and archive, multi-select match); `DocumentRepository` sorts by a field and adds `ListFieldValuesAsync`. |
 | 2026-11-08 | Claude | Document and number reads now include register visits. |
 | 2026-11-04 | Claude | `DocumentViewAccessQuery` grants movement-based reading to the sending department of a returned or rejected current step, in line with the inbox and `DocumentAccessEvaluator`. |

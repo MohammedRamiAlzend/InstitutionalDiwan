@@ -1,4 +1,5 @@
 using FluentValidation;
+using InstitutionalDiwan.Application.Features.Persons;
 using InstitutionalDiwan.Domain.Entities.Correspondence;
 
 namespace InstitutionalDiwan.Application.Features.Correspondence.Documents;
@@ -35,6 +36,12 @@ public sealed class CreateDocumentCommandValidator : AbstractValidator<CreateDoc
         RuleFor(command => command.Movement!.DestinationDepartmentId)
             .NotEmpty().WithErrorCode("Department.NotFound")
             .When(command => command.Movement is not null);
+
+        RuleFor(command => command.Persons)
+            .Must(persons => persons is null || persons.Count <= DocumentPersonInputValidator.MaxPersonsPerRequest)
+            .WithErrorCode("Persons.ValueTooLong");
+
+        RuleForEach(command => command.Persons).SetValidator(new DocumentPersonInputValidator());
 
         RuleFor(command => command.ConfidentialityLevelId)
             .GreaterThan(0).When(command => command.ConfidentialityLevelId.HasValue);

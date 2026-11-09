@@ -1,3 +1,4 @@
+using InstitutionalDiwan.Application.Features.Persons;
 using InstitutionalDiwan.Application.Abstractions.Context;
 using InstitutionalDiwan.Application.Features.Correspondence.DocumentFields;
 using InstitutionalDiwan.Application.Features.Correspondence.Documents;
@@ -48,7 +49,8 @@ public sealed class CorrespondenceAuditIntegrationTests
             new DocumentTypeSchemaVersionRepository(db),
             new FakeDocumentFieldOptionResolver(),
             db,
-            new FakeSender());
+            new FakeSender(),
+            new DocumentPersonLinker(new PersonRepository(db), new LookupRepository(db)));
 
         var result = await handler.Handle(
             new CreateDocumentCommand(

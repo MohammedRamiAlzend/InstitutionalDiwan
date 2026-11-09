@@ -27,6 +27,11 @@ grouping by technical type, so a slice can be read top-to-bottom.
 ## Planned use cases per module
 
 ### Lookups (cross-module)
+
+### Persons (cross-module)
+
+People named on documents who are not system users. See [`Persons/README.md`](Persons/README.md).
+
 - **Implemented:** `ListLookupEntriesQuery` ✅, `GetLookupEntryByIdQuery` ✅, `CreateLookupEntryCommand` ✅,
   `RelabelLookupEntryCommand` ✅, `DeactivateLookupEntryCommand` ✅ (rejects an entry that is still
   referenced by another table with `Lookup.EntryInUse`), `ActivateLookupEntryCommand` ✅; see
@@ -152,6 +157,7 @@ registries, per-document grants/movements) still returns a plain collection on p
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-09 | Claude | Added `Persons/`: people named on documents, their suggestions, list, file, documents and merged timeline, and the shared `DocumentPersonLinker`. |
 | 2026-11-08 | Claude | Added `Diagnostics/SystemErrors` for the developer's error log. |
 | 2026-11-03 | Claude | Added `Notifications/`: `NotificationPublisher` (recipient rules per event type), list/unread-count queries and mark-read/dismiss/read-all commands; the movement, registration and archive handlers now call the publisher before saving. |
 | 2026-11-03 | Claude | Added the `Relations/` slice (Module 08, Phase 2). |

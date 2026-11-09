@@ -473,6 +473,25 @@ internal sealed class TamperEvidentAuditInterceptor : SaveChangesInterceptor
         DocumentParticipantAddedEvent e => new(
             "CORRESPONDENCE", AuditActionType.UpdateId, AuditEntityType.DocumentId, e.DocumentId,
             NewJson(new { e.ParticipantId, e.RoleId }), RelatedDocumentId: e.DocumentId),
+        // Person events carry ids and field names only, so the audit log holds no personal data.
+        PersonCreatedEvent e => new(
+            "PERSONS", AuditActionType.CreateId, AuditEntityType.PersonId, e.PersonId,
+            ActorUserId: e.ActorUserId),
+        PersonDetailsUpdatedEvent e => new(
+            "PERSONS", AuditActionType.UpdateId, AuditEntityType.PersonId, e.PersonId,
+            NewJson(new { e.ChangedFields }), ActorUserId: e.ActorUserId),
+        DocumentPersonLinkedEvent e => new(
+            "PERSONS", AuditActionType.CreateId, AuditEntityType.PersonId, e.PersonId,
+            NewJson(new { e.DocumentPersonId, e.RoleId }), RelatedDocumentId: e.DocumentId, ActorUserId: e.ActorUserId),
+        DocumentPersonRoleChangedEvent e => new(
+            "PERSONS", AuditActionType.UpdateId, AuditEntityType.PersonId, e.PersonId,
+            NewJson(new { e.DocumentPersonId, e.RoleId }),
+            OldValuesJson: OldJson(new { RoleId = e.PreviousRoleId }),
+            RelatedDocumentId: e.DocumentId, ActorUserId: e.ActorUserId),
+        DocumentPersonUnlinkedEvent e => new(
+            "PERSONS", AuditActionType.DeleteId, AuditEntityType.PersonId, e.PersonId,
+            OldValuesJson: OldJson(new { e.DocumentPersonId, e.RoleId }),
+            RelatedDocumentId: e.DocumentId, ActorUserId: e.ActorUserId),
         DocumentSchemaVersionPublishedEvent e => new(
             "CORRESPONDENCE", AuditActionType.UpdateId, AuditEntityType.DocumentSchemaVersionId, e.SchemaVersionId,
             NewJson(new { Status = "Published", e.DocumentTypeId, e.VersionNumber }),

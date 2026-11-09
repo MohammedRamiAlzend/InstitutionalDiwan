@@ -1,3 +1,4 @@
+using InstitutionalDiwan.Application.Features.Persons;
 using InstitutionalDiwan.Application.Features.Correspondence.Documents;
 using InstitutionalDiwan.Domain.Common;
 using InstitutionalDiwan.Domain.Entities.Correspondence;
@@ -49,7 +50,7 @@ public sealed class DocumentLifecycleHandlerTests
         }
 
         public CreateDraftDocumentCommandHandler CreateDraftHandler() =>
-            new(Users, Documents, DocumentTypes, new FakeDocumentTypeSchemaVersionRepository(), new FakeDocumentFieldOptionResolver(), UnitOfWork);
+            new(Users, Documents, DocumentTypes, new FakeDocumentTypeSchemaVersionRepository(), new FakeDocumentFieldOptionResolver(), UnitOfWork, new DocumentPersonLinker(new FakePersonRepository(), new FakeLookupRepository()));
 
         public RegisterDocumentCommandHandler RegisterHandler() =>
             new(Documents, Numbers, Registries, new FakeDocumentTypeSchemaVersionRepository(), Access, UnitOfWork, FakeNotificationPublisher.Instance, TestClock.Instance, new FakeSender());

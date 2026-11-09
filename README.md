@@ -48,6 +48,7 @@ in a `README.md` per subfolder — see the "Known gap" note below.
 
 | Tool | Version | Needed for |
 | --- | --- | --- |
+| 2026-11-09 | Claude | People named on documents (plan `plans/document-persons.md`): a shared persons register with a lookup of roles, names captured when a document is created, and a person screen showing their documents, where each one is now, and a merged timeline, behind `PERSON_VIEW` and `PERSON_MANAGE`. |
 | .NET SDK | 10.0 | Building and running the API and the tests |
 | SQL Server | 2019+ / LocalDB | The `InstitutionalDiwan` database (`Server=.;Trusted_Connection=True`) |
 | Node.js | 20+ (24 recommended) | The standalone front end and the `add-endpoint-docs.mjs` script; not needed to build or run the API |
@@ -84,7 +85,7 @@ npm run build   # tsc -b && vite build
 npm run lint
 ```
 
-> The front end's architecture, implemented slices, 18 permissions, UI/design contract, and live
+> The front end's architecture, implemented slices, 20 permissions, UI/design contract, and live
 > endpoint catalog are documented in
 > [`institutionaldiwan.front/README.md`](institutionaldiwan.front/README.md),
 > [`AGENTS.md`](institutionaldiwan.front/AGENTS.md), and

@@ -1,6 +1,6 @@
 /**
  * Canonical permission codes — must match the API's
- * `InstitutionalDiwan.Domain/Common/Permissions.cs` exactly (17 codes).
+ * `InstitutionalDiwan.Domain/Common/Permissions.cs` exactly (20 codes).
  */
 export const Permissions = {
   DocumentView: 'DOCUMENT_VIEW',
@@ -21,6 +21,8 @@ export const Permissions = {
   AuditView: 'AUDIT_VIEW',
   AuditManage: 'AUDIT_MANAGE',
   SystemErrorsView: 'SYSTEM_ERRORS_VIEW',
+  PersonView: 'PERSON_VIEW',
+  PersonManage: 'PERSON_MANAGE',
 } as const
 
 export type PermissionCode = (typeof Permissions)[keyof typeof Permissions]

@@ -13,6 +13,7 @@ public sealed class Document : AggregateRoot<Guid>
     public const int StatusCanceled = DocumentStatusType.CanceledId;
 
     private readonly List<DocumentParticipant> _participants = new();
+    private readonly List<DocumentPerson> _persons = new();
     private readonly List<DocumentStatusHistory> _statusHistory = new();
     private readonly List<DocumentNumber> _numbers = new();
     private readonly List<DocumentFieldValue> _fieldValues = new();
@@ -61,6 +62,10 @@ public sealed class Document : AggregateRoot<Guid>
     public IReadOnlyCollection<DocumentFieldValue> FieldValues => _fieldValues.AsReadOnly();
 
     public IReadOnlyCollection<DocumentParticipant> Participants => _participants.AsReadOnly();
+
+    /// <summary>The people named on this document (defendants, plaintiffs, ...), who are not system users.</summary>
+    public IReadOnlyCollection<DocumentPerson> Persons => _persons.AsReadOnly();
+
     public IReadOnlyCollection<DocumentStatusHistory> StatusHistory => _statusHistory.AsReadOnly();
 
     /// <summary>
@@ -240,6 +245,74 @@ public sealed class Document : AggregateRoot<Guid>
         UpdatedAt = now;
         RaiseDomainEvent(new DocumentParticipantAddedEvent(DocumentId, participantResult.Value.ParticipantId, participantResult.Value.RoleId));
         return participantResult;
+    }
+
+    /// <summary>Names a person on this document in the given capacity.</summary>
+    public Result<DocumentPerson> LinkPerson(Guid personId, int roleId, Guid actorUserId, DateTime? utcNow = null)
+    {
+        var editable = EnsurePersonsEditable();
+        if (editable.IsFailure)
+            return Result.Failure<DocumentPerson>(editable.Error);
+
+        if (_persons.Any(link => link.PersonId == personId))
+            return Result.Failure<DocumentPerson>(DomainErrors.Persons.DuplicateInDocument);
+
+        var now = utcNow ?? DateTime.UtcNow;
+        var link = DocumentPerson.Create(DocumentId, personId, roleId, actorUserId, now);
+
+        _persons.Add(link);
+        UpdatedAt = now;
+        RaiseDomainEvent(new DocumentPersonLinkedEvent(DocumentId, link.DocumentPersonId, personId, roleId, actorUserId));
+        return Result.Success(link);
+    }
+
+    /// <summary>Changes the capacity a person holds on this document.</summary>
+    public Result<DocumentPerson> ChangePersonRole(Guid documentPersonId, int roleId, Guid actorUserId, DateTime? utcNow = null)
+    {
+        var editable = EnsurePersonsEditable();
+        if (editable.IsFailure)
+            return Result.Failure<DocumentPerson>(editable.Error);
+
+        var link = _persons.FirstOrDefault(candidate => candidate.DocumentPersonId == documentPersonId);
+        if (link is null)
+            return Result.Failure<DocumentPerson>(DomainErrors.Persons.LinkNotFound);
+
+        var previousRoleId = link.RoleId;
+        if (previousRoleId == roleId)
+            return Result.Success(link);
+
+        link.ChangeRole(roleId);
+        UpdatedAt = utcNow ?? DateTime.UtcNow;
+        RaiseDomainEvent(new DocumentPersonRoleChangedEvent(DocumentId, documentPersonId, link.PersonId, previousRoleId, roleId, actorUserId));
+        return Result.Success(link);
+    }
+
+    /// <summary>Takes a person off this document. The person's own record stays.</summary>
+    public Result UnlinkPerson(Guid documentPersonId, Guid actorUserId, DateTime? utcNow = null)
+    {
+        var editable = EnsurePersonsEditable();
+        if (editable.IsFailure)
+            return editable;
+
+        var link = _persons.FirstOrDefault(candidate => candidate.DocumentPersonId == documentPersonId);
+        if (link is null)
+            return Result.Failure(DomainErrors.Persons.LinkNotFound);
+
+        _persons.Remove(link);
+        UpdatedAt = utcNow ?? DateTime.UtcNow;
+        RaiseDomainEvent(new DocumentPersonUnlinkedEvent(DocumentId, documentPersonId, link.PersonId, link.RoleId, actorUserId));
+        return Result.Success();
+    }
+
+    private Result EnsurePersonsEditable()
+    {
+        var notArchived = EnsureNotArchived();
+        if (notArchived.IsFailure)
+            return notArchived;
+
+        return CurrentStatusId == DocumentStatusType.CanceledId
+            ? Result.Failure(DomainErrors.Persons.DocumentCanceled)
+            : Result.Success();
     }
 
     public Result Register(

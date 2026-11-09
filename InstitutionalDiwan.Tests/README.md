@@ -139,6 +139,7 @@ indexes) runs against a private SQLite in-memory database through `Support/TestC
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-09 | Claude | Added `PersonDomainTests`, `PersonRepositoryTests` (real SQLite: access limits, spelling folding, timeline merge) and `FakePersonRepository`. |
 | 2026-11-08 | Claude | Added `SystemErrorStoreTests`; permission counts are now 18. |
 | 2026-11-08 | Claude | Added `DocumentFieldBehaviorDomainTests` and `DocumentFieldBehaviorPersistenceTests`; `FakeDocumentFieldOptionResolver` for handlers that resolve sourced options. |
 | 2026-11-04 | Claude | `Persistence/NotificationsTests.cs` gained three tests (inbox search with literal wildcards, every sort key with stable paging, per-type unread counts). 743 tests pass. |

@@ -75,6 +75,11 @@ public static class AuthenticationExtensions
                 options.AddPolicy(permission, policy =>
                     policy.AddRequirements(new PermissionRequirement(permission)));
             }
+
+            options.AddPolicy(PersonPolicies.Suggest, policy =>
+                policy.RequireAssertion(context =>
+                    context.User.HasClaim(JwtProvider.PermissionClaimType, Permissions.DocumentCreate) ||
+                    context.User.HasClaim(JwtProvider.PermissionClaimType, Permissions.DocumentEdit)));
         });
 
         services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();

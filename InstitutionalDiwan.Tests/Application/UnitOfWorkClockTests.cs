@@ -1,3 +1,4 @@
+using InstitutionalDiwan.Application.Features.Persons;
 using InstitutionalDiwan.Application.Features.Correspondence.Documents;
 using InstitutionalDiwan.Application.Features.Identity.ChangePassword;
 using InstitutionalDiwan.Application.Features.Identity.Login;
@@ -42,7 +43,8 @@ public sealed class UnitOfWorkClockTests
             new FakeDocumentTypeSchemaVersionRepository(),
             new FakeDocumentFieldOptionResolver(),
             unitOfWork,
-            new FakeSender());
+            new FakeSender(),
+            new DocumentPersonLinker(new FakePersonRepository(), new FakeLookupRepository()));
 
         var result = await handler.Handle(
             new CreateDocumentCommand(

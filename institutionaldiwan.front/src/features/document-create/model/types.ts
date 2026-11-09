@@ -1,5 +1,11 @@
 import type { FieldValueRequest } from '@/entities/document-schema'
 
+/** A person named on the new document: an existing `personId`, or the `fullName` of a new one. */
+export interface CreateDocumentPersonRequest {
+  personId?: string
+  fullName?: string
+}
+
 /** Optional routing sent together with the new document; the movement is opened and sent at once. */
 export interface CreateDocumentMovementRequest {
   destinationDepartmentId: string
@@ -24,6 +30,7 @@ export interface CreateDocumentRequest {
   subjectSummary?: string | null
   /** Dynamic field values for the type's published schema; omit when the type has none. */
   fieldValues?: FieldValueRequest[]
+  persons?: CreateDocumentPersonRequest[]
 }
 
 /** `POST /api/documents/drafts` — creates a DRAFT without consuming a number. */
@@ -32,6 +39,7 @@ export interface CreateDraftDocumentRequest {
   documentTypeId: number
   subjectSummary?: string | null
   fieldValues?: FieldValueRequest[]
+  persons?: CreateDocumentPersonRequest[]
   documentDate?: string | null
   externalReferenceNumber?: string | null
   externalDocumentDate?: string | null

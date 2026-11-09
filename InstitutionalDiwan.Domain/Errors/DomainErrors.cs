@@ -103,6 +103,23 @@ public static class DomainErrors
         public static readonly Error AssignmentTypeInvalid = Error.Validation("Identity.AssignmentTypeInvalid", "The specified department assignment type does not exist or is inactive.");
     }
 
+    public static class Persons
+    {
+        public static readonly Error Empty = Error.Validation("Persons.Empty", "A person needs at least a name or a national number.");
+        public static readonly Error NotFound = Error.NotFound("Persons.NotFound", "The person was not found.");
+        public static readonly Error ReferenceInvalid = Error.Validation("Persons.ReferenceInvalid", "A person entry must give either an existing person id or a full name, not both.");
+        public static readonly Error NationalNumberTaken = Error.Conflict("Persons.NationalNumberTaken", "Another person already has this national number.");
+        public static readonly Error DuplicateInDocument = Error.Conflict("Persons.DuplicateInDocument", "This person is already named on the document.");
+        public static readonly Error DocumentCanceled = Error.Conflict("Persons.DocumentCanceled", "The people named on a canceled document cannot be changed.");
+        public static readonly Error LinkNotFound = Error.NotFound("Persons.LinkNotFound", "This person is not named on the document.");
+        public static readonly Error RoleNotFound = Error.Validation("Persons.RoleNotFound", "The specified person role does not exist or is inactive.");
+        public static readonly Error DefaultRoleMissing = Error.Conflict("Persons.DefaultRoleMissing", "No default person role is active; choose a role or set a default in the lookups.");
+        public static readonly Error GenderNotFound = Error.Validation("Persons.GenderNotFound", "The specified gender does not exist or is inactive.");
+        public static readonly Error NationalityNotFound = Error.Validation("Persons.NationalityNotFound", "The specified nationality does not exist or is inactive.");
+        public static readonly Error BirthDateInvalid = Error.Validation("Persons.BirthDateInvalid", "The birth date is outside the accepted range.");
+        public static readonly Error ValueTooLong = Error.Validation("Persons.ValueTooLong", "A person value exceeds its maximum length.");
+    }
+
     public static class Correspondence
     {
         public static readonly Error TitleEmpty = Error.Validation("Correspondence.TitleEmpty", "Document title is required.");

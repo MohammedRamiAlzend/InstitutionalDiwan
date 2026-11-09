@@ -1,3 +1,4 @@
+using InstitutionalDiwan.Application.Features.Persons;
 using InstitutionalDiwan.Application.Features.Correspondence.Documents;
 using InstitutionalDiwan.Application.Features.Movements;
 using InstitutionalDiwan.Application.Features.Numbering.Numbers;
@@ -53,7 +54,7 @@ public sealed class CreateDocumentCommandHandlerTests
 
     private static CreateDocumentCommandHandler CreateHandler(World w)
         => new(w.Users, w.Documents, w.Types, w.Numbers, w.Registries,
-            new FakeDocumentTypeSchemaVersionRepository(), new FakeDocumentFieldOptionResolver(), w.Uow, w.Sender);
+            new FakeDocumentTypeSchemaVersionRepository(), new FakeDocumentFieldOptionResolver(), w.Uow, w.Sender, new DocumentPersonLinker(new FakePersonRepository(), new FakeLookupRepository()));
 
     private static CreateDocumentCommand Command(
         Guid userId,

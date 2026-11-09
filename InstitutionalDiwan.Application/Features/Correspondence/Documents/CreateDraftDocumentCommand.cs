@@ -1,4 +1,5 @@
 using InstitutionalDiwan.Application.Abstractions.Messaging;
+using InstitutionalDiwan.Application.Features.Persons;
 using InstitutionalDiwan.Domain.ValueObjects;
 
 namespace InstitutionalDiwan.Application.Features.Correspondence.Documents;
@@ -18,4 +19,5 @@ public sealed record CreateDraftDocumentCommand(
     DateTime? DocumentDate = null,
     string? ExternalReferenceNumber = null,
     DateTime? ExternalDocumentDate = null,
-    IReadOnlyList<DocumentFieldValueInput>? FieldValues = null) : ICommand<DocumentResponse>;
+    IReadOnlyList<DocumentFieldValueInput>? FieldValues = null,
+    IReadOnlyList<DocumentPersonInput>? Persons = null) : ICommand<DocumentResponse>;

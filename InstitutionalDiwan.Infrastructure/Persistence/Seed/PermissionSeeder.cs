@@ -37,6 +37,8 @@ public sealed class PermissionSeeder : ISeeder
         (Permissions.AuditView, "عرض سجل التدقيق", "View audit log", "AUDIT", "Browse and verify the tamper-evident audit log."),
         (Permissions.AuditManage, "إدارة سلامة سجل التدقيق", "Manage audit integrity", "AUDIT", "Create checkpoints and run integrity verification over the audit log."),
         (Permissions.SystemErrorsView, "متابعة الأخطاء البرمجية", "Track system errors", "DIAGNOSTICS", "Browse, export, annotate and purge captured application errors."),
+        (Permissions.PersonView, "عرض الأشخاص", "View persons", "PERSONS", "Search people named on documents and follow their documents."),
+        (Permissions.PersonManage, "إدارة بيانات الأشخاص", "Manage persons", "PERSONS", "Edit the recorded details of people named on documents."),
     };
 
     public async Task SeedAsync(SeederContext context, CancellationToken cancellationToken = default)

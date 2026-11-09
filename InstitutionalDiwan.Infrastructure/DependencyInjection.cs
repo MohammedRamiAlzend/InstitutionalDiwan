@@ -85,6 +85,7 @@ public static class DependencyInjection
         services.AddScoped<ILookupRepository, LookupRepository>();
         services.AddScoped<IInstitutionSettingRepository, InstitutionSettingRepository>();
         services.AddScoped<IExternalOrganizationRepository, ExternalOrganizationRepository>();
+        services.AddScoped<IPersonRepository, PersonRepository>();
         services.AddScoped<IDocumentMovementRepository, DocumentMovementRepository>();
         services.AddScoped<IDocumentFileRepository, DocumentFileRepository>();
         services.AddScoped<IDocumentFileTypeRepository, DocumentFileTypeRepository>();
@@ -114,6 +115,8 @@ public static class DependencyInjection
         services.AddScoped<ISeeder, ParticipantRoleSeeder>();
         services.AddScoped<ISeeder, ParticipantTargetTypeSeeder>();
         services.AddScoped<ISeeder, OrganizationTypeSeeder>();
+        services.AddScoped<ISeeder, DocumentPersonRoleSeeder>();
+        services.AddScoped<ISeeder, GenderSeeder>();
         services.AddScoped<ISeeder, MovementTypeSeeder>();
         services.AddScoped<ISeeder, MovementStatusSeeder>();
         services.AddScoped<ISeeder, MovementStepStatusSeeder>();

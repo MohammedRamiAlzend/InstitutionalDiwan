@@ -285,6 +285,11 @@ public static class LookupCatalog
             ["participant-target-types"] = Define(ParticipantTargetType.Create),
             ["organization-types"] = Define(OrganizationType.Create),
 
+            // People named on documents
+            ["document-person-roles"] = Define(InstitutionalDiwan.Domain.Entities.Persons.DocumentPersonRole.Create),
+            ["genders"] = Define(InstitutionalDiwan.Domain.Entities.Persons.Gender.Create),
+            ["nationalities"] = Define(InstitutionalDiwan.Domain.Entities.Persons.Nationality.Create),
+
             // Module 04 — Numbering
             ["document-number-statuses"] = Define(DocumentNumberStatus.Create),
             ["document-number-event-types"] = Define(DocumentNumberEventType.Create),

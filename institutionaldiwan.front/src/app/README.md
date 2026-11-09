@@ -44,6 +44,7 @@
 ## Change Log
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-09 | Claude | `AppRouter` serves `/persons` and `/persons/:personId`. |
 | 2026-11-08 | Claude | `App` installs global browser error reporting; `/system-errors` route. |
 | 2026-11-08 | Claude | `App` wraps the tree in a full-page `ErrorBoundary`, so a failure outside the shell no longer leaves a blank page. |
 | 2026-11-04 | Claude | Corrected the status line: the Module 06 attachments tab is complete and role-matrix verified, so nothing about it remains pending. |

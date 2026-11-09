@@ -1,5 +1,6 @@
 using InstitutionalDiwan.Application.Abstractions.Messaging;
 using InstitutionalDiwan.Application.Features.Correspondence.DocumentFields;
+using InstitutionalDiwan.Application.Features.Persons;
 using InstitutionalDiwan.Domain.Common;
 using InstitutionalDiwan.Domain.Entities.Correspondence;
 using InstitutionalDiwan.Domain.Errors;
@@ -16,6 +17,7 @@ internal sealed class CreateDraftDocumentCommandHandler
     private readonly IDocumentTypeSchemaVersionRepository _schemaVersionRepository;
     private readonly IDocumentFieldOptionResolver _optionResolver;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly DocumentPersonLinker _personLinker;
 
     public CreateDraftDocumentCommandHandler(
         IUserRepository userRepository,
@@ -23,8 +25,10 @@ internal sealed class CreateDraftDocumentCommandHandler
         IDocumentTypeRepository documentTypeRepository,
         IDocumentTypeSchemaVersionRepository schemaVersionRepository,
         IDocumentFieldOptionResolver optionResolver,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        DocumentPersonLinker personLinker)
     {
+        _personLinker = personLinker;
         _userRepository = userRepository;
         _documentRepository = documentRepository;
         _documentTypeRepository = documentTypeRepository;
@@ -78,6 +82,11 @@ internal sealed class CreateDraftDocumentCommandHandler
             documentResult.Value, schema, request.FieldValues, sourcedOptions, _unitOfWork.UtcNow);
         if (valuesResult.IsFailure)
             return Result.Failure<DocumentResponse>(valuesResult.Error);
+
+        var personsResult = await _personLinker.LinkAsync(
+            documentResult.Value, request.Persons, user.UserId, _unitOfWork.UtcNow, cancellationToken);
+        if (personsResult.IsFailure)
+            return Result.Failure<DocumentResponse>(personsResult.Error);
 
         _documentRepository.Add(documentResult.Value);
         await _unitOfWork.SaveChangesAsync(cancellationToken);

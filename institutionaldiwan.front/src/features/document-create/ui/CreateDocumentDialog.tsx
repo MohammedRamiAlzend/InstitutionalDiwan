@@ -14,6 +14,7 @@ import {
   type FieldValueMap,
 } from '@/entities/document-schema'
 import { useExternalOrganizations } from '@/entities/external-organization'
+import { PersonNamesInput } from '@/entities/person'
 import { LOOKUP_SLUGS, useLookupEntries, usePreselectLookupDefault } from '@/entities/lookup'
 import { DepartmentRegistrySelect, useDepartmentRegistryOptions } from '@/entities/numbering-registry'
 import { useMyPrimaryDepartmentId, useSessionStore } from '@/entities/user'
@@ -97,6 +98,7 @@ function buildEmptyValues(canManageNumbering: boolean): CreateDocumentFormValues
     externalReferenceNumber: '',
     externalDocumentDate: '',
     mode: canManageNumbering ? 'register' : 'draft',
+    persons: [],
     addRecipient: false,
     recipientType: 'external',
     recipientOrganizationId: '',
@@ -107,7 +109,7 @@ function buildEmptyValues(canManageNumbering: boolean): CreateDocumentFormValues
 
 /** A draft is worth keeping once the user typed anything meaningful. */
 function hasDraftContent(
-  values: Partial<CreateDocumentFormValues> | undefined,
+  values: (Partial<Omit<CreateDocumentFormValues, 'persons'>> & { persons?: readonly unknown[] }) | undefined,
   fieldValues: FieldValueMap,
 ): boolean {
   const typed = [
@@ -121,6 +123,7 @@ function hasDraftContent(
   return (
     typed.some((text) => Boolean(text?.trim())) ||
     Boolean(values?.destinationDepartmentId) ||
+    Boolean(values?.persons?.length) ||
     Object.values(fieldValues).some((entry) => entry.trim())
   )
 }
@@ -149,6 +152,8 @@ export function CreateDocumentDialog({ open, onOpenChange }: CreateDocumentDialo
   )
 
   const typesQuery = useLookupEntries(LOOKUP_SLUGS.DocumentTypes)
+  const personRolesQuery = useLookupEntries(LOOKUP_SLUGS.DocumentPersonRoles)
+  const defaultPersonRole = personRolesQuery.data?.find((entry) => entry.isDefault)?.descAr
   const movementTypesQuery = useLookupEntries(LOOKUP_SLUGS.MovementTypes)
 
   const typeOptions = useMemo(
@@ -313,6 +318,12 @@ export function CreateDocumentDialog({ open, onOpenChange }: CreateDocumentDialo
       title: values.title.trim(),
       documentTypeId: Number(values.documentTypeId),
       subjectSummary: values.subjectSummary.trim() || null,
+      persons:
+        values.persons.length > 0
+          ? values.persons.map((person) =>
+              person.personId ? { personId: person.personId } : { fullName: person.fullName },
+            )
+          : undefined,
     }
 
     const recipientRequest =
@@ -524,6 +535,31 @@ export function CreateDocumentDialog({ open, onOpenChange }: CreateDocumentDialo
                 invalid={Boolean(errors.documentTypeId)}
                 placeholder="اختر النوع…"
                 aria-label="نوع الوثيقة"
+              />
+            )}
+          />
+        </FormField>
+
+        <FormField
+          label="الأشخاص المرتبطون بالوثيقة"
+          hint={
+            defaultPersonRole
+              ? `اختياري. يُسجَّل كل اسم بصفة «${defaultPersonRole}»، ويمكن تغييرها لاحقًا من صفحة الوثيقة.`
+              : 'اختياري. يمكن إضافة أكثر من شخص.'
+          }
+          error={errors.persons?.message}
+          className="sm:col-span-2"
+        >
+          <Controller
+            control={control}
+            name="persons"
+            render={({ field }) => (
+              <PersonNamesInput
+                id="document-persons"
+                value={field.value ?? []}
+                onChange={field.onChange}
+                disabled={pending}
+                invalid={Boolean(errors.persons)}
               />
             )}
           />

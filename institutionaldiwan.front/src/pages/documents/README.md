@@ -37,6 +37,7 @@ atomic first upload).
 | `ui/DocumentDetailsPage.tsx` | Detail page: fetch details/timeline, header status mutations filtered by status + permission, URL tabs, and the four lifecycle dialogs. |
 | `ui/DocumentOverviewTab.tsx` | Details tab: metadata grid, status history (with cancel/edit reasons), and the audit timeline section. |
 | `ui/DocumentParticipantsTab.tsx` | Participants tab: role, target type, resolved target name, primary flag, notes, and the add action. |
+| `ui/DocumentPersonsTab.tsx` | People named on the document: full grid with role change and removal for `DOCUMENT_EDIT`, frozen on archived or canceled documents. |
 | `ui/DocumentGrantsTab.tsx` | Access-grants tab: per-grant level label, active/expired/revoked state badge, grantee name (or short id without `USER_MANAGE`), grant/expiry/revocation metadata, and the منح/إلغاء dialogs. |
 | `ui/DocumentArchiveTab.tsx` | Archive-history tab: event type, status transition, location, actor and reason, newest first, with loading/error/empty states. |
 | `ui/DocumentDetailsPage.tsx` («الروابط» tab) | Mounts `DocumentRelationsPanel` for `?tab=relations`; writes need `DOCUMENT_EDIT` and a document that is neither archived nor cancelled. |
@@ -124,6 +125,7 @@ mounted dialog.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-09 | Claude | Added the «الأشخاص المرتبطون» tab (`ui/DocumentPersonsTab.tsx`). |
 | 2026-11-08 | Claude | Movements tab shows the register number and visit date per step; numbers tab lists each line's arrival dates. |
 | 2026-11-05 | Claude | The overview tab and the page header badge no longer show direction, confidentiality or priority (suspended). |
 | 2026-11-04 | Claude | User, department and employee references now render as «name + short id» (`UserLabel` / `DepartmentLabel` / `EmployeeLabel`) instead of a bare id. |

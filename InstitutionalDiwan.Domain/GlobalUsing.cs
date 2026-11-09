@@ -8,5 +8,6 @@ global using InstitutionalDiwan.Domain.Entities.Movements;
 global using InstitutionalDiwan.Domain.Entities.Notifications;
 global using InstitutionalDiwan.Domain.Entities.Numbering;
 global using InstitutionalDiwan.Domain.Entities.Organization;
+global using InstitutionalDiwan.Domain.Entities.Persons;
 global using InstitutionalDiwan.Domain.Entities.Relations;
 global using InstitutionalDiwan.Domain.Errors;

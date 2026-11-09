@@ -30,6 +30,12 @@ const documentFields = {
     .max(100, 'الرقم المرجعي الخارجي يتجاوز الحد الأقصى للأحرف.'),
   externalDocumentDate: z.string(),
   mode: z.enum(['draft', 'register']),
+  persons: z.array(
+    z.object({
+      personId: z.string().nullable(),
+      fullName: z.string().trim().min(1).max(300, 'الاسم يتجاوز الحد الأقصى للأحرف.'),
+    }),
+  ),
   addRecipient: z.boolean(),
   recipientType: z.enum(['external', 'department', 'person']),
   recipientOrganizationId: z.string(),

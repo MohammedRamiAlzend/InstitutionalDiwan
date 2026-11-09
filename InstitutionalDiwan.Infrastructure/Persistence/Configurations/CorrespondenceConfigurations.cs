@@ -65,6 +65,14 @@ public sealed class DocumentConfiguration : IEntityTypeConfiguration<Document>
         builder.Navigation(x => x.Participants)
             .UsePropertyAccessMode(PropertyAccessMode.Field);
 
+        builder.HasMany(x => x.Persons)
+            .WithOne()
+            .HasForeignKey(x => x.DocumentId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Navigation(x => x.Persons)
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
+
         builder.HasMany(x => x.StatusHistory)
             .WithOne()
             .HasForeignKey(x => x.DocumentId)

@@ -94,6 +94,7 @@ commands the API actually walks: `CreateDraftDocumentCommand` → `UpdateDraftMe
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-09 | Claude | `CreateDocumentCommand` and `CreateDraftDocumentCommand` accept `Persons`, named through `DocumentPersonLinker` inside the same transaction. |
 | 2026-11-08 | Claude | `DocumentFieldFilterParser.ResolveAsync` is shared by the registry, department and archive queries and handles multi-selects; `ListDocumentsQueryHandler` sorts by `field:<key>` and returns the schema's table columns in `DocumentResponse.FieldValues`. |
 | 2026-11-08 | Claude | Create and register accept `DepartmentRegistryId` to choose the department register. |
 | 2026-11-05 | Claude | `CreateDocumentCommand` no longer takes a typed number or year: the system issues a GUID central number, writes the creator department register line (typed number + date, register mandatory) and optionally opens and sends a movement, all in one transaction. `RegisterDocumentCommand` gained the same optional register line and movement. |

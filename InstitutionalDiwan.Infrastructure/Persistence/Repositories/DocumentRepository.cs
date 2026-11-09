@@ -15,6 +15,7 @@ internal sealed class DocumentRepository : IDocumentRepository
     public Task<Document?> GetByIdAsync(Guid documentId, CancellationToken cancellationToken = default) =>
         _context.Documents
             .Include(document => document.Participants)
+            .Include(document => document.Persons)
             .Include(document => document.StatusHistory)
             .Include(document => document.FieldValues)
             .AsSplitQuery()

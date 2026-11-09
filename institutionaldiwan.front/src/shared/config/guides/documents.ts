@@ -117,6 +117,11 @@ export const DOCUMENT_DETAILS_GUIDE_ENTRIES: readonly GuideEntry[] = [
     body: 'الأطراف المرتبطة بالوثيقة ودور كل منهم: أقسام وموظفون وجهات خارجية. هؤلاء هم من توجَّه إليهم الحركات.',
   },
   {
+    id: 'document-details.tab-persons',
+    title: 'الأشخاص المرتبطون',
+    body: 'المدعى عليهم والمدعون وغيرهم ممن وردت أسماؤهم في هذه الوثيقة من غير مستخدمي النظام. افتح اسم الشخص لترى كل وثائقه.',
+  },
+  {
     id: 'document-details.tab-numbers',
     title: 'أرقام الوثيقة',
     body: 'الأرقام الرسمية الصادرة للوثيقة من سجلات الترقيم، مع إمكان الإصدار أو الإلغاء أو الاستبدال وفق الصلاحية. كل رقم يبقى محفوظًا في السجل.',
@@ -211,6 +216,7 @@ export const DOCUMENT_DETAILS_GUIDE: PageGuide = {
     'document-details.tabs',
     'document-details.tab-details',
     'document-details.tab-participants',
+    'document-details.tab-persons',
     'document-details.tab-numbers',
     'document-details.tab-movements',
     'document-details.tab-files',

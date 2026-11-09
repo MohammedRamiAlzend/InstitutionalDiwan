@@ -20,6 +20,10 @@ export const ROUTES = {
   DOCUMENT_SCHEMAS: '/document-schemas',
   AUDIT: '/audit',
   SYSTEM_ERRORS: '/system-errors',
+  PERSONS: '/persons',
+  PERSON_DETAIL: (id: string) => `/persons/${id}`,
+  /** Route pattern consumed by `AppRouter`; keep in sync with `PERSON_DETAIL`. */
+  PERSON_DETAIL_PATTERN: '/persons/:personId',
 } as const
 
 export type RoutePath = (typeof ROUTES)[keyof typeof ROUTES] | string

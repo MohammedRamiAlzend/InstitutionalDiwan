@@ -21,6 +21,8 @@ access live here.
 | `MovementsController.cs` | `api/movements` (plus planned document/department/step aliases) | `DOCUMENT_VIEW` reads; `DOCUMENT_EDIT` writes | The routing workflow: open a movement (Central Diwan hub enforced), send, receive (refuses custody until the destination department recorded its register number), complete, reject (routed back to the Central Diwan), return, redirect, close, cancel; plus the movement read endpoints, the department inbox/outbox, and the planned step-scoped route aliases. |
 | `DocumentFilesController.cs` | `api/document-files` (plus planned `/api/documents/{documentId}/files` aliases) | `DOCUMENT_VIEW` reads; `DOCUMENT_EDIT` writes | Module 06 attachments: create a file's version chain (metadata-only or atomic first-version upload), upload the next version (multipart; extension/size/magic-byte validation), archive, list by document, download a version, and verify its SHA-256. |
 | `ExternalOrganizationsController.cs` | `api/external-organizations` | `DOCUMENT_VIEW` reads; `DOCUMENT_EDIT` writes | External correspondent CRUD: paged/searchable list (incl. `includeInactive`), get, create, update, deactivate, activate. |
+| `PersonsController.cs` | `api/persons` | `PERSON_VIEW` reads; `PERSON_MANAGE` update; suggestions need `DOCUMENT_CREATE` or `DOCUMENT_EDIT` | People named on documents: suggestions, access-filtered list, full record, documents, merged timeline. |
+| `DocumentPersonsController.cs` | `api/documents/{documentId}/persons` | `DOCUMENT_VIEW` reads; `DOCUMENT_EDIT` writes | Lists, adds, re-roles and removes the people named on one document. |
 | `DocumentFieldsController.cs` | `api` (`document-types/{id}/fields`, `document-types/{id}/schema`, `document-types/{id}/schema-versions`, `schema-versions/{id}[/fields[/{fieldId}]|/publish]`, `documents/{id}/fields`) | `LOOKUP_MANAGE` for schema administration; `DOCUMENT_VIEW` for the published schema and a document's values; `DOCUMENT_EDIT` to set draft values | Dynamic document fields: define fields, run the schema draft/publish lifecycle, read the published schema, read and replace a draft document's values. |
 | `DocumentArchiveController.cs` | `api` (`archive/documents`, `documents/{id}/archive-events`, `documents/{id}/archive`, `documents/{id}/unarchive`) | `DOCUMENT_VIEW` reads; `DOCUMENT_ARCHIVE` writes; per-document access in the handlers | Module 07: archive and restore documents, a document's archive history, and the access-filtered archive search. |
 | `SavedSearchesController.cs` | `api/saved-searches` | `DOCUMENT_VIEW`; owner only in the handlers | Module 07: the caller's personal saved archive searches (list, create, replace, delete). |
@@ -144,6 +146,7 @@ plain JSON array.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-09 | Claude | Added `PersonsController` and `DocumentPersonsController`; document create endpoints accept `persons`. |
 | 2026-11-08 | Claude | Added `SystemErrorsController`: list, details, Excel export, status and notes, manual purge, and browser reports. |
 | 2026-11-08 | Claude | `GET /api/departments/{id}/documents` and `GET /api/archive/documents` accept `fieldFilters`. |
 | 2026-11-08 | Claude | Create, register and receive accept the chosen department register. |

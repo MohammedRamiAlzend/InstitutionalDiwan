@@ -30,6 +30,7 @@ Reads the seeded reference ("lookup") catalogs through `GET /api/lookups/{lookup
 ## Change Log
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-09 | Claude | Added the `DocumentPersonRoles` and `DocumentNumberEventTypes` slugs and the role fallbacks. |
 | 2026-11-05 | Claude | Document-type fallbacks reduced to `سجل أساس`; removed `DOCUMENT_TYPE_DIRECTION`. |
 | 2026-11-05 | Claude | Added `isDefault` to `LookupEntryResponse`, `findDefaultLookupEntry` and `usePreselectLookupDefault` (preselects the catalog default in empty create-form selects). |
 | 2026-11-04 | Claude | Module 01 lookups administration: added `lookupApi.catalogs`, `lookupKeys.catalogs` and `useLookupCatalogs`. |

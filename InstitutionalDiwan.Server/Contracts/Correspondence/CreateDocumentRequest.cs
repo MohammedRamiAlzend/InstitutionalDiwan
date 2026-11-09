@@ -18,7 +18,8 @@ public sealed record CreateDocumentRequest(
     int? PriorityLevelId = null,
     IReadOnlyList<DocumentFieldValueRequest>? FieldValues = null,
     CreateDocumentMovementRequest? Movement = null,
-    Guid? DepartmentRegistryId = null);
+    Guid? DepartmentRegistryId = null,
+    IReadOnlyList<InstitutionalDiwan.Server.Contracts.Persons.DocumentPersonRequest>? Persons = null);
 
 /// <summary>Destination of the movement opened and sent together with the new document.</summary>
 public sealed record CreateDocumentMovementRequest(

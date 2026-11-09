@@ -2,6 +2,7 @@ using InstitutionalDiwan.Application.Abstractions.Messaging;
 using InstitutionalDiwan.Application.Features.Movements;
 using InstitutionalDiwan.Application.Features.Numbering;
 using InstitutionalDiwan.Application.Features.Numbering.Numbers;
+using InstitutionalDiwan.Application.Features.Persons;
 using MediatR;
 using InstitutionalDiwan.Application.Features.Correspondence.DocumentFields;
 using InstitutionalDiwan.Domain.Common;
@@ -26,6 +27,7 @@ internal sealed class CreateDocumentCommandHandler : ICommandHandler<CreateDocum
     private readonly IDocumentFieldOptionResolver _optionResolver;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ISender _sender;
+    private readonly DocumentPersonLinker _personLinker;
 
     public CreateDocumentCommandHandler(
         IUserRepository userRepository,
@@ -36,8 +38,10 @@ internal sealed class CreateDocumentCommandHandler : ICommandHandler<CreateDocum
         IDocumentTypeSchemaVersionRepository schemaVersionRepository,
         IDocumentFieldOptionResolver optionResolver,
         IUnitOfWork unitOfWork,
-        ISender sender)
+        ISender sender,
+        DocumentPersonLinker personLinker)
     {
+        _personLinker = personLinker;
         _userRepository = userRepository;
         _documentRepository = documentRepository;
         _documentTypeRepository = documentTypeRepository;
@@ -106,6 +110,11 @@ internal sealed class CreateDocumentCommandHandler : ICommandHandler<CreateDocum
         var requiredResult = document.EnsureRequiredFieldsComplete(schema);
         if (requiredResult.IsFailure)
             return Result.Failure<DocumentResponse>(requiredResult.Error);
+
+        var personsResult = await _personLinker.LinkAsync(
+            document, request.Persons, user.UserId, _unitOfWork.UtcNow, cancellationToken);
+        if (personsResult.IsFailure)
+            return Result.Failure<DocumentResponse>(personsResult.Error);
 
         // The system number always comes from a central registry, never from a department register.
         var registryResult = await ResolveRegistryAsync(

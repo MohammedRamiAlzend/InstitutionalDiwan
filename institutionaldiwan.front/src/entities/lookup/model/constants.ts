@@ -71,6 +71,8 @@ export const LOOKUP_SLUGS = {
   DocumentPriorityLevels: 'document-priority-levels',
   DocumentFileTypes: 'document-file-types',
   ParticipantRoles: 'participant-roles',
+  DocumentPersonRoles: 'document-person-roles',
+  DocumentNumberEventTypes: 'document-number-event-types',
   ParticipantTargetTypes: 'participant-target-types',
   OrganizationTypes: 'organization-types',
   MovementTypes: 'movement-types',
@@ -159,6 +161,10 @@ export const LOOKUP_FALLBACKS: Record<string, readonly LookupCatalogEntry[]> = {
     { id: DOCUMENT_FILE_TYPE.Attachment, desc: 'Attachment', descAr: 'مرفق' },
     { id: DOCUMENT_FILE_TYPE.Signature, desc: 'Signature', descAr: 'توقيع' },
     { id: DOCUMENT_FILE_TYPE.Other, desc: 'Other', descAr: 'أخرى' },
+  ],
+  'document-person-roles': [
+    { id: 1, desc: 'Defendant', descAr: 'مدعى عليه' },
+    { id: 2, desc: 'Plaintiff', descAr: 'مدعٍ' },
   ],
   'participant-roles': [
     { id: PARTICIPANT_ROLE.Sender, desc: 'Sender', descAr: 'مُرسل' },

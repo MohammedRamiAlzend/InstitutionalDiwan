@@ -61,6 +61,13 @@ public sealed class DiwanDbContext : DbContext, IUnitOfWork
     public DbSet<ParticipantTargetType> ParticipantTargetTypes => Set<ParticipantTargetType>();
     public DbSet<OrganizationType> OrganizationTypes => Set<OrganizationType>();
 
+    // People named on documents
+    public DbSet<InstitutionalDiwan.Domain.Entities.Persons.Person> Persons => Set<InstitutionalDiwan.Domain.Entities.Persons.Person>();
+    public DbSet<DocumentPerson> DocumentPersons => Set<DocumentPerson>();
+    public DbSet<InstitutionalDiwan.Domain.Entities.Persons.DocumentPersonRole> DocumentPersonRoles => Set<InstitutionalDiwan.Domain.Entities.Persons.DocumentPersonRole>();
+    public DbSet<InstitutionalDiwan.Domain.Entities.Persons.Gender> Genders => Set<InstitutionalDiwan.Domain.Entities.Persons.Gender>();
+    public DbSet<InstitutionalDiwan.Domain.Entities.Persons.Nationality> Nationalities => Set<InstitutionalDiwan.Domain.Entities.Persons.Nationality>();
+
     // Module 04: Official Numbering
     public DbSet<DocumentNumber> DocumentNumbers => Set<DocumentNumber>();
     public DbSet<NumberingRegistry> NumberingRegistries => Set<NumberingRegistry>();

@@ -1029,6 +1029,46 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                     b.ToTable("DOCUMENT_PARTICIPANTS", (string)null);
                 });
 
+            modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Correspondence.DocumentPerson", b =>
+                {
+                    b.Property<Guid>("DocumentPersonId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("DocumentPersonId");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2(3)")
+                        .HasColumnName("CreatedAt");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("CreatedByUserId");
+
+                    b.Property<Guid>("DocumentId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("DocumentId");
+
+                    b.Property<Guid>("PersonId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("PersonId");
+
+                    b.Property<int>("RoleId")
+                        .HasColumnType("int")
+                        .HasColumnName("RoleId");
+
+                    b.HasKey("DocumentPersonId");
+
+                    b.HasIndex("RoleId");
+
+                    b.HasIndex("DocumentId", "PersonId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_DOCUMENT_PERSONS_DOC_PERSON");
+
+                    b.HasIndex("PersonId", "DocumentId")
+                        .HasDatabaseName("IX_DOCUMENT_PERSONS_PERSON_DOC");
+
+                    b.ToTable("DOCUMENT_PERSONS", (string)null);
+                });
+
             modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Correspondence.DocumentPriorityLevel", b =>
                 {
                     b.Property<int>("Id")
@@ -3352,6 +3392,233 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                     b.ToTable("NUMBERING_MODES", (string)null);
                 });
 
+            modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Persons.DocumentPersonRole", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("int")
+                        .HasColumnName("Id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2(3)")
+                        .HasColumnName("CreatedAt");
+
+                    b.Property<string>("Desc")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)")
+                        .HasColumnName("Desc");
+
+                    b.Property<string>("DescAr")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)")
+                        .HasColumnName("DescAr");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit")
+                        .HasColumnName("IsActive");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("DOCUMENT_PERSON_ROLES", (string)null);
+                });
+
+            modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Persons.Gender", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("int")
+                        .HasColumnName("Id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2(3)")
+                        .HasColumnName("CreatedAt");
+
+                    b.Property<string>("Desc")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)")
+                        .HasColumnName("Desc");
+
+                    b.Property<string>("DescAr")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)")
+                        .HasColumnName("DescAr");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit")
+                        .HasColumnName("IsActive");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("GENDERS", (string)null);
+                });
+
+            modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Persons.Nationality", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("int")
+                        .HasColumnName("Id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2(3)")
+                        .HasColumnName("CreatedAt");
+
+                    b.Property<string>("Desc")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)")
+                        .HasColumnName("Desc");
+
+                    b.Property<string>("DescAr")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)")
+                        .HasColumnName("DescAr");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit")
+                        .HasColumnName("IsActive");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("NATIONALITIES", (string)null);
+                });
+
+            modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Persons.Person", b =>
+                {
+                    b.Property<Guid>("PersonId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("PersonId");
+
+                    b.Property<string>("Address")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)")
+                        .HasColumnName("Address");
+
+                    b.Property<DateOnly?>("BirthDate")
+                        .HasColumnType("date")
+                        .HasColumnName("BirthDate");
+
+                    b.Property<string>("BirthPlace")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)")
+                        .HasColumnName("BirthPlace");
+
+                    b.Property<string>("CivilRegistryNumber")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasColumnName("CivilRegistryNumber");
+
+                    b.Property<string>("CivilRegistryPlace")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)")
+                        .HasColumnName("CivilRegistryPlace");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2(3)")
+                        .HasColumnName("CreatedAt");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("CreatedByUserId");
+
+                    b.Property<string>("DisplayName")
+                        .IsRequired()
+                        .HasMaxLength(320)
+                        .HasColumnType("nvarchar(320)")
+                        .HasColumnName("DisplayName");
+
+                    b.Property<string>("FatherName")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("FatherName");
+
+                    b.Property<string>("FirstName")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("FirstName");
+
+                    b.Property<string>("FullName")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)")
+                        .HasColumnName("FullName");
+
+                    b.Property<int?>("GenderId")
+                        .HasColumnType("int")
+                        .HasColumnName("GenderId");
+
+                    b.Property<string>("LastName")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("LastName");
+
+                    b.Property<string>("MotherName")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("MotherName");
+
+                    b.Property<string>("NationalNumber")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasColumnName("NationalNumber");
+
+                    b.Property<int?>("NationalityId")
+                        .HasColumnType("int")
+                        .HasColumnName("NationalityId");
+
+                    b.Property<string>("NormalizedName")
+                        .IsRequired()
+                        .HasMaxLength(320)
+                        .HasColumnType("nvarchar(320)")
+                        .HasColumnName("NormalizedName");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)")
+                        .HasColumnName("Notes");
+
+                    b.Property<string>("Phone")
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)")
+                        .HasColumnName("Phone");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion")
+                        .HasColumnName("RowVersion");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2(3)")
+                        .HasColumnName("UpdatedAt");
+
+                    b.HasKey("PersonId");
+
+                    b.HasIndex("GenderId");
+
+                    b.HasIndex("NationalNumber")
+                        .IsUnique()
+                        .HasDatabaseName("UX_PERSONS_NATIONAL_NUMBER")
+                        .HasFilter("[NationalNumber] IS NOT NULL");
+
+                    b.HasIndex("NationalityId");
+
+                    b.HasIndex("NormalizedName")
+                        .HasDatabaseName("IX_PERSONS_NORMALIZED_NAME");
+
+                    b.ToTable("PERSONS", (string)null);
+                });
+
             modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Relations.DocumentRelation", b =>
                 {
                     b.Property<Guid>("RelationId")
@@ -3709,6 +3976,27 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Correspondence.DocumentPerson", b =>
+                {
+                    b.HasOne("InstitutionalDiwan.Domain.Entities.Correspondence.Document", null)
+                        .WithMany("Persons")
+                        .HasForeignKey("DocumentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("InstitutionalDiwan.Domain.Entities.Persons.Person", null)
+                        .WithMany()
+                        .HasForeignKey("PersonId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("InstitutionalDiwan.Domain.Entities.Persons.DocumentPersonRole", null)
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Correspondence.DocumentStatusHistory", b =>
                 {
                     b.HasOne("InstitutionalDiwan.Domain.Entities.Correspondence.Document", null)
@@ -4055,6 +4343,19 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict);
                 });
 
+            modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Persons.Person", b =>
+                {
+                    b.HasOne("InstitutionalDiwan.Domain.Entities.Persons.Gender", null)
+                        .WithMany()
+                        .HasForeignKey("GenderId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("InstitutionalDiwan.Domain.Entities.Persons.Nationality", null)
+                        .WithMany()
+                        .HasForeignKey("NationalityId")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
             modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Relations.DocumentRelation", b =>
                 {
                     b.HasOne("InstitutionalDiwan.Domain.Entities.Identity.User", null)
@@ -4127,6 +4428,8 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                     b.Navigation("Numbers");
 
                     b.Navigation("Participants");
+
+                    b.Navigation("Persons");
 
                     b.Navigation("StatusHistory");
                 });

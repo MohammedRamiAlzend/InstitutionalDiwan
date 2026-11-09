@@ -42,6 +42,7 @@ error handling, and form/dialog UI.
 | `role-manage/` | roles create/update/activate + grant/revoke permission | `ROLE_MANAGE`; system roles protected; code immutable after creation | ✅ Implemented |
 | `movement-routing/` | `POST /api/movements`; `POST /api/movements/{id}/send\|receive\|complete\|reject\|return\|redirect\|close\|cancel` | `DOCUMENT_EDIT`; draft-only edit fields; opening requires the Central Diwan and a registered document; receive stays blocked until the destination department records a register number (`Numbering.DepartmentRegistrationRequired`); rejection/return require a reason and reroute to the Central Diwan; invalid transitions surface `Movements.InvalidStatusTransition` | ✅ Implemented (Phase 6) |
 | `external-organization-manage/` | `POST /api/external-organizations`, `PUT /{id}`, `DELETE /{id}` (deactivate), `POST /{id}/activate` | `DOCUMENT_EDIT`; code immutable after creation; `Correspondence.ExternalOrgCodeAlreadyExists` shown inside the retained dialog; optional text sent as `null`; deactivated rows keep the record but leave the participant picker | ✅ Implemented (Phase 7) |
+| `document-person-manage/` | `POST`/`PUT`/`DELETE /api/documents/{id}/persons`: add, re-role, remove people on a document. | | |
 | `attachment-upload/` | Module 06 `POST /api/documents/{id}/files`, `POST /api/document-files/{id}/versions`, `POST /api/document-files/{id}/archive` | Magic bytes + SHA-256; MANAGE access; show checksum after upload | ✅ Upload + versions + archive + verify (Module 06 Phases 3–4) |
 | `system-error-manage/` | `PUT /api/system-errors/{id}`, `POST /api/system-errors/purge` — status and notes, manual purge. | — | — |
 | `audit-manage/` | `POST /api/audit-logs/checkpoints`, `POST .../integrity-checks` | `AUDIT_MANAGE`; integrity failure is **200 + `isValid: false`** rendered in-dialog; empty checkpoint range → Arabic `Audit.NothingToCheckpoint` / `Audit.ChainBroken` | ✅ Implemented (Module 09) |
@@ -91,6 +92,7 @@ error handling, and form/dialog UI.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-09 | Claude | Added `document-person-manage/`. |
 | 2026-11-08 | Claude | Added `system-error-manage/`. |
 | 2026-11-04 | Claude | Module 01 lookups administration (plan `plans/module-01-lookups-frontend.md`): implemented `lookup-manage`. |
 | 2026-11-04 | Claude | Module 10 notifications front end (plan `plans/module-10-notifications-frontend.md`): implemented `notification-manage` and `notification-live`. |

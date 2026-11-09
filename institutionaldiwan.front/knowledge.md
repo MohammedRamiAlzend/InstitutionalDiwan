@@ -127,8 +127,12 @@ source of truth: `src/shared/config/permissions.ts`.
 | `AUDIT_VIEW` | Search audit log + list integrity reports |
 | `AUDIT_MANAGE` | Create checkpoints + run integrity checks |
 | `SYSTEM_ERRORS_VIEW` | The developer's error log: browse, export, set status and notes, purge |
+| `PERSON_VIEW` | The persons screens; documents shown stay limited to what the caller may view |
+| `PERSON_MANAGE` | Update a person's recorded details |
 
 ## Live Backend Endpoints (external `InstitutionalDiwan.Server`)
+
+**Persons** (`PERSON_VIEW`, limited to documents the caller may view): `GET /api/persons` (paged; `search`, `sortBy`: `name`, `documentCount`, `lastActivity`), `GET /api/persons/{id}`, `GET /api/persons/{id}/documents` (`roleId`, `statusId`, `search`, `sortBy`: `title`, `status`, `linkedAt`), `GET /api/persons/{id}/timeline`. `PUT /api/persons/{id}` needs `PERSON_MANAGE`. `GET /api/persons/suggestions?q=` needs `DOCUMENT_CREATE` or `DOCUMENT_EDIT`, searches everyone, and returns only name, birth year, last four national-number digits and date added. Per document: `GET /api/documents/{id}/persons` (`DOCUMENT_VIEW`), `POST`, `PUT /{documentPersonId}`, `DELETE /{documentPersonId}` (`DOCUMENT_EDIT`; 409 when archived or canceled). `POST /api/documents` and `/drafts` accept `persons: [{ personId? | fullName?, roleId? }]`.
 
 **System errors** (`SYSTEM_ERRORS_VIEW`): `GET /api/system-errors` (paged; `search`, `sortBy` lastSeenAt/firstSeenAt/occurrenceCount/title/status, `status`, `source`, `kind`, `lastSeenFromUtc`, `lastSeenToUtc`), `GET /api/system-errors/export` (same filters, `.xlsx`, 10000 rows), `GET`/`PUT /api/system-errors/{id}` (`status` 1 new, 2 in progress, 3 resolved; `notes`), `POST /api/system-errors/purge` (`olderThanDays` 1-3650, returns the count). `POST /api/system-errors/client-reports` is open to any signed-in user (`kind` 3 render, 4 script, 5 network).
 
@@ -503,7 +507,7 @@ create-form selects; an inactive entry cannot be default → `409 Lookup.Default
 `file-storage-providers`, `movement-event-types`, `movement-step-statuses`, `movement-statuses`,
 `movement-types`, `notification-channels`, `notification-outbox-statuses`,
 `notification-priorities`, `notification-types`, `numbering-modes`, `numbering-reset-policies`,
-`organization-types`, `participant-roles`, `participant-target-types`, `relation-action-types`,
+`organization-types`, `document-person-roles`, `genders`, `nationalities`, `participant-roles`, `participant-target-types`, `relation-action-types`,
 `storage-provider-types`, `user-scope-types`.
 
 ## Error Shape (RFC 7807)

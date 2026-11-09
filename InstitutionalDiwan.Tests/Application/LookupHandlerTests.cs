@@ -56,9 +56,10 @@ public sealed class LookupHandlerTests
             "audit-action-types", "audit-entity-types",
             "notification-types", "notification-priorities", "notification-channels",
             "notification-outbox-statuses",
+            "document-person-roles", "genders", "nationalities",
         };
 
-        Assert.Equal(34, slugs.Length);
+        Assert.Equal(37, slugs.Length);
         Assert.All(slugs, slug => Assert.True(repository.IsSupported(slug), $"'{slug}' should be a supported catalog."));
         Assert.False(repository.IsSupported("not-a-catalog"));
     }

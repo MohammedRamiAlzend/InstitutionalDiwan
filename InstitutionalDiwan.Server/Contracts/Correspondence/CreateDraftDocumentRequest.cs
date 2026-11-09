@@ -14,4 +14,5 @@ public sealed record CreateDraftDocumentRequest(
     DateTime? DocumentDate = null,
     string? ExternalReferenceNumber = null,
     DateTime? ExternalDocumentDate = null,
-    IReadOnlyList<DocumentFieldValueRequest>? FieldValues = null);
+    IReadOnlyList<DocumentFieldValueRequest>? FieldValues = null,
+    IReadOnlyList<InstitutionalDiwan.Server.Contracts.Persons.DocumentPersonRequest>? Persons = null);

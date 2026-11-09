@@ -43,10 +43,12 @@ import { DocumentMovementsTab } from './DocumentMovementsTab'
 import { DocumentNumbersTab } from './DocumentNumbersTab'
 import { DocumentOverviewTab } from './DocumentOverviewTab'
 import { DocumentParticipantsTab } from './DocumentParticipantsTab'
+import { DocumentPersonsTab } from './DocumentPersonsTab'
 
 const TABS = [
   { key: 'details', label: 'التفاصيل', available: true },
   { key: 'participants', label: 'المشاركون', available: true },
+  { key: 'persons', label: 'الأشخاص المرتبطون', available: true },
   { key: 'numbers', label: 'الأرقام', available: true },
   { key: 'movements', label: 'الحركات', available: true },
   { key: 'files', label: 'الملفات', available: true },
@@ -60,6 +62,7 @@ type TabKey = (typeof TABS)[number]['key']
 type AvailableTabKey =
   | 'details'
   | 'participants'
+  | 'persons'
   | 'numbers'
   | 'movements'
   | 'files'
@@ -75,6 +78,7 @@ function resolveTab(
   canViewNumbering: boolean,
 ): AvailableTabKey {
   if (raw === 'participants') return 'participants'
+  if (raw === 'persons') return 'persons'
   if (raw === 'numbers' && canViewNumbering) return 'numbers'
   if (raw === 'movements') return 'movements'
   if (raw === 'files') return 'files'
@@ -343,6 +347,21 @@ function DocumentDetailsView() {
           canAdd={canManageParticipants}
           onAdd={() => setParticipantOpen(true)}
         />
+        </GuideRegion>
+      )}
+      {activeTab === 'persons' && (
+        <GuideRegion id="document-details.tab-persons">
+          <DocumentPersonsTab
+            documentId={document.documentId}
+            canManage={canManageParticipants}
+            frozenReason={
+              canEdit && (isCanceled || isArchived)
+                ? isArchived
+                  ? 'الوثيقة مؤرشفة؛ ألغِ أرشفتها لتعديل الأشخاص.'
+                  : 'الوثيقة ملغاة؛ لا يمكن تعديل الأشخاص.'
+                : undefined
+            }
+          />
         </GuideRegion>
       )}
       {activeTab === 'numbers' && canViewNumbering && (

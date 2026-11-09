@@ -4,6 +4,7 @@ import {
   type DocumentParticipantResponse,
   type DocumentResponse,
 } from '@/entities/document'
+import { personKeys } from '@/entities/person'
 import { httpClient } from '@/shared/api'
 import type {
   CreateDocumentRecipientRequest,
@@ -22,6 +23,7 @@ export function useCreateDocumentMutation() {
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: documentKeys.lists() })
+      void queryClient.invalidateQueries({ queryKey: personKeys.all })
     },
   })
 }
@@ -37,6 +39,7 @@ export function useCreateDraftDocumentMutation() {
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: documentKeys.lists() })
+      void queryClient.invalidateQueries({ queryKey: personKeys.all })
     },
   })
 }

@@ -2,6 +2,7 @@ import type { LucideIcon } from 'lucide-react'
 import {
   Archive,
   Bug,
+  Contact,
   Building2,
   FileText,
   Hash,
@@ -74,6 +75,14 @@ export const SHELL_NAV_GROUPS: readonly ShellNavGroup[] = [
         to: ROUTES.MOVEMENTS,
         icon: Inbox,
         permission: Permissions.DocumentView,
+        available: true,
+      },
+      {
+        id: 'persons',
+        label: 'الأشخاص',
+        to: ROUTES.PERSONS,
+        icon: Contact,
+        permission: Permissions.PersonView,
         available: true,
       },
       {

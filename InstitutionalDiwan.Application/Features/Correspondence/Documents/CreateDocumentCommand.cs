@@ -1,4 +1,5 @@
 using InstitutionalDiwan.Application.Abstractions.Messaging;
+using InstitutionalDiwan.Application.Features.Persons;
 using InstitutionalDiwan.Domain.Entities.Movements;
 using InstitutionalDiwan.Domain.ValueObjects;
 
@@ -31,7 +32,8 @@ public sealed record CreateDocumentCommand(
     int? PriorityLevelId = null,
     IReadOnlyList<DocumentFieldValueInput>? FieldValues = null,
     CreateDocumentMovementInput? Movement = null,
-    Guid? DepartmentRegistryId = null) : ICommand<DocumentResponse>;
+    Guid? DepartmentRegistryId = null,
+    IReadOnlyList<DocumentPersonInput>? Persons = null) : ICommand<DocumentResponse>;
 
 /// <summary>Where the new document is sent as soon as it is created.</summary>
 public sealed record CreateDocumentMovementInput(
