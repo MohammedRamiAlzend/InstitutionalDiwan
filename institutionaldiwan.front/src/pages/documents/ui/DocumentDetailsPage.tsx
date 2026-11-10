@@ -8,9 +8,9 @@ import {
   useDocumentDetails,
   useDocumentTimeline,
 } from '@/entities/document'
-import { useDocumentFields } from '@/entities/document-schema'
+import { useDepartmentRecords, useDocumentFields } from '@/entities/document-schema'
 import { DOCUMENT_STATUS } from '@/entities/lookup'
-import { useSessionStore } from '@/entities/user'
+import { useCoversDepartment, useSessionStore } from '@/entities/user'
 import {
   ArchiveDocumentDialog,
   UnarchiveDocumentDialog,
@@ -33,6 +33,7 @@ import {
   PageHeader,
   Skeleton,
 } from '@/shared/ui'
+import { DepartmentRecordsPanel } from '@/widgets/department-records-panel'
 import { DocumentFieldsPanel } from '@/widgets/document-fields-panel'
 import { DocumentPrintSheet } from '@/widgets/document-print-sheet'
 import { DocumentRelationsPanel } from '@/widgets/document-relations-panel'
@@ -54,6 +55,7 @@ const TABS = [
   { key: 'files', label: 'الملفات', available: true },
   { key: 'grants', label: 'التصاريح', available: true },
   { key: 'fields', label: 'الحقول', available: true },
+  { key: 'department-records', label: 'سجل الديوان', available: true },
   { key: 'relations', label: 'الروابط', available: true },
   { key: 'archive', label: 'سجل الأرشفة', available: true },
 ] as const
@@ -68,6 +70,7 @@ type AvailableTabKey =
   | 'files'
   | 'grants'
   | 'fields'
+  | 'department-records'
   | 'relations'
   | 'archive'
 
@@ -84,6 +87,7 @@ function resolveTab(
   if (raw === 'files') return 'files'
   if (raw === 'grants' && canManageGrants) return 'grants'
   if (raw === 'fields') return 'fields'
+  if (raw === 'department-records') return 'department-records'
   if (raw === 'relations') return 'relations'
   if (raw === 'archive') return 'archive'
   return 'details'
@@ -125,6 +129,10 @@ function DocumentDetailsView() {
   const fieldsQuery = useDocumentFields(documentId)
   const hasDynamicFields = Boolean(fieldsQuery.data?.schemaVersionId)
   const departmentsQuery = useDepartmentOptions()
+  // The tab shows only when the server returned a department record the caller may read.
+  const departmentRecordsQuery = useDepartmentRecords(documentId)
+  const hasDepartmentRecords = (departmentRecordsQuery.data?.records.length ?? 0) > 0
+  const coversDepartment = useCoversDepartment()
 
   const [registerOpen, setRegisterOpen] = useState(false)
   const [participantOpen, setParticipantOpen] = useState(false)
@@ -198,9 +206,12 @@ function DocumentDetailsView() {
   const isArchived = document.statusId === DOCUMENT_STATUS.Archived
   // An archived document rejects participant, attachment and number writes until unarchived.
   const canManageParticipants = canEdit && !isCanceled && !isArchived
-  const canArchiveNow = canArchive && document.statusId === DOCUMENT_STATUS.Registered
-  const canUnarchive = canArchive && isArchived
-  const canCancel = canEdit && !isCanceled && !isArchived
+  // Closing a document belongs to the department that created it; the server enforces the same rule.
+  const isOwningDepartment = coversDepartment(document.owningDepartmentId)
+  const canArchiveNow =
+    canArchive && isOwningDepartment && document.statusId === DOCUMENT_STATUS.Registered
+  const canUnarchive = canArchive && isOwningDepartment && isArchived
+  const canCancel = canEdit && isOwningDepartment && !isCanceled && !isArchived
 
   const setTab = (tab: TabKey) => {
     setSearchParams({ tab })
@@ -295,7 +306,8 @@ function DocumentDetailsView() {
             (tab.key !== 'participants' || FEATURES.participants) &&
             (tab.key !== 'grants' || canManageGrants) &&
             (tab.key !== 'numbers' || canViewNumbering) &&
-            (tab.key !== 'fields' || hasDynamicFields),
+            (tab.key !== 'fields' || hasDynamicFields) &&
+            (tab.key !== 'department-records' || hasDepartmentRecords),
         ).map((tab) => {
           const isActive = activeTab === tab.key
 
@@ -408,6 +420,11 @@ function DocumentDetailsView() {
                 : undefined
             }
           />
+        </GuideRegion>
+      )}
+      {activeTab === 'department-records' && (
+        <GuideRegion id="document-details.tab-department-records">
+          <DepartmentRecordsPanel documentId={document.documentId} />
         </GuideRegion>
       )}
       {activeTab === 'relations' && (

@@ -129,6 +129,8 @@ source of truth: `src/shared/config/permissions.ts`.
 | `SYSTEM_ERRORS_VIEW` | The developer's error log: browse, export, set status and notes, purge |
 | `PERSON_VIEW` | The persons screens; documents shown stay limited to what the caller may view |
 | `PERSON_MANAGE` | Update a person's recorded details |
+| `DEPARTMENT_RECORD_VIEW_ALL` | Read other departments' records on a document (seeded for admin) |
+| `DEPARTMENT_RECORD_CORRECT` | Correct a locked department record with a reason (seeded for admin) |
 
 ## Live Backend Endpoints (external `InstitutionalDiwan.Server`)
 
@@ -137,6 +139,10 @@ source of truth: `src/shared/config/permissions.ts`.
 **Persons** (`PERSON_VIEW`, limited to documents the caller may view): `GET /api/persons` (paged; `search`, `sortBy`: `name`, `documentCount`, `lastActivity`), `GET /api/persons/{id}`, `GET /api/persons/{id}/documents` (`roleId`, `statusId`, `search`, `sortBy`: `title`, `status`, `linkedAt`), `GET /api/persons/{id}/timeline`. `PUT /api/persons/{id}` needs `PERSON_MANAGE`. `GET /api/persons/suggestions?q=` needs `DOCUMENT_CREATE` or `DOCUMENT_EDIT`, searches everyone, and returns only name, birth year, last four national-number digits and date added. Per document: `GET /api/documents/{id}/persons` (`DOCUMENT_VIEW`), `POST`, `PUT /{documentPersonId}`, `DELETE /{documentPersonId}` (`DOCUMENT_EDIT`; 409 when archived or canceled). `POST /api/documents` and `/drafts` accept `persons: [{ personId? | fullName?, roleId? }]`.
 
 **Document names:** `title` in document responses is written by the system (type and owning department register number, or type and creation date for a draft). The interface neither asks for nor shows a title or summary; `title` and `subjectSummary` stay optional on create. Documents have no document date or external reference; define those as dynamic fields when needed.
+
+**Department records** (each department's record on its visits of a document; plan `plans/department-records.md`): when a department has a published record form for the document type (`GET /api/document-types/{id}/schema?departmentId=`, `DOCUMENT_VIEW`), `POST /api/movements/{id}/receive` (and the `steps/{stepId}/receive` alias) accepts `fieldValues: [{ fieldKey, value }]` and opens the record on the visit; a missing required field fails the whole receipt (400 `DocumentFields.ValueRequired`). `GET /api/documents/{id}/department-records` (`DOCUMENT_VIEW`) returns each register line with its visits (`isLocked`, `versionNumber`, `canEdit`, `canCorrect`, `fields[{ field, value }]`), only for departments in the caller's scope or with `DEPARTMENT_RECORD_VIEW_ALL` + VIEW access. `PUT /api/registry-visits/{visitId}/fields` (`DOCUMENT_EDIT`, own department, open record) replaces the values; `PUT /api/registry-visits/{visitId}/fields/correct` (`DEPARTMENT_RECORD_CORRECT`) corrects a locked one with `{ values, reason }`. A record locks when the document leaves the department (send, redirect, reject, return), when another department receives it, and on archive or cancel. A return to sender gives the sender a new visit. Errors: `DepartmentRecords.VisitLocked`, `VisitNotLocked`, `NotOwnerDepartment`, `SchemaNotFound`, `VisitNotFound`, `CorrectionReasonRequired`, `CorrectionReasonTooLong`.
+
+**Closing belongs to the creating department:** archive, unarchive and cancel answer 403 `Correspondence.OnlyOwningDepartmentCanClose` unless the caller's department scope covers the document's `owningDepartmentId` (institution-wide scope passes). The details page hides those buttons otherwise.
 
 **Register number filter:** `GET /api/documents?registerNumber=` keeps documents with a line in any department register whose number contains the value.
 
@@ -410,6 +416,12 @@ picker in `features/document-manage`. The UI is the `/documents?tab=organization
 dedicated route or sidebar entry.
 
 ### Dynamic document fields — implemented in the SPA (`/document-schemas`, create dialog, «الحقول» tab)
+
+> **Department record forms.** Every schema route above (`fields`, `schema-versions`, `schema`)
+> takes an optional `?departmentId=` (and `POST …/fields` an optional `departmentId` in the body):
+> it selects that department's **record form** for the type instead of the creation form. Versions,
+> drafts and publishing are per form; publishing a department form never retires the creation form.
+> See «Department records» below.
 
 Administrators define extra fields per document type and publish them in immutable schema versions
 (draft → published → retired). A document is pinned to the version published when it was created

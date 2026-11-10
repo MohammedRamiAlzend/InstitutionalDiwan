@@ -2,6 +2,7 @@ using InstitutionalDiwan.Application.Abstractions.Notifications;
 using InstitutionalDiwan.Domain.Entities.Notifications;
 using InstitutionalDiwan.Application.Abstractions.Authorization;
 using InstitutionalDiwan.Application.Abstractions.Messaging;
+using InstitutionalDiwan.Application.Features.DepartmentRecords;
 using InstitutionalDiwan.Domain.Common;
 using InstitutionalDiwan.Domain.Errors;
 using InstitutionalDiwan.Domain.Repositories;
@@ -16,14 +17,17 @@ internal sealed class SendMovementCommandHandler
     private readonly IDepartmentScopeEvaluator _departmentScopeEvaluator;
     private readonly IUnitOfWork _unitOfWork;
     private readonly INotificationPublisher _notificationPublisher;
+    private readonly DepartmentRecordService _recordService;
 
     public SendMovementCommandHandler(
         IDocumentMovementRepository movementRepository,
         CentralDiwanRouting centralDiwanRouting,
         IDepartmentScopeEvaluator departmentScopeEvaluator,
         IUnitOfWork unitOfWork,
-        INotificationPublisher notificationPublisher)
+        INotificationPublisher notificationPublisher,
+        DepartmentRecordService recordService)
     {
+        _recordService = recordService;
         _movementRepository = movementRepository;
         _centralDiwanRouting = centralDiwanRouting;
         _departmentScopeEvaluator = departmentScopeEvaluator;
@@ -49,9 +53,13 @@ internal sealed class SendMovementCommandHandler
         if (routeResult.IsFailure)
             return Result.Failure<MovementResponse>(routeResult.Error);
 
+        var leaving = movement.Steps.Single(step => step.StepNo == movement.CurrentStepNo).FromDepartmentId;
         var send = movement.Send(request.UserId, request.Notes, _unitOfWork.UtcNow);
         if (send.IsFailure)
             return Result.Failure<MovementResponse>(send.Error);
+
+        // The document leaves the sending department, so its record is locked.
+        await _recordService.LockDepartmentAsync(movement.DocumentId, leaving, _unitOfWork.UtcNow, cancellationToken);
 
         await _notificationPublisher.PublishMovementAsync(NotificationType.MovementSentId, movement, request.UserId, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);

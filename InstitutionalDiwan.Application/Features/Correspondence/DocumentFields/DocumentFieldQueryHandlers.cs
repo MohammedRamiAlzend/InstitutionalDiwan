@@ -28,7 +28,7 @@ internal sealed class ListDocumentFieldsQueryHandler
         if (await _documentTypeRepository.GetByIdAsync(request.DocumentTypeId, cancellationToken) is null)
             return Result.Failure<IReadOnlyList<DocumentFieldResponse>>(DomainErrors.Correspondence.DocumentTypeNotFound);
 
-        var fields = await _fieldRepository.ListByDocumentTypeAsync(request.DocumentTypeId, cancellationToken);
+        var fields = await _fieldRepository.ListByDocumentTypeAsync(request.DocumentTypeId, request.DepartmentId, cancellationToken);
         return Result.Success<IReadOnlyList<DocumentFieldResponse>>(
             fields.Select(DocumentFieldResponse.From).ToList());
     }
@@ -55,7 +55,7 @@ internal sealed class ListSchemaVersionsQueryHandler
         if (await _documentTypeRepository.GetByIdAsync(request.DocumentTypeId, cancellationToken) is null)
             return Result.Failure<IReadOnlyList<SchemaVersionSummaryResponse>>(DomainErrors.Correspondence.DocumentTypeNotFound);
 
-        var versions = await _versionRepository.ListByDocumentTypeAsync(request.DocumentTypeId, cancellationToken);
+        var versions = await _versionRepository.ListByDocumentTypeAsync(request.DocumentTypeId, request.DepartmentId, cancellationToken);
         return Result.Success<IReadOnlyList<SchemaVersionSummaryResponse>>(
             versions.Select(SchemaVersionSummaryResponse.From).ToList());
     }
@@ -109,7 +109,7 @@ internal sealed class GetDocumentTypeSchemaQueryHandler
         if (await _documentTypeRepository.GetByIdAsync(request.DocumentTypeId, cancellationToken) is null)
             return Result.Failure<DocumentTypeSchemaResponse>(DomainErrors.Correspondence.DocumentTypeNotFound);
 
-        var published = await _versionRepository.GetPublishedAsync(request.DocumentTypeId, cancellationToken);
+        var published = await _versionRepository.GetPublishedAsync(request.DocumentTypeId, request.DepartmentId, cancellationToken);
         return new DocumentTypeSchemaResponse(
             request.DocumentTypeId,
             published is null

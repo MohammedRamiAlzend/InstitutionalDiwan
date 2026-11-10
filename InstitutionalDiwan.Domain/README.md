@@ -361,6 +361,7 @@ them, while listing, relabelling and (de)activation keep working.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-10 | Claude | Department records: `DocumentField`/`DocumentTypeSchemaVersion.DepartmentId` (record forms per department), `DepartmentRecordValue`, visit record open/edit/lock/correct, `Document.LockOpenRegistryVisits`, same-day arrivals tied to different steps, `RecordReturnVisit`, `DomainErrors.DepartmentRecords`, `Correspondence.OnlyOwningDepartmentCanClose`, permissions `DEPARTMENT_RECORD_VIEW_ALL` and `DEPARTMENT_RECORD_CORRECT` (22 codes). |
 | 2026-11-09 | Claude | Removed `Document.DocumentDate`, `ExternalReferenceNumber` and `ExternalDocumentDate`; anything still needed is a dynamic field. |
 | 2026-11-09 | Claude | `Document.Title` is optional and no longer shown; `Document.DisplayName` (type and owning register number, or type and date) names the document, written by the system. |
 | 2026-11-09 | Claude | Added `Entities/Persons/` (`Person`, `PersonDetails`, `PersonNameNormalizer`, `DocumentPersonRole`, `Gender`, `Nationality`), `Correspondence/DocumentPerson`, `Document.LinkPerson`/`ChangePersonRole`/`UnlinkPerson`, `Repositories/IPersonRepository.cs`, the `Persons` errors and events, and `PERSON_VIEW`/`PERSON_MANAGE` (20 codes). |

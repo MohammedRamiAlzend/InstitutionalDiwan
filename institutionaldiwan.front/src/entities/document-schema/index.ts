@@ -1,4 +1,7 @@
 export type {
+  DepartmentRecordResponse,
+  DepartmentRecordVisitResponse,
+  DocumentDepartmentRecordsResponse,
   DocumentFieldResponse,
   DocumentFieldsResponse,
   DocumentFieldValueResponse,
@@ -32,6 +35,7 @@ export type { FieldFilterOperator, FieldFilterValue } from './model/filters'
 export { FIELD_DATA_TYPE_LABELS, SCHEMA_STATUS_LABELS } from './model/labels'
 export {
   schemaKeys,
+  useDepartmentRecords,
   useDocumentFields,
   useDocumentTypeFields,
   useDocumentTypeSchema,

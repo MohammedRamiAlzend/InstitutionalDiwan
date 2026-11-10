@@ -161,6 +161,7 @@ registries, per-document grants/movements) still returns a plain collection on p
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-10 | Claude | Added the `DepartmentRecords` slice. |
 | 2026-11-09 | Claude | Added `Exports/`: Excel workbook of a displayed table. |
 | 2026-11-09 | Claude | Numbering handlers take the fallback year from `Document.CreatedAt` and no longer depend on `IClock`. |
 | 2026-11-09 | Claude | Added `Persons/`: people named on documents, their suggestions, list, file, documents and merged timeline, and the shared `DocumentPersonLinker`. |

@@ -97,6 +97,7 @@ together with the `DocumentNumber` id it was dated by.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-10 | Claude | Receive accepts `FieldValues` and opens the department record (required fields enforced in the same transaction); send, redirect, reject and return lock the record of the department the document leaves; return gives the sender a new visit. |
 | 2026-11-08 | Claude | Receive accepts `RegistryId` to choose the register for a new number. |
 | 2026-11-08 | Claude | Receive writes the dated register visit itself: it reuses the department number for the date's year or takes a new number, and step responses carry the register number and date. |
 | 2026-11-03 | Claude | Added custody rules to the workflow commands, as the project owner chose: opening requires `DOWNLOAD` on the document; send and cancel require scope over the current step's sender; receive, complete, reject, return and redirect the receiver; close either side. Redirecting a draft belongs to the sender, because it has not left them. |

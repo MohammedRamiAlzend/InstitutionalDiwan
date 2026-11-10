@@ -64,6 +64,59 @@ public sealed class DocumentDynamicFieldsRepositoryTests
             "قرار", DocumentType.DecisionId, DocumentDirection.InternalId, Guid.NewGuid(), Actor,
             schemaVersionId: schemaVersionId).Value;
 
+    private static async Task<Guid> AddDepartmentAsync(DiwanDbContext context, string code)
+    {
+        if (!await context.DepartmentTypes.AnyAsync())
+        {
+            context.DepartmentTypes.Add(InstitutionalDiwan.Domain.Entities.Organization.DepartmentType.Create(
+                InstitutionalDiwan.Domain.Entities.Organization.DepartmentType.SectionId, "Section", "شعبة", 0).Value);
+        }
+
+        var department = InstitutionalDiwan.Domain.Entities.Organization.Department.Create(
+            code, $"ديوان {code}", InstitutionalDiwan.Domain.Entities.Organization.DepartmentType.SectionId).Value;
+        context.Departments.Add(department);
+        await context.SaveChangesAsync();
+        return department.DepartmentId;
+    }
+
+    [Fact]
+    public async Task FieldKeys_AreUniquePerForm_SoADepartmentFormMayReuseACreationKey()
+    {
+        await using var context = await CreateContextAsync();
+        var investigation = await AddDepartmentAsync(context, "INV");
+        var hr = await AddDepartmentAsync(context, "HR");
+
+        context.DocumentFields.Add(Field("case_no", DocumentFieldDataType.Text));
+        context.DocumentFields.Add(DocumentField.Create(DocumentType.DecisionId, "case_no", DocumentFieldDataType.Text, Actor, departmentId: investigation).Value);
+        context.DocumentFields.Add(DocumentField.Create(DocumentType.DecisionId, "case_no", DocumentFieldDataType.Number, Actor, departmentId: hr).Value);
+        await context.SaveChangesAsync();
+
+        var fields = new DocumentFieldRepository(context);
+        Assert.Equal(DocumentFieldDataType.Number, (await fields.GetByKeyAsync(DocumentType.DecisionId, hr, "case_no"))!.DataType);
+        Assert.Null((await fields.GetByKeyAsync(DocumentType.DecisionId, "case_no"))!.DepartmentId);
+
+        context.DocumentFields.Add(DocumentField.Create(DocumentType.DecisionId, "case_no", DocumentFieldDataType.Text, Actor, departmentId: investigation).Value);
+        await Assert.ThrowsAsync<DbUpdateException>(() => context.SaveChangesAsync());
+    }
+
+    [Fact]
+    public async Task Drafts_AreOnePerForm_AndADepartmentDraftDoesNotBlockTheCreationDraft()
+    {
+        await using var context = await CreateContextAsync();
+        var investigation = await AddDepartmentAsync(context, "INV");
+
+        context.DocumentTypeSchemaVersions.Add(DocumentTypeSchemaVersion.CreateDraft(DocumentType.DecisionId, 1, Actor).Value);
+        context.DocumentTypeSchemaVersions.Add(DocumentTypeSchemaVersion.CreateDraft(DocumentType.DecisionId, 1, Actor, departmentId: investigation).Value);
+        await context.SaveChangesAsync();
+
+        var versions = new DocumentTypeSchemaVersionRepository(context);
+        Assert.Null((await versions.GetDraftAsync(DocumentType.DecisionId))!.DepartmentId);
+        Assert.Equal(investigation, (await versions.GetDraftAsync(DocumentType.DecisionId, investigation))!.DepartmentId);
+
+        context.DocumentTypeSchemaVersions.Add(DocumentTypeSchemaVersion.CreateDraft(DocumentType.DecisionId, 2, Actor, departmentId: investigation).Value);
+        await Assert.ThrowsAsync<DbUpdateException>(() => context.SaveChangesAsync());
+    }
+
     [Fact]
     public async Task SchemaVersion_RoundTripsFieldsOptionsAndSettings()
     {

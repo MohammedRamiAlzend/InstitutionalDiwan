@@ -141,10 +141,10 @@ public sealed class CorrespondenceAuditIntegrationTests
         var types = new DocumentTypeRepository(db);
         var userId = fixture.User.UserId;
 
-        var field = await new CreateDocumentFieldCommandHandler(types, fields, db).Handle(
+        var field = await new CreateDocumentFieldCommandHandler(types, fields, new DepartmentRepository(db), db).Handle(
             new CreateDocumentFieldCommand(userId, DocumentType.OutgoingLetterId, "session_no", DocumentFieldDataType.Text),
             CancellationToken.None);
-        var draft = await new CreateSchemaDraftCommandHandler(types, versions, db).Handle(
+        var draft = await new CreateSchemaDraftCommandHandler(types, versions, new DepartmentRepository(db), db).Handle(
             new CreateSchemaDraftCommand(userId, DocumentType.OutgoingLetterId), CancellationToken.None);
         var added = await new AddFieldToDraftCommandHandler(versions, fields, new FakeDocumentFieldOptionResolver(), db).Handle(
             new AddFieldToDraftCommand(draft.Value.SchemaVersionId, field.Value.DocumentFieldId,

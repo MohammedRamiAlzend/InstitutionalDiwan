@@ -51,6 +51,7 @@ every other slice; handlers take the acting `UserId` explicitly.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-10 | Claude | Fields, drafts, versions and the published schema take an optional department: a department record form per document type. Publishing retires only the same form. |
 | 2026-11-08 | Claude | Field settings carry `Behavior`; added `DocumentFieldOptionResolver`; `DocumentSchemaPinning.ApplyValues` passes sourced options and writes read-only values even when no values are submitted. |
 | 2026-11-03 | Claude | `SetDocumentFieldValuesCommandHandler` now requires `DOWNLOAD` access to the document (403 `Correspondence.DocumentAccessDenied`), matching draft metadata edits. |
 | 2026-11-03 | Claude | `GetDocumentFieldsQueryHandler` now requires `VIEW` access to the document, because the values are document content. `SetDocumentFieldValuesCommandHandler` still has no document-level check; it waits for the access levels of the write handlers to be decided. |

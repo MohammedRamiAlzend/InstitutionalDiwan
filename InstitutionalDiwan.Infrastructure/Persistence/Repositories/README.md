@@ -95,6 +95,7 @@ Concrete EF Core implementations of the repository interfaces declared in
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-10 | Claude | Field and schema-version repositories read one form (creation form by default, or a department record form); visits load their record values; `FindDocumentIdByVisitAsync`. |
 | 2026-11-09 | Claude | `DocumentRepository.ListPagedAsync` filters by a number in any department register. |
 | 2026-11-09 | Claude | Document search and the `title` sort use `DisplayName`; search no longer reads the hidden title or summary. |
 | 2026-11-09 | Claude | Added `PersonRepository`; `DocumentRepository.GetByIdAsync` includes `Persons`; `LookupCatalog` gained `document-person-roles`, `genders`, `nationalities`. |

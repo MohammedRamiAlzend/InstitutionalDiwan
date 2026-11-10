@@ -1,5 +1,6 @@
 import { httpClient } from '@/shared/api'
 import type {
+  DocumentDepartmentRecordsResponse,
   DocumentFieldResponse,
   DocumentFieldsResponse,
   DocumentTypeSchemaResponse,
@@ -38,19 +39,29 @@ function versionWithBehavior(version: SchemaVersionResponse): SchemaVersionRespo
   return { ...version, fields: version.fields.map(withBehavior) }
 }
 
+/** Query string of a form: nothing for the creation form, `departmentId` for a department record form. */
+export function formParams(departmentId?: string | null): { departmentId?: string } {
+  return departmentId ? { departmentId } : {}
+}
+
 export const schemaApi = {
-  /** `GET /api/document-types/{id}/fields` — `LOOKUP_MANAGE`. */
-  async fields(documentTypeId: number): Promise<DocumentFieldResponse[]> {
+  /** `GET /api/document-types/{id}/fields?departmentId=` — one form's fields (`LOOKUP_MANAGE`). */
+  async fields(documentTypeId: number, departmentId?: string | null): Promise<DocumentFieldResponse[]> {
     const { data } = await httpClient.get<DocumentFieldResponse[]>(
       `/document-types/${documentTypeId}/fields`,
+      { params: formParams(departmentId) },
     )
     return data
   },
 
-  /** `GET /api/document-types/{id}/schema-versions` — history, newest first (`LOOKUP_MANAGE`). */
-  async versions(documentTypeId: number): Promise<SchemaVersionSummaryResponse[]> {
+  /** `GET /api/document-types/{id}/schema-versions?departmentId=` — one form's history, newest first (`LOOKUP_MANAGE`). */
+  async versions(
+    documentTypeId: number,
+    departmentId?: string | null,
+  ): Promise<SchemaVersionSummaryResponse[]> {
     const { data } = await httpClient.get<SchemaVersionSummaryResponse[]>(
       `/document-types/${documentTypeId}/schema-versions`,
+      { params: formParams(departmentId) },
     )
     return data
   },
@@ -63,12 +74,39 @@ export const schemaApi = {
     return versionWithBehavior(data)
   },
 
-  /** `GET /api/document-types/{id}/schema` — the published schema; `schema` is null when none (`DOCUMENT_VIEW`). */
-  async typeSchema(documentTypeId: number): Promise<DocumentTypeSchemaResponse> {
+  /**
+   * `GET /api/document-types/{id}/schema?departmentId=` — a form's published schema (the creation
+   * form, or a department's record form); `schema` is null when none (`DOCUMENT_VIEW`).
+   */
+  async typeSchema(
+    documentTypeId: number,
+    departmentId?: string | null,
+  ): Promise<DocumentTypeSchemaResponse> {
     const { data } = await httpClient.get<DocumentTypeSchemaResponse>(
       `/document-types/${documentTypeId}/schema`,
+      { params: formParams(departmentId) },
     )
     return { ...data, schema: data.schema && versionWithBehavior(data.schema) }
+  },
+
+  /**
+   * `GET /api/documents/{id}/department-records` — each department's register line with the record
+   * of every visit, filtered by the server to what the caller may read (`DOCUMENT_VIEW`).
+   */
+  async departmentRecords(documentId: string): Promise<DocumentDepartmentRecordsResponse> {
+    const { data } = await httpClient.get<DocumentDepartmentRecordsResponse>(
+      `/documents/${documentId}/department-records`,
+    )
+    return {
+      ...data,
+      records: data.records.map((record) => ({
+        ...record,
+        visits: record.visits.map((visit) => ({
+          ...visit,
+          fields: visit.fields.map((entry) => ({ ...entry, field: withBehavior(entry.field) })),
+        })),
+      })),
+    }
   },
 
   /** `GET /api/documents/{id}/fields` — the pinned schema with stored values (`DOCUMENT_VIEW` + VIEW access). */

@@ -30,6 +30,7 @@ internal sealed class DocumentRepository : IDocumentRepository
                 .ThenInclude(number => number.History)
             .Include(document => document.Numbers)
                 .ThenInclude(number => number.Visits)
+                    .ThenInclude(visit => visit.Values)
             .AsSplitQuery()
             .FirstOrDefaultAsync(document => document.DocumentId == documentId, cancellationToken);
 

@@ -156,6 +156,12 @@ export const DOCUMENT_DETAILS_GUIDE_ENTRIES: readonly GuideEntry[] = [
     note: 'تُعدَّل القيم في المسودة فقط وبصلاحية تعديل الوثيقة، وتُقفل عند التسجيل الرسمي.',
   },
   {
+    id: 'document-details.tab-department-records',
+    title: 'سجل الديوان',
+    body: 'ما سجّله كل ديوان عن هذه الوثيقة في كل زيارة لها، بنموذجه الخاص لهذا النوع. تُفتح الزيارة عند الاستلام وتبقى قابلة للتعديل ما دامت الوثيقة لدى الديوان.',
+    note: 'يُقفل السجل لحظة خروج الوثيقة من الديوان، ولا يصحّحه بعدها إلا مدير النظام مع ذكر السبب. لا ترى إلا سجل ديوانك ما لم تُمنح صلاحية الاطلاع على كل السجلات.',
+  },
+  {
     id: 'document-details.tab-relations',
     title: 'روابط الوثيقة',
     body: 'الوثائق المرتبطة بهذه الوثيقة: ردود وروابط مرجعية ووثائق تلغيها أو نسخ عنها. يمكنك استعراضها في جدول أو مخطط أو شجرة، ورؤية سجل كل ما أُضيف وأُزيل.',
@@ -222,6 +228,7 @@ export const DOCUMENT_DETAILS_GUIDE: PageGuide = {
     'document-details.tab-grants',
     'document-details.tab-archive',
     'document-details.tab-fields',
+    'document-details.tab-department-records',
     'document-details.tab-relations',
     'document-details.relations-grid',
     'document-details.relations-types',

@@ -2,6 +2,7 @@ using InstitutionalDiwan.Application.Abstractions.Notifications;
 using InstitutionalDiwan.Domain.Entities.Notifications;
 using InstitutionalDiwan.Application.Abstractions.Authorization;
 using InstitutionalDiwan.Application.Abstractions.Messaging;
+using InstitutionalDiwan.Application.Features.DepartmentRecords;
 using InstitutionalDiwan.Domain.Common;
 using InstitutionalDiwan.Domain.Entities.Movements;
 using InstitutionalDiwan.Domain.Errors;
@@ -19,6 +20,7 @@ internal sealed class RedirectMovementCommandHandler
     private readonly IDepartmentScopeEvaluator _departmentScopeEvaluator;
     private readonly IUnitOfWork _unitOfWork;
     private readonly INotificationPublisher _notificationPublisher;
+    private readonly DepartmentRecordService _recordService;
 
     public RedirectMovementCommandHandler(
         IDocumentMovementRepository movementRepository,
@@ -27,8 +29,10 @@ internal sealed class RedirectMovementCommandHandler
         CentralDiwanRouting centralDiwanRouting,
         IDepartmentScopeEvaluator departmentScopeEvaluator,
         IUnitOfWork unitOfWork,
-        INotificationPublisher notificationPublisher)
+        INotificationPublisher notificationPublisher,
+        DepartmentRecordService recordService)
     {
+        _recordService = recordService;
         _movementRepository = movementRepository;
         _departmentRepository = departmentRepository;
         _userRepository = userRepository;
@@ -73,6 +77,8 @@ internal sealed class RedirectMovementCommandHandler
                 return Result.Failure<MovementResponse>(DomainErrors.Identity.UserNotFound);
         }
 
+        var leftStep = movement.Steps.Single(step => step.StepNo == movement.CurrentStepNo);
+        var wasDraft = movement.StatusId == DocumentMovement.StatusDraft;
         var redirect = movement.RedirectTo(
             destination.DepartmentId,
             request.UserId,
@@ -82,6 +88,13 @@ internal sealed class RedirectMovementCommandHandler
             _unitOfWork.UtcNow);
         if (redirect.IsFailure)
             return Result.Failure<MovementResponse>(redirect.Error);
+
+        // The document leaves whoever held it: the sender of an unsent movement, otherwise the
+        // department that received the step (a step redirected before receipt has no record).
+        if (wasDraft)
+            await _recordService.LockDepartmentAsync(movement.DocumentId, leftStep.FromDepartmentId, _unitOfWork.UtcNow, cancellationToken);
+        else
+            await _recordService.LockStepVisitAsync(movement.DocumentId, leftStep, _unitOfWork.UtcNow, cancellationToken);
 
         await _notificationPublisher.PublishMovementAsync(NotificationType.MovementRedirectedId, movement, request.UserId, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);

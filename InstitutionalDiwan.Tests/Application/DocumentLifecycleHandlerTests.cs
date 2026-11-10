@@ -62,7 +62,7 @@ public sealed class DocumentLifecycleHandlerTests
             new(Documents, Departments, ExternalOrganizations, Lookups, Access, UnitOfWork);
 
         public CancelDocumentCommandHandler CancelHandler() =>
-            new(Documents, Movements, Access, UnitOfWork);
+            new(Documents, Movements, Access, UnitOfWork, new FakeDepartmentScopeEvaluator { InstitutionWide = true }, FakeDepartmentRecords.Service(Documents));
     }
 
     private static async Task<DocumentResponse> CreateDraftAsync(World world)

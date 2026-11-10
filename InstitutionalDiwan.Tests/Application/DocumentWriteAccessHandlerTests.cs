@@ -66,7 +66,7 @@ public sealed class DocumentWriteAccessHandlerTests
                 CancellationToken.None);
 
         public async Task<Result> CancelAsync(Guid? documentId = null) =>
-            await new CancelDocumentCommandHandler(Documents, Movements, Access, UnitOfWork).Handle(
+            await new CancelDocumentCommandHandler(Documents, Movements, Access, UnitOfWork, new FakeDepartmentScopeEvaluator { InstitutionWide = true }, FakeDepartmentRecords.Service(Documents)).Handle(
                 new CancelDocumentCommand(documentId ?? Document.DocumentId, ActorId, "سبب"),
                 CancellationToken.None);
     }

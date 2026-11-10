@@ -177,9 +177,11 @@ public sealed class DocumentNumber : AggregateRoot<Guid>
     }
 
     /// <summary>
-    /// Records the visit for a receipt. A visit on the same date that the clerk wrote while this step
-    /// was on its way (at or after <paramref name="stepSentAt"/>) and that no receipt has used yet is
-    /// the same arrival, so it is linked to the step instead of being rejected as a duplicate.
+    /// Records the visit for a receipt. A visit on the same date that the clerk wrote by hand while
+    /// this step was on its way (at or after <paramref name="stepSentAt"/>) and that no receipt has
+    /// used yet is the same arrival, so it is linked to the step. Otherwise a new visit is added, even
+    /// on a date the line already has: a document that leaves and comes back on the same day arrives
+    /// twice, each arrival tied to its own movement step.
     /// </summary>
     public Result<DocumentRegistryVisit> RecordReceiptVisit(
         Guid actorUserId,
@@ -193,18 +195,41 @@ public sealed class DocumentNumber : AggregateRoot<Guid>
         if (guard.IsFailure)
             return Result.Failure<DocumentRegistryVisit>(guard.Error);
 
-        var sameDate = FindVisit(registryDate);
-        if (sameDate is null)
-            return Result.Success(AddVisit(actorUserId, registryDate, movementStepId, notes, utcNow ?? DateTime.UtcNow));
-
-        var writtenForThisStep = sameDate.MovementStepId is null
-            && stepSentAt is { } sentAt
-            && sameDate.RecordedAt >= sentAt;
-        if (!writtenForThisStep)
+        if (_visits.Any(visit => visit.MovementStepId == movementStepId))
             return Result.Failure<DocumentRegistryVisit>(DomainErrors.Numbering.VisitDateDuplicate);
 
-        sameDate.LinkToStep(movementStepId);
-        return Result.Success(sameDate);
+        var writtenForThisStep = _visits.FirstOrDefault(visit =>
+            visit.RegistryDate == registryDate.Date
+            && visit.MovementStepId is null
+            && stepSentAt is { } sentAt
+            && visit.RecordedAt >= sentAt);
+        if (writtenForThisStep is null)
+            return Result.Success(AddVisit(actorUserId, registryDate, movementStepId, notes, utcNow ?? DateTime.UtcNow));
+
+        writtenForThisStep.LinkToStep(movementStepId);
+        return Result.Success(writtenForThisStep);
+    }
+
+    /// <summary>
+    /// Records the visit of a document handed back to this department without a receipt (a movement
+    /// returned to its sender). It is tied to the returned step, so it may share a date with an
+    /// earlier arrival.
+    /// </summary>
+    public Result<DocumentRegistryVisit> RecordReturnVisit(
+        Guid actorUserId,
+        DateTime registryDate,
+        Guid movementStepId,
+        string? notes = null,
+        DateTime? utcNow = null)
+    {
+        var guard = EnsureCanAddVisit(registryDate);
+        if (guard.IsFailure)
+            return Result.Failure<DocumentRegistryVisit>(guard.Error);
+
+        if (_visits.Any(visit => visit.MovementStepId == movementStepId))
+            return Result.Failure<DocumentRegistryVisit>(DomainErrors.Numbering.VisitDateDuplicate);
+
+        return Result.Success(AddVisit(actorUserId, registryDate, movementStepId, notes, utcNow ?? DateTime.UtcNow));
     }
 
     private DocumentRegistryVisit? FindVisit(DateTime registryDate) =>

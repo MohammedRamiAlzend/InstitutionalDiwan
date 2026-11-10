@@ -616,6 +616,9 @@ internal sealed class TamperEvidentAuditInterceptor : SaveChangesInterceptor
             _ when type == typeof(DocumentAccessGrant) => ("IDENTITY", AuditEntityType.DocumentId),
             _ when type == typeof(Document) => ("CORRESPONDENCE", AuditEntityType.DocumentId),
             _ when type == typeof(DocumentNumber) => ("NUMBERING", AuditEntityType.DocumentNumberId),
+            // A department's record on a visit: opening, edits, the lock and every correction are audited.
+            _ when type == typeof(DocumentRegistryVisit) => ("NUMBERING", AuditEntityType.DocumentNumberId),
+            _ when type == typeof(DepartmentRecordValue) => ("NUMBERING", AuditEntityType.DocumentNumberId),
             _ when type == typeof(NumberingRegistry) => ("NUMBERING", AuditEntityType.NumberingRegistryId),
             _ when type == typeof(NumberingCounter) => ("NUMBERING", AuditEntityType.NumberingRegistryId),
             _ when type == typeof(DocumentFile) => ("ATTACHMENTS", AuditEntityType.FileId),

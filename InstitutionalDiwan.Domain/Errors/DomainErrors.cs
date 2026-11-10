@@ -155,7 +155,8 @@ public static class DomainErrors
         public static readonly Error ParticipantRoleNotFound = Error.Validation("Correspondence.ParticipantRoleNotFound", "The specified participant role does not exist.");
         public static readonly Error ParticipantDepartmentNotFound = Error.Validation("Correspondence.ParticipantDepartmentNotFound", "The specified internal participant department does not exist.");
         public static readonly Error DocumentHasActiveNumber = Error.Conflict("Correspondence.DocumentHasActiveNumber", "Cancel or replace the existing official number before issuing a new one.");
-        public static readonly Error OnlyRegisteredRoutable = Error.Conflict("Correspondence.OnlyRegisteredRoutable", "Only documents in REGISTERED status can be routed to another department.");
+        public static readonly Error OnlyOwningDepartmentCanClose = Error.Forbidden("Correspondence.OnlyOwningDepartmentCanClose", "Only the department that created the document can archive, unarchive or cancel it.");
+        public static readonly Error OnlyRegisteredRoutable =Error.Conflict("Correspondence.OnlyRegisteredRoutable", "Only documents in REGISTERED status can be routed to another department.");
     }
 
     public static class Numbering
@@ -389,5 +390,17 @@ public static class DomainErrors
         /// <summary>The detail is the administrator-supplied Arabic message of the field's pattern.</summary>
         public static Error ValuePatternMismatch(string messageAr) =>
             Error.Validation("DocumentFields.ValuePatternMismatch", messageAr);
+    }
+
+    /// <summary>The record a department keeps on each visit of a document (its record form values).</summary>
+    public static class DepartmentRecords
+    {
+        public static readonly Error VisitNotFound = Error.NotFound("DepartmentRecords.VisitNotFound", "The register visit was not found.");
+        public static readonly Error VisitLocked = Error.Conflict("DepartmentRecords.VisitLocked", "The document has left the department, so this record is locked; only an administrator can correct it.");
+        public static readonly Error VisitNotLocked = Error.Conflict("DepartmentRecords.VisitNotLocked", "The record is still open; edit it directly instead of correcting it.");
+        public static readonly Error NotOwnerDepartment = Error.Forbidden("DepartmentRecords.NotOwnerDepartment", "Only the department that keeps this record can edit it.");
+        public static readonly Error SchemaNotFound = Error.Conflict("DepartmentRecords.SchemaNotFound", "This visit has no department record form.");
+        public static readonly Error CorrectionReasonRequired = Error.Validation("DepartmentRecords.CorrectionReasonRequired", "A reason is required to correct a locked record.");
+        public static readonly Error CorrectionReasonTooLong = Error.Validation("DepartmentRecords.CorrectionReasonTooLong", "The correction reason cannot exceed 1000 characters.");
     }
 }

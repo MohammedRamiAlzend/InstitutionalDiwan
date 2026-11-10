@@ -41,6 +41,7 @@ error handling, and form/dialog UI.
 | `employee-manage/` | employees create/update/activate/deactivate | `EMPLOYEE_MANAGE`; department must exist and be valid | ✅ Implemented |
 | `role-manage/` | roles create/update/activate + grant/revoke permission | `ROLE_MANAGE`; system roles protected; code immutable after creation | ✅ Implemented |
 | `movement-routing/` | `POST /api/movements`; `POST /api/movements/{id}/send\|receive\|complete\|reject\|return\|redirect\|close\|cancel` | `DOCUMENT_EDIT`; draft-only edit fields; opening requires the Central Diwan and a registered document; receive stays blocked until the destination department records a register number (`Numbering.DepartmentRegistrationRequired`); rejection/return require a reason and reroute to the Central Diwan; invalid transitions surface `Movements.InvalidStatusTransition` | ✅ Implemented (Phase 6) |
+| `department-record-manage/` | `PUT /api/registry-visits/{visitId}/fields`; `PUT /api/registry-visits/{visitId}/fields/correct` | `DOCUMENT_EDIT` (own department, open record); `DEPARTMENT_RECORD_CORRECT` (locked record, reason) | Edits and corrects the record a department keeps on a visit of a document. |
 | `external-organization-manage/` | `POST /api/external-organizations`, `PUT /{id}`, `DELETE /{id}` (deactivate), `POST /{id}/activate` | `DOCUMENT_EDIT`; code immutable after creation; `Correspondence.ExternalOrgCodeAlreadyExists` shown inside the retained dialog; optional text sent as `null`; deactivated rows keep the record but leave the participant picker | ✅ Implemented (Phase 7) |
 | `document-person-manage/` | `POST`/`PUT`/`DELETE /api/documents/{id}/persons`: add, re-role, remove people on a document. | | |
 | `attachment-upload/` | Module 06 `POST /api/documents/{id}/files`, `POST /api/document-files/{id}/versions`, `POST /api/document-files/{id}/archive` | Magic bytes + SHA-256; MANAGE access; show checksum after upload | ✅ Upload + versions + archive + verify (Module 06 Phases 3–4) |
@@ -78,6 +79,7 @@ error handling, and form/dialog UI.
 | `document-access-grant/` | ✅ Implemented (Phase 4: add-grant dialog over the identity-options user picker, revoke confirmation, grant-key invalidation) |
 | `numbering-manage/` | ✅ Implemented (Phase 5: registry create/edit/activate and issue/cancel/replace/department-registration dialogs; Module 04 Phase 2 added the form's live pattern preview and stricter token validation) |
 | `movement-routing/` | ✅ Implemented (Phase 6: open dialog with assignee picker, plus one action dialog covering send, receive, complete, reject, return, redirect, close, and cancel). |
+| `department-record-manage/` | ✅ Implemented (edit form for open records, correction with reason for locked ones) |
 | `external-organization-manage/` | ✅ Implemented (Phase 7: create/edit dialog over the `organization-types` lookup, duplicate-code Arabic error, staged deactivate/activate via `ConfirmDialog`). |
 | `audit-manage/` | ✅ Implemented (Module 09: checkpoint button/dialog with optional target log, integrity-check dialog with optional range and in-place pass/fail panel). |
 | `archive-manage/` | ✅ Implemented (Module 07: archive dialog with location + optional reason, unarchive dialog with mandatory reason, save/rename/delete saved searches). |
@@ -92,6 +94,7 @@ error handling, and form/dialog UI.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-10 | Claude | Added `department-record-manage` (edit and correct department records). |
 | 2026-11-09 | Claude | Added `document-person-manage/`. |
 | 2026-11-08 | Claude | Added `system-error-manage/`. |
 | 2026-11-04 | Claude | Module 01 lookups administration (plan `plans/module-01-lookups-frontend.md`): implemented `lookup-manage`. |

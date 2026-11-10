@@ -17,6 +17,11 @@ public sealed class DocumentField : Entity<Guid>
 
     // FK → DocumentType.Id (InstitutionalDiwan.Domain.Entities.Correspondence.DocumentType)
     public int DocumentTypeId { get; private set; }
+    /// <summary>
+    /// FK → Department.DepartmentId. Null for a field of the creation form; otherwise the field belongs
+    /// to that department's record form for this document type.
+    /// </summary>
+    public Guid? DepartmentId { get; private set; }
     public string Key { get; private set; } = null!;
     public DocumentFieldDataType DataType { get; private set; }
     public Guid CreatedByUserId { get; private set; }
@@ -31,10 +36,14 @@ public sealed class DocumentField : Entity<Guid>
         string? key,
         DocumentFieldDataType dataType,
         Guid createdByUserId,
-        DateTime? utcNow = null)
+        DateTime? utcNow = null,
+        Guid? departmentId = null)
     {
         if (documentTypeId <= 0)
             return Result.Failure<DocumentField>(DomainErrors.DocumentFields.DocumentTypeInvalid);
+
+        if (departmentId == Guid.Empty)
+            return Result.Failure<DocumentField>(DomainErrors.Department.NotFound);
 
         var normalizedKey = key?.Trim();
         if (!IsValidKey(normalizedKey))
@@ -47,6 +56,7 @@ public sealed class DocumentField : Entity<Guid>
         {
             DocumentFieldId = Guid.NewGuid(),
             DocumentTypeId = documentTypeId,
+            DepartmentId = departmentId,
             Key = normalizedKey!,
             DataType = dataType,
             CreatedByUserId = createdByUserId,

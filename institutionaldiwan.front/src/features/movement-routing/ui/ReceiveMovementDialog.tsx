@@ -1,7 +1,17 @@
+import { useMemo, useState } from 'react'
 import { Controller, useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
-import { findDepartmentEntry, useDocumentRegistryNumbers } from '@/entities/document'
+import { findDepartmentEntry, useDocumentById, useDocumentRegistryNumbers } from '@/entities/document'
+import {
+  DynamicFieldInputs,
+  toFieldValueRequests,
+  useDocumentTypeSchema,
+  validateFieldValues,
+  withFieldDefaults,
+  type FieldValueErrors,
+  type FieldValueMap,
+} from '@/entities/document-schema'
 import { useMovementById } from '@/entities/movement'
 import { DepartmentRegistrySelect, useDepartmentRegistryOptions } from '@/entities/numbering-registry'
 import { useSessionStore } from '@/entities/user'
@@ -29,7 +39,8 @@ interface ReceiveMovementDialogProps {
  * Receives a movement and writes the dated visit in the destination department's register. When the
  * department already has a number for the document in the date's year the number is shown locked;
  * otherwise the clerk types it. Callers without NUMBERING_VIEW cannot see the lines, so the number
- * stays optional for them and the server decides.
+ * stays optional for them and the server decides. When the department has a published record form for
+ * the document type, its fields follow ("سجل الديوان") and the required ones must be filled to receive.
  */
 export function ReceiveMovementDialog({
   movementId,
@@ -70,8 +81,25 @@ export function ReceiveMovementDialog({
     (option) => option.value === existingLine?.registryId,
   )?.label
   const linesKnown = canViewNumbering && entriesQuery.isSuccess
+
+  // The destination department's own record form for this document type, when one is published.
+  const documentQuery = useDocumentById(documentId, { enabled: open && Boolean(documentId) })
+  const recordFormQuery = useDocumentTypeSchema(documentQuery.data?.documentTypeId, {
+    enabled: open && Boolean(movementQuery.data),
+    departmentId: movementQuery.data?.destinationDepartmentId,
+  })
+  const recordFields = recordFormQuery.data?.schema?.fields ?? []
+  const [recordValues, setRecordValues] = useState<FieldValueMap>({})
+  const [recordErrors, setRecordErrors] = useState<FieldValueErrors>({})
+  const effectiveRecordValues = useMemo(
+    () => withFieldDefaults(recordFormQuery.data?.schema?.fields ?? [], recordValues),
+    [recordFormQuery.data, recordValues],
+  )
+
   const loading =
     movementQuery.isLoading ||
+    documentQuery.isLoading ||
+    recordFormQuery.isLoading ||
     (canViewNumbering && (entriesQuery.isLoading || registries.isLoading))
 
   const submit = handleSubmit(async (values) => {
@@ -85,6 +113,11 @@ export function ReceiveMovementDialog({
       return
     }
 
+    // Required record fields block the receipt here; the server checks them again.
+    const recordFieldErrors = validateFieldValues(recordFields, effectiveRecordValues)
+    setRecordErrors(recordFieldErrors)
+    if (Object.keys(recordFieldErrors).length > 0) return
+
     try {
       const receipt = await mutation.mutateAsync({
         movementId,
@@ -92,6 +125,9 @@ export function ReceiveMovementDialog({
         registryDate: values.registryDate,
         registryNumberText: existingLine ? null : typedNumber || null,
         registryId: existingLine ? null : values.registryId || null,
+        ...(recordFields.length > 0
+          ? { fieldValues: toFieldValueRequests(recordFields, effectiveRecordValues) }
+          : {}),
       })
       toast.success(
         receipt.isReturnVisit
@@ -234,6 +270,33 @@ export function ReceiveMovementDialog({
             {...register('registryDate')}
           />
         </FormField>
+
+        {recordFields.length > 0 && (
+          <section
+            aria-label="سجل الديوان"
+            className="flex flex-col gap-4 border-t border-border pt-4"
+          >
+            <div>
+              <h3 className="text-sm font-semibold text-foreground">سجل الديوان</h3>
+              <p className="text-xs text-muted">
+                الحقول الإلزامية تُملأ الآن، والباقي يُكمَّل لاحقًا ما دامت الوثيقة لدى الديوان.
+              </p>
+            </div>
+            <DynamicFieldInputs
+              fields={recordFields}
+              values={effectiveRecordValues}
+              errors={recordErrors}
+              disabled={mutation.isPending}
+              onChange={(key, value) => {
+                setRecordValues((current) => ({ ...current, [key]: value }))
+                setRecordErrors((current) => {
+                  if (!(key in current)) return current
+                  return Object.fromEntries(Object.entries(current).filter(([k]) => k !== key))
+                })
+              }}
+            />
+          </section>
+        )}
 
         <FormField label="ملاحظات الاستلام (اختياري)" error={errors.notes?.message}>
           <Textarea

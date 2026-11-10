@@ -11,15 +11,18 @@ internal sealed class CreateSchemaDraftCommandHandler
 {
     private readonly IDocumentTypeRepository _documentTypeRepository;
     private readonly IDocumentTypeSchemaVersionRepository _versionRepository;
+    private readonly IDepartmentRepository _departmentRepository;
     private readonly IUnitOfWork _unitOfWork;
 
     public CreateSchemaDraftCommandHandler(
         IDocumentTypeRepository documentTypeRepository,
         IDocumentTypeSchemaVersionRepository versionRepository,
+        IDepartmentRepository departmentRepository,
         IUnitOfWork unitOfWork)
     {
         _documentTypeRepository = documentTypeRepository;
         _versionRepository = versionRepository;
+        _departmentRepository = departmentRepository;
         _unitOfWork = unitOfWork;
     }
 
@@ -30,16 +33,20 @@ internal sealed class CreateSchemaDraftCommandHandler
         if (await _documentTypeRepository.GetByIdAsync(request.DocumentTypeId, cancellationToken) is null)
             return Result.Failure<SchemaVersionResponse>(DomainErrors.Correspondence.DocumentTypeNotFound);
 
-        if (await _versionRepository.GetDraftAsync(request.DocumentTypeId, cancellationToken) is not null)
+        var departmentId = request.DepartmentId;
+        if (departmentId is { } id && await _departmentRepository.GetByIdAsync(id, cancellationToken) is null)
+            return Result.Failure<SchemaVersionResponse>(DomainErrors.Department.NotFound);
+
+        if (await _versionRepository.GetDraftAsync(request.DocumentTypeId, departmentId, cancellationToken) is not null)
             return Result.Failure<SchemaVersionResponse>(DomainErrors.DocumentFields.SchemaVersionAlreadyHasDraft);
 
         var versionNumber = await _versionRepository.GetLatestVersionNumberAsync(
-            request.DocumentTypeId, cancellationToken) + 1;
-        var published = await _versionRepository.GetPublishedAsync(request.DocumentTypeId, cancellationToken);
+            request.DocumentTypeId, departmentId, cancellationToken) + 1;
+        var published = await _versionRepository.GetPublishedAsync(request.DocumentTypeId, departmentId, cancellationToken);
 
         var draftResult = published is null
             ? DocumentTypeSchemaVersion.CreateDraft(
-                request.DocumentTypeId, versionNumber, request.UserId, _unitOfWork.UtcNow)
+                request.DocumentTypeId, versionNumber, request.UserId, _unitOfWork.UtcNow, departmentId)
             : DocumentTypeSchemaVersion.CreateDraftFrom(
                 published, versionNumber, request.UserId, _unitOfWork.UtcNow);
         if (draftResult.IsFailure)
@@ -105,7 +112,9 @@ internal sealed class PublishSchemaVersionCommandHandler
             return Result.Failure<SchemaVersionResponse>(DomainErrors.DocumentFields.SchemaVersionNotFound);
 
         // Read before publishing, so "the current version" cannot be the draft we are about to publish.
-        var previous = await _versionRepository.GetPublishedAsync(version.DocumentTypeId, cancellationToken);
+        // Only the same form is superseded: a department's record form never retires the creation form.
+        var previous = await _versionRepository.GetPublishedAsync(
+            version.DocumentTypeId, version.DepartmentId, cancellationToken);
 
         var published = version.Publish(request.UserId, _unitOfWork.UtcNow);
         if (published.IsFailure)

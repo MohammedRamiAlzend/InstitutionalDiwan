@@ -153,6 +153,8 @@ export function FieldSettingsDialog({
         const created = await createField.mutateAsync({
           key: identity.data.key,
           dataType: Number(identity.data.dataType) as FieldDataType,
+          // A field belongs to the form the draft belongs to (creation form or one department's).
+          ...(version?.departmentId ? { departmentId: version.departmentId } : {}),
         })
         documentFieldId = created.documentFieldId
         // The identity now exists even if adding it fails below, so retries must reuse it.

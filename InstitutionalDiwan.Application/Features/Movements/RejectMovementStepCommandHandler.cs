@@ -2,6 +2,7 @@ using InstitutionalDiwan.Application.Abstractions.Notifications;
 using InstitutionalDiwan.Domain.Entities.Notifications;
 using InstitutionalDiwan.Application.Abstractions.Authorization;
 using InstitutionalDiwan.Application.Abstractions.Messaging;
+using InstitutionalDiwan.Application.Features.DepartmentRecords;
 using InstitutionalDiwan.Domain.Common;
 using InstitutionalDiwan.Domain.Errors;
 using InstitutionalDiwan.Domain.Repositories;
@@ -16,14 +17,17 @@ internal sealed class RejectMovementStepCommandHandler
     private readonly IDepartmentScopeEvaluator _departmentScopeEvaluator;
     private readonly IUnitOfWork _unitOfWork;
     private readonly INotificationPublisher _notificationPublisher;
+    private readonly DepartmentRecordService _recordService;
 
     public RejectMovementStepCommandHandler(
         IDocumentMovementRepository movementRepository,
         CentralDiwanRouting centralDiwanRouting,
         IDepartmentScopeEvaluator departmentScopeEvaluator,
         IUnitOfWork unitOfWork,
-        INotificationPublisher notificationPublisher)
+        INotificationPublisher notificationPublisher,
+        DepartmentRecordService recordService)
     {
+        _recordService = recordService;
         _movementRepository = movementRepository;
         _centralDiwanRouting = centralDiwanRouting;
         _departmentScopeEvaluator = departmentScopeEvaluator;
@@ -53,6 +57,7 @@ internal sealed class RejectMovementStepCommandHandler
         if (centralResult.IsFailure)
             return Result.Failure<MovementResponse>(centralResult.Error);
 
+        var rejectedStep = movement.Steps.Single(step => step.StepNo == movement.CurrentStepNo);
         var reject = movement.RejectStep(
             request.UserId,
             request.Reason,
@@ -60,6 +65,11 @@ internal sealed class RejectMovementStepCommandHandler
             _unitOfWork.UtcNow);
         if (reject.IsFailure)
             return Result.Failure<MovementResponse>(reject.Error);
+
+        // The rejecting department's record of this step is closed, whether the document goes on to the
+        // Central Diwan or (when the Central Diwan rejects) stays there. A step rejected before receipt
+        // has no record.
+        await _recordService.LockStepVisitAsync(movement.DocumentId, rejectedStep, _unitOfWork.UtcNow, cancellationToken);
 
         await _notificationPublisher.PublishMovementAsync(NotificationType.MovementRejectedId, movement, request.UserId, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);

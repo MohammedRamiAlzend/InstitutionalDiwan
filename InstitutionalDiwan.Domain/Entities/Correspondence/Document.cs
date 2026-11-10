@@ -406,6 +406,40 @@ public sealed class Document : AggregateRoot<Guid>
             && number.DepartmentId == departmentId
             && number.NumberingYear == year);
 
+    /// <summary>A visit on any of this document's department-register lines, with the line it belongs to.</summary>
+    public (DocumentNumber Line, DocumentRegistryVisit Visit)? FindRegistryVisit(Guid visitId)
+    {
+        foreach (var number in _numbers.Where(number => number.IsDepartmentEntry))
+        {
+            var visit = number.Visits.FirstOrDefault(candidate => candidate.VisitId == visitId);
+            if (visit is not null)
+                return (number, visit);
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// Locks the department records still open on this document: every one, or only those of
+    /// <paramref name="departmentId"/>, leaving <paramref name="exceptVisitId"/> open. The document is
+    /// held by one department at a time, so at most one record should be open at any moment.
+    /// </summary>
+    public int LockOpenRegistryVisits(DateTime utcNow, Guid? departmentId = null, Guid? exceptVisitId = null)
+    {
+        var locked = 0;
+        foreach (var number in _numbers.Where(number => number.IsDepartmentEntry
+                     && (departmentId is null || number.DepartmentId == departmentId)))
+        {
+            foreach (var visit in number.Visits.Where(visit => !visit.IsLocked && visit.VisitId != exceptVisitId))
+            {
+                visit.Lock(utcNow);
+                locked++;
+            }
+        }
+
+        return locked;
+    }
+
     /// <summary>
     /// Attaches a department-register entry to this document. One line per department per year:
     /// later arrivals in that year reuse the number and only add a dated visit.

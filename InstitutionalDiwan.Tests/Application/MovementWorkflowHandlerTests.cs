@@ -1,3 +1,4 @@
+using InstitutionalDiwan.Application.Features.DepartmentRecords;
 using InstitutionalDiwan.Application.Features.Correspondence.Documents;
 using InstitutionalDiwan.Application.Features.Movements;
 using InstitutionalDiwan.Application.Features.Numbering.Numbers;
@@ -83,25 +84,30 @@ public sealed class MovementWorkflowHandlerTests
             new(Movements, Documents, Departments, Users, Routing(), DocumentAccess, UnitOfWork);
 
         public SendMovementCommandHandler SendMovementHandler() =>
-            new(Movements, Routing(), CustodyScope, UnitOfWork, FakeNotificationPublisher.Instance);
+            new(Movements, Routing(), CustodyScope, UnitOfWork, FakeNotificationPublisher.Instance, Records());
 
         public ReceiveDocumentCommandHandler ReceiveHandler() =>
             new(
                 Movements, Documents, CustodyScope, UnitOfWork, FakeNotificationPublisher.Instance,
                 new DepartmentRegistrationService(Numbers, Departments, Registries, CustodyScope, UnitOfWork),
-                TestClock.Instance);
+                TestClock.Instance, Records());
 
         public CompleteMovementStepCommandHandler CompleteHandler() =>
             new(Movements, CustodyScope, UnitOfWork, FakeNotificationPublisher.Instance);
 
         public RejectMovementStepCommandHandler RejectHandler() =>
-            new(Movements, Routing(), CustodyScope, UnitOfWork, FakeNotificationPublisher.Instance);
+            new(Movements, Routing(), CustodyScope, UnitOfWork, FakeNotificationPublisher.Instance, Records());
 
         public ReturnMovementToSenderCommandHandler ReturnHandler() =>
-            new(Movements, CustodyScope, UnitOfWork, FakeNotificationPublisher.Instance);
+            new(Movements, CustodyScope, UnitOfWork, FakeNotificationPublisher.Instance, Records());
 
         public RedirectMovementCommandHandler RedirectHandler() =>
-            new(Movements, Departments, Users, Routing(), CustodyScope, UnitOfWork, FakeNotificationPublisher.Instance);
+            new(Movements, Departments, Users, Routing(), CustodyScope, UnitOfWork, FakeNotificationPublisher.Instance, Records());
+
+        /// <summary>Department record forms published for this world's documents.</summary>
+        public FakeDocumentTypeSchemaVersionRepository RecordForms { get; } = new();
+
+        public DepartmentRecordService Records() => FakeDepartmentRecords.Service(Documents, RecordForms);
 
         public CloseMovementCommandHandler CloseHandler() =>
             new(Movements, Documents, CustodyScope, UnitOfWork, FakeNotificationPublisher.Instance);

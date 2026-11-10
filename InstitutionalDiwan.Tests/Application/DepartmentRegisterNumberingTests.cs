@@ -103,7 +103,7 @@ public sealed class DepartmentRegisterNumberingTests
                 CancellationToken.None);
 
         public ReceiveDocumentCommandHandler ReceiveHandler() =>
-            new(Movements, Documents, CustodyScope, UnitOfWork, FakeNotificationPublisher.Instance, RegistrationService(), TestClock.Instance);
+            new(Movements, Documents, CustodyScope, UnitOfWork, FakeNotificationPublisher.Instance, RegistrationService(), TestClock.Instance, FakeDepartmentRecords.Service(Documents));
 
         public Task<Result<MovementStepReceiptResponse>> ReceiveAsync(
             DocumentMovement movement,
@@ -517,19 +517,24 @@ public sealed class DepartmentRegisterNumberingTests
     }
 
     [Fact]
-    public async Task Receive_OnReturnWithTheSameDate_IsRefusedAndLeavesTheStepWaiting()
+    public async Task Receive_OnReturnWithTheSameDate_AddsASecondVisitTiedToTheNewStep()
     {
         var world = new World();
         await world.IssueCentralAsync();
-        await world.ReceiveAsync(CreateSentMovement(world), FirstVisit, "45");
+        var first = await world.ReceiveAsync(CreateSentMovement(world), FirstVisit, "45");
+        Assert.True(first.IsSuccess, first.Error?.Code);
 
+        // Out and back on the same day is two arrivals: each is tied to its own movement step.
         var returnMovement = CreateSentMovement(world);
         var result = await world.ReceiveAsync(returnMovement, FirstVisit);
 
-        Assert.True(result.IsFailure);
-        Assert.Equal(DomainErrors.Numbering.VisitDateDuplicate.Code, result.Error.Code);
-        Assert.Equal(DocumentMovement.StatusSent, returnMovement.StatusId);
-        Assert.Single(world.DepartmentEntry(world.HrId)!.Visits);
+        Assert.True(result.IsSuccess, result.Error?.Code);
+        Assert.Equal(DocumentMovement.StatusReceived, returnMovement.StatusId);
+        var visits = world.DepartmentEntry(world.HrId)!.Visits;
+        Assert.Equal(2, visits.Count);
+        Assert.All(visits, visit => Assert.Equal(FirstVisit.Date, visit.RegistryDate));
+        Assert.Equal(2, visits.Select(visit => visit.MovementStepId).Distinct().Count());
+        Assert.True(result.Value.IsReturnVisit);
     }
 
     [Fact]

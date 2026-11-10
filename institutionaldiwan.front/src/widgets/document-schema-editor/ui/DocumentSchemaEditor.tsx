@@ -13,6 +13,7 @@ import {
   type SchemaFieldResponse,
   type SchemaVersionSummaryResponse,
 } from '@/entities/document-schema'
+import { useDepartmentOptions } from '@/entities/department'
 import { LOOKUP_SLUGS, useLookupEntries } from '@/entities/lookup'
 import {
   DeleteDraftDialog,
@@ -33,6 +34,9 @@ import {
   type MenuEntry,
   type SelectOption,
 } from '@/shared/ui'
+
+/** The form selector's value for the creation form (no department). */
+const CREATION_FORM = 'creation'
 
 /** Latest version first; the server already sorts, so the first row is the default selection. */
 function pickVersionId(
@@ -64,9 +68,10 @@ function constraintsOf(field: SchemaFieldResponse): string {
 }
 
 /**
- * Administration view of one document type's field schema: the version history on the side and the
- * selected version's fields as a grid. The document type (`?type=`) and version (`?version=`) live in
- * the URL so a link reopens the same view.
+ * Administration view of one form of a document type: the creation form, or a department's record
+ * form (`?dept=`) that the department fills when it receives a document of the type. The version
+ * history sits on the side and the selected version's fields form a grid. The document type
+ * (`?type=`), form (`?dept=`) and version (`?version=`) live in the URL so a link reopens the view.
  */
 export function DocumentSchemaEditor() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -75,12 +80,15 @@ export function DocumentSchemaEditor() {
 
   const typeParam = searchParams.get('type')
   const documentTypeId = typeParam && Number.isInteger(Number(typeParam)) ? Number(typeParam) : undefined
+  // `?dept=` picks a department's record form; without it the page edits the creation form.
+  const departmentId = searchParams.get('dept')
+  const departmentsQuery = useDepartmentOptions()
 
-  const versionsQuery = useSchemaVersions(documentTypeId)
+  const versionsQuery = useSchemaVersions(documentTypeId, { departmentId })
   const selectedVersionId = pickVersionId(versionsQuery.data, searchParams.get('version'))
   const versionQuery = useSchemaVersion(selectedVersionId)
-  const definedFieldsQuery = useDocumentTypeFields(documentTypeId)
-  const createDraft = useCreateDraftMutation(documentTypeId ?? 0)
+  const definedFieldsQuery = useDocumentTypeFields(documentTypeId, { departmentId })
+  const createDraft = useCreateDraftMutation(documentTypeId ?? 0, departmentId)
 
   const [dialog, setDialog] = useState<
     | { type: 'add' }
@@ -92,6 +100,19 @@ export function DocumentSchemaEditor() {
   const typeOptions = useMemo<SelectOption[]>(
     () => (typesQuery.data ?? []).map((entry) => ({ value: String(entry.id), label: entry.descAr })),
     [typesQuery.data],
+  )
+
+  const formOptions = useMemo<SelectOption[]>(
+    () => [
+      { value: CREATION_FORM, label: 'نموذج الإنشاء' },
+      ...(departmentsQuery.data ?? [])
+        .filter((department) => department.isActive || department.departmentId === departmentId)
+        .map((department) => ({
+          value: department.departmentId,
+          label: `سجل ديوان: ${department.nameAr}`,
+        })),
+    ],
+    [departmentsQuery.data, departmentId],
   )
 
   const update = (next: Record<string, string | null>) => {
@@ -264,7 +285,22 @@ export function DocumentSchemaEditor() {
             placeholder="اختر نوع الوثيقة…"
             className="w-64"
           />
+          <span className="text-sm font-medium text-foreground">النموذج</span>
+          <Select
+            aria-label="اختيار النموذج: نموذج الإنشاء أو سجل ديوان"
+            value={departmentId ?? CREATION_FORM}
+            onValueChange={(value) =>
+              update({ dept: value === CREATION_FORM ? null : value, version: null })
+            }
+            options={formOptions}
+            className="w-72"
+          />
         </div>
+        {departmentId && (
+          <p className="mt-2 text-xs text-muted">
+            يملأ الديوان هذا النموذج عند استلام وثيقة من هذا النوع، ويُقفل سجله عند خروج الوثيقة منه.
+          </p>
+        )}
       </GuideRegion>
 
       {documentTypeId === undefined ? (

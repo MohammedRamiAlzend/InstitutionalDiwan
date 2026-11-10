@@ -1,6 +1,6 @@
 /**
  * Canonical permission codes — must match the API's
- * `InstitutionalDiwan.Domain/Common/Permissions.cs` exactly (20 codes).
+ * `InstitutionalDiwan.Domain/Common/Permissions.cs` exactly (22 codes).
  */
 export const Permissions = {
   DocumentView: 'DOCUMENT_VIEW',
@@ -23,6 +23,10 @@ export const Permissions = {
   SystemErrorsView: 'SYSTEM_ERRORS_VIEW',
   PersonView: 'PERSON_VIEW',
   PersonManage: 'PERSON_MANAGE',
+  /** Read the records other departments keep on their visits of a document. */
+  DepartmentRecordViewAll: 'DEPARTMENT_RECORD_VIEW_ALL',
+  /** Correct a department record after it was locked, with a reason. */
+  DepartmentRecordCorrect: 'DEPARTMENT_RECORD_CORRECT',
 } as const
 
 export type PermissionCode = (typeof Permissions)[keyof typeof Permissions]

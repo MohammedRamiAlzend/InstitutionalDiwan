@@ -3,6 +3,7 @@ using InstitutionalDiwan.Domain.Entities.Notifications;
 using InstitutionalDiwan.Application.Abstractions.Authorization;
 using InstitutionalDiwan.Application.Abstractions.Messaging;
 using InstitutionalDiwan.Application.Features.Correspondence.Documents;
+using InstitutionalDiwan.Application.Features.DepartmentRecords;
 using InstitutionalDiwan.Domain.Common;
 using InstitutionalDiwan.Domain.Entities.Archiving;
 using InstitutionalDiwan.Domain.Entities.Identity;
@@ -23,6 +24,8 @@ internal sealed class ArchiveDocumentCommandHandler
     private readonly IDocumentAccessEvaluator _documentAccessEvaluator;
     private readonly IUnitOfWork _unitOfWork;
     private readonly INotificationPublisher _notificationPublisher;
+    private readonly IDepartmentScopeEvaluator _departmentScopeEvaluator;
+    private readonly DepartmentRecordService _recordService;
 
     public ArchiveDocumentCommandHandler(
         IDocumentRepository documentRepository,
@@ -31,8 +34,12 @@ internal sealed class ArchiveDocumentCommandHandler
         ILookupRepository lookupRepository,
         IDocumentAccessEvaluator documentAccessEvaluator,
         IUnitOfWork unitOfWork,
-        INotificationPublisher notificationPublisher)
+        INotificationPublisher notificationPublisher,
+        IDepartmentScopeEvaluator departmentScopeEvaluator,
+        DepartmentRecordService recordService)
     {
+        _departmentScopeEvaluator = departmentScopeEvaluator;
+        _recordService = recordService;
         _documentRepository = documentRepository;
         _documentMovementRepository = documentMovementRepository;
         _documentArchiveRepository = documentArchiveRepository;
@@ -55,6 +62,10 @@ internal sealed class ArchiveDocumentCommandHandler
         {
             return Result.Failure<DocumentResponse>(DomainErrors.Correspondence.DocumentAccessDenied);
         }
+
+        var owner = await OwningDepartmentGuard.EnsureOwningDepartmentAsync(document, _departmentScopeEvaluator, cancellationToken);
+        if (owner.IsFailure)
+            return Result.Failure<DocumentResponse>(owner.Error);
 
         var location = await _lookupRepository.GetByIdAsync(
             ArchiveLocationsLookup, request.ArchiveLocationId, cancellationToken);
@@ -85,6 +96,7 @@ internal sealed class ArchiveDocumentCommandHandler
             return Result.Failure<DocumentResponse>(eventResult.Error);
 
         _documentArchiveRepository.Add(eventResult.Value);
+        await _recordService.LockAllAsync(document.DocumentId, utcNow, cancellationToken);
         await _notificationPublisher.PublishDocumentAsync(NotificationType.DocumentArchivedId, document, request.UserId, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 

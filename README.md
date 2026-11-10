@@ -86,7 +86,7 @@ npm run build   # tsc -b && vite build
 npm run lint
 ```
 
-> The front end's architecture, implemented slices, 20 permissions, UI/design contract, and live
+> The front end's architecture, implemented slices, 22 permissions, UI/design contract, and live
 > endpoint catalog are documented in
 > [`institutionaldiwan.front/README.md`](institutionaldiwan.front/README.md),
 > [`AGENTS.md`](institutionaldiwan.front/AGENTS.md), and
@@ -107,6 +107,7 @@ npm run lint
 | 08 — Relations | Link a document to another (reply to, related, supersedes, duplicate of), the links of a document, a relations graph that never passes through documents the caller cannot view, and a permanent link history | Implemented in the backend (cycle and duplicate checks, access rules, audit). Accepted as verified by the project owner (2026-11-03). | Implemented: the «الروابط» tab on `/documents/:id` (grid, Mermaid/tree graph, history, add/remove); build and lint pass; accepted as verified by the project owner (2026-11-03). |
 | 09 — Audit | Entity/action audit chain, search, checkpoints, integrity reports, scheduled maintenance | Implemented. | Implemented and verified: `/audit` logs and integrity reports behind `AUDIT_VIEW`, checkpoint/integrity actions behind `AUDIT_MANAGE`. |
 | 10 — Notifications | In-app notifications: movement and document events announced to the right department users, a personal inbox (list, unread count, read, read-all, dismiss), a SignalR alert hub and an outbox with retry, dead letters and retention | Implemented in the backend (plan `plans/module-10-notifications-backend.md`): verified against the live API (REST, hub push, ownership 404, outbox SENT). IN_APP only; EMAIL/SMS are out of scope. | Implemented (plan `plans/module-10-notifications-frontend.md`): the header bell with an unread badge and live-connection line, the `/notifications` inbox grid (server search, sort, paging, unread/type filters), and a lazy-loaded SignalR client with reconnect and de-duplicated toasts. `npm run build` and `npm run lint` pass; exercised against the live API. |
+| — Department records | Each department's own record on its visits of a document: a record form per (document type, department), opened at receipt with its required fields, editable while the document stays, locked when it leaves, corrected only by an administrator with a reason; closing (archive, unarchive, cancel) limited to the creating department | Implemented (plan `plans/department-records.md`): `dotnet test` passes (906 tests). | Implemented: department form selector in `/document-schemas`, the record form in the receive dialog, and the «سجل الديوان» tab on `/documents/:id`; `npm run build` and `npm run lint` pass. Not yet exercised against the live API. |
 
 “Implemented and verified” means the code is present and was exercised against the live API;
 `dotnet test` (743 tests), `npm run build`, and `npm run lint` pass. Module 01 settings loads the
@@ -160,6 +161,7 @@ have no `README.md` of their own yet — their content is documented in the encl
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-10 | Claude | Added department records: per-department record forms, records opened at receipt and locked on exit, corrections with a reason, two new permissions (22), and closing limited to the creating department. |
 | 2026-11-08 | Claude | Added the developer's error log: captured server and browser errors, grouped with status and notes, Excel export and manual purge, behind `SYSTEM_ERRORS_VIEW`. |
 | 2026-11-08 | Claude | Dynamic field behavior (plan `plans/document-field-behavior.md`): default values, read-only fields enforced on the server, filterable fields and table columns, placeholder and help text, minimum length and date limits, conditional visibility, form layout, multi-select fields and options fed by departments, organizations or lookups; field filters on the archive and department queries. |
 | 2026-11-04 | Claude | Fixed scrambled dates everywhere in the SPA: `formatDate` / `formatDateTime` used the `ar-SY` locale, whose output carries right-to-left marks and an Arabic comma, so in an RTL page the time jumped before the date and the year lost its slashes. They now read the numeric parts through `en-US`, assemble `2026/11/04` and `2026/11/04 09:12` (Damascus time, 24-hour) and wrap the result in a left-to-right isolate, so every call site renders correctly with or without `dir="ltr"`. Front build and lint pass. |

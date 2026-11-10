@@ -34,7 +34,7 @@ public sealed class DocumentFieldHandlerTests
 
         public async Task<DocumentFieldResponse> CreateFieldAsync(string key, DocumentFieldDataType type)
         {
-            var result = await new CreateDocumentFieldCommandHandler(Types, Fields, UnitOfWork)
+            var result = await new CreateDocumentFieldCommandHandler(Types, Fields, new FakeDepartmentRepository(), UnitOfWork)
                 .Handle(new CreateDocumentFieldCommand(Admin, TypeId, key, type), CancellationToken.None);
             Assert.True(result.IsSuccess, result.IsFailure ? result.Error.Code : null);
             return result.Value;
@@ -42,7 +42,7 @@ public sealed class DocumentFieldHandlerTests
 
         public async Task<SchemaVersionResponse> CreateDraftAsync()
         {
-            var result = await new CreateSchemaDraftCommandHandler(Types, Versions, UnitOfWork)
+            var result = await new CreateSchemaDraftCommandHandler(Types, Versions, new FakeDepartmentRepository(), UnitOfWork)
                 .Handle(new CreateSchemaDraftCommand(Admin, TypeId), CancellationToken.None);
             Assert.True(result.IsSuccess, result.IsFailure ? result.Error.Code : null);
             return result.Value;
@@ -98,7 +98,7 @@ public sealed class DocumentFieldHandlerTests
     {
         var world = new World();
         await world.CreateFieldAsync("session_no", DocumentFieldDataType.Text);
-        var handler = new CreateDocumentFieldCommandHandler(world.Types, world.Fields, world.UnitOfWork);
+        var handler = new CreateDocumentFieldCommandHandler(world.Types, world.Fields, new FakeDepartmentRepository(), world.UnitOfWork);
 
         var duplicate = await handler.Handle(
             new CreateDocumentFieldCommand(Admin, TypeId, "session_no", DocumentFieldDataType.Number), CancellationToken.None);
@@ -123,7 +123,7 @@ public sealed class DocumentFieldHandlerTests
         Assert.Equal(2, draft.VersionNumber);
         Assert.Equal(2, draft.Fields.Count);
 
-        var again = await new CreateSchemaDraftCommandHandler(world.Types, world.Versions, world.UnitOfWork)
+        var again = await new CreateSchemaDraftCommandHandler(world.Types, world.Versions, new FakeDepartmentRepository(), world.UnitOfWork)
             .Handle(new CreateSchemaDraftCommand(Admin, TypeId), CancellationToken.None);
         Assert.Equal("DocumentFields.SchemaVersionAlreadyHasDraft", again.Error.Code);
 

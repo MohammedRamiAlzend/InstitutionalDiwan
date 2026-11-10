@@ -28,5 +28,6 @@ Administration view of one document type's field schema: version history chips a
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-10 | Claude | Form selector (`?dept=`): edit the creation form or a department record form. |
 | 2026-11-08 | Claude | The constraints column lists the new field behavior. |
 | 2026-11-03 | Claude | Implemented per plan `plans/document-dynamic-fields-frontend.md`. |

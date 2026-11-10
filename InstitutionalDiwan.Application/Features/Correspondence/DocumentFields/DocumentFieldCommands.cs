@@ -6,19 +6,22 @@ namespace InstitutionalDiwan.Application.Features.Correspondence.DocumentFields;
 
 /// <summary>
 /// Defines a new dynamic field (its stable key and data type) for a document type. The field only
-/// appears on documents once it is added to a schema draft and that draft is published.
+/// appears on documents once it is added to a schema draft and that draft is published. With a
+/// <see cref="DepartmentId"/> the field belongs to that department's record form, not the creation form.
 /// </summary>
 public sealed record CreateDocumentFieldCommand(
     Guid UserId,
     int DocumentTypeId,
     string Key,
-    DocumentFieldDataType DataType) : ICommand<DocumentFieldResponse>;
+    DocumentFieldDataType DataType,
+    Guid? DepartmentId = null) : ICommand<DocumentFieldResponse>;
 
 /// <summary>
-/// Starts the editable schema draft of a document type, as a copy of the published version when
-/// there is one. A type has at most one draft.
+/// Starts the editable schema draft of a form (the creation form, or a department's record form when
+/// <see cref="DepartmentId"/> is set), as a copy of the published version when there is one. A form
+/// has at most one draft.
 /// </summary>
-public sealed record CreateSchemaDraftCommand(Guid UserId, int DocumentTypeId) : ICommand<SchemaVersionResponse>;
+public sealed record CreateSchemaDraftCommand(Guid UserId, int DocumentTypeId, Guid? DepartmentId = null) : ICommand<SchemaVersionResponse>;
 
 /// <summary>Throws away an unpublished draft; published versions cannot be discarded.</summary>
 public sealed record DiscardSchemaDraftCommand(Guid SchemaVersionId) : ICommand;

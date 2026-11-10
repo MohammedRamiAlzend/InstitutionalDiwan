@@ -1,5 +1,6 @@
 using System.Text.Json;
 using InstitutionalDiwan.Domain.Entities.Correspondence;
+using InstitutionalDiwan.Domain.Entities.Organization;
 using InstitutionalDiwan.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
@@ -17,14 +18,27 @@ public sealed class DocumentFieldConfiguration : IEntityTypeConfiguration<Docume
         builder.HasKey(x => x.DocumentFieldId);
         builder.Property(x => x.DocumentFieldId).HasColumnName("DocumentFieldId").ValueGeneratedNever();
         builder.Property(x => x.DocumentTypeId).HasColumnName("DocumentTypeId").IsRequired();
+        builder.Property(x => x.DepartmentId).HasColumnName("DepartmentId");
         builder.Property(x => x.Key).HasColumnName("Key").HasMaxLength(DocumentField.MaxKeyLength).IsRequired();
         builder.Property(x => x.DataType).HasColumnName("DataType").IsRequired();
         builder.Property(x => x.CreatedByUserId).HasColumnName("CreatedByUserId").IsRequired();
         builder.Property(x => x.CreatedAt).HasColumnName("CreatedAt").HasColumnType("datetime2(3)").IsRequired();
 
-        builder.HasIndex(x => new { x.DocumentTypeId, x.Key }).IsUnique().HasDatabaseName("UX_DOCUMENT_FIELDS_TYPE_KEY");
+        // A key is unique within one form. NULL is never equal to NULL in some databases' unique
+        // indexes, so the creation form (DepartmentId NULL) and department forms get one partial
+        // index each instead of a single index over the nullable column.
+        builder.HasIndex(x => new { x.DocumentTypeId, x.Key })
+            .IsUnique()
+            .HasFilter("[DepartmentId] IS NULL")
+            .HasDatabaseName("UX_DOCUMENT_FIELDS_TYPE_KEY");
+
+        builder.HasIndex(x => new { x.DocumentTypeId, x.DepartmentId, x.Key })
+            .IsUnique()
+            .HasFilter("[DepartmentId] IS NOT NULL")
+            .HasDatabaseName("UX_DOCUMENT_FIELDS_TYPE_DEPT_KEY");
 
         builder.HasOne<DocumentType>().WithMany().HasForeignKey(x => x.DocumentTypeId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<Department>().WithMany().HasForeignKey(x => x.DepartmentId).OnDelete(DeleteBehavior.Restrict);
     }
 }
 
@@ -39,6 +53,7 @@ public sealed class DocumentTypeSchemaVersionConfiguration : IEntityTypeConfigur
         builder.HasKey(x => x.SchemaVersionId);
         builder.Property(x => x.SchemaVersionId).HasColumnName("SchemaVersionId").ValueGeneratedNever();
         builder.Property(x => x.DocumentTypeId).HasColumnName("DocumentTypeId").IsRequired();
+        builder.Property(x => x.DepartmentId).HasColumnName("DepartmentId");
         builder.Property(x => x.VersionNumber).HasColumnName("VersionNumber").IsRequired();
         builder.Property(x => x.Status).HasColumnName("Status").IsRequired();
         builder.Property(x => x.CreatedByUserId).HasColumnName("CreatedByUserId").IsRequired();
@@ -48,19 +63,34 @@ public sealed class DocumentTypeSchemaVersionConfiguration : IEntityTypeConfigur
         builder.Property(x => x.PublishedByUserId).HasColumnName("PublishedByUserId");
         builder.Property(x => x.RowVersion).HasColumnName("RowVersion").IsRowVersion();
 
+        // Versions are numbered per form: the creation form (DepartmentId NULL) or one department's
+        // record form. NULL is never equal to NULL in some databases' unique indexes, so each rule
+        // gets one partial index for the creation form and one for department forms.
         builder.HasIndex(x => new { x.DocumentTypeId, x.VersionNumber })
             .IsUnique()
+            .HasFilter("[DepartmentId] IS NULL")
             .HasDatabaseName("UX_DOC_SCHEMA_VERSIONS_TYPE_NUMBER");
 
-        // At most one editable draft per document type (Status 1 = Draft).
+        builder.HasIndex(x => new { x.DocumentTypeId, x.DepartmentId, x.VersionNumber })
+            .IsUnique()
+            .HasFilter("[DepartmentId] IS NOT NULL")
+            .HasDatabaseName("UX_DOC_SCHEMA_VERSIONS_TYPE_DEPT_NUMBER");
+
+        // At most one editable draft per form (Status 1 = Draft).
         builder.HasIndex(x => x.DocumentTypeId)
             .IsUnique()
-            .HasFilter("[Status] = 1")
+            .HasFilter("[Status] = 1 AND [DepartmentId] IS NULL")
             .HasDatabaseName("UX_DOC_SCHEMA_VERSIONS_ONE_DRAFT");
 
-        builder.HasIndex(x => new { x.DocumentTypeId, x.Status }).HasDatabaseName("IX_DOC_SCHEMA_VERSIONS_TYPE_STATUS");
+        builder.HasIndex(x => new { x.DocumentTypeId, x.DepartmentId })
+            .IsUnique()
+            .HasFilter("[Status] = 1 AND [DepartmentId] IS NOT NULL")
+            .HasDatabaseName("UX_DOC_SCHEMA_VERSIONS_ONE_DEPT_DRAFT");
+
+        builder.HasIndex(x => new { x.DocumentTypeId, x.DepartmentId, x.Status }).HasDatabaseName("IX_DOC_SCHEMA_VERSIONS_TYPE_STATUS");
 
         builder.HasOne<DocumentType>().WithMany().HasForeignKey(x => x.DocumentTypeId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<Department>().WithMany().HasForeignKey(x => x.DepartmentId).OnDelete(DeleteBehavior.Restrict);
 
         builder.HasMany(x => x.Fields)
             .WithOne()

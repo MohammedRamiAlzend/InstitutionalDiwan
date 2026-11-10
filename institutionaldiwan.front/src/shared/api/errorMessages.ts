@@ -121,6 +121,18 @@ const CODE_MESSAGES: Record<string, string> = {
   'Correspondence.TitleEmpty': 'عنوان الوثيقة مطلوب.',
   'Correspondence.TitleTooLong': 'عنوان الوثيقة يتجاوز الحد الأقصى للأحرف.',
   'Correspondence.TypeCodeEmpty': 'رمز نوع الوثيقة مطلوب.',
+  'Correspondence.OnlyOwningDepartmentCanClose':
+    'الأرشفة وإلغاء الأرشفة والإلغاء من صلاحية الديوان الذي أنشأ الوثيقة فقط.',
+
+  // Department records (each diwan's record on its visits of a document)
+  'DepartmentRecords.VisitNotFound': 'زيارة السجل غير موجودة.',
+  'DepartmentRecords.VisitLocked':
+    'خرجت الوثيقة من الديوان فأُقفل سجله؛ التصحيح متاح لمدير النظام فقط.',
+  'DepartmentRecords.VisitNotLocked': 'السجل ما زال مفتوحًا؛ عدّله مباشرة بدل التصحيح.',
+  'DepartmentRecords.NotOwnerDepartment': 'لا يعدّل هذا السجل إلا الديوان صاحبه.',
+  'DepartmentRecords.SchemaNotFound': 'لا يوجد نموذج سجل لهذه الزيارة.',
+  'DepartmentRecords.CorrectionReasonRequired': 'سبب التصحيح مطلوب.',
+  'DepartmentRecords.CorrectionReasonTooLong': 'سبب التصحيح يتجاوز 1000 حرف.',
 
   // Table exports
   'Exports.Invalid': 'تعذّر تصدير الجدول بصيغته الحالية.',

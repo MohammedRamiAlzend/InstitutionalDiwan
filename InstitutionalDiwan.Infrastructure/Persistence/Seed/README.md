@@ -66,6 +66,7 @@ Production requires opting in by adding `SeedingEnvironments.Production` to
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-10 | Claude | Seeds `DEPARTMENT_RECORD_VIEW_ALL` and `DEPARTMENT_RECORD_CORRECT` and grants both to `ADMIN` (22 permissions). |
 | 2026-11-09 | Claude | Added `PersonsLookupSeeders.cs` (orders 91-92: `DocumentPersonRoleSeeder` with Defendant as default, `GenderSeeder`); permission catalog 20 codes; `ADMIN` granted `PERSON_VIEW` and `PERSON_MANAGE`; audit entity type `Person`. |
 | 2026-11-08 | Claude | Permission catalog gained `SYSTEM_ERRORS_VIEW` (18 codes). |
 | 2026-11-04 | Claude | Standard-mode diwan accounts now get a new `DIWAN_OPERATOR` role (document view/create/edit plus `NUMBERING_VIEW` and `NUMBERING_MANAGE`) instead of `USER`: a department must write its own register number (numbers tab, `POST /api/document-numbers/department-registration`) before it can receive a document, and `USER` could neither see the tab nor register. `StandardAccountSeeder` also moves already-seeded accounts to the new role on the next startup (users must log in again for the new permissions). |

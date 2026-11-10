@@ -39,6 +39,8 @@ public sealed class PermissionSeeder : ISeeder
         (Permissions.SystemErrorsView, "متابعة الأخطاء البرمجية", "Track system errors", "DIAGNOSTICS", "Browse, export, annotate and purge captured application errors."),
         (Permissions.PersonView, "عرض الأشخاص", "View persons", "PERSONS", "Search people named on documents and follow their documents."),
         (Permissions.PersonManage, "إدارة بيانات الأشخاص", "Manage persons", "PERSONS", "Edit the recorded details of people named on documents."),
+        (Permissions.DepartmentRecordViewAll, "الاطلاع على سجلات الدواوين", "View all department records", "CORRESPONDENCE", "Read the records other departments keep on their visits of a document."),
+        (Permissions.DepartmentRecordCorrect, "تصحيح سجلات الدواوين المقفلة", "Correct locked department records", "CORRESPONDENCE", "Correct a department record after the document left the department, with a reason."),
     };
 
     public async Task SeedAsync(SeederContext context, CancellationToken cancellationToken = default)

@@ -148,25 +148,39 @@ public interface ISystemErrorRepository
     Task<int> DeleteLastSeenBeforeAsync(DateTime cutoffUtc, CancellationToken cancellationToken = default);
 }
 
+/// <summary>
+/// Fields of one form of a document type. The overloads without a department read the creation form;
+/// those with one read that department's record form (a null department is the creation form too).
+/// </summary>
 public interface IDocumentFieldRepository
 {
     Task<DocumentField?> GetByIdAsync(Guid documentFieldId, CancellationToken cancellationToken = default);
     Task<DocumentField?> GetByKeyAsync(int documentTypeId, string key, CancellationToken cancellationToken = default);
+    Task<DocumentField?> GetByKeyAsync(int documentTypeId, Guid? departmentId, string key, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<DocumentField>> ListByDocumentTypeAsync(int documentTypeId, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<DocumentField>> ListByDocumentTypeAsync(int documentTypeId, Guid? departmentId, CancellationToken cancellationToken = default);
     void Add(DocumentField field);
 }
 
+/// <summary>
+/// Schema versions of one form of a document type. The overloads without a department read the
+/// creation form; those with one read that department's record form (null is the creation form).
+/// </summary>
 public interface IDocumentTypeSchemaVersionRepository
 {
     /// <summary>A version with its fields, by id.</summary>
     Task<DocumentTypeSchemaVersion?> GetByIdAsync(Guid schemaVersionId, CancellationToken cancellationToken = default);
-    /// <summary>The single editable draft of a document type, if one exists.</summary>
+    /// <summary>The single editable draft of a document type's creation form, if one exists.</summary>
     Task<DocumentTypeSchemaVersion?> GetDraftAsync(int documentTypeId, CancellationToken cancellationToken = default);
-    /// <summary>The published version new documents of the type are pinned to, if any.</summary>
+    Task<DocumentTypeSchemaVersion?> GetDraftAsync(int documentTypeId, Guid? departmentId, CancellationToken cancellationToken = default);
+    /// <summary>The published creation form new documents of the type are pinned to, if any.</summary>
     Task<DocumentTypeSchemaVersion?> GetPublishedAsync(int documentTypeId, CancellationToken cancellationToken = default);
-    /// <summary>The highest version number used by the type (0 when none), for numbering the next draft.</summary>
+    Task<DocumentTypeSchemaVersion?> GetPublishedAsync(int documentTypeId, Guid? departmentId, CancellationToken cancellationToken = default);
+    /// <summary>The highest version number used by the form (0 when none), for numbering the next draft.</summary>
     Task<int> GetLatestVersionNumberAsync(int documentTypeId, CancellationToken cancellationToken = default);
+    Task<int> GetLatestVersionNumberAsync(int documentTypeId, Guid? departmentId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<DocumentTypeSchemaVersion>> ListByDocumentTypeAsync(int documentTypeId, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<DocumentTypeSchemaVersion>> ListByDocumentTypeAsync(int documentTypeId, Guid? departmentId, CancellationToken cancellationToken = default);
     void Add(DocumentTypeSchemaVersion version);
     /// <summary>Deletes a discarded draft together with its fields; published versions are never removed.</summary>
     void Remove(DocumentTypeSchemaVersion version);
@@ -199,6 +213,8 @@ public interface IDocumentNumberRepository
         Guid departmentId,
         CancellationToken cancellationToken = default);
     Task<IReadOnlyList<DocumentNumber>> ListByDocumentAsync(Guid documentId, CancellationToken cancellationToken = default);
+    /// <summary>The document whose register line holds visit <paramref name="visitId"/>, if any.</summary>
+    Task<Guid?> FindDocumentIdByVisitAsync(Guid visitId, CancellationToken cancellationToken = default);
     /// <summary>The register book: one department's entries, oldest register date first.</summary>
     Task<IReadOnlyList<DocumentNumber>> ListByDepartmentAsync(
         Guid departmentId,

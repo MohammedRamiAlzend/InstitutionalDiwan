@@ -52,6 +52,7 @@ searches what is archived. Each transition changes the document, its status hist
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-10 | Claude | Archive and unarchive are limited to the department that created the document (`Correspondence.OnlyOwningDepartmentCanClose`); archiving locks every open department record. |
 | 2026-11-08 | Claude | `ArchiveSearchCriteria` accepts the keys the archive grid saves (`sort`, `dir`, `archivedFrom`, `archivedTo`); a saved search with a sort or archive dates was rejected as invalid. |
 | 2026-11-08 | Claude | `SearchArchivedDocumentsQuery` accepts `FieldFilters`; saved-search criteria accept the joined field filters (`F`). |
 | 2026-11-03 | Claude | Added the slice for Module 07, Phase 2: archive and unarchive commands, archive history and access-filtered search queries, and the saved search criteria check. |

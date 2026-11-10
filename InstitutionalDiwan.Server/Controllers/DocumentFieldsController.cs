@@ -26,25 +26,29 @@ public sealed class DocumentFieldsController : ControllerBase
     private const string VersionIdDoc = "Schema version unique identifier (GUID, route). Example: 3f8b2c61-9d47-4e15-a6b0-5c1e7d92f438.";
     private const string FieldIdDoc = "Document field unique identifier (GUID, route). Example: b2a47e90-6c13-4d58-8f21-0e9d5a7c3b64.";
     private const string DocumentIdDoc = "Document unique identifier (GUID, route). Example: 7c9e3b42-8a61-4d52-9f17-2ab85c6e7934.";
+    private const string DepartmentIdDoc = "Department whose record form to use (GUID, query, optional). Omit for the type's creation form. Example: e7a62f43-9b82-4d01-8c2e-7ab91e506d42.";
 
     private readonly ISender _sender;
 
     public DocumentFieldsController(ISender sender) => _sender = sender;
 
-    /// <summary>Lists every dynamic field defined for a document type.</summary>
+    /// <summary>Lists every dynamic field defined for one form of a document type.</summary>
     /// <param name="documentTypeId">Document type id (integer, route). Example: <c>1</c>.</param>
+    /// <param name="departmentId">Department whose record form to list (GUID, query, optional); omit for the creation form. Example: <c>e7a62f43-9b82-4d01-8c2e-7ab91e506d42</c>.</param>
     /// <param name="cancellationToken">Request cancellation token (optional).</param>
     /// <response code="200">The fields, oldest first.</response>
     /// <response code="404">The document type does not exist.</response>
     [HttpGet("document-types/{documentTypeId:int}/fields")]
-    [EndpointSummary("Lists every dynamic field defined for a document type.")]
-    [EndpointDescription("Lists every dynamic field defined for a document type, whether or not it is in a published schema. Requires the LOOKUP_MANAGE permission. Responses: 200 (The fields, oldest first.), 404 (The document type does not exist.)")]
+    [EndpointSummary("Lists every dynamic field defined for one form of a document type.")]
+    [EndpointDescription("Lists every dynamic field defined for a document type's creation form, or with departmentId for that department's record form, whether or not it is in a published schema. Requires the LOOKUP_MANAGE permission. Responses: 200 (The fields, oldest first.), 404 (The document type does not exist.)")]
     [Authorize(Policy = Permissions.LookupManage)]
     [ProducesResponseType<IReadOnlyList<DocumentFieldResponse>>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> ListFields(
-        [Description(TypeIdDoc)] int documentTypeId, CancellationToken cancellationToken)
-        => (await _sender.Send(new ListDocumentFieldsQuery(documentTypeId), cancellationToken)).ToActionResult();
+        [Description(TypeIdDoc)] int documentTypeId,
+        [FromQuery, Description(DepartmentIdDoc)] Guid? departmentId,
+        CancellationToken cancellationToken)
+        => (await _sender.Send(new ListDocumentFieldsQuery(documentTypeId, departmentId), cancellationToken)).ToActionResult();
 
     /// <summary>Defines a new dynamic field (key and data type) for a document type.</summary>
     /// <param name="documentTypeId">Document type id (integer, route). Example: <c>1</c>.</param>
@@ -53,6 +57,7 @@ public sealed class DocumentFieldsController : ControllerBase
     /// <list type="bullet">
     /// <item><term>key</term><description>Stable field key, lowercase letters, digits and underscores (string, required). Example: <c>session_no</c>.</description></item>
     /// <item><term>dataType</term><description>1 Text, 2 LongText, 3 Number, 4 Date, 5 Boolean, 6 Select (integer, required). Example: <c>1</c>.</description></item>
+    /// <item><term>departmentId</term><description>Department whose record form the field belongs to; omit for the creation form (GUID, optional). Example: <c>e7a62f43-9b82-4d01-8c2e-7ab91e506d42</c>.</description></item>
     /// </list>
     /// </param>
     /// <param name="cancellationToken">Request cancellation token (optional).</param>
@@ -62,7 +67,7 @@ public sealed class DocumentFieldsController : ControllerBase
     /// <response code="409">The key is already used for this document type.</response>
     [HttpPost("document-types/{documentTypeId:int}/fields")]
     [EndpointSummary("Defines a new dynamic field (key and data type) for a document type.")]
-    [EndpointDescription("Defines a new dynamic field for a document type. The field appears on documents only after it is added to a schema draft and that draft is published. The data type can never change. Requires the LOOKUP_MANAGE permission. Responses: 200 (The created field.), 400 (The key or data type is invalid.), 404 (The document type does not exist.), 409 (The key is already used for this document type.)")]
+    [EndpointDescription("Defines a new dynamic field for a document type's creation form, or with departmentId for that department's record form. The field appears only after it is added to a schema draft of the same form and that draft is published. The data type can never change. Requires the LOOKUP_MANAGE permission. Responses: 200 (The created field.), 400 (The key or data type is invalid.), 404 (The document type does not exist.), 409 (The key is already used for this document type.)")]
     [Authorize(Policy = Permissions.LookupManage)]
     [ProducesResponseType<DocumentFieldResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
@@ -77,60 +82,69 @@ public sealed class DocumentFieldsController : ControllerBase
             return Unauthorized();
 
         return (await _sender.Send(
-            new CreateDocumentFieldCommand(userId, documentTypeId, request.Key, request.DataType),
+            new CreateDocumentFieldCommand(userId, documentTypeId, request.Key, request.DataType, request.DepartmentId),
             cancellationToken)).ToActionResult();
     }
 
-    /// <summary>Fetches the published schema that new documents of a type are pinned to.</summary>
+    /// <summary>Fetches the published schema of one form of a document type.</summary>
     /// <param name="documentTypeId">Document type id (integer, route). Example: <c>1</c>.</param>
+    /// <param name="departmentId">Department whose record form to fetch (GUID, query, optional); omit for the creation form. Example: <c>e7a62f43-9b82-4d01-8c2e-7ab91e506d42</c>.</param>
     /// <param name="cancellationToken">Request cancellation token (optional).</param>
-    /// <response code="200">The published schema, or an empty one when the type has no published fields.</response>
+    /// <response code="200">The published schema, or an empty one when the form has no published fields.</response>
     /// <response code="404">The document type does not exist.</response>
     [HttpGet("document-types/{documentTypeId:int}/schema")]
-    [EndpointSummary("Fetches the published schema that new documents of a type are pinned to.")]
-    [EndpointDescription("Fetches the published field schema of a document type, used to render the create-document form. Requires the DOCUMENT_VIEW permission. Responses: 200 (The published schema, or an empty one when the type has no published fields.), 404 (The document type does not exist.)")]
+    [EndpointSummary("Fetches the published schema of one form of a document type.")]
+    [EndpointDescription("Fetches the published field schema of a document type: the creation form new documents are pinned to, or with departmentId the record form that department fills when it receives a document of the type. Requires the DOCUMENT_VIEW permission. Responses: 200 (The published schema, or an empty one when the form has no published fields.), 404 (The document type does not exist.)")]
     [Authorize(Policy = Permissions.DocumentView)]
     [ProducesResponseType<DocumentTypeSchemaResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetPublishedSchema(
-        [Description(TypeIdDoc)] int documentTypeId, CancellationToken cancellationToken)
-        => (await _sender.Send(new GetDocumentTypeSchemaQuery(documentTypeId), cancellationToken)).ToActionResult();
+        [Description(TypeIdDoc)] int documentTypeId,
+        [FromQuery, Description(DepartmentIdDoc)] Guid? departmentId,
+        CancellationToken cancellationToken)
+        => (await _sender.Send(new GetDocumentTypeSchemaQuery(documentTypeId, departmentId), cancellationToken)).ToActionResult();
 
-    /// <summary>Lists a document type's schema version history.</summary>
+    /// <summary>Lists the schema version history of one form of a document type.</summary>
     /// <param name="documentTypeId">Document type id (integer, route). Example: <c>1</c>.</param>
+    /// <param name="departmentId">Department whose record form to list (GUID, query, optional); omit for the creation form. Example: <c>e7a62f43-9b82-4d01-8c2e-7ab91e506d42</c>.</param>
     /// <param name="cancellationToken">Request cancellation token (optional).</param>
     /// <response code="200">The versions, newest first.</response>
     /// <response code="404">The document type does not exist.</response>
     [HttpGet("document-types/{documentTypeId:int}/schema-versions")]
-    [EndpointSummary("Lists a document type's schema version history.")]
-    [EndpointDescription("Lists the schema versions (draft, published and retired) of a document type, newest first. Requires the LOOKUP_MANAGE permission. Responses: 200 (The versions, newest first.), 404 (The document type does not exist.)")]
+    [EndpointSummary("Lists the schema version history of one form of a document type.")]
+    [EndpointDescription("Lists the schema versions (draft, published and retired) of a document type's creation form, or with departmentId of that department's record form, newest first. Requires the LOOKUP_MANAGE permission. Responses: 200 (The versions, newest first.), 404 (The document type does not exist.)")]
     [Authorize(Policy = Permissions.LookupManage)]
     [ProducesResponseType<IReadOnlyList<SchemaVersionSummaryResponse>>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> ListVersions(
-        [Description(TypeIdDoc)] int documentTypeId, CancellationToken cancellationToken)
-        => (await _sender.Send(new ListSchemaVersionsQuery(documentTypeId), cancellationToken)).ToActionResult();
+        [Description(TypeIdDoc)] int documentTypeId,
+        [FromQuery, Description(DepartmentIdDoc)] Guid? departmentId,
+        CancellationToken cancellationToken)
+        => (await _sender.Send(new ListSchemaVersionsQuery(documentTypeId, departmentId), cancellationToken)).ToActionResult();
 
-    /// <summary>Starts the editable schema draft of a document type.</summary>
+    /// <summary>Starts the editable schema draft of one form of a document type.</summary>
     /// <param name="documentTypeId">Document type id (integer, route). Example: <c>1</c>.</param>
+    /// <param name="departmentId">Department whose record form to draft (GUID, query, optional); omit for the creation form. Example: <c>e7a62f43-9b82-4d01-8c2e-7ab91e506d42</c>.</param>
     /// <param name="cancellationToken">Request cancellation token (optional).</param>
     /// <response code="200">The new draft, copied from the published version when there is one.</response>
-    /// <response code="404">The document type does not exist.</response>
-    /// <response code="409">The type already has a draft.</response>
+    /// <response code="404">The document type or department does not exist.</response>
+    /// <response code="409">The form already has a draft.</response>
     [HttpPost("document-types/{documentTypeId:int}/schema-versions")]
-    [EndpointSummary("Starts the editable schema draft of a document type.")]
-    [EndpointDescription("Starts the editable schema draft of a document type as a copy of the published version, or empty when there is none. A type has at most one draft. Requires the LOOKUP_MANAGE permission. Responses: 200 (The new draft, copied from the published version when there is one.), 404 (The document type does not exist.), 409 (The type already has a draft.)")]
+    [EndpointSummary("Starts the editable schema draft of one form of a document type.")]
+    [EndpointDescription("Starts the editable schema draft of a document type's creation form, or with departmentId of that department's record form, as a copy of the form's published version, or empty when there is none. A form has at most one draft, and publishing it supersedes only the same form. Requires the LOOKUP_MANAGE permission. Responses: 200 (The new draft, copied from the published version when there is one.), 404 (The document type or department does not exist.), 409 (The form already has a draft.)")]
     [Authorize(Policy = Permissions.LookupManage)]
     [ProducesResponseType<SchemaVersionResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> CreateDraft(
-        [Description(TypeIdDoc)] int documentTypeId, CancellationToken cancellationToken)
+        [Description(TypeIdDoc)] int documentTypeId,
+        [FromQuery, Description(DepartmentIdDoc)] Guid? departmentId,
+        CancellationToken cancellationToken)
     {
         if (CurrentUserId is not { } userId)
             return Unauthorized();
 
-        return (await _sender.Send(new CreateSchemaDraftCommand(userId, documentTypeId), cancellationToken))
+        return (await _sender.Send(new CreateSchemaDraftCommand(userId, documentTypeId, departmentId), cancellationToken))
             .ToActionResult();
     }
 

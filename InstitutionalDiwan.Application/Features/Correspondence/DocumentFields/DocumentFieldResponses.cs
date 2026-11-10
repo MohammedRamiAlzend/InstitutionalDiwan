@@ -4,16 +4,20 @@ using InstitutionalDiwan.Domain.ValueObjects;
 
 namespace InstitutionalDiwan.Application.Features.Correspondence.DocumentFields;
 
-/// <summary>The stable identity of a dynamic field of a document type.</summary>
+/// <summary>
+/// The stable identity of a dynamic field of a document type. <c>DepartmentId</c> is null for the
+/// creation form and set for a field of that department's record form.
+/// </summary>
 public sealed record DocumentFieldResponse(
     Guid DocumentFieldId,
     int DocumentTypeId,
     string Key,
     DocumentFieldDataType DataType,
-    DateTime CreatedAt)
+    DateTime CreatedAt,
+    Guid? DepartmentId = null)
 {
     public static DocumentFieldResponse From(DocumentField field) =>
-        new(field.DocumentFieldId, field.DocumentTypeId, field.Key, field.DataType, field.CreatedAt);
+        new(field.DocumentFieldId, field.DocumentTypeId, field.Key, field.DataType, field.CreatedAt, field.DepartmentId);
 }
 
 /// <summary>A field as configured inside one schema version.</summary>
@@ -55,7 +59,8 @@ public sealed record SchemaVersionResponse(
     DateTime CreatedAt,
     DateTime? PublishedAt,
     Guid? PublishedByUserId,
-    IReadOnlyList<SchemaFieldResponse> Fields)
+    IReadOnlyList<SchemaFieldResponse> Fields,
+    Guid? DepartmentId = null)
 {
     public static SchemaVersionResponse From(
         DocumentTypeSchemaVersion version,
@@ -66,7 +71,8 @@ public sealed record SchemaVersionResponse(
             .OrderBy(field => field.DisplayOrder)
             .ThenBy(field => field.FieldKey, StringComparer.Ordinal)
             .Select(field => SchemaFieldResponse.From(field, sourcedOptions))
-            .ToList());
+            .ToList(),
+        version.DepartmentId);
 }
 
 /// <summary>A version without its fields, for the version history list.</summary>
@@ -77,11 +83,12 @@ public sealed record SchemaVersionSummaryResponse(
     int FieldCount,
     DateTime CreatedAt,
     DateTime? PublishedAt,
-    Guid? PublishedByUserId)
+    Guid? PublishedByUserId,
+    Guid? DepartmentId = null)
 {
     public static SchemaVersionSummaryResponse From(DocumentTypeSchemaVersion version) => new(
         version.SchemaVersionId, version.VersionNumber, version.Status, version.Fields.Count,
-        version.CreatedAt, version.PublishedAt, version.PublishedByUserId);
+        version.CreatedAt, version.PublishedAt, version.PublishedByUserId, version.DepartmentId);
 }
 
 /// <summary>

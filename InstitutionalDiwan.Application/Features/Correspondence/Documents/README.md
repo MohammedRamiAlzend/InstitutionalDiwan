@@ -34,6 +34,7 @@ commands the API actually walks: `CreateDraftDocumentCommand` → `UpdateDraftMe
 | `AddDocumentParticipantCommandValidator.cs` | FluentValidation rules incl. the exactly-one-target invariant (`Correspondence.ParticipantTargetInvalid`). |
 | `CancelDocumentCommand.cs` | CQRS command cancelling a document with a required reason. |
 | `CancelDocumentCommandHandler.cs` | Requires `MANAGE` access (403), asks `IDocumentMovementRepository.HasActiveMovementsAsync`, then `Document.Cancel` (blocked by active movements, archived status, or a missing reason). |
+| `OwningDepartmentGuard.cs` | Archive, unarchive and cancel belong to the department that created the document: the caller's department scope must cover `OwningDepartmentId`, otherwise `Correspondence.OnlyOwningDepartmentCanClose` (403). |
 | `CancelDocumentCommandValidator.cs` | FluentValidation rules: ids required, non-blank reason ≤ 1000 chars. |
 | `DocumentResponse.cs` | Light read model returned by list/create/register/cancel; `From(Document)` maps the aggregate incl. `OfficialNumberText` and `RegistrationDate`. |
 | `DocumentDetailResponse.cs` | Rich read model: the document plus its participants and status history (ordered). |
@@ -94,6 +95,7 @@ commands the API actually walks: `CreateDraftDocumentCommand` → `UpdateDraftMe
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-10 | Claude | Added `OwningDepartmentGuard`; cancelling is limited to the creating department and locks every open department record. |
 | 2026-11-09 | Claude | `ListDocumentsQuery` accepts `RegisterNumber`. |
 | 2026-11-09 | Claude | Removed the document date and external reference inputs; `DocumentResponse` no longer has `DocumentDate`, and the numbering year falls back to the creation year. |
 | 2026-11-09 | Claude | Title and summary are optional on create; `DocumentResponse.Title` now carries `Document.DisplayName`. |

@@ -61,12 +61,20 @@ internal sealed class DocumentNumberRepository : IDocumentNumberRepository
                           number.DepartmentId == departmentId,
                 cancellationToken);
 
+    public async Task<Guid?> FindDocumentIdByVisitAsync(Guid visitId, CancellationToken cancellationToken = default) =>
+        await (from visit in _context.DocumentRegistryVisits
+               join number in _context.DocumentNumbers on visit.DocumentNumberId equals number.DocumentNumberId
+               where visit.VisitId == visitId
+               select (Guid?)number.DocumentId)
+            .FirstOrDefaultAsync(cancellationToken);
+
     public async Task<IReadOnlyList<DocumentNumber>> ListByDocumentAsync(
         Guid documentId,
         CancellationToken cancellationToken = default) =>
         await _context.DocumentNumbers
             .Include(number => number.History)
             .Include(number => number.Visits)
+                .ThenInclude(visit => visit.Values)
             .AsSplitQuery()
             .Where(number => number.DocumentId == documentId)
             .OrderBy(number => number.IssuedAt)

@@ -55,6 +55,7 @@ export const ROUTES = {
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-10 | Claude | Added `DEPARTMENT_RECORD_VIEW_ALL` and `DEPARTMENT_RECORD_CORRECT` (22 codes) and the `document-details.tab-department-records` guide entry. |
 | 2026-11-09 | Claude | Tutorial catalogue: added `table.export` to the page guides and `document-details.export-pdf`. |
 | 2026-11-09 | Claude | Added `FEATURES.drafts` (off). |
 | 2026-11-09 | Claude | `isLookupCatalogEnabled` hides the catalogs of suspended features. |

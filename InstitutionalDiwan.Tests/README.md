@@ -139,6 +139,7 @@ indexes) runs against a private SQLite in-memory database through `Support/TestC
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-10 | Claude | Added `DepartmentRecordTests` and `FakeDepartmentRecords`; partial-index persistence tests; permission counts are now 22; a same-day return is a second visit. |
 | 2026-11-09 | Claude | Added `TableExcelWriterTests`. |
 | 2026-11-09 | Claude | Added `DocumentRegisterNumberFilterTests`. |
 | 2026-11-09 | Claude | Added `DocumentDisplayNameTests`. |

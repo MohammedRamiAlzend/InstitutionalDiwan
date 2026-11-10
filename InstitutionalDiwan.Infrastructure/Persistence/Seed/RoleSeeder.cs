@@ -27,6 +27,7 @@ public sealed class RoleSeeder : ISeeder
         Permissions.ReportView, Permissions.LookupManage,
         Permissions.AuditView, Permissions.AuditManage,
         Permissions.PersonView, Permissions.PersonManage,
+        Permissions.DepartmentRecordViewAll, Permissions.DepartmentRecordCorrect,
     };
 
     private static readonly string[] UserPermissions =

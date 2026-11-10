@@ -56,6 +56,8 @@ export interface DocumentFieldResponse {
   key: string
   dataType: FieldDataType
   createdAt: string
+  /** Set for a field of a department record form; null (or absent on an older API) for the creation form. */
+  departmentId?: string | null
 }
 
 export interface FieldOption {
@@ -111,6 +113,8 @@ export interface SchemaVersionResponse {
   publishedAt: string | null
   publishedByUserId: string | null
   fields: SchemaFieldResponse[]
+  /** Set for a department record form; null (or absent on an older API) for the creation form. */
+  departmentId?: string | null
 }
 
 /** `SchemaVersionSummaryResponse` — a history row without its fields. */
@@ -122,6 +126,7 @@ export interface SchemaVersionSummaryResponse {
   createdAt: string
   publishedAt: string | null
   publishedByUserId: string | null
+  departmentId?: string | null
 }
 
 /** `DocumentTypeSchemaResponse` — the published schema a new document is pinned to, if any. */
@@ -141,4 +146,43 @@ export interface DocumentFieldsResponse {
   schemaVersionId: string | null
   versionNumber: number | null
   fields: DocumentFieldValueResponse[]
+}
+
+/**
+ * `DepartmentRecordVisitResponse` — one arrival of the document in a department and the record the
+ * department kept on it. `fields` is empty when the department had no published form then.
+ */
+export interface DepartmentRecordVisitResponse {
+  visitId: string
+  registryDate: string
+  movementStepId: string | null
+  recordedAt: string
+  schemaVersionId: string | null
+  versionNumber: number | null
+  isLocked: boolean
+  lockedAt: string | null
+  recordUpdatedAt: string | null
+  correctedAt: string | null
+  correctionReason: string | null
+  /** The caller may edit this open record (own department, `DOCUMENT_EDIT`). */
+  canEdit: boolean
+  /** The caller may correct this locked record (`DEPARTMENT_RECORD_CORRECT`). */
+  canCorrect: boolean
+  fields: DocumentFieldValueResponse[]
+}
+
+/** `DepartmentRecordResponse` — one department's register line on the document and its visits. */
+export interface DepartmentRecordResponse {
+  registryNumberId: string
+  departmentId: string
+  departmentNameAr: string
+  registryNumberText: string
+  numberingYear: number
+  visits: DepartmentRecordVisitResponse[]
+}
+
+/** `DocumentDepartmentRecordsResponse` — only the records the caller may read. */
+export interface DocumentDepartmentRecordsResponse {
+  documentId: string
+  records: DepartmentRecordResponse[]
 }

@@ -31,6 +31,8 @@ public sealed class ArchivingHandlerTests
         public FakeLookupRepository Lookups { get; } = new();
         public FakeDocumentAccessEvaluator Access { get; } = new();
         public FakeDepartmentScopeEvaluator Scope { get; } = new();
+        /// <summary>Scope used by archive and unarchive: the owning department rule passes by default.</summary>
+        public FakeDepartmentScopeEvaluator OwnerScope { get; } = new() { InstitutionWide = true };
         public FakeDocumentFileRepository Files { get; } = new();
         public FakeDocumentFileTypeRepository FileTypes { get; } = new FakeDocumentFileTypeRepository().WithDefaultTypes();
         public FakeFileStorageProviderRepository Providers { get; } = new FakeFileStorageProviderRepository().WithLocalProvider();
@@ -58,10 +60,10 @@ public sealed class ArchivingHandlerTests
         }
 
         public ArchiveDocumentCommandHandler ArchiveHandler() =>
-            new(Documents, Movements, Archive, Lookups, Access, UnitOfWork, FakeNotificationPublisher.Instance);
+            new(Documents, Movements, Archive, Lookups, Access, UnitOfWork, FakeNotificationPublisher.Instance, OwnerScope, FakeDepartmentRecords.Service(Documents));
 
         public UnarchiveDocumentCommandHandler UnarchiveHandler() =>
-            new(Documents, Archive, Access, UnitOfWork);
+            new(Documents, Archive, Access, UnitOfWork, OwnerScope);
 
         public ListDocumentArchiveEventsQueryHandler EventsHandler() =>
             new(Documents, Archive, Access);

@@ -2,6 +2,7 @@ using InstitutionalDiwan.Application.Abstractions.Notifications;
 using InstitutionalDiwan.Domain.Entities.Notifications;
 using InstitutionalDiwan.Application.Abstractions.Authorization;
 using InstitutionalDiwan.Application.Abstractions.Messaging;
+using InstitutionalDiwan.Application.Features.DepartmentRecords;
 using InstitutionalDiwan.Application.Features.Numbering.Numbers;
 using InstitutionalDiwan.Domain.Common;
 using InstitutionalDiwan.Domain.Entities.Correspondence;
@@ -22,6 +23,7 @@ internal sealed class ReceiveDocumentCommandHandler
     private readonly INotificationPublisher _notificationPublisher;
     private readonly DepartmentRegistrationService _registrationService;
     private readonly IClock _clock;
+    private readonly DepartmentRecordService _recordService;
 
     public ReceiveDocumentCommandHandler(
         IDocumentMovementRepository movementRepository,
@@ -30,8 +32,10 @@ internal sealed class ReceiveDocumentCommandHandler
         IUnitOfWork unitOfWork,
         INotificationPublisher notificationPublisher,
         DepartmentRegistrationService registrationService,
-        IClock clock)
+        IClock clock,
+        DepartmentRecordService recordService)
     {
+        _recordService = recordService;
         _movementRepository = movementRepository;
         _documentRepository = documentRepository;
         _departmentScopeEvaluator = departmentScopeEvaluator;
@@ -76,6 +80,13 @@ internal sealed class ReceiveDocumentCommandHandler
             request.UserId, entry.DocumentNumberId, request.Notes, _unitOfWork.UtcNow, visit.VisitId);
         if (receive.IsFailure)
             return Result.Failure<MovementStepReceiptResponse>(receive.Error);
+
+        // Nothing is saved yet, so a missing required field fails the whole receipt.
+        var opened = await _recordService.OpenOnReceiptAsync(
+            document, movement.DestinationDepartmentId, visit, request.FieldValues,
+            request.UserId, _unitOfWork.UtcNow, cancellationToken);
+        if (opened.IsFailure)
+            return Result.Failure<MovementStepReceiptResponse>(opened.Error);
 
         await _notificationPublisher.PublishMovementAsync(NotificationType.MovementReceivedId, movement, request.UserId, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);

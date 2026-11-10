@@ -28,13 +28,18 @@ export function useCreateFieldMutation(documentTypeId: number) {
   })
 }
 
-/** `POST /api/document-types/{id}/schema-versions` — starts the single draft, copied from the published version. */
-export function useCreateDraftMutation(documentTypeId: number) {
+/**
+ * `POST /api/document-types/{id}/schema-versions?departmentId=` — starts the form's single draft,
+ * copied from its published version. Without `departmentId` it is the creation form.
+ */
+export function useCreateDraftMutation(documentTypeId: number, departmentId?: string | null) {
   const invalidate = useSchemaInvalidation()
   return useMutation({
     mutationFn: async (): Promise<SchemaVersionResponse> => {
       const { data } = await httpClient.post<SchemaVersionResponse>(
         `/document-types/${documentTypeId}/schema-versions`,
+        undefined,
+        { params: departmentId ? { departmentId } : {} },
       )
       return data
     },

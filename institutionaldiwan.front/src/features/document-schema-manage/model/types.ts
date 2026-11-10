@@ -18,6 +18,8 @@ export interface FieldSettingsRequest {
 export interface CreateFieldRequest {
   key: string
   dataType: FieldDataType
+  /** The department record form the field belongs to; omitted for the creation form. */
+  departmentId?: string
 }
 
 /** `AddSchemaFieldRequest`. */

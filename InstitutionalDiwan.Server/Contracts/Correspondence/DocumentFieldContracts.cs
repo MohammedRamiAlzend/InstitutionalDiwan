@@ -27,7 +27,13 @@ public sealed record DocumentFieldSettingsRequest(
 /// the integer value of <c>DocumentFieldDataType</c> (1 Text, 2 LongText, 3 Number, 4 Date, 5 Boolean, 6 Select, 7 MultiSelect)
 /// and can never change afterwards.
 /// </summary>
-public sealed record CreateDocumentFieldRequest(string Key, DocumentFieldDataType DataType);
+public sealed record CreateDocumentFieldRequest(string Key, DocumentFieldDataType DataType, Guid? DepartmentId = null);
+
+/// <summary>Payload submitted to <c>PUT /api/registry-visits/{visitId}/fields</c>; replaces all values of the open record.</summary>
+public sealed record SetVisitRecordRequest(IReadOnlyList<DocumentFieldValueRequest> Values);
+
+/// <summary>Payload submitted to <c>PUT /api/registry-visits/{visitId}/fields/correct</c>; replaces the values of a locked record.</summary>
+public sealed record CorrectVisitRecordRequest(IReadOnlyList<DocumentFieldValueRequest> Values, string Reason);
 
 /// <summary>Payload submitted to <c>POST /api/schema-versions/{schemaVersionId}/fields</c>.</summary>
 public sealed record AddSchemaFieldRequest(Guid DocumentFieldId, DocumentFieldSettingsRequest Settings);

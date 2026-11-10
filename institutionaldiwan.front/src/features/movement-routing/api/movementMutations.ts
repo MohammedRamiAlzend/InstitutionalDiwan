@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { documentKeys } from '@/entities/document'
+import { schemaKeys } from '@/entities/document-schema'
 import {
   movementKeys,
   type MovementReceiptResponse,
@@ -14,13 +15,17 @@ import type {
   RedirectMovementRequest,
 } from '../model/types'
 
-/** Every movement action changes the document status, its timeline, and both department queues. */
+/**
+ * Every movement action changes the document status, its timeline, both department queues and the
+ * department records (a receipt opens one, leaving a department locks it).
+ */
 function useMovementInvalidation() {
   const queryClient = useQueryClient()
 
   return () => {
     void queryClient.invalidateQueries({ queryKey: movementKeys.all })
     void queryClient.invalidateQueries({ queryKey: documentKeys.all })
+    void queryClient.invalidateQueries({ queryKey: schemaKeys.departmentRecordsAll })
   }
 }
 

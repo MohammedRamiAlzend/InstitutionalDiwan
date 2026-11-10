@@ -25,6 +25,7 @@ access live here.
 | `DocumentPersonsController.cs` | `api/documents/{documentId}/persons` | `DOCUMENT_VIEW` reads; `DOCUMENT_EDIT` writes | Lists, adds, re-roles and removes the people named on one document. |
 | `ExportsController.cs` | `api/exports` | Any signed-in user; reads no stored data | `POST table` returns an Excel workbook of the headers and rows sent. |
 | `DocumentFieldsController.cs` | `api` (`document-types/{id}/fields`, `document-types/{id}/schema`, `document-types/{id}/schema-versions`, `schema-versions/{id}[/fields[/{fieldId}]|/publish]`, `documents/{id}/fields`) | `LOOKUP_MANAGE` for schema administration; `DOCUMENT_VIEW` for the published schema and a document's values; `DOCUMENT_EDIT` to set draft values | Dynamic document fields: define fields, run the schema draft/publish lifecycle, read the published schema, read and replace a draft document's values. |
+| `DepartmentRecordsController.cs` | `api` (`documents/{id}/department-records`, `registry-visits/{visitId}/fields[/correct]`) | `DOCUMENT_VIEW` read; `DOCUMENT_EDIT` edit (own department, open record); `DEPARTMENT_RECORD_CORRECT` correction | The record each department keeps on its visits of a document: read (filtered to the caller's departments or `DEPARTMENT_RECORD_VIEW_ALL`), edit while open, correct a locked record with a reason. |
 | `DocumentArchiveController.cs` | `api` (`archive/documents`, `documents/{id}/archive-events`, `documents/{id}/archive`, `documents/{id}/unarchive`) | `DOCUMENT_VIEW` reads; `DOCUMENT_ARCHIVE` writes; per-document access in the handlers | Module 07: archive and restore documents, a document's archive history, and the access-filtered archive search. |
 | `SavedSearchesController.cs` | `api/saved-searches` | `DOCUMENT_VIEW`; owner only in the handlers | Module 07: the caller's personal saved archive searches (list, create, replace, delete). |
 | `DocumentRelationsController.cs` | `api/documents/{id}/relations` (`graph`, `events`, `{relationId}`) | `DOCUMENT_VIEW` reads; `DOCUMENT_EDIT` create and remove; per-document access in the handlers | Module 08: a document's links, the relations graph, the permanent relation history, and creating or removing a link. |
@@ -147,6 +148,7 @@ plain JSON array.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-10 | Claude | Added `DepartmentRecordsController`; schema routes take `departmentId`; receive routes accept `fieldValues`. |
 | 2026-11-09 | Claude | Added `ExportsController` (`POST api/exports/table`). |
 | 2026-11-09 | Claude | `GET /api/documents` accepts `registerNumber`. |
 | 2026-11-09 | Claude | `POST /api/documents/drafts` no longer accepts the document date or external reference. |

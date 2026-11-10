@@ -11,15 +11,18 @@ internal sealed class CreateDocumentFieldCommandHandler
 {
     private readonly IDocumentTypeRepository _documentTypeRepository;
     private readonly IDocumentFieldRepository _fieldRepository;
+    private readonly IDepartmentRepository _departmentRepository;
     private readonly IUnitOfWork _unitOfWork;
 
     public CreateDocumentFieldCommandHandler(
         IDocumentTypeRepository documentTypeRepository,
         IDocumentFieldRepository fieldRepository,
+        IDepartmentRepository departmentRepository,
         IUnitOfWork unitOfWork)
     {
         _documentTypeRepository = documentTypeRepository;
         _fieldRepository = fieldRepository;
+        _departmentRepository = departmentRepository;
         _unitOfWork = unitOfWork;
     }
 
@@ -30,12 +33,18 @@ internal sealed class CreateDocumentFieldCommandHandler
         if (await _documentTypeRepository.GetByIdAsync(request.DocumentTypeId, cancellationToken) is null)
             return Result.Failure<DocumentFieldResponse>(DomainErrors.Correspondence.DocumentTypeNotFound);
 
+        if (request.DepartmentId is { } departmentId
+            && await _departmentRepository.GetByIdAsync(departmentId, cancellationToken) is null)
+        {
+            return Result.Failure<DocumentFieldResponse>(DomainErrors.Department.NotFound);
+        }
+
         var key = request.Key?.Trim() ?? string.Empty;
-        if (await _fieldRepository.GetByKeyAsync(request.DocumentTypeId, key, cancellationToken) is not null)
+        if (await _fieldRepository.GetByKeyAsync(request.DocumentTypeId, request.DepartmentId, key, cancellationToken) is not null)
             return Result.Failure<DocumentFieldResponse>(DomainErrors.DocumentFields.KeyAlreadyExists);
 
         var fieldResult = DocumentField.Create(
-            request.DocumentTypeId, key, request.DataType, request.UserId, _unitOfWork.UtcNow);
+            request.DocumentTypeId, key, request.DataType, request.UserId, _unitOfWork.UtcNow, request.DepartmentId);
         if (fieldResult.IsFailure)
             return Result.Failure<DocumentFieldResponse>(fieldResult.Error);
 

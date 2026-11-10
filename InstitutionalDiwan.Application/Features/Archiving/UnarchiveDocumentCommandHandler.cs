@@ -16,13 +16,16 @@ internal sealed class UnarchiveDocumentCommandHandler
     private readonly IDocumentArchiveRepository _documentArchiveRepository;
     private readonly IDocumentAccessEvaluator _documentAccessEvaluator;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IDepartmentScopeEvaluator _departmentScopeEvaluator;
 
     public UnarchiveDocumentCommandHandler(
         IDocumentRepository documentRepository,
         IDocumentArchiveRepository documentArchiveRepository,
         IDocumentAccessEvaluator documentAccessEvaluator,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        IDepartmentScopeEvaluator departmentScopeEvaluator)
     {
+        _departmentScopeEvaluator = departmentScopeEvaluator;
         _documentRepository = documentRepository;
         _documentArchiveRepository = documentArchiveRepository;
         _documentAccessEvaluator = documentAccessEvaluator;
@@ -42,6 +45,10 @@ internal sealed class UnarchiveDocumentCommandHandler
         {
             return Result.Failure<DocumentResponse>(DomainErrors.Correspondence.DocumentAccessDenied);
         }
+
+        var owner = await OwningDepartmentGuard.EnsureOwningDepartmentAsync(document, _departmentScopeEvaluator, cancellationToken);
+        if (owner.IsFailure)
+            return Result.Failure<DocumentResponse>(owner.Error);
 
         var previousStatusId = document.CurrentStatusId;
         var utcNow = _unitOfWork.UtcNow;

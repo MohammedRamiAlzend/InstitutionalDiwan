@@ -27,6 +27,10 @@ public static class Permissions
     public const string SystemErrorsView = "SYSTEM_ERRORS_VIEW";
     public const string PersonView = "PERSON_VIEW";
     public const string PersonManage = "PERSON_MANAGE";
+    /// <summary>Read the records other departments keep on their visits of a document.</summary>
+    public const string DepartmentRecordViewAll = "DEPARTMENT_RECORD_VIEW_ALL";
+    /// <summary>Correct a department record after it was locked, with a reason.</summary>
+    public const string DepartmentRecordCorrect = "DEPARTMENT_RECORD_CORRECT";
 
     /// <summary>Every known permission — used to register one authorization policy per permission.</summary>
     public static readonly IReadOnlyCollection<string> All = new[]
@@ -34,6 +38,6 @@ public static class Permissions
         DocumentView, DocumentCreate, DocumentEdit, DocumentDelete, DocumentApprove, DocumentArchive,
         NumberingView, NumberingManage, DepartmentManage, RoleManage, UserManage, EmployeeManage,
         AccessGrantManage, ReportView, LookupManage, AuditView, AuditManage, SystemErrorsView,
-        PersonView, PersonManage,
+        PersonView, PersonManage, DepartmentRecordViewAll, DepartmentRecordCorrect,
     };
 }

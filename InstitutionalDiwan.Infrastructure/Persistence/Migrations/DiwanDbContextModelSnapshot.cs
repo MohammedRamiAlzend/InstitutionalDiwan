@@ -884,6 +884,10 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                         .HasColumnType("int")
                         .HasColumnName("DataType");
 
+                    b.Property<Guid?>("DepartmentId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("DepartmentId");
+
                     b.Property<int>("DocumentTypeId")
                         .HasColumnType("int")
                         .HasColumnName("DocumentTypeId");
@@ -896,9 +900,17 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
 
                     b.HasKey("DocumentFieldId");
 
+                    b.HasIndex("DepartmentId");
+
                     b.HasIndex("DocumentTypeId", "Key")
                         .IsUnique()
-                        .HasDatabaseName("UX_DOCUMENT_FIELDS_TYPE_KEY");
+                        .HasDatabaseName("UX_DOCUMENT_FIELDS_TYPE_KEY")
+                        .HasFilter("[DepartmentId] IS NULL");
+
+                    b.HasIndex("DocumentTypeId", "DepartmentId", "Key")
+                        .IsUnique()
+                        .HasDatabaseName("UX_DOCUMENT_FIELDS_TYPE_DEPT_KEY")
+                        .HasFilter("[DepartmentId] IS NOT NULL");
 
                     b.ToTable("DOCUMENT_FIELDS", (string)null);
                 });
@@ -1237,6 +1249,10 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("CreatedByUserId");
 
+                    b.Property<Guid?>("DepartmentId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("DepartmentId");
+
                     b.Property<int>("DocumentTypeId")
                         .HasColumnType("int")
                         .HasColumnName("DocumentTypeId");
@@ -1269,17 +1285,30 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
 
                     b.HasKey("SchemaVersionId");
 
+                    b.HasIndex("DepartmentId");
+
                     b.HasIndex("DocumentTypeId")
                         .IsUnique()
                         .HasDatabaseName("UX_DOC_SCHEMA_VERSIONS_ONE_DRAFT")
-                        .HasFilter("[Status] = 1");
+                        .HasFilter("[Status] = 1 AND [DepartmentId] IS NULL");
 
-                    b.HasIndex("DocumentTypeId", "Status")
-                        .HasDatabaseName("IX_DOC_SCHEMA_VERSIONS_TYPE_STATUS");
+                    b.HasIndex("DocumentTypeId", "DepartmentId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_DOC_SCHEMA_VERSIONS_ONE_DEPT_DRAFT")
+                        .HasFilter("[Status] = 1 AND [DepartmentId] IS NOT NULL");
 
                     b.HasIndex("DocumentTypeId", "VersionNumber")
                         .IsUnique()
-                        .HasDatabaseName("UX_DOC_SCHEMA_VERSIONS_TYPE_NUMBER");
+                        .HasDatabaseName("UX_DOC_SCHEMA_VERSIONS_TYPE_NUMBER")
+                        .HasFilter("[DepartmentId] IS NULL");
+
+                    b.HasIndex("DocumentTypeId", "DepartmentId", "Status")
+                        .HasDatabaseName("IX_DOC_SCHEMA_VERSIONS_TYPE_STATUS");
+
+                    b.HasIndex("DocumentTypeId", "DepartmentId", "VersionNumber")
+                        .IsUnique()
+                        .HasDatabaseName("UX_DOC_SCHEMA_VERSIONS_TYPE_DEPT_NUMBER")
+                        .HasFilter("[DepartmentId] IS NOT NULL");
 
                     b.ToTable("DOCUMENT_TYPE_SCHEMA_VERSIONS", (string)null);
                 });
@@ -2761,6 +2790,54 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                     b.ToTable("NOTIFICATION_TYPES", (string)null);
                 });
 
+            modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Numbering.DepartmentRecordValue", b =>
+                {
+                    b.Property<Guid>("ValueId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("ValueId");
+
+                    b.Property<bool?>("BoolValue")
+                        .HasColumnType("bit")
+                        .HasColumnName("BoolValue");
+
+                    b.Property<DateTime?>("DateValue")
+                        .HasColumnType("datetime2(3)")
+                        .HasColumnName("DateValue");
+
+                    b.Property<Guid>("DocumentFieldId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("DocumentFieldId");
+
+                    b.Property<decimal?>("NumberValue")
+                        .HasPrecision(28, 8)
+                        .HasColumnType("decimal(28,8)")
+                        .HasColumnName("NumberValue");
+
+                    b.Property<string>("OptionKey")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasColumnName("OptionKey");
+
+                    b.Property<string>("TextValue")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)")
+                        .HasColumnName("TextValue");
+
+                    b.Property<Guid>("VisitId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("VisitId");
+
+                    b.HasKey("ValueId");
+
+                    b.HasIndex("DocumentFieldId");
+
+                    b.HasIndex("VisitId", "DocumentFieldId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_DEPT_RECORD_VALUES_VISIT_FIELD");
+
+                    b.ToTable("DEPARTMENT_RECORD_VALUES", (string)null);
+                });
+
             modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Numbering.DocumentNumber", b =>
                 {
                     b.Property<Guid>("DocumentNumberId")
@@ -3007,9 +3084,26 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("VisitId");
 
+                    b.Property<DateTime?>("CorrectedAt")
+                        .HasColumnType("datetime2(3)")
+                        .HasColumnName("CorrectedAt");
+
+                    b.Property<Guid?>("CorrectedByUserId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("CorrectedByUserId");
+
+                    b.Property<string>("CorrectionReason")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)")
+                        .HasColumnName("CorrectionReason");
+
                     b.Property<Guid>("DocumentNumberId")
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("DocumentNumberId");
+
+                    b.Property<DateTime?>("LockedAt")
+                        .HasColumnType("datetime2(3)")
+                        .HasColumnName("LockedAt");
 
                     b.Property<Guid?>("MovementStepId")
                         .HasColumnType("uniqueidentifier")
@@ -3019,6 +3113,14 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)")
                         .HasColumnName("Notes");
+
+                    b.Property<DateTime?>("RecordUpdatedAt")
+                        .HasColumnType("datetime2(3)")
+                        .HasColumnName("RecordUpdatedAt");
+
+                    b.Property<Guid?>("RecordUpdatedByUserId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("RecordUpdatedByUserId");
 
                     b.Property<DateTime>("RecordedAt")
                         .HasColumnType("datetime2(3)")
@@ -3032,11 +3134,23 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                         .HasColumnType("date")
                         .HasColumnName("RegistryDate");
 
+                    b.Property<Guid?>("SchemaVersionId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("SchemaVersionId");
+
                     b.HasKey("VisitId");
+
+                    b.HasIndex("SchemaVersionId");
+
+                    b.HasIndex("DocumentNumberId", "MovementStepId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_DOC_REG_VISITS_NUMBER_STEP")
+                        .HasFilter("[MovementStepId] IS NOT NULL");
 
                     b.HasIndex("DocumentNumberId", "RegistryDate")
                         .IsUnique()
-                        .HasDatabaseName("UX_DOC_REG_VISITS_NUMBER_DATE");
+                        .HasDatabaseName("UX_DOC_REG_VISITS_NUMBER_DATE")
+                        .HasFilter("[MovementStepId] IS NULL");
 
                     b.ToTable("DOCUMENT_REGISTRY_VISITS", (string)null);
                 });
@@ -3925,6 +4039,11 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Correspondence.DocumentField", b =>
                 {
+                    b.HasOne("InstitutionalDiwan.Domain.Entities.Organization.Department", null)
+                        .WithMany()
+                        .HasForeignKey("DepartmentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("InstitutionalDiwan.Domain.Entities.Correspondence.DocumentType", null)
                         .WithMany()
                         .HasForeignKey("DocumentTypeId")
@@ -4020,6 +4139,11 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Correspondence.DocumentTypeSchemaVersion", b =>
                 {
+                    b.HasOne("InstitutionalDiwan.Domain.Entities.Organization.Department", null)
+                        .WithMany()
+                        .HasForeignKey("DepartmentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("InstitutionalDiwan.Domain.Entities.Correspondence.DocumentType", null)
                         .WithMany()
                         .HasForeignKey("DocumentTypeId")
@@ -4218,6 +4342,21 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Numbering.DepartmentRecordValue", b =>
+                {
+                    b.HasOne("InstitutionalDiwan.Domain.Entities.Correspondence.DocumentField", null)
+                        .WithMany()
+                        .HasForeignKey("DocumentFieldId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("InstitutionalDiwan.Domain.Entities.Numbering.DocumentRegistryVisit", null)
+                        .WithMany("Values")
+                        .HasForeignKey("VisitId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Numbering.DocumentNumber", b =>
                 {
                     b.HasOne("InstitutionalDiwan.Domain.Entities.Organization.Department", null)
@@ -4266,6 +4405,11 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                         .HasForeignKey("DocumentNumberId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("InstitutionalDiwan.Domain.Entities.Correspondence.DocumentTypeSchemaVersion", null)
+                        .WithMany()
+                        .HasForeignKey("SchemaVersionId")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Numbering.NumberingCounter", b =>
@@ -4462,6 +4606,11 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                     b.Navigation("History");
 
                     b.Navigation("Visits");
+                });
+
+            modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Numbering.DocumentRegistryVisit", b =>
+                {
+                    b.Navigation("Values");
                 });
 
             modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Numbering.NumberingRegistry", b =>

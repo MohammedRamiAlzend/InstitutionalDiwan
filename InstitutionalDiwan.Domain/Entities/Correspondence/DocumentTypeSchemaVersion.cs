@@ -23,6 +23,12 @@ public sealed class DocumentTypeSchemaVersion : AggregateRoot<Guid>
 
     // FK → DocumentType.Id (InstitutionalDiwan.Domain.Entities.Correspondence.DocumentType)
     public int DocumentTypeId { get; private set; }
+    /// <summary>
+    /// FK → Department.DepartmentId. Null for the creation form of the type; otherwise the record form
+    /// the department fills on its visits of documents of this type. Versions are numbered, drafted and
+    /// published per (type, department).
+    /// </summary>
+    public Guid? DepartmentId { get; private set; }
     public int VersionNumber { get; private set; }
     public DocumentTypeSchemaVersionStatus Status { get; private set; } = DocumentTypeSchemaVersionStatus.Draft;
     // FK → User.UserId (InstitutionalDiwan.Domain.Entities.Identity.User)
@@ -44,15 +50,20 @@ public sealed class DocumentTypeSchemaVersion : AggregateRoot<Guid>
         int documentTypeId,
         int versionNumber,
         Guid createdByUserId,
-        DateTime? utcNow = null)
+        DateTime? utcNow = null,
+        Guid? departmentId = null)
     {
         if (documentTypeId <= 0)
             return Result.Failure<DocumentTypeSchemaVersion>(DomainErrors.DocumentFields.DocumentTypeInvalid);
+
+        if (departmentId == Guid.Empty)
+            return Result.Failure<DocumentTypeSchemaVersion>(DomainErrors.Department.NotFound);
 
         return Result.Success(new DocumentTypeSchemaVersion
         {
             SchemaVersionId = Guid.NewGuid(),
             DocumentTypeId = documentTypeId,
+            DepartmentId = departmentId,
             VersionNumber = Math.Max(versionNumber, 1),
             Status = DocumentTypeSchemaVersionStatus.Draft,
             CreatedByUserId = createdByUserId,
@@ -67,7 +78,7 @@ public sealed class DocumentTypeSchemaVersion : AggregateRoot<Guid>
         Guid createdByUserId,
         DateTime? utcNow = null)
     {
-        var draftResult = CreateDraft(basis.DocumentTypeId, versionNumber, createdByUserId, utcNow);
+        var draftResult = CreateDraft(basis.DocumentTypeId, versionNumber, createdByUserId, utcNow, basis.DepartmentId);
         if (draftResult.IsFailure)
             return draftResult;
 
@@ -85,7 +96,8 @@ public sealed class DocumentTypeSchemaVersion : AggregateRoot<Guid>
         if (editable.IsFailure)
             return editable;
 
-        if (field.DocumentTypeId != DocumentTypeId)
+        // A field belongs to one form: the type's creation form (no department) or one department's record form.
+        if (field.DocumentTypeId != DocumentTypeId || field.DepartmentId != DepartmentId)
             return Result.Failure(DomainErrors.DocumentFields.FieldDocumentTypeMismatch);
 
         if (settings.DataType != field.DataType)

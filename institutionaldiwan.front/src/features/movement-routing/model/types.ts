@@ -1,3 +1,5 @@
+import type { FieldValueRequest } from '@/entities/document-schema'
+
 /** `POST /api/movements` — the source is the caller's primary department. */
 export interface CreateMovementRequest {
   documentId: string
@@ -19,6 +21,8 @@ export interface ReceiveMovementRequest extends MovementNotesRequest {
   registryNumberText?: string | null
   /** Register for a new number; omitted = the best matching active one. */
   registryId?: string | null
+  /** Values of the destination department's record form for the document type, when one is published. */
+  fieldValues?: FieldValueRequest[]
 }
 
 /** Required reason carried by reject/return/cancel. */

@@ -99,11 +99,63 @@ public sealed class DocumentRegistryVisitConfiguration : IEntityTypeConfiguratio
         builder.Property(x => x.RecordedByUserId).HasColumnName("RecordedByUserId").IsRequired();
         builder.Property(x => x.RecordedAt).HasColumnName("RecordedAt").HasColumnType("datetime2(3)").IsRequired();
         builder.Property(x => x.Notes).HasColumnName("Notes").HasMaxLength(500);
+        builder.Property(x => x.SchemaVersionId).HasColumnName("SchemaVersionId");
+        builder.Property(x => x.LockedAt).HasColumnName("LockedAt").HasColumnType("datetime2(3)");
+        builder.Property(x => x.RecordUpdatedAt).HasColumnName("RecordUpdatedAt").HasColumnType("datetime2(3)");
+        builder.Property(x => x.RecordUpdatedByUserId).HasColumnName("RecordUpdatedByUserId");
+        builder.Property(x => x.CorrectedAt).HasColumnName("CorrectedAt").HasColumnType("datetime2(3)");
+        builder.Property(x => x.CorrectedByUserId).HasColumnName("CorrectedByUserId");
+        builder.Property(x => x.CorrectionReason).HasColumnName("CorrectionReason")
+            .HasMaxLength(DocumentRegistryVisit.MaxCorrectionReasonLength);
+        builder.Ignore(x => x.IsLocked);
 
-        // The same date can only be written once on a register line.
+        // A date written by hand appears once per register line. Arrivals tied to movement steps may
+        // share a date (out and back on the same day), but one step is never recorded twice.
         builder.HasIndex(x => new { x.DocumentNumberId, x.RegistryDate })
             .IsUnique()
+            .HasFilter("[MovementStepId] IS NULL")
             .HasDatabaseName("UX_DOC_REG_VISITS_NUMBER_DATE");
+
+        builder.HasIndex(x => new { x.DocumentNumberId, x.MovementStepId })
+            .IsUnique()
+            .HasFilter("[MovementStepId] IS NOT NULL")
+            .HasDatabaseName("UX_DOC_REG_VISITS_NUMBER_STEP");
+
+        builder.HasOne<DocumentTypeSchemaVersion>().WithMany().HasForeignKey(x => x.SchemaVersionId).OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasMany(x => x.Values)
+            .WithOne()
+            .HasForeignKey(x => x.VisitId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Navigation(x => x.Values)
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
+    }
+}
+
+/// <summary>Values of a department's record form, one row per field per visit.</summary>
+public sealed class DepartmentRecordValueConfiguration : IEntityTypeConfiguration<DepartmentRecordValue>
+{
+    public void Configure(EntityTypeBuilder<DepartmentRecordValue> builder)
+    {
+        builder.ToTable("DEPARTMENT_RECORD_VALUES");
+        builder.Ignore(x => x.Id);
+
+        builder.HasKey(x => x.ValueId);
+        builder.Property(x => x.ValueId).HasColumnName("ValueId").ValueGeneratedNever();
+        builder.Property(x => x.VisitId).HasColumnName("VisitId").IsRequired();
+        builder.Property(x => x.DocumentFieldId).HasColumnName("DocumentFieldId").IsRequired();
+        builder.Property(x => x.TextValue).HasColumnName("TextValue").HasMaxLength(InstitutionalDiwan.Domain.ValueObjects.DocumentFieldSettings.MaxLongTextLength);
+        builder.Property(x => x.NumberValue).HasColumnName("NumberValue").HasPrecision(28, 8);
+        builder.Property(x => x.DateValue).HasColumnName("DateValue").HasColumnType("datetime2(3)");
+        builder.Property(x => x.BoolValue).HasColumnName("BoolValue");
+        builder.Property(x => x.OptionKey).HasColumnName("OptionKey").HasMaxLength(DocumentField.MaxKeyLength);
+
+        builder.HasIndex(x => new { x.VisitId, x.DocumentFieldId })
+            .IsUnique()
+            .HasDatabaseName("UX_DEPT_RECORD_VALUES_VISIT_FIELD");
+
+        builder.HasOne<DocumentField>().WithMany().HasForeignKey(x => x.DocumentFieldId).OnDelete(DeleteBehavior.Restrict);
     }
 }
 

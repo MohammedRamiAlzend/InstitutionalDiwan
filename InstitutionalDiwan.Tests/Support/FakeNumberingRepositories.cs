@@ -58,6 +58,12 @@ internal sealed class FakeDocumentNumberRepository : IDocumentNumberRepository
                 .OrderBy(number => number.IssuedAt)
                 .ToList());
 
+    public Task<Guid?> FindDocumentIdByVisitAsync(Guid visitId, CancellationToken cancellationToken = default)
+        => Task.FromResult(DocumentNumbers
+            .Where(number => number.Visits.Any(visit => visit.VisitId == visitId))
+            .Select(number => (Guid?)number.DocumentId)
+            .FirstOrDefault());
+
     public Task<IReadOnlyList<DocumentNumber>> ListByDepartmentAsync(
         Guid departmentId,
         int? numberingYear,
