@@ -56,6 +56,7 @@ entries ordered by the department's own date, with the central Diwan number kept
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-10 | Claude | `DepartmentRegisterLineResponse` carries `ReplacedByNumberText` and `ReplacesNumberText`, so the register book shows a renumbered document's old and new lines linked. |
 | 2026-11-03 | Claude | The department register now requires the department to be in the caller's scope, and keeps every line but hides the document's title and central number when the caller cannot view it, so the book has no gaps and leaks no content. |
 | 2026-10-22 | Buffy | `CreateNumberingRegistryCommandHandler` now stamps the registry with `IUnitOfWork.UtcNow` (the shared `NumberingRegistryResolver` does the same for the auto-created default registry). |
 | 2026-10-20 | Buffy | Added the department register book (`ListDepartmentRegisterQuery`) and noted that the template lock now counts only central numbers, so typed department entries cannot freeze a registry format. |

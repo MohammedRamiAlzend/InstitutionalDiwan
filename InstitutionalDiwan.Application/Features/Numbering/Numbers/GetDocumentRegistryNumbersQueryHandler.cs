@@ -48,6 +48,13 @@ internal sealed class GetDocumentRegistryNumbersQueryHandler
             number.ScopeId == DocumentNumberScope.CentralId &&
             number.DocumentNumberId == document.ActiveOfficialNumberId);
 
+        // Both directions of the renumbering link: a line by id, and the line each one replaced.
+        var byId = numbers.ToDictionary(number => number.DocumentNumberId);
+        var replacedBy = numbers
+            .Where(number => number.ReplacedByNumberId is not null)
+            .GroupBy(number => number.ReplacedByNumberId!.Value)
+            .ToDictionary(group => group.Key, group => group.First());
+
         var departmentNumbers = numbers
             .Where(number => number.ScopeId == DocumentNumberScope.DepartmentId)
             .OrderBy(number => number.RegistryDate)
@@ -79,7 +86,11 @@ internal sealed class GetDocumentRegistryNumbersQueryHandler
                         visit.RecordedByUserId,
                         visit.RecordedAt,
                         visit.Notes))
-                    .ToList()))
+                    .ToList(),
+                number.ReplacedByNumberId,
+                byId.GetValueOrDefault(number.ReplacedByNumberId ?? Guid.Empty)?.OfficialNumberText,
+                replacedBy.GetValueOrDefault(number.DocumentNumberId)?.DocumentNumberId,
+                replacedBy.GetValueOrDefault(number.DocumentNumberId)?.OfficialNumberText))
             .ToList();
 
         return Result.Success(new DocumentRegistryNumbersResponse(

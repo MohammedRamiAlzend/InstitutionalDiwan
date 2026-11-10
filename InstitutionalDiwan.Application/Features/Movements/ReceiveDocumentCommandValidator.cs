@@ -20,6 +20,10 @@ public sealed class ReceiveDocumentCommandValidator : AbstractValidator<ReceiveD
         RuleFor(command => command.RegistryNumberText)
             .MaximumLength(100);
 
+        RuleFor(command => command.RegistryNumberText)
+            .NotEmpty().WithErrorCode("Numbering.DepartmentNumberRequired")
+            .When(command => command.IssueNewNumber);
+
         RuleFor(command => command.RegistryDate)
             .Must(date => date is null
                 || (date.Value.Year is >= 1900 and <= 2200 && !RegistryDateRules.IsFuture(date.Value, clock)))

@@ -49,6 +49,7 @@ inbox, outbox, and the document timeline refresh together.
 - 2026-11-05: Unsent form input is now kept (per user, per form) after an accidental close or cancel and restored with a toast; it is cleared only after a successful submit (`useDraftForm`).
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-10 | Claude | The receive dialog offers "تسجيل الوثيقة برقم جديد" when the department already has a number that year and sends `issueNewNumber`; the toast names the replaced number. |
 | 2026-11-10 | Claude | The receive dialog shows the destination department's record form and sends `fieldValues`; movement writes also refresh department records. |
 | 2026-11-08 | Claude | Receive asks for the register first when a department has several and a new number is needed. |
 | 2026-11-08 | Claude | Receive has its own dialog with a date and a locked or typed department number. |

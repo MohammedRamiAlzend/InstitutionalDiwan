@@ -126,6 +126,7 @@ mounted dialog.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-10 | Claude | The numbers tab shows, on each department line, the number it replaced and the number that replaced it. |
 | 2026-11-10 | Claude | Document details gains the «سجل الديوان» tab; archive, unarchive and cancel show only to the creating department. |
 | 2026-11-09 | Claude | Document page gained the «تصدير PDF» header action. |
 | 2026-11-09 | Claude | The participants tab and the add-participant action are hidden while `FEATURES.participants` is off. |

@@ -9,7 +9,11 @@ namespace InstitutionalDiwan.Application.Features.Numbering.Registries;
 public sealed record ListDepartmentRegisterQuery(Guid DepartmentId, int? NumberingYear)
     : IQuery<IReadOnlyCollection<DepartmentRegisterLineResponse>>;
 
-/// <summary>One document as it appears in a department's register.</summary>
+/// <summary>
+/// One document as it appears in a department's register. When the department renumbered the
+/// document, the replaced line (<c>StatusId</c> 3) carries the number that took its place in
+/// <c>ReplacedByNumberText</c> and the newer line carries the earlier number in <c>ReplacesNumberText</c>.
+/// </summary>
 public sealed record DepartmentRegisterLineResponse(
     Guid DocumentNumberId,
     Guid DocumentId,
@@ -19,4 +23,6 @@ public sealed record DepartmentRegisterLineResponse(
     int NumberingYear,
     DateTime? RegistryDate,
     int StatusId,
-    int RegistrationCount);
+    int RegistrationCount,
+    string? ReplacedByNumberText = null,
+    string? ReplacesNumberText = null);

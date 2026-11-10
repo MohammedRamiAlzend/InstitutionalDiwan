@@ -244,7 +244,9 @@ Each version stores a **64-char hex SHA-256**. Max upload ~50 MB (+ multipart ov
 | `POST` | `.../numbers/{documentNumberId}/replace` | `NUMBERING_MANAGE` | + `DOWNLOAD` access. |
 | `POST` | `.../numbers/department-registration` | `NUMBERING_MANAGE` | Body `{ departmentId, registryNumberText, registryDate, notes?, registryId? }`. `departmentId` must be the caller's own primary department (else 403 `Numbering.DepartmentRegistrationOwnDepartmentOnly`); `registryId` picks one of that department's active registers (404 `Numbering.RegistryNotFound`, 409 `Numbering.DepartmentRegistryMismatch`), omitted = best match. |
 
-A department has one number per document per year (`DepartmentNumberLocked` if a different one is sent); each arrival adds a dated entry in `visits[]` on `registry-entries`, and a repeated date returns 409 `Numbering.VisitDateDuplicate`. `receive` writes the visit itself, so `department-registration` is only needed to register without receiving.
+A department has one number in use per document per year (`DepartmentNumberLocked` if a different one is sent); each arrival adds a dated entry in `visits[]` on `registry-entries`, and a repeated date returns 409 `Numbering.VisitDateDuplicate`. `receive` writes the visit itself, so `department-registration` is only needed to register without receiving.
+
+**Renumbering on return**: `receive` with `issueNewNumber: true` and a new `registryNumberText` writes the returning document under a new department number. The earlier line stays with `statusId` 3 (replaced) and the two are linked: on `registry-entries` each department line has `replacedByNumberId`/`replacedByNumberText` (old → new) and `replacesNumberId`/`replacesNumberText` (new → old); `GET /api/departments/{id}/register` lines have `replacedByNumberText`/`replacesNumberText`; the receipt returns `replacedNumberId`/`replacedNumberText`. It can be repeated (a chain), needs no reason and no extra permission, and the replaced number cannot be reused in that register and year (409 `Numbering.RegistryNumberTaken`). The documents register-number filter matches replaced numbers too.
 
 ### Numbering registries — `/api/numbering/registries`
 
@@ -266,7 +268,7 @@ A department has one number per document per year (`DepartmentNumberLocked` if a
 | `GET` | `/api/movements/by-document/{documentId}` | `DOCUMENT_VIEW` | + `VIEW` access. |
 | `POST` | `/api/movements` | `DOCUMENT_EDIT` | + `DOWNLOAD` access. |
 | `POST` | `/api/movements/{movementId}/send` | `DOCUMENT_EDIT` | Custody: scope covers the current step's sender; otherwise 403 `Movements.DepartmentOutOfScope`. |
-| `POST` | `/api/movements/{movementId}/receive` | `DOCUMENT_EDIT` | Custody: the current step's receiver. Body `{ notes?, registryDate?, registryNumberText?, registryId? }`; `registryId` picks the register for a new number; the number is required only when the department has none for the document in that year (409 `Numbering.DepartmentRegistrationRequired`). |
+| `POST` | `/api/movements/{movementId}/receive` | `DOCUMENT_EDIT` | Custody: the current step's receiver. Body `{ notes?, registryDate?, registryNumberText?, registryId?, issueNewNumber? }`; `registryId` picks the register for a new number; the number is required only when the department has none for the document in that year (409 `Numbering.DepartmentRegistrationRequired`). `issueNewNumber` replaces the department's number for that year with `registryNumberText` and links the two. |
 | `POST` | `/api/movements/{movementId}/complete` | `DOCUMENT_EDIT` | Custody: the receiver. |
 | `POST` | `/api/movements/{movementId}/reject` | `DOCUMENT_EDIT` | Custody: the receiver. |
 | `POST` | `/api/movements/{movementId}/return` | `DOCUMENT_EDIT` | Custody: the receiver. |

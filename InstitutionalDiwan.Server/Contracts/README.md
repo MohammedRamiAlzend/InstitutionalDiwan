@@ -59,6 +59,7 @@ commands/queries map between them and the domain.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-10 | Claude | `ReceiveDocumentRequest` gained the optional `IssueNewNumber` flag. |
 | 2026-11-10 | Claude | `ReceiveDocumentRequest.FieldValues`, `CreateDocumentFieldRequest.DepartmentId`, `SetVisitRecordRequest`, `CorrectVisitRecordRequest`. |
 | 2026-11-09 | Claude | Removed `DocumentDate`, `ExternalReferenceNumber` and `ExternalDocumentDate` from `CreateDraftDocumentRequest`. |
 | 2026-11-09 | Claude | `Title` is optional on `CreateDocumentRequest` and `CreateDraftDocumentRequest`. |

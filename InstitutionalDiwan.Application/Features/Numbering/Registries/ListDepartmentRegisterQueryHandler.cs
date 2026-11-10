@@ -76,6 +76,13 @@ internal sealed class ListDepartmentRegisterQueryHandler
                 _clock.UtcNow),
             cancellationToken);
 
+        // A renumbered document has two lines in the same department and year, so both sit in this list.
+        var byId = numbers.ToDictionary(number => number.DocumentNumberId);
+        var replacedBy = numbers
+            .Where(number => number.ReplacedByNumberId is not null)
+            .GroupBy(number => number.ReplacedByNumberId!.Value)
+            .ToDictionary(group => group.Key, group => group.First());
+
         IReadOnlyCollection<DepartmentRegisterLineResponse> register = numbers
             .Select(number =>
             {
@@ -94,7 +101,9 @@ internal sealed class ListDepartmentRegisterQueryHandler
                     number.StatusId,
                     number.History.Count(history =>
                         history.EventTypeId is DocumentNumberEventType.RegisteredInDepartmentId
-                            or DocumentNumberEventType.ReRegisteredInDepartmentId));
+                            or DocumentNumberEventType.ReRegisteredInDepartmentId),
+                    byId.GetValueOrDefault(number.ReplacedByNumberId ?? Guid.Empty)?.OfficialNumberText,
+                    replacedBy.GetValueOrDefault(number.DocumentNumberId)?.OfficialNumberText);
             })
             .ToList();
 

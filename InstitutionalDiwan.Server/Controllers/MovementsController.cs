@@ -249,6 +249,7 @@ public sealed class MovementsController : ControllerBase
     /// <item><term>registryNumberText</term><description>Department register number, required only when the department has no number for this document in that year (string, optional). Example: <c>1457/ص</c>.</description></item>
     /// <item><term>registryId</term><description>Register of the department to write a new number in (GUID, optional, best matching active register when omitted; ignored when the number already exists). Example: <c>3f6b2a10-7c44-4e19-9a52-1d8e6f0b7c21</c>.</description></item>
     /// <item><term>fieldValues</term><description>Values of the department record form for the document type, field key and value as text; required fields of a published form must be filled (array, optional). Example: <c>[{"fieldKey":"case_no","value":"77/2026"}]</c>.</description></item>
+    /// <item><term>issueNewNumber</term><description>Write the document under registryNumberText even though the department already has a number for it that year; the earlier number becomes REPLACED and stays linked to the new one (boolean, optional, default false). Example: <c>true</c>.</description></item>
     /// </list>
     /// </param>
     /// <param name="cancellationToken">Request cancellation token (optional).</param>
@@ -260,7 +261,7 @@ public sealed class MovementsController : ControllerBase
     /// is missing — record it first.</response>
     [HttpPost("{movementId:guid}/receive")]
     [EndpointSummary("Receives the movement's current step at the destination department.")]
-    [EndpointDescription("Receives the movement's current step at the destination department and writes a dated visit in that department's register: an existing number for the year of registryDate is reused, otherwise registryNumberText is required. When the department has a published record form for the document type, fieldValues opens the department record on the visit in the same transaction and every required field must be filled. Requires the DOCUMENT_EDIT permission and a scope covering the receiving department of the current step. Responses: 200 (The recorded receipt.), 400 (A record value failed validation or a required record field is missing.), 401 (The token is missing, expired, or invalid.), 403 (The token lacks the DOCUMENT_EDIT permission, or the caller's scope does not cover the receiving department.), 404 (No movement with that id exists.), 409 (The step is not awaiting receipt, or the department's register entry is missing — record it first.)")]
+    [EndpointDescription("Receives the movement's current step at the destination department and writes a dated visit in that department's register: an existing number for the year of registryDate is reused, otherwise registryNumberText is required. With issueNewNumber the department writes the document under a new registryNumberText instead; its earlier number becomes REPLACED and stays linked to the new one. When the department has a published record form for the document type, fieldValues opens the department record on the visit in the same transaction and every required field must be filled. Requires the DOCUMENT_EDIT permission and a scope covering the receiving department of the current step. Responses: 200 (The recorded receipt.), 400 (A record value failed validation or a required record field is missing.), 401 (The token is missing, expired, or invalid.), 403 (The token lacks the DOCUMENT_EDIT permission, or the caller's scope does not cover the receiving department.), 404 (No movement with that id exists.), 409 (The step is not awaiting receipt, or the department's register entry is missing — record it first.)")]
     [Authorize(Policy = Permissions.DocumentEdit)]
     [ProducesResponseType<MovementStepReceiptResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
@@ -277,7 +278,7 @@ public sealed class MovementsController : ControllerBase
             return Unauthorized();
 
         var result = await _sender.Send(
-            new ReceiveDocumentCommand(movementId, userId, request.Notes, null, request.RegistryDate, request.RegistryNumberText, request.RegistryId, request.FieldValues.ToInputs()), cancellationToken);
+            new ReceiveDocumentCommand(movementId, userId, request.Notes, null, request.RegistryDate, request.RegistryNumberText, request.RegistryId, request.FieldValues.ToInputs(), request.IssueNewNumber), cancellationToken);
 
         return result.ToActionResult();
     }
@@ -591,6 +592,7 @@ public sealed class MovementsController : ControllerBase
     /// <item><term>registryNumberText</term><description>Department register number, required only when the department has no number for this document in that year (string, optional). Example: <c>1457/ص</c>.</description></item>
     /// <item><term>registryId</term><description>Register of the department to write a new number in (GUID, optional, best matching active register when omitted; ignored when the number already exists). Example: <c>3f6b2a10-7c44-4e19-9a52-1d8e6f0b7c21</c>.</description></item>
     /// <item><term>fieldValues</term><description>Values of the department record form for the document type, field key and value as text; required fields of a published form must be filled (array, optional). Example: <c>[{"fieldKey":"case_no","value":"77/2026"}]</c>.</description></item>
+    /// <item><term>issueNewNumber</term><description>Write the document under registryNumberText even though the department already has a number for it that year; the earlier number becomes REPLACED and stays linked to the new one (boolean, optional, default false). Example: <c>true</c>.</description></item>
     /// </list>
     /// </param>
     /// <param name="cancellationToken">Request cancellation token (optional).</param>
@@ -601,7 +603,7 @@ public sealed class MovementsController : ControllerBase
     /// <response code="409">The step is not current or awaiting receipt, or the department register entry is missing.</response>
     [HttpPost("{movementId:guid}/steps/{stepId:guid}/receive")]
     [EndpointSummary("Receives a named step when it is the movement's current step.")]
-    [EndpointDescription("Receives a named step when it is the movement's current step. Writes a dated visit in the destination department's register: an existing number for the year of registryDate is reused, otherwise registryNumberText is required. When the department has a published record form for the document type, fieldValues opens the department record on the visit in the same transaction and every required field must be filled. Requires the DOCUMENT_EDIT permission and a scope covering the receiving department of the current step. Responses: 200 (The recorded receipt.), 400 (A record value failed validation or a required record field is missing.), 401 (The token is missing, expired, or invalid.), 403 (The token lacks the DOCUMENT_EDIT permission, or the caller's scope does not cover the receiving department.), 404 (No movement with that id exists.), 409 (The step is not current or awaiting receipt, or the department register entry is missing.)")]
+    [EndpointDescription("Receives a named step when it is the movement's current step. Writes a dated visit in the destination department's register: an existing number for the year of registryDate is reused, otherwise registryNumberText is required. With issueNewNumber the department writes the document under a new registryNumberText instead; its earlier number becomes REPLACED and stays linked to the new one. When the department has a published record form for the document type, fieldValues opens the department record on the visit in the same transaction and every required field must be filled. Requires the DOCUMENT_EDIT permission and a scope covering the receiving department of the current step. Responses: 200 (The recorded receipt.), 400 (A record value failed validation or a required record field is missing.), 401 (The token is missing, expired, or invalid.), 403 (The token lacks the DOCUMENT_EDIT permission, or the caller's scope does not cover the receiving department.), 404 (No movement with that id exists.), 409 (The step is not current or awaiting receipt, or the department register entry is missing.)")]
     [Authorize(Policy = Permissions.DocumentEdit)]
     [ProducesResponseType<MovementStepReceiptResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
@@ -619,7 +621,7 @@ public sealed class MovementsController : ControllerBase
             return Unauthorized();
 
         var result = await _sender.Send(
-            new ReceiveDocumentCommand(movementId, userId, request.Notes, stepId, request.RegistryDate, request.RegistryNumberText, request.RegistryId, request.FieldValues.ToInputs()), cancellationToken);
+            new ReceiveDocumentCommand(movementId, userId, request.Notes, stepId, request.RegistryDate, request.RegistryNumberText, request.RegistryId, request.FieldValues.ToInputs(), request.IssueNewNumber), cancellationToken);
         return result.ToActionResult();
     }
 

@@ -2921,7 +2921,7 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                     b.HasIndex("DocumentId", "DepartmentId", "NumberingYear")
                         .IsUnique()
                         .HasDatabaseName("UX_DOC_NUMBERS_DOC_DEPT")
-                        .HasFilter("[DepartmentId] IS NOT NULL");
+                        .HasFilter("[DepartmentId] IS NOT NULL AND [StatusId] <> 3");
 
                     b.HasIndex("RegistryId", "NumberingYear", "SequenceValue")
                         .IsUnique()

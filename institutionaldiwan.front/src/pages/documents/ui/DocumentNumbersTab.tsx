@@ -60,7 +60,10 @@ const numberStatusLabels: Record<number, string> = {
 /** The API stamps replacement numbers with an English `Replaces …` note; keep it Arabic here. */
 function formatNumberNote(note: string): string {
   const replaced = /^Replaces\s+(.+)$/.exec(note)
-  return replaced ? `يستبدل الرقم ${replaced[1]}` : note
+  if (replaced) return `يستبدل الرقم ${replaced[1]}`
+
+  const renumbered = /^Replaced by department number\s+(.+)$/.exec(note)
+  return renumbered ? `سُجّلت الوثيقة برقم جديد: ${renumbered[1]}` : note
 }
 
 function latestNumberNote(number: DocumentNumberResponse): string | null {
@@ -383,7 +386,7 @@ export function DocumentNumbersTab({
             <h2 className="text-base font-semibold text-foreground">أرقام سجلات الدوائر</h2>
             <p className="max-w-2xl text-xs text-muted">
               الأرقام التي كتبتها الدوائر في سجلاتها الخاصة للوثيقة، مع كل تاريخ تسجيل أو إعادة
-              تسجيل.
+              تسجيل. إذا سجّلت الدائرة الوثيقة برقم جديد يبقى رقمها السابق هنا مستبدَلًا ومرتبطًا به.
             </p>
           </div>
           {canManage && hasCentralNumber && (
@@ -427,6 +430,27 @@ export function DocumentNumbersTab({
                     {line.visits.length} زيارة
                   </span>
                 </div>
+
+                {(line.replacedByNumberText || line.replacesNumberText) && (
+                  <p className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-lg bg-surface-muted px-3 py-2 text-xs text-foreground">
+                    {line.replacesNumberText && (
+                      <span>
+                        يحلّ محلّ الرقم السابق:{' '}
+                        <span dir="ltr" className="font-mono font-semibold">
+                          {line.replacesNumberText}
+                        </span>
+                      </span>
+                    )}
+                    {line.replacedByNumberText && (
+                      <span>
+                        استُبدل بالرقم:{' '}
+                        <span dir="ltr" className="font-mono font-semibold">
+                          {line.replacedByNumberText}
+                        </span>
+                      </span>
+                    )}
+                  </p>
+                )}
 
                 {line.visits.length > 0 && (
                   <div className="flex flex-wrap items-center gap-1.5 text-xs">

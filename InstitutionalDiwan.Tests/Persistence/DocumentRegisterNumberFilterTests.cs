@@ -96,6 +96,38 @@ public sealed class DocumentRegisterNumberFilterTests
     }
 
     [Fact]
+    public async Task ARenumberedDocumentIsSavedWithBothLinesAndFoundByEither()
+    {
+        var world = await CreateWorldAsync();
+        world.Db.DocumentNumberStatuses.Add(DocumentNumberStatus.Create(DocumentNumberStatus.ReplacedId, "Replaced", "مستبدل").Value);
+        world.Db.DocumentNumberEventTypes.Add(DocumentNumberEventType.Create(DocumentNumberEventType.ReplacedId, "Replaced", "استبدال").Value);
+        var document = AddDocument(world, "الأولى");
+        AddLine(world, document, world.Receiver, world.ReceiverBook, "45/2026");
+        await world.Db.SaveChangesAsync();
+
+        // The unique index allows one line in use per department and year, so the old line must be
+        // marked replaced in the same save that inserts the new one.
+        var replacement = DocumentNumber.CreateDepartmentEntry(
+            document.DocumentId, world.Receiver.DepartmentId, world.ReceiverBook.RegistryId, "46/2026",
+            new DateTime(2026, 5, 1), world.Actor.UserId, utcNow: Now.AddDays(1)).Value;
+        Assert.True(document.ReplaceDepartmentNumber(replacement, world.Actor.UserId, utcNow: Now.AddDays(1)).IsSuccess);
+        await world.Db.SaveChangesAsync();
+
+        var lines = world.Db.DocumentNumbers.Where(number => number.DocumentId == document.DocumentId).ToList();
+        Assert.Equal(2, lines.Count);
+        Assert.Equal(replacement.DocumentNumberId, lines.Single(line => line.OfficialNumberText == "45/2026").ReplacedByNumberId);
+        Assert.Equal(new[] { "الأولى" }, await FilterAsync(world, "45/2026"));
+        Assert.Equal(new[] { "الأولى" }, await FilterAsync(world, "46/2026"));
+
+        // A second line in use for the same department and year is still refused by the database.
+        var duplicate = DocumentNumber.CreateDepartmentEntry(
+            document.DocumentId, world.Receiver.DepartmentId, world.ReceiverBook.RegistryId, "47/2026",
+            new DateTime(2026, 5, 2), world.Actor.UserId, utcNow: Now.AddDays(2)).Value;
+        world.Db.DocumentNumbers.Add(duplicate);
+        await Assert.ThrowsAsync<Microsoft.EntityFrameworkCore.DbUpdateException>(() => world.Db.SaveChangesAsync());
+    }
+
+    [Fact]
     public async Task IgnoresTheCentralNumber()
     {
         var world = await CreateWorldAsync();

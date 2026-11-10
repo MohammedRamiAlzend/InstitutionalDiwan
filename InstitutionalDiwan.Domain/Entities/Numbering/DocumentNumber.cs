@@ -312,6 +312,45 @@ public sealed class DocumentNumber : AggregateRoot<Guid>
         return Result.Success();
     }
 
+    /// <summary>
+    /// The department wrote the document under a new number when it came back. This line stays in the
+    /// register book as <c>REPLACED</c> and points at the line that took its place, so either number
+    /// leads to the other. Unlike a central replacement no reason is required: it is an ordinary
+    /// decision of the receiving clerk.
+    /// </summary>
+    public Result SupersedeInDepartment(
+        DocumentNumber replacement,
+        Guid actorUserId,
+        string? notes = null,
+        DateTime? utcNow = null)
+    {
+        if (!IsDepartmentEntry || !replacement.IsDepartmentEntry)
+            return Result.Failure(DomainErrors.Numbering.DepartmentScopeMismatch);
+
+        if (StatusId != DocumentNumberStatus.ActiveId)
+            return Result.Failure(DomainErrors.Numbering.NumberNotActive);
+
+        if (replacement.DocumentNumberId == DocumentNumberId
+            || replacement.DocumentId != DocumentId
+            || replacement.DepartmentId != DepartmentId)
+        {
+            return Result.Failure(DomainErrors.Numbering.ReplacementIdInvalid);
+        }
+
+        var reason = string.IsNullOrWhiteSpace(notes)
+            ? $"Replaced by department number {replacement.OfficialNumberText}"
+            : notes.Trim();
+
+        StatusId = DocumentNumberStatus.ReplacedId;
+        ReplacedByNumberId = replacement.DocumentNumberId;
+        _history.Add(DocumentNumberHistory.Create(
+            DocumentNumberId, DocumentNumberEventType.ReplacedId, actorUserId, reason, utcNow: utcNow));
+
+        RaiseDomainEvent(new OfficialNumberReplacedEvent(
+            DocumentNumberId, replacement.DocumentNumberId, DocumentId, actorUserId, reason));
+        return Result.Success();
+    }
+
     private static bool IsValidRegistryDate(DateTime registryDate) =>
         registryDate != default && registryDate.Year is >= 1900 and <= 2200;
 }

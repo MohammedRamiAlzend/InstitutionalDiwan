@@ -108,15 +108,18 @@ public sealed class DepartmentRegisterNumberingTests
         public Task<Result<MovementStepReceiptResponse>> ReceiveAsync(
             DocumentMovement movement,
             DateTime registryDate,
-            string? numberText = null) =>
+            string? numberText = null,
+            bool issueNewNumber = false) =>
             ReceiveHandler().Handle(
                 new ReceiveDocumentCommand(
-                    movement.MovementId, UserId, RegistryDate: registryDate, RegistryNumberText: numberText),
+                    movement.MovementId, UserId, RegistryDate: registryDate, RegistryNumberText: numberText,
+                    IssueNewNumber: issueNewNumber),
                 CancellationToken.None);
 
         public DocumentNumber? DepartmentEntry(Guid departmentId) =>
             Numbers.DocumentNumbers.SingleOrDefault(number =>
                 number.ScopeId == DocumentNumberScope.DepartmentId &&
+                number.StatusId != DocumentNumberStatus.ReplacedId &&
                 number.DepartmentId == departmentId);
     }
 
@@ -611,6 +614,99 @@ public sealed class DepartmentRegisterNumberingTests
 
         Assert.True(result.IsFailure);
         Assert.Equal(DomainErrors.Numbering.DepartmentNumberLocked.Code, result.Error.Code);
+    }
+
+    [Fact]
+    public async Task Receive_WithANewNumberOnReturn_ReplacesTheLineAndLinksBoth()
+    {
+        var world = new World();
+        await world.IssueCentralAsync();
+        var first = await world.ReceiveAsync(CreateSentMovement(world), FirstVisit, "45");
+        Assert.True(first.IsSuccess, first.Error?.Code);
+
+        var returnMovement = CreateSentMovement(world);
+        var second = await world.ReceiveAsync(returnMovement, SecondVisit, "46", issueNewNumber: true);
+
+        Assert.True(second.IsSuccess, second.Error?.Code);
+        Assert.Equal("46", second.Value.RegistryNumberText);
+        Assert.NotEqual(first.Value.RegistryNumberId, second.Value.RegistryNumberId);
+        Assert.Equal(first.Value.RegistryNumberId, second.Value.ReplacedNumberId);
+        Assert.Equal("45", second.Value.ReplacedNumberText);
+        Assert.True(second.Value.IsReturnVisit);
+
+        var old = world.Numbers.DocumentNumbers.Single(number => number.OfficialNumberText == "45");
+        Assert.Equal(DocumentNumberStatus.ReplacedId, old.StatusId);
+        Assert.Equal(second.Value.RegistryNumberId, old.ReplacedByNumberId);
+        Assert.Contains(old.History, history => history.EventTypeId == DocumentNumberEventType.ReplacedId);
+        Assert.Equal(FirstVisit, Assert.Single(old.Visits).RegistryDate);
+
+        var current = world.DepartmentEntry(world.HrId)!;
+        Assert.Equal("46", current.OfficialNumberText);
+        Assert.Equal(DocumentNumberStatus.ActiveId, current.StatusId);
+        var visit = Assert.Single(current.Visits);
+        Assert.Equal(returnMovement.Steps.Single().StepId, visit.MovementStepId);
+        Assert.Equal(second.Value.RegistryVisitId, returnMovement.Steps.Single().RegistryVisitId);
+    }
+
+    [Fact]
+    public async Task Receive_AfterRenumbering_ReusesTheNewNumberAndCanRenumberAgain()
+    {
+        var world = new World();
+        await world.IssueCentralAsync();
+        await world.ReceiveAsync(CreateSentMovement(world), FirstVisit, "45");
+        var renumbered = await world.ReceiveAsync(CreateSentMovement(world), SecondVisit, "46", issueNewNumber: true);
+        Assert.True(renumbered.IsSuccess, renumbered.Error?.Code);
+
+        // No number typed: the number in use is the new one, never the replaced one.
+        var reused = await world.ReceiveAsync(CreateSentMovement(world), SecondVisit.AddDays(1));
+        Assert.True(reused.IsSuccess, reused.Error?.Code);
+        Assert.Equal(renumbered.Value.RegistryNumberId, reused.Value.RegistryNumberId);
+
+        var third = await world.ReceiveAsync(CreateSentMovement(world), SecondVisit.AddDays(2), "47", issueNewNumber: true);
+        Assert.True(third.IsSuccess, third.Error?.Code);
+        Assert.Equal("46", third.Value.ReplacedNumberText);
+
+        var numbers = await new GetDocumentRegistryNumbersQueryHandler(
+                world.Documents, world.Numbers, new FakeDocumentAccessEvaluator { AllowAll = true })
+            .Handle(new GetDocumentRegistryNumbersQuery(world.Document.DocumentId), CancellationToken.None);
+        Assert.True(numbers.IsSuccess, numbers.Error?.Code);
+        var chain = numbers.Value.DepartmentNumbers.ToDictionary(line => line.RegistryNumberText);
+        Assert.Equal(new[] { "45", "46", "47" }, chain.Keys.OrderBy(text => text));
+        Assert.Equal(("46", (string?)null), (chain["45"].ReplacedByNumberText, chain["45"].ReplacesNumberText));
+        Assert.Equal(("47", "45"), (chain["46"].ReplacedByNumberText, chain["46"].ReplacesNumberText));
+        Assert.Equal(((string?)null, "46"), (chain["47"].ReplacedByNumberText, chain["47"].ReplacesNumberText));
+        Assert.Equal(
+            new[] { DocumentNumberStatus.ReplacedId, DocumentNumberStatus.ReplacedId, DocumentNumberStatus.ActiveId },
+            new[] { chain["45"].StatusId, chain["46"].StatusId, chain["47"].StatusId });
+    }
+
+    [Fact]
+    public async Task Receive_WithANewNumberAlreadyUsedInTheRegister_ReturnsConflictAndKeepsTheLine()
+    {
+        var world = new World();
+        await world.IssueCentralAsync();
+        await world.ReceiveAsync(CreateSentMovement(world), FirstVisit, "45");
+        await world.ReceiveAsync(CreateSentMovement(world), SecondVisit, "46", issueNewNumber: true);
+
+        // The replaced number stays in the book, so it cannot be taken again that year.
+        var result = await world.ReceiveAsync(CreateSentMovement(world), SecondVisit.AddDays(1), "45", issueNewNumber: true);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(DomainErrors.Numbering.RegistryNumberTaken.Code, result.Error.Code);
+        Assert.Equal("46", world.DepartmentEntry(world.HrId)!.OfficialNumberText);
+    }
+
+    [Fact]
+    public async Task Receive_AskingForANewNumberOnTheFirstArrival_JustRegisters()
+    {
+        var world = new World();
+        await world.IssueCentralAsync();
+
+        var result = await world.ReceiveAsync(CreateSentMovement(world), FirstVisit, "45", issueNewNumber: true);
+
+        Assert.True(result.IsSuccess, result.Error?.Code);
+        Assert.Null(result.Value.ReplacedNumberId);
+        Assert.False(result.Value.IsReturnVisit);
     }
 
     [Fact]

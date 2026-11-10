@@ -141,7 +141,8 @@ const CODE_MESSAGES: Record<string, string> = {
   // Module 03/04 — Official numbering
   'Numbering.AlreadyCancelled': 'رقم النظام ملغى مسبقًا.',
   'Numbering.CancelReasonRequired': 'سبب إلغاء الرقم مطلوب.',
-  'Numbering.DepartmentNumberLocked': 'رقم تسجيل الدائرة مقفل ولا يمكن تعديله.',
+  'Numbering.DepartmentNumberLocked':
+    'للوثيقة رقم آخر في سجل الدائرة لهذه السنة. لتسجيلها برقم جديد اختر «تسجيل الوثيقة برقم جديد» عند الاستلام.',
   'Numbering.VisitDateDuplicate': 'سُجّل وصول هذه الوثيقة بهذا التاريخ مسبقًا؛ اختر تاريخًا آخر.',
   'Numbering.VisitYearMismatch': 'يجب أن يكون تاريخ الوصول في نفس سنة رقم الدائرة.',
   'Numbering.DepartmentNumberRequired': 'رقم تسجيل الدائرة مطلوب.',

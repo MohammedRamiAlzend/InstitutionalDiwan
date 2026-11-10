@@ -50,6 +50,7 @@ affected `detail(id)`.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-10 | Claude | `DepartmentRegisterLineResponse` gained `replacedByNumberText` and `replacesNumberText`. |
 | 2026-11-08 | Claude | Added the shared department register picker. |
 | 2026-10-29 | agent | Module 04 Phase 2: added `unknownPatternTokens` to `model/format.ts` and exported it through the barrel; documented that `registryScopeRank` is ordering-only, not a server-precedence claim. |
 | 2026-10-29 | agent | Module 04 Phase 1: added the pure `model/format.ts` (`renderNumberPattern`, `DEFAULT_NUMBER_PATTERN`) and `model/scope.ts` (`registryScopeRank`, `registryScopeKey`, `describeRegistryScope`, `findDuplicateActiveScopes`) helpers through the public barrel; no UI change yet. |

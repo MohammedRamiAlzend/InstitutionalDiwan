@@ -76,6 +76,7 @@ internal sealed class ReceiveDocumentCommandHandler
             return Result.Failure<MovementStepReceiptResponse>(registered.Error);
 
         var (entry, visit) = registered.Value;
+        var replaced = document.Numbers.FirstOrDefault(number => number.ReplacedByNumberId == entry.DocumentNumberId);
         var receive = movement.ReceiveStep(
             request.UserId, entry.DocumentNumberId, request.Notes, _unitOfWork.UtcNow, visit.VisitId);
         if (receive.IsFailure)
@@ -100,12 +101,15 @@ internal sealed class ReceiveDocumentCommandHandler
             visit.RegistryDate,
             step.ReceivedAt ?? _clock.UtcNow,
             visit.VisitId,
-            entry.Visits.Count > 1));
+            entry.Visits.Count > 1 || replaced is not null,
+            replaced?.DocumentNumberId,
+            replaced?.OfficialNumberText));
     }
 
     /// <summary>
     /// Adds the visit on the department's line for the year of the date, or creates that line when
-    /// the clerk supplied a number. A typed number must match an existing line.
+    /// the clerk supplied a number. A typed number must match an existing line, unless the clerk asked
+    /// for a new number: then the existing line is replaced by a new one that links back to it.
     /// </summary>
     private async Task<Result<(DocumentNumber Entry, DocumentRegistryVisit Visit)>> WriteRegisterVisitAsync(
         ReceiveDocumentCommand request,
@@ -119,14 +123,16 @@ internal sealed class ReceiveDocumentCommandHandler
         var typedNumber = request.RegistryNumberText?.Trim();
         var entry = document.FindDepartmentNumber(departmentId, registryDate.Year);
 
-        if (entry is not null)
-        {
-            if (!string.IsNullOrEmpty(typedNumber)
-                && !string.Equals(entry.OfficialNumberText, typedNumber, StringComparison.OrdinalIgnoreCase))
-            {
-                return Result.Failure<(DocumentNumber, DocumentRegistryVisit)>(DomainErrors.Numbering.DepartmentNumberLocked);
-            }
+        var renumbering = entry is not null
+            && !string.IsNullOrEmpty(typedNumber)
+            && !string.Equals(entry.OfficialNumberText, typedNumber, StringComparison.OrdinalIgnoreCase);
 
+        // A different number is a typing mistake unless the clerk asked for a new number.
+        if (renumbering && !request.IssueNewNumber)
+            return Result.Failure<(DocumentNumber, DocumentRegistryVisit)>(DomainErrors.Numbering.DepartmentNumberLocked);
+
+        if (entry is not null && !renumbering)
+        {
             var visit = entry.RecordReceiptVisit(
                 request.UserId, registryDate, step.StepId, step.SentAt, request.Notes, _unitOfWork.UtcNow);
             return visit.IsFailure
@@ -146,7 +152,8 @@ internal sealed class ReceiveDocumentCommandHandler
             return Result.Failure<(DocumentNumber, DocumentRegistryVisit)>(registry.Error);
 
         var created = await _registrationService.CreateEntryAsync(
-            document, departmentId, registry.Value, typedNumber, registryDate, request.UserId, request.Notes, step.StepId, cancellationToken);
+            document, departmentId, registry.Value, typedNumber, registryDate, request.UserId, request.Notes, step.StepId,
+            cancellationToken, replaceCurrent: renumbering);
         return created.IsFailure
             ? Result.Failure<(DocumentNumber, DocumentRegistryVisit)>(created.Error)
             : Result.Success((created.Value, created.Value.Visits.Single()));

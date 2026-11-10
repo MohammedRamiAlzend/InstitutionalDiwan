@@ -77,7 +77,11 @@ internal sealed class DepartmentRegistrationService
         return Result.Success(chosen);
     }
 
-    /// <summary>Creates the department's register line for the year of <paramref name="registryDate"/>, with its first visit.</summary>
+    /// <summary>
+    /// Creates the department's register line for the year of <paramref name="registryDate"/>, with its
+    /// first visit. With <paramref name="replaceCurrent"/> the department is renumbering a document it
+    /// already registered that year: its current line becomes <c>REPLACED</c> and links to the new one.
+    /// </summary>
     public async Task<Result<DocumentNumber>> CreateEntryAsync(
         Document document,
         Guid departmentId,
@@ -87,7 +91,8 @@ internal sealed class DepartmentRegistrationService
         Guid userId,
         string? notes,
         Guid? movementStepId,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        bool replaceCurrent = false)
     {
         if (document.ActiveOfficialNumberId is null)
             return Result.Failure<DocumentNumber>(DomainErrors.Numbering.DocumentNotRegistered);
@@ -116,7 +121,9 @@ internal sealed class DepartmentRegistrationService
         if (entryResult.IsFailure)
             return entryResult;
 
-        var attachResult = document.AddDepartmentNumber(entryResult.Value, _unitOfWork.UtcNow);
+        var attachResult = replaceCurrent
+            ? document.ReplaceDepartmentNumber(entryResult.Value, userId, notes, _unitOfWork.UtcNow)
+            : document.AddDepartmentNumber(entryResult.Value, _unitOfWork.UtcNow);
         if (attachResult.IsFailure)
             return Result.Failure<DocumentNumber>(attachResult.Error);
 

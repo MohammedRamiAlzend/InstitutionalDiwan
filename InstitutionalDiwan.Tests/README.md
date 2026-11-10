@@ -139,6 +139,7 @@ indexes) runs against a private SQLite in-memory database through `Support/TestC
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-10 | Claude | Department renumbering: four handler tests in `DepartmentRegisterNumberingTests` (link both ways, reuse and repeat, taken number, first arrival) and a SQLite test in `DocumentRegisterNumberFilterTests` for the filtered unique index and search by either number. |
 | 2026-11-10 | Claude | Added `DepartmentRecordTests` and `FakeDepartmentRecords`; partial-index persistence tests; permission counts are now 22; a same-day return is a second visit. |
 | 2026-11-09 | Claude | Added `TableExcelWriterTests`. |
 | 2026-11-09 | Claude | Added `DocumentRegisterNumberFilterTests`. |

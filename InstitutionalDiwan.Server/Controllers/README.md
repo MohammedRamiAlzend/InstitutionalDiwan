@@ -148,6 +148,7 @@ plain JSON array.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-10 | Claude | Both receive endpoints (`POST /api/movements/{id}/receive` and `/steps/{stepId}/receive`) document and forward `issueNewNumber`. |
 | 2026-11-10 | Claude | Added `DepartmentRecordsController`; schema routes take `departmentId`; receive routes accept `fieldValues`. |
 | 2026-11-09 | Claude | Added `ExportsController` (`POST api/exports/table`). |
 | 2026-11-09 | Claude | `GET /api/documents` accepts `registerNumber`. |

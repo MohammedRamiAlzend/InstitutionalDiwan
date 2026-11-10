@@ -23,6 +23,8 @@ export interface ReceiveMovementRequest extends MovementNotesRequest {
   registryId?: string | null
   /** Values of the destination department's record form for the document type, when one is published. */
   fieldValues?: FieldValueRequest[]
+  /** Write the document under `registryNumberText` although the department has a number that year; the old one becomes replaced and linked. */
+  issueNewNumber?: boolean
 }
 
 /** Required reason carried by reject/return/cancel. */

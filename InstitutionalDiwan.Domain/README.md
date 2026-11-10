@@ -361,6 +361,7 @@ them, while listing, relabelling and (de)activation keep working.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-10 | Claude | Department renumbering: `DocumentNumber.SupersedeInDepartment` marks a department line `REPLACED` and links it to the new line through `ReplacedByNumberId` (no reason required), `Document.ReplaceDepartmentNumber` swaps the line in use, `FindDepartmentNumber` returns the line in use, and `AddDepartmentNumber` ignores replaced lines. |
 | 2026-11-10 | Claude | Department records: `DocumentField`/`DocumentTypeSchemaVersion.DepartmentId` (record forms per department), `DepartmentRecordValue`, visit record open/edit/lock/correct, `Document.LockOpenRegistryVisits`, same-day arrivals tied to different steps, `RecordReturnVisit`, `DomainErrors.DepartmentRecords`, `Correspondence.OnlyOwningDepartmentCanClose`, permissions `DEPARTMENT_RECORD_VIEW_ALL` and `DEPARTMENT_RECORD_CORRECT` (22 codes). |
 | 2026-11-09 | Claude | Removed `Document.DocumentDate`, `ExternalReferenceNumber` and `ExternalDocumentDate`; anything still needed is a dynamic field. |
 | 2026-11-09 | Claude | `Document.Title` is optional and no longer shown; `Document.DisplayName` (type and owning register number, or type and date) names the document, written by the system. |

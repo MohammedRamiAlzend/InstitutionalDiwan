@@ -97,6 +97,7 @@ together with the `DocumentNumber` id it was dated by.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-10 | Claude | `ReceiveDocumentCommand.IssueNewNumber`: a department that already has a number for the document that year may receive it under a new `RegistryNumberText`; the old line becomes `REPLACED` and linked, and the receipt reports `ReplacedNumberId`/`ReplacedNumberText`. Without the flag a different number is still `Numbering.DepartmentNumberLocked`. |
 | 2026-11-10 | Claude | Receive accepts `FieldValues` and opens the department record (required fields enforced in the same transaction); send, redirect, reject and return lock the record of the department the document leaves; return gives the sender a new visit. |
 | 2026-11-08 | Claude | Receive accepts `RegistryId` to choose the register for a new number. |
 | 2026-11-08 | Claude | Receive writes the dated register visit itself: it reuses the department number for the date's year or takes a new number, and step responses carry the register number and date. |

@@ -50,10 +50,12 @@ public sealed class DocumentNumberConfiguration : IEntityTypeConfiguration<Docum
             .HasFilter("[ScopeId] = 2")
             .HasDatabaseName("UX_DOC_NUMBERS_DEPT_TEXT_YEAR");
 
-        // One register line per document per department per year; later arrivals in the year add visits.
+        // One register line in use per document per department per year; later arrivals in the year
+        // add visits. A department that renumbers the document keeps the replaced lines (StatusId 3)
+        // beside the new one, so those are left out of the index.
         builder.HasIndex(x => new { x.DocumentId, x.DepartmentId, x.NumberingYear })
             .IsUnique()
-            .HasFilter("[DepartmentId] IS NOT NULL")
+            .HasFilter("[DepartmentId] IS NOT NULL AND [StatusId] <> 3")
             .HasDatabaseName("UX_DOC_NUMBERS_DOC_DEPT");
 
         builder.HasIndex(x => new { x.DepartmentId, x.RegistryDate })

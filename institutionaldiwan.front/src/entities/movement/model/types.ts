@@ -81,6 +81,9 @@ export interface MovementReceiptResponse {
   registryVisitId: string
   /** True when the department already had this number and the receipt added a new date. */
   isReturnVisit: boolean
+  /** The department's earlier number, when this receipt wrote the document under a new one. */
+  replacedNumberId: string | null
+  replacedNumberText: string | null
 }
 
 export type MovementQueueKind = 'inbox' | 'outbox'

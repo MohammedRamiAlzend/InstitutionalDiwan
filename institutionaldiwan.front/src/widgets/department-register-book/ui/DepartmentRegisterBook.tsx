@@ -107,6 +107,24 @@ export function DepartmentRegisterBook() {
         ),
       },
       {
+        id: 'linkedNumber',
+        header: 'الرقم المرتبط',
+        sortable: true,
+        sortValue: (line) => line.replacedByNumberText ?? line.replacesNumberText,
+        cell: (line) => {
+          const linked = line.replacedByNumberText ?? line.replacesNumberText
+          if (!linked) return <span className="text-xs text-muted">—</span>
+          return (
+            <span className="inline-flex items-center gap-1.5 whitespace-nowrap text-xs text-muted">
+              {line.replacedByNumberText ? 'استُبدل بـ' : 'بدل'}
+              <code dir="ltr" className="text-foreground">
+                {linked}
+              </code>
+            </span>
+          )
+        },
+      },
+      {
         id: 'numberingYear',
         header: 'السنة',
         sortable: true,
@@ -205,6 +223,8 @@ export function DepartmentRegisterBook() {
           documentRowLabel(line.documentTitle),
           line.centralNumberText,
           line.registryNumberText,
+          line.replacedByNumberText,
+          line.replacesNumberText,
           String(line.numberingYear),
         ]
           .filter(Boolean)

@@ -31,6 +31,7 @@ empty migration when the model changed.
 | `20261103064712_Add_Archiving_Constraints` | Foreign keys from `DOCUMENT_ARCHIVE_EVENTS` to documents, users and status types and from `SAVED_SEARCHES` to users (all restrict); unique `UX_SAVED_SEARCHES_USER_NAME`, filtered unique `UX_SAVED_SEARCHES_USER_DEFAULT` (one default per user), and `IX_DOC_ARCHIVE_EVENTS_TYPE_DATE`, which replaces the single-column event-type index. Both tables were empty, so no data migration is needed. |
 | `20261103090137_Add_Relations_Constraints` | Foreign keys from `DOCUMENT_RELATIONS` to documents (source and target), users and `DOCUMENT_RELATION_TYPES`, and from `DOCUMENT_RELATION_EVENTS` to documents, users, types and action types (all restrict); deliberately none from the events to `RelationId`, because the history outlives a removed link. Adds `CK_DOC_RELATIONS_NOT_SELF`, `IX_DOC_RELATIONS_TARGET` and the event indexes by document and date. Both tables were empty, so no data migration is needed. |
 | `20261110080858_DepartmentRecords` | Additive: nullable `DepartmentId` on `DOCUMENT_FIELDS` and `DOCUMENT_TYPE_SCHEMA_VERSIONS` with one partial unique index per form (creation form `DepartmentId IS NULL`, department forms `IS NOT NULL`); record columns on `DOCUMENT_REGISTRY_VISITS` (`SchemaVersionId`, `LockedAt`, update and correction stamps); new `DEPARTMENT_RECORD_VALUES`; the visit-date unique index now covers hand-written visits only, plus one visit per movement step. Existing rows stay valid. |
+| `20261110112943_Department_Number_Renumbering` | Recreates `UX_DOC_NUMBERS_DOC_DEPT` with the filter `[DepartmentId] IS NOT NULL AND [StatusId] <> 3`: one department line in use per document per year, while lines replaced by a renumbering stay beside it. Existing rows stay valid. |
 
 ## Custom (hand-written) migration steps
 
@@ -67,6 +68,7 @@ empty migration when the model changed.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-10 | Claude | Added `20261110112943_Department_Number_Renumbering`: `UX_DOC_NUMBERS_DOC_DEPT` now skips replaced lines (`[StatusId] <> 3`), so a department keeps its replaced numbers beside the one in use. Existing rows stay valid. |
 | 2026-11-10 | Claude | Added `DepartmentRecords`: department forms (partial unique indexes per form), record columns on visits, `DEPARTMENT_RECORD_VALUES`, and visit-date uniqueness limited to hand-written visits. |
 | 2026-11-09 | Claude | Added `Remove_Document_Date_And_External_Reference`, dropping those three columns from `DOCUMENTS`. |
 | 2026-11-09 | Claude | Added `Add_Document_DisplayName`: `Title` becomes nullable, and `DisplayName` is added and filled for existing documents. |

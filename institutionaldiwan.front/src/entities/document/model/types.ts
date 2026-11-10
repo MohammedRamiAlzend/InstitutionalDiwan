@@ -110,7 +110,11 @@ export interface DepartmentRegistryVisitResponse {
   notes: string | null
 }
 
-/** A department's register line for the document in one year, with its dated visits. */
+/**
+ * A department's register line for the document in one year, with its dated visits. A department
+ * that renumbered the document has several lines in the year: the replaced ones (`statusId` 3) name
+ * the line that took their place, and each newer line names the one it replaced.
+ */
 export interface DepartmentRegistryNumberResponse {
   documentNumberId: string
   departmentId: string
@@ -119,6 +123,10 @@ export interface DepartmentRegistryNumberResponse {
   numberingYear: number
   registryDate: string | null
   statusId: number
+  replacedByNumberId: string | null
+  replacedByNumberText: string | null
+  replacesNumberId: string | null
+  replacesNumberText: string | null
   registrations: DepartmentRegistrationEventResponse[]
   visits: DepartmentRegistryVisitResponse[]
 }

@@ -17,7 +17,7 @@ import { DepartmentRegistrySelect, useDepartmentRegistryOptions } from '@/entiti
 import { useSessionStore } from '@/entities/user'
 import { ApiError, toArabicErrorMessage } from '@/shared/api'
 import { Permissions } from '@/shared/config'
-import { Button, Dialog, FormField, Input, Textarea } from '@/shared/ui'
+import { Button, Checkbox, Dialog, FormField, Input, Textarea } from '@/shared/ui'
 import { useReceiveMovementMutation } from '../api/movementMutations'
 import { MOVEMENT_ACTION_LABELS } from '../model/constants'
 import { receiveMovementSchema, type ReceiveMovementFormValues } from '../model/schemas'
@@ -38,7 +38,8 @@ interface ReceiveMovementDialogProps {
 /**
  * Receives a movement and writes the dated visit in the destination department's register. When the
  * department already has a number for the document in the date's year the number is shown locked;
- * otherwise the clerk types it. Callers without NUMBERING_VIEW cannot see the lines, so the number
+ * otherwise the clerk types it. A clerk may tick "تسجيل الوثيقة برقم جديد" to write a returning
+ * document under a new number: the earlier number becomes replaced and stays linked to the new one. Callers without NUMBERING_VIEW cannot see the lines, so the number
  * stays optional for them and the server decides. When the department has a published record form for
  * the document type, its fields follow ("سجل الديوان") and the required ones must be filled to receive.
  */
@@ -61,6 +62,7 @@ export function ReceiveMovementDialog({
     register,
     handleSubmit,
     setError,
+    clearErrors,
     control,
     formState: { errors },
   } = useForm<ReceiveMovementFormValues>({
@@ -81,6 +83,9 @@ export function ReceiveMovementDialog({
     (option) => option.value === existingLine?.registryId,
   )?.label
   const linesKnown = canViewNumbering && entriesQuery.isSuccess
+  // A department may write a returning document under a new number; the earlier one stays linked.
+  const [issueNewNumber, setIssueNewNumber] = useState(false)
+  const reusedLine = issueNewNumber ? undefined : existingLine
 
   // The destination department's own record form for this document type, when one is published.
   const documentQuery = useDocumentById(documentId, { enabled: open && Boolean(documentId) })
@@ -104,12 +109,16 @@ export function ReceiveMovementDialog({
 
   const submit = handleSubmit(async (values) => {
     const typedNumber = values.registryNumberText.trim()
-    if (!existingLine && registries.options.length > 1 && !values.registryId) {
+    if (!reusedLine && registries.options.length > 1 && !values.registryId) {
       setError('registryId', { message: 'اختر السجل الذي سُجّل فيه الرقم.' })
       return
     }
-    if (linesKnown && !existingLine && !typedNumber) {
+    if (linesKnown && !reusedLine && !typedNumber) {
       setError('registryNumberText', { message: 'أدخل رقم سجل الدائرة لهذه السنة.' })
+      return
+    }
+    if (existingLine && issueNewNumber && typedNumber === existingLine.registryNumberText) {
+      setError('registryNumberText', { message: 'الرقم الجديد يطابق الرقم الحالي.' })
       return
     }
 
@@ -123,14 +132,17 @@ export function ReceiveMovementDialog({
         movementId,
         notes: values.notes.trim() || null,
         registryDate: values.registryDate,
-        registryNumberText: existingLine ? null : typedNumber || null,
-        registryId: existingLine ? null : values.registryId || null,
+        registryNumberText: reusedLine ? null : typedNumber || null,
+        registryId: reusedLine ? null : values.registryId || null,
+        ...(existingLine && issueNewNumber ? { issueNewNumber: true } : {}),
         ...(recordFields.length > 0
           ? { fieldValues: toFieldValueRequests(recordFields, effectiveRecordValues) }
           : {}),
       })
       toast.success(
-        receipt.isReturnVisit
+        receipt.replacedNumberText
+          ? `تم الاستلام برقم الدائرة الجديد ${receipt.registryNumberText} بدل الرقم ${receipt.replacedNumberText}.`
+          : receipt.isReturnVisit
           ? `تم الاستلام بنفس رقم الدائرة ${receipt.registryNumberText} وبتاريخ جديد.`
           : `تم استلام الوثيقة برقم الدائرة ${receipt.registryNumberText}.`,
       )
@@ -159,7 +171,7 @@ export function ReceiveMovementDialog({
       open={open}
       onOpenChange={onOpenChange}
       title={MOVEMENT_ACTION_LABELS.receive}
-      description="يُكتب الاستلام في سجل الدائرة الوجهة: رقم واحد للوثيقة في السنة، وتاريخ جديد في كل مرة تصل فيها."
+      description="يُكتب الاستلام في سجل الدائرة الوجهة: يبقى رقم الوثيقة نفسه بتاريخ جديد في كل مرة تصل فيها، إلا إذا سُجّلت برقم جديد."
       size="sm"
       footer={
         <>
@@ -188,7 +200,7 @@ export function ReceiveMovementDialog({
         noValidate
         className="flex flex-col gap-4"
       >
-        {existingLine ? (
+        {reusedLine ? (
           existingRegistryLabel && (
             <FormField key="registry-locked" label="السجل" htmlFor="movement-receive-registry-locked">
               <Input id="movement-receive-registry-locked" value={existingRegistryLabel} readOnly />
@@ -219,13 +231,13 @@ export function ReceiveMovementDialog({
           )
         )}
 
-        {existingLine ? (
+        {reusedLine ? (
           <FormField key="locked" label="رقم سجل الدائرة" htmlFor="movement-receive-number-locked">
             <Input
               id="movement-receive-number-locked"
               dir="ltr"
               className="font-mono"
-              value={existingLine.registryNumberText}
+              value={reusedLine.registryNumberText}
               readOnly
             />
             <p className="text-xs text-muted">زيارة متكررة، الرقم نفسه بتاريخ جديد.</p>
@@ -233,7 +245,7 @@ export function ReceiveMovementDialog({
         ) : (
           <FormField
             key="typed"
-            label="رقم سجل الدائرة"
+            label={existingLine ? 'رقم سجل الدائرة الجديد' : 'رقم سجل الدائرة'}
             required={linesKnown}
             error={errors.registryNumberText?.message}
             htmlFor="movement-receive-number"
@@ -252,7 +264,29 @@ export function ReceiveMovementDialog({
                 اتركه فارغًا إذا كان لدائرتك رقم لهذه الوثيقة في هذه السنة.
               </p>
             )}
+            {existingLine && (
+              <p className="text-xs text-muted">
+                يحلّ محلّ الرقم{' '}
+                <span dir="ltr" className="font-mono text-foreground">
+                  {existingLine.registryNumberText}
+                </span>{' '}
+                الذي يبقى في السجل مستبدَلًا ومرتبطًا بالرقم الجديد.
+              </p>
+            )}
           </FormField>
+        )}
+
+        {existingLine && (
+          <Checkbox
+            checked={issueNewNumber}
+            onCheckedChange={(checked) => {
+              setIssueNewNumber(checked)
+              clearErrors(['registryId', 'registryNumberText'])
+            }}
+            disabled={mutation.isPending}
+            label="تسجيل الوثيقة برقم جديد"
+            description="للدائرة رقم سابق لهذه الوثيقة في هذه السنة؛ الرقم الجديد يصبح المعتمد ويبقى مرتبطًا بالسابق."
+          />
         )}
 
         <FormField

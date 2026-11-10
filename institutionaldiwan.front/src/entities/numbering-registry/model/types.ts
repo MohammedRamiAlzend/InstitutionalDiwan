@@ -32,6 +32,10 @@ export interface DepartmentRegisterLineResponse {
   registryDate: string | null
   statusId: number
   registrationCount: number
+  /** On a replaced line: the department's newer number for the same document. */
+  replacedByNumberText: string | null
+  /** On a newer line: the department's earlier number it replaced. */
+  replacesNumberText: string | null
 }
 
 /** Optional year filter for the department register book. */

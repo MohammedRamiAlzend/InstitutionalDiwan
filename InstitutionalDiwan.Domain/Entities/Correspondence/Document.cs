@@ -399,12 +399,42 @@ public sealed class Document : AggregateRoot<Guid>
             DisplayName = $"{DisplayName[..separatorIndex]}{DisplayNameSeparator}{number.OfficialNumberText}";
     }
 
-    /// <summary>The department-register line for <paramref name="departmentId"/> in <paramref name="year"/>, if any.</summary>
+    /// <summary>
+    /// The department-register line for <paramref name="departmentId"/> in <paramref name="year"/>, if
+    /// any. A department that renumbered the document has several lines in the year; the one in use
+    /// (not replaced) is returned.
+    /// </summary>
     public DocumentNumber? FindDepartmentNumber(Guid departmentId, int year) =>
-        _numbers.FirstOrDefault(number =>
-            number.IsDepartmentEntry
-            && number.DepartmentId == departmentId
-            && number.NumberingYear == year);
+        _numbers
+            .Where(number =>
+                number.IsDepartmentEntry
+                && number.DepartmentId == departmentId
+                && number.NumberingYear == year)
+            .OrderBy(number => number.StatusId == DocumentNumberStatus.ReplacedId ? 1 : 0)
+            .ThenByDescending(number => number.IssuedAt)
+            .FirstOrDefault();
+
+    /// <summary>
+    /// Puts <paramref name="replacement"/> in place of the department's current line for that year:
+    /// the current line becomes <c>REPLACED</c> and links to the new one, which is the number in use
+    /// from now on. Can be repeated, giving a chain of numbers for one document in one department.
+    /// </summary>
+    public Result ReplaceDepartmentNumber(
+        DocumentNumber replacement,
+        Guid actorUserId,
+        string? notes = null,
+        DateTime? utcNow = null)
+    {
+        if (replacement is null || replacement.DepartmentId is not { } departmentId)
+            return Result.Failure(DomainErrors.Numbering.DepartmentScopeMismatch);
+
+        var current = FindDepartmentNumber(departmentId, replacement.NumberingYear);
+        if (current is null)
+            return Result.Failure(DomainErrors.Numbering.NumberNotFound);
+
+        var superseded = current.SupersedeInDepartment(replacement, actorUserId, notes, utcNow);
+        return superseded.IsFailure ? superseded : AddDepartmentNumber(replacement, utcNow);
+    }
 
     /// <summary>A visit on any of this document's department-register lines, with the line it belongs to.</summary>
     public (DocumentNumber Line, DocumentRegistryVisit Visit)? FindRegistryVisit(Guid visitId)
@@ -441,8 +471,9 @@ public sealed class Document : AggregateRoot<Guid>
     }
 
     /// <summary>
-    /// Attaches a department-register entry to this document. One line per department per year:
-    /// later arrivals in that year reuse the number and only add a dated visit.
+    /// Attaches a department-register entry to this document. One line in use per department per
+    /// year: later arrivals in that year reuse the number and only add a dated visit, unless the
+    /// department renumbers the document (<see cref="ReplaceDepartmentNumber"/>).
     /// </summary>
     public Result AddDepartmentNumber(DocumentNumber number, DateTime? utcNow = null)
     {
@@ -459,7 +490,8 @@ public sealed class Document : AggregateRoot<Guid>
         if (_numbers.Any(existing =>
                 existing.IsDepartmentEntry
                 && existing.DepartmentId == number.DepartmentId
-                && existing.NumberingYear == number.NumberingYear))
+                && existing.NumberingYear == number.NumberingYear
+                && existing.StatusId != DocumentNumberStatus.ReplacedId))
         {
             return Result.Failure(DomainErrors.Numbering.DepartmentNumberLocked);
         }
