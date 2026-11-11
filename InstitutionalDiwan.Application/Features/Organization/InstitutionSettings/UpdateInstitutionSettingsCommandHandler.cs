@@ -72,6 +72,21 @@ internal sealed class UpdateInstitutionSettingsCommandHandler
                 DomainErrors.InstitutionSetting.ResponsibleEmployeeNotFound);
         }
 
+        if (request.ArchiveDiwanDepartmentId is { } archiveDiwanDepartmentId &&
+            archiveDiwanDepartmentId != Guid.Empty)
+        {
+            if (archiveDiwanDepartmentId == centralDiwanDepartmentId)
+                return Result.Failure<InstitutionSettingResponse>(DomainErrors.InstitutionSetting.ArchiveDiwanSameAsCentral);
+
+            var archiveDiwan = await _departmentRepository.GetByIdAsync(archiveDiwanDepartmentId, cancellationToken);
+            if (archiveDiwan is null)
+                return Result.Failure<InstitutionSettingResponse>(DomainErrors.InstitutionSetting.ArchiveDiwanNotFound);
+
+            // Keeping an archive diwan that was deactivated meanwhile is not a new designation.
+            if (!archiveDiwan.IsActive && setting.ArchiveDiwanDepartmentId != archiveDiwanDepartmentId)
+                return Result.Failure<InstitutionSettingResponse>(DomainErrors.InstitutionSetting.ArchiveDiwanInactive);
+        }
+
         var updateResult = setting.Update(
             request.InstitutionNameAr,
             request.NumberingModeId,
@@ -86,6 +101,10 @@ internal sealed class UpdateInstitutionSettingsCommandHandler
 
         if (updateResult.IsFailure)
             return Result.Failure<InstitutionSettingResponse>(updateResult.Error);
+
+        var archiveDiwanResult = setting.SetArchiveDiwan(request.ArchiveDiwanDepartmentId, _unitOfWork.UtcNow);
+        if (archiveDiwanResult.IsFailure)
+            return Result.Failure<InstitutionSettingResponse>(archiveDiwanResult.Error);
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 

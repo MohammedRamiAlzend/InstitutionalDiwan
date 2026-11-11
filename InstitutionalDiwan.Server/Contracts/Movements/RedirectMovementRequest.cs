@@ -5,4 +5,5 @@ public sealed record RedirectMovementRequest(
     Guid NewDestinationDepartmentId,
     Guid? AssignedToUserId = null,
     string? Instructions = null,
-    DateTime? DueDate = null);
+    DateTime? DueDate = null,
+    int? MovementTypeId = null);

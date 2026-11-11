@@ -15,6 +15,10 @@ public sealed class RedirectMovementCommandValidator : AbstractValidator<Redirec
         RuleFor(command => command.NewDestinationDepartmentId)
             .NotEmpty().WithErrorCode("Department.NotFound");
 
+        RuleFor(command => command.MovementTypeId)
+            .GreaterThan(0).WithErrorCode("Lookup.InvalidId")
+            .When(command => command.MovementTypeId.HasValue);
+
         RuleFor(command => command.Instructions)
             .MaximumLength(1000);
     }

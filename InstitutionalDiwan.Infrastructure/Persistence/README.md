@@ -63,6 +63,7 @@ without knowing which provider is underneath.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-11 | Claude | Mapped decision types, their document-type links and document decisions (`Configurations/DecisionsConfigurations.cs`), and registered the two repositories plus `DecisionTypeSeeder`. Migration `Add_Decisions`. |
 | 2026-11-10 | Claude | Mapped `DEPARTMENT_RECORD_VALUES`, department columns on fields and schema versions, and record columns on register visits. |
 | 2026-11-03 | Claude | Module 07 Archiving, Phase 1: repositories, configuration constraints and the `Add_Archiving_Constraints` migration; see the subfolder READMEs. |
 | 2026-11-02 | Claude | Dynamic document fields, Phase 1: `Configurations/DocumentFieldsConfigurations.cs` (DOCUMENT_FIELDS, DOCUMENT_TYPE_SCHEMA_VERSIONS, DOCUMENT_TYPE_SCHEMA_VERSION_FIELDS with a JSON `Options` column, DOCUMENT_FIELD_VALUES), four `DiwanDbContext` DbSets, `Document.SchemaVersionId` + `FieldValues` mapping, the two new repositories and the `Add_Document_Dynamic_Fields` migration. |

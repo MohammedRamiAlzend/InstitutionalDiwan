@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { archiveKeys, type SavedSearchResponse } from '@/entities/archive'
+import { documentDecisionKeys } from '@/entities/document-decision'
 import { documentKeys, type DocumentResponse } from '@/entities/document'
 import { httpClient } from '@/shared/api'
 import type {
@@ -20,6 +21,7 @@ function useArchiveTransitionInvalidation(documentId: string) {
     void queryClient.invalidateQueries({ queryKey: documentKeys.lists() })
     void queryClient.invalidateQueries({ queryKey: archiveKeys.searches() })
     void queryClient.invalidateQueries({ queryKey: archiveKeys.events(documentId) })
+    void queryClient.invalidateQueries({ queryKey: documentDecisionKeys.all })
   }
 }
 

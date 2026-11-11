@@ -24,6 +24,9 @@ namespace InstitutionalDiwan.Infrastructure.Authorization;
 ///   document's active movement (the sender or the receiver) may <c>VIEW</c> and <c>DOWNLOAD</c>
 ///   it, even when it is outside the owning department's scope. Forwarding and managing still
 ///   require an explicit higher grant or an institution-wide scope.</item>
+///   <item><b>Archive diwan custody</b> — the designated archive diwan may <c>VIEW</c> and
+///   <c>DOWNLOAD</c> a document whose latest movement ended there and was received, also after
+///   that movement is closed and the document archived.</item>
 /// </list>
 /// </summary>
 public sealed class DocumentAccessEvaluator : IDocumentAccessEvaluator
@@ -34,6 +37,7 @@ public sealed class DocumentAccessEvaluator : IDocumentAccessEvaluator
     private readonly IDepartmentScopeEvaluator _departmentScopeEvaluator;
     private readonly IDocumentMovementRepository _movementRepository;
     private readonly IClock _clock;
+    private readonly IInstitutionSettingRepository? _settingRepository;
 
     public DocumentAccessEvaluator(
         IUserContext userContext,
@@ -41,8 +45,10 @@ public sealed class DocumentAccessEvaluator : IDocumentAccessEvaluator
         IDocumentAccessGrantRepository grantRepository,
         IDepartmentScopeEvaluator departmentScopeEvaluator,
         IDocumentMovementRepository movementRepository,
-        IClock clock)
+        IClock clock,
+        IInstitutionSettingRepository? settingRepository = null)
     {
+        _settingRepository = settingRepository;
         _userContext = userContext;
         _documentRepository = documentRepository;
         _grantRepository = grantRepository;
@@ -88,7 +94,33 @@ public sealed class DocumentAccessEvaluator : IDocumentAccessEvaluator
         if (requiredAccessLevelId > AccessLevel.DownloadId)
             return false;
 
-        return await IsCurrentMovementParticipantAsync(documentId, cancellationToken);
+        return await IsCurrentMovementParticipantAsync(documentId, cancellationToken) ||
+               await IsHeldByCallersArchiveDiwanAsync(documentId, cancellationToken);
+    }
+
+    /// <summary>
+    /// True when the document's latest movement that was not canceled ended at the designated archive
+    /// diwan and was received there, and the caller's scope covers that department. The archive diwan
+    /// keeps this reading access after the movement is closed and the document archived.
+    /// </summary>
+    private async Task<bool> IsHeldByCallersArchiveDiwanAsync(
+        Guid documentId,
+        CancellationToken cancellationToken)
+    {
+        if (_settingRepository is null)
+            return false;
+
+        var setting = await _settingRepository.GetSingletonAsync(cancellationToken);
+        if (setting?.ArchiveDiwanDepartmentId is not { } archiveDiwanDepartmentId)
+            return false;
+
+        var movements = await _movementRepository.ListByDocumentAsync(documentId, cancellationToken);
+        var latest = movements.FirstOrDefault(movement => movement.StatusId != DocumentMovement.StatusCanceled);
+        if (latest is null || !latest.IsHeldAt(archiveDiwanDepartmentId))
+            return false;
+
+        return await _departmentScopeEvaluator.CanAccessDepartmentAsync(
+            archiveDiwanDepartmentId, cancellationToken);
     }
 
     /// <summary>

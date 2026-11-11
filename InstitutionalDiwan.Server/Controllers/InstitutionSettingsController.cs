@@ -59,6 +59,7 @@ public sealed class InstitutionSettingsController : ControllerBase
     /// <item><term>defaultTimezone</term><description>Default time zone (string, optional). Example: <c>Asia/Riyadh</c>.</description></item>
     /// <item><term>responsibleEmployeeId</term><description>Responsible employee unique identifier (GUID, optional). Example: <c>3fa85f64-5717-4562-b3fc-2c963f66afa6</c>.</description></item>
     /// <item><term>centralDiwanTransferReason</term><description>Central Diwan transfer reason (string, optional). Example: <c>Reassignment of the Central Diwan designation</c>.</description></item>
+    /// <item><term>archiveDiwanDepartmentId</term><description>Archive diwan department unique identifier; null clears it (GUID, optional). Example: <c>7b2d4c10-9e3a-4f58-8c21-5d6e7f8a9b0c</c>.</description></item>
     /// </list>
     /// </param>
     /// <param name="cancellationToken">Request cancellation token (optional).</param>
@@ -68,7 +69,7 @@ public sealed class InstitutionSettingsController : ControllerBase
     /// <response code="409">The Central Diwan is inactive, not a root, or is the wrong type.</response>
     [HttpPut]
     [EndpointSummary("Replaces the institution settings.")]
-    [EndpointDescription("Replaces the institution settings. The Central Diwan department must exist, be active, be of type CENTRAL_DIWAN, and be a root department. Changing the Central Diwan requires a transfer reason. Requires the DEPARTMENT_MANAGE permission. Responses: 200 (The updated settings.), 400 (The payload failed validation, or referenced an unknown lookup entry.), 404 (Institution settings have not been seeded yet.), 409 (The Central Diwan is inactive, not a root, or is the wrong type.)")]
+    [EndpointDescription("Replaces the institution settings. The Central Diwan department must exist, be active, be of type CENTRAL_DIWAN, and be a root department. Changing the Central Diwan requires a transfer reason. The optional archive diwan must be an active department other than the Central Diwan; null clears it. Requires the DEPARTMENT_MANAGE permission. Responses: 200 (The updated settings.), 400 (The payload failed validation, or referenced an unknown lookup entry.), 404 (Institution settings have not been seeded yet.), 409 (The Central Diwan is inactive, not a root, or is the wrong type.)")]
     [ProducesResponseType<InstitutionSettingResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
@@ -86,7 +87,8 @@ public sealed class InstitutionSettingsController : ControllerBase
             request.InstitutionNameEn,
             request.LogoPath,
             request.DefaultTimezone,
-            request.CentralDiwanTransferReason), cancellationToken);
+            request.CentralDiwanTransferReason,
+            request.ArchiveDiwanDepartmentId), cancellationToken);
 
         return result.ToActionResult();
     }

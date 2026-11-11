@@ -68,7 +68,7 @@ GlobalUsing.cs Global usings for entities, common, and errors
 
 A single static catalog nested by module (`DomainErrors.Department`, `.Identity`, `.Correspondence`,
 `.Numbering`, `.Movements`, `.Attachments`, `.Relations`, `.Archiving`, `.Audit`, `.Notifications`,
-`.InstitutionSetting`, `.Lookup`, `.DocumentFields`). Each entry is a strongly-typed `Error` with a stable code such as
+`.InstitutionSetting`, `.Lookup`, `.DocumentFields`, `.Decisions`). Each entry is a strongly-typed `Error` with a stable code such as
 `Correspondence.OnlyDraftEditable` so the API can produce deterministic ProblemDetails.
 
 The `.Archiving` group covers Module 07: `SearchNotFound` (NotFound), `SearchNameTaken` / `SearchLimitReached` (Conflict), and the validation errors `EventTypeInvalid`, `LocationNotFound`, `UnarchiveReasonEmpty`, `ReasonTooLong`, `SearchNameEmpty`, `SearchNameTooLong`, `CriteriaJsonEmpty`, and `CriteriaInvalid`. `Correspondence.OnlyRegisteredArchivable` and `Correspondence.DocumentArchived` (both Conflict) guard the document itself: only a `REGISTERED` document can be archived, and an archived document rejects changes until it is unarchived.
@@ -344,7 +344,7 @@ them, while listing, relabelling and (de)activation keep working.
 | `Errors/` | Implemented (`DomainErrors` catalog, including `Department.CentralDiwanProtected`, `Identity.RoleInactive`, and `Identity.PasswordChangeRequired`) |
 | `Events/` | ✅ Implemented (35 events) |
 | `Repositories/` | ✅ Implemented (21 interfaces) |
-| `Entities/` | ✅ Implemented (64 entities across 10 modules, including reference/lookup tables) |
+| `Entities/` | ✅ Implemented (67 entities across the module folders, including reference/lookup tables and `Entities/Decisions/`) |
 
 ### Known issues / TODO
 
@@ -361,6 +361,8 @@ them, while listing, relabelling and (de)activation keep working.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-11 | Claude | Decision types and decisions (plan `plans/case-decisions.md`, slice B): `Entities/Decisions/` (`DecisionType`, `DocumentDecision`, effect and status lookups), `IDecisionTypeRepository` and `IDocumentDecisionRepository`, `DomainErrors.Decisions`, `DecisionIssuedEvent` and `DecisionRevokedEvent`, file type `DecisionId` (5), notification type `DecisionIssuedId` (12), audit entity types 16 and 17, and permission `DECISION_MANAGE` (23 codes). Issuing a join decision is refused until unification exists. |
+| 2026-11-11 | Claude | Archive diwan (plan `plans/case-decisions.md`, slice A): `InstitutionSetting.ArchiveDiwanDepartmentId` with `SetArchiveDiwan`, movement type `MovementType.ToArchiveId` (5), `DocumentMovement.IsHeldAt`, an optional type on `DocumentMovement.RedirectTo`, and the new `Archiving.*`, `InstitutionSetting.ArchiveDiwan*` and `Department.ArchiveDiwanProtected` errors. |
 | 2026-11-10 | Claude | Department renumbering: `DocumentNumber.SupersedeInDepartment` marks a department line `REPLACED` and links it to the new line through `ReplacedByNumberId` (no reason required), `Document.ReplaceDepartmentNumber` swaps the line in use, `FindDepartmentNumber` returns the line in use, and `AddDepartmentNumber` ignores replaced lines. |
 | 2026-11-10 | Claude | Department records: `DocumentField`/`DocumentTypeSchemaVersion.DepartmentId` (record forms per department), `DepartmentRecordValue`, visit record open/edit/lock/correct, `Document.LockOpenRegistryVisits`, same-day arrivals tied to different steps, `RecordReturnVisit`, `DomainErrors.DepartmentRecords`, `Correspondence.OnlyOwningDepartmentCanClose`, permissions `DEPARTMENT_RECORD_VIEW_ALL` and `DEPARTMENT_RECORD_CORRECT` (22 codes). |
 | 2026-11-09 | Claude | Removed `Document.DocumentDate`, `ExternalReferenceNumber` and `ExternalDocumentDate`; anything still needed is a dynamic field. |

@@ -5,7 +5,8 @@ namespace InstitutionalDiwan.Application.Features.Organization.InstitutionSettin
 /// <summary>
 /// Updates the singleton institution settings. The designated Central Diwan must be an active root
 /// department of type <c>CENTRAL_DIWAN</c>; moving it away from the current department additionally
-/// requires <paramref name="CentralDiwanTransferReason"/>.
+/// requires <paramref name="CentralDiwanTransferReason"/>. <paramref name="ArchiveDiwanDepartmentId"/>
+/// designates the active department that keeps archived files, or clears it when null.
 /// </summary>
 public sealed record UpdateInstitutionSettingsCommand(
     string InstitutionNameAr,
@@ -16,4 +17,5 @@ public sealed record UpdateInstitutionSettingsCommand(
     string? InstitutionNameEn = null,
     string? LogoPath = null,
     string? DefaultTimezone = null,
-    string? CentralDiwanTransferReason = null) : ICommand<InstitutionSettingResponse>;
+    string? CentralDiwanTransferReason = null,
+    Guid? ArchiveDiwanDepartmentId = null) : ICommand<InstitutionSettingResponse>;

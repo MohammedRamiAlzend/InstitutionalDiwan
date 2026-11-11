@@ -50,6 +50,7 @@ complex business mutations, raw `axios`/`fetch` calls, or reusable domain models
 | `document-schemas/` | `/document-schemas` | Dynamic fields — `/document-types/{id}/schema-versions` and the schema write routes | ✅ Implemented behind `LOOKUP_MANAGE`; type and version live in `?type=` / `?version=` |
 | `system-errors/` | `/system-errors` behind `SYSTEM_ERRORS_VIEW`. | — | — | — |
 | `persons/` | `/persons` and `/persons/:personId` behind `PERSON_VIEW`. | — | — | — |
+| `decisions/` | `/decisions` behind `DOCUMENT_VIEW`; `?tab=register` or `?tab=types` (types need `LOOKUP_MANAGE`). | — | — | — |
 | `audit/` | `/audit` | 09 — `GET /api/audit-logs`, checkpoints, integrity checks/reports (`?panel=logs\|integrity`) | ✅ Implemented (Module 09) |
 | `archive/` | `/archive` | 07 — `GET /api/archive/documents`, saved searches | ✅ Implemented (Module 07) |
 | `notifications/` | `/notifications` | 10 — `GET /api/notifications`, `/hubs/notifications` | ✅ Implemented (Module 10) |
@@ -88,6 +89,7 @@ the cross-module `widgets/visualization-panel` remains planned.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-11 | Claude | Added `decisions/` (`/decisions`, register and decision-type tabs). |
 | 2026-11-09 | Claude | Added `persons/`. |
 | 2026-11-08 | Claude | Added `system-errors/`. |
 | 2026-11-04 | Claude | Module 01 lookups administration: implemented `lookups/` — `/lookups` and the «الجداول المرجعية» sidebar entry. |

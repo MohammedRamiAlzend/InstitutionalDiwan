@@ -206,6 +206,7 @@ export const Permissions = {
   LookupManage: 'LOOKUP_MANAGE',
   AuditView: 'AUDIT_VIEW',
   AuditManage: 'AUDIT_MANAGE',
+  DecisionManage: 'DECISION_MANAGE',
 } as const;
 
 export type PermissionCode = (typeof Permissions)[keyof typeof Permissions];

@@ -10,6 +10,8 @@ public sealed class DocumentFileType : LookupEntity
     public const int AttachmentId = 2;
     public const int SignatureId = 3;
     public const int OtherId = 4;
+    /// <summary>A copy of a decision, optionally linked to the decision it records.</summary>
+    public const int DecisionId = 5;
 
     /// <summary>Comma-separated list of extensions accepted for this file type.</summary>
     public string AllowedExtensionsCsv { get; private set; } = ".pdf,.tif,.tiff,.png,.jpg";

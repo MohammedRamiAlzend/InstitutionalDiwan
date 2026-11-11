@@ -106,6 +106,8 @@ export const MOVEMENT_TYPE = {
   Transfer: 2,
   Cc: 3,
   Return: 4,
+  /** On its way to the archive diwan, through the department that created the document. */
+  ToArchive: 5,
 } as const
 
 export const MOVEMENT_STATUS = {
@@ -149,6 +151,22 @@ export const DOCUMENT_FILE_TYPE = {
   Attachment: 2,
   Signature: 3,
   Other: 4,
+  Decision: 5,
+} as const
+
+export const DECISION_EFFECT = {
+  Refer: 1,
+  SendToArchive: 2,
+  Join: 3,
+  None: 4,
+} as const
+
+export const DECISION_STATUS = {
+  Issued: 1,
+  Appealed: 2,
+  Final: 3,
+  Revoked: 4,
+  Canceled: 5,
 } as const
 
 export const AUDIT_ACTION_TYPE = {

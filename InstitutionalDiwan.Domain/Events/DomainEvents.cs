@@ -54,6 +54,10 @@ public sealed record DocumentFileArchivedEvent(Guid FileId, Guid DocumentId) : D
 public sealed record DocumentRelationCreatedEvent(Guid RelationId, Guid SourceDocumentId, Guid TargetDocumentId, int RelationTypeId, Guid ActorUserId) : DomainEventBase;
 public sealed record DocumentRelationRemovedEvent(Guid RelationId, Guid SourceDocumentId, Guid TargetDocumentId, int RelationTypeId, Guid ActorUserId) : DomainEventBase;
 
+// Decisions
+public sealed record DecisionIssuedEvent(Guid DecisionId, Guid DocumentId, Guid IssuingDepartmentId, int EffectId, Guid ActorUserId) : DomainEventBase;
+public sealed record DecisionRevokedEvent(Guid DecisionId, Guid DocumentId, int StatusId, Guid ActorUserId, string Reason) : DomainEventBase;
+
 // Module 10: Notifications
 public sealed record NotificationCreatedEvent(Guid NotificationId, int NotificationTypeId, Guid? RelatedDocumentId) : DomainEventBase;
 public sealed record NotificationReadEvent(Guid NotificationId, Guid UserId, DateTime ReadAtUtc) : DomainEventBase;

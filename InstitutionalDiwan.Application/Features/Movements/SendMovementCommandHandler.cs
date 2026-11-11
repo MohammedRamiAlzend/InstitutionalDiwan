@@ -14,6 +14,7 @@ internal sealed class SendMovementCommandHandler
 {
     private readonly IDocumentMovementRepository _movementRepository;
     private readonly CentralDiwanRouting _centralDiwanRouting;
+    private readonly ArchiveDiwanRouting _archiveDiwanRouting;
     private readonly IDepartmentScopeEvaluator _departmentScopeEvaluator;
     private readonly IUnitOfWork _unitOfWork;
     private readonly INotificationPublisher _notificationPublisher;
@@ -22,6 +23,7 @@ internal sealed class SendMovementCommandHandler
     public SendMovementCommandHandler(
         IDocumentMovementRepository movementRepository,
         CentralDiwanRouting centralDiwanRouting,
+        ArchiveDiwanRouting archiveDiwanRouting,
         IDepartmentScopeEvaluator departmentScopeEvaluator,
         IUnitOfWork unitOfWork,
         INotificationPublisher notificationPublisher,
@@ -30,6 +32,7 @@ internal sealed class SendMovementCommandHandler
         _recordService = recordService;
         _movementRepository = movementRepository;
         _centralDiwanRouting = centralDiwanRouting;
+        _archiveDiwanRouting = archiveDiwanRouting;
         _departmentScopeEvaluator = departmentScopeEvaluator;
         _unitOfWork = unitOfWork;
         _notificationPublisher = notificationPublisher;
@@ -52,6 +55,16 @@ internal sealed class SendMovementCommandHandler
             movement.SourceDepartmentId, movement.DestinationDepartmentId, cancellationToken);
         if (routeResult.IsFailure)
             return Result.Failure<MovementResponse>(routeResult.Error);
+
+        // The archive diwan may have been designated after this movement was drafted.
+        var archiveRoute = await _archiveDiwanRouting.ValidateFirstHopAsync(
+            movement.DocumentId,
+            movement.MovementTypeId,
+            movement.SourceDepartmentId,
+            movement.DestinationDepartmentId,
+            cancellationToken);
+        if (archiveRoute.IsFailure)
+            return Result.Failure<MovementResponse>(archiveRoute.Error);
 
         var leaving = movement.Steps.Single(step => step.StepNo == movement.CurrentStepNo).FromDepartmentId;
         var send = movement.Send(request.UserId, request.Notes, _unitOfWork.UtcNow);

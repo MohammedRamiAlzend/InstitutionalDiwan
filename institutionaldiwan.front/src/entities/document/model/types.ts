@@ -46,6 +46,10 @@ export interface DocumentDetailResponse {
   document: DocumentResponse
   participants: DocumentParticipantResponse[]
   statusHistory: DocumentStatusHistoryResponse[]
+  /** The designated archive diwan; null while archiving stays with the owning department. */
+  archiveDiwanDepartmentId: string | null
+  /** Whether the archive diwan holds the document now (it received it and it has not left). */
+  isHeldByArchiveDiwan: boolean
 }
 
 /** One audit-timeline entry; `eventKind` is `STATUS`, `PARTICIPANT`, or `NUMBER`. */

@@ -103,7 +103,7 @@
   `useMutation`, `ui/` forms/dialogs).
 - Arabic-first UI: `dir="rtl"` on the document root, `dir="ltr"` on codes, ids, and official numbers.
 
-## Canonical permissions (18)
+## Canonical permissions (23)
 
 Must match the external API's `InstitutionalDiwan.Domain/Common/Permissions.cs` exactly. Front-end
 source of truth: `src/shared/config/permissions.ts`.
@@ -131,6 +131,7 @@ source of truth: `src/shared/config/permissions.ts`.
 | `PERSON_MANAGE` | Update a person's recorded details |
 | `DEPARTMENT_RECORD_VIEW_ALL` | Read other departments' records on a document (seeded for admin) |
 | `DEPARTMENT_RECORD_CORRECT` | Correct a locked department record with a reason (seeded for admin) |
+| `DECISION_MANAGE` | Issue a decision, attach its copy, and cancel a mistaken entry (seeded for admin and the standard diwan operator) |
 
 ## Live Backend Endpoints (external `InstitutionalDiwan.Server`)
 
@@ -141,6 +142,18 @@ source of truth: `src/shared/config/permissions.ts`.
 **Document names:** `title` in document responses is written by the system (type and owning department register number, or type and creation date for a draft). The interface neither asks for nor shows a title or summary; `title` and `subjectSummary` stay optional on create. Documents have no document date or external reference; define those as dynamic fields when needed.
 
 **Department records** (each department's record on its visits of a document; plan `plans/department-records.md`): when a department has a published record form for the document type (`GET /api/document-types/{id}/schema?departmentId=`, `DOCUMENT_VIEW`), `POST /api/movements/{id}/receive` (and the `steps/{stepId}/receive` alias) accepts `fieldValues: [{ fieldKey, value }]` and opens the record on the visit; a missing required field fails the whole receipt (400 `DocumentFields.ValueRequired`). `GET /api/documents/{id}/department-records` (`DOCUMENT_VIEW`) returns each register line with its visits (`isLocked`, `versionNumber`, `canEdit`, `canCorrect`, `fields[{ field, value }]`), only for departments in the caller's scope or with `DEPARTMENT_RECORD_VIEW_ALL` + VIEW access. `PUT /api/registry-visits/{visitId}/fields` (`DOCUMENT_EDIT`, own department, open record) replaces the values; `PUT /api/registry-visits/{visitId}/fields/correct` (`DEPARTMENT_RECORD_CORRECT`) corrects a locked one with `{ values, reason }`. A record locks when the document leaves the department (send, redirect, reject, return), when another department receives it, and on archive or cancel. A return to sender gives the sender a new visit. Errors: `DepartmentRecords.VisitLocked`, `VisitNotLocked`, `NotOwnerDepartment`, `SchemaNotFound`, `VisitNotFound`, `CorrectionReasonRequired`, `CorrectionReasonTooLong`.
+
+**Decisions** (plan `plans/case-decisions.md`, slice B). Types: `GET /api/decision-types` (`DOCUMENT_VIEW`; optional `documentTypeId`, `isActive`), `POST /api/decision-types`, `PUT /api/decision-types/{id}`, `POST .../activate` and `.../deactivate` (`LOOKUP_MANAGE`). A referral without a destination is stored inactive; activating it then returns 409 `Decisions.TypeDestinationRequired`. A destination on any other effect is 409 `Decisions.TypeDestinationNotAllowed`. A type has one Arabic name. Editing a type does not change decisions already issued.
+
+On a document (`DOCUMENT_VIEW`, and view access): `GET /api/documents/{id}/decisions` (newest first; `appeals` is always empty) and `GET /api/documents/{id}/next-action`. `kind` is `refer`, `send-for-archive`, `archive`, or null. The step is a suggestion: the existing movement and archive commands still perform it. A referral wins over the archive route. Nothing is suggested while the file is in transit, archived, or canceled.
+
+`POST /api/documents/{id}/decisions` and `PUT /api/decisions/{id}/file` need `DECISION_MANAGE` and an unlocked department-register visit in the caller's scope (`Decisions.NotHoldingDepartment` otherwise). A non-appealable decision is born final (status 3); an appealable one is born issued (status 1). One decision in force per document (`Decisions.ActiveDecisionExists`). The number is unique per issuing department and year, including revoked and canceled rows (`Decisions.DecisionNumberTaken`). Effect 3 (join) is refused with `Decisions.JoinTargetInvalid`. An optional file must be an unarchived decision-type file on the same document.
+
+`POST /api/decisions/{id}/cancel` needs `DECISION_MANAGE` and a system-scoped administrator (`Decisions.NotSystemAdmin` otherwise) plus a reason. `GET /api/decisions` is paged (`search`, `sortBy`: `decisionDate`, `decisionNumber`, `status`, `type`, filters `decisionTypeId`, `statusId`, `issuingDepartmentId`, `year`) and hides decisions on documents the caller cannot view.
+
+Reopening a document revokes an in-force send-to-archive decision (status 4) with the reopen reason. Other effects stay. Statuses: 1 issued, 2 appealed (constant only), 3 final, 4 revoked, 5 canceled. The seeded types, all linked to document type 1, are التخلي and الاتهام (referral, inactive), الظن (referral, active with destination ديوان الفرد only in Standard mode), منع المحاكمة (send to archive, active), التوحيد (join, active). Issuing one notifies the owning department (`NotificationType` 12) and not the actor.
+
+The «القرار» tab on `/documents/:id` appears when the document type has an active decision type. `/decisions` has the register (`?tab=register`) and, for `LOOKUP_MANAGE`, the types (`?tab=types`).
 
 **Closing belongs to the creating department:** archive, unarchive and cancel answer 403 `Correspondence.OnlyOwningDepartmentCanClose` unless the caller's department scope covers the document's `owningDepartmentId` (institution-wide scope passes). The details page hides those buttons otherwise.
 
@@ -272,7 +285,7 @@ A department has one number in use per document per year (`DepartmentNumberLocke
 | `POST` | `/api/movements/{movementId}/complete` | `DOCUMENT_EDIT` | Custody: the receiver. |
 | `POST` | `/api/movements/{movementId}/reject` | `DOCUMENT_EDIT` | Custody: the receiver. |
 | `POST` | `/api/movements/{movementId}/return` | `DOCUMENT_EDIT` | Custody: the receiver. |
-| `POST` | `/api/movements/{movementId}/redirect` | `DOCUMENT_EDIT` | Custody: the receiver, or the sender while the movement is still a draft. |
+| `POST` | `/api/movements/{movementId}/redirect` | `DOCUMENT_EDIT` | Custody: the receiver, or the sender while the movement is still a draft. Body also takes optional `movementTypeId`: the type the movement carries from this hop on (`5` = to archive); omitted keeps the current type. |
 | `POST` | `/api/movements/{movementId}/close` | `DOCUMENT_EDIT` | Custody: either side. |
 | `POST` | `/api/movements/{movementId}/cancel` | `DOCUMENT_EDIT` | Custody: the sender. |
 
@@ -335,7 +348,11 @@ Notable codes: `Department.CyclicHierarchy`, `Department.HasActiveChildren`.
 
 ### Institution settings — `/api/institution-settings`
 
-`GET` and `PUT` — `DEPARTMENT_MANAGE`.
+`GET` and `PUT` — `DEPARTMENT_MANAGE`. Both carry `archiveDiwanDepartmentId` (GUID or `null`): the
+archive diwan, an active department other than the Central Diwan. `PUT` replaces the settings, so
+omitting the field or sending `null` clears it. Errors: `InstitutionSetting.ArchiveDiwanNotFound`
+(400), `ArchiveDiwanInactive` and `ArchiveDiwanSameAsCentral` (409). A designated archive diwan
+cannot be deactivated (`Department.ArchiveDiwanProtected`, 409).
 
 ### Users — `/api/users`
 
@@ -370,7 +387,7 @@ exposes full contact data, role permissions, or management rights:
 
 ### Roles & permissions — `/api/roles`, `/api/permissions`
 
-`GET /api/permissions` — `ROLE_MANAGE`. Returns the flat 18-code catalog with `code`, `nameAr`,
+`GET /api/permissions` — `ROLE_MANAGE`. Returns the flat 23-code catalog with `code`, `nameAr`,
 `nameEn`, `moduleName`, and `description`; the SPA groups it by `moduleName` through
 `permissionModuleLabel`.
 Roles: `GET /api/roles` (plain array), `GET /api/roles/{id}`, `POST /api/roles`
@@ -475,6 +492,28 @@ first. Registry filtering: `GET /api/documents?documentTypeId=N&fieldFilters=key
   only (another user's search answers 404). Body `name` (max 150), `criteriaJson` (a JSON object string
   with the search parameters above, max 4000), `isDefault`. The server stores the criteria but does not
   run them: read them back and call the archive search. Limit 50 per user, one default.
+
+**Archive diwan (route to the archive).** When `archiveDiwanDepartmentId` is set in the institution
+settings, archiving moves to that department and the rules above change:
+
+- A document is sent for archiving in a movement of type `5` («للحفظ»), opened with
+  `POST /api/movements` or set on a hop with `redirect`'s `movementTypeId`. A hop that is not the last
+  one goes to the creating department or to the Central Diwan: 409 `Archiving.ArchiveRouteViaOwningDepartment`.
+  The last hop, to the archive diwan, is sent by the creating department, or by the Central Diwan once
+  the movement has already visited the creating department: 409 `Archiving.OnlyOwningDepartmentSendsToArchive`.
+  The archive diwan receives
+  no other movement type: 409 `Archiving.ArchiveDiwanAcceptsArchiveMovementsOnly`. Type `5` with no
+  archive diwan: 409 `Archiving.ArchiveDiwanNotConfigured`.
+- `archive` needs the document received at the archive diwan (409 `Archiving.DocumentNotAtArchiveDiwan`)
+  and a caller whose scope covers it (403 `Archiving.OnlyArchiveDiwanCanArchive`); `MANAGE` access and
+  the owning-department rule do not apply. It closes the movement that brought the document, so an
+  `IN_MOVEMENT` document held there can be archived directly.
+- `unarchive` of a document the archive diwan holds belongs to the archive diwan (same 403); documents
+  archived where they were created keep the owning-department rule. The same reason revokes an in-force
+  decision whose effect is send-to-archive.
+- The archive diwan may view and download what it holds, also after the movement is closed.
+- `GET /api/documents/{id}/details` adds `archiveDiwanDepartmentId` and `isHeldByArchiveDiwan`, which
+  the details page uses to offer the two actions.
 
 An archived document rejects participant, attachment, and number writes with 409
 `Correspondence.DocumentArchived` until it is unarchived; reads, downloads, checksum verification, and

@@ -20,6 +20,7 @@ public sealed class NotificationTypeSeeder : LookupSeederBase<NotificationType>
         (NotificationType.MovementRedirectedId, "Movement redirected", "تحويل إحالة"),
         (NotificationType.MovementClosedId, "Movement closed", "إغلاق إحالة"),
         (NotificationType.MovementCancelledId, "Movement cancelled", "إلغاء إحالة"),
+        (NotificationType.DecisionIssuedId, "Decision issued", "صدر قرار"),
     };
 
     protected override NotificationType BuildItem(int id, string desc, string descAr)
@@ -46,6 +47,8 @@ public sealed class NotificationTypeSeeder : LookupSeederBase<NotificationType>
                 ("اكتملت الإحالة", "اكتملت معالجة الوثيقة {Title}.", "IN_APP"),
             NotificationType.DocumentArchivedId =>
                 ("تمت الأرشفة", "تمت أرشفة الوثيقة {Title}.", "IN_APP"),
+            NotificationType.DecisionIssuedId =>
+                ("صدر قرار", "صدر قرار على الوثيقة {Title} بالرقم {Number}.", "IN_APP"),
             _ =>
                 ("وثيقة جديدة", "تم إنشاء الوثيقة {Title}.", "IN_APP"),
         };

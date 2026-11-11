@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { Archive, ArchiveRestore, ArrowRight, Ban, FileDown, Hash, UserPlus } from 'lucide-react'
 import { useDepartmentOptions } from '@/entities/department'
+import { useDecisionTypes } from '@/entities/decision-type'
 import {
   DocumentStatusBadge,
   OfficialNumberTag,
@@ -36,6 +37,7 @@ import {
 import { DepartmentRecordsPanel } from '@/widgets/department-records-panel'
 import { DocumentFieldsPanel } from '@/widgets/document-fields-panel'
 import { DocumentPrintSheet } from '@/widgets/document-print-sheet'
+import { DocumentDecisionsPanel } from '@/widgets/document-decisions-panel'
 import { DocumentRelationsPanel } from '@/widgets/document-relations-panel'
 import { DocumentArchiveTab } from './DocumentArchiveTab'
 import { DocumentFilesTab } from './DocumentFilesTab'
@@ -57,6 +59,7 @@ const TABS = [
   { key: 'fields', label: 'الحقول', available: true },
   { key: 'department-records', label: 'سجل الديوان', available: true },
   { key: 'relations', label: 'الروابط', available: true },
+  { key: 'decisions', label: 'القرار', available: true },
   { key: 'archive', label: 'سجل الأرشفة', available: true },
 ] as const
 
@@ -72,6 +75,7 @@ type AvailableTabKey =
   | 'fields'
   | 'department-records'
   | 'relations'
+  | 'decisions'
   | 'archive'
 
 /** Unknown, not-yet-available, or permission-hidden tabs fall back to the details tab. */
@@ -79,6 +83,7 @@ function resolveTab(
   raw: string | null,
   canManageGrants: boolean,
   canViewNumbering: boolean,
+  showDecisions: boolean,
 ): AvailableTabKey {
   if (raw === 'participants' && FEATURES.participants) return 'participants'
   if (raw === 'persons') return 'persons'
@@ -89,6 +94,7 @@ function resolveTab(
   if (raw === 'fields') return 'fields'
   if (raw === 'department-records') return 'department-records'
   if (raw === 'relations') return 'relations'
+  if (raw === 'decisions' && showDecisions) return 'decisions'
   if (raw === 'archive') return 'archive'
   return 'details'
 }
@@ -116,14 +122,22 @@ function DocumentDetailsView() {
   const canViewNumbering = hasPermission(Permissions.NumberingView)
   const canManageNumbering = hasPermission(Permissions.NumberingManage)
   const canArchive = hasPermission(Permissions.DocumentArchive)
+  const canManageDecisions = hasPermission(Permissions.DecisionManage)
 
+  const detailsQuery = useDocumentDetails(documentId)
+  const decisionTypesQuery = useDecisionTypes(
+    { documentTypeId: detailsQuery.data?.document.documentTypeId, isActive: true },
+    { enabled: detailsQuery.data?.document.documentTypeId !== undefined },
+  )
+  const showDecisionsTab =
+    (decisionTypesQuery.data?.length ?? 0) > 0 ||
+    (decisionTypesQuery.isLoading && searchParams.get('tab') === 'decisions')
   const activeTab = resolveTab(
     searchParams.get('tab'),
     canManageGrants,
     canViewNumbering,
+    showDecisionsTab,
   )
-
-  const detailsQuery = useDocumentDetails(documentId)
   const timelineQuery = useDocumentTimeline(documentId)
   // A document pinned to no schema has no dynamic fields, so its tab stays hidden.
   const fieldsQuery = useDocumentFields(documentId)
@@ -208,9 +222,21 @@ function DocumentDetailsView() {
   const canManageParticipants = canEdit && !isCanceled && !isArchived
   // Closing a document belongs to the department that created it; the server enforces the same rule.
   const isOwningDepartment = coversDepartment(document.owningDepartmentId)
+  // With an archive diwan designated, archiving happens there once it received the document (the
+  // archiving closes the movement that brought it), and it alone reopens what it holds.
+  const archiveDiwanId = details.archiveDiwanDepartmentId
+  const isArchiveDiwan = archiveDiwanId !== null && coversDepartment(archiveDiwanId)
+  const heldByArchiveDiwan = details.isHeldByArchiveDiwan
   const canArchiveNow =
-    canArchive && isOwningDepartment && document.statusId === DOCUMENT_STATUS.Registered
-  const canUnarchive = canArchive && isOwningDepartment && isArchived
+    canArchive &&
+    (archiveDiwanId === null
+      ? isOwningDepartment && document.statusId === DOCUMENT_STATUS.Registered
+      : isArchiveDiwan &&
+        heldByArchiveDiwan &&
+        (document.statusId === DOCUMENT_STATUS.Registered ||
+          document.statusId === DOCUMENT_STATUS.InMovement))
+  const canUnarchive =
+    canArchive && isArchived && (heldByArchiveDiwan ? isArchiveDiwan : isOwningDepartment)
   const canCancel = canEdit && isOwningDepartment && !isCanceled && !isArchived
 
   const setTab = (tab: TabKey) => {
@@ -307,7 +333,8 @@ function DocumentDetailsView() {
             (tab.key !== 'grants' || canManageGrants) &&
             (tab.key !== 'numbers' || canViewNumbering) &&
             (tab.key !== 'fields' || hasDynamicFields) &&
-            (tab.key !== 'department-records' || hasDepartmentRecords),
+            (tab.key !== 'department-records' || hasDepartmentRecords) &&
+            (tab.key !== 'decisions' || showDecisionsTab),
         ).map((tab) => {
           const isActive = activeTab === tab.key
 
@@ -440,6 +467,18 @@ function DocumentDetailsView() {
                   : 'الوثيقة ملغاة؛ لا يمكن تعديل روابطها.'
                 : undefined
             }
+          />
+        </GuideRegion>
+      )}
+      {activeTab === 'decisions' && showDecisionsTab && (
+        <GuideRegion id="document-details.tab-decisions">
+          <DocumentDecisionsPanel
+            documentId={document.documentId}
+            documentTitle={document.title}
+            documentTypeId={document.documentTypeId}
+            canIssue={canManageDecisions && !isCanceled && !isArchived}
+            canMove={canEdit && !isCanceled && !isArchived}
+            canArchive={canArchiveNow}
           />
         </GuideRegion>
       )}

@@ -35,6 +35,8 @@ export interface MovementReasonRequest {
 /** `POST /api/movements/{id}/redirect` — opens a new step without closing the movement. */
 export interface RedirectMovementRequest {
   newDestinationDepartmentId: string
+  /** What the document travels for from this hop on (5 = to archive); omitted keeps the current type. */
+  movementTypeId?: number | null
   assignedToUserId?: string | null
   instructions?: string | null
   dueDate?: string | null

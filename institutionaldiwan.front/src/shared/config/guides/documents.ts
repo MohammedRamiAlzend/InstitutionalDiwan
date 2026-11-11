@@ -201,6 +201,22 @@ export const DOCUMENT_DETAILS_GUIDE_ENTRIES: readonly GuideEntry[] = [
     body: 'كل إضافة وإزالة لرابط، حتى الروابط المزالة، مرتبة من الأحدث مع المنفّذ والسبب والوقت.',
   },
   {
+    id: 'document-details.tab-decisions',
+    title: 'تبويب القرار',
+    body: 'يظهر عندما يكون لنوع الوثيقة نوع قرار مفعّل. يعرض القرار النافذ وسجله، ويقترح الخطوة التالية دون أن ينفّذها: إحالة، أو إرسال للحفظ، أو أرشفة.',
+    note: 'إصدار القرار لمن يحمل الوثيقة ويملك إدارة القرارات.',
+  },
+  {
+    id: 'document-details.next-action',
+    title: 'الخطوة المقترحة',
+    body: 'تفتح الحركة أو حوار الأرشفة مع الوجهة والنوع المناسبين. تبقى أنت من يرسل الحركة أو يؤكد الأرشفة.',
+  },
+  {
+    id: 'document-details.decision-number',
+    title: 'رقم القرار',
+    body: 'الرقم كما كُتب في القرار. لا يتكرر لدى الديوان نفسه في السنة نفسها، حتى بعد إلغاء الإدخال.',
+  },
+  {
     id: 'document-details.relations-target',
     title: 'الوثيقة المراد ربطها',
     body: 'ابحث باسم الوثيقة أو رقم النظام واختر الوثيقة المقابلة. تظهر لك الوثائق التي تملك صلاحية الاطلاع عليها فقط.',
@@ -230,6 +246,9 @@ export const DOCUMENT_DETAILS_GUIDE: PageGuide = {
     'document-details.tab-fields',
     'document-details.tab-department-records',
     'document-details.tab-relations',
+    'document-details.tab-decisions',
+    'document-details.next-action',
+    'document-details.decision-number',
     'document-details.relations-grid',
     'document-details.relations-types',
     'document-details.relations-direction',

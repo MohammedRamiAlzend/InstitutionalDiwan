@@ -17,6 +17,8 @@ public sealed class NotificationType : LookupEntity
     public const int MovementRedirectedId = 9;
     public const int MovementClosedId = 10;
     public const int MovementCancelledId = 11;
+    /// <summary>A decision was issued; the document's owning department is told.</summary>
+    public const int DecisionIssuedId = 12;
 
     public string TitleTemplateAr { get; private set; } = null!;
     public string BodyTemplateAr { get; private set; } = null!;

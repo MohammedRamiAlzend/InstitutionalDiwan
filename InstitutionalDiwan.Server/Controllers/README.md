@@ -1,6 +1,6 @@
 # Presentation / Controllers
 
-> **Status:** Implemented — twenty-two thin controllers, one per module plus the generic lookups controller and the administrative picker reads.
+> **Status:** Implemented — twenty-four thin controllers, one per module plus the generic lookups controller and the administrative picker reads.
 
 ## Purpose
 
@@ -27,6 +27,8 @@ access live here.
 | `DocumentFieldsController.cs` | `api` (`document-types/{id}/fields`, `document-types/{id}/schema`, `document-types/{id}/schema-versions`, `schema-versions/{id}[/fields[/{fieldId}]|/publish]`, `documents/{id}/fields`) | `LOOKUP_MANAGE` for schema administration; `DOCUMENT_VIEW` for the published schema and a document's values; `DOCUMENT_EDIT` to set draft values | Dynamic document fields: define fields, run the schema draft/publish lifecycle, read the published schema, read and replace a draft document's values. |
 | `DepartmentRecordsController.cs` | `api` (`documents/{id}/department-records`, `registry-visits/{visitId}/fields[/correct]`) | `DOCUMENT_VIEW` read; `DOCUMENT_EDIT` edit (own department, open record); `DEPARTMENT_RECORD_CORRECT` correction | The record each department keeps on its visits of a document: read (filtered to the caller's departments or `DEPARTMENT_RECORD_VIEW_ALL`), edit while open, correct a locked record with a reason. |
 | `DocumentArchiveController.cs` | `api` (`archive/documents`, `documents/{id}/archive-events`, `documents/{id}/archive`, `documents/{id}/unarchive`) | `DOCUMENT_VIEW` reads; `DOCUMENT_ARCHIVE` writes; per-document access in the handlers | Module 07: archive and restore documents, a document's archive history, and the access-filtered archive search. |
+| `DecisionTypesController.cs` | `api/decision-types` | `DOCUMENT_VIEW` reads; `LOOKUP_MANAGE` writes | Decision types: list, create, update, activate, deactivate. A referral without a destination is stored inactive. |
+| `DecisionsController.cs` | `api/decisions` and `api/documents/{id}/decisions` | `DOCUMENT_VIEW` reads; `DECISION_MANAGE` issue, attach and cancel | The decision register, a document's decisions, the suggested next action, issuing, attaching the decision file, and canceling a mistaken entry. |
 | `SavedSearchesController.cs` | `api/saved-searches` | `DOCUMENT_VIEW`; owner only in the handlers | Module 07: the caller's personal saved archive searches (list, create, replace, delete). |
 | `DocumentRelationsController.cs` | `api/documents/{id}/relations` (`graph`, `events`, `{relationId}`) | `DOCUMENT_VIEW` reads; `DOCUMENT_EDIT` create and remove; per-document access in the handlers | Module 08: a document's links, the relations graph, the permanent relation history, and creating or removing a link. |
 | `InstitutionSettingsController.cs` | `api/institution-settings` | `DEPARTMENT_MANAGE` | Reads and replaces the singleton institution settings (Central Diwan guards). |
@@ -148,6 +150,8 @@ plain JSON array.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-11 | Claude | Added `DecisionTypesController` (`LOOKUP_MANAGE` writes, `DOCUMENT_VIEW` reads) and `DecisionsController` (register and per-document reads on `DOCUMENT_VIEW`, issue/attach/cancel on `DECISION_MANAGE`). |
+| 2026-11-11 | Claude | `PUT /api/institution-settings` accepts `archiveDiwanDepartmentId`, and `POST /api/movements/{id}/redirect` accepts `movementTypeId`; both documented with examples. |
 | 2026-11-10 | Claude | Both receive endpoints (`POST /api/movements/{id}/receive` and `/steps/{stepId}/receive`) document and forward `issueNewNumber`. |
 | 2026-11-10 | Claude | Added `DepartmentRecordsController`; schema routes take `departmentId`; receive routes accept `fieldValues`. |
 | 2026-11-09 | Claude | Added `ExportsController` (`POST api/exports/table`). |

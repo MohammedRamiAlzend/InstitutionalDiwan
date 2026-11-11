@@ -80,11 +80,13 @@ public sealed class MovementWorkflowHandlerTests
 
         public CentralDiwanRouting Routing() => new(Settings);
 
+        public ArchiveDiwanRouting ArchiveRouting() => new(Settings, Documents);
+
         public CreateMovementCommandHandler CreateMovementHandler() =>
-            new(Movements, Documents, Departments, Users, Routing(), DocumentAccess, UnitOfWork);
+            new(Movements, Documents, Departments, Users, Routing(), ArchiveRouting(), DocumentAccess, UnitOfWork);
 
         public SendMovementCommandHandler SendMovementHandler() =>
-            new(Movements, Routing(), CustodyScope, UnitOfWork, FakeNotificationPublisher.Instance, Records());
+            new(Movements, Routing(), ArchiveRouting(), CustodyScope, UnitOfWork, FakeNotificationPublisher.Instance, Records());
 
         public ReceiveDocumentCommandHandler ReceiveHandler() =>
             new(
@@ -102,7 +104,7 @@ public sealed class MovementWorkflowHandlerTests
             new(Movements, CustodyScope, UnitOfWork, FakeNotificationPublisher.Instance, Records());
 
         public RedirectMovementCommandHandler RedirectHandler() =>
-            new(Movements, Departments, Users, Routing(), CustodyScope, UnitOfWork, FakeNotificationPublisher.Instance, Records());
+            new(Movements, Departments, Users, Routing(), ArchiveRouting(), CustodyScope, UnitOfWork, FakeNotificationPublisher.Instance, Records());
 
         /// <summary>Department record forms published for this world's documents.</summary>
         public FakeDocumentTypeSchemaVersionRepository RecordForms { get; } = new();

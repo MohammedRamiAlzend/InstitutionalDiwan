@@ -26,5 +26,6 @@ Staging notifications when business events happen, and the personal inbox use ca
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-11 | Claude | `NotificationPublisher.PublishToDepartmentAsync` announces an event to one department's users and still omits the actor. |
 | 2026-11-04 | Claude | The inbox query gained `Search`, `SortBy` and `SortDescending` (all passed through `PageRequest`), and `UnreadCountResponse` gained `ByType` (backed by `INotificationRepository.CountUnreadByTypeAsync`). Additive: no migration. |
 | 2026-11-03 | Claude | Added the Module 10 use cases. |

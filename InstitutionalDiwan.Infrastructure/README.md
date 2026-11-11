@@ -94,6 +94,7 @@ Persistence/Configurations/
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-11 | Claude | Archive diwan: `INSTITUTION_SETTINGS.ArchiveDiwanDepartmentId` (mapping and migration `Add_Archive_Diwan`), the seeded movement type 5 «للحفظ», and reading access for the archive diwan over the documents it holds in `DocumentAccessEvaluator` and `DocumentViewAccessQuery`. |
 | 2026-11-09 | Claude | Added `Exports/` with `TableExcelWriter`. |
 | 2026-11-08 | Claude | Added `Diagnostics/` (error queue, background writer, repository, Excel writer with ClosedXML). |
 | 2026-11-04 | Claude | Registered `StandardDepartmentSeeder`, `SuperAdminSeeder` and `StandardAccountSeeder`; seeders gained a `Modes` filter (see `Persistence/Seed/README.md`). |

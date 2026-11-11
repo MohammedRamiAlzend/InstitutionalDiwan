@@ -8,6 +8,8 @@ export interface InstitutionSettingResponse {
   numberingResetPolicyId: number
   defaultTimezone: string
   centralDiwanDepartmentId: string | null
+  /** The department that keeps archived files; null while archiving stays with the owning department. */
+  archiveDiwanDepartmentId: string | null
   responsibleEmployeeId: string | null
   updatedAt: string
 }

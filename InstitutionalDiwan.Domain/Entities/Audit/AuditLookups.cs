@@ -62,6 +62,8 @@ public sealed class AuditEntityType : LookupEntity
     /// <summary>A document type's dynamic-field schema: field definitions and their versions.</summary>
     public const int DocumentSchemaVersionId = 14;
     public const int PersonId = 15;
+    public const int DecisionId = 16;
+    public const int DecisionTypeId = 17;
 
     private AuditEntityType()
     {

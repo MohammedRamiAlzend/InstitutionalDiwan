@@ -7,6 +7,7 @@ using InstitutionalDiwan.Application.Features.DepartmentRecords;
 using InstitutionalDiwan.Domain.Common;
 using InstitutionalDiwan.Domain.Entities.Archiving;
 using InstitutionalDiwan.Domain.Entities.Identity;
+using InstitutionalDiwan.Domain.Entities.Movements;
 using InstitutionalDiwan.Domain.Errors;
 using InstitutionalDiwan.Domain.Repositories;
 
@@ -26,6 +27,7 @@ internal sealed class ArchiveDocumentCommandHandler
     private readonly INotificationPublisher _notificationPublisher;
     private readonly IDepartmentScopeEvaluator _departmentScopeEvaluator;
     private readonly DepartmentRecordService _recordService;
+    private readonly IInstitutionSettingRepository _settingRepository;
 
     public ArchiveDocumentCommandHandler(
         IDocumentRepository documentRepository,
@@ -36,8 +38,10 @@ internal sealed class ArchiveDocumentCommandHandler
         IUnitOfWork unitOfWork,
         INotificationPublisher notificationPublisher,
         IDepartmentScopeEvaluator departmentScopeEvaluator,
-        DepartmentRecordService recordService)
+        DepartmentRecordService recordService,
+        IInstitutionSettingRepository settingRepository)
     {
+        _settingRepository = settingRepository;
         _departmentScopeEvaluator = departmentScopeEvaluator;
         _recordService = recordService;
         _documentRepository = documentRepository;
@@ -57,26 +61,62 @@ internal sealed class ArchiveDocumentCommandHandler
         if (document is null)
             return Result.Failure<DocumentResponse>(DomainErrors.Correspondence.DocumentNotFound);
 
-        if (!await _documentAccessEvaluator.CanAccessDocumentAsync(
-                request.DocumentId, AccessLevel.ManageId, cancellationToken))
+        // With an archive diwan designated, archiving happens there and only there: custody of the
+        // document replaces the MANAGE rule and the owning-department rule.
+        var custody = await ArchiveDiwanCustody.ResolveAsync(
+            document.DocumentId, _settingRepository, _documentMovementRepository, cancellationToken);
+        if (custody.ArchiveDiwanDepartmentId is { } archiveDiwanDepartmentId)
         {
-            return Result.Failure<DocumentResponse>(DomainErrors.Correspondence.DocumentAccessDenied);
-        }
+            if (!custody.IsHeld)
+                return Result.Failure<DocumentResponse>(DomainErrors.Archiving.DocumentNotAtArchiveDiwan);
 
-        var owner = await OwningDepartmentGuard.EnsureOwningDepartmentAsync(document, _departmentScopeEvaluator, cancellationToken);
-        if (owner.IsFailure)
-            return Result.Failure<DocumentResponse>(owner.Error);
+            if (!await _departmentScopeEvaluator.CanAccessDepartmentAsync(archiveDiwanDepartmentId, cancellationToken))
+                return Result.Failure<DocumentResponse>(DomainErrors.Archiving.OnlyArchiveDiwanCanArchive);
+        }
+        else
+        {
+            if (!await _documentAccessEvaluator.CanAccessDocumentAsync(
+                    request.DocumentId, AccessLevel.ManageId, cancellationToken))
+            {
+                return Result.Failure<DocumentResponse>(DomainErrors.Correspondence.DocumentAccessDenied);
+            }
+
+            var owner = await OwningDepartmentGuard.EnsureOwningDepartmentAsync(document, _departmentScopeEvaluator, cancellationToken);
+            if (owner.IsFailure)
+                return Result.Failure<DocumentResponse>(owner.Error);
+        }
 
         var location = await _lookupRepository.GetByIdAsync(
             ArchiveLocationsLookup, request.ArchiveLocationId, cancellationToken);
         if (location is null || !location.IsActive)
             return Result.Failure<DocumentResponse>(DomainErrors.Archiving.LocationNotFound);
 
-        var hasActiveMovements = await _documentMovementRepository.HasActiveMovementsAsync(
-            document.DocumentId, cancellationToken);
+        var utcNow = _unitOfWork.UtcNow;
+        bool hasActiveMovements;
+        if (custody.IsHeld)
+        {
+            // The movement that brought the document ends here, in the same save as the archiving.
+            var arrival = custody.LatestMovement!;
+            if (arrival.StatusId != DocumentMovement.StatusClosed)
+            {
+                var close = arrival.Close(request.UserId, "Archived by the archive diwan", utcNow);
+                if (close.IsFailure)
+                    return Result.Failure<DocumentResponse>(close.Error);
+
+                var released = document.MarkMovementEnded(request.UserId, "Archived by the archive diwan", utcNow);
+                if (released.IsFailure)
+                    return Result.Failure<DocumentResponse>(released.Error);
+            }
+
+            hasActiveMovements = false;
+        }
+        else
+        {
+            hasActiveMovements = await _documentMovementRepository.HasActiveMovementsAsync(
+                document.DocumentId, cancellationToken);
+        }
 
         var previousStatusId = document.CurrentStatusId;
-        var utcNow = _unitOfWork.UtcNow;
 
         var archiveResult = document.Archive(
             request.UserId, hasActiveMovements, request.ArchiveLocationId, request.Reason, utcNow);

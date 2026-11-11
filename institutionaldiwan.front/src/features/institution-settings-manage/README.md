@@ -53,4 +53,5 @@ read and cache keys remain in `entities/institution-setting`.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-11 | Claude | Added the «ديوان الحفظ» section: an optional department select (any active department except the Central Diwan) sent as `archiveDiwanDepartmentId`, `null` when cleared. |
 | 2026-10-28 | agent | Document the Module 01 settings form, explicit singleton update, picker permissions, and truthful loading/error/missing-data behavior. |

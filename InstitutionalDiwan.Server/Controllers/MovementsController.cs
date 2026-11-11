@@ -407,6 +407,7 @@ public sealed class MovementsController : ControllerBase
     /// <item><term>assignedToUserId</term><description>Assigned user id (GUID, optional). Example: <c>5f8b32a7-c941-4e62-bd07-2c86ea754921</c>.</description></item>
     /// <item><term>instructions</term><description>Instructions (string, optional). Example: <c>Reviewed and forwarded to the responsible department.</c>.</description></item>
     /// <item><term>dueDate</term><description>Due date (date, optional). Example: <c>2026-01-15</c>.</description></item>
+    /// <item><term>movementTypeId</term><description>Movement type from this hop on; 5 sends the document for archiving; null keeps the current type (integer, optional). Example: <c>5</c>.</description></item>
     /// </list>
     /// </param>
     /// <param name="cancellationToken">Request cancellation token (optional).</param>
@@ -441,7 +442,8 @@ public sealed class MovementsController : ControllerBase
                 request.NewDestinationDepartmentId,
                 request.AssignedToUserId,
                 request.Instructions,
-                request.DueDate),
+                request.DueDate,
+                request.MovementTypeId),
             cancellationToken);
 
         return result.ToActionResult();

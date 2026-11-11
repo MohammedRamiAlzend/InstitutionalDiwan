@@ -76,6 +76,8 @@ public sealed class DepartmentRecordTests
 
         public CentralDiwanRouting Routing() => new(Settings);
 
+        public ArchiveDiwanRouting ArchiveRouting() => new(Settings, Documents);
+
         public async Task RegisterAsync()
         {
             var result = await new RegisterDocumentCommandHandler(
@@ -111,12 +113,12 @@ public sealed class DepartmentRecordTests
         public async Task<DocumentMovement> SendToInvestigationAsync()
         {
             var created = await new CreateMovementCommandHandler(
-                    Movements, Documents, Departments, Users, Routing(), new FakeDocumentAccessEvaluator { AllowAll = true }, UnitOfWork)
+                    Movements, Documents, Departments, Users, Routing(), ArchiveRouting(), new FakeDocumentAccessEvaluator { AllowAll = true }, UnitOfWork)
                 .Handle(new CreateMovementCommand(Document.DocumentId, Clerk.UserId, InvestigationId), CancellationToken.None);
             Assert.True(created.IsSuccess, created.Error?.Code);
 
             var sent = await new SendMovementCommandHandler(
-                    Movements, Routing(), CustodyScope, UnitOfWork, FakeNotificationPublisher.Instance, Records())
+                    Movements, Routing(), ArchiveRouting(), CustodyScope, UnitOfWork, FakeNotificationPublisher.Instance, Records())
                 .Handle(new SendMovementCommand(created.Value.MovementId, Clerk.UserId), CancellationToken.None);
             Assert.True(sent.IsSuccess, sent.Error?.Code);
             return (await Movements.GetByIdAsync(created.Value.MovementId))!;
@@ -263,7 +265,7 @@ public sealed class DepartmentRecordTests
         Assert.True(edited.Value.CanEdit);
 
         var redirect = await new RedirectMovementCommandHandler(
-                world.Movements, world.Departments, world.Users, world.Routing(), world.CustodyScope,
+                world.Movements, world.Departments, world.Users, world.Routing(), world.ArchiveRouting(), world.CustodyScope,
                 world.UnitOfWork, FakeNotificationPublisher.Instance, world.Records())
             .Handle(new RedirectMovementCommand(movement.MovementId, world.Investigator.UserId, world.DiwanId), CancellationToken.None);
         Assert.True(redirect.IsSuccess, redirect.Error?.Code);

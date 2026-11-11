@@ -18,8 +18,9 @@ searches what is archived. Each transition changes the document, its status hist
 | `ArchiveDocumentCommandHandler.cs` | Checks the document exists, `MANAGE` access, an active location and active movements, then runs `Document.Archive` and records the `ARCHIVED` event in the same save. |
 | `ArchiveDocumentCommandValidator.cs` | Requires the ids and a positive location, and limits the reason to 500 characters. |
 | `UnarchiveDocumentCommand.cs` | CQRS command restoring an archived document; the reason is required. |
-| `UnarchiveDocumentCommandHandler.cs` | Checks the document exists and `MANAGE` access, then runs `Document.Unarchive` and records the `UNARCHIVED` event in the same save. |
+| `UnarchiveDocumentCommandHandler.cs` | Checks the document exists and `MANAGE` access (or archive-diwan custody), then runs `Document.Unarchive`, revokes an in-force send-to-archive decision with the same reason, and records the `UNARCHIVED` event in the same save. |
 | `UnarchiveDocumentCommandValidator.cs` | Requires the ids and a non-blank reason of at most 500 characters. |
+| `ArchiveDiwanCustody.cs` | Resolves the designated archive diwan and whether it holds a document (its latest movement that was not canceled ended there and was received); shared by archive, unarchive and the document details read. |
 | `ListDocumentArchiveEventsQuery.cs` | Query for one document's archive history. |
 | `ListDocumentArchiveEventsQueryHandler.cs` | Returns the history newest first to a caller with `VIEW` access on the document. |
 | `SearchArchivedDocumentsQuery.cs` | Paged archive search with free text, sort, department, type, direction, location and archive-date filters. |
@@ -52,6 +53,8 @@ searches what is archived. Each transition changes the document, its status hist
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-11 | Claude | Reopening a document revokes an in-force decision whose effect is send-to-archive, using the reopen reason. A referral or any other effect stays in force, and no return movement is created. |
+| 2026-11-11 | Claude | With an archive diwan designated, archiving happens there: the document must be held by the archive diwan and the caller's scope must cover it (custody replaces `MANAGE` and the owning-department rule), and the archiving closes the movement that brought the document. A document the archive diwan holds is unarchived by the archive diwan only. Without an archive diwan nothing changes. |
 | 2026-11-10 | Claude | Archive and unarchive are limited to the department that created the document (`Correspondence.OnlyOwningDepartmentCanClose`); archiving locks every open department record. |
 | 2026-11-08 | Claude | `ArchiveSearchCriteria` accepts the keys the archive grid saves (`sort`, `dir`, `archivedFrom`, `archivedTo`); a saved search with a sort or archive dates was rejected as invalid. |
 | 2026-11-08 | Claude | `SearchArchivedDocumentsQuery` accepts `FieldFilters`; saved-search criteria accept the joined field filters (`F`). |

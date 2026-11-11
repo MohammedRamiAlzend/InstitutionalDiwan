@@ -50,6 +50,7 @@ browser.
 | `document-schema-editor/` | Schema version history and field grid of one document type with draft actions (new draft, add/edit/remove field, publish, delete) | `entities/document-schema` + `features/document-schema-manage` |
 | `document-fields-panel/` | A document's dynamic fields against its pinned schema version, editable while a draft | `entities/document-schema` + `features/document-field-values` |
 | `department-records-panel/` | Each department's record on its visits of a document, as a timeline per department with open/locked state, edit and correction | `entities/document-schema` + `features/department-record-manage` | ✅ |
+| `document-decisions-panel/` | The in-force decision, its history, and the suggested next step on `/documents/:id` | `entities/document-decision` + `features/decision-manage` | ✅ |
 | `visualization-panel/` | Mermaid source viewer plus data-derived diagram / chart / tree switcher with node context menus | `entities/department`, `entities/movement` + `shared/ui/mermaid-view` | ❌ Planned |
 | `notification-center/` | SignalR bell/drawer | Deferred until Module 10 + hubs | ❌ Blocked |
 
@@ -89,6 +90,7 @@ browser.
 | `document-schema-editor/` | ✅ Implemented and verified in-browser (dynamic fields plan Phases 1–2) |
 | `document-fields-panel/` | ✅ Implemented and verified in-browser (plan Phase 4) |
 | `department-records-panel/` | ✅ Implemented |
+| `document-decisions-panel/` | ✅ Implemented and exercised in the browser. |
 | `document-attachments-panel/` | ✅ Grid, filters, download, upload, versions, archive, and verify implemented (Module 06 Phases 2–4) and browser-verified in Phase 5 across manager, `USER`, and read-only roles. |
 | `movement-timeline/` | Deferred (the document movements tab renders the step chain today) |
 | `visualization-panel/` | ❌ Not implemented (`shared/ui/mermaid-view` is now live, so the cross-module switcher can follow) |
@@ -98,6 +100,7 @@ browser.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-11 | Claude | Added `document-decisions-panel` (the in-force decision, its history, and the suggested next step). |
 | 2026-11-10 | Claude | Added `department-records-panel` (department records timeline on the document page). |
 | 2026-11-09 | Claude | Added `document-print-sheet/`. |
 | 2026-11-09 | Claude | The document registry drops the document date column. |

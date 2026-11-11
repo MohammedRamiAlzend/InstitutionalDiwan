@@ -6,6 +6,7 @@ using InstitutionalDiwan.Domain.Common;
 using InstitutionalDiwan.Domain.Entities.Archiving;
 using InstitutionalDiwan.Domain.Entities.Attachments;
 using InstitutionalDiwan.Domain.Entities.Correspondence;
+using InstitutionalDiwan.Domain.Entities.Decisions;
 using InstitutionalDiwan.Domain.Entities.Identity;
 using InstitutionalDiwan.Domain.Entities.Numbering;
 using InstitutionalDiwan.Domain.Errors;
@@ -29,6 +30,8 @@ public sealed class ArchivingHandlerTests
         public FakeDocumentMovementRepository Movements { get; } = new();
         public FakeDocumentArchiveRepository Archive { get; } = new();
         public FakeLookupRepository Lookups { get; } = new();
+        /// <summary>Empty by default: no archive diwan, so archiving stays with the owning department.</summary>
+        public FakeInstitutionSettingRepository Settings { get; } = new();
         public FakeDocumentAccessEvaluator Access { get; } = new();
         public FakeDepartmentScopeEvaluator Scope { get; } = new();
         /// <summary>Scope used by archive and unarchive: the owning department rule passes by default.</summary>
@@ -39,6 +42,7 @@ public sealed class ArchivingHandlerTests
         public FakeFileSignatureValidator Signatures { get; } = new();
         public FakeFileStorageService Storage { get; } = new();
         public FakeUnitOfWork UnitOfWork { get; } = new();
+        public FakeDocumentDecisionRepository Decisions { get; } = new();
 
         public User Clerk { get; }
         public Document Document { get; }
@@ -60,10 +64,10 @@ public sealed class ArchivingHandlerTests
         }
 
         public ArchiveDocumentCommandHandler ArchiveHandler() =>
-            new(Documents, Movements, Archive, Lookups, Access, UnitOfWork, FakeNotificationPublisher.Instance, OwnerScope, FakeDepartmentRecords.Service(Documents));
+            new(Documents, Movements, Archive, Lookups, Access, UnitOfWork, FakeNotificationPublisher.Instance, OwnerScope, FakeDepartmentRecords.Service(Documents), Settings);
 
         public UnarchiveDocumentCommandHandler UnarchiveHandler() =>
-            new(Documents, Archive, Access, UnitOfWork, OwnerScope);
+            new(Documents, Archive, Access, UnitOfWork, OwnerScope, Settings, Movements, Decisions);
 
         public ListDocumentArchiveEventsQueryHandler EventsHandler() =>
             new(Documents, Archive, Access);
@@ -247,6 +251,73 @@ public sealed class ArchivingHandlerTests
 
         Assert.Equal(DomainErrors.Correspondence.NotArchived.Code, result.Error.Code);
         Assert.Empty(world.Archive.Events);
+    }
+
+    [Fact]
+    public async Task Unarchive_WithoutReason_IsStillRefused()
+    {
+        var world = new World();
+        await world.RegisterAsync();
+        await world.ArchiveAsync();
+        var decision = InForceDecision(world, DecisionEffect.SendToArchiveId, appealable: false);
+
+        var result = await world.UnarchiveAsync("  ");
+
+        Assert.Equal(DomainErrors.Archiving.UnarchiveReasonEmpty.Code, result.Error.Code);
+        Assert.Equal(DecisionStatus.FinalId, decision.StatusId);
+    }
+
+    [Fact]
+    public async Task Unarchive_WithReason_RevokesOnlyASendToArchiveDecision()
+    {
+        var world = new World();
+        await world.RegisterAsync();
+        await world.ArchiveAsync();
+        var decision = InForceDecision(world, DecisionEffect.SendToArchiveId, appealable: false);
+
+        var result = await world.UnarchiveAsync("طلب قضائي");
+
+        Assert.True(result.IsSuccess, result.Error?.Code);
+        Assert.Equal(DecisionStatus.RevokedId, decision.StatusId);
+        Assert.Equal("طلب قضائي", decision.StatusReason);
+    }
+
+    [Fact]
+    public async Task Unarchive_WithReason_LeavesAReferralInForce()
+    {
+        var world = new World();
+        await world.RegisterAsync();
+        await world.ArchiveAsync();
+        var decision = InForceDecision(world, DecisionEffect.ReferId, appealable: true);
+
+        var result = await world.UnarchiveAsync("طلب قضائي");
+
+        Assert.True(result.IsSuccess, result.Error?.Code);
+        Assert.Equal(DecisionStatus.IssuedId, decision.StatusId);
+        Assert.Null(decision.StatusReason);
+    }
+
+    private static DocumentDecision InForceDecision(World world, int effectId, bool appealable)
+    {
+        var destination = effectId == DecisionEffect.ReferId ? Guid.NewGuid() : (Guid?)null;
+        var type = DecisionType.Create(
+            "نوع", appealable, effectId, destination,
+            [DocumentType.InternalMemoId], isActive: true).Value;
+        var decision = DocumentDecision.Issue(
+            world.Document.DocumentId,
+            world.Document.DocumentTypeId,
+            type,
+            "2026/1",
+            new DateOnly(2026, 11, 11),
+            world.Clerk.PrimaryDepartmentId,
+            Guid.NewGuid(),
+            null,
+            null,
+            world.Clerk.UserId,
+            activeDecisionExists: false,
+            numberTaken: false).Value;
+        world.Decisions.Add(decision);
+        return decision;
     }
 
     [Fact]

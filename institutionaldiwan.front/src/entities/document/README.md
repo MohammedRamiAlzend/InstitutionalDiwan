@@ -62,6 +62,7 @@ paging/search/sort/filter params and keeps the previous page visible while the n
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-11 | Claude | `DocumentDetailResponse` carries `archiveDiwanDepartmentId` and `isHeldByArchiveDiwan`. |
 | 2026-11-10 | Claude | `DepartmentRegistryNumberResponse` carries the renumbering link (`replacedByNumber*`, `replacesNumber*`); `findDepartmentEntry` returns the line in use, skipping replaced ones. |
 | 2026-11-09 | Claude | `DocumentListParams` gained `registerNumber`. |
 | 2026-11-08 | Claude | `DocumentResponse.fieldValues` for the schema's table columns. |

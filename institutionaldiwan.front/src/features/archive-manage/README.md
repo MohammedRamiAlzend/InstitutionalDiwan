@@ -36,4 +36,5 @@ private saved searches. Each mutation invalidates the entity query keys it affec
 - 2026-11-05: Unsent form input is now kept (per user, per form) after an accidental close or cancel and restored with a toast; it is cleared only after a successful submit (`useDraftForm`).
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-11 | Claude | Unarchive invalidates the decision queries, because reopening revokes a send-to-archive decision. |
 | 2026-11-03 | agent | Implemented the Module 07 commands and dialogs. |

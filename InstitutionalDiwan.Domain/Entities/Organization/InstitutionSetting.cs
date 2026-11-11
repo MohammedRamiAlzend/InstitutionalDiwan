@@ -19,6 +19,9 @@ public sealed class InstitutionSetting : AggregateRoot<Guid>
     // FK → Department.DepartmentId (InstitutionalDiwan.Domain.Entities.Organization.Department)
     // The root department that acts as the Central Diwan; null until one is designated.
     public Guid? CentralDiwanDepartmentId { get; private set; }
+    // FK → Department.DepartmentId (InstitutionalDiwan.Domain.Entities.Organization.Department)
+    // The department that keeps archived files; null while archiving stays with the owning department.
+    public Guid? ArchiveDiwanDepartmentId { get; private set; }
     // FK → Employee.EmployeeId (InstitutionalDiwan.Domain.Entities.Identity.Employee)
     public Guid? ResponsibleEmployeeId { get; private set; }
     public DateTime UpdatedAt { get; private set; }
@@ -110,6 +113,27 @@ public sealed class InstitutionSetting : AggregateRoot<Guid>
         ResponsibleEmployeeId = responsibleEmployeeId;
         DefaultTimezone = string.IsNullOrWhiteSpace(defaultTimezone) ? DefaultTimezone : defaultTimezone.Trim();
         UpdatedAt = now;
+        return Result.Success();
+    }
+
+    /// <summary>
+    /// Designates the archive diwan, or clears it with <c>null</c>. Existence and activity are checked
+    /// by the caller; the domain refuses the Central Diwan itself, because the archive route ends at a
+    /// department the Central Diwan sends to.
+    /// </summary>
+    public Result SetArchiveDiwan(Guid? archiveDiwanDepartmentId, DateTime? utcNow = null)
+    {
+        if (archiveDiwanDepartmentId == Guid.Empty)
+            archiveDiwanDepartmentId = null;
+
+        if (archiveDiwanDepartmentId.HasValue && archiveDiwanDepartmentId == CentralDiwanDepartmentId)
+            return Result.Failure(DomainErrors.InstitutionSetting.ArchiveDiwanSameAsCentral);
+
+        if (ArchiveDiwanDepartmentId == archiveDiwanDepartmentId)
+            return Result.Success();
+
+        ArchiveDiwanDepartmentId = archiveDiwanDepartmentId;
+        UpdatedAt = utcNow ?? DateTime.UtcNow;
         return Result.Success();
     }
 

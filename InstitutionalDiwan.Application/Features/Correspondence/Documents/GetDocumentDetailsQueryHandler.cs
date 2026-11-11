@@ -1,5 +1,6 @@
 using InstitutionalDiwan.Application.Abstractions.Authorization;
 using InstitutionalDiwan.Application.Abstractions.Messaging;
+using InstitutionalDiwan.Application.Features.Archiving;
 using InstitutionalDiwan.Domain.Common;
 using InstitutionalDiwan.Domain.Entities.Identity;
 using InstitutionalDiwan.Domain.Errors;
@@ -12,11 +13,17 @@ internal sealed class GetDocumentDetailsQueryHandler
 {
     private readonly IDocumentRepository _documentRepository;
     private readonly IDocumentAccessEvaluator _documentAccessEvaluator;
+    private readonly IInstitutionSettingRepository? _settingRepository;
+    private readonly IDocumentMovementRepository? _movementRepository;
 
     public GetDocumentDetailsQueryHandler(
         IDocumentRepository documentRepository,
-        IDocumentAccessEvaluator documentAccessEvaluator)
+        IDocumentAccessEvaluator documentAccessEvaluator,
+        IInstitutionSettingRepository? settingRepository = null,
+        IDocumentMovementRepository? movementRepository = null)
     {
+        _settingRepository = settingRepository;
+        _movementRepository = movementRepository;
         _documentRepository = documentRepository;
         _documentAccessEvaluator = documentAccessEvaluator;
     }
@@ -37,6 +44,16 @@ internal sealed class GetDocumentDetailsQueryHandler
                 DomainErrors.Correspondence.DocumentAccessDenied);
         }
 
-        return DocumentDetailResponse.From(document);
+        var details = DocumentDetailResponse.From(document);
+        if (_settingRepository is null || _movementRepository is null)
+            return details;
+
+        var custody = await ArchiveDiwanCustody.ResolveAsync(
+            document.DocumentId, _settingRepository, _movementRepository, cancellationToken);
+        return details with
+        {
+            ArchiveDiwanDepartmentId = custody.ArchiveDiwanDepartmentId,
+            IsHeldByArchiveDiwan = custody.IsHeld
+        };
     }
 }

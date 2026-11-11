@@ -3,6 +3,7 @@ using InstitutionalDiwan.Domain.Common;
 using InstitutionalDiwan.Domain.Entities.Attachments;
 using InstitutionalDiwan.Domain.Entities.Audit;
 using InstitutionalDiwan.Domain.Entities.Correspondence;
+using InstitutionalDiwan.Domain.Entities.Decisions;
 using InstitutionalDiwan.Domain.Entities.Identity;
 using InstitutionalDiwan.Domain.Entities.Movements;
 using InstitutionalDiwan.Domain.Entities.Numbering;
@@ -556,6 +557,13 @@ internal sealed class TamperEvidentAuditInterceptor : SaveChangesInterceptor
             "RELATIONS", AuditActionType.CreateId, AuditEntityType.DocumentRelationId, e.RelationId,
             NewJson(new { e.SourceDocumentId, e.TargetDocumentId, e.RelationTypeId }),
             RelatedDocumentId: e.SourceDocumentId, ActorUserId: e.ActorUserId),
+        DecisionIssuedEvent e => new(
+            "DECISIONS", AuditActionType.CreateId, AuditEntityType.DecisionId, e.DecisionId,
+            NewJson(new { e.IssuingDepartmentId, e.EffectId }), ActorUserId: e.ActorUserId, RelatedDocumentId: e.DocumentId),
+        DecisionRevokedEvent e => new(
+            "DECISIONS", AuditActionType.UpdateId, AuditEntityType.DecisionId, e.DecisionId,
+            NewJson(new { e.StatusId, e.Reason }), ActorUserId: e.ActorUserId, RelatedDocumentId: e.DocumentId),
+
         DocumentRelationRemovedEvent e => new(
             "RELATIONS", AuditActionType.DeleteId, AuditEntityType.DocumentRelationId, e.RelationId,
             OldValuesJson: OldJson(new { e.SourceDocumentId, e.TargetDocumentId, e.RelationTypeId }),
@@ -626,6 +634,8 @@ internal sealed class TamperEvidentAuditInterceptor : SaveChangesInterceptor
             _ when type == typeof(DocumentRelation) => ("RELATIONS", AuditEntityType.DocumentRelationId),
             _ when type == typeof(DocumentTypeSchemaVersion) => ("CORRESPONDENCE", AuditEntityType.DocumentSchemaVersionId),
             _ when type == typeof(DocumentField) => ("CORRESPONDENCE", AuditEntityType.DocumentSchemaVersionId),
+            _ when type == typeof(DocumentDecision) => ("DECISIONS", AuditEntityType.DecisionId),
+            _ when type == typeof(DecisionType) => ("DECISIONS", AuditEntityType.DecisionTypeId),
             _ => (string.Empty, 0)
         };
 

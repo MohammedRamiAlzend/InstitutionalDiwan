@@ -17,6 +17,7 @@ internal sealed class RedirectMovementCommandHandler
     private readonly IDepartmentRepository _departmentRepository;
     private readonly IUserRepository _userRepository;
     private readonly CentralDiwanRouting _centralDiwanRouting;
+    private readonly ArchiveDiwanRouting _archiveDiwanRouting;
     private readonly IDepartmentScopeEvaluator _departmentScopeEvaluator;
     private readonly IUnitOfWork _unitOfWork;
     private readonly INotificationPublisher _notificationPublisher;
@@ -27,6 +28,7 @@ internal sealed class RedirectMovementCommandHandler
         IDepartmentRepository departmentRepository,
         IUserRepository userRepository,
         CentralDiwanRouting centralDiwanRouting,
+        ArchiveDiwanRouting archiveDiwanRouting,
         IDepartmentScopeEvaluator departmentScopeEvaluator,
         IUnitOfWork unitOfWork,
         INotificationPublisher notificationPublisher,
@@ -37,6 +39,7 @@ internal sealed class RedirectMovementCommandHandler
         _departmentRepository = departmentRepository;
         _userRepository = userRepository;
         _centralDiwanRouting = centralDiwanRouting;
+        _archiveDiwanRouting = archiveDiwanRouting;
         _departmentScopeEvaluator = departmentScopeEvaluator;
         _unitOfWork = unitOfWork;
         _notificationPublisher = notificationPublisher;
@@ -70,6 +73,14 @@ internal sealed class RedirectMovementCommandHandler
         if (routeResult.IsFailure)
             return Result.Failure<MovementResponse>(routeResult.Error);
 
+        var archiveRoute = await _archiveDiwanRouting.ValidateNextHopAsync(
+            movement,
+            destination.DepartmentId,
+            request.MovementTypeId ?? movement.MovementTypeId,
+            cancellationToken);
+        if (archiveRoute.IsFailure)
+            return Result.Failure<MovementResponse>(archiveRoute.Error);
+
         if (request.AssignedToUserId is { } assignedToUserId)
         {
             var assignee = await _userRepository.GetByIdAsync(assignedToUserId, cancellationToken);
@@ -85,7 +96,8 @@ internal sealed class RedirectMovementCommandHandler
             request.AssignedToUserId,
             request.Instructions,
             request.DueDate,
-            _unitOfWork.UtcNow);
+            _unitOfWork.UtcNow,
+            request.MovementTypeId);
         if (redirect.IsFailure)
             return Result.Failure<MovementResponse>(redirect.Error);
 

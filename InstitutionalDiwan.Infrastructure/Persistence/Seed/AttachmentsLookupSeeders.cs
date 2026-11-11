@@ -30,6 +30,7 @@ public sealed class DocumentFileTypeSeeder : LookupSeederBase<DocumentFileType>
         (DocumentFileType.AttachmentId, "Attachment", "مرفق"),
         (DocumentFileType.SignatureId, "Signature", "توقيع"),
         (DocumentFileType.OtherId, "Other", "أخرى"),
+        (DocumentFileType.DecisionId, "Decision", "قرار"),
     };
 
     protected override DocumentFileType BuildItem(int id, string desc, string descAr)

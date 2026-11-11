@@ -45,6 +45,8 @@ public sealed class AuditEntityTypeSeeder : LookupSeederBase<AuditEntityType>
         (AuditEntityType.OperationId, "Operation", "عملية"),
         (AuditEntityType.DocumentSchemaVersionId, "Document field schema", "مخطط حقول الوثيقة"),
         (AuditEntityType.PersonId, "Person", "شخص"),
+        (AuditEntityType.DecisionId, "Decision", "قرار"),
+        (AuditEntityType.DecisionTypeId, "Decision type", "نوع قرار"),
     };
 
     protected override AuditEntityType BuildItem(int id, string desc, string descAr) =>

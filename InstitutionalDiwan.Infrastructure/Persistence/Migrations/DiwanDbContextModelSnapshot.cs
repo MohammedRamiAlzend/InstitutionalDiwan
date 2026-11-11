@@ -1555,6 +1555,166 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                     b.ToTable("PARTICIPANT_TARGET_TYPES", (string)null);
                 });
 
+            modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Decisions.DecisionType", b =>
+                {
+                    b.Property<Guid>("DecisionTypeId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("DecisionTypeId");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2(3)")
+                        .HasColumnName("CreatedAt");
+
+                    b.Property<Guid?>("DestinationDepartmentId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("DestinationDepartmentId");
+
+                    b.Property<int>("EffectId")
+                        .HasColumnType("int")
+                        .HasColumnName("EffectId");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit")
+                        .HasColumnName("IsActive");
+
+                    b.Property<bool>("IsAppealable")
+                        .HasColumnType("bit")
+                        .HasColumnName("IsAppealable");
+
+                    b.Property<string>("NameAr")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)")
+                        .HasColumnName("NameAr");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2(3)")
+                        .HasColumnName("UpdatedAt");
+
+                    b.HasKey("DecisionTypeId");
+
+                    b.HasIndex("DestinationDepartmentId");
+
+                    b.ToTable("DECISION_TYPES", (string)null);
+                });
+
+            modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Decisions.DecisionTypeDocumentType", b =>
+                {
+                    b.Property<Guid>("DecisionTypeId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("DecisionTypeId");
+
+                    b.Property<int>("DocumentTypeId")
+                        .HasColumnType("int")
+                        .HasColumnName("DocumentTypeId");
+
+                    b.HasKey("DecisionTypeId", "DocumentTypeId");
+
+                    b.HasIndex("DocumentTypeId");
+
+                    b.ToTable("DECISION_TYPE_DOCUMENT_TYPES", (string)null);
+                });
+
+            modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Decisions.DocumentDecision", b =>
+                {
+                    b.Property<Guid>("DecisionId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("DecisionId");
+
+                    b.Property<DateOnly>("DecisionDate")
+                        .HasColumnType("date")
+                        .HasColumnName("DecisionDate");
+
+                    b.Property<string>("DecisionNumber")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("DecisionNumber");
+
+                    b.Property<Guid>("DecisionTypeId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("DecisionTypeId");
+
+                    b.Property<int>("DecisionYear")
+                        .HasColumnType("int")
+                        .HasColumnName("DecisionYear");
+
+                    b.Property<Guid?>("DestinationDepartmentId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("DestinationDepartmentId");
+
+                    b.Property<Guid?>("DocumentFileId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("DocumentFileId");
+
+                    b.Property<Guid>("DocumentId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("DocumentId");
+
+                    b.Property<int>("EffectId")
+                        .HasColumnType("int")
+                        .HasColumnName("EffectId");
+
+                    b.Property<bool>("IsAppealable")
+                        .HasColumnType("bit")
+                        .HasColumnName("IsAppealable");
+
+                    b.Property<Guid>("IssuingDepartmentId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("IssuingDepartmentId");
+
+                    b.Property<DateTime>("RecordedAt")
+                        .HasColumnType("datetime2(3)")
+                        .HasColumnName("RecordedAt");
+
+                    b.Property<Guid>("RecordedByUserId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("RecordedByUserId");
+
+                    b.Property<Guid>("RegistryVisitId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("RegistryVisitId");
+
+                    b.Property<DateTime?>("StatusChangedAt")
+                        .HasColumnType("datetime2(3)")
+                        .HasColumnName("StatusChangedAt");
+
+                    b.Property<int>("StatusId")
+                        .HasColumnType("int")
+                        .HasColumnName("StatusId");
+
+                    b.Property<string>("StatusReason")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)")
+                        .HasColumnName("StatusReason");
+
+                    b.Property<string>("Summary")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)")
+                        .HasColumnName("Summary");
+
+                    b.HasKey("DecisionId");
+
+                    b.HasIndex("DecisionTypeId");
+
+                    b.HasIndex("DestinationDepartmentId");
+
+                    b.HasIndex("DocumentFileId");
+
+                    b.HasIndex("DocumentId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_DOCUMENT_DECISIONS_ONE_ACTIVE")
+                        .HasFilter("[StatusId] IN (1, 2, 3)");
+
+                    b.HasIndex("RegistryVisitId");
+
+                    b.HasIndex("IssuingDepartmentId", "DecisionYear", "DecisionNumber")
+                        .IsUnique()
+                        .HasDatabaseName("UX_DOCUMENT_DECISIONS_DEPT_YEAR_NUMBER");
+
+                    b.ToTable("DOCUMENT_DECISIONS", (string)null);
+                });
+
             modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Diagnostics.SystemError", b =>
                 {
                     b.Property<Guid>("SystemErrorId")
@@ -3408,6 +3568,10 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("SettingId");
 
+                    b.Property<Guid?>("ArchiveDiwanDepartmentId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("ArchiveDiwanDepartmentId");
+
                     b.Property<Guid?>("CentralDiwanDepartmentId")
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("CentralDiwanDepartmentId");
@@ -3451,6 +3615,9 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                         .HasColumnName("UpdatedAt");
 
                     b.HasKey("SettingId");
+
+                    b.HasIndex("ArchiveDiwanDepartmentId")
+                        .HasDatabaseName("IX_INSTITUTION_SETTINGS_ARCHIVE_DIWAN");
 
                     b.HasIndex("CentralDiwanDepartmentId")
                         .HasDatabaseName("IX_INSTITUTION_SETTINGS_CENTRAL_DIWAN");
@@ -4175,6 +4342,66 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Decisions.DecisionType", b =>
+                {
+                    b.HasOne("InstitutionalDiwan.Domain.Entities.Organization.Department", null)
+                        .WithMany()
+                        .HasForeignKey("DestinationDepartmentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Decisions.DecisionTypeDocumentType", b =>
+                {
+                    b.HasOne("InstitutionalDiwan.Domain.Entities.Decisions.DecisionType", null)
+                        .WithMany("DocumentTypes")
+                        .HasForeignKey("DecisionTypeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("InstitutionalDiwan.Domain.Entities.Correspondence.DocumentType", null)
+                        .WithMany()
+                        .HasForeignKey("DocumentTypeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Decisions.DocumentDecision", b =>
+                {
+                    b.HasOne("InstitutionalDiwan.Domain.Entities.Decisions.DecisionType", null)
+                        .WithMany()
+                        .HasForeignKey("DecisionTypeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("InstitutionalDiwan.Domain.Entities.Organization.Department", null)
+                        .WithMany()
+                        .HasForeignKey("DestinationDepartmentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("InstitutionalDiwan.Domain.Entities.Attachments.DocumentFile", null)
+                        .WithMany()
+                        .HasForeignKey("DocumentFileId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("InstitutionalDiwan.Domain.Entities.Correspondence.Document", null)
+                        .WithMany()
+                        .HasForeignKey("DocumentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("InstitutionalDiwan.Domain.Entities.Organization.Department", null)
+                        .WithMany()
+                        .HasForeignKey("IssuingDepartmentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("InstitutionalDiwan.Domain.Entities.Numbering.DocumentRegistryVisit", null)
+                        .WithMany()
+                        .HasForeignKey("RegistryVisitId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Identity.DocumentAccessGrant", b =>
                 {
                     b.HasOne("InstitutionalDiwan.Domain.Entities.Identity.AccessLevel", null)
@@ -4458,6 +4685,11 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                 {
                     b.HasOne("InstitutionalDiwan.Domain.Entities.Organization.Department", null)
                         .WithMany()
+                        .HasForeignKey("ArchiveDiwanDepartmentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("InstitutionalDiwan.Domain.Entities.Organization.Department", null)
+                        .WithMany()
                         .HasForeignKey("CentralDiwanDepartmentId")
                         .OnDelete(DeleteBehavior.Restrict);
 
@@ -4573,6 +4805,11 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Correspondence.DocumentTypeSchemaVersion", b =>
                 {
                     b.Navigation("Fields");
+                });
+
+            modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Decisions.DecisionType", b =>
+                {
+                    b.Navigation("DocumentTypes");
                 });
 
             modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Identity.Role", b =>

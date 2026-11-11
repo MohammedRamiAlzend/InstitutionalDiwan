@@ -83,6 +83,7 @@ scoped-interceptor lifetime issues with `AddDbContext`.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-11 | Claude | Maps `DocumentDecision` and `DecisionType`, and the `DecisionIssued` / `DecisionRevoked` events, onto audit entity types 16 and 17. |
 | 2026-11-10 | Claude | Register visits and department record values are now audited (open, edit, lock, correction). |
 | 2026-11-09 | Claude | Maps the person domain events. They carry ids and changed field names only, and `Person` is deliberately not mapped for generic before/after entries, so the audit log holds no personal data. |
 | 2026-11-03 | Claude | Corrected the archive audit rows: `DocumentUnarchivedEvent` recorded the restored status as the old value, so old is now `ARCHIVED` and new is the restored status. `DocumentArchivedEvent` now also records the new status and the archive location. |

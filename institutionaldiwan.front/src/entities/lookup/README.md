@@ -30,6 +30,7 @@ Reads the seeded reference ("lookup") catalogs through `GET /api/lookups/{lookup
 ## Change Log
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-11 | Claude | The document-file-type fallback includes «قرار» (id 5). |
 | 2026-11-09 | Claude | Added the `DocumentPersonRoles` and `DocumentNumberEventTypes` slugs and the role fallbacks. |
 | 2026-11-05 | Claude | Document-type fallbacks reduced to `سجل أساس`; removed `DOCUMENT_TYPE_DIRECTION`. |
 | 2026-11-05 | Claude | Added `isDefault` to `LookupEntryResponse`, `findDefaultLookupEntry` and `usePreselectLookupDefault` (preselects the catalog default in empty create-form selects). |

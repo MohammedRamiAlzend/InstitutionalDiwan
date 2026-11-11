@@ -23,4 +23,12 @@ public interface INotificationPublisher
         Document document,
         Guid actorUserId,
         CancellationToken cancellationToken = default);
+
+    /// <summary>Announces a document event to the users of one department, except the actor.</summary>
+    Task PublishToDepartmentAsync(
+        int notificationTypeId,
+        Document document,
+        Guid departmentId,
+        Guid actorUserId,
+        CancellationToken cancellationToken = default);
 }

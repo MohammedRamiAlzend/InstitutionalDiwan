@@ -13,6 +13,12 @@ export const INSTITUTION_SETTINGS_GUIDE_ENTRIES: readonly GuideEntry[] = [
     note: 'تغييره يتطلب تسجيل سبب النقل.',
   },
   {
+    id: 'institution-settings.archive',
+    title: 'ديوان الحفظ',
+    body: 'القسم الذي تُحفظ عنده الوثائق نهائيًا. أي ديوان يريد حفظ وثيقة يرسلها بحركة من نوع «للحفظ» إلى الديوان الذي أنشأها، وهذا يرسلها إلى ديوان الحفظ، وعند استلامها هناك تُؤرشف.',
+    note: 'اتركه فارغًا لتبقى الأرشفة عند الديوان الذي أنشأ الوثيقة.',
+  },
+  {
     id: 'institution-settings.numbering',
     title: 'الترقيم',
     body: 'النمط الافتراضي لأرقام الوثائق الصادرة وسياسة تصفير التسلسل. تُطبَّق هذه القيم على السجلات الجديدة ما لم تُحدد غيرها.',
@@ -25,17 +31,18 @@ export const INSTITUTION_SETTINGS_GUIDE_ENTRIES: readonly GuideEntry[] = [
   {
     id: 'institution-settings.save',
     title: 'حفظ الإعدادات',
-    body: 'يحفظ كل المجموعات الأربع معًا. لا يُحفظ شيء قبل الضغط، ويُعرض تاريخ آخر تحديث بجانب الزر لتتأكد أن التعديل سُجّل.',
+    body: 'يحفظ كل المجموعات معًا. لا يُحفظ شيء قبل الضغط، ويُعرض تاريخ آخر تحديث بجانب الزر لتتأكد أن التعديل سُجّل.',
   },
 ]
 
 export const INSTITUTION_SETTINGS_GUIDE: PageGuide = {
   pageId: 'institution-settings',
   intro:
-    'إعدادات المؤسسة قيم عامة يبني عليها النظام: هوية المؤسسة، والديوان المركزي، وسياسة الترقيم، والموظف المسؤول. عدّل ما تحتاج واحفظ مرة واحدة.',
+    'إعدادات المؤسسة قيم عامة يبني عليها النظام: هوية المؤسسة، والديوان المركزي، وديوان الحفظ، وسياسة الترقيم، والموظف المسؤول. عدّل ما تحتاج واحفظ مرة واحدة.',
   entryIds: [
     'institution-settings.identity',
     'institution-settings.central',
+    'institution-settings.archive',
     'institution-settings.numbering',
     'institution-settings.responsible',
     'institution-settings.save',

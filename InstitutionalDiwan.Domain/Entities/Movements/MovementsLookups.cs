@@ -10,6 +10,8 @@ public sealed class MovementType : LookupEntity
     public const int TransferId = 2;
     public const int CcId = 3;
     public const int ReturnId = 4;
+    /// <summary>The file is on its way to the archive diwan, through the department that created it.</summary>
+    public const int ToArchiveId = 5;
 
     private MovementType()
     {

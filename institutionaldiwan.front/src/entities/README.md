@@ -32,6 +32,8 @@ read-only presentational UI. Entities never perform write mutations.
 | `document/` | `DocumentResponse`, `DocumentDetailResponse`, timeline, access grants, number history/registry entries (`/documents`, `/documents/{id}`) | `useDocuments`, `useDocumentById`, `useDocumentDetails`, `useDocumentTimeline`, `useDocumentAccessGrants`, `useDocumentNumberHistory`, `useDocumentRegistryNumbers`, `DocumentStatusBadge`, `DocumentDirectionBadge`, `OfficialNumberTag`, `NumberStatusBadge` | ✅ Reads and presentational UI implemented; the grants/numbers UI lives in the page and writes in `features/document-access-grant` / `features/numbering-manage`. |
 | `external-organization/` | `ExternalOrganizationResponse` (paged `/external-organizations`, `/{id}`) | `useExternalOrganizations`, `useExternalOrganizationById` | ✅ Reads for the participant tab, picker, and admin grid; writes live in `features/external-organization-manage` (Phase 7). |
 | `person/` | People named on documents: suggestions, list, file, documents, timeline (`personKeys`), and the `PersonNamesInput` field. | | |
+| `decision-type/` | Decision types (`GET /api/decision-types`) | `useDecisionTypes`, `decisionTypeKeys` | Reads only. |
+| `document-decision/` | A document's decisions, the register, and the suggested next action | `useDocumentDecisions`, `useDocumentNextAction`, `useDecisionRegister`, `documentDecisionKeys`, `DecisionStatusBadge` | Reads only. |
 | `document-file/` | Module 06 file + version + checksum responses (`GET /api/documents/{id}/files`, `/document-files/{id}/download`, `/document-files/{id}/verify`) | `useDocumentFiles`, `useVerifyChecksum`, `documentFileKeys`, `documentFileApi.download`, `ChecksumBadge`, `FileArchivedBadge` | ✅ Reads implemented (Module 06 Phases 0 and 2) and mounted by `widgets/document-attachments-panel`; writes land in `features/attachment-upload` (Phase 3). |
 | `numbering-registry/` | Registry/counter responses, department register book (`/numbering/registries`, `/departments/{id}/register`) | `useNumberingRegistries`, `useNumberingRegistryById`, `useDepartmentRegister`, `RegistryScopeCard`, pure `renderNumberPattern`/scope helpers | ✅ Reads implemented (Phase 5); pure template/scope model added in Module 04 Phase 1. |
 | `movement/` | `MovementQueueItemResponse`, `MovementResponse` (steps/events) (`GET /api/movements/inbox`, `/outbox`, `/by-document/{documentId}`, `/{movementId}`) | `useMovementQueue`, `useMovementInbox`, `useMovementOutbox`, `useDocumentMovements`, `useMovementById`, `getMovementActions`/`hasActiveMovement` rules, `MovementStatusBadge`, `MovementStepStatusBadge`, `MovementTypeBadge` | ✅ Reads, transition rules, and badges implemented (Phase 6). |
@@ -78,6 +80,7 @@ read-only presentational UI. Entities never perform write mutations.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-11 | Claude | Added `decision-type` and `document-decision` read models, query keys and the decision status badge. |
 | 2026-11-09 | Claude | `DocumentResponse` no longer has `documentDate`. |
 | 2026-11-09 | Claude | Added `person/`. |
 | 2026-11-08 | Claude | Added `system-error/`. |

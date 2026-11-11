@@ -13,7 +13,8 @@ public sealed record InstitutionSettingResponse(
     string DefaultTimezone,
     Guid? CentralDiwanDepartmentId,
     Guid? ResponsibleEmployeeId,
-    DateTime UpdatedAt)
+    DateTime UpdatedAt,
+    Guid? ArchiveDiwanDepartmentId = null)
 {
     public static InstitutionSettingResponse From(InstitutionSetting setting) => new(
         setting.SettingId,
@@ -25,5 +26,6 @@ public sealed record InstitutionSettingResponse(
         setting.DefaultTimezone,
         setting.CentralDiwanDepartmentId,
         setting.ResponsibleEmployeeId,
-        setting.UpdatedAt);
+        setting.UpdatedAt,
+        setting.ArchiveDiwanDepartmentId);
 }

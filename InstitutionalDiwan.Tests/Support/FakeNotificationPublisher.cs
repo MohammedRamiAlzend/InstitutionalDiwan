@@ -25,6 +25,17 @@ internal sealed class FakeNotificationPublisher : INotificationPublisher
         return Task.CompletedTask;
     }
 
+    public Task PublishToDepartmentAsync(
+        int notificationTypeId,
+        Document document,
+        Guid departmentId,
+        Guid actorUserId,
+        CancellationToken cancellationToken = default)
+    {
+        Published.Add((notificationTypeId, document.DocumentId, null, actorUserId));
+        return Task.CompletedTask;
+    }
+
     public Task PublishDocumentAsync(
         int notificationTypeId,
         Document document,

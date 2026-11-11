@@ -31,6 +31,8 @@ public static class Permissions
     public const string DepartmentRecordViewAll = "DEPARTMENT_RECORD_VIEW_ALL";
     /// <summary>Correct a department record after it was locked, with a reason.</summary>
     public const string DepartmentRecordCorrect = "DEPARTMENT_RECORD_CORRECT";
+    /// <summary>Issue a decision, attach its copy, and cancel a mistaken entry.</summary>
+    public const string DecisionManage = "DECISION_MANAGE";
 
     /// <summary>Every known permission — used to register one authorization policy per permission.</summary>
     public static readonly IReadOnlyCollection<string> All = new[]
@@ -39,5 +41,6 @@ public static class Permissions
         NumberingView, NumberingManage, DepartmentManage, RoleManage, UserManage, EmployeeManage,
         AccessGrantManage, ReportView, LookupManage, AuditView, AuditManage, SystemErrorsView,
         PersonView, PersonManage, DepartmentRecordViewAll, DepartmentRecordCorrect,
+        DecisionManage,
     };
 }

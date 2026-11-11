@@ -3,6 +3,7 @@ global using InstitutionalDiwan.Domain.Entities.Archiving;
 global using InstitutionalDiwan.Domain.Entities.Attachments;
 global using InstitutionalDiwan.Domain.Entities.Audit;
 global using InstitutionalDiwan.Domain.Entities.Correspondence;
+global using InstitutionalDiwan.Domain.Entities.Decisions;
 global using InstitutionalDiwan.Domain.Entities.Identity;
 global using InstitutionalDiwan.Domain.Entities.Movements;
 global using InstitutionalDiwan.Domain.Entities.Notifications;

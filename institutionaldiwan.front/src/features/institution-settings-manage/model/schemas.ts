@@ -24,6 +24,8 @@ export const institutionSettingsSchema = z.object({
   numberingResetPolicyId: z.string().min(1, 'اختر سياسة تصفير الترقيم.'),
   centralDiwanDepartmentId: z.string().min(1, 'اختر قسم الديوان المركزي.'),
   responsibleEmployeeId: z.string(),
+  /** A department id, or the form's "none" sentinel. */
+  archiveDiwanDepartmentId: z.string(),
   centralDiwanTransferReason: z
     .string()
     .trim()

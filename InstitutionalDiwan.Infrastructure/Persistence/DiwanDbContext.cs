@@ -3,6 +3,7 @@ using InstitutionalDiwan.Domain.Entities.Archiving;
 using InstitutionalDiwan.Domain.Entities.Attachments;
 using InstitutionalDiwan.Domain.Entities.Audit;
 using InstitutionalDiwan.Domain.Entities.Correspondence;
+using InstitutionalDiwan.Domain.Entities.Decisions;
 using InstitutionalDiwan.Domain.Entities.Identity;
 using InstitutionalDiwan.Domain.Entities.Movements;
 using InstitutionalDiwan.Domain.Entities.Notifications;
@@ -101,6 +102,11 @@ public sealed class DiwanDbContext : DbContext, IUnitOfWork
     public DbSet<SavedSearch> SavedSearches => Set<SavedSearch>();
     public DbSet<ArchiveEventType> ArchiveEventTypes => Set<ArchiveEventType>();
     public DbSet<ArchiveLocation> ArchiveLocations => Set<ArchiveLocation>();
+
+    // Decisions
+    public DbSet<DecisionType> DecisionTypes => Set<DecisionType>();
+    public DbSet<DecisionTypeDocumentType> DecisionTypeDocumentTypes => Set<DecisionTypeDocumentType>();
+    public DbSet<DocumentDecision> DocumentDecisions => Set<DocumentDecision>();
 
     // Module 08: Relations
     public DbSet<DocumentRelation> DocumentRelations => Set<DocumentRelation>();

@@ -36,7 +36,7 @@ There is no front-end test runner; `build`, `lint` and exercising the SPA agains
 
 One-way dependencies: Domain → nothing; Application → Domain; Infrastructure → Domain + Application; Server → Application + Infrastructure. Application has no EF Core/ASP.NET; Domain has no packages. CQRS slices live in `Application/Features/<Module>/...` with validators and pipeline behaviors.
 
-- **Permissions** have one source of truth: `InstitutionalDiwan.Domain/Common/Permissions.cs`. The seeded catalog, JWT claims and ASP.NET policies must use identical strings, and the front end's `src/shared/config/permissions.ts` must mirror them exactly (22 codes).
+- **Permissions** have one source of truth: `InstitutionalDiwan.Domain/Common/Permissions.cs`. The seeded catalog, JWT claims and ASP.NET policies must use identical strings, and the front end's `src/shared/config/permissions.ts` must mirror them exactly (23 codes).
 - **Errors** are RFC 7807 `ProblemDetails`; `title` is the domain error code (e.g. `Numbering.OfficialNumberTaken`), `detail` is English text.
 - **OpenAPI**: every route needs a summary, description and a concrete example per parameter; `OpenApiDocumentationTests` fails the build otherwise (`add-endpoint-docs.mjs` helps generate these).
 - Use namespaces `InstitutionalDiwan.*`; legacy `NewDiwan.*` must not be introduced.

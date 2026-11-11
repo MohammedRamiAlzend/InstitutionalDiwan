@@ -20,6 +20,7 @@ Defines the React Router v7 route tree, the authentication guard (`ProtectedRout
 ## Change Log
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-11 | Claude | Registered `/decisions` (`ROUTES.DECISIONS`); the page performs its own `DOCUMENT_VIEW` guard. |
 | 2026-11-04 | Claude | Registered `/lookups` (`ROUTES.LOOKUPS`); the page performs its own `LOOKUP_MANAGE` guard. |
 | 2026-11-04 | Claude | Module 10 notifications front end (plan `plans/module-10-notifications-frontend.md`): registered `/notifications` (`ROUTES.NOTIFICATIONS`), wrapped the shell routes in `NotificationLiveLayout` (keeps the hub open and marks a toast-opened notification read) and passed `NotificationBell` to `AppShell`. |
 | 2026-11-03 | Claude | Registered `/document-schemas` (`ROUTES.DOCUMENT_SCHEMAS`); the page performs its own `LOOKUP_MANAGE` guard. |

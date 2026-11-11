@@ -2,7 +2,8 @@ namespace InstitutionalDiwan.Server.Contracts.Organization;
 
 /// <summary>
 /// Payload submitted to <c>PUT /api/institution-settings</c>. The Central Diwan must be an active
-/// root department of type <c>CENTRAL_DIWAN</c>; changing it requires a transfer reason.
+/// root department of type <c>CENTRAL_DIWAN</c>; changing it requires a transfer reason. The archive
+/// diwan is optional: an active department other than the Central Diwan, or null to clear it.
 /// </summary>
 public sealed record UpdateInstitutionSettingsRequest(
     string InstitutionNameAr,
@@ -13,4 +14,5 @@ public sealed record UpdateInstitutionSettingsRequest(
     string? LogoPath = null,
     string? DefaultTimezone = null,
     Guid? ResponsibleEmployeeId = null,
-    string? CentralDiwanTransferReason = null);
+    string? CentralDiwanTransferReason = null,
+    Guid? ArchiveDiwanDepartmentId = null);

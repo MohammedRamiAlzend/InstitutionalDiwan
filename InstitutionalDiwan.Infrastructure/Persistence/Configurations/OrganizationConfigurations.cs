@@ -78,10 +78,17 @@ public sealed class InstitutionSettingConfiguration : IEntityTypeConfiguration<I
         builder.Property(x => x.NumberingResetPolicyId).HasColumnName("NumberingResetPolicyId").IsRequired();
         builder.Property(x => x.DefaultTimezone).HasColumnName("DefaultTimezone").HasMaxLength(100).IsRequired();
         builder.Property(x => x.CentralDiwanDepartmentId).HasColumnName("CentralDiwanDepartmentId");
+        builder.Property(x => x.ArchiveDiwanDepartmentId).HasColumnName("ArchiveDiwanDepartmentId");
         builder.Property(x => x.ResponsibleEmployeeId).HasColumnName("ResponsibleEmployeeId");
         builder.Property(x => x.UpdatedAt).HasColumnName("UpdatedAt").HasColumnType("datetime2(3)").IsRequired();
 
         builder.HasIndex(x => x.CentralDiwanDepartmentId).HasDatabaseName("IX_INSTITUTION_SETTINGS_CENTRAL_DIWAN");
+        builder.HasIndex(x => x.ArchiveDiwanDepartmentId).HasDatabaseName("IX_INSTITUTION_SETTINGS_ARCHIVE_DIWAN");
+
+        builder.HasOne<Department>()
+            .WithMany()
+            .HasForeignKey(x => x.ArchiveDiwanDepartmentId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne<NumberingMode>()
             .WithMany()

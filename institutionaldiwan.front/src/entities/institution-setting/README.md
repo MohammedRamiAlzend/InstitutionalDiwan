@@ -35,4 +35,5 @@ Owns the typed read of the singleton institution settings through `GET /api/inst
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-11 | Claude | `InstitutionSettingResponse` carries `archiveDiwanDepartmentId`. |
 | 2026-10-28 | agent | Document the Module 01 singleton read slice and missing-settings semantics so consumers do not infer an initialization or overwrite flow. |

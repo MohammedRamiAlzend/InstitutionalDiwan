@@ -95,6 +95,7 @@ commands the API actually walks: `CreateDraftDocumentCommand` → `UpdateDraftMe
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-11 | Claude | `DocumentDetailResponse` adds `ArchiveDiwanDepartmentId` and `IsHeldByArchiveDiwan`, filled by `GetDocumentDetailsQueryHandler`, so the client offers archive and unarchive to the right department. |
 | 2026-11-10 | Claude | Added `OwningDepartmentGuard`; cancelling is limited to the creating department and locks every open department record. |
 | 2026-11-09 | Claude | `ListDocumentsQuery` accepts `RegisterNumber`. |
 | 2026-11-09 | Claude | Removed the document date and external reference inputs; `DocumentResponse` no longer has `DocumentDate`, and the numbering year falls back to the creation year. |

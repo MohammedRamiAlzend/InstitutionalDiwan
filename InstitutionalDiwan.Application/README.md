@@ -58,6 +58,7 @@ See each subfolder's README for the full design and per-folder status tables.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-11 | Claude | Registered `ArchiveDiwanRouting` for the route to the archive diwan (plan `plans/case-decisions.md`, slice A). |
 | 2026-11-10 | Claude | Registers `DepartmentRecordService` (opens and locks department records) and adds the `Features/DepartmentRecords` slice. |
 | 2026-11-08 | Claude | Registered `IDocumentFieldOptionResolver` for select fields fed by departments, external organizations or lookup catalogs. |
 | 2026-11-03 | Claude | Module 07 Archiving, Phase 2: new `Features/Archiving` slice, and archived documents are now frozen in the Attachments and Numbering write handlers. No HTTP endpoint yet. |

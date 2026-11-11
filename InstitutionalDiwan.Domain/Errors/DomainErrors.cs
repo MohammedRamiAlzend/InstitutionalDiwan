@@ -39,7 +39,8 @@ public static class DomainErrors
         public static readonly Error CyclicHierarchy = Error.Conflict("Department.CyclicHierarchy", "Cannot move department under one of its own descendants.");
         public static readonly Error InactiveParent = Error.Conflict("Department.InactiveParent", "Cannot move department under an inactive parent department.");
         public static readonly Error HasActiveChildren = Error.Conflict("Department.HasActiveChildren", "Cannot deactivate a department that still has active child departments.");
-        public static readonly Error CentralDiwanProtected = Error.Conflict("Department.CentralDiwanProtected", "Cannot reparent or deactivate the designated Central Diwan department. Transfer the Central Diwan through institution settings first.");
+        public static readonly Error ArchiveDiwanProtected = Error.Conflict("Department.ArchiveDiwanProtected", "Cannot deactivate the designated archive diwan department. Choose another archive diwan in institution settings first.");
+        public static readonly Error CentralDiwanProtected =Error.Conflict("Department.CentralDiwanProtected", "Cannot reparent or deactivate the designated Central Diwan department. Transfer the Central Diwan through institution settings first.");
         public static readonly Error NotFound = Error.NotFound("Department.NotFound", "The department was not found.");
         public static readonly Error CodeAlreadyExists = Error.Conflict("Department.CodeAlreadyExists", "A department with this code already exists.");
         public static readonly Error TypeNotFound = Error.Validation("Department.TypeNotFound", "The specified department type does not exist.");
@@ -67,6 +68,9 @@ public static class DomainErrors
         public static readonly Error ResetPolicyNotFound = Error.Validation("InstitutionSetting.ResetPolicyNotFound", "The specified numbering reset policy does not exist.");
         public static readonly Error ResetPolicyInactive = Error.Conflict("InstitutionSetting.ResetPolicyInactive", "Cannot select an inactive numbering reset policy.");
         public static readonly Error ResponsibleEmployeeNotFound = Error.Validation("InstitutionSetting.ResponsibleEmployeeNotFound", "The designated responsible employee does not exist.");
+        public static readonly Error ArchiveDiwanNotFound = Error.Validation("InstitutionSetting.ArchiveDiwanNotFound", "The designated archive diwan department does not exist.");
+        public static readonly Error ArchiveDiwanInactive = Error.Conflict("InstitutionSetting.ArchiveDiwanInactive", "Cannot designate an inactive department as the archive diwan.");
+        public static readonly Error ArchiveDiwanSameAsCentral = Error.Conflict("InstitutionSetting.ArchiveDiwanSameAsCentral", "The archive diwan cannot be the Central Diwan department.");
     }
 
     public static class Identity
@@ -269,6 +273,12 @@ public static class DomainErrors
         public static readonly Error SearchNameTaken = Error.Conflict("Archiving.SearchNameTaken", "You already have a saved search with this name.");
         public static readonly Error SearchLimitReached = Error.Conflict("Archiving.SearchLimitReached", "You have reached the maximum of 50 saved searches.");
         public static readonly Error CriteriaInvalid = Error.Validation("Archiving.CriteriaInvalid", "The saved search criteria are not valid or exceed 4000 characters.");
+        public static readonly Error ArchiveDiwanNotConfigured = Error.Conflict("Archiving.ArchiveDiwanNotConfigured", "No archive diwan is designated in the institution settings, so a document cannot be sent for archiving.");
+        public static readonly Error ArchiveRouteViaOwningDepartment = Error.Conflict("Archiving.ArchiveRouteViaOwningDepartment", "A document sent for archiving must go to the department that created it; only that department sends it to the archive diwan.");
+        public static readonly Error OnlyOwningDepartmentSendsToArchive = Error.Conflict("Archiving.OnlyOwningDepartmentSendsToArchive", "Only the department that created the document can send it to the archive diwan.");
+        public static readonly Error ArchiveDiwanAcceptsArchiveMovementsOnly = Error.Conflict("Archiving.ArchiveDiwanAcceptsArchiveMovementsOnly", "The archive diwan only receives documents sent for archiving.");
+        public static readonly Error DocumentNotAtArchiveDiwan = Error.Conflict("Archiving.DocumentNotAtArchiveDiwan", "The document must be received by the archive diwan before it can be archived.");
+        public static readonly Error OnlyArchiveDiwanCanArchive = Error.Forbidden("Archiving.OnlyArchiveDiwanCanArchive", "Only the archive diwan can archive or unarchive a document it holds.");
     }
 
     public static class Audit
@@ -402,5 +412,36 @@ public static class DomainErrors
         public static readonly Error SchemaNotFound = Error.Conflict("DepartmentRecords.SchemaNotFound", "This visit has no department record form.");
         public static readonly Error CorrectionReasonRequired = Error.Validation("DepartmentRecords.CorrectionReasonRequired", "A reason is required to correct a locked record.");
         public static readonly Error CorrectionReasonTooLong = Error.Validation("DepartmentRecords.CorrectionReasonTooLong", "The correction reason cannot exceed 1000 characters.");
+    }
+
+    /// <summary>Decision types and the decisions issued on documents.</summary>
+    public static class Decisions
+    {
+        public static readonly Error NameEmpty = Error.Validation("Decisions.NameEmpty", "A decision type needs an Arabic name and an English name.");
+        public static readonly Error NameTooLong = Error.Validation("Decisions.NameTooLong", "A decision type name cannot exceed 200 characters.");
+        public static readonly Error EffectInvalid = Error.Validation("Decisions.EffectInvalid", "The decision effect is not one of the known effects.");
+        public static readonly Error TypeNotFound = Error.NotFound("Decisions.TypeNotFound", "The decision type was not found.");
+        public static readonly Error TypeInactive = Error.Conflict("Decisions.TypeInactive", "The decision type is inactive and cannot be issued.");
+        public static readonly Error TypeNotAllowedForDocument = Error.Conflict("Decisions.TypeNotAllowedForDocument", "This decision type is not offered for the document's type.");
+        public static readonly Error TypeDestinationRequired = Error.Conflict("Decisions.TypeDestinationRequired", "A referral decision type needs a destination department before it can be activated.");
+        public static readonly Error TypeDestinationNotAllowed = Error.Validation("Decisions.TypeDestinationNotAllowed", "Only a referral decision type may name a destination department.");
+        public static readonly Error TypeInUse = Error.Conflict("Decisions.TypeInUse", "A decision type that has been used is deactivated, not deleted.");
+        public static readonly Error NotHoldingDepartment = Error.Forbidden("Decisions.NotHoldingDepartment", "A decision can be issued only by the department that currently holds the document.");
+        public static readonly Error ActiveDecisionExists = Error.Conflict("Decisions.ActiveDecisionExists", "The document already has a decision in force. Revoke or cancel it before issuing another.");
+        public static readonly Error DecisionNumberEmpty = Error.Validation("Decisions.DecisionNumberEmpty", "The decision number is required.");
+        public static readonly Error DecisionNumberTooLong = Error.Validation("Decisions.DecisionNumberTooLong", "The decision number cannot exceed 100 characters.");
+        public static readonly Error DecisionNumberTaken = Error.Conflict("Decisions.DecisionNumberTaken", "This decision number is already used by the issuing department in that year.");
+        public static readonly Error DecisionDateInvalid = Error.Validation("Decisions.DecisionDateInvalid", "The decision date is not a valid year.");
+        public static readonly Error SummaryTooLong = Error.Validation("Decisions.SummaryTooLong", "The decision summary cannot exceed 2000 characters.");
+        public static readonly Error DecisionNotFound = Error.NotFound("Decisions.DecisionNotFound", "The decision was not found.");
+        public static readonly Error DecisionFileInvalid = Error.Validation("Decisions.DecisionFileInvalid", "The file must be a decision copy attached to the same document.");
+        public static readonly Error CancelReasonRequired = Error.Validation("Decisions.CancelReasonRequired", "A reason is required to cancel or revoke a decision.");
+        public static readonly Error ReasonTooLong = Error.Validation("Decisions.ReasonTooLong", "The reason cannot exceed 1000 characters.");
+        public static readonly Error NotSystemAdmin = Error.Forbidden("Decisions.NotSystemAdmin", "Only a system administrator can cancel a decision that was entered by mistake.");
+        public static readonly Error NotAppealable = Error.Conflict("Decisions.NotAppealable", "This decision cannot be appealed.");
+        public static readonly Error AppealAlreadyPending = Error.Conflict("Decisions.AppealAlreadyPending", "An appeal is already pending on this decision.");
+        public static readonly Error AppealOutcomeInvalid = Error.Validation("Decisions.AppealOutcomeInvalid", "The appeal outcome must be accepted or rejected.");
+        public static readonly Error DocumentJoined = Error.Conflict("Decisions.DocumentJoined", "This file was joined into another and cannot take a new separating decision.");
+        public static readonly Error JoinTargetInvalid = Error.Conflict("Decisions.JoinTargetInvalid", "Unification of two files is not available yet.");
     }
 }

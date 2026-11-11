@@ -139,6 +139,8 @@ indexes) runs against a private SQLite in-memory database through `Support/TestC
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-11 | Claude | Decision slice: `Application/DecisionTests` (type activation, snapshot, one in-force decision, holding department, document-type link, join refused, number uniqueness) and `Persistence/DecisionPersistenceTests` (the register hides documents the caller cannot view; the database keeps one in-force decision and a canceled number). Permission, role and seed counts moved to 23. 940 tests pass. |
+| 2026-11-11 | Claude | Added `Application/ArchiveDiwanRouteTests.cs` (the full route to the archive diwan, archive and reopen custody, the routing rules, the settings checks) and an archive-diwan parity case in `Persistence/DocumentViewAccessQueryTests`; `FakeDocumentMovementRepository.HasActiveMovementsAsync` now follows the movements' status. 926 tests pass. |
 | 2026-11-10 | Claude | Department renumbering: four handler tests in `DepartmentRegisterNumberingTests` (link both ways, reuse and repeat, taken number, first arrival) and a SQLite test in `DocumentRegisterNumberFilterTests` for the filtered unique index and search by either number. |
 | 2026-11-10 | Claude | Added `DepartmentRecordTests` and `FakeDepartmentRecords`; partial-index persistence tests; permission counts are now 22; a same-day return is a second visit. |
 | 2026-11-09 | Claude | Added `TableExcelWriterTests`. |

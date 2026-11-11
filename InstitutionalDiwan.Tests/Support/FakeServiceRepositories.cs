@@ -2,6 +2,7 @@ using InstitutionalDiwan.Application.Abstractions.Authentication;
 using InstitutionalDiwan.Application.Abstractions.Authorization;
 using InstitutionalDiwan.Domain.Common;
 using InstitutionalDiwan.Domain.Entities.Correspondence;
+using InstitutionalDiwan.Domain.Entities.Decisions;
 using InstitutionalDiwan.Domain.Entities.Identity;
 using InstitutionalDiwan.Domain.Entities.Movements;
 using InstitutionalDiwan.Domain.Entities.Organization;
@@ -134,13 +135,13 @@ internal sealed class FakeDocumentMovementRepository : IDocumentMovementReposito
             .FirstOrDefault());
 
     public Task<bool> HasActiveMovementsAsync(Guid documentId, CancellationToken cancellationToken = default)
-        => Task.FromResult(DocumentIdsWithActiveMovements.Contains(documentId));
+        => Task.FromResult(
+            DocumentIdsWithActiveMovements.Contains(documentId) ||
+            Movements.Any(movement => movement.DocumentId == documentId &&
+                                      movement.StatusId != DocumentMovement.StatusClosed &&
+                                      movement.StatusId != DocumentMovement.StatusCanceled));
 
-    public void Add(DocumentMovement movement)
-    {
-        Movements.Add(movement);
-        DocumentIdsWithActiveMovements.Add(movement.DocumentId);
-    }
+    public void Add(DocumentMovement movement) => Movements.Add(movement);
 }
 
 internal sealed class FakeLookupRepository : ILookupRepository
@@ -256,4 +257,68 @@ internal sealed class FakeDepartmentScopeEvaluator : IDepartmentScopeEvaluator
     public Task<IReadOnlySet<Guid>?> GetAccessibleDepartmentIdsAsync(
         CancellationToken cancellationToken = default)
         => Task.FromResult<IReadOnlySet<Guid>?>(InstitutionWide ? null : AccessibleDepartments);
+}
+
+/// <summary>In-memory decisions. An unset open visit means the document is not held anywhere.</summary>
+internal sealed class FakeDocumentDecisionRepository : IDocumentDecisionRepository
+{
+    public List<DocumentDecision> Decisions { get; } = new();
+    public OpenDecisionVisit? OpenVisit { get; set; }
+
+    public Task<DocumentDecision?> GetByIdAsync(Guid decisionId, CancellationToken cancellationToken = default)
+        => Task.FromResult(Decisions.FirstOrDefault(decision => decision.DecisionId == decisionId));
+
+    public Task<DocumentDecision?> GetActiveByDocumentAsync(Guid documentId, CancellationToken cancellationToken = default)
+        => Task.FromResult(Decisions.FirstOrDefault(decision => decision.DocumentId == documentId && decision.IsInForce));
+
+    public Task<IReadOnlyList<DocumentDecision>> ListByDocumentAsync(Guid documentId, CancellationToken cancellationToken = default)
+        => Task.FromResult<IReadOnlyList<DocumentDecision>>(
+            Decisions.Where(decision => decision.DocumentId == documentId)
+                .OrderByDescending(decision => decision.RecordedAt)
+                .ToList());
+
+    public Task<bool> IsNumberTakenAsync(
+        Guid issuingDepartmentId,
+        int year,
+        string decisionNumber,
+        CancellationToken cancellationToken = default)
+        => Task.FromResult(Decisions.Any(decision =>
+            decision.IssuingDepartmentId == issuingDepartmentId &&
+            decision.DecisionYear == year &&
+            decision.DecisionNumber == decisionNumber));
+
+    public Task<OpenDecisionVisit?> FindOpenVisitAsync(Guid documentId, CancellationToken cancellationToken = default)
+        => Task.FromResult(OpenVisit);
+
+    public Task<PagedList<DecisionRegisterRow>> ListPagedAsync(
+        PageRequest page,
+        DocumentViewAccess access,
+        DecisionRegisterFilter filter,
+        CancellationToken cancellationToken = default)
+        => Task.FromResult(new PagedList<DecisionRegisterRow>([], 0));
+
+    public void Add(DocumentDecision decision) => Decisions.Add(decision);
+}
+
+internal sealed class FakeDecisionTypeRepository : IDecisionTypeRepository
+{
+    public List<DecisionType> Types { get; } = new();
+
+    public Task<DecisionType?> GetByIdAsync(Guid decisionTypeId, CancellationToken cancellationToken = default)
+        => Task.FromResult(Types.FirstOrDefault(type => type.DecisionTypeId == decisionTypeId));
+
+    public Task<IReadOnlyList<DecisionType>> ListAsync(
+        int? documentTypeId,
+        bool? isActive,
+        CancellationToken cancellationToken = default)
+    {
+        IEnumerable<DecisionType> query = Types;
+        if (documentTypeId is { } typeId)
+            query = query.Where(type => type.AllowsDocumentType(typeId));
+        if (isActive is { } active)
+            query = query.Where(type => type.IsActive == active);
+        return Task.FromResult<IReadOnlyList<DecisionType>>(query.OrderBy(type => type.NameAr).ToList());
+    }
+
+    public void Add(DecisionType decisionType) => Types.Add(decisionType);
 }

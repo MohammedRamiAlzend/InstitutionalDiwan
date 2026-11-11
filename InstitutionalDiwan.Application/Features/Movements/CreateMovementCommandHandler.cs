@@ -17,6 +17,7 @@ internal sealed class CreateMovementCommandHandler
     private readonly IDepartmentRepository _departmentRepository;
     private readonly IUserRepository _userRepository;
     private readonly CentralDiwanRouting _centralDiwanRouting;
+    private readonly ArchiveDiwanRouting _archiveDiwanRouting;
     private readonly IDocumentAccessEvaluator _documentAccessEvaluator;
     private readonly IUnitOfWork _unitOfWork;
 
@@ -26,6 +27,7 @@ internal sealed class CreateMovementCommandHandler
         IDepartmentRepository departmentRepository,
         IUserRepository userRepository,
         CentralDiwanRouting centralDiwanRouting,
+        ArchiveDiwanRouting archiveDiwanRouting,
         IDocumentAccessEvaluator documentAccessEvaluator,
         IUnitOfWork unitOfWork)
     {
@@ -34,6 +36,7 @@ internal sealed class CreateMovementCommandHandler
         _departmentRepository = departmentRepository;
         _userRepository = userRepository;
         _centralDiwanRouting = centralDiwanRouting;
+        _archiveDiwanRouting = archiveDiwanRouting;
         _documentAccessEvaluator = documentAccessEvaluator;
         _unitOfWork = unitOfWork;
     }
@@ -77,6 +80,15 @@ internal sealed class CreateMovementCommandHandler
             user.PrimaryDepartmentId, destination.DepartmentId, cancellationToken);
         if (routeResult.IsFailure)
             return Result.Failure<MovementResponse>(routeResult.Error);
+
+        var archiveRoute = await _archiveDiwanRouting.ValidateFirstHopAsync(
+            document.DocumentId,
+            request.MovementTypeId,
+            user.PrimaryDepartmentId,
+            destination.DepartmentId,
+            cancellationToken);
+        if (archiveRoute.IsFailure)
+            return Result.Failure<MovementResponse>(archiveRoute.Error);
 
         if (request.AssignedToUserId is { } assignedToUserId)
         {

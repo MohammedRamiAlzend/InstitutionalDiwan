@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Controller } from 'react-hook-form'
+import { Controller, useWatch } from 'react-hook-form'
 import { useDraftForm } from '@/shared/lib'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Route, Search } from 'lucide-react'
@@ -19,12 +19,17 @@ import {
 import { useCreateMovementMutation } from '../api/movementMutations'
 import { openMovementSchema, type OpenMovementFormValues } from '../model/schemas'
 import { useAssigneeOptions } from '../model/useAssigneeOptions'
+import { ArchiveRouteHint } from './ArchiveRouteHint'
 
 interface OpenMovementDialogProps {
   documentId: string
   documentTitle: string
   open: boolean
   onOpenChange: (open: boolean) => void
+  /** Prefills the destination when a decision suggests the next hop. */
+  initialDestinationId?: string
+  /** Prefills the movement type; defaults to a referral. */
+  initialMovementTypeId?: number
 }
 
 /**
@@ -36,12 +41,15 @@ export function OpenMovementDialog({
   documentTitle,
   open,
   onOpenChange,
+  initialDestinationId,
+  initialMovementTypeId,
 }: OpenMovementDialogProps) {
   const mutation = useCreateMovementMutation()
   const departmentsQuery = useDepartmentOptions({ enabled: open })
   const typesQuery = useLookupEntries(LOOKUP_SLUGS.MovementTypes)
   const [assigneeSearch, setAssigneeSearch] = useState('')
   const assigneeOptions = useAssigneeOptions(assigneeSearch, open)
+  const suggested = Boolean(initialDestinationId)
 
   const {
     register,
@@ -49,16 +57,22 @@ export function OpenMovementDialog({
     handleSubmit,
     formState: { errors },
     draft,
-  } = useDraftForm<OpenMovementFormValues>({ formId: `open-movement:${documentId}` }, {
+  } = useDraftForm<OpenMovementFormValues>({
+    formId: suggested
+      ? `open-movement:${documentId}:suggested:${initialDestinationId}:${initialMovementTypeId ?? MOVEMENT_TYPE.Referral}`
+      : `open-movement:${documentId}`,
+  }, {
     resolver: zodResolver(openMovementSchema),
     defaultValues: {
-      destinationDepartmentId: '',
-      movementTypeId: String(MOVEMENT_TYPE.Referral),
+      destinationDepartmentId: initialDestinationId ?? '',
+      movementTypeId: String(initialMovementTypeId ?? MOVEMENT_TYPE.Referral),
       assignedToUserId: '',
       instructions: '',
       dueDate: '',
     },
   })
+
+  const selectedTypeId = useWatch({ control, name: 'movementTypeId' })
 
   const departmentOptions = useMemo(
     () =>
@@ -179,6 +193,7 @@ export function OpenMovementDialog({
               />
             )}
           />
+          {selectedTypeId === String(MOVEMENT_TYPE.ToArchive) && <ArchiveRouteHint />}
         </FormField>
 
         <FormField label="تاريخ الاستحقاق" error={errors.dueDate?.message}>

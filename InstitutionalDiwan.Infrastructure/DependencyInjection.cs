@@ -94,6 +94,8 @@ public static class DependencyInjection
         services.AddScoped<IDocumentArchiveRepository, DocumentArchiveRepository>();
         services.AddScoped<ISavedSearchRepository, SavedSearchRepository>();
         services.AddScoped<IDocumentRelationRepository, DocumentRelationRepository>();
+        services.AddScoped<IDecisionTypeRepository, DecisionTypeRepository>();
+        services.AddScoped<IDocumentDecisionRepository, DocumentDecisionRepository>();
         services.AddScoped<IAuditLogRepository, AuditLogRepository>();
         services.AddScoped<INotificationRepository, NotificationRepository>();
         services.AddScoped<InstitutionalDiwan.Application.Abstractions.Notifications.INotificationRecipientDirectory, NotificationRecipientDirectory>();
@@ -155,6 +157,7 @@ public static class DependencyInjection
         services.AddScoped<ISeeder, StandardDepartmentSeeder>();
         services.AddScoped<ISeeder, SuperAdminSeeder>();
         services.AddScoped<ISeeder, StandardAccountSeeder>();
+        services.AddScoped<ISeeder, DecisionTypeSeeder>();
 
         services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
         services.AddSingleton<IPasswordHasher, PasswordHasher>();

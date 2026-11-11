@@ -249,7 +249,12 @@ public sealed class DocumentMovement : AggregateRoot<Guid>
         return Result.Success();
     }
 
-    public Result RedirectTo(Guid newDestinationDepartmentId, Guid actorUserId, Guid? assignedToUserId = null, string? instructions = null, DateTime? dueDate = null, DateTime? utcNow = null)
+    /// <summary>
+    /// Sends the document on to another department inside the same movement. A movement lives through
+    /// many hops, so <paramref name="movementTypeId"/> lets the redirecting department restate what
+    /// the document now travels for (for example "to archive"); null keeps the current type.
+    /// </summary>
+    public Result RedirectTo(Guid newDestinationDepartmentId, Guid actorUserId, Guid? assignedToUserId = null, string? instructions = null, DateTime? dueDate = null, DateTime? utcNow = null, int? movementTypeId = null)
     {
         var now = utcNow ?? DateTime.UtcNow;
         if (StatusId is StatusClosed or StatusCanceled)
@@ -258,6 +263,9 @@ public sealed class DocumentMovement : AggregateRoot<Guid>
         var step = GetCurrentStep();
         if (step is null)
             return Result.Failure(DomainErrors.Movements.NoActiveStep);
+
+        if (movementTypeId is > 0)
+            MovementTypeId = movementTypeId.Value;
 
         step.MarkRedirected(instructions, now);
 
@@ -310,6 +318,21 @@ public sealed class DocumentMovement : AggregateRoot<Guid>
         AppendEvent(CurrentStepNo, MovementEventType.CanceledId, actorUserId, reason.Trim(), now);
         RaiseDomainEvent(new MovementCancelledEvent(MovementId, DocumentId, actorUserId, reason.Trim()));
         return Result.Success();
+    }
+
+    /// <summary>
+    /// True when this movement brought the document to <paramref name="departmentId"/> and that
+    /// department took it in: the current step is addressed to it and was received. A closed movement
+    /// still counts (the document stays where the movement ended); a canceled one does not.
+    /// </summary>
+    public bool IsHeldAt(Guid departmentId)
+    {
+        if (StatusId == StatusCanceled || DestinationDepartmentId != departmentId)
+            return false;
+
+        return GetCurrentStep() is { } step &&
+               step.ToDepartmentId == departmentId &&
+               step.StepStatusId is MovementStepStatus.ReceivedId or MovementStepStatus.CompletedId;
     }
 
     private DocumentMovementStep? GetCurrentStep() =>

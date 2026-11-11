@@ -2,6 +2,7 @@ import { useEffect, useMemo, type ReactNode } from 'react'
 import { Controller, useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import {
+  Archive,
   Building2,
   Clock3,
   Hash,
@@ -50,6 +51,7 @@ function toFormValues(setting: InstitutionSettingResponse): InstitutionSettingsF
     numberingResetPolicyId: String(setting.numberingResetPolicyId),
     centralDiwanDepartmentId: setting.centralDiwanDepartmentId ?? '',
     responsibleEmployeeId: setting.responsibleEmployeeId ?? NONE,
+    archiveDiwanDepartmentId: setting.archiveDiwanDepartmentId ?? NONE,
     centralDiwanTransferReason: '',
   }
 }
@@ -135,6 +137,27 @@ function InstitutionSettingsFormContent({ setting }: { setting: InstitutionSetti
     }))
   }, [departmentsQuery.data])
 
+  // Any active department except the Central Diwan itself; the current one stays listed if stopped.
+  const archiveDiwanOptions = useMemo(() => {
+    const departments = [...(departmentsQuery.data ?? [])].sort((left, right) =>
+      left.nameAr.localeCompare(right.nameAr, 'ar'),
+    )
+
+    return [
+      { value: NONE, label: 'بلا ديوان حفظ (الأرشفة عند الديوان المنشئ)' },
+      ...departments
+        .filter((department) => department.departmentId !== selectedCentralDiwanId)
+        .map((department) => ({
+          value: department.departmentId,
+          label: department.isActive
+            ? `${department.nameAr} (${department.code})`
+            : `${department.nameAr} (${department.code}) (موقوف)`,
+          disabled:
+            !department.isActive && department.departmentId !== setting.archiveDiwanDepartmentId,
+        })),
+    ]
+  }, [departmentsQuery.data, selectedCentralDiwanId, setting.archiveDiwanDepartmentId])
+
   const modeOptions = useMemo(
     () => (modeQuery.data ?? []).map((entry) => ({ value: String(entry.id), label: entry.descAr })),
     [modeQuery.data],
@@ -171,6 +194,8 @@ function InstitutionSettingsFormContent({ setting }: { setting: InstitutionSetti
         defaultTimezone: values.defaultTimezone || null,
         responsibleEmployeeId:
           values.responsibleEmployeeId === NONE ? null : values.responsibleEmployeeId,
+        archiveDiwanDepartmentId:
+          values.archiveDiwanDepartmentId === NONE ? null : values.archiveDiwanDepartmentId,
         centralDiwanTransferReason: changed
           ? values.centralDiwanTransferReason.trim()
           : null,
@@ -304,6 +329,35 @@ function InstitutionSettingsFormContent({ setting }: { setting: InstitutionSetti
             </p>
           )}
         </div>
+      </Section>
+      </GuideRegion>
+
+      <GuideRegion id="institution-settings.archive">
+      <Section
+        icon={Archive}
+        title="ديوان الحفظ"
+        description="القسم الذي تنتهي إليه الوثائق المحفوظة. أي ديوان يرسل الوثيقة للحفظ إلى الديوان الذي أنشأها، وهو يرسلها إلى ديوان الحفظ، وهناك تُؤرشف."
+      >
+        <FormField label="قسم ديوان الحفظ" error={errors.archiveDiwanDepartmentId?.message}>
+          <Controller
+            control={control}
+            name="archiveDiwanDepartmentId"
+            render={({ field }) => (
+              <Select
+                value={field.value || NONE}
+                onValueChange={field.onChange}
+                options={archiveDiwanOptions}
+                disabled={pending || departmentsQuery.isLoading}
+                invalid={Boolean(errors.archiveDiwanDepartmentId)}
+                aria-label="قسم ديوان الحفظ"
+              />
+            )}
+          />
+        </FormField>
+        <p className="mt-2 text-xs text-muted">
+          بدون ديوان حفظ تبقى الأرشفة عند الديوان الذي أنشأ الوثيقة كما هي. الوثائق المؤرشفة قبل
+          تعيينه تبقى عند منشئها.
+        </p>
       </Section>
       </GuideRegion>
 

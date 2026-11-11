@@ -87,6 +87,28 @@ internal sealed class NotificationPublisher : INotificationPublisher
         }
     }
 
+    public async Task PublishToDepartmentAsync(
+        int notificationTypeId,
+        Document document,
+        Guid departmentId,
+        Guid actorUserId,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var audience = new Dictionary<Guid, Guid?>();
+            foreach (var user in await _directory.GetDepartmentUsersAsync(departmentId, _unitOfWork.UtcNow, cancellationToken))
+                audience.TryAdd(user.UserId, user.DepartmentId);
+
+            await StageAsync(
+                notificationTypeId, document, null, actorUserId, audience, _unitOfWork.UtcNow, cancellationToken);
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            _logger.LogError(exception, "Staging department notification {TypeId} failed.", notificationTypeId);
+        }
+    }
+
     public async Task PublishDocumentAsync(
         int notificationTypeId,
         Document document,

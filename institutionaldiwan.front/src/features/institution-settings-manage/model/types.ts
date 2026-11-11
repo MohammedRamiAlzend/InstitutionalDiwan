@@ -10,4 +10,6 @@ export interface UpdateInstitutionSettingsRequest {
   responsibleEmployeeId: string | null
   /** Required only when the Central Diwan department changes. */
   centralDiwanTransferReason: string | null
+  /** The archive diwan; `null` clears it, so the field is always sent. */
+  archiveDiwanDepartmentId: string | null
 }

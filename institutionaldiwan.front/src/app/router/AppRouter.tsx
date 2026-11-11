@@ -7,6 +7,7 @@ import { DepartmentsPage } from '@/pages/departments'
 import { DocumentsPage, DocumentDetailsPage } from '@/pages/documents'
 import { MovementsPage } from '@/pages/movements'
 import { ArchivePage } from '@/pages/archive'
+import { DecisionsPage } from '@/pages/decisions'
 import { InstitutionSettingsPage } from '@/pages/institution-settings'
 import { UsersPage } from '@/pages/users'
 import { RolesPage } from '@/pages/roles'
@@ -36,6 +37,7 @@ export function AppRouter() {
             <Route path={ROUTES.DOCUMENTS} element={<DocumentsPage />} />
             <Route path={ROUTES.DOCUMENT_DETAIL_PATTERN} element={<DocumentDetailsPage />} />
             <Route path={ROUTES.MOVEMENTS} element={<MovementsPage />} />
+            <Route path={ROUTES.DECISIONS} element={<DecisionsPage />} />
             <Route path={ROUTES.ARCHIVE} element={<ArchivePage />} />
             <Route path={ROUTES.DEPARTMENTS} element={<DepartmentsPage />} />
             <Route path={ROUTES.INSTITUTION_SETTINGS} element={<InstitutionSettingsPage />} />

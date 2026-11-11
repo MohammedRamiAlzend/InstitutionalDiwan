@@ -32,6 +32,8 @@ export {
   MOVEMENT_STEP_STATUS,
   MOVEMENT_EVENT_TYPE,
   DOCUMENT_FILE_TYPE,
+  DECISION_EFFECT,
+  DECISION_STATUS,
   AUDIT_ACTION_TYPE,
   AUDIT_ENTITY_TYPE,
   ARCHIVE_EVENT_TYPE,
@@ -42,6 +44,7 @@ export {
   NOTIFICATION_PRIORITY,
   NOTIFICATION_SORT_KEY,
 } from './lookupIds'
+export { decisionEffectLabel, decisionStatusLabel, isDecisionInForce } from './decisionLabels'
 export {
   DOCUMENT_FILE_TYPE_LIMITS,
   MAX_UPLOAD_BYTES,

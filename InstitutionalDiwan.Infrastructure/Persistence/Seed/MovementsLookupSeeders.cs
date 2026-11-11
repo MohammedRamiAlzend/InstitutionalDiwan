@@ -13,6 +13,7 @@ public sealed class MovementTypeSeeder : LookupSeederBase<MovementType>
         (MovementType.TransferId, "Transfer", "تحويل"),
         (MovementType.CcId, "CC", "نسخة"),
         (MovementType.ReturnId, "Return", "إعادة"),
+        (MovementType.ToArchiveId, "To archive", "للحفظ"),
     };
 
     protected override MovementType BuildItem(int id, string desc, string descAr) =>

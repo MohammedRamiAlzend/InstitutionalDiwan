@@ -4,7 +4,7 @@ Ordered, environment-aware database seeding.
 
 > **Status:** Implemented — three seeding modes (`Everything`, `Standard`, `None`), 33 reference-catalog seeders, the institution-settings singleton, a
 > 15-department demo organization tree (Development/Staging), 28 demo employees attached to that
-> tree (Development/Staging), 18 permissions, system roles with 20 grants, and demo users.
+> tree (Development/Staging), 23 permissions, system roles with 25 grants, and demo users.
 
 ## How it works
 
@@ -32,11 +32,12 @@ Development, Production, etc.
 | 96 | `DepartmentSeeder` | Development, Staging; mode `Everything` | A demo organization tree of 15 departments across four levels: the `CENTRAL_DIWAN` root (reused from Order 95), four directorates, seven departments, and three sections (e.g. `DIR-ADMIN` → `DEP-HR` → `SEC-PAYROLL`), so the departments screen has a realistic hierarchy to display. Idempotent by `Code`. |
 | 97 | `EmployeeSeeder` | Development, Staging; mode `Everything` | 28 demo employees attached by department code — the Central Diwan office, every directorate, department, and section — so a department card can list the people who belong to it. Includes Arabic/English names, employee numbers (`EMP-0001`…), job titles, and a few contact details. Idempotent by `EmployeeNumber`. |
 | 98 | `StandardDepartmentSeeder` | All; mode `Standard` | `INDIVIDUAL_DIWAN` (ديوان الفرد) and `INVESTIGATION_DIWAN` (ديوان التحقيق), directorates under `CENTRAL_DIWAN`. Idempotent by `Code`. |
-| 100 | `PermissionSeeder` | All | Permission catalog — the 18 codes in `Permissions.All`, including `DOCUMENT_ARCHIVE`, `LOOKUP_MANAGE`, `NUMBERING_MANAGE`, `AUDIT_VIEW`, and `AUDIT_MANAGE`. |
-| 200 | `RoleSeeder` | All | `ADMIN` / `USER` roles plus their permission grants (ADMIN receives all 17, USER the three document permissions; 20 grants total). |
+| 100 | `PermissionSeeder` | All | Permission catalog — the 23 codes in `Permissions.All`, including `DOCUMENT_ARCHIVE`, `LOOKUP_MANAGE`, `NUMBERING_MANAGE`, `AUDIT_VIEW`, `AUDIT_MANAGE`, and `DECISION_MANAGE`. |
+| 200 | `RoleSeeder` | All | `ADMIN` / `USER` roles plus their permission grants (ADMIN receives 22, USER the three document permissions; 25 grants total). |
 | 300 | `UserSeeder` | Development, Staging; mode `Everything` | Demo accounts `admin` / `user` (password `12345678`) with role assignments. `admin` belongs to the Central Diwan and `user` to `DEP-HR`. Idempotent by username; existing accounts are never changed. |
 | 305 | `SuperAdminSeeder` | All; modes `Standard`, `None` | Role `SUPER_ADMIN` with every code in `Permissions.All` (re-synced each startup) and the `superadmin` account (system scope, Central Diwan, password from `Seeding:DefaultPassword`). An existing account is never changed. |
-| 310 | `StandardAccountSeeder` | All; mode `Standard` | Six accounts with the `DIWAN_OPERATOR` role (created here: document view/create/edit + `NUMBERING_VIEW`/`NUMBERING_MANAGE`, so a diwan can write its department register number before receiving) and a linked employee (`STD-0001`…`STD-0006`): «الديوان المركزي» and «احمد ديوان مركزي» (institution scope, Central Diwan), «ديوان الفرد» and «احمد ديوان الفرد» (department scope), «ديوان التحقيق» and «احمد ديوان التحقيق» (department scope). The username is the Arabic name itself. |
+| 310 | `StandardAccountSeeder` | All; mode `Standard` | Six accounts with the `DIWAN_OPERATOR` role (created here: document view/create/edit, `NUMBERING_VIEW`/`NUMBERING_MANAGE`, and `DECISION_MANAGE`) and a linked employee (`STD-0001`…`STD-0006`): «الديوان المركزي» and «احمد ديوان مركزي» (institution scope, Central Diwan), «ديوان الفرد» and «احمد ديوان الفرد» (department scope), «ديوان التحقيق» and «احمد ديوان التحقيق» (department scope). The username is the Arabic name itself. |
+| 320 | `DecisionTypeSeeder` | All; every mode | Five decision types on document type 1. Suspicion is active, with destination `INDIVIDUAL_DIWAN`, only when that department exists. |
 
 ## Seeding modes
 
@@ -66,6 +67,8 @@ Production requires opting in by adding `SeedingEnvironments.Production` to
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-11 | Claude | `DecisionTypeSeeder` (order 320, every mode) seeds the five decision types on the base-record document type. Suspicion is activated with destination `INDIVIDUAL_DIWAN` only when that department exists. Also seeds `DECISION_MANAGE` (23 codes, granted to `ADMIN` and `DIWAN_OPERATOR`), file type «قرار», notification «صدر قرار», and audit entity types for decisions and decision types. |
+| 2026-11-11 | Claude | `MovementTypeSeeder` seeds a fifth movement type, `MovementType.ToArchiveId` «للحفظ». |
 | 2026-11-10 | Claude | Seeds `DEPARTMENT_RECORD_VIEW_ALL` and `DEPARTMENT_RECORD_CORRECT` and grants both to `ADMIN` (22 permissions). |
 | 2026-11-09 | Claude | Added `PersonsLookupSeeders.cs` (orders 91-92: `DocumentPersonRoleSeeder` with Defendant as default, `GenderSeeder`); permission catalog 20 codes; `ADMIN` granted `PERSON_VIEW` and `PERSON_MANAGE`; audit entity type `Person`. |
 | 2026-11-08 | Claude | Permission catalog gained `SYSTEM_ERRORS_VIEW` (18 codes). |

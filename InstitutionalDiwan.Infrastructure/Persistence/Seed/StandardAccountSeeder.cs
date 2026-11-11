@@ -28,6 +28,7 @@ public sealed class StandardAccountSeeder : ISeeder
         Permissions.DocumentEdit,
         Permissions.NumberingView,
         Permissions.NumberingManage,
+        Permissions.DecisionManage,
     };
 
     public int Order => 310;

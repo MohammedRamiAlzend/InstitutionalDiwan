@@ -55,6 +55,8 @@ export const ROUTES = {
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-11 | Claude | Added `DECISION_MANAGE` (23 codes), `DECISION_EFFECT`, `DECISION_STATUS`, `DOCUMENT_FILE_TYPE.Decision`, `/decisions`, and the `decisions` tutorial guide. |
+| 2026-11-11 | Claude | `MOVEMENT_TYPE.ToArchive` (5) and the `institution-settings.archive` guide entry. |
 | 2026-11-10 | Claude | Added `DEPARTMENT_RECORD_VIEW_ALL` and `DEPARTMENT_RECORD_CORRECT` (22 codes) and the `document-details.tab-department-records` guide entry. |
 | 2026-11-09 | Claude | Tutorial catalogue: added `table.export` to the page guides and `document-details.export-pdf`. |
 | 2026-11-09 | Claude | Added `FEATURES.drafts` (off). |

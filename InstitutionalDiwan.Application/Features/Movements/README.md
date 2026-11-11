@@ -25,6 +25,7 @@ together with the `DocumentNumber` id it was dated by.
 | `CreateMovementCommandHandler.cs` | Requires a REGISTERED document, an active destination department, no other active movement, and a legal Central Diwan route; the source department is the caller's own primary department, never a client-supplied value. |
 | `CreateMovementCommandValidator.cs` | FluentValidation rules: document id, actor, and destination department required. |
 | `CentralDiwanRouting.cs` | Enforces the hub rule: a hop between two ordinary departments is refused unless the Central Diwan is the source or the destination. Same-department hand-offs are allowed. |
+| `ArchiveDiwanRouting.cs` | The route to the archive diwan: a movement of type "to archive" goes from any department to the department that created the document (or the Central Diwan as a relay), only the creating department sends it on to the archive diwan, and the archive diwan receives no other movement type. Off while no archive diwan is designated. |
 | `SendMovementCommand.cs` / `…Handler.cs` | Sends the current step to the destination department after re-checking the Central Diwan route. |
 | `MovementStepGuard.cs` | Optional current-step check used by the planned `steps/{stepId}/…` route aliases; a stale step answers `Movements.StepNotCurrent`. |
 | `ReceiveDocumentCommand.cs` / `…Handler.cs` / `…Validator.cs` | Records the receipt at the destination department, gated on that department's own register entry. |
@@ -97,6 +98,7 @@ together with the `DocumentNumber` id it was dated by.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-11 | Claude | Added `ArchiveDiwanRouting` and called it when a movement is opened, sent or redirected; `RedirectMovementCommand` takes an optional `MovementTypeId`, so a department holding a document can send it on "to archive" inside the same movement. |
 | 2026-11-10 | Claude | `ReceiveDocumentCommand.IssueNewNumber`: a department that already has a number for the document that year may receive it under a new `RegistryNumberText`; the old line becomes `REPLACED` and linked, and the receipt reports `ReplacedNumberId`/`ReplacedNumberText`. Without the flag a different number is still `Numbering.DepartmentNumberLocked`. |
 | 2026-11-10 | Claude | Receive accepts `FieldValues` and opens the department record (required fields enforced in the same transaction); send, redirect, reject and return lock the record of the department the document leaves; return gives the sender a new visit. |
 | 2026-11-08 | Claude | Receive accepts `RegistryId` to choose the register for a new number. |

@@ -45,6 +45,10 @@ export const DOCUMENT_FILE_TYPE_LIMITS: Readonly<Record<number, FileTypeUploadLi
     maxBytes: 50 * 1024 * 1024,
     allowedExtensions: GENERAL_EXTENSIONS,
   },
+  [DOCUMENT_FILE_TYPE.Decision]: {
+    maxBytes: 50 * 1024 * 1024,
+    allowedExtensions: GENERAL_EXTENSIONS,
+  },
 }
 
 /** `DocumentFilesController.MaxUploadBytes`: 50 MB of file plus 1 MB of multipart overhead. */

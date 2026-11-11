@@ -161,6 +161,7 @@ export const LOOKUP_FALLBACKS: Record<string, readonly LookupCatalogEntry[]> = {
     { id: DOCUMENT_FILE_TYPE.Attachment, desc: 'Attachment', descAr: 'مرفق' },
     { id: DOCUMENT_FILE_TYPE.Signature, desc: 'Signature', descAr: 'توقيع' },
     { id: DOCUMENT_FILE_TYPE.Other, desc: 'Other', descAr: 'أخرى' },
+    { id: DOCUMENT_FILE_TYPE.Decision, desc: 'Decision', descAr: 'قرار' },
   ],
   'document-person-roles': [
     { id: 1, desc: 'Defendant', descAr: 'مدعى عليه' },

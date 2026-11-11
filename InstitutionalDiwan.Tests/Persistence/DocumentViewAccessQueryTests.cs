@@ -111,7 +111,8 @@ public sealed class DocumentViewAccessQueryTests
         var db = world.Db;
         var scope = new DepartmentScopeEvaluator(userContext, new UserRepository(db), new DepartmentRepository(db), TestClock.Instance);
         var evaluator = new DocumentAccessEvaluator(
-            userContext, new DocumentRepository(db), new DocumentAccessGrantRepository(db), scope, new DocumentMovementRepository(db), TestClock.Instance);
+            userContext, new DocumentRepository(db), new DocumentAccessGrantRepository(db), scope, new DocumentMovementRepository(db), TestClock.Instance,
+            new InstitutionSettingRepository(db));
         return (scope, evaluator);
     }
 
@@ -260,6 +261,108 @@ public sealed class DocumentViewAccessQueryTests
         Assert.Equal(institutionWide, expected.Contains(closed.DocumentId));
         Assert.Equal(institutionWide, expected.Contains(redirectedAway.DocumentId));
         Assert.Equal(institutionWide, expected.Contains(returnedAway.DocumentId));
+    }
+
+    [Fact]
+    public async Task List_ArchiveDiwanCustody_MatchesDocumentAccessEvaluator()
+    {
+        var world = await CreateWorldAsync();
+        var db = world.Db;
+
+        // The caller works in the archive diwan; every document below is owned outside its scope.
+        var archiveDiwanId = world.Other.DepartmentId;
+        var remoteId = world.Remote.DepartmentId;
+        var caller = User.Create("archivist", "hash", archiveDiwanId).Value;
+        db.Users.Add(caller);
+
+        db.NumberingModes.Add(NumberingMode.Create(NumberingMode.AutomaticId, "Automatic", "تلقائي").Value);
+        db.NumberingResetPolicies.Add(
+            InstitutionalDiwan.Domain.Entities.Numbering.NumberingResetPolicy.Create(
+                InstitutionalDiwan.Domain.Entities.Numbering.NumberingResetPolicy.YearlyId, "Yearly", "سنوي").Value);
+        db.MovementEventTypes.Add(MovementEventType.Create(MovementEventType.CanceledId, "Canceled", "إلغاء").Value);
+        var setting = InstitutionSetting.Create(
+            "المؤسسة", NumberingMode.AutomaticId,
+            InstitutionalDiwan.Domain.Entities.Numbering.NumberingResetPolicy.YearlyId,
+            centralDiwanDepartmentId: world.Parent.DepartmentId).Value;
+        Assert.True(setting.SetArchiveDiwan(archiveDiwanId).IsSuccess);
+        db.InstitutionSettings.Add(setting);
+
+        var documents = new List<Document>();
+        Document Routed(int confidentiality = DocumentConfidentialityLevel.NormalId)
+        {
+            var document = NewDocument(world, remoteId, confidentiality);
+            Register(world, document);
+            documents.Add(document);
+            return document;
+        }
+
+        DocumentMovement Arrive(Document document, bool receive = true, int minutes = 0)
+        {
+            var movement = DocumentMovement.Create(
+                document.DocumentId, remoteId, archiveDiwanId, world.Author.UserId,
+                MovementType.ReferralId, utcNow: Now.AddMinutes(minutes)).Value;
+            db.DocumentMovements.Add(movement);
+            Assert.True(movement.Send(world.Author.UserId).IsSuccess);
+            if (receive)
+                Assert.True(movement.ReceiveStep(caller.UserId, Guid.NewGuid()).IsSuccess);
+            return movement;
+        }
+
+        DocumentMovement Leave(Document document, int minutes)
+        {
+            var movement = DocumentMovement.Create(
+                document.DocumentId, archiveDiwanId, remoteId, caller.UserId,
+                MovementType.ReferralId, utcNow: Now.AddMinutes(minutes)).Value;
+            db.DocumentMovements.Add(movement);
+            Assert.True(movement.Send(caller.UserId).IsSuccess);
+            return movement;
+        }
+
+        var heldClosed = Routed();
+        Assert.True(Arrive(heldClosed).Close(caller.UserId).IsSuccess);
+
+        var heldArchived = Routed();
+        Assert.True(Arrive(heldArchived).Close(caller.UserId).IsSuccess);
+        Assert.True(heldArchived.Archive(caller.UserId, hasActiveMovements: false, ArchiveLocation.PhysicalArchiveId).IsSuccess);
+
+        var secretHeld = Routed(DocumentConfidentialityLevel.SecretId);
+        Assert.True(Arrive(secretHeld).Close(caller.UserId).IsSuccess);
+
+        var neverReceived = Routed();
+        Assert.True(Arrive(neverReceived, receive: false).Close(caller.UserId).IsSuccess);
+
+        var leftAgain = Routed();
+        Assert.True(Arrive(leftAgain).Close(caller.UserId).IsSuccess);
+        var departure = Leave(leftAgain, minutes: 5);
+        Assert.True(departure.ReceiveStep(world.Author.UserId, Guid.NewGuid()).IsSuccess);
+        Assert.True(departure.Close(world.Author.UserId).IsSuccess);
+
+        var departureCanceled = Routed();
+        Assert.True(Arrive(departureCanceled).Close(caller.UserId).IsSuccess);
+        Assert.True(Leave(departureCanceled, minutes: 5).Cancel(caller.UserId, "خطأ").IsSuccess);
+
+        await db.SaveChangesAsync();
+
+        var (scope, evaluator) = Evaluators(world, caller);
+
+        var expected = new HashSet<Guid>();
+        foreach (var document in documents)
+        {
+            if (await evaluator.CanAccessDocumentAsync(document.DocumentId, AccessLevel.ViewId))
+                expected.Add(document.DocumentId);
+        }
+
+        var result = await new DocumentRepository(db).ListPagedAsync(AllRows(), await AccessAsync(scope, caller));
+
+        Assert.Equal(expected, result.Items.Select(document => document.DocumentId).ToHashSet());
+        Assert.Equal(expected.Count, result.TotalCount);
+
+        Assert.Contains(heldClosed.DocumentId, expected);
+        Assert.Contains(heldArchived.DocumentId, expected);
+        Assert.Contains(departureCanceled.DocumentId, expected);
+        Assert.DoesNotContain(secretHeld.DocumentId, expected);
+        Assert.DoesNotContain(neverReceived.DocumentId, expected);
+        Assert.DoesNotContain(leftAgain.DocumentId, expected);
     }
 
     [Fact]

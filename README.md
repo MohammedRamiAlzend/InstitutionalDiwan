@@ -86,7 +86,7 @@ npm run build   # tsc -b && vite build
 npm run lint
 ```
 
-> The front end's architecture, implemented slices, 22 permissions, UI/design contract, and live
+> The front end's architecture, implemented slices, 23 permissions, UI/design contract, and live
 > endpoint catalog are documented in
 > [`institutionaldiwan.front/README.md`](institutionaldiwan.front/README.md),
 > [`AGENTS.md`](institutionaldiwan.front/AGENTS.md), and
@@ -108,6 +108,7 @@ npm run lint
 | 09 — Audit | Entity/action audit chain, search, checkpoints, integrity reports, scheduled maintenance | Implemented. | Implemented and verified: `/audit` logs and integrity reports behind `AUDIT_VIEW`, checkpoint/integrity actions behind `AUDIT_MANAGE`. |
 | 10 — Notifications | In-app notifications: movement and document events announced to the right department users, a personal inbox (list, unread count, read, read-all, dismiss), a SignalR alert hub and an outbox with retry, dead letters and retention | Implemented in the backend (plan `plans/module-10-notifications-backend.md`): verified against the live API (REST, hub push, ownership 404, outbox SENT). IN_APP only; EMAIL/SMS are out of scope. | Implemented (plan `plans/module-10-notifications-frontend.md`): the header bell with an unread badge and live-connection line, the `/notifications` inbox grid (server search, sort, paging, unread/type filters), and a lazy-loaded SignalR client with reconnect and de-duplicated toasts. `npm run build` and `npm run lint` pass; exercised against the live API. |
 | — Department records | Each department's own record on its visits of a document: a record form per (document type, department), opened at receipt with its required fields, editable while the document stays, locked when it leaves, corrected only by an administrator with a reason; closing (archive, unarchive, cancel) limited to the creating department | Implemented (plan `plans/department-records.md`): `dotnet test` passes (906 tests). | Implemented: department form selector in `/document-schemas`, the record form in the receive dialog, and the «سجل الديوان» tab on `/documents/:id`; `npm run build` and `npm run lint` pass. Not yet exercised against the live API. |
+| — Case decisions | Administrator-managed decision types and one in-force decision per document, with a suggested next step (referral, send for archive, or archive). Appeals and joining two files are later slices | Implemented for slices A and B (plan `plans/case-decisions.md`): archive-diwan route, decision types, issue/attach/cancel, suggested next action, and reopening revoking a send-to-archive decision. `dotnet test` passes (940 tests). Issuing a join decision is refused. | `/decisions` (register, and types for `LOOKUP_MANAGE`) and a «القرار» tab on `/documents/:id` when the document type has an active decision type. `npm run build` and `npm run lint` pass. Exercised in the browser: the five seeded types, issuing «منع المحاكمة» and canceling it, and the archive suggestion. |
 
 “Implemented and verified” means the code is present and was exercised against the live API;
 `dotnet test` (743 tests), `npm run build`, and `npm run lint` pass. Module 01 settings loads the
@@ -161,6 +162,10 @@ have no `README.md` of their own yet — their content is documented in the encl
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-11 | Claude | Implemented slice B of `plans/case-decisions.md`: decision types, decisions and their suggested effect, `DECISION_MANAGE` (23 codes), and the `/decisions` page plus the document «القرار» tab. Migration `Add_Decisions` applied on startup. 940 tests pass; front build and lint pass. In the browser, a stay-of-proceedings decision was issued and then canceled. Issuing a unification decision is refused until slice D. |
+| 2026-11-11 | Claude | Added `plans/case-decisions-progress.md`, which tracks what is done and what remains of `plans/case-decisions.md`. |
+| 2026-11-11 | Claude | Implemented slice A of `plans/case-decisions.md`, the route to the archive diwan: an archive diwan in the institution settings, movement type 5 «للحفظ» that goes through the department that created the document, archiving and reopening at the archive diwan, and its reading access to what it holds. Migration `Add_Archive_Diwan`; 926 tests pass, front build and lint pass. Only the settings field was exercised against the live API. |
+| 2026-11-11 | Claude | Added the plan `plans/case-decisions.md` (draft, awaiting approval; no code): a judge's decision on a file with administrator-defined decision types, the prosecution's appeal, joining two files, and an archive diwan reached only through the department that created the file. |
 | 2026-11-10 | Claude | Added department records: per-department record forms, records opened at receipt and locked on exit, corrections with a reason, two new permissions (22), and closing limited to the creating department. |
 | 2026-11-08 | Claude | Added the developer's error log: captured server and browser errors, grouped with status and notes, Excel export and manual purge, behind `SYSTEM_ERRORS_VIEW`. |
 | 2026-11-08 | Claude | Dynamic field behavior (plan `plans/document-field-behavior.md`): default values, read-only fields enforced on the server, filterable fields and table columns, placeholder and help text, minimum length and date limits, conditional visibility, form layout, multi-select fields and options fed by departments, organizations or lookups; field filters on the archive and department queries. |

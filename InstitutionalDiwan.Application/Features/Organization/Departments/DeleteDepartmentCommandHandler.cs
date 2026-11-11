@@ -31,6 +31,9 @@ internal sealed class DeleteDepartmentCommandHandler : ICommandHandler<DeleteDep
         if (setting?.CentralDiwanDepartmentId == department.DepartmentId)
             return Result.Failure(DomainErrors.Department.CentralDiwanProtected);
 
+        if (setting?.ArchiveDiwanDepartmentId == department.DepartmentId)
+            return Result.Failure(DomainErrors.Department.ArchiveDiwanProtected);
+
         var hasActiveChildren = await _departmentRepository.HasActiveChildrenAsync(
             department.DepartmentId, cancellationToken);
 
