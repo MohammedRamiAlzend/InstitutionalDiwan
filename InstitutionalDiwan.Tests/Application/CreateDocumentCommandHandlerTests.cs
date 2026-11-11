@@ -6,6 +6,7 @@ using InstitutionalDiwan.Domain.Common;
 using InstitutionalDiwan.Domain.Entities.Correspondence;
 using InstitutionalDiwan.Domain.Entities.Identity;
 using InstitutionalDiwan.Domain.Entities.Numbering;
+using InstitutionalDiwan.Domain.Entities.Organization;
 using InstitutionalDiwan.Domain.Errors;
 using InstitutionalDiwan.Tests.Support;
 
@@ -54,7 +55,77 @@ public sealed class CreateDocumentCommandHandlerTests
 
     private static CreateDocumentCommandHandler CreateHandler(World w)
         => new(w.Users, w.Documents, w.Types, w.Numbers, w.Registries,
-            new FakeDocumentTypeSchemaVersionRepository(), new FakeDocumentFieldOptionResolver(), w.Uow, w.Sender, new DocumentPersonLinker(new FakePersonRepository(), new FakeLookupRepository()));
+            new FakeDocumentTypeSchemaVersionRepository(), new FakeDocumentFieldOptionResolver(), w.Uow, w.Sender, new DocumentPersonLinker(new FakePersonRepository(), new FakeLookupRepository()), new FakeInstitutionSettingRepository());
+
+    private static FakeInstitutionSettingRepository SettingsWith(
+        Guid centralDiwanDepartmentId, bool otherDiwansMayCreate)
+    {
+        var setting = InstitutionSetting.Create(
+            "المؤسسة", 1, 1, centralDiwanDepartmentId: centralDiwanDepartmentId).Value;
+        setting.SetOtherDiwansMayCreateDocuments(otherDiwansMayCreate);
+        var settings = new FakeInstitutionSettingRepository();
+        settings.Add(setting);
+        return settings;
+    }
+
+    private static CreateDocumentCommandHandler CreateHandler(World w, FakeInstitutionSettingRepository settings)
+        => new(w.Users, w.Documents, w.Types, w.Numbers, w.Registries,
+            new FakeDocumentTypeSchemaVersionRepository(), new FakeDocumentFieldOptionResolver(), w.Uow, w.Sender,
+            new DocumentPersonLinker(new FakePersonRepository(), new FakeLookupRepository()), settings);
+
+    [Fact]
+    public async Task Create_WhenOnlyTheCentralDiwanMayCreate_RefusesAnotherDepartment()
+    {
+        var w = Setup();
+        var settings = SettingsWith(Guid.NewGuid(), otherDiwansMayCreate: false);
+
+        var result = await CreateHandler(w, settings).Handle(Command(w.User.UserId), CancellationToken.None);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("Correspondence.DocumentCreationRestricted", result.Error.Code);
+        Assert.Empty(w.Documents.Documents);
+    }
+
+    [Fact]
+    public async Task Create_WhenOnlyTheCentralDiwanMayCreate_AllowsTheCentralDiwan()
+    {
+        var w = Setup();
+        var settings = SettingsWith(w.User.PrimaryDepartmentId, otherDiwansMayCreate: false);
+
+        var result = await CreateHandler(w, settings).Handle(Command(w.User.UserId), CancellationToken.None);
+
+        Assert.True(result.IsSuccess, result.IsFailure ? result.Error.Code : null);
+    }
+
+    [Fact]
+    public async Task Create_WhenOtherDiwansMayCreate_AllowsAnotherDepartment()
+    {
+        var w = Setup();
+        var settings = SettingsWith(Guid.NewGuid(), otherDiwansMayCreate: true);
+
+        var result = await CreateHandler(w, settings).Handle(Command(w.User.UserId), CancellationToken.None);
+
+        Assert.True(result.IsSuccess, result.IsFailure ? result.Error.Code : null);
+    }
+
+    [Fact]
+    public async Task CreateDraft_WhenOnlyTheCentralDiwanMayCreate_RefusesAnotherDepartment()
+    {
+        var w = Setup();
+        var handler = new CreateDraftDocumentCommandHandler(
+            w.Users, w.Documents, w.Types, new FakeDocumentTypeSchemaVersionRepository(),
+            new FakeDocumentFieldOptionResolver(), w.Uow,
+            new DocumentPersonLinker(new FakePersonRepository(), new FakeLookupRepository()),
+            SettingsWith(Guid.NewGuid(), otherDiwansMayCreate: false));
+
+        var result = await handler.Handle(
+            new CreateDraftDocumentCommand(w.User.UserId, "مسودة", TypeId, DirectionId: DirectionId),
+            CancellationToken.None);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("Correspondence.DocumentCreationRestricted", result.Error.Code);
+        Assert.Empty(w.Documents.Documents);
+    }
 
     private static CreateDocumentCommand Command(
         Guid userId,

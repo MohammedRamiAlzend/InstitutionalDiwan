@@ -25,7 +25,7 @@ public sealed class GetUserProfileQueryHandlerTests
     {
         var userContext = AuthenticatedContext();
 
-        var result = await new GetUserProfileQueryHandler(userContext, new FakeDepartmentScopeEvaluator())
+        var result = await new GetUserProfileQueryHandler(userContext, new FakeDepartmentScopeEvaluator(), new FakeInstitutionSettingRepository())
             .Handle(new GetUserProfileQuery(), CancellationToken.None);
 
         Assert.True(result.IsSuccess);
@@ -42,7 +42,7 @@ public sealed class GetUserProfileQueryHandlerTests
         var scope = new FakeDepartmentScopeEvaluator();
         scope.AccessibleDepartments.Add(departmentId);
 
-        var result = await new GetUserProfileQueryHandler(AuthenticatedContext(), scope)
+        var result = await new GetUserProfileQueryHandler(AuthenticatedContext(), scope, new FakeInstitutionSettingRepository())
             .Handle(new GetUserProfileQuery(), CancellationToken.None);
 
         Assert.True(result.IsSuccess);
@@ -54,17 +54,40 @@ public sealed class GetUserProfileQueryHandlerTests
     {
         var scope = new FakeDepartmentScopeEvaluator { InstitutionWide = true };
 
-        var result = await new GetUserProfileQueryHandler(AuthenticatedContext(), scope)
+        var result = await new GetUserProfileQueryHandler(AuthenticatedContext(), scope, new FakeInstitutionSettingRepository())
             .Handle(new GetUserProfileQuery(), CancellationToken.None);
 
         Assert.True(result.IsSuccess);
         Assert.Null(result.Value.AccessibleDepartmentIds);
     }
 
+    [Theory]
+    [InlineData(false, false, false)]
+    [InlineData(false, true, true)]
+    [InlineData(true, false, true)]
+    public async Task Handle_ReportsWhetherTheCallersDepartmentMayCreateDocuments(
+        bool otherDiwansMayCreate, bool callerIsCentralDiwan, bool expected)
+    {
+        var context = AuthenticatedContext();
+        context.PrimaryDepartmentId = Guid.NewGuid();
+        var setting = InstitutionalDiwan.Domain.Entities.Organization.InstitutionSetting.Create(
+            "المؤسسة", 1, 1,
+            centralDiwanDepartmentId: callerIsCentralDiwan ? context.PrimaryDepartmentId : Guid.NewGuid()).Value;
+        setting.SetOtherDiwansMayCreateDocuments(otherDiwansMayCreate);
+        var settings = new FakeInstitutionSettingRepository();
+        settings.Add(setting);
+
+        var result = await new GetUserProfileQueryHandler(context, new FakeDepartmentScopeEvaluator(), settings)
+            .Handle(new GetUserProfileQuery(), CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(expected, result.Value.CanCreateDocuments);
+    }
+
     [Fact]
     public async Task Handle_WhenNotAuthenticated_ReturnsUnauthorized()
     {
-        var result = await new GetUserProfileQueryHandler(new FakeUserContext(), new FakeDepartmentScopeEvaluator())
+        var result = await new GetUserProfileQueryHandler(new FakeUserContext(), new FakeDepartmentScopeEvaluator(), new FakeInstitutionSettingRepository())
             .Handle(new GetUserProfileQuery(), CancellationToken.None);
 
         Assert.True(result.IsFailure);

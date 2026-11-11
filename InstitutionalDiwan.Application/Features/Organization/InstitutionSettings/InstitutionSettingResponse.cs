@@ -14,7 +14,8 @@ public sealed record InstitutionSettingResponse(
     Guid? CentralDiwanDepartmentId,
     Guid? ResponsibleEmployeeId,
     DateTime UpdatedAt,
-    Guid? ArchiveDiwanDepartmentId = null)
+    Guid? ArchiveDiwanDepartmentId = null,
+    bool OtherDiwansMayCreateDocuments = true)
 {
     public static InstitutionSettingResponse From(InstitutionSetting setting) => new(
         setting.SettingId,
@@ -27,5 +28,6 @@ public sealed record InstitutionSettingResponse(
         setting.CentralDiwanDepartmentId,
         setting.ResponsibleEmployeeId,
         setting.UpdatedAt,
-        setting.ArchiveDiwanDepartmentId);
+        setting.ArchiveDiwanDepartmentId,
+        setting.OtherDiwansMayCreateDocuments);
 }

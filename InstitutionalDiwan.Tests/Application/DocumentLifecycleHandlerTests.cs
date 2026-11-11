@@ -50,7 +50,7 @@ public sealed class DocumentLifecycleHandlerTests
         }
 
         public CreateDraftDocumentCommandHandler CreateDraftHandler() =>
-            new(Users, Documents, DocumentTypes, new FakeDocumentTypeSchemaVersionRepository(), new FakeDocumentFieldOptionResolver(), UnitOfWork, new DocumentPersonLinker(new FakePersonRepository(), new FakeLookupRepository()));
+            new(Users, Documents, DocumentTypes, new FakeDocumentTypeSchemaVersionRepository(), new FakeDocumentFieldOptionResolver(), UnitOfWork, new DocumentPersonLinker(new FakePersonRepository(), new FakeLookupRepository()), new FakeInstitutionSettingRepository());
 
         public RegisterDocumentCommandHandler RegisterHandler() =>
             new(Documents, Numbers, Registries, new FakeDocumentTypeSchemaVersionRepository(), Access, UnitOfWork, FakeNotificationPublisher.Instance, new FakeSender());

@@ -18,6 +18,7 @@ internal sealed class CreateDraftDocumentCommandHandler
     private readonly IDocumentFieldOptionResolver _optionResolver;
     private readonly IUnitOfWork _unitOfWork;
     private readonly DocumentPersonLinker _personLinker;
+    private readonly IInstitutionSettingRepository _settingRepository;
 
     public CreateDraftDocumentCommandHandler(
         IUserRepository userRepository,
@@ -26,8 +27,10 @@ internal sealed class CreateDraftDocumentCommandHandler
         IDocumentTypeSchemaVersionRepository schemaVersionRepository,
         IDocumentFieldOptionResolver optionResolver,
         IUnitOfWork unitOfWork,
-        DocumentPersonLinker personLinker)
+        DocumentPersonLinker personLinker,
+        IInstitutionSettingRepository settingRepository)
     {
+        _settingRepository = settingRepository;
         _personLinker = personLinker;
         _userRepository = userRepository;
         _documentRepository = documentRepository;
@@ -47,6 +50,11 @@ internal sealed class CreateDraftDocumentCommandHandler
 
         if (!user.IsActive)
             return Result.Failure<DocumentResponse>(DomainErrors.Identity.UserInactive);
+
+        var mayCreate = await DocumentCreationPolicy.EnsureMayCreateAsync(
+            _settingRepository, user.PrimaryDepartmentId, cancellationToken);
+        if (mayCreate.IsFailure)
+            return Result.Failure<DocumentResponse>(mayCreate.Error);
 
         var documentType = await _documentTypeRepository.GetByIdAsync(
             request.DocumentTypeId, cancellationToken);

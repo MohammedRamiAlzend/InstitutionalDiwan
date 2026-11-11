@@ -3,6 +3,7 @@ using InstitutionalDiwan.Application.Abstractions.Authorization;
 using InstitutionalDiwan.Application.Abstractions.Messaging;
 using InstitutionalDiwan.Domain.Common;
 using InstitutionalDiwan.Domain.Errors;
+using InstitutionalDiwan.Domain.Repositories;
 
 namespace InstitutionalDiwan.Application.Features.Identity.Login;
 
@@ -11,13 +12,16 @@ internal sealed class GetUserProfileQueryHandler
 {
     private readonly IUserContext _userContext;
     private readonly IDepartmentScopeEvaluator _departmentScopeEvaluator;
+    private readonly IInstitutionSettingRepository _settingRepository;
 
     public GetUserProfileQueryHandler(
         IUserContext userContext,
-        IDepartmentScopeEvaluator departmentScopeEvaluator)
+        IDepartmentScopeEvaluator departmentScopeEvaluator,
+        IInstitutionSettingRepository settingRepository)
     {
         _userContext = userContext;
         _departmentScopeEvaluator = departmentScopeEvaluator;
+        _settingRepository = settingRepository;
     }
 
     public async Task<Result<UserProfileResponse>> Handle(
@@ -41,12 +45,17 @@ internal sealed class GetUserProfileQueryHandler
         var accessibleDepartmentIds = await _departmentScopeEvaluator
             .GetAccessibleDepartmentIdsAsync(cancellationToken);
 
+        var setting = await _settingRepository.GetSingletonAsync(cancellationToken);
+        var canCreateDocuments = setting is null ||
+            setting.CanCreateDocuments(_userContext.PrimaryDepartmentId);
+
         return Result.Success(new UserProfileResponse(
             _userContext.UserId,
             _userContext.Username,
             roles,
             permissions,
             accessibleDepartmentIds?.OrderBy(departmentId => departmentId).ToList(),
-            _userContext.PrimaryDepartmentId));
+            _userContext.PrimaryDepartmentId,
+            canCreateDocuments));
     }
 }

@@ -22,6 +22,8 @@ public sealed class InstitutionSetting : AggregateRoot<Guid>
     // FK → Department.DepartmentId (InstitutionalDiwan.Domain.Entities.Organization.Department)
     // The department that keeps archived files; null while archiving stays with the owning department.
     public Guid? ArchiveDiwanDepartmentId { get; private set; }
+    // When false, only the Central Diwan creates documents; every other department receives them.
+    public bool OtherDiwansMayCreateDocuments { get; private set; } = true;
     // FK → Employee.EmployeeId (InstitutionalDiwan.Domain.Entities.Identity.Employee)
     public Guid? ResponsibleEmployeeId { get; private set; }
     public DateTime UpdatedAt { get; private set; }
@@ -136,6 +138,23 @@ public sealed class InstitutionSetting : AggregateRoot<Guid>
         UpdatedAt = utcNow ?? DateTime.UtcNow;
         return Result.Success();
     }
+
+    /// <summary>
+    /// Decides whether departments other than the Central Diwan may create documents. When it is off
+    /// the Central Diwan alone creates them.
+    /// </summary>
+    public void SetOtherDiwansMayCreateDocuments(bool allowed, DateTime? utcNow = null)
+    {
+        if (OtherDiwansMayCreateDocuments == allowed)
+            return;
+
+        OtherDiwansMayCreateDocuments = allowed;
+        UpdatedAt = utcNow ?? DateTime.UtcNow;
+    }
+
+    /// <summary>True when a user whose department is <paramref name="departmentId"/> may create documents.</summary>
+    public bool CanCreateDocuments(Guid departmentId) =>
+        OtherDiwansMayCreateDocuments || CentralDiwanDepartmentId == departmentId;
 
     public Result UpdateNumberingPolicy(int numberingModeId, int numberingResetPolicyId, DateTime? utcNow = null)
     {

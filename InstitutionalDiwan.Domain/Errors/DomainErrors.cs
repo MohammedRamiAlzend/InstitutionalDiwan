@@ -132,6 +132,7 @@ public static class DomainErrors
         public static readonly Error TypeCodeEmpty = Error.Validation("Correspondence.TypeCodeEmpty", "Document type code is required.");
         public static readonly Error DocumentTypeNotFound = Error.Validation("Correspondence.DocumentTypeNotFound", "The specified document type does not exist.");
         public static readonly Error DocumentTypeInactive = Error.Conflict("Correspondence.DocumentTypeInactive", "Cannot use an inactive document type.");
+        public static readonly Error DocumentCreationRestricted = Error.Forbidden("Correspondence.DocumentCreationRestricted", "Only the Central Diwan can create documents; the institution settings do not allow other departments to.");
         public static readonly Error DirectionInvalid = Error.Validation("Correspondence.DirectionInvalid", "Direction must be INTERNAL, INCOMING, or OUTGOING.");
         public static readonly Error OnlyDraftEditable = Error.Conflict("Correspondence.OnlyDraftEditable", "Only documents in DRAFT status can have their core metadata modified directly.");
         public static readonly Error OnlyDraftRegisterable = Error.Conflict("Correspondence.OnlyDraftRegisterable", "Only documents in DRAFT status can be officially registered.");

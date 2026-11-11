@@ -24,6 +24,7 @@ import { DEPARTMENT_TYPE, Permissions } from '@/shared/config'
 import { formatDateTime } from '@/shared/lib'
 import {
   Button,
+  Checkbox,
   FormField,
   GuideChip,
   GuideRegion,
@@ -52,6 +53,7 @@ function toFormValues(setting: InstitutionSettingResponse): InstitutionSettingsF
     centralDiwanDepartmentId: setting.centralDiwanDepartmentId ?? '',
     responsibleEmployeeId: setting.responsibleEmployeeId ?? NONE,
     archiveDiwanDepartmentId: setting.archiveDiwanDepartmentId ?? NONE,
+    otherDiwansMayCreateDocuments: setting.otherDiwansMayCreateDocuments,
     centralDiwanTransferReason: '',
   }
 }
@@ -196,6 +198,7 @@ function InstitutionSettingsFormContent({ setting }: { setting: InstitutionSetti
           values.responsibleEmployeeId === NONE ? null : values.responsibleEmployeeId,
         archiveDiwanDepartmentId:
           values.archiveDiwanDepartmentId === NONE ? null : values.archiveDiwanDepartmentId,
+        otherDiwansMayCreateDocuments: values.otherDiwansMayCreateDocuments,
         centralDiwanTransferReason: changed
           ? values.centralDiwanTransferReason.trim()
           : null,
@@ -278,7 +281,7 @@ function InstitutionSettingsFormContent({ setting }: { setting: InstitutionSetti
       <Section
         icon={Landmark}
         title="الديوان المركزي"
-        description="قسم رئيسي (بلا قسم أعلى) من نوع الديوان المركزي. تغييره يتطلب تسجيل سبب النقل."
+        description="قسم رئيسي (بلا قسم أعلى) من نوع الديوان المركزي. تغييره يتطلب تسجيل سبب النقل. يمكنك أيضًا قصر إنشاء الوثائق عليه."
       >
         <div className="grid gap-4 sm:grid-cols-2">
           <FormField
@@ -322,6 +325,22 @@ function InstitutionSettingsFormContent({ setting }: { setting: InstitutionSetti
               />
             </FormField>
           )}
+
+          <div className="sm:col-span-2">
+            <Controller
+              control={control}
+              name="otherDiwansMayCreateDocuments"
+              render={({ field }) => (
+                <Checkbox
+                  checked={field.value}
+                  onCheckedChange={(checked) => field.onChange(checked === true)}
+                  disabled={pending}
+                  label="السماح للدواوين الأخرى بإنشاء وثائق"
+                  description="عند إيقافه ينشئ الديوان المركزي وحده الوثائق، وتصل الدواوين الأخرى بالإحالة."
+                />
+              )}
+            />
+          </div>
 
           {departmentsQuery.isError && (
             <p role="alert" className="sm:col-span-2 text-xs text-danger">

@@ -88,7 +88,8 @@ public sealed class InstitutionSettingsController : ControllerBase
             request.LogoPath,
             request.DefaultTimezone,
             request.CentralDiwanTransferReason,
-            request.ArchiveDiwanDepartmentId), cancellationToken);
+            request.ArchiveDiwanDepartmentId,
+            request.OtherDiwansMayCreateDocuments), cancellationToken);
 
         return result.ToActionResult();
     }

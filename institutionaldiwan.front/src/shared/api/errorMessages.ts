@@ -230,6 +230,8 @@ const CODE_MESSAGES: Record<string, string> = {
     'الديوان الذي أنشأ الوثيقة هو وحده من يرسلها إلى ديوان الحفظ.',
   'Archiving.ArchiveDiwanAcceptsArchiveMovementsOnly':
     'ديوان الحفظ يستقبل الوثائق المرسلة للحفظ فقط؛ اختر نوع الحركة «للحفظ».',
+  'Correspondence.DocumentCreationRestricted':
+    'إنشاء الوثائق مقصور على الديوان المركزي؛ لا تسمح إعدادات المؤسسة لقسمك بإنشائها.',
   'Archiving.DocumentNotAtArchiveDiwan':
     'تُؤرشف الوثيقة عند ديوان الحفظ بعد أن يستلمها؛ أرسلها للحفظ أولًا.',
   'Archiving.OnlyArchiveDiwanCanArchive':

@@ -52,6 +52,7 @@ Composes the institutional correspondence registry through `shared/ui/data-table
 | Browser verification | ✅ Verified in-browser (2026-10-28) against the live API: seeded rows render with Arabic lookup labels and the resolved owning department; search, the status filter via URL, the empty state with «مسح البحث والمرشحات», and title sorting behave as specified; both creations (draft and registered) appear immediately without a reload (7 → 8 rows). |
 
 ## 6. Change Log
+- 2026-11-11: The "new document" buttons also require `useCanCreateDocuments`, so a department the institution settings exclude from creating documents never sees them.
 - 2026-11-09: Added `ui/RegisterNumberFilter.tsx`: filter by a number in any department register, kept in the URL as `registerNumber`.
 - 2026-11-08: Fields marked as columns appear in the grid and sort on the server; `FieldFilterBar` and `FieldFilterDialog` moved to `entities/document-schema`.
 - 2026-11-05: Removed the direction filter and the direction, confidentiality and priority columns (suspended); `directionId` is no longer sent to `GET /api/documents`.

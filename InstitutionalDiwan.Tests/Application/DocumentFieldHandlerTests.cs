@@ -80,7 +80,7 @@ public sealed class DocumentFieldHandlerTests
         }
 
         public CreateDraftDocumentCommandHandler DraftHandler() =>
-            new(Users, Documents, Types, Versions, new FakeDocumentFieldOptionResolver(), UnitOfWork, new DocumentPersonLinker(new FakePersonRepository(), new FakeLookupRepository()));
+            new(Users, Documents, Types, Versions, new FakeDocumentFieldOptionResolver(), UnitOfWork, new DocumentPersonLinker(new FakePersonRepository(), new FakeLookupRepository()), new FakeInstitutionSettingRepository());
 
         public async Task<DocumentResponse> CreateDraftDocumentAsync(params DocumentFieldValueInput[] values)
         {
@@ -286,7 +286,7 @@ public sealed class DocumentFieldHandlerTests
         var handler = new CreateDocumentCommandHandler(
             world.Users, world.Documents, world.Types, numbers, registries,
             world.Versions, new FakeDocumentFieldOptionResolver(), world.UnitOfWork, new FakeSender(),
-            new DocumentPersonLinker(new FakePersonRepository(), new FakeLookupRepository()));
+            new DocumentPersonLinker(new FakePersonRepository(), new FakeLookupRepository()), new FakeInstitutionSettingRepository());
 
         var missing = await handler.Handle(
             new CreateDocumentCommand(world.Author.UserId, "قرار", TypeId, "9/2026", new DateTime(2026, 3, 9), DirectionId: DocumentDirection.InternalId),

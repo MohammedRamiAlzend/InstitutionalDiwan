@@ -3672,6 +3672,12 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                         .HasColumnType("int")
                         .HasColumnName("NumberingResetPolicyId");
 
+                    b.Property<bool>("OtherDiwansMayCreateDocuments")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true)
+                        .HasColumnName("OtherDiwansMayCreateDocuments");
+
                     b.Property<Guid?>("ResponsibleEmployeeId")
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("ResponsibleEmployeeId");

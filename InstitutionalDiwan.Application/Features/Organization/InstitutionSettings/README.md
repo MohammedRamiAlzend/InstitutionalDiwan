@@ -45,6 +45,7 @@ transfer reason — lives in `InstitutionSetting.Update` and is surfaced as
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-11 | Claude |  |
 | 2026-11-11 | Claude | The update command and the response carry `ArchiveDiwanDepartmentId`: an active department other than the Central Diwan, or null to clear it. |
 | 2026-10-28 | Qoder | Limit `LogoPath` to 500 characters before persistence and document that department writes require a settings transfer before changing the current hub's hierarchy or active state. |
 | 2026-10-22 | Buffy | `UpdateInstitutionSettingsCommandHandler` now passes `IUnitOfWork.UtcNow` so `InstitutionSetting.UpdatedAt` comes from the transaction, not the system clock. |

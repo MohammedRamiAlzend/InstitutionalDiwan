@@ -80,6 +80,23 @@ export function useMyPrimaryDepartmentId(): {
   return { departmentId: data?.primaryDepartmentId, isLoading }
 }
 
+/**
+ * Whether the institution settings let the caller's department create documents. It is `true`
+ * until the profile loads, and for an API that predates the setting, so the permission alone
+ * decides; the server still refuses a forbidden creation. Shares the scope key for the reason
+ * given on `useCoversDepartment`.
+ */
+export function useCanCreateDocuments(): boolean {
+  const { data } = useQuery({
+    queryKey: userKeys.departmentScope(),
+    queryFn: userApi.me,
+    enabled: tokenStorage.has(),
+    staleTime: 5 * 60 * 1000,
+  })
+
+  return data?.canCreateDocuments !== false
+}
+
 /** Paged users with username search (requires `USER_MANAGE`). */
 export function useUsers(
   params: UserListParams,

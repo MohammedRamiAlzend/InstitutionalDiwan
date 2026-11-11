@@ -23,6 +23,7 @@ commands the API actually walks: `CreateDraftDocumentCommand` → `UpdateDraftMe
 | `CreateDocumentCommandValidator.cs` | FluentValidation rules: required title/type/direction, direction ∈ {INTERNAL, INCOMING, OUTGOING}, required official number (≤100 chars), numbering year in [1900, 2200]. |
 | `CreateDraftDocumentCommand.cs` | CQRS command creating a DRAFT document owned by the caller's department, without consuming an official number. |
 | `CreateDraftDocumentCommandHandler.cs` | Validates the caller (active user) and document type (exists + active), then `Document.CreateDraft` with the caller's `PrimaryDepartmentId` as owner. Pins the document to the published schema of its type and applies optional `FieldValues`. |
+| `DocumentCreationPolicy.cs` | Decides from the institution settings whether the creator's department may create documents: always when other diwans are allowed, otherwise only the Central Diwan (`Correspondence.DocumentCreationRestricted`). |
 | `CreateDraftDocumentCommandValidator.cs` | FluentValidation rules for title, type, direction, and optional summary/date/reference fields. |
 | `UpdateDraftMetadataCommand.cs` | CQRS command editing title, summary, confidentiality, and priority. |
 | `UpdateDraftMetadataCommandHandler.cs` | Loads the document (404), requires `DOWNLOAD` access (403) and applies `Document.UpdateDraftMetadata`, which refuses anything but `DRAFT` (`Correspondence.OnlyDraftEditable`, 409). |
@@ -95,6 +96,7 @@ commands the API actually walks: `CreateDraftDocumentCommand` → `UpdateDraftMe
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-11 | Claude |  |
 | 2026-11-11 | Claude | `DocumentDetailResponse` adds `ArchiveDiwanDepartmentId` and `IsHeldByArchiveDiwan`, filled by `GetDocumentDetailsQueryHandler`, so the client offers archive and unarchive to the right department. |
 | 2026-11-10 | Claude | Added `OwningDepartmentGuard`; cancelling is limited to the creating department and locks every open department record. |
 | 2026-11-09 | Claude | `ListDocumentsQuery` accepts `RegisterNumber`. |

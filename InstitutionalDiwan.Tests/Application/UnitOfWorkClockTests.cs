@@ -44,7 +44,7 @@ public sealed class UnitOfWorkClockTests
             new FakeDocumentFieldOptionResolver(),
             unitOfWork,
             new FakeSender(),
-            new DocumentPersonLinker(new FakePersonRepository(), new FakeLookupRepository()));
+            new DocumentPersonLinker(new FakePersonRepository(), new FakeLookupRepository()), new FakeInstitutionSettingRepository());
 
         var result = await handler.Handle(
             new CreateDocumentCommand(

@@ -45,6 +45,7 @@ host extracted from the presented token — and the reachable departments come f
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-11 | Claude |  |
 | 2026-11-04 | Claude | `UserProfileResponse` (`GET /api/auth/me`) gained `primaryDepartmentId` so the SPA can fix the department of a register-number entry to the caller's own. |
 | 2026-11-03 | Claude | Added `AccessibleDepartmentIds` to the profile, read through `IDepartmentScopeEvaluator`, so the SPA can offer only the movement actions on the caller's side of the current step. `/api/auth/me` now makes a database read. |
 | 2026-10-22 | Buffy | Added `GetUserProfileQuery`, `GetUserProfileQueryHandler`, and `UserProfileResponse` so `GET /api/auth/me` runs through MediatR instead of assembling claims in `AuthController`; `IUserContext` gained `Username` and `Roles` to make that projection possible. `LoginCommandHandler` now stamps `LastLoginAt` from `IUnitOfWork.UtcNow`. Created this README. |

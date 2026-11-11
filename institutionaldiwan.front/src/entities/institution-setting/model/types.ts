@@ -10,6 +10,7 @@ export interface InstitutionSettingResponse {
   centralDiwanDepartmentId: string | null
   /** The department that keeps archived files; null while archiving stays with the owning department. */
   archiveDiwanDepartmentId: string | null
+  otherDiwansMayCreateDocuments: boolean
   responsibleEmployeeId: string | null
   updatedAt: string
 }

@@ -60,6 +60,7 @@ commands/queries map between them and the domain.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-11 | Claude |  |
 | 2026-11-11 | Claude | Added `RecordDecisionAppealRequest` and `RecordAppealOutcomeRequest`. |
 | 2026-11-11 | Claude | Added `Contracts/Decisions` request bodies for creating and updating a decision type, issuing a decision, attaching its file and canceling it. |
 | 2026-11-11 | Claude | `UpdateInstitutionSettingsRequest` gains `ArchiveDiwanDepartmentId` and `RedirectMovementRequest` gains `MovementTypeId`. |

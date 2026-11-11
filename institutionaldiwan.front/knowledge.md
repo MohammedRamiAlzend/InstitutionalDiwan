@@ -204,7 +204,7 @@ required for every table.
 | --- | --- | --- | --- |
 | `POST` | `/api/auth/login` | — (public) | Returns a JWT access token. |
 | `POST` | `/api/auth/register` | — (public) | Self-registration. |
-| `GET` | `/api/auth/me` | `DOCUMENT_VIEW` | Caller profile, including `accessibleDepartmentIds` (the departments the caller's live scope reaches, `null` for an institution-wide scope) and `primaryDepartmentId` (the caller's own department). |
+| `GET` | `/api/auth/me` | `DOCUMENT_VIEW` | Caller profile, including `canCreateDocuments` (false when the settings reserve creation to the Central Diwan and the caller is elsewhere) and `accessibleDepartmentIds` (the departments the caller's live scope reaches, `null` for an institution-wide scope) and `primaryDepartmentId` (the caller's own department). |
 | `POST` | `/api/auth/change-password` | `DOCUMENT_VIEW` | Payload `{ oldPassword, newPassword }`; returns a fresh `LoginResponse` (JWT + identity). New password 8–200 chars and different from the old one (`Identity.CurrentPasswordIncorrect`, `Identity.NewPasswordSameAsOld`). |
 
 ### Documents — `/api/documents`
@@ -350,7 +350,10 @@ Notable codes: `Department.CyclicHierarchy`, `Department.HasActiveChildren`.
 
 ### Institution settings — `/api/institution-settings`
 
-`GET` and `PUT` — `DEPARTMENT_MANAGE`. Both carry `archiveDiwanDepartmentId` (GUID or `null`): the
+`GET` and `PUT` — `DEPARTMENT_MANAGE`. Both carry `otherDiwansMayCreateDocuments` (boolean, default
+`true`; omitted on `PUT` means `true`). When `false`, only the Central Diwan creates documents:
+`POST /api/documents` and `/api/documents/drafts` from any other department fail with 403
+`Correspondence.DocumentCreationRestricted`. Both also carry `archiveDiwanDepartmentId` (GUID or `null`): the
 archive diwan, an active department other than the Central Diwan. `PUT` replaces the settings, so
 omitting the field or sending `null` clears it. Errors: `InstitutionSetting.ArchiveDiwanNotFound`
 (400), `ArchiveDiwanInactive` and `ArchiveDiwanSameAsCentral` (409). A designated archive diwan

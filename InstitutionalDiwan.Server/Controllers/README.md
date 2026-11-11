@@ -150,6 +150,7 @@ plain JSON array.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-11 | Claude |  |
 | 2026-11-11 | Claude | `GET api/documents/{id}/join-candidates` lists same-type files the caller may view. Issuing a decision accepts `joinTargetDocumentId`. Canceling a unification removes the join link in the same save. |
 | 2026-11-11 | Claude | `POST /api/decisions/{id}/appeals` and `PUT /api/decisions/{id}/appeals/{appealId}/outcome` on `DECISION_MANAGE`. A document's decision list now includes appeals. |
 | 2026-11-11 | Claude | Added `DecisionTypesController` (`LOOKUP_MANAGE` writes, `DOCUMENT_VIEW` reads) and `DecisionsController` (register and per-document reads on `DOCUMENT_VIEW`, issue/attach/cancel on `DECISION_MANAGE`). |

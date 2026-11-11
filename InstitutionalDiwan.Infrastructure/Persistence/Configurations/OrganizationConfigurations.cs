@@ -79,6 +79,10 @@ public sealed class InstitutionSettingConfiguration : IEntityTypeConfiguration<I
         builder.Property(x => x.DefaultTimezone).HasColumnName("DefaultTimezone").HasMaxLength(100).IsRequired();
         builder.Property(x => x.CentralDiwanDepartmentId).HasColumnName("CentralDiwanDepartmentId");
         builder.Property(x => x.ArchiveDiwanDepartmentId).HasColumnName("ArchiveDiwanDepartmentId");
+        builder.Property(x => x.OtherDiwansMayCreateDocuments)
+            .HasColumnName("OtherDiwansMayCreateDocuments")
+            .HasDefaultValue(true)
+            .IsRequired();
         builder.Property(x => x.ResponsibleEmployeeId).HasColumnName("ResponsibleEmployeeId");
         builder.Property(x => x.UpdatedAt).HasColumnName("UpdatedAt").HasColumnType("datetime2(3)").IsRequired();
 

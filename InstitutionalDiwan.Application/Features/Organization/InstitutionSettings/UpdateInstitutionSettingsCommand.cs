@@ -7,6 +7,7 @@ namespace InstitutionalDiwan.Application.Features.Organization.InstitutionSettin
 /// department of type <c>CENTRAL_DIWAN</c>; moving it away from the current department additionally
 /// requires <paramref name="CentralDiwanTransferReason"/>. <paramref name="ArchiveDiwanDepartmentId"/>
 /// designates the active department that keeps archived files, or clears it when null.
+/// <paramref name="OtherDiwansMayCreateDocuments"/> false reserves document creation to the Central Diwan.
 /// </summary>
 public sealed record UpdateInstitutionSettingsCommand(
     string InstitutionNameAr,
@@ -18,4 +19,5 @@ public sealed record UpdateInstitutionSettingsCommand(
     string? LogoPath = null,
     string? DefaultTimezone = null,
     string? CentralDiwanTransferReason = null,
-    Guid? ArchiveDiwanDepartmentId = null) : ICommand<InstitutionSettingResponse>;
+    Guid? ArchiveDiwanDepartmentId = null,
+    bool OtherDiwansMayCreateDocuments = true) : ICommand<InstitutionSettingResponse>;

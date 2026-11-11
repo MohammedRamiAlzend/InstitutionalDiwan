@@ -26,6 +26,8 @@ export const institutionSettingsSchema = z.object({
   responsibleEmployeeId: z.string(),
   /** A department id, or the form's "none" sentinel. */
   archiveDiwanDepartmentId: z.string(),
+  /** False reserves document creation to the Central Diwan. */
+  otherDiwansMayCreateDocuments: z.boolean(),
   centralDiwanTransferReason: z
     .string()
     .trim()

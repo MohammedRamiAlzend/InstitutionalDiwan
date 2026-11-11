@@ -50,7 +50,8 @@ public sealed class CorrespondenceAuditIntegrationTests
             new FakeDocumentFieldOptionResolver(),
             db,
             new FakeSender(),
-            new DocumentPersonLinker(new PersonRepository(db), new LookupRepository(db)));
+            new DocumentPersonLinker(new PersonRepository(db), new LookupRepository(db)),
+            new InstitutionSettingRepository(db));
 
         var result = await handler.Handle(
             new CreateDocumentCommand(

@@ -68,6 +68,7 @@ Used by documents, users, employees, external organizations, audit logs, and int
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-11 | Claude |  |
 | 2026-11-11 | Claude | `Decisions.JoinTargetInvalid` now describes an invalid principal file. `Decisions.DocumentJoined` already described a joined file that cannot take a separating decision. |
 | 2026-11-11 | Claude | Arabic messages for `Decisions.AppealNotFound`, `AppealOutOfScope`, `AppealDateInvalid`, `AppealReferenceTooLong` and `AppealNotesTooLong`. |
 | 2026-11-11 | Claude | Added Arabic messages for every `Decisions.*` code, including the appeal and join codes reserved for later slices. |

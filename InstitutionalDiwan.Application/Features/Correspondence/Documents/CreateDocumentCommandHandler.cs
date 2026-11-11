@@ -28,6 +28,7 @@ internal sealed class CreateDocumentCommandHandler : ICommandHandler<CreateDocum
     private readonly IUnitOfWork _unitOfWork;
     private readonly ISender _sender;
     private readonly DocumentPersonLinker _personLinker;
+    private readonly IInstitutionSettingRepository _settingRepository;
 
     public CreateDocumentCommandHandler(
         IUserRepository userRepository,
@@ -39,8 +40,10 @@ internal sealed class CreateDocumentCommandHandler : ICommandHandler<CreateDocum
         IDocumentFieldOptionResolver optionResolver,
         IUnitOfWork unitOfWork,
         ISender sender,
-        DocumentPersonLinker personLinker)
+        DocumentPersonLinker personLinker,
+        IInstitutionSettingRepository settingRepository)
     {
+        _settingRepository = settingRepository;
         _personLinker = personLinker;
         _userRepository = userRepository;
         _documentRepository = documentRepository;
@@ -63,6 +66,11 @@ internal sealed class CreateDocumentCommandHandler : ICommandHandler<CreateDocum
 
         if (!user.IsActive)
             return Result.Failure<DocumentResponse>(DomainErrors.Identity.UserInactive);
+
+        var mayCreate = await DocumentCreationPolicy.EnsureMayCreateAsync(
+            _settingRepository, user.PrimaryDepartmentId, cancellationToken);
+        if (mayCreate.IsFailure)
+            return Result.Failure<DocumentResponse>(mayCreate.Error);
 
         var documentType = await _documentTypeRepository.GetByIdAsync(request.DocumentTypeId, cancellationToken);
         if (documentType is null)

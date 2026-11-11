@@ -10,6 +10,8 @@ export interface MeResponse {
   accessibleDepartmentIds: string[] | null
   /** The caller's own department: the only one whose register numbers they may write. */
   primaryDepartmentId: string
+  /** `false` when the institution settings reserve document creation to the Central Diwan. */
+  canCreateDocuments: boolean
 }
 
 /** Account visibility scope (Module 02 `ScopeTypeId` rendered semantically). */

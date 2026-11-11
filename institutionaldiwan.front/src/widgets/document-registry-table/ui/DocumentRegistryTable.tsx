@@ -17,7 +17,7 @@ import {
   type SchemaFieldResponse,
 } from '@/entities/document-schema'
 import { LOOKUP_SLUGS, LookupLabel, useLookupEntries } from '@/entities/lookup'
-import { useSessionStore } from '@/entities/user'
+import { useCanCreateDocuments, useSessionStore } from '@/entities/user'
 import { CreateDocumentDialog } from '@/features/document-create'
 import { RegisterNumberFilter } from './RegisterNumberFilter'
 import { toArabicErrorMessage } from '@/shared/api'
@@ -90,7 +90,9 @@ export function DocumentRegistryTable() {
   })
 
   const hasPermission = useSessionStore((state) => state.hasPermission)
-  const canCreate = hasPermission(Permissions.DocumentCreate)
+  // The settings can reserve creation to the Central Diwan, so the button is hidden for the others.
+  const departmentMayCreate = useCanCreateDocuments()
+  const canCreate = hasPermission(Permissions.DocumentCreate) && departmentMayCreate
   const navigate = useNavigate()
 
   const departmentsQuery = useDepartmentOptions()

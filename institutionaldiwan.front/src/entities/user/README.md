@@ -29,6 +29,7 @@ Models Module 02 `User` (`MeResponse`, `UserResponse`, `UserOption`) and owns th
 ## Change Log
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-11 | Claude |  |
 | 2026-11-04 | Claude | Added `UserLabel` and the batching `loadUserLabel` loader (`userKeys.label`) so «executed by» style columns show the username with the short id. |
 | 2026-11-04 | Claude | `MeResponse.primaryDepartmentId` and the `useMyPrimaryDepartmentId` hook (returns `{ departmentId, isLoading }`; shares the scope query key with `useCoversDepartment`). |
 | 2026-11-03 | Claude | Added `accessibleDepartmentIds` to `MeResponse` and `useCoversDepartment`, which answers whether the caller's scope reaches a department. |

@@ -305,6 +305,7 @@ public sealed class JwtSecurityPipelineTests
             builder.Services.AddScoped<IUserRepository, UserRepository>();
             builder.Services.AddScoped<IRoleRepository, RoleRepository>();
             builder.Services.AddScoped<IDepartmentRepository, DepartmentRepository>();
+            builder.Services.AddScoped<IInstitutionSettingRepository, InstitutionSettingRepository>();
             builder.Services.AddScoped<IUnitOfWork>(services => services.GetRequiredService<DiwanDbContext>());
             builder.Services.AddSingleton<IClock>(new TestClock(DateTime.UtcNow));
             builder.Services.AddSingleton<IPasswordHasher, PasswordHasher>();

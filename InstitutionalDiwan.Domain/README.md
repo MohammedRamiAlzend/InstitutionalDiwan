@@ -361,6 +361,7 @@ them, while listing, relabelling and (de)activation keep working.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-11 | Claude |  |
 | 2026-11-11 | Claude | Slice D: `DocumentRelationType.JoinedIntoId` (5). `IDocumentRelationRepository.ListOutgoingAsync` and `IPersonRepository.ListJoinCandidatesAsync`. A join decision can be issued; `Decisions.JoinTargetInvalid` means the principal file is invalid, and `Decisions.DocumentJoined` refuses a later separating decision. |
 | 2026-11-11 | Claude | Appeals (plan `plans/case-decisions.md`, slice C): `DecisionAppeal`, `AppealOutcome` (1 pending, 2 accepted, 3 rejected), `DecisionAppealedEvent`, audit entity type 18, and the appeal error codes. An issued appealable decision becomes appealed; a rejected outcome makes it final and an accepted outcome revokes it. Join execution stays refused. |
 | 2026-11-11 | Claude | Decision types and decisions (plan `plans/case-decisions.md`, slice B): `Entities/Decisions/` (`DecisionType`, `DocumentDecision`, effect and status lookups), `IDecisionTypeRepository` and `IDocumentDecisionRepository`, `DomainErrors.Decisions`, `DecisionIssuedEvent` and `DecisionRevokedEvent`, file type `DecisionId` (5), notification type `DecisionIssuedId` (12), audit entity types 16 and 17, and permission `DECISION_MANAGE` (23 codes). Issuing a join decision is refused until unification exists. |

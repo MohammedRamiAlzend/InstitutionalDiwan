@@ -12,4 +12,6 @@ export interface UpdateInstitutionSettingsRequest {
   centralDiwanTransferReason: string | null
   /** The archive diwan; `null` clears it, so the field is always sent. */
   archiveDiwanDepartmentId: string | null
+  /** `false` reserves document creation to the Central Diwan. */
+  otherDiwansMayCreateDocuments: boolean
 }

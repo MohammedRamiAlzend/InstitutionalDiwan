@@ -15,6 +15,7 @@ export {
   userKeys,
   useMeQuery,
   useCoversDepartment,
+  useCanCreateDocuments,
   useMyPrimaryDepartmentId,
   useUsers,
   useUserById,

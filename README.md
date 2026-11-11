@@ -162,6 +162,7 @@ have no `README.md` of their own yet — their content is documented in the encl
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-11 | Claude |  |
 | 2026-11-11 | Claude | Implemented slice D of `plans/case-decisions.md`: issuing «التوحيد» links the file to a principal file with relation type «موحَّد مع» (id 5) in the same save. The joined file keeps its number, status and place. Canceling that decision removes the link. No new permission and no migration. |
 | 2026-11-11 | Claude | Implemented slice C of `plans/case-decisions.md`: an appeal on an issued appealable decision, and an outcome that either makes the decision final or revokes it. `POST /api/decisions/{id}/appeals` and `PUT /api/decisions/{id}/appeals/{appealId}/outcome` use the existing `DECISION_MANAGE` permission. Migration `20261111110728_Add_Decision_Appeals`. 946 tests pass. Joining two files stays refused. |
 | 2026-11-11 | Claude | Implemented slice B of `plans/case-decisions.md`: decision types, decisions and their suggested effect, `DECISION_MANAGE` (23 codes), and the `/decisions` page plus the document «القرار» tab. Migration `Add_Decisions` applied on startup. 940 tests pass; front build and lint pass. In the browser, a stay-of-proceedings decision was issued and then canceled. Issuing a unification decision is refused until slice D. |

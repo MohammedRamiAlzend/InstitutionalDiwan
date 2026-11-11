@@ -106,6 +106,8 @@ internal sealed class UpdateInstitutionSettingsCommandHandler
         if (archiveDiwanResult.IsFailure)
             return Result.Failure<InstitutionSettingResponse>(archiveDiwanResult.Error);
 
+        setting.SetOtherDiwansMayCreateDocuments(request.OtherDiwansMayCreateDocuments, _unitOfWork.UtcNow);
+
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return InstitutionSettingResponse.From(setting);
