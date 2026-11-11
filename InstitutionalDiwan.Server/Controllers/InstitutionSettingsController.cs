@@ -1,8 +1,11 @@
 using InstitutionalDiwan.Application.Features.Organization.InstitutionSettings;
 using InstitutionalDiwan.Domain.Common;
+using InstitutionalDiwan.Domain.Entities.Organization;
+using InstitutionalDiwan.Domain.Errors;
 using InstitutionalDiwan.Server.Contracts.Organization;
 using InstitutionalDiwan.Server.Extensions;
 using MediatR;
+using System.ComponentModel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -19,6 +22,8 @@ namespace InstitutionalDiwan.Server.Controllers;
 [Authorize(Policy = Permissions.DepartmentManage)]
 public sealed class InstitutionSettingsController : ControllerBase
 {
+    private const int MaxLogoRequestBytes = 1536 * 1024;
+
     private readonly ISender _sender;
 
     public InstitutionSettingsController(ISender sender) => _sender = sender;
@@ -91,6 +96,63 @@ public sealed class InstitutionSettingsController : ControllerBase
             request.ArchiveDiwanDepartmentId,
             request.OtherDiwansMayCreateDocuments), cancellationToken);
 
+        return result.ToActionResult();
+    }
+
+    /// <summary>Uploads the institution logo, replacing the current one.</summary>
+    /// <remarks>PNG, JPEG, WebP or plain SVG up to 1 MB. The kind is read from the file's bytes.</remarks>
+    /// <param name="file">The image (multipart/form-data). Example: logo.png.</param>
+    /// <param name="cancellationToken">Request cancellation token (optional).</param>
+    /// <response code="200">The updated settings; <c>logoUpdatedAt</c> carries the new logo version.</response>
+    /// <response code="400">The file is empty, larger than 1 MB, or not an acceptable image.</response>
+    /// <response code="401">The token is missing, expired, or invalid.</response>
+    /// <response code="403">The token lacks the DEPARTMENT_MANAGE permission.</response>
+    /// <response code="404">Institution settings have not been seeded yet.</response>
+    [HttpPut("logo")]
+    [RequestSizeLimit(MaxLogoRequestBytes)]
+    [RequestFormLimits(MultipartBodyLengthLimit = MaxLogoRequestBytes)]
+    [Consumes("multipart/form-data")]
+    [EndpointSummary("Uploads the institution logo.")]
+    [EndpointDescription("Replaces the institution logo with the uploaded image (PNG, JPEG, WebP or plain SVG, at most 1 MB; the kind is checked from the bytes). The logo then appears on the sign-in page, in the application shell and as the browser tab icon. Requires the DEPARTMENT_MANAGE permission. Responses: 200 (The updated settings.), 400 (The file is empty, too large, or not an acceptable image.), 401 (The token is missing, expired, or invalid.), 403 (The token lacks the DEPARTMENT_MANAGE permission.), 404 (Institution settings have not been seeded yet.)")]
+    [ProducesResponseType<InstitutionSettingResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> SetLogo(
+        [FromForm, Description("The logo image (multipart/form-data). Example: logo.png.")] IFormFile file,
+        CancellationToken cancellationToken)
+    {
+        if (file is null || file.Length == 0)
+            return DomainErrors.InstitutionSetting.LogoEmpty.ToActionResult();
+
+        if (file.Length > InstitutionLogo.MaxBytes)
+            return DomainErrors.InstitutionSetting.LogoTooLarge.ToActionResult();
+
+        await using var content = file.OpenReadStream();
+        using var buffer = new MemoryStream((int)file.Length);
+        await content.CopyToAsync(buffer, cancellationToken);
+
+        var result = await _sender.Send(new SetInstitutionLogoCommand(buffer.ToArray()), cancellationToken);
+        return result.ToActionResult();
+    }
+
+    /// <summary>Removes the institution logo.</summary>
+    /// <param name="cancellationToken">Request cancellation token (optional).</param>
+    /// <response code="200">The updated settings; <c>logoUpdatedAt</c> is null.</response>
+    /// <response code="401">The token is missing, expired, or invalid.</response>
+    /// <response code="403">The token lacks the DEPARTMENT_MANAGE permission.</response>
+    /// <response code="404">Institution settings have not been seeded yet.</response>
+    [HttpDelete("logo")]
+    [EndpointSummary("Removes the institution logo.")]
+    [EndpointDescription("Removes the uploaded institution logo so the default mark is shown again. Removing when there is none succeeds without change. Requires the DEPARTMENT_MANAGE permission. Responses: 200 (The updated settings.), 401 (The token is missing, expired, or invalid.), 403 (The token lacks the DEPARTMENT_MANAGE permission.), 404 (Institution settings have not been seeded yet.)")]
+    [ProducesResponseType<InstitutionSettingResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> RemoveLogo(CancellationToken cancellationToken)
+    {
+        var result = await _sender.Send(new RemoveInstitutionLogoCommand(), cancellationToken);
         return result.ToActionResult();
     }
 }

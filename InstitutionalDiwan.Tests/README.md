@@ -35,6 +35,7 @@ indexes) runs against a private SQLite in-memory database through `Support/TestC
 | `Application/DeleteDepartmentCommandHandlerTests.cs` | Tests deactivation and active-child guards with the settings repository dependency. |
 | `Application/ActivateDepartmentCommandHandlerTests.cs` | Tests missing/inactive parents without mutation or saving, parent-first activation, root activation, and already-active behavior. |
 | `Application/InstitutionSettingsHandlerTests.cs` | Tests hub update/move/delete protection before and after a real settings transfer, inactive/null hub and invalid lookup/employee branches, and logo-length/required-hub validation. |
+| `Application/InstitutionLogoTests.cs` | The institution logo: the image kind is read from the bytes (PNG, JPEG, WebP, plain SVG); empty, oversized, non-image and script-bearing SVG files are refused; set, replace, remove and read, the setting's `LogoUpdatedAt` version, and the public branding. |
 
 ### Module 02 security regression files
 
@@ -139,6 +140,7 @@ indexes) runs against a private SQLite in-memory database through `Support/TestC
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-12 | Claude | Added `Application/InstitutionLogoTests.cs`; `FakeInstitutionSettingRepository` keeps a logo. `dotnet test` now 1000. |
 | 2026-11-11 | Claude | `Persistence/DepartmentRegisterFieldTypeFilterTests`: number, date (calendar day), boolean and select filters, two filters combined with AND, and sorts by number, date and boolean fields on record values. The field sort now breaks ties by register number. 984 tests pass. |
 | 2026-11-11 | Claude | `DepartmentRegisterPageTests.FilterSearchAndSortReadOnlyTheLatestVisit` (a line with two visits); the test world seeds the re-registration event. 979 tests pass. |
 | 2026-11-11 | Claude | Register page field-value filters: SQLite test (contains, equals, other version, no match) and two handler tests (a version is required; unknown field refused; typed filter handed to the query). 978 tests pass. |

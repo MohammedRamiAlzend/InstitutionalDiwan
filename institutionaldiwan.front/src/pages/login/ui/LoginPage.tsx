@@ -1,5 +1,6 @@
 import { useLocation, useNavigate } from 'react-router-dom'
-import { ClipboardList, History, Landmark, ShieldCheck } from 'lucide-react'
+import { ClipboardList, History, ShieldCheck } from 'lucide-react'
+import { BrandMark, BrandName } from '@/entities/branding'
 import { ROUTES } from '@/shared/config'
 import { LoginForm, type LoginResponse } from '@/features/auth'
 import { ThemeToggle } from '@/shared/ui'
@@ -41,12 +42,10 @@ export function LoginPage() {
     <div className="flex min-h-screen flex-col bg-background">
       <header className="flex items-center justify-between px-6 py-4 sm:px-10">
         <div className="flex items-center gap-3">
-          <span className="flex size-10 items-center justify-center rounded-full bg-accent text-accent-contrast">
-            <Landmark className="size-5" aria-hidden />
-          </span>
+          <BrandMark />
           <div className="leading-tight">
             <p className="font-heading text-lg font-bold text-foreground">
-              الديوان المؤسسي
+              <BrandName />
             </p>
             <p className="text-xs text-muted">بوابة الدخول المؤسسية</p>
           </div>
@@ -96,7 +95,7 @@ export function LoginPage() {
                   الجمهورية العربية السورية
                 </p>
                 <h2 className="font-heading text-3xl font-bold">
-                  الديوان المؤسسي
+                  <BrandName />
                 </h2>
                 <p className="text-base opacity-90">
                   منصة موحّدة لإدارة الوثائق والمراسلات الرسمية

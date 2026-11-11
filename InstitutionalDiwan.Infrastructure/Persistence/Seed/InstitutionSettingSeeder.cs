@@ -36,7 +36,7 @@ public sealed class InstitutionSettingSeeder : ISeeder
         var centralDiwan = await EnsureCentralDiwanDepartmentAsync(db, cancellationToken);
 
         var settingResult = InstitutionSetting.Create(
-            institutionNameAr: "المؤسسة",
+            institutionNameAr: "الديوان المؤسسي",
             numberingModeId: NumberingMode.AutomaticId,
             numberingResetPolicyId: NumberingResetPolicy.YearlyId,
             centralDiwanDepartmentId: centralDiwan.DepartmentId);

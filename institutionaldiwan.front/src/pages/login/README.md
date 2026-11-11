@@ -13,6 +13,7 @@ Renders the public authentication screen at `/login`: an Arabic RTL two-panel la
 ## 5. Implementation Status
 - ✅ Implemented and verified in RTL, light and dark themes, with the live API.
 ## 6. Change Log
+- 2026-11-12: The header and brand panel show the stored institution name and logo (`entities/branding`) instead of fixed text.
 - 2026-10-28: Routed reset logins (`mustChangePassword`) to `/change-password` instead of the requested page.
 - 2026-10-27: Implemented the page to match the approved light/dark designs; brand panel mirrors automatically in LTR.
 - 2026-10-22: Converted this `README.md` from the Word document it was authored in to markdown, so the `README.md`-per-folder rule in `AGENT.md` holds and the content is diffable and agent-editable.

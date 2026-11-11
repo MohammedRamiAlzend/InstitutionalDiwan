@@ -71,6 +71,10 @@ public static class DomainErrors
         public static readonly Error ArchiveDiwanNotFound = Error.Validation("InstitutionSetting.ArchiveDiwanNotFound", "The designated archive diwan department does not exist.");
         public static readonly Error ArchiveDiwanInactive = Error.Conflict("InstitutionSetting.ArchiveDiwanInactive", "Cannot designate an inactive department as the archive diwan.");
         public static readonly Error ArchiveDiwanSameAsCentral = Error.Conflict("InstitutionSetting.ArchiveDiwanSameAsCentral", "The archive diwan cannot be the Central Diwan department.");
+        public static readonly Error LogoEmpty = Error.Validation("InstitutionSetting.LogoEmpty", "The logo file is empty.");
+        public static readonly Error LogoTooLarge = Error.Validation("InstitutionSetting.LogoTooLarge", "The logo file exceeds the maximum size of 1 MB.");
+        public static readonly Error LogoTypeNotAllowed = Error.Validation("InstitutionSetting.LogoTypeNotAllowed", "The logo must be a PNG, JPEG, WebP or SVG image.");
+        public static readonly Error LogoNotFound = Error.NotFound("InstitutionSetting.LogoNotFound", "No institution logo has been uploaded.");
     }
 
     public static class Identity

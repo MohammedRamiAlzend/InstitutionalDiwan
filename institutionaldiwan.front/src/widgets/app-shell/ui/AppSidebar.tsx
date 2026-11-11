@@ -3,12 +3,12 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import {
   ArrowUpRight,
   ChevronDown,
-  Landmark,
   Link2,
   PanelLeftClose,
   PanelLeftOpen,
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { BrandMark, BrandName } from '@/entities/branding'
 import { useSessionStore } from '@/entities/user'
 import { cn } from '@/shared/lib'
 import {
@@ -113,13 +113,11 @@ export function AppSidebar({
           collapsed ? 'flex-col justify-center py-3' : 'h-16',
         )}
       >
-        <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-accent text-accent-contrast">
-          <Landmark className="size-5" aria-hidden />
-        </span>
+        <BrandMark />
         {!collapsed && (
           <div className="min-w-0 flex-1 leading-tight">
             <p className="truncate font-heading text-sm font-bold text-foreground">
-              الديوان المؤسسي
+              <BrandName />
             </p>
             <p className="truncate text-[11px] text-muted">منصة المراسلات الرسمية</p>
           </div>

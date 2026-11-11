@@ -16,6 +16,7 @@ Because the shell owns navigation, theme, density, and logout, this page contain
 - ✅ Content-only landing mounted as the first `AppShell` child (Phase 1)
 - ❌ KPI cards, quick document creation, and the recent-activity data grid pending
 ## 6. Change Log
+- 2026-11-12: The welcome line shows the stored institution name (`entities/branding`) instead of fixed text.
 - 2026-10-27: Moved header/theme/logout chrome into `widgets/app-shell` (Phase 1) and rewrote the page as shell-owned content; role codes render as LTR islands.
 - 2026-10-27: Implemented the minimal landing so the login flow has a protected destination; marked the KPI/activity sections as pending.
 - 2026-10-25: Documented the compact shared data grid and row context menus for recent activity.

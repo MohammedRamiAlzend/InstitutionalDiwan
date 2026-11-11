@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { CircleHelp, Pause, Play, RefreshCw, Rows3, Settings2 } from 'lucide-react'
+import { useBrandName } from '@/entities/branding'
 import {
   ContextMenu,
   ErrorBoundary,
@@ -74,7 +75,8 @@ export function AppShell({ headerSlot }: AppShellProps = {}) {
     }
   }, [mobileOpen])
 
-  const title = findNavItem(location.pathname)?.label ?? 'الديوان المؤسسي'
+  const brandName = useBrandName()
+  const title = findNavItem(location.pathname)?.label ?? brandName
 
   // Only an explicit choice is stored, so `prefers-reduced-motion` keeps steering until then.
   const changeMotion = (next: Motion) => {

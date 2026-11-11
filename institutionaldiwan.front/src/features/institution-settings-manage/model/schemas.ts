@@ -11,10 +11,6 @@ export const institutionSettingsSchema = z.object({
     .string()
     .trim()
     .max(200, 'اسم المؤسسة بالإنجليزية يتجاوز الحد الأقصى للأحرف.'),
-  logoPath: z
-    .string()
-    .trim()
-    .max(500, 'مسار الشعار يتجاوز الحد الأقصى للأحرف.'),
   defaultTimezone: z
     .string()
     .trim()

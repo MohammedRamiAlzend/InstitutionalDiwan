@@ -18,6 +18,14 @@ internal sealed class FakeInstitutionSettingRepository : IInstitutionSettingRepo
         => Task.FromResult(Settings.FirstOrDefault());
 
     public void Add(InstitutionSetting setting) => Settings.Add(setting);
+
+    public InstitutionLogo? Logo { get; set; }
+
+    public Task<InstitutionLogo?> GetLogoAsync(CancellationToken cancellationToken = default) => Task.FromResult(Logo);
+
+    public void AddLogo(InstitutionLogo logo) => Logo = logo;
+
+    public void RemoveLogo(InstitutionLogo logo) => Logo = null;
 }
 
 internal sealed class FakeExternalOrganizationRepository : IExternalOrganizationRepository

@@ -20,4 +20,11 @@ internal sealed class InstitutionSettingRepository : IInstitutionSettingReposito
             .FirstOrDefaultAsync(cancellationToken);
 
     public void Add(InstitutionSetting setting) => _context.InstitutionSettings.Add(setting);
+
+    public Task<InstitutionLogo?> GetLogoAsync(CancellationToken cancellationToken = default) =>
+        _context.InstitutionLogos.FirstOrDefaultAsync(cancellationToken);
+
+    public void AddLogo(InstitutionLogo logo) => _context.InstitutionLogos.Add(logo);
+
+    public void RemoveLogo(InstitutionLogo logo) => _context.InstitutionLogos.Remove(logo);
 }

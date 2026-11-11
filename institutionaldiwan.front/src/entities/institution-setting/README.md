@@ -11,7 +11,7 @@ Owns the typed read of the singleton institution settings through `GET /api/inst
 
 | File | Purpose |
 | --- | --- |
-| `model/types.ts` | `InstitutionSettingResponse`: institution names, logo path, timezone, numbering mode/reset policy, central department, responsible employee, and update timestamp. |
+| `model/types.ts` | `InstitutionSettingResponse`: institution names, logo path, `logoUpdatedAt` (version of the uploaded logo), timezone, numbering mode/reset policy, central department, responsible employee, and update timestamp. |
 | `api/institutionSettingApi.ts` | Fetches the existing singleton through the shared HTTP client. |
 | `model/queries.ts` | `institutionSettingKeys.all/detail()` and `useInstitutionSettings`, with a 60-second stale time and optional `enabled` flag. |
 | `index.ts` | Public exports for the response type, query keys, and read hook. |
@@ -35,6 +35,7 @@ Owns the typed read of the singleton institution settings through `GET /api/inst
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-12 | Claude | `InstitutionSettingResponse` carries `logoUpdatedAt`. |
 | 2026-11-11 | Claude |  |
 | 2026-11-11 | Claude | `InstitutionSettingResponse` carries `archiveDiwanDepartmentId`. |
 | 2026-10-28 | agent | Document the Module 01 singleton read slice and missing-settings semantics so consumers do not infer an initialization or overwrite flow. |

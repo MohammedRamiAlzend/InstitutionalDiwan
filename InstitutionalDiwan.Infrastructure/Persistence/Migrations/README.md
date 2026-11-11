@@ -1,6 +1,6 @@
 # Infrastructure / Persistence / Migrations
 
-> **Status:** Implemented — migrations through `Add_Department_Register_Page_Indexes` are generated, including the Module 09 `Add_Audit_Chain_Uniqueness` guard and the additive `Add_Document_Dynamic_Fields`.
+> **Status:** Implemented — migrations through `Add_Institution_Logo` are generated, including the Module 09 `Add_Audit_Chain_Uniqueness` guard and the additive `Add_Document_Dynamic_Fields`.
 > Startup applies them through `Server/Extensions/DatabaseExtensions.cs`
 > (`Database.MigrateAsync`).
 
@@ -38,6 +38,7 @@ empty migration when the model changed.
 | `20261111110728_Add_Decision_Appeals` | Adds `DECISION_APPEALS`: appeal date, appellant department, optional reference and notes, outcome, and who recorded the appeal and its outcome. `AppealDate` and `OutcomeDate` are `date`. Cascade from the decision, restrict on the department. `IX_DECISION_APPEALS_DECISION` plus filtered unique `UX_DECISION_APPEALS_ONE_PENDING` (`[OutcomeId] = 1`). |
 | `20261111134113_Add_Other_Diwans_May_Create_Documents` | Adds the `OtherDiwansMayCreateDocuments` bit to `INSTITUTION_SETTINGS`, default true, so existing installations keep creating from every department. |
 | `20261111193125_Add_Department_Register_Page_Indexes` | Index only: `IX_DOC_REG_VISITS_VERSION_NUMBER_DATE` (visits by form version, register line, date) and `IX_DEPT_RECORD_VALUES_FIELD_VISIT` (record values by field, visit) for the register page; they replace the single-column foreign-key indexes on `SchemaVersionId` and `DocumentFieldId`. |
+| `20261111205409_Add_Institution_Logo` | Adds `INSTITUTION_SETTINGS.LogoUpdatedAt` and the `INSTITUTION_LOGOS` table (logo bytes and media type, one row per setting, cascade on delete); renames the placeholder institution name «المؤسسة» to «الديوان المؤسسي» so the title stays as the shell showed it. |
 
 ## Custom (hand-written) migration steps
 
@@ -74,6 +75,7 @@ empty migration when the model changed.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-12 | Claude | Added `Add_Institution_Logo`. |
 | 2026-11-11 | Claude | Added `Add_Department_Register_Page_Indexes`. |
 | 2026-11-11 | Claude |  |
 | 2026-11-11 | Claude | Added `20261111110728_Add_Decision_Appeals` (`DECISION_APPEALS`, date columns, and one pending appeal per decision). |

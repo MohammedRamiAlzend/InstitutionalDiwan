@@ -74,6 +74,7 @@ public sealed class InstitutionSettingConfiguration : IEntityTypeConfiguration<I
         builder.Property(x => x.InstitutionNameAr).HasColumnName("InstitutionNameAr").HasMaxLength(250).IsRequired();
         builder.Property(x => x.InstitutionNameEn).HasColumnName("InstitutionNameEn").HasMaxLength(250);
         builder.Property(x => x.LogoPath).HasColumnName("LogoPath").HasMaxLength(500);
+        builder.Property(x => x.LogoUpdatedAt).HasColumnName("LogoUpdatedAt").HasColumnType("datetime2(3)");
         builder.Property(x => x.NumberingModeId).HasColumnName("NumberingModeId").IsRequired();
         builder.Property(x => x.NumberingResetPolicyId).HasColumnName("NumberingResetPolicyId").IsRequired();
         builder.Property(x => x.DefaultTimezone).HasColumnName("DefaultTimezone").HasMaxLength(100).IsRequired();
@@ -128,5 +129,24 @@ public sealed class NumberingModeConfiguration : IEntityTypeConfiguration<Number
         builder.Property(x => x.DescAr).HasColumnName("DescAr").HasMaxLength(150).IsRequired();
         builder.Property(x => x.IsActive).HasColumnName("IsActive").IsRequired();
         builder.Property(x => x.CreatedAt).HasColumnName("CreatedAt").HasColumnType("datetime2(3)").IsRequired();
+    }
+}
+
+public sealed class InstitutionLogoConfiguration : IEntityTypeConfiguration<InstitutionLogo>
+{
+    public void Configure(EntityTypeBuilder<InstitutionLogo> builder)
+    {
+        builder.ToTable("INSTITUTION_LOGOS");
+
+        builder.HasKey(x => x.SettingId);
+        builder.Property(x => x.SettingId).HasColumnName("SettingId").ValueGeneratedNever();
+        builder.Property(x => x.ContentType).HasColumnName("ContentType").HasMaxLength(50).IsRequired();
+        builder.Property(x => x.Data).HasColumnName("Data").IsRequired();
+        builder.Property(x => x.UpdatedAt).HasColumnName("UpdatedAt").HasColumnType("datetime2(3)").IsRequired();
+
+        builder.HasOne<InstitutionSetting>()
+            .WithOne()
+            .HasForeignKey<InstitutionLogo>(x => x.SettingId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

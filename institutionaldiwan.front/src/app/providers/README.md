@@ -5,7 +5,7 @@ Composes all application-level React context providers (`ThemeProvider`, `QueryP
 ## Contents
 | File | Purpose |
 | --- | --- |
-| `AppProviders.tsx` | Wraps the application tree in `ThemeProvider` → `QueryProvider` → `AuthSessionLoader` + RTL `Toaster`. |
+| `AppProviders.tsx` | Wraps the application tree in `ThemeProvider` → `QueryProvider` → `BrandingEffects` (tab title and icon from the stored name and logo) + `AuthSessionLoader` + RTL `Toaster`. |
 | `ThemeProvider.tsx` | Re-applies the stored `diwan.theme` choice (`light` / `dark` / `system`) to `<html data-theme>` after mount; the toggle lives in `shared/ui/theme-toggle`. |
 | `QueryProvider.tsx` | Configures `@tanstack/react-query` `QueryClient` (default `staleTime: 30_000`, retry 0 on `401`/`403`/`404`/`409`, at most one retry otherwise) and lazy-loads the devtools in development only. |
 | `AuthSessionLoader.tsx` | Calls `GET /api/auth/me` on initial mount when a token exists, hydrates the session store, and clears a stale token when hydration fails. |
@@ -17,6 +17,7 @@ Composes all application-level React context providers (`ThemeProvider`, `QueryP
 ## Change Log
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-12 | Claude | `AppProviders` mounts `BrandingEffects` so the browser tab shows the institution name and logo. |
 | 2026-11-05 | Claude | `AuthSessionLoader` publishes the signed-in user id to `setFormDraftScope` so form drafts are stored per user. |
 | 2026-10-28 | agent | Documented the forced-change interaction: `/api/auth/me` still omits `mustChangePassword`, so `ProtectedRoute` re-reads the `must_change_password` claim from the stored JWT when the in-memory session does not carry it. |
 | 2026-10-27 | agent | Implemented the providers for Identity Module 01; devtools are dev-only lazy chunks so they stay out of the production bundle. `mustChangePassword` is not re-derived from `/api/auth/me` (that response carries no flag) — it is set at login only. |

@@ -29,6 +29,7 @@ public sealed class DiwanDbContext : DbContext, IUnitOfWork
     public DbSet<DepartmentType> DepartmentTypes => Set<DepartmentType>();
     public DbSet<NumberingMode> NumberingModes => Set<NumberingMode>();
     public DbSet<InstitutionSetting> InstitutionSettings => Set<InstitutionSetting>();
+    public DbSet<InstitutionLogo> InstitutionLogos => Set<InstitutionLogo>();
 
     // Module 02: Identity & Access
     public DbSet<User> Users => Set<User>();

@@ -3630,6 +3630,32 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                     b.ToTable("DEPARTMENT_TYPES", (string)null);
                 });
 
+            modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Organization.InstitutionLogo", b =>
+                {
+                    b.Property<Guid>("SettingId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("SettingId");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasColumnName("ContentType");
+
+                    b.Property<byte[]>("Data")
+                        .IsRequired()
+                        .HasColumnType("varbinary(max)")
+                        .HasColumnName("Data");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2(3)")
+                        .HasColumnName("UpdatedAt");
+
+                    b.HasKey("SettingId");
+
+                    b.ToTable("INSTITUTION_LOGOS", (string)null);
+                });
+
             modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Organization.InstitutionSetting", b =>
                 {
                     b.Property<Guid>("SettingId")
@@ -3665,6 +3691,10 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)")
                         .HasColumnName("LogoPath");
+
+                    b.Property<DateTime?>("LogoUpdatedAt")
+                        .HasColumnType("datetime2(3)")
+                        .HasColumnName("LogoUpdatedAt");
 
                     b.Property<int>("NumberingModeId")
                         .HasColumnType("int")
@@ -4768,6 +4798,15 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                         .WithMany()
                         .HasForeignKey("ParentDepartmentId")
                         .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Organization.InstitutionLogo", b =>
+                {
+                    b.HasOne("InstitutionalDiwan.Domain.Entities.Organization.InstitutionSetting", null)
+                        .WithOne()
+                        .HasForeignKey("InstitutionalDiwan.Domain.Entities.Organization.InstitutionLogo", "SettingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Organization.InstitutionSetting", b =>

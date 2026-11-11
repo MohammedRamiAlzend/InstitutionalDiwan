@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { BrandName } from '@/entities/branding'
 import { useSessionStore } from '@/entities/user'
 import { useLogout } from '@/features/auth'
 import { ROUTES } from '@/shared/config'
@@ -80,7 +81,9 @@ export function AppHeader({
       </Button>
 
       <div className="flex min-w-0 flex-col">
-        <p className="text-[11px] text-muted">الديوان المؤسسي</p>
+        <p className="text-[11px] text-muted">
+          <BrandName />
+        </p>
         <p className="truncate font-heading text-sm font-semibold text-foreground">
           {title}
         </p>

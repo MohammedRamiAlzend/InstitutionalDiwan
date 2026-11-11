@@ -1,4 +1,5 @@
 import { KeyRound, ShieldCheck, Sparkles } from 'lucide-react'
+import { BrandName } from '@/entities/branding'
 import { useSessionStore } from '@/entities/user'
 import { Badge, GuideProvider, GuideRegion, PageHeader } from '@/shared/ui'
 
@@ -44,7 +45,9 @@ function DashboardContent() {
 
       <GuideRegion id="dashboard.welcome">
       <section className="rounded-2xl border border-border bg-surface p-6 sm:p-8">
-        <p className="text-sm text-muted">مرحبًا بك في الديوان المؤسسي</p>
+        <p className="text-sm text-muted">
+          مرحبًا بك في <BrandName />
+        </p>
         <h2 className="mt-1 font-heading text-2xl font-bold text-foreground">
           {user?.username ?? '—'}
         </h2>

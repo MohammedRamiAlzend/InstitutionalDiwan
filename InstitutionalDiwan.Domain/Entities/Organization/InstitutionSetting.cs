@@ -11,6 +11,8 @@ public sealed class InstitutionSetting : AggregateRoot<Guid>
     public string InstitutionNameAr { get; private set; } = null!;
     public string? InstitutionNameEn { get; private set; }
     public string? LogoPath { get; private set; }
+    // When the uploaded logo (INSTITUTION_LOGOS) last changed; null while there is none. Doubles as the cache version.
+    public DateTime? LogoUpdatedAt { get; private set; }
     // FK → NumberingMode.Id (InstitutionalDiwan.Domain.Entities.Organization.NumberingMode)
     public int NumberingModeId { get; private set; }
     // FK → NumberingResetPolicy.Id (InstitutionalDiwan.Domain.Entities.Numbering.NumberingResetPolicy)
@@ -155,6 +157,13 @@ public sealed class InstitutionSetting : AggregateRoot<Guid>
     /// <summary>True when a user whose department is <paramref name="departmentId"/> may create documents.</summary>
     public bool CanCreateDocuments(Guid departmentId) =>
         OtherDiwansMayCreateDocuments || CentralDiwanDepartmentId == departmentId;
+
+    /// <summary>Records that the uploaded logo was set (a time) or removed (null), so readers can tell it changed.</summary>
+    public void MarkLogoChanged(DateTime? logoUpdatedAt, DateTime? utcNow = null)
+    {
+        LogoUpdatedAt = logoUpdatedAt;
+        UpdatedAt = utcNow ?? DateTime.UtcNow;
+    }
 
     public Result UpdateNumberingPolicy(int numberingModeId, int numberingResetPolicyId, DateTime? utcNow = null)
     {

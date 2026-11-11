@@ -268,6 +268,9 @@ public interface IInstitutionSettingRepository
 {
     Task<InstitutionSetting?> GetSingletonAsync(CancellationToken cancellationToken = default);
     void Add(InstitutionSetting setting);
+    Task<InstitutionLogo?> GetLogoAsync(CancellationToken cancellationToken = default);
+    void AddLogo(InstitutionLogo logo);
+    void RemoveLogo(InstitutionLogo logo);
 }
 
 public interface IExternalOrganizationRepository

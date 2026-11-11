@@ -37,7 +37,7 @@ Concrete EF Core implementations of the repository interfaces declared in
 | `EmployeeRepository.cs` | Loads `Employee` records by id and listing for the employee-management endpoints; `ListPagedAsync` orders by Arabic name and pages with a name/employee-number search and an optional department-id set (the handler supplies one id, or the id plus descendants, for the department roster). |
 | `DocumentAccessGrantRepository.cs` | Loads per-document `DocumentAccessGrant` rows by id and by document, for grant/revoke/list. |
 | `LookupRepository.cs` | The one generic repository: resolves a kebab-case lookup slug to its `DbSet<TLookup>` through `LookupCatalog`, then lists/fetches/creates/relabels/(de)activates entries and answers `IsInUseAsync` from EF foreign-key metadata. Backs `/api/lookups/{lookup}`. |
-| `InstitutionSettingRepository.cs` | Loads the single `InstitutionSetting` row (table is a singleton by convention; the seeder owns the first insert) and attaches updates. |
+| `InstitutionSettingRepository.cs` | Loads the single `InstitutionSetting` row (table is a singleton by convention; the seeder owns the first insert) and attaches updates; `GetLogoAsync`/`AddLogo`/`RemoveLogo` keep the logo image in its own table so reading the settings never loads the bytes. |
 | `ExternalOrganizationRepository.cs` | Loads `ExternalOrganization` by id or normalized (upper-cased) code and lists them by code; `ListPagedAsync` adds the active filter, a code/name search, and `Skip`/`Take` for the external-correspondent CRUD endpoints. |
 | `PersonRepository.cs` | Persons and their read models: name suggestions, the access-filtered list, a person's documents with current location and last action, the timeline merged from five sources, and join candidates (other unarchived, uncanceled documents of the same type that share a person and that the caller may view). |
 | `DecisionTypeRepository.cs` | Decision types and the document types each one may be issued on. |
@@ -98,6 +98,7 @@ Concrete EF Core implementations of the repository interfaces declared in
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-12 | Claude | `InstitutionSettingRepository` gained `GetLogoAsync`, `AddLogo` and `RemoveLogo`. |
 | 2026-11-11 | Claude | A sort on a form field breaks ties by register number, then id, like the column sorts. |
 | 2026-11-11 | Claude | The department register page now filters, sorts and searches form values on each line's latest visit of the version (`DepartmentRecordFieldFilterQuery.LatestVisits`), the same visit it displays; before, sort and search read any visit. |
 | 2026-11-11 | Claude | Added `DepartmentRecordFieldFilterQuery`, the department-record counterpart of `DocumentFieldFilterQuery`; the register page applies it. No schema change. |

@@ -32,7 +32,8 @@ access live here.
 | `DecisionsController.cs` | `api/decisions`, `api/documents/{id}/decisions`, `api/documents/{id}/join-candidates` and `api/documents/{id}/next-action` | `DOCUMENT_VIEW` reads; `DECISION_MANAGE` issue, attach, cancel, record an appeal and record its outcome | The decision register, a document's decisions (including the principal file's decisions and appeals), join suggestions, the suggested next action (including an ordinary move), issuing a decision with an optional principal file, attaching the decision file, canceling a mistaken entry (a join cancel removes the link), recording an appeal and recording its outcome. |
 | `SavedSearchesController.cs` | `api/saved-searches` | `DOCUMENT_VIEW`; owner only in the handlers | Module 07: the caller's personal saved archive searches (list, create, replace, delete). |
 | `DocumentRelationsController.cs` | `api/documents/{id}/relations` (`graph`, `events`, `{relationId}`) | `DOCUMENT_VIEW` reads; `DOCUMENT_EDIT` create and remove; per-document access in the handlers | Module 08: a document's links, the relations graph, the permanent relation history, and creating or removing a link. |
-| `InstitutionSettingsController.cs` | `api/institution-settings` | `DEPARTMENT_MANAGE` | Reads and replaces the singleton institution settings (Central Diwan guards). |
+| `InstitutionSettingsController.cs` | `api/institution-settings` | `DEPARTMENT_MANAGE` | Reads and replaces the singleton institution settings (Central Diwan guards); `PUT`/`DELETE /logo` upload (multipart, PNG/JPEG/WebP/SVG up to 1 MB) and remove the institution logo. |
+| `BrandingController.cs` | `api/branding` | anonymous | The public identity for the sign-in page, shell and browser tab: `GET` returns the institution name and logo version; `GET /logo` streams the uploaded logo with an ETag and a sandboxing CSP. |
 | `UsersController.cs` | `api/users` | `USER_MANAGE` | User CRUD (paged/searchable list), activate/deactivate, assign/revoke roles, `POST {id}/reset-password` (forced change at next sign-in), `POST {id}/department-assignments`, `DELETE {id}/department-assignments/{assignmentId}`, `GET {id}/effective-permissions`. |
 | `RolesController.cs` | `api/roles` | `ROLE_MANAGE` | Role CRUD, activate, grant/revoke permissions. |
 | `PermissionsController.cs` | `api/permissions` | `ROLE_MANAGE` | The permission catalog. |
@@ -151,6 +152,7 @@ plain JSON array.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-12 | Claude | Added `BrandingController` (anonymous `GET /api/branding` and `GET /api/branding/logo`) and the `PUT`/`DELETE /api/institution-settings/logo` endpoints. |
 | 2026-11-11 | Claude | `DepartmentRegistersController`: added `GET .../register/entries` and `GET .../register/forms` (`NUMBERING_VIEW`). |
 | 2026-11-11 | Claude |  |
 | 2026-11-11 | Claude | `GET api/documents/{id}/join-candidates` lists same-type files the caller may view. Issuing a decision accepts `joinTargetDocumentId`. Canceling a unification removes the join link in the same save. |

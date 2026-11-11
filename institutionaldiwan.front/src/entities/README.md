@@ -26,6 +26,7 @@ read-only presentational UI. Entities never perform write mutations.
 | `user/` | `MeResponse`, `UserResponse`, effective permissions, `/identity-options/users` options | `useMeQuery` (session), `useUsers`, `useUserById`, `useUserEffectivePermissions`, `useUserOptions` (active-user picker), `UserScopeBadge` | ✅ Implemented |
 | `department/` | `DepartmentResponse`, `DepartmentTreeNodeResponse` (`/departments`, `/tree`, `/{id}`) | `useDepartments`, `useDepartmentTree`, `useDepartmentById`, `DepartmentBadge`, `departmentTreeToMermaid` | Reads and department-only Mermaid builder implemented; the widget composes lazy employee branches. |
 | `institution-setting/` | `InstitutionSettingResponse` (`/institution-settings`) | `useInstitutionSettings`, `institutionSettingKeys` | Singleton read implemented; missing settings remain an error. |
+| `branding/` | `BrandingResponse` (`/branding`, anonymous) | `useBranding`, `brandingKeys`, `useBrandName`, `brandingLogoUrl`, `BrandMark`, `BrandName`, `BrandingEffects` | The institution name and logo shown by the sign-in page, shell, dashboard and browser tab. |
 | `role/` | `RoleResponse`, `PermissionResponse` (`/roles`, `/permissions`) | `useRoles`, `useRoleById`, `usePermissionsCatalog`, `RoleBadge` | Implemented. |
 | `employee/` | `EmployeeResponse` (paged `/employees`, `/{id}`) | `useEmployees`, `useEmployeeById`, `EmployeePicker` | Reads and reusable paged/searchable picker implemented. |
 | `lookup/` | `LookupEntryResponse` (`/lookups/{lookup}`) | `useLookupEntries`, `LookupLabel`, seeded fallbacks | Named Organization/Identity catalogs (incl. numbering mode/reset policy) plus the five Module 03 document catalogs; generic reads implemented. |
@@ -65,6 +66,7 @@ read-only presentational UI. Entities never perform write mutations.
 | `user/`, `role/`, `employee/`, `lookup/` | ✅ Implemented |
 | `department/` | Reads and department-only Mermaid builder implemented; lazy employee composition lives in the widget. |
 | `institution-setting/` | Singleton read, query keys, and response type implemented. |
+| `branding/` | Anonymous branding read, name hook, logo mark and tab title/icon effect implemented. |
 | `employee/` picker and numbering lookups | Implemented for Module 01 forms; final verification pending. |
 | `document/` | ✅ Read models, query keys/hooks, status/direction badges, the official-number tag, number history/registry reads, and `NumberStatusBadge`. |
 | `external-organization/` | ✅ Paged/searchable list and by-id reads for participant names, the external-party picker, and the Phase 7 admin grid (`includeInactive`, `active`-only default). |
@@ -80,6 +82,7 @@ read-only presentational UI. Entities never perform write mutations.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-12 | Claude | Added `branding/`: the institution name and logo read from the anonymous `GET /api/branding`, with `BrandMark`, `BrandName` and `BrandingEffects`. |
 | 2026-11-11 | Claude | A document decision's appeals are part of the read model. |
 | 2026-11-11 | Claude | `document-decision` reads join candidates. `document-relation` phrases type «موحَّد مع». |
 | 2026-11-11 | Claude | Added `decision-type` and `document-decision` read models, query keys and the decision status badge. |

@@ -363,6 +363,19 @@ omitting the field or sending `null` clears it. Errors: `InstitutionSetting.Arch
 (400), `ArchiveDiwanInactive` and `ArchiveDiwanSameAsCentral` (409). A designated archive diwan
 cannot be deactivated (`Department.ArchiveDiwanProtected`, 409).
 
+**Institution name and logo.** Settings responses carry `logoUpdatedAt` (ISO time, or `null` without a logo; it
+doubles as the cache version). `PUT /api/institution-settings/logo` (`DEPARTMENT_MANAGE`, `multipart/form-data`
+field `file`) stores or replaces the logo and returns the settings; `DELETE /api/institution-settings/logo` removes it.
+Only PNG, JPEG, WebP and plain SVG up to 1 MB are accepted, judged from the bytes, not the file name or
+`Content-Type`. Errors (400): `InstitutionSetting.LogoEmpty`, `LogoTooLarge`, `LogoTypeNotAllowed`.
+
+### Branding — `/api/branding` (anonymous)
+
+`GET /api/branding` → `{ institutionNameAr, institutionNameEn, logoUpdatedAt }`, readable before sign-in (404
+`InstitutionSetting.NotFound` when nothing was seeded). `GET /api/branding/logo` streams the uploaded image with an
+`ETag` (304 on revalidation) and a sandboxing `Content-Security-Policy`; 404 `InstitutionSetting.LogoNotFound` without a
+logo. The SPA addresses it as `/api/branding/logo?v=<logoUpdatedAt>`.
+
 ### Users — `/api/users`
 
 `GET` (paged list), `GET /{userId}`, `POST`, `PUT /{userId}`, `DELETE /{userId}`,

@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { httpClient } from '@/shared/api'
+import { brandingKeys } from '@/entities/branding'
 import {
   institutionSettingKeys,
   type InstitutionSettingResponse,
@@ -20,7 +21,10 @@ export function useUpdateInstitutionSettingsMutation() {
       )
       return data
     },
-    onSuccess: () =>
-      void queryClient.invalidateQueries({ queryKey: institutionSettingKeys.all }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: institutionSettingKeys.all })
+      // The name shown in the shell and on the sign-in page comes from the branding read.
+      void queryClient.invalidateQueries({ queryKey: brandingKeys.all })
+    },
   })
 }

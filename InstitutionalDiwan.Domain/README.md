@@ -162,7 +162,7 @@ integrity reports have their own add/list/latest methods; no update or delete is
 
 | # | Module | Entities | Notable aggregate roots |
 | --- | --- | --- | --- |
-| 01 | Organization | `Department`, `DepartmentType`, `InstitutionSetting` | `Department`, `InstitutionSetting` |
+| 01 | Organization | `Department`, `DepartmentType`, `InstitutionSetting`, `InstitutionLogo` | `Department`, `InstitutionSetting` |
 | 02 | Identity & Access | `User`, `Role`, `Permission`, `UserRole`, `RolePermission`, `Employee`, `UserDepartmentAssignment`, `DocumentAccessGrant` | `User`, `Role`, `Employee`, `DocumentAccessGrant` |
 | 03 | Correspondence | `Document`, `DocumentParticipant`, `DocumentStatusHistory`, `DocumentType`, `DocumentStatusType`, `ExternalOrganization`, `DocumentField`, `DocumentTypeSchemaVersion`, `DocumentTypeSchemaVersionField`, `DocumentFieldValue` | `Document`, `ExternalOrganization`, `DocumentTypeSchemaVersion` |
 | 04 | Official Numbering | `DocumentNumber`, `NumberingRegistry`, `NumberingCounter`, `DocumentNumberHistory`, `DocumentNumberScope` | `DocumentNumber`, `NumberingRegistry` |
@@ -361,6 +361,7 @@ them, while listing, relabelling and (de)activation keep working.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-12 | Claude | Added `InstitutionLogo` (the uploaded logo image, kept apart from `InstitutionSetting`, which gained `LogoUpdatedAt` and `MarkLogoChanged`), the `InstitutionSetting.Logo*` errors, and the logo methods of `IInstitutionSettingRepository`. |
 | 2026-11-11 | Claude |  |
 | 2026-11-11 | Claude | Slice D: `DocumentRelationType.JoinedIntoId` (5). `IDocumentRelationRepository.ListOutgoingAsync` and `IPersonRepository.ListJoinCandidatesAsync`. A join decision can be issued; `Decisions.JoinTargetInvalid` means the principal file is invalid, and `Decisions.DocumentJoined` refuses a later separating decision. |
 | 2026-11-11 | Claude | Appeals (plan `plans/case-decisions.md`, slice C): `DecisionAppeal`, `AppealOutcome` (1 pending, 2 accepted, 3 rejected), `DecisionAppealedEvent`, audit entity type 18, and the appeal error codes. An issued appealable decision becomes appealed; a rejected outcome makes it final and an accepted outcome revokes it. Join execution stays refused. |

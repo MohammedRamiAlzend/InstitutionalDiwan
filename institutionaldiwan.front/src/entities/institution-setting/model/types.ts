@@ -4,6 +4,8 @@ export interface InstitutionSettingResponse {
   institutionNameAr: string
   institutionNameEn: string | null
   logoPath: string | null
+  /** When the uploaded logo last changed; `null` while there is none. */
+  logoUpdatedAt: string | null
   numberingModeId: number
   numberingResetPolicyId: number
   defaultTimezone: string

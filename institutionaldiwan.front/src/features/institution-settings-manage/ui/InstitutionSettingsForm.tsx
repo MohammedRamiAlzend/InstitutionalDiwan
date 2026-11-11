@@ -34,6 +34,7 @@ import {
   Textarea,
 } from '@/shared/ui'
 import { useUpdateInstitutionSettingsMutation } from '../api/institutionSettingMutations'
+import { InstitutionLogoField } from './InstitutionLogoField'
 import {
   institutionSettingsSchema,
   type InstitutionSettingsFormValues,
@@ -46,7 +47,6 @@ function toFormValues(setting: InstitutionSettingResponse): InstitutionSettingsF
   return {
     institutionNameAr: setting.institutionNameAr,
     institutionNameEn: setting.institutionNameEn ?? '',
-    logoPath: setting.logoPath ?? '',
     defaultTimezone: setting.defaultTimezone,
     numberingModeId: String(setting.numberingModeId),
     numberingResetPolicyId: String(setting.numberingResetPolicyId),
@@ -192,7 +192,8 @@ function InstitutionSettingsFormContent({ setting }: { setting: InstitutionSetti
         numberingResetPolicyId: Number(values.numberingResetPolicyId),
         centralDiwanDepartmentId: values.centralDiwanDepartmentId,
         institutionNameEn: values.institutionNameEn || null,
-        logoPath: values.logoPath || null,
+        // The old free-text path is no longer edited here; the uploaded logo replaces it.
+        logoPath: setting.logoPath,
         defaultTimezone: values.defaultTimezone || null,
         responsibleEmployeeId:
           values.responsibleEmployeeId === NONE ? null : values.responsibleEmployeeId,
@@ -216,7 +217,7 @@ function InstitutionSettingsFormContent({ setting }: { setting: InstitutionSetti
       <Section
         icon={Building2}
         title="بيانات المؤسسة"
-        description="الاسم الرسمي والشعار والمنطقة الزمنية الافتراضية المستخدمة في الوثائق."
+        description="الاسم الرسمي والشعار اللذان يظهران في الواجهة، والمنطقة الزمنية الافتراضية المستخدمة في الوثائق."
       >
         <div className="grid gap-4 sm:grid-cols-2">
           <FormField
@@ -224,6 +225,7 @@ function InstitutionSettingsFormContent({ setting }: { setting: InstitutionSetti
             htmlFor="institution-name-ar"
             required
             error={errors.institutionNameAr?.message}
+            hint="يظهر في صفحة الدخول وفي القائمة الجانبية وفي عنوان تبويب المتصفح."
             className="sm:col-span-2"
           >
             <Input
@@ -248,14 +250,8 @@ function InstitutionSettingsFormContent({ setting }: { setting: InstitutionSetti
             />
           </FormField>
 
-          <FormField label="مسار الشعار" htmlFor="institution-logo-path" error={errors.logoPath?.message}>
-            <Input
-              id="institution-logo-path"
-              dir="ltr"
-              placeholder="/assets/logo.png"
-              invalid={Boolean(errors.logoPath)}
-              {...register('logoPath')}
-            />
+          <FormField label="شعار المؤسسة" className="sm:col-span-2">
+            <InstitutionLogoField />
           </FormField>
 
           <FormField

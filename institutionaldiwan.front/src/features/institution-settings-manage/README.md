@@ -13,15 +13,17 @@ read and cache keys remain in `entities/institution-setting`.
 | File | Purpose |
 | --- | --- |
 | `model/types.ts` | `UpdateInstitutionSettingsRequest`, including nullable optional values and the central Diwan transfer reason. |
-| `model/schemas.ts` | Arabic Zod validation for names, logo path, timezone, numbering selections, central department, and transfer-reason length. |
-| `api/institutionSettingMutations.ts` | `useUpdateInstitutionSettingsMutation` sends the update and invalidates `institutionSettingKeys.all` on success. |
+| `model/schemas.ts` | Arabic Zod validation for names, timezone, numbering selections, central department, and transfer-reason length. |
+| `api/institutionSettingMutations.ts` | `useUpdateInstitutionSettingsMutation` sends the update and invalidates `institutionSettingKeys.all` and `brandingKeys.all` on success, so the shell shows the new name. |
+| `api/institutionLogoMutations.ts` | `useUploadInstitutionLogoMutation` (multipart `PUT /institution-settings/logo`) and `useRemoveInstitutionLogoMutation` (`DELETE`), each invalidating the settings and branding keys. |
+| `ui/InstitutionLogoField.tsx` | Logo preview (the live `BrandMark`), upload/replace and remove buttons, client checks mirroring the server (type, 1 MB) and Arabic error feedback; a change applies at once, outside the form's save. |
 | `ui/InstitutionSettingsForm.tsx` | Loads settings, groups fields into institution/central Diwan/numbering/responsible-employee sections, validates transfers, and renders save feedback. |
 | `index.ts` | Public exports for the form, mutation, and request type. |
 
 ## Conventions / Notes
 
 - Allowed imports: entity public barrels and `shared`; never sibling features or upper layers.
-- Fields include Arabic/English names, a logo **path** (not file upload), timezone, numbering mode,
+- Fields include Arabic/English names, an uploaded **logo** (applied immediately; the old free-text path is no longer edited and is sent back unchanged), timezone, numbering mode,
   reset policy, central Diwan department, and optional responsible employee.
 - Central Diwan choices enable only active root departments of type `DEPARTMENT_TYPE.CentralDiwan`.
   Changing the current designation reveals and requires a nonblank transfer reason. The backend
@@ -53,6 +55,7 @@ read and cache keys remain in `entities/institution-setting`.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-12 | Claude | The logo is uploaded as an image (`InstitutionLogoField`) instead of typed as a path; saving the settings also refreshes the branding read. |
 | 2026-11-11 | Claude |  |
 | 2026-11-11 | Claude | Added the «ديوان الحفظ» section: an optional department select (any active department except the Central Diwan) sent as `archiveDiwanDepartmentId`, `null` when cleared. |
 | 2026-10-28 | agent | Document the Module 01 settings form, explicit singleton update, picker permissions, and truthful loading/error/missing-data behavior. |
