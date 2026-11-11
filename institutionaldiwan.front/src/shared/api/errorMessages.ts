@@ -134,7 +134,8 @@ const CODE_MESSAGES: Record<string, string> = {
     'خرجت الوثيقة من الديوان فأُقفل سجله؛ التصحيح متاح لمدير النظام فقط.',
   'DepartmentRecords.VisitNotLocked': 'السجل ما زال مفتوحًا؛ عدّله مباشرة بدل التصحيح.',
   'DepartmentRecords.NotOwnerDepartment': 'لا يعدّل هذا السجل إلا الديوان صاحبه.',
-  'DepartmentRecords.SchemaNotFound': 'لا يوجد نموذج سجل لهذه الزيارة.',
+  'DepartmentRecords.FormNotFound': 'نموذج السجل المختار غير متاح لهذا القسم.',
+  'DepartmentRecords.SchemaNotFound':'لا يوجد نموذج سجل لهذه الزيارة.',
   'DepartmentRecords.CorrectionReasonRequired': 'سبب التصحيح مطلوب.',
   'DepartmentRecords.CorrectionReasonTooLong': 'سبب التصحيح يتجاوز 1000 حرف.',
 

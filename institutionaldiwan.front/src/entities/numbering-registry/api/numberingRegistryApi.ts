@@ -1,5 +1,8 @@
 import { httpClient } from '@/shared/api'
+import type { PagedResult } from '@/shared/types'
 import type {
+  DepartmentRegisterEntriesParams,
+  DepartmentRegisterEntryResponse,
   DepartmentRegisterLineResponse,
   NumberingRegistryResponse,
 } from '../model/types'
@@ -27,6 +30,18 @@ export const numberingRegistryApi = {
     const { data } = await httpClient.get<DepartmentRegisterLineResponse[]>(
       `/departments/${departmentId}/register`,
       { params: { numberingYear } },
+    )
+    return data
+  },
+  /** One page of a department's register, narrowed and ordered by the server. */
+  departmentRegisterEntries: async ({
+    departmentId,
+    search,
+    ...params
+  }: DepartmentRegisterEntriesParams): Promise<PagedResult<DepartmentRegisterEntryResponse>> => {
+    const { data } = await httpClient.get<PagedResult<DepartmentRegisterEntryResponse>>(
+      `/departments/${departmentId}/register/entries`,
+      { params: { ...params, search: search?.trim() || undefined } },
     )
     return data
   },

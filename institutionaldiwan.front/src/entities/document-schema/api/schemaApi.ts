@@ -1,5 +1,6 @@
 import { httpClient } from '@/shared/api'
 import type {
+  DepartmentRegisterFormsResponse,
   DocumentDepartmentRecordsResponse,
   DocumentFieldResponse,
   DocumentFieldsResponse,
@@ -105,6 +106,22 @@ export const schemaApi = {
           ...visit,
           fields: visit.fields.map((entry) => ({ ...entry, field: withBehavior(entry.field) })),
         })),
+      })),
+    }
+  },
+
+  /**
+   * `GET /api/departments/{id}/register/forms` — every published or retired record-form version of a
+   * department, per document type and newest first (`NUMBERING_VIEW`).
+   */
+  async departmentRegisterForms(departmentId: string): Promise<DepartmentRegisterFormsResponse> {
+    const { data } = await httpClient.get<DepartmentRegisterFormsResponse>(
+      `/departments/${departmentId}/register/forms`,
+    )
+    return {
+      forms: data.forms.map((form) => ({
+        ...form,
+        versions: form.versions.map(versionWithBehavior),
       })),
     }
   },

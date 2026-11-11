@@ -63,6 +63,17 @@ internal sealed class DocumentTypeSchemaVersionRepository : IDocumentTypeSchemaV
             .OrderByDescending(version => version.VersionNumber)
             .ToListAsync(cancellationToken);
 
+    public async Task<IReadOnlyList<DocumentTypeSchemaVersion>> ListIssuedByDepartmentAsync(
+        Guid departmentId, CancellationToken cancellationToken = default) =>
+        await _context.DocumentTypeSchemaVersions
+            .AsNoTracking()
+            .Include(version => version.Fields)
+            .Where(version => version.DepartmentId == departmentId &&
+                              version.Status != DocumentTypeSchemaVersionStatus.Draft)
+            .OrderBy(version => version.DocumentTypeId)
+            .ThenByDescending(version => version.VersionNumber)
+            .ToListAsync(cancellationToken);
+
     public void Add(DocumentTypeSchemaVersion version) => _context.DocumentTypeSchemaVersions.Add(version);
 
     public void Remove(DocumentTypeSchemaVersion version) => _context.DocumentTypeSchemaVersions.Remove(version);

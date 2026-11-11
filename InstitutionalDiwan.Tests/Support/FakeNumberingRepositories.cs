@@ -1,3 +1,4 @@
+using InstitutionalDiwan.Domain.Common;
 using InstitutionalDiwan.Domain.Entities.Numbering;
 using InstitutionalDiwan.Domain.Repositories;
 
@@ -73,6 +74,19 @@ internal sealed class FakeDocumentNumberRepository : IDocumentNumberRepository
                                             (numberingYear == null || number.NumberingYear == numberingYear))
                 .OrderBy(number => number.RegistryDate)
                 .ToList());
+
+    /// <summary>The filter of the last register page asked for; the page itself is empty (the SQLite tests cover the query).</summary>
+    public DepartmentRegisterFilter? LastRegisterFilter { get; private set; }
+
+    public Task<PagedList<DepartmentRegisterRow>> ListDepartmentRegisterPagedAsync(
+        PageRequest page,
+        DocumentViewAccess access,
+        DepartmentRegisterFilter filter,
+        CancellationToken cancellationToken = default)
+    {
+        LastRegisterFilter = filter;
+        return Task.FromResult(new PagedList<DepartmentRegisterRow>(Array.Empty<DepartmentRegisterRow>(), 0));
+    }
 
     public Task<bool> AnyByRegistryAsync(Guid registryId, CancellationToken cancellationToken = default)
         => Task.FromResult(DocumentNumbers.Any(number =>

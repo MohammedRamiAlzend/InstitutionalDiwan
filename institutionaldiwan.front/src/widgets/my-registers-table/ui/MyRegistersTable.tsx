@@ -9,9 +9,18 @@ import {
   RestrictedDocumentLabel,
 } from '@/entities/document'
 import {
-  useDepartmentRegister,
+  FIELD_DATA_TYPE,
+  formatFieldValue,
+  SCHEMA_STATUS,
+  useDepartmentRegisterForms,
+  type SchemaFieldResponse,
+} from '@/entities/document-schema'
+import { LOOKUP_SLUGS, useLookupEntries } from '@/entities/lookup'
+import {
+  useDepartmentRegisterEntries,
   useNumberingRegistries,
-  type DepartmentRegisterLineResponse,
+  type DepartmentRegisterEntriesParams,
+  type DepartmentRegisterEntryResponse,
 } from '@/entities/numbering-registry'
 import { useMyPrimaryDepartmentId } from '@/entities/user'
 import { DOCUMENT_NUMBER_STATUS, ROUTES } from '@/shared/config'
@@ -27,6 +36,8 @@ import {
   type MenuEntry,
 } from '@/shared/ui'
 
+const NO_FORM = 'none'
+
 const STATUS_OPTIONS = [
   { value: 'all', label: 'كل الحالات' },
   { value: String(DOCUMENT_NUMBER_STATUS.Active), label: 'نشط' },
@@ -34,76 +45,133 @@ const STATUS_OPTIONS = [
   { value: String(DOCUMENT_NUMBER_STATUS.Cancelled), label: 'ملغى' },
 ] as const
 
-/** A date input's `yyyy-mm-dd` against a line's ISO date; null when the line has no date. */
-function dayOf(line: DepartmentRegisterLineResponse): string | null {
-  return line.registryDate ? line.registryDate.slice(0, 10) : null
+/** The server orders a form field by its stored column, which these types order meaningfully. */
+const SORTABLE_FIELD_TYPES: ReadonlySet<number> = new Set([
+  FIELD_DATA_TYPE.Text,
+  FIELD_DATA_TYPE.LongText,
+  FIELD_DATA_TYPE.Number,
+  FIELD_DATA_TYPE.Date,
+  FIELD_DATA_TYPE.Boolean,
+  FIELD_DATA_TYPE.Select,
+])
+
+function fieldColumn(field: SchemaFieldResponse): DataTableColumn<DepartmentRegisterEntryResponse> {
+  const latin = field.dataType === FIELD_DATA_TYPE.Number || field.dataType === FIELD_DATA_TYPE.Date
+  return {
+    id: `field.${field.key}`,
+    header: field.labelAr,
+    sortable: SORTABLE_FIELD_TYPES.has(field.dataType),
+    sortKey: `field:${field.key}`,
+    cell: (entry) => (
+      <span dir={latin ? 'ltr' : undefined} className="text-xs text-foreground">
+        {formatFieldValue(field, entry.values[field.key])}
+      </span>
+    ),
+  }
 }
 
 /**
- * `/my-registers` — pick one of the registers of the caller's own department and browse its lines.
- * The department book is read once; the register, year, status and date filters narrow it in the
- * browser and live in the URL, like the search, sort and page.
+ * `/my-registers` — pick one register of the caller's own department and browse its lines. Search,
+ * filters, sorting and paging all run on the server and live in the URL. When the department has a
+ * record form for a document type, the lines carry that form's values as extra columns, for the
+ * chosen version (the latest by default).
  */
 export function MyRegistersTable() {
   const table = useTableState({
     defaultSortKey: 'registryDate',
     defaultSortDirection: 'desc',
-    filterKeys: ['registry', 'year', 'status', 'from', 'to'],
+    filterKeys: ['registry', 'type', 'version', 'year', 'status', 'from', 'to'],
+    // A version belongs to one document type's form.
+    resetOnChange: { type: ['version'] },
   })
   const navigate = useNavigate()
 
   const { departmentId, isLoading: isLoadingDepartment } = useMyPrimaryDepartmentId()
   const registriesQuery = useNumberingRegistries({ enabled: Boolean(departmentId) })
-  const bookQuery = useDepartmentRegister(departmentId, null)
-  const book = useMemo(() => bookQuery.data ?? [], [bookQuery.data])
+  const formsQuery = useDepartmentRegisterForms(departmentId)
+  const typesQuery = useLookupEntries(LOOKUP_SLUGS.DocumentTypes)
 
   const registries = useMemo(
     () =>
       (registriesQuery.data ?? []).filter((registry) => registry.departmentId === departmentId),
     [registriesQuery.data, departmentId],
   )
-
-  const lineCount = useMemo(() => {
-    const counts = new Map<string, number>()
-    for (const line of book) {
-      if (line.registryId) counts.set(line.registryId, (counts.get(line.registryId) ?? 0) + 1)
-    }
-    return counts
-  }, [book])
-
   const registryOptions = useMemo(
     () =>
       registries.map((registry) => ({
         value: registry.registryId,
-        label: `${registry.code} — ${registry.nameAr} (${formatNumber(
-          lineCount.get(registry.registryId) ?? 0,
-        )})${registry.isActive ? '' : ' (موقوف)'}`,
+        label: `${registry.code} — ${registry.nameAr}${registry.isActive ? '' : ' (موقوف)'}`,
       })),
-    [registries, lineCount],
+    [registries],
   )
 
   // A department with a single register needs no choosing.
   const registryId =
     table.filters.registry || (registries.length === 1 ? registries[0].registryId : '')
-  const yearText = table.filters.year ?? ''
-  const year = /^\d{4}$/.test(yearText) ? Number(yearText) : null
-  const statusId = table.filters.status ?? ''
+  const registry = registries.find((candidate) => candidate.registryId === registryId)
+
+  // The form: the one the user chose, else the register's own document type if it has a form, else
+  // the first form. "No form" lists every line without record data.
+  const forms = useMemo(() => formsQuery.data?.forms ?? [], [formsQuery.data])
+  const typeParam = table.filters.type ?? ''
+  const defaultTypeId =
+    registry?.documentTypeId && forms.some((entry) => entry.documentTypeId === registry.documentTypeId)
+      ? registry.documentTypeId
+      : forms[0]?.documentTypeId
+  const typeId =
+    typeParam === NO_FORM ? null : typeParam ? Number(typeParam) : (defaultTypeId ?? null)
+  const form = forms.find((entry) => entry.documentTypeId === typeId) ?? null
+  // The newest version comes first, so it is the default.
+  const version =
+    form?.versions.find((candidate) => candidate.schemaVersionId === table.filters.version) ??
+    form?.versions[0] ??
+    null
+
+  const typeName = useMemo(() => {
+    const names = new Map((typesQuery.data ?? []).map((entry) => [entry.id, entry.descAr]))
+    return (id: number) => names.get(id) ?? `نوع ${id}`
+  }, [typesQuery.data])
+  const typeOptions = useMemo(
+    () => [
+      { value: NO_FORM, label: 'بلا بيانات نموذج' },
+      ...forms.map((entry) => ({
+        value: String(entry.documentTypeId),
+        label: typeName(entry.documentTypeId),
+      })),
+    ],
+    [forms, typeName],
+  )
+  const versionOptions = (form?.versions ?? []).map((candidate, index) => ({
+    value: candidate.schemaVersionId,
+    label: `الإصدار ${candidate.versionNumber}${index === 0 ? ' (الأحدث)' : ''}${
+      candidate.status === SCHEMA_STATUS.Retired ? ' — متقاعد' : ''
+    }`,
+  }))
+
+  const year = /^\d{4}$/.test(table.filters.year ?? '') ? Number(table.filters.year) : undefined
+  const statusId = Number.parseInt(table.filters.status ?? '', 10)
   const from = table.filters.from ?? ''
   const to = table.filters.to ?? ''
 
-  const lines = useMemo(
-    () =>
-      book.filter((line) => {
-        if (line.registryId !== registryId) return false
-        if (year !== null && line.numberingYear !== year) return false
-        if (statusId && String(line.statusId) !== statusId) return false
-        const day = dayOf(line)
-        if (from && (!day || day < from)) return false
-        if (to && (!day || day > to)) return false
-        return true
-      }),
-    [book, registryId, year, statusId, from, to],
-  )
+  const formsReady = !formsQuery.isLoading
+  const params: DepartmentRegisterEntriesParams | null =
+    departmentId && registryId && formsReady
+      ? {
+          departmentId,
+          registryId,
+          numberingYear: year,
+          statusId: Number.isFinite(statusId) ? statusId : undefined,
+          dateFrom: from || undefined,
+          dateTo: to || undefined,
+          schemaVersionId: version?.schemaVersionId,
+          page: table.page,
+          pageSize: table.pageSize,
+          search: table.search || undefined,
+          sortBy: table.sortKey ?? undefined,
+          sortDescending: table.sortDirection === 'desc',
+        }
+      : null
+  const entriesQuery = useDepartmentRegisterEntries(params)
 
   const copyValue = async (value: string, label: string) => {
     try {
@@ -114,20 +182,21 @@ export function MyRegistersTable() {
     }
   }
 
-  const openDocument = (line: DepartmentRegisterLineResponse) =>
-    navigate(`${ROUTES.DOCUMENT_DETAIL(line.documentId)}?tab=numbers`)
+  const openDocument = (entry: DepartmentRegisterEntryResponse) =>
+    navigate(`${ROUTES.DOCUMENT_DETAIL(entry.documentId)}?tab=numbers`)
 
-  const columns = useMemo<DataTableColumn<DepartmentRegisterLineResponse>[]>(
-    () => [
+  const fieldColumns = (version?.fields ?? []).map(fieldColumn)
+
+  const columns: DataTableColumn<DepartmentRegisterEntryResponse>[] = [
       {
         id: 'registryNumber',
         header: 'رقم السجل',
         hideable: false,
         sortable: true,
-        sortValue: (line) => line.registryNumberText,
-        cell: (line) => (
+        sortKey: 'registryNumber',
+        cell: (entry) => (
           <code dir="ltr" className="whitespace-nowrap text-xs text-foreground">
-            {line.registryNumberText}
+            {entry.registryNumberText}
           </code>
         ),
       },
@@ -135,10 +204,10 @@ export function MyRegistersTable() {
         id: 'registryDate',
         header: 'تاريخ التسجيل',
         sortable: true,
-        sortValue: (line) => line.registryDate,
-        cell: (line) => (
+        sortKey: 'registryDate',
+        cell: (entry) => (
           <span dir="ltr" className="whitespace-nowrap text-xs text-muted">
-            {formatDate(line.registryDate)}
+            {formatDate(entry.registryDate)}
           </span>
         ),
       },
@@ -146,42 +215,41 @@ export function MyRegistersTable() {
         id: 'document',
         header: 'الوثيقة',
         sortable: true,
-        sortValue: (line) => line.documentTitle,
-        cell: (line) =>
-          isDocumentRestricted(line.documentTitle) ? (
+        sortKey: 'document',
+        cell: (entry) =>
+          isDocumentRestricted(entry.documentTitle) ? (
             <RestrictedDocumentLabel />
           ) : (
             <Link
-              to={`${ROUTES.DOCUMENT_DETAIL(line.documentId)}?tab=numbers`}
+              to={`${ROUTES.DOCUMENT_DETAIL(entry.documentId)}?tab=numbers`}
               className="inline-flex items-center gap-1.5 text-sm text-accent transition-colors hover:underline"
             >
               <FileText className="size-3.5 shrink-0" aria-hidden />
-              <span className="line-clamp-1 max-w-72">{line.documentTitle}</span>
+              <span className="line-clamp-1 max-w-72">{entry.documentTitle}</span>
             </Link>
           ),
       },
+      ...fieldColumns,
       {
         id: 'centralNumber',
         header: 'رقم الديوان',
         sortable: true,
-        sortValue: (line) => line.centralNumberText,
-        cell: (line) => (
+        sortKey: 'centralNumber',
+        cell: (entry) => (
           <span dir="ltr" className="whitespace-nowrap text-xs text-muted">
-            {line.centralNumberText ?? '—'}
+            {entry.centralNumberText ?? '—'}
           </span>
         ),
       },
       {
         id: 'linkedNumber',
         header: 'الرقم المرتبط',
-        sortable: true,
-        sortValue: (line) => line.replacedByNumberText ?? line.replacesNumberText,
-        cell: (line) => {
-          const linked = line.replacedByNumberText ?? line.replacesNumberText
+        cell: (entry) => {
+          const linked = entry.replacedByNumberText ?? entry.replacesNumberText
           if (!linked) return <span className="text-xs text-muted">—</span>
           return (
             <span className="inline-flex items-center gap-1.5 whitespace-nowrap text-xs text-muted">
-              {line.replacedByNumberText ? 'استُبدل بـ' : 'بدل'}
+              {entry.replacedByNumberText ? 'استُبدل بـ' : 'بدل'}
               <code dir="ltr" className="text-foreground">
                 {linked}
               </code>
@@ -193,38 +261,40 @@ export function MyRegistersTable() {
         id: 'numberingYear',
         header: 'السنة',
         sortable: true,
-        sortValue: (line) => line.numberingYear,
-        cell: (line) => (
+        sortKey: 'numberingYear',
+        defaultHidden: true,
+        cell: (entry) => (
           <span dir="ltr" className="whitespace-nowrap text-xs text-muted">
-            {line.numberingYear}
+            {entry.numberingYear}
           </span>
         ),
       },
       {
         id: 'status',
         header: 'الحالة',
-        cell: (line) => <NumberStatusBadge statusId={line.statusId} />,
+        sortable: true,
+        sortKey: 'status',
+        cell: (entry) => <NumberStatusBadge statusId={entry.statusId} />,
       },
       {
         id: 'registrationCount',
         header: 'مرات التسجيل',
         sortable: true,
-        sortValue: (line) => line.registrationCount,
-        cell: (line) => <Badge variant="outline">{formatNumber(line.registrationCount)}</Badge>,
+        sortKey: 'registrationCount',
+        defaultHidden: true,
+        cell: (entry) => <Badge variant="outline">{formatNumber(entry.registrationCount)}</Badge>,
       },
-    ],
-    [],
-  )
+  ]
 
-  const buildRowMenu = (line: DepartmentRegisterLineResponse): MenuEntry[] => [
-    ...(isDocumentRestricted(line.documentTitle)
+  const buildRowMenu = (entry: DepartmentRegisterEntryResponse): MenuEntry[] => [
+    ...(isDocumentRestricted(entry.documentTitle)
       ? []
       : ([
           {
             id: 'open-document',
             label: 'فتح الوثيقة',
             icon: <ArrowUpRight className="size-4" aria-hidden />,
-            onSelect: () => openDocument(line),
+            onSelect: () => openDocument(entry),
           },
           { type: 'separator' },
         ] as MenuEntry[])),
@@ -232,27 +302,28 @@ export function MyRegistersTable() {
       id: 'copy-registry-number',
       label: 'نسخ رقم السجل',
       icon: <Copy className="size-4" aria-hidden />,
-      onSelect: () => void copyValue(line.registryNumberText, 'رقم السجل'),
+      onSelect: () => void copyValue(entry.registryNumberText, 'رقم السجل'),
     },
     {
       id: 'copy-central-number',
       label: 'نسخ رقم الديوان',
       icon: <Copy className="size-4" aria-hidden />,
-      disabled: !line.centralNumberText,
+      disabled: !entry.centralNumberText,
       onSelect: () =>
-        line.centralNumberText && void copyValue(line.centralNumberText, 'رقم الديوان'),
+        entry.centralNumberText && void copyValue(entry.centralNumberText, 'رقم الديوان'),
     },
     {
       id: 'copy-document-id',
       label: 'نسخ معرّف الوثيقة',
       icon: <Hash className="size-4" aria-hidden />,
-      onSelect: () => void copyValue(line.documentId, 'معرّف الوثيقة'),
+      onSelect: () => void copyValue(entry.documentId, 'معرّف الوثيقة'),
     },
   ]
 
   const refetch = () => {
     void registriesQuery.refetch()
-    void bookQuery.refetch()
+    void formsQuery.refetch()
+    void entriesQuery.refetch()
   }
 
   const headerMenu: MenuEntry[] = [
@@ -264,9 +335,15 @@ export function MyRegistersTable() {
     },
   ]
 
-  const isLoading = isLoadingDepartment || registriesQuery.isLoading || bookQuery.isLoading
+  const isLoading =
+    isLoadingDepartment ||
+    registriesQuery.isLoading ||
+    formsQuery.isLoading ||
+    (params !== null && entriesQuery.isLoading)
   const noRegisters = !isLoading && Boolean(departmentId) && registries.length === 0
-  const hasNarrowing = Boolean(year !== null || statusId || from || to || table.search)
+  const hasNarrowing = Boolean(
+    year !== undefined || Number.isFinite(statusId) || from || to || table.search,
+  )
 
   const emptyTitle = noRegisters
     ? 'لا سجلات لقسمك'
@@ -274,50 +351,40 @@ export function MyRegistersTable() {
       ? 'اختر سجلًا لعرض أسطره'
       : hasNarrowing
         ? 'لا توجد نتائج مطابقة.'
-        : 'لا أسطر في هذا السجل بعد.'
+        : version
+          ? 'لا أسطر على هذا الإصدار.'
+          : 'لا أسطر في هذا السجل بعد.'
   const emptyDescription = noRegisters
     ? 'لم يُنشأ لقسمك سجل ترقيم. يُنشئه مسؤول الترقيم من صفحة «الترقيم».'
     : !registryId
       ? 'تظهر هنا الأسطر المسجّلة في السجل الذي تختاره من سجلات قسمك.'
       : hasNarrowing
         ? 'جرّب تعديل البحث أو المرشحات، أو امسحها لعرض كل أسطر السجل.'
-        : 'تُضاف الأسطر عند تسجيل وثيقة في هذا السجل أو استلامها.'
+        : version
+          ? 'لا أسطر لها زيارة مسجّلة على هذا الإصدار من النموذج. جرّب إصدارًا آخر أو «بلا بيانات نموذج».'
+          : 'تُضاف الأسطر عند تسجيل وثيقة في هذا السجل أو استلامها.'
 
   return (
     <DataTable
       tableId="my-registers"
-      mode="client"
       caption="سجلاتي"
       columns={columns}
-      rows={lines}
-      rowKey={(line) => line.documentNumberId}
-      rowSearchText={(line) =>
-        [
-          documentRowLabel(line.documentTitle),
-          line.registryNumberText,
-          line.centralNumberText,
-          line.replacedByNumberText,
-          line.replacesNumberText,
-          String(line.numberingYear),
-        ]
-          .filter(Boolean)
-          .join(' ')
-          .toLocaleLowerCase('ar')
-      }
-      rowLabel={(line) => documentRowLabel(line.documentTitle)}
+      rows={params ? entriesQuery.data?.items : []}
+      rowKey={(entry) => entry.documentNumberId}
+      rowLabel={(entry) => documentRowLabel(entry.documentTitle)}
       isLoading={isLoading}
-      error={registriesQuery.error ?? bookQuery.error}
+      error={registriesQuery.error ?? formsQuery.error ?? (params ? entriesQuery.error : null)}
       onRetry={refetch}
       onRefresh={refetch}
-      isFetching={registriesQuery.isFetching || bookQuery.isFetching}
+      isFetching={entriesQuery.isFetching || registriesQuery.isFetching}
       page={table.page}
       pageSize={table.pageSize}
-      totalCount={lines.length}
+      totalCount={params ? (entriesQuery.data?.totalCount ?? 0) : 0}
       onPageChange={table.setPage}
       onPageSizeChange={table.setPageSize}
       search={table.search}
       onSearchChange={table.setSearch}
-      searchPlaceholder="ابحث برقم السجل أو الوثيقة أو رقم الديوان…"
+      searchPlaceholder="ابحث برقم السجل أو الوثيقة أو رقم الديوان أو قيم النموذج…"
       sortKey={table.sortKey}
       sortDirection={table.sortDirection}
       onSortChange={table.setSort}
@@ -326,68 +393,89 @@ export function MyRegistersTable() {
       emptyMenu={headerMenu}
       filters={
         <GuideRegion id="my-registers.filters">
-          <div className="flex flex-wrap items-end gap-2">
-            <Select
-              aria-label="اختيار السجل"
-              value={registryId || undefined}
-              onValueChange={(value) => table.setFilter('registry', value)}
-              options={registryOptions}
-              disabled={isLoading || registries.length === 0}
-              placeholder={isLoading ? 'جارٍ التحميل…' : 'اختر السجل…'}
-              className="w-72"
-            />
-            <Input
-              aria-label="تصفية حسب سنة الترقيم"
-              type="number"
-              inputMode="numeric"
-              dir="ltr"
-              min={1900}
-              max={2200}
-              value={yearText}
-              onChange={(event) => table.setFilter('year', event.target.value)}
-              placeholder="كل السنوات"
-              className="w-32"
-            />
-            <Select
-              aria-label="تصفية حسب حالة الرقم"
-              value={statusId || 'all'}
-              onValueChange={(value) => table.setFilter('status', value === 'all' ? null : value)}
-              options={[...STATUS_OPTIONS]}
-              className="w-36"
-            />
-            <Input
-              aria-label="من تاريخ"
-              type="date"
-              dir="ltr"
-              value={from}
-              max={to || undefined}
-              onChange={(event) => table.setFilter('from', event.target.value)}
-              className="w-40"
-            />
-            <Input
-              aria-label="إلى تاريخ"
-              type="date"
-              dir="ltr"
-              value={to}
-              min={from || undefined}
-              onChange={(event) => table.setFilter('to', event.target.value)}
-              className="w-40"
-            />
-            {(year !== null || statusId || from || to) && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  table.setFilter('year', null)
-                  table.setFilter('status', null)
-                  table.setFilter('from', null)
-                  table.setFilter('to', null)
-                }}
-              >
-                مسح المرشحات
-              </Button>
-            )}
+          <div className="flex flex-col gap-2">
+            <div className="flex flex-wrap items-end gap-2">
+              <Select
+                aria-label="اختيار السجل"
+                value={registryId || undefined}
+                onValueChange={(value) => table.setFilter('registry', value)}
+                options={registryOptions}
+                disabled={isLoading || registries.length === 0}
+                placeholder={isLoading ? 'جارٍ التحميل…' : 'اختر السجل…'}
+                className="w-64"
+              />
+              <Select
+                aria-label="نموذج سجل القسم"
+                value={form ? String(form.documentTypeId) : NO_FORM}
+                onValueChange={(value) => table.setFilter('type', value)}
+                options={typeOptions}
+                disabled={!registryId || formsQuery.isLoading}
+                className="w-48"
+              />
+              {form && (
+                <Select
+                  aria-label="إصدار النموذج"
+                  value={version?.schemaVersionId}
+                  onValueChange={(value) => table.setFilter('version', value)}
+                  options={versionOptions}
+                  className="w-48"
+                />
+              )}
+            </div>
+            <div className="flex flex-wrap items-end gap-2">
+              <Input
+                aria-label="تصفية حسب سنة الترقيم"
+                type="number"
+                inputMode="numeric"
+                dir="ltr"
+                min={1900}
+                max={2200}
+                value={table.filters.year ?? ''}
+                onChange={(event) => table.setFilter('year', event.target.value)}
+                placeholder="كل السنوات"
+                className="w-32"
+              />
+              <Select
+                aria-label="تصفية حسب حالة الرقم"
+                value={Number.isFinite(statusId) ? String(statusId) : 'all'}
+                onValueChange={(value) => table.setFilter('status', value === 'all' ? null : value)}
+                options={[...STATUS_OPTIONS]}
+                className="w-36"
+              />
+              <Input
+                aria-label="من تاريخ"
+                type="date"
+                dir="ltr"
+                value={from}
+                max={to || undefined}
+                onChange={(event) => table.setFilter('from', event.target.value)}
+                className="w-40"
+              />
+              <Input
+                aria-label="إلى تاريخ"
+                type="date"
+                dir="ltr"
+                value={to}
+                min={from || undefined}
+                onChange={(event) => table.setFilter('to', event.target.value)}
+                className="w-40"
+              />
+              {(year !== undefined || Number.isFinite(statusId) || from || to) && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    table.setFilter('year', null)
+                    table.setFilter('status', null)
+                    table.setFilter('from', null)
+                    table.setFilter('to', null)
+                  }}
+                >
+                  مسح المرشحات
+                </Button>
+              )}
+            </div>
           </div>
         </GuideRegion>
       }

@@ -15,8 +15,8 @@ Writes live in `features/numbering-manage`.
 
 | File | Purpose |
 | --- | --- |
-| `model/types.ts` | `NumberingRegistryResponse`, `NumberingCounterResponse`, `DepartmentRegisterLineResponse`, and `DepartmentRegisterParams` TypeScript contracts. |
-| `model/queries.ts` | `numberingRegistryKeys` factory and `useNumberingRegistries`, `useNumberingRegistryById`, `useDepartmentRegister` hooks. |
+| `model/types.ts` | `NumberingRegistryResponse`, `NumberingCounterResponse`, `DepartmentRegisterLineResponse`, `DepartmentRegisterParams`, `DepartmentRegisterEntryResponse` and `DepartmentRegisterEntriesParams` TypeScript contracts. |
+| `model/queries.ts` | `numberingRegistryKeys` factory and `useNumberingRegistries`, `useNumberingRegistryById`, `useDepartmentRegister` and `useDepartmentRegisterEntries` (one server-narrowed page, previous page kept while loading) hooks. |
 | `model/departmentRegistries.ts` | `useDepartmentRegistryOptions` lists a department's active registers as options for choosing where a number is written. |
 | `model/format.ts` | Pure `renderNumberPattern(pattern, { numberingYear, sequenceValue })` mirroring `OfficialNumberFormatter` (`{YEAR}`, `{SEQ}`, `{SEQ:Dn}`, case-insensitive, `DEFAULT_NUMBER_PATTERN` on blank), the default template constant, and `unknownPatternTokens` (tokens the formatter cannot expand) for form validation. |
 | `model/scope.ts` | Pure scope helpers: `registryScopeRank` (constrained dimensions 0–3; ordering only, never asserted as server precedence), `registryScopeKey`, `describeRegistryScope` (Arabic summary), and `findDuplicateActiveScopes` (active registries sharing one scope triple). |
@@ -50,6 +50,7 @@ affected `detail(id)`.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-11 | Claude | Added `departmentRegisterEntries` (`GET .../register/entries`) with `useDepartmentRegisterEntries` and its keys. |
 | 2026-11-11 | Claude | `DepartmentRegisterLineResponse` gained `registryId`, so a screen can show one register at a time. |
 | 2026-11-10 | Claude | `DepartmentRegisterLineResponse` gained `replacedByNumberText` and `replacesNumberText`. |
 | 2026-11-08 | Claude | Added the shared department register picker. |

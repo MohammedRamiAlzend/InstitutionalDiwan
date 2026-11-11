@@ -411,6 +411,7 @@ public static class DomainErrors
         public static readonly Error VisitNotLocked = Error.Conflict("DepartmentRecords.VisitNotLocked", "The record is still open; edit it directly instead of correcting it.");
         public static readonly Error NotOwnerDepartment = Error.Forbidden("DepartmentRecords.NotOwnerDepartment", "Only the department that keeps this record can edit it.");
         public static readonly Error SchemaNotFound = Error.Conflict("DepartmentRecords.SchemaNotFound", "This visit has no department record form.");
+        public static readonly Error FormNotFound = Error.NotFound("DepartmentRecords.FormNotFound", "The department has no published record form with that id.");
         public static readonly Error CorrectionReasonRequired = Error.Validation("DepartmentRecords.CorrectionReasonRequired", "A reason is required to correct a locked record.");
         public static readonly Error CorrectionReasonTooLong = Error.Validation("DepartmentRecords.CorrectionReasonTooLong", "The correction reason cannot exceed 1000 characters.");
     }

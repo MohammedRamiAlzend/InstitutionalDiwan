@@ -139,6 +139,7 @@ indexes) runs against a private SQLite in-memory database through `Support/TestC
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-11 | Claude | Department register page: `Application/DepartmentRegisterEntriesHandlerTests` (scope, form checks, sort mapping, forms list) and `Persistence/DepartmentRegisterPageTests` (SQLite: filters, paging, form-version values, search, field sort, hidden titles). 975 tests pass. |
 | 2026-11-11 | Claude | Slice D: a join creates a `JoinedInto` relation, a cycle or a hidden principal file is refused, a separating decision on the joined file is refused, canceling the join removes the relation, and the principal file's decisions stay hidden from a caller who cannot view it. |
 | 2026-11-11 | Claude | Appeal slice: status transitions, a non-appealable decision, an accepted appeal that allows a new decision, an appeal on an archived document, scope over the issuer or the appellant, and a SQLite round trip. Audit entity types are now 18. 946 tests pass. |
 | 2026-11-11 | Claude | Decision slice: `Application/DecisionTests` (type activation, snapshot, one in-force decision, holding department, document-type link, join refused, number uniqueness) and `Persistence/DecisionPersistenceTests` (the register hides documents the caller cannot view; the database keeps one in-force decision and a canceled number). Permission, role and seed counts moved to 23. 940 tests pass. |

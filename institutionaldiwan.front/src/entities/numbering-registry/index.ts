@@ -1,6 +1,8 @@
 export type {
   NumberingCounterResponse,
   NumberingRegistryResponse,
+  DepartmentRegisterEntriesParams,
+  DepartmentRegisterEntryResponse,
   DepartmentRegisterLineResponse,
   DepartmentRegisterParams,
 } from './model/types'
@@ -9,6 +11,7 @@ export {
   useNumberingRegistries,
   useNumberingRegistryById,
   useDepartmentRegister,
+  useDepartmentRegisterEntries,
 } from './model/queries'
 export { useDepartmentRegistryOptions } from './model/departmentRegistries'
 export type { DepartmentRegistryOptions } from './model/departmentRegistries'

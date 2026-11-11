@@ -1,5 +1,7 @@
 export type {
   DepartmentRecordResponse,
+  DepartmentRegisterFormResponse,
+  DepartmentRegisterFormsResponse,
   DepartmentRecordVisitResponse,
   DocumentDepartmentRecordsResponse,
   DocumentFieldResponse,
@@ -36,6 +38,7 @@ export { FIELD_DATA_TYPE_LABELS, SCHEMA_STATUS_LABELS } from './model/labels'
 export {
   schemaKeys,
   useDepartmentRecords,
+  useDepartmentRegisterForms,
   useDocumentFields,
   useDocumentTypeFields,
   useDocumentTypeSchema,

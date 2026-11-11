@@ -117,6 +117,17 @@ export interface SchemaVersionResponse {
   departmentId?: string | null
 }
 
+/** One document type's record form for a department; `versions` is newest first, so the first is the latest. */
+export interface DepartmentRegisterFormResponse {
+  documentTypeId: number
+  versions: SchemaVersionResponse[]
+}
+
+/** `GET /api/departments/{id}/register/forms` — the record forms a department has issued. */
+export interface DepartmentRegisterFormsResponse {
+  forms: DepartmentRegisterFormResponse[]
+}
+
 /** `SchemaVersionSummaryResponse` — a history row without its fields. */
 export interface SchemaVersionSummaryResponse {
   schemaVersionId: string

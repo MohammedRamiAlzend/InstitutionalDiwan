@@ -1,6 +1,9 @@
-import { useQuery, type UseQueryOptions } from '@tanstack/react-query'
+import { keepPreviousData, useQuery, type UseQueryOptions } from '@tanstack/react-query'
 import { numberingRegistryApi } from '../api/numberingRegistryApi'
+import type { PagedResult } from '@/shared/types'
 import type {
+  DepartmentRegisterEntriesParams,
+  DepartmentRegisterEntryResponse,
   DepartmentRegisterLineResponse,
   NumberingRegistryResponse,
 } from './types'
@@ -13,6 +16,9 @@ export const numberingRegistryKeys = {
   detail: (registryId: string) =>
     [...numberingRegistryKeys.details(), registryId] as const,
   registers: () => [...numberingRegistryKeys.all, 'department-register'] as const,
+  entries: () => [...numberingRegistryKeys.all, 'register-entries'] as const,
+  entriesPage: (params: DepartmentRegisterEntriesParams) =>
+    [...numberingRegistryKeys.entries(), params] as const,
   register: (departmentId: string, numberingYear: number | null) =>
     [...numberingRegistryKeys.registers(), departmentId, numberingYear] as const,
 }
@@ -57,5 +63,21 @@ export function useDepartmentRegister(
     staleTime: 30 * 1000,
     ...options,
     enabled: Boolean(departmentId) && (options?.enabled ?? true),
+  })
+}
+
+/** One server-narrowed page of a department's register; the previous page stays while the next loads. */
+export function useDepartmentRegisterEntries(
+  params: DepartmentRegisterEntriesParams | null,
+  options?: EnabledOptions<PagedResult<DepartmentRegisterEntryResponse>>,
+) {
+  return useQuery({
+    queryKey: numberingRegistryKeys.entriesPage(
+      params ?? { departmentId: '', page: 1, pageSize: 1 },
+    ),
+    queryFn: () => numberingRegistryApi.departmentRegisterEntries(params as DepartmentRegisterEntriesParams),
+    placeholderData: keepPreviousData,
+    staleTime: 15 * 1000,
+    enabled: params !== null && (options?.enabled ?? true),
   })
 }

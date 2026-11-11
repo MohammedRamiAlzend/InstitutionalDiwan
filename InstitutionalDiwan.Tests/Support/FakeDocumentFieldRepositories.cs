@@ -80,6 +80,16 @@ internal sealed class FakeDocumentTypeSchemaVersionRepository : IDocumentTypeSch
         Task.FromResult<IReadOnlyList<DocumentTypeSchemaVersion>>(
             OfForm(documentTypeId, departmentId).OrderByDescending(version => version.VersionNumber).ToList());
 
+    public Task<IReadOnlyList<DocumentTypeSchemaVersion>> ListIssuedByDepartmentAsync(
+        Guid departmentId,
+        CancellationToken cancellationToken = default) =>
+        Task.FromResult<IReadOnlyList<DocumentTypeSchemaVersion>>(
+            Versions.Where(version => version.DepartmentId == departmentId &&
+                                      version.Status != DocumentTypeSchemaVersionStatus.Draft)
+                .OrderBy(version => version.DocumentTypeId)
+                .ThenByDescending(version => version.VersionNumber)
+                .ToList());
+
     public void Add(DocumentTypeSchemaVersion version) => Versions.Add(version);
 
     public void Remove(DocumentTypeSchemaVersion version) => Versions.Remove(version);

@@ -181,6 +181,8 @@ public interface IDocumentTypeSchemaVersionRepository
     Task<int> GetLatestVersionNumberAsync(int documentTypeId, Guid? departmentId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<DocumentTypeSchemaVersion>> ListByDocumentTypeAsync(int documentTypeId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<DocumentTypeSchemaVersion>> ListByDocumentTypeAsync(int documentTypeId, Guid? departmentId, CancellationToken cancellationToken = default);
+    /// <summary>Every published or retired record-form version of one department, all document types, newest first.</summary>
+    Task<IReadOnlyList<DocumentTypeSchemaVersion>> ListIssuedByDepartmentAsync(Guid departmentId, CancellationToken cancellationToken = default);
     void Add(DocumentTypeSchemaVersion version);
     /// <summary>Deletes a discarded draft together with its fields; published versions are never removed.</summary>
     void Remove(DocumentTypeSchemaVersion version);
@@ -195,6 +197,28 @@ public interface INumberingRegistryRepository
     Task<NumberingRegistry?> GetActiveDepartmentRegistryAsync(Guid departmentId, CancellationToken cancellationToken = default);
     void Add(NumberingRegistry registry);
 }
+
+/// <summary>What narrows a department's register page. Dates compare by calendar day, both ends inclusive.</summary>
+public sealed record DepartmentRegisterFilter(
+    Guid DepartmentId,
+    Guid? RegistryId = null,
+    int? NumberingYear = null,
+    int? StatusId = null,
+    DateTime? RegistryDateFrom = null,
+    DateTime? RegistryDateTo = null,
+    int? DocumentTypeId = null,
+    Guid? SchemaVersionId = null,
+    DocumentFieldSort? FieldSort = null);
+
+/// <summary>One line of a department register page, with what a screen needs beside the line itself.</summary>
+public sealed record DepartmentRegisterRow(
+    DocumentNumber Number,
+    string? DocumentTitle,
+    string? CentralNumberText,
+    int RegistrationCount,
+    string? ReplacedByNumberText,
+    string? ReplacesNumberText,
+    DocumentRegistryVisit? RecordVisit);
 
 public interface IDocumentNumberRepository
 {
@@ -215,6 +239,17 @@ public interface IDocumentNumberRepository
     Task<IReadOnlyList<DocumentNumber>> ListByDocumentAsync(Guid documentId, CancellationToken cancellationToken = default);
     /// <summary>The document whose register line holds visit <paramref name="visitId"/>, if any.</summary>
     Task<Guid?> FindDocumentIdByVisitAsync(Guid visitId, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// One page of a department's register lines, narrowed and ordered in the database. A line whose
+    /// document the caller cannot view keeps its number but has no title and does not match a title search.
+    /// When the filter names a record form version, only lines with a visit on that version are returned,
+    /// each with its latest such visit and the visit's values.
+    /// </summary>
+    Task<PagedList<DepartmentRegisterRow>> ListDepartmentRegisterPagedAsync(
+        PageRequest page,
+        DocumentViewAccess access,
+        DepartmentRegisterFilter filter,
+        CancellationToken cancellationToken = default);
     /// <summary>The register book: one department's entries, oldest register date first.</summary>
     Task<IReadOnlyList<DocumentNumber>> ListByDepartmentAsync(
         Guid departmentId,

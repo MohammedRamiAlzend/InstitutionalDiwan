@@ -271,7 +271,11 @@ A department has one number in use per document per year (`DepartmentNumberLocke
 
 ### Department register — `/api/departments/{departmentId}/register`
 
-`GET` — `NUMBERING_VIEW`. Optional numbering-year filter. Each line carries `registryId`, the department register it was written in. The SPA's `/my-registers` page («سجلاتي») reads the caller's own department book once, lists that department's registers from `GET /api/numbering/registries`, and shows one register at a time with year, status, date, search and sort filters in the URL.
+`GET` — `NUMBERING_VIEW`. Optional numbering-year filter. Each line carries `registryId`, the department register it was written in. The SPA's `/my-registers` page («سجلاتي») lists that department's registers from `GET /api/numbering/registries` and shows one register at a time from `GET .../register/entries` (all search, filters, sort and paging on the server, kept in the URL).
+
+`GET /api/departments/{departmentId}/register/entries` — `NUMBERING_VIEW`, department in the caller's scope. Query: `registryId`, `numberingYear`, `statusId`, `dateFrom`/`dateTo` (inclusive days), `schemaVersionId`, `page`, `pageSize`, `search`, `sortBy` (`registryNumber`, `registryDate`, `document`, `centralNumber`, `numberingYear`, `status`, `registrationCount`, or `field:{key}` of the chosen version), `sortDescending`. Returns a `PagedResult` of lines with `registryId`, `visitId`, `recordLocked` and `values` (field key → stored text of the latest visit on that version). With `schemaVersionId` only lines that have a visit on that version are returned; a version of another department or a draft is 404 `DepartmentRecords.FormNotFound`. A line whose document the caller cannot view has an empty title and does not match a title search.
+
+`GET /api/departments/{departmentId}/register/forms` — `NUMBERING_VIEW`. Returns `{ forms: [{ documentTypeId, versions[] }] }`, the department's published and retired record forms with versions newest first and their fields.
 
 ### Movements — `/api/movements`
 

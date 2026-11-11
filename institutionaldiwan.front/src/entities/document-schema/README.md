@@ -39,6 +39,7 @@ Read side of the per-document-type field schemas: a type's field identities, its
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-11 | Claude | Added `departmentRegisterForms` and `useDepartmentRegisterForms` (a department's issued record forms per document type, versions newest first). |
 | 2026-11-10 | Claude | Schema reads take an optional department (record forms); added department-record types, `departmentRecords` API and `useDepartmentRecords`. |
 | 2026-11-08 | Claude | `schemaApi` fills in `behavior` when the API predates it, so a server not yet upgraded no longer blanks the page. |
 | 2026-11-08 | Claude | Field `behavior` and the multi-select type; `visibleFields`, `withFieldDefaults`, `withFixedValues`, `formatFieldValue`; added `FieldValueControl`; `FieldFilterBar` and `FieldFilterDialog` moved here from the registry widget so the archive shares them, with quick filters on the bar. |

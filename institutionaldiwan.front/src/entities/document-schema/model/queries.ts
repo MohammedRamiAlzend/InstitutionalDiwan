@@ -1,6 +1,7 @@
 import { useQuery, type UseQueryOptions } from '@tanstack/react-query'
 import { schemaApi } from '../api/schemaApi'
 import type {
+  DepartmentRegisterFormsResponse,
   DocumentDepartmentRecordsResponse,
   DocumentFieldResponse,
   DocumentFieldsResponse,
@@ -22,9 +23,24 @@ export const schemaKeys = {
   typeSchema: (documentTypeId: number, departmentId?: string | null) =>
     [...schemaKeys.all, 'type-schema', documentTypeId, formKey(departmentId)] as const,
   documentFields: (documentId: string) => [...schemaKeys.all, 'document', documentId] as const,
+  departmentRegisterForms: (departmentId: string) =>
+    [...schemaKeys.all, 'register-forms', departmentId] as const,
   departmentRecordsAll: ['document-schema', 'department-records'] as const,
   departmentRecords: (documentId: string) =>
     [...schemaKeys.departmentRecordsAll, documentId] as const,
+}
+
+/** The record forms a department has issued, per document type with every version, newest first. */
+export function useDepartmentRegisterForms(
+  departmentId: string | undefined,
+  options?: Partial<Pick<UseQueryOptions<DepartmentRegisterFormsResponse>, 'enabled'>>,
+) {
+  return useQuery({
+    queryKey: schemaKeys.departmentRegisterForms(departmentId ?? ''),
+    queryFn: () => schemaApi.departmentRegisterForms(departmentId ?? ''),
+    staleTime: 60 * 1000,
+    enabled: Boolean(departmentId) && (options?.enabled ?? true),
+  })
 }
 
 /** The department records on a document that the caller may read (each visit's record form values). */

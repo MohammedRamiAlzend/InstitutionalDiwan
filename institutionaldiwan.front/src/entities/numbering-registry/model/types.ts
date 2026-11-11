@@ -45,3 +45,43 @@ export interface DepartmentRegisterParams {
   departmentId: string
   numberingYear?: number
 }
+
+/** One line of a department register page, with the record values of the chosen form version. */
+export interface DepartmentRegisterEntryResponse {
+  documentNumberId: string
+  documentId: string
+  registryId: string
+  /** Empty when the caller may not view the document. */
+  documentTitle: string
+  centralNumberText: string | null
+  registryNumberText: string
+  numberingYear: number
+  registryDate: string | null
+  statusId: number
+  registrationCount: number
+  replacedByNumberText: string | null
+  replacesNumberText: string | null
+  /** The latest visit on the chosen form version; null when no version was chosen. */
+  visitId: string | null
+  recordLocked: boolean | null
+  /** Stored text of each field of the chosen version, by field key. */
+  values: Record<string, string | null>
+}
+
+/** Server-side narrowing of a department register page (`GET /api/departments/{id}/register/entries`). */
+export interface DepartmentRegisterEntriesParams {
+  departmentId: string
+  registryId?: string
+  numberingYear?: number
+  statusId?: number
+  /** `yyyy-mm-dd`, inclusive. */
+  dateFrom?: string
+  dateTo?: string
+  schemaVersionId?: string
+  page: number
+  pageSize: number
+  search?: string
+  /** A column name, or `field:{key}` for a field of the chosen form version. */
+  sortBy?: string
+  sortDescending?: boolean
+}
