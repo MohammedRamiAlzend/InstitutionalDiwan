@@ -77,6 +77,9 @@ public static class NextActionKind
     public const string Refer = "refer";
     public const string SendForArchive = "send-for-archive";
     public const string Archive = "archive";
+
+    /// <summary>Move the joined file to the department that holds the principal file.</summary>
+    public const string Move = "move";
 }
 
 public sealed record CreateDecisionTypeCommand(
@@ -107,7 +110,8 @@ public sealed record IssueDocumentDecisionCommand(
     string DecisionNumber,
     DateOnly DecisionDate,
     string? Summary,
-    Guid? DocumentFileId) : ICommand<DocumentDecisionResponse>;
+    Guid? DocumentFileId,
+    Guid? JoinTargetDocumentId = null) : ICommand<DocumentDecisionResponse>;
 
 public sealed record AttachDecisionFileCommand(
     Guid DecisionId,
@@ -135,6 +139,18 @@ public sealed record RecordAppealOutcomeCommand(
     DateOnly OutcomeDate) : ICommand<DocumentDecisionResponse>;
 
 public sealed record ListDocumentDecisionsQuery(Guid DocumentId) : IQuery<IReadOnlyList<DocumentDecisionResponse>>;
+
+/// <summary>
+/// Another unarchived file of the same type that shares a person with this document and that the
+/// caller may view. Showing it does not join the files.
+/// </summary>
+public sealed record JoinCandidateResponse(
+    Guid DocumentId,
+    string Title,
+    string? OfficialNumberText,
+    string PersonName);
+
+public sealed record ListJoinCandidatesQuery(Guid DocumentId) : IQuery<IReadOnlyList<JoinCandidateResponse>>;
 
 public sealed record GetDocumentNextActionQuery(Guid DocumentId) : IQuery<NextActionResponse>;
 

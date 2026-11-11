@@ -102,6 +102,8 @@ public sealed class RelationsTests
         db.DocumentRelationTypes.Add(DocumentRelationType.Create(ReplyTo, "Reply to", "ردّ على").Value);
         db.DocumentRelationTypes.Add(DocumentRelationType.Create(Related, "Related", "مرتبط", isSymmetric: true, preventCycles: false).Value);
         db.DocumentRelationTypes.Add(DocumentRelationType.Create(Supersedes, "Supersedes", "يلغي").Value);
+        db.DocumentRelationTypes.Add(DocumentRelationType.Create(
+            DocumentRelationType.JoinedIntoId, "Joined into", "موحَّد مع").Value);
         var retired = DocumentRelationType.Create(Retired, "Retired", "متقاعد").Value;
         retired.Deactivate();
         db.DocumentRelationTypes.Add(retired);
@@ -187,6 +189,8 @@ public sealed class RelationsTests
         var c = await world.LinkedAsync(b, ReplyTo, "ج");
 
         AssertError(DomainErrors.Relations.CycleDetected, await world.LinkAsync(b, a, ReplyTo));
+        Assert.True((await world.LinkAsync(a, b, DocumentRelationType.JoinedIntoId)).IsSuccess);
+        AssertError(DomainErrors.Relations.CycleDetected, await world.LinkAsync(b, a, DocumentRelationType.JoinedIntoId));
         AssertError(DomainErrors.Relations.CycleDetected, await world.LinkAsync(c, a, ReplyTo));
 
         // A loop is only a loop within one type, and a symmetric type never forms one.

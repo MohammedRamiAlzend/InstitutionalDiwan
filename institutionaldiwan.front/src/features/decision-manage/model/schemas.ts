@@ -8,6 +8,7 @@ export const issueDecisionSchema = z.object({
   decisionDate: z.string().regex(DATE_PATTERN, 'تاريخ القرار مطلوب.'),
   summary: z.string().trim().max(2000, 'الخلاصة لا تتجاوز 2000 حرف.'),
   documentFileId: z.string(),
+  joinTargetDocumentId: z.string(),
 })
 
 export type IssueDecisionFormValues = z.infer<typeof issueDecisionSchema>

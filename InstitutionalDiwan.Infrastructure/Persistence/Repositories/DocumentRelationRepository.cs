@@ -59,6 +59,17 @@ internal sealed class DocumentRelationRepository : IDocumentRelationRepository
                         relation.RelationTypeId == relationTypeId,
             cancellationToken);
 
+    public async Task<IReadOnlyList<DocumentRelation>> ListOutgoingAsync(
+        Guid sourceDocumentId,
+        int relationTypeId,
+        CancellationToken cancellationToken = default) =>
+        await _context.DocumentRelations
+            .Where(relation => relation.SourceDocumentId == sourceDocumentId &&
+                               relation.RelationTypeId == relationTypeId)
+            .OrderByDescending(relation => relation.CreatedAt)
+            .ThenByDescending(relation => relation.RelationId)
+            .ToListAsync(cancellationToken);
+
     public async Task<bool> WouldCreateCycleAsync(
         int relationTypeId,
         Guid sourceDocumentId,

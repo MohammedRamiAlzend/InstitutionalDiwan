@@ -43,7 +43,7 @@ error handling, and form/dialog UI.
 | `movement-routing/` | `POST /api/movements`; `POST /api/movements/{id}/send\|receive\|complete\|reject\|return\|redirect\|close\|cancel` | `DOCUMENT_EDIT`; draft-only edit fields; opening requires the Central Diwan and a registered document; receive stays blocked until the destination department records a register number (`Numbering.DepartmentRegistrationRequired`); rejection/return require a reason and reroute to the Central Diwan; invalid transitions surface `Movements.InvalidStatusTransition` | ✅ Implemented (Phase 6) |
 | `department-record-manage/` | `PUT /api/registry-visits/{visitId}/fields`; `PUT /api/registry-visits/{visitId}/fields/correct` | `DOCUMENT_EDIT` (own department, open record); `DEPARTMENT_RECORD_CORRECT` (locked record, reason) | Edits and corrects the record a department keeps on a visit of a document. |
 | `decision-type-manage/` | `POST`/`PUT /api/decision-types`, activate and deactivate | `LOOKUP_MANAGE`; a referral shows the destination department | Creates and edits decision types. |
-| `decision-manage/` | `POST /api/documents/{id}/decisions`, `PUT /api/decisions/{id}/file`, `POST /api/decisions/{id}/cancel`, `POST /api/decisions/{id}/appeals`, `PUT .../appeals/{appealId}/outcome` | `DECISION_MANAGE`; cancel is offered to a system-scoped administrator | Issues a decision, attaches its copy, cancels a mistaken entry, and records an appeal and its outcome. |
+| `decision-manage/` | `POST /api/documents/{id}/decisions`, `PUT /api/decisions/{id}/file`, `POST /api/decisions/{id}/cancel`, `POST /api/decisions/{id}/appeals`, `PUT .../appeals/{appealId}/outcome` | `DECISION_MANAGE`; cancel is offered to a system-scoped administrator | Issues a decision, including unification onto a principal file, attaches its copy, cancels a mistaken entry, and records an appeal and its outcome. |
 | `external-organization-manage/` | `POST /api/external-organizations`, `PUT /{id}`, `DELETE /{id}` (deactivate), `POST /{id}/activate` | `DOCUMENT_EDIT`; code immutable after creation; `Correspondence.ExternalOrgCodeAlreadyExists` shown inside the retained dialog; optional text sent as `null`; deactivated rows keep the record but leave the participant picker | ✅ Implemented (Phase 7) |
 | `document-person-manage/` | `POST`/`PUT`/`DELETE /api/documents/{id}/persons`: add, re-role, remove people on a document. | | |
 | `attachment-upload/` | Module 06 `POST /api/documents/{id}/files`, `POST /api/document-files/{id}/versions`, `POST /api/document-files/{id}/archive` | Magic bytes + SHA-256; MANAGE access; show checksum after upload | ✅ Upload + versions + archive + verify (Module 06 Phases 3–4) |
@@ -83,7 +83,7 @@ error handling, and form/dialog UI.
 | `movement-routing/` | ✅ Implemented (Phase 6: open dialog with assignee picker, plus one action dialog covering send, receive, complete, reject, return, redirect, close, and cancel). |
 | `department-record-manage/` | ✅ Implemented (edit form for open records, correction with reason for locked ones) |
 | `decision-type-manage/` | ✅ Implemented (form, activate, deactivate). The form was exercised in the browser. |
-| `decision-manage/` | ✅ Implemented (issue, attach file, cancel, appeal, outcome). Join types are not offered. Issue, cancel, recording an appeal, and accepting it were exercised in the browser. |
+| `decision-manage/` | ✅ Implemented (issue, attach file, cancel, appeal, outcome, unification). Issue, cancel, recording an appeal, and accepting it were exercised in the browser. |
 | `external-organization-manage/` | ✅ Implemented (Phase 7: create/edit dialog over the `organization-types` lookup, duplicate-code Arabic error, staged deactivate/activate via `ConfirmDialog`). |
 | `audit-manage/` | ✅ Implemented (Module 09: checkpoint button/dialog with optional target log, integrity-check dialog with optional range and in-place pass/fail panel). |
 | `archive-manage/` | ✅ Implemented (Module 07: archive dialog with location + optional reason, unarchive dialog with mandatory reason, save/rename/delete saved searches). |
@@ -98,6 +98,7 @@ error handling, and form/dialog UI.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-11 | Claude | `decision-manage` issues a unification decision onto a principal file. The manual relation dialog hides type «موحَّد مع». |
 | 2026-11-11 | Claude | `decision-manage` records an appeal and its outcome. |
 | 2026-11-11 | Claude | Added `decision-type-manage` and `decision-manage`. Unarchive also refreshes the decision queries. |
 | 2026-11-10 | Claude | Added `department-record-manage` (edit and correct department records). |

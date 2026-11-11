@@ -136,6 +136,59 @@ internal sealed class PersonRepository : IPersonRepository
                 row.Link.CreatedAt))
             .ToListAsync(cancellationToken);
 
+    public async Task<IReadOnlyList<JoinCandidateRow>> ListJoinCandidatesAsync(
+        Guid documentId,
+        int documentTypeId,
+        DocumentViewAccess access,
+        CancellationToken cancellationToken = default)
+    {
+        var personIds = _context.DocumentPersons.AsNoTracking()
+            .Where(link => link.DocumentId == documentId)
+            .Select(link => link.PersonId);
+
+        var rows = await _context.DocumentPersons.AsNoTracking()
+            .Where(link => personIds.Contains(link.PersonId) && link.DocumentId != documentId)
+            .Join(
+                _context.Documents.AsNoTracking()
+                    .WhereViewableBy(_context, access)
+                    .Where(document => document.DocumentTypeId == documentTypeId &&
+                                       document.CurrentStatusId != DocumentStatusType.ArchivedId &&
+                                       document.CurrentStatusId != DocumentStatusType.CanceledId),
+                link => link.DocumentId,
+                document => document.DocumentId,
+                (link, document) => new
+                {
+                    document.DocumentId,
+                    document.DisplayName,
+                    document.OfficialNumberText,
+                    link.PersonId,
+                })
+            .Join(
+                _context.Persons.AsNoTracking(),
+                row => row.PersonId,
+                person => person.PersonId,
+                (row, person) => new
+                {
+                    row.DocumentId,
+                    Title = row.DisplayName,
+                    row.OfficialNumberText,
+                    PersonName = person.DisplayName,
+                })
+            .ToListAsync(cancellationToken);
+
+        return rows
+            .GroupBy(row => row.DocumentId)
+            .Select(group =>
+            {
+                var first = group.OrderBy(row => row.PersonName, StringComparer.Ordinal).First();
+                return new JoinCandidateRow(
+                    first.DocumentId, first.Title, first.OfficialNumberText, first.PersonName);
+            })
+            .OrderBy(row => row.Title, StringComparer.Ordinal)
+            .ThenBy(row => row.DocumentId)
+            .ToList();
+    }
+
     public async Task<PagedList<PersonDocumentRow>> ListDocumentsAsync(
         Guid personId,
         PageRequest page,

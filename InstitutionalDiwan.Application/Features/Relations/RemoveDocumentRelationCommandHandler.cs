@@ -51,24 +51,11 @@ internal sealed class RemoveDocumentRelationCommandHandler : ICommandHandler<Rem
             return Result.Failure(DomainErrors.Relations.RelationNotFound);
         }
 
-        var removed = relation.Remove(request.UserId, request.Reason);
+        var removed = DocumentRelationLinking.Unlink(
+            _relationRepository, relation, request.UserId, request.Reason.Trim(), _unitOfWork.UtcNow);
         if (removed.IsFailure)
             return removed;
 
-        var eventResult = DocumentRelationEvent.Record(
-            relation.RelationId,
-            relation.SourceDocumentId,
-            relation.TargetDocumentId,
-            relation.RelationTypeId,
-            RelationActionType.RemovedId,
-            request.UserId,
-            request.Reason,
-            _unitOfWork.UtcNow);
-        if (eventResult.IsFailure)
-            return Result.Failure(eventResult.Error);
-
-        _relationRepository.Add(eventResult.Value);
-        _relationRepository.Remove(relation);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success();

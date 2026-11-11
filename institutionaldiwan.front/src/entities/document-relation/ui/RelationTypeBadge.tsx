@@ -6,6 +6,7 @@ const VARIANTS: Record<number, BadgeVariant> = {
   [DOCUMENT_RELATION_TYPE.Related]: 'outline',
   [DOCUMENT_RELATION_TYPE.Supersedes]: 'warning',
   [DOCUMENT_RELATION_TYPE.DuplicateOf]: 'neutral',
+  [DOCUMENT_RELATION_TYPE.JoinedInto]: 'accent',
 }
 
 /** Relation type (reply to, related, supersedes, duplicate of) with its Arabic label. */

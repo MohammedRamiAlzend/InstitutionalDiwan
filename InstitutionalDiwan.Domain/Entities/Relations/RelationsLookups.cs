@@ -11,6 +11,9 @@ public sealed class DocumentRelationType : LookupEntity
     public const int SupersedesId = 3;
     public const int DuplicateOfId = 4;
 
+    /// <summary>The joined file points at the principal file. Asymmetric, and it must not form a cycle.</summary>
+    public const int JoinedIntoId = 5;
+
     /// <summary>Whether the link is symmetric (A→B implies B→A).</summary>
     public bool IsSymmetric { get; private set; }
 

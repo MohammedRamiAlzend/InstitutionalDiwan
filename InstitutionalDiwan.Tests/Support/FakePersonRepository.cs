@@ -29,8 +29,17 @@ internal sealed class FakePersonRepository : IPersonRepository
     public Task<PagedList<PersonListRow>> ListPagedAsync(PageRequest page, DocumentViewAccess access, CancellationToken cancellationToken = default)
         => throw new NotSupportedException();
 
+    public List<JoinCandidateRow> JoinCandidates { get; } = new();
+
     public Task<IReadOnlyList<DocumentPersonRow>> ListByDocumentAsync(Guid documentId, CancellationToken cancellationToken = default)
         => throw new NotSupportedException();
+
+    public Task<IReadOnlyList<JoinCandidateRow>> ListJoinCandidatesAsync(
+        Guid documentId,
+        int documentTypeId,
+        DocumentViewAccess access,
+        CancellationToken cancellationToken = default)
+        => Task.FromResult<IReadOnlyList<JoinCandidateRow>>(JoinCandidates);
 
     public Task<PagedList<PersonDocumentRow>> ListDocumentsAsync(
         Guid personId,

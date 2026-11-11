@@ -50,7 +50,7 @@ browser.
 | `document-schema-editor/` | Schema version history and field grid of one document type with draft actions (new draft, add/edit/remove field, publish, delete) | `entities/document-schema` + `features/document-schema-manage` |
 | `document-fields-panel/` | A document's dynamic fields against its pinned schema version, editable while a draft | `entities/document-schema` + `features/document-field-values` |
 | `department-records-panel/` | Each department's record on its visits of a document, as a timeline per department with open/locked state, edit and correction | `entities/document-schema` + `features/department-record-manage` | ✅ |
-| `document-decisions-panel/` | The in-force decision, its appeals, its history, and the suggested next step on `/documents/:id` | `entities/document-decision` + `features/decision-manage` | ✅ |
+| `document-decisions-panel/` | The in-force decision, its appeals, its history, the principal file's decisions, a join suggestion, and the suggested next step on `/documents/:id` | `entities/document-decision` + `entities/document-relation` + `features/decision-manage` | ✅ |
 | `visualization-panel/` | Mermaid source viewer plus data-derived diagram / chart / tree switcher with node context menus | `entities/department`, `entities/movement` + `shared/ui/mermaid-view` | ❌ Planned |
 | `notification-center/` | SignalR bell/drawer | Deferred until Module 10 + hubs | ❌ Blocked |
 
@@ -100,6 +100,7 @@ browser.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-11 | Claude | `document-decisions-panel` shows a join, the principal file's decisions for reading, and a suggestion when a person also appears on another visible file. |
 | 2026-11-11 | Claude | `document-decisions-panel` records an appeal and its outcome. |
 | 2026-11-11 | Claude | Added `document-decisions-panel` (the in-force decision, its history, and the suggested next step). |
 | 2026-11-10 | Claude | Added `department-records-panel` (department records timeline on the document page). |

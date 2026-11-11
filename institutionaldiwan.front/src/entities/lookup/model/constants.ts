@@ -266,6 +266,7 @@ export const LOOKUP_FALLBACKS: Record<string, readonly LookupCatalogEntry[]> = {
     { id: DOCUMENT_RELATION_TYPE.Related, desc: 'Related', descAr: 'مرتبط' },
     { id: DOCUMENT_RELATION_TYPE.Supersedes, desc: 'Supersedes', descAr: 'يلغي' },
     { id: DOCUMENT_RELATION_TYPE.DuplicateOf, desc: 'Duplicate of', descAr: 'نسخة عن' },
+    { id: DOCUMENT_RELATION_TYPE.JoinedInto, desc: 'Joined into', descAr: 'موحَّد مع' },
   ],
   'relation-action-types': [
     { id: RELATION_ACTION_TYPE.Created, desc: 'Created', descAr: 'إنشاء' },

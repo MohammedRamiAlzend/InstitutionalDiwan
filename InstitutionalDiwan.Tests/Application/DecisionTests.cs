@@ -2,8 +2,11 @@ using InstitutionalDiwan.Application.Features.Decisions;
 using InstitutionalDiwan.Domain.Entities.Archiving;
 using InstitutionalDiwan.Domain.Entities.Correspondence;
 using InstitutionalDiwan.Domain.Entities.Decisions;
+using InstitutionalDiwan.Domain.Entities.Identity;
+using InstitutionalDiwan.Domain.Entities.Movements;
 using InstitutionalDiwan.Domain.Entities.Notifications;
 using InstitutionalDiwan.Domain.Entities.Organization;
+using InstitutionalDiwan.Domain.Entities.Relations;
 using InstitutionalDiwan.Domain.Errors;
 using InstitutionalDiwan.Domain.Events;
 using InstitutionalDiwan.Domain.Repositories;
@@ -26,6 +29,9 @@ public sealed class DecisionTests
         public FakeDepartmentScopeEvaluator Scope { get; } = new();
         public FakeUnitOfWork UnitOfWork { get; } = new();
         public FakeNotificationPublisher Notifications { get; } = new();
+        public FakeDocumentRelationRepository Relations { get; } = new();
+        public FakeDocumentAccessEvaluator Access { get; } = new() { AllowAll = true };
+        public FakeUserContext Users { get; } = new();
         public Guid HolderId { get; } = Guid.NewGuid();
         public Guid UserId { get; } = Guid.NewGuid();
         public Document Document { get; }
@@ -38,17 +44,42 @@ public sealed class DecisionTests
             DocumentTypes.Add(DocumentType.Create(DocumentType.InternalMemoId, "Memo", "مذكرة").Value);
             Scope.AccessibleDepartments.Add(HolderId);
             Decisions.OpenVisit = new OpenDecisionVisit(Guid.NewGuid(), HolderId);
+            Relations.Types.Add(DocumentRelationType.Create(
+                DocumentRelationType.JoinedIntoId, "Joined into", "موحَّد مع").Value);
+            Users.UserId = UserId;
+            Users.ScopeTypeId = UserScopeType.SystemId;
         }
 
         public IssueDocumentDecisionCommandHandler IssueHandler() =>
-            new(Documents, Types, Decisions, new FakeDocumentFileRepository(), Scope, UnitOfWork, Notifications);
+            new(Documents, Types, Decisions, new FakeDocumentFileRepository(), Scope, UnitOfWork, Notifications, Relations, Access);
 
         public Task<InstitutionalDiwan.Domain.Common.Result<DocumentDecisionResponse>> IssueAsync(
-            DecisionType type, string number, DateOnly? date = null) =>
+            DecisionType type, string number, DateOnly? date = null, Guid? documentId = null, Guid? joinTargetDocumentId = null) =>
             IssueHandler().Handle(
                 new IssueDocumentDecisionCommand(
-                    Document.DocumentId, UserId, type.DecisionTypeId, number, date ?? DecisionDate, null, null),
+                    documentId ?? Document.DocumentId,
+                    UserId,
+                    type.DecisionTypeId,
+                    number,
+                    date ?? DecisionDate,
+                    null,
+                    null,
+                    joinTargetDocumentId),
                 CancellationToken.None);
+
+        public Document AddDocument(string title)
+        {
+            var document = Document.CreateDraft(
+                title, DocumentType.InternalMemoId, DocumentDirection.InternalId, HolderId, UserId).Value;
+            Documents.Add(document);
+            return document;
+        }
+
+        public CancelDecisionCommandHandler CancelHandler() =>
+            new(Decisions, Types, Users, UnitOfWork, Relations);
+
+        public ListDocumentDecisionsQueryHandler ListHandler() =>
+            new(Documents, Decisions, Types, Access, Relations);
 
         public RecordDecisionAppealCommandHandler AppealHandler() =>
             new(Documents, Decisions, Types, Departments, Scope, UnitOfWork);
@@ -189,7 +220,7 @@ public sealed class DecisionTests
     }
 
     [Fact]
-    public async Task Issue_JoinEffect_IsRefusedUntilUnificationExists()
+    public async Task Issue_JoinWithoutAPrincipalFile_IsRefused()
     {
         var world = new World();
         var type = Type(DecisionEffect.JoinId, appealable: false);
@@ -199,6 +230,7 @@ public sealed class DecisionTests
 
         Assert.Equal(DomainErrors.Decisions.JoinTargetInvalid.Code, issued.Error.Code);
         Assert.Empty(world.Decisions.Decisions);
+        Assert.Empty(world.Relations.Relations);
     }
 
     [Fact]
@@ -380,5 +412,219 @@ public sealed class DecisionTests
         outsider.Scope.AccessibleDepartments.Add(outsider.HolderId);
         var unknown = await outsider.AppealAsync(blocked.Value.DecisionId, missingDepartment);
         Assert.Equal(DomainErrors.Department.NotFound.Code, unknown.Error.Code);
+    }
+
+    [Fact]
+    public async Task Issue_Join_CreatesTheRelationOnTheJoinedFile_AndLeavesItsNumberAndPlace()
+    {
+        var world = new World();
+        var join = Type(DecisionEffect.JoinId, appealable: false);
+        var separating = Type(DecisionEffect.NoneId, appealable: false);
+        world.Types.Add(join);
+        world.Types.Add(separating);
+        var principal = world.AddDocument("الرئيسي");
+        var status = world.Document.CurrentStatusId;
+        var events = world.Document.DomainEvents.Count;
+
+        var issued = await world.IssueAsync(join, "JOIN/1", joinTargetDocumentId: principal.DocumentId);
+
+        Assert.True(issued.IsSuccess, issued.Error?.Code);
+        Assert.Equal(DecisionStatus.FinalId, issued.Value.StatusId);
+        Assert.Equal(world.Document.DocumentId, issued.Value.DocumentId);
+        Assert.Equal(status, world.Document.CurrentStatusId);
+        Assert.Equal(events, world.Document.DomainEvents.Count);
+        var relation = Assert.Single(world.Relations.Relations);
+        Assert.Equal(DocumentRelationType.JoinedIntoId, relation.RelationTypeId);
+        Assert.Equal(world.Document.DocumentId, relation.SourceDocumentId);
+        Assert.Equal(principal.DocumentId, relation.TargetDocumentId);
+        Assert.Equal(RelationActionType.CreatedId, Assert.Single(world.Relations.Events).ActionTypeId);
+
+        var own = await world.IssueAsync(separating, "A/1", documentId: principal.DocumentId);
+        Assert.True(own.IsSuccess, own.Error?.Code);
+        Assert.Equal(principal.DocumentId, own.Value.DocumentId);
+        Assert.Equal(own.Value.DecisionId, (await world.Decisions.GetActiveByDocumentAsync(principal.DocumentId))!.DecisionId);
+        Assert.Equal(issued.Value.DecisionId, (await world.Decisions.GetActiveByDocumentAsync(world.Document.DocumentId))!.DecisionId);
+    }
+
+    [Fact]
+    public async Task Issue_JoinThatClosesACycle_OrTargetsAJoinedFile_IsRefused()
+    {
+        var world = new World();
+        var join = Type(DecisionEffect.JoinId, appealable: false);
+        world.Types.Add(join);
+        var principal = world.AddDocument("الرئيسي");
+        var third = world.AddDocument("ثالث");
+        Assert.True((await world.IssueAsync(join, "JOIN/1", joinTargetDocumentId: principal.DocumentId)).IsSuccess);
+
+        var back = await world.IssueAsync(join, "JOIN/2", documentId: principal.DocumentId, joinTargetDocumentId: world.Document.DocumentId);
+        Assert.Equal(DomainErrors.Decisions.JoinTargetInvalid.Code, back.Error.Code);
+
+        world.Decisions.Decisions.Clear();
+        Assert.True((await world.IssueAsync(join, "JOIN/3", documentId: principal.DocumentId, joinTargetDocumentId: third.DocumentId)).IsSuccess);
+        var intoJoined = await world.IssueAsync(join, "JOIN/4", documentId: third.DocumentId, joinTargetDocumentId: principal.DocumentId);
+        Assert.Equal(DomainErrors.Decisions.JoinTargetInvalid.Code, intoJoined.Error.Code);
+        Assert.Equal(2, world.Relations.Relations.Count);
+    }
+
+    [Fact]
+    public async Task Issue_JoinTargetTheIssuerCannotView_IsRefused()
+    {
+        var world = new World();
+        var join = Type(DecisionEffect.JoinId, appealable: false);
+        world.Types.Add(join);
+        var principal = world.AddDocument("محجوب");
+        world.Access.AllowAll = false;
+        world.Access.ViewableDocuments.Add(world.Document.DocumentId);
+
+        var issued = await world.IssueAsync(join, "JOIN/1", joinTargetDocumentId: principal.DocumentId);
+
+        Assert.Equal(DomainErrors.Decisions.JoinTargetInvalid.Code, issued.Error.Code);
+        Assert.Empty(world.Decisions.Decisions);
+        Assert.Empty(world.Relations.Relations);
+    }
+
+    [Fact]
+    public async Task Issue_JoinTargetThatIsMissingArchivedCanceledOrThisFile_IsRefused()
+    {
+        var world = new World();
+        var join = Type(DecisionEffect.JoinId, appealable: false);
+        var other = Type(DecisionEffect.NoneId, appealable: false);
+        world.Types.Add(join);
+        world.Types.Add(other);
+
+        var missing = await world.IssueAsync(join, "JOIN/1", joinTargetDocumentId: Guid.NewGuid());
+        Assert.Equal(DomainErrors.Decisions.JoinTargetInvalid.Code, missing.Error.Code);
+
+        var self = await world.IssueAsync(join, "JOIN/1", joinTargetDocumentId: world.Document.DocumentId);
+        Assert.Equal(DomainErrors.Decisions.JoinTargetInvalid.Code, self.Error.Code);
+
+        var archived = world.AddDocument("مؤرشف");
+        Assert.True(archived.Register(
+            Guid.NewGuid(), OfficialNumberValue.Create("2026/000099").Value, world.UserId).IsSuccess);
+        Assert.True(archived.Archive(world.UserId, false, ArchiveLocation.PhysicalArchiveId).IsSuccess);
+        var archivedJoin = await world.IssueAsync(join, "JOIN/1", joinTargetDocumentId: archived.DocumentId);
+        Assert.Equal(DomainErrors.Decisions.JoinTargetInvalid.Code, archivedJoin.Error.Code);
+
+        var canceled = world.AddDocument("ملغى");
+        Assert.True(canceled.Cancel(world.UserId, false, "أُلغي").IsSuccess);
+        var canceledJoin = await world.IssueAsync(join, "JOIN/1", joinTargetDocumentId: canceled.DocumentId);
+        Assert.Equal(DomainErrors.Decisions.JoinTargetInvalid.Code, canceledJoin.Error.Code);
+
+        var withTarget = await world.IssueAsync(other, "N/1", joinTargetDocumentId: world.AddDocument("آخر").DocumentId);
+        Assert.Equal(DomainErrors.Decisions.JoinTargetInvalid.Code, withTarget.Error.Code);
+        Assert.Empty(world.Relations.Relations);
+        Assert.Empty(world.Decisions.Decisions);
+    }
+
+    [Fact]
+    public async Task Issue_SeparatingDecisionOnAJoinedFile_IsRefused()
+    {
+        var world = new World();
+        var join = Type(DecisionEffect.JoinId, appealable: false);
+        var separating = Type(DecisionEffect.SendToArchiveId, appealable: false);
+        world.Types.Add(join);
+        world.Types.Add(separating);
+        var principal = world.AddDocument("الرئيسي");
+        Assert.True((await world.IssueAsync(join, "JOIN/1", joinTargetDocumentId: principal.DocumentId)).IsSuccess);
+
+        var second = await world.IssueAsync(separating, "SEP/1");
+
+        Assert.Equal(DomainErrors.Decisions.DocumentJoined.Code, second.Error.Code);
+        Assert.Single(world.Decisions.Decisions);
+        Assert.Single(world.Relations.Relations);
+    }
+
+    [Fact]
+    public async Task Cancel_Join_RemovesTheRelationInTheSameSave()
+    {
+        var world = new World();
+        var join = Type(DecisionEffect.JoinId, appealable: false);
+        var separating = Type(DecisionEffect.NoneId, appealable: false);
+        world.Types.Add(join);
+        world.Types.Add(separating);
+        var principal = world.AddDocument("الرئيسي");
+        var issued = await world.IssueAsync(join, "JOIN/1", joinTargetDocumentId: principal.DocumentId);
+        Assert.True(issued.IsSuccess, issued.Error?.Code);
+
+        var canceled = await world.CancelHandler().Handle(
+            new CancelDecisionCommand(issued.Value.DecisionId, world.UserId, "أُدخل على الملف الخطأ"),
+            CancellationToken.None);
+
+        Assert.True(canceled.IsSuccess, canceled.Error?.Code);
+        Assert.Equal(DecisionStatus.CanceledId, canceled.Value.StatusId);
+        Assert.Empty(world.Relations.Relations);
+        Assert.Contains(world.Relations.Events, relationEvent => relationEvent.ActionTypeId == RelationActionType.RemovedId);
+        Assert.Equal(2, world.UnitOfWork.SaveChangesCallCount);
+
+        var again = await world.IssueAsync(separating, "SEP/1");
+        Assert.True(again.IsSuccess, again.Error?.Code);
+    }
+
+    [Fact]
+    public async Task List_OnTheJoinedFile_HidesThePrincipalDecisionsWhenTheCallerCannotViewIt()
+    {
+        var world = new World();
+        var join = Type(DecisionEffect.JoinId, appealable: false);
+        var separating = Type(DecisionEffect.NoneId, appealable: false);
+        world.Types.Add(join);
+        world.Types.Add(separating);
+        var principal = world.AddDocument("الرئيسي");
+        var own = await world.IssueAsync(separating, "A/1", documentId: principal.DocumentId);
+        var issued = await world.IssueAsync(join, "JOIN/1", joinTargetDocumentId: principal.DocumentId);
+        Assert.True(own.IsSuccess, own.Error?.Code);
+        Assert.True(issued.IsSuccess, issued.Error?.Code);
+
+        var visible = await world.ListHandler().Handle(
+            new ListDocumentDecisionsQuery(world.Document.DocumentId), CancellationToken.None);
+        Assert.True(visible.IsSuccess, visible.Error?.Code);
+        Assert.Contains(visible.Value, decision => decision.DecisionId == own.Value.DecisionId);
+        Assert.Contains(visible.Value, decision => decision.DecisionId == issued.Value.DecisionId);
+
+        var principalOnly = await world.ListHandler().Handle(
+            new ListDocumentDecisionsQuery(principal.DocumentId), CancellationToken.None);
+        Assert.DoesNotContain(principalOnly.Value, decision => decision.DecisionId == issued.Value.DecisionId);
+
+        world.Access.AllowAll = false;
+        world.Access.ViewableDocuments.Add(world.Document.DocumentId);
+        var hidden = await world.ListHandler().Handle(
+            new ListDocumentDecisionsQuery(world.Document.DocumentId), CancellationToken.None);
+        Assert.True(hidden.IsSuccess, hidden.Error?.Code);
+        var only = Assert.Single(hidden.Value);
+        Assert.Equal(issued.Value.DecisionId, only.DecisionId);
+    }
+
+    [Fact]
+    public async Task NextAction_SuggestsAnOrdinaryMovementWhenThePrincipalFileIsHeldElsewhere()
+    {
+        var world = new World();
+        var join = Type(DecisionEffect.JoinId, appealable: false);
+        world.Types.Add(join);
+        var principal = world.AddDocument("الرئيسي");
+        var otherDepartment = Guid.NewGuid();
+        world.Decisions.VisitsByDocument[principal.DocumentId] =
+            new OpenDecisionVisit(Guid.NewGuid(), otherDepartment);
+        world.Scope.AccessibleDepartments.Add(otherDepartment);
+        Assert.True((await world.IssueAsync(join, "JOIN/1", joinTargetDocumentId: principal.DocumentId)).IsSuccess);
+
+        var handler = new GetDocumentNextActionQueryHandler(
+            world.Documents,
+            world.Decisions,
+            new FakeDocumentMovementRepository(),
+            new FakeInstitutionSettingRepository(),
+            world.Access,
+            world.Relations);
+        var suggested = await handler.Handle(
+            new GetDocumentNextActionQuery(world.Document.DocumentId), CancellationToken.None);
+
+        Assert.True(suggested.IsSuccess, suggested.Error?.Code);
+        Assert.Equal(NextActionKind.Move, suggested.Value.Kind);
+        Assert.Equal(otherDepartment, suggested.Value.DestinationDepartmentId);
+        Assert.Equal(MovementType.ReferralId, suggested.Value.MovementTypeId);
+
+        world.Access.AllowAll = false;
+        world.Access.ViewableDocuments.Add(world.Document.DocumentId);
+        var hidden = await handler.Handle(
+            new GetDocumentNextActionQuery(world.Document.DocumentId), CancellationToken.None);
+        Assert.Null(hidden.Value.Kind);
     }
 }

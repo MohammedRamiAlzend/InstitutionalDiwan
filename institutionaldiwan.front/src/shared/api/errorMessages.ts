@@ -266,7 +266,8 @@ const CODE_MESSAGES: Record<string, string> = {
   'Decisions.AppealReferenceTooLong': 'الرقم المرجعي لا يتجاوز 100 حرف.',
   'Decisions.AppealNotesTooLong': 'ملاحظات الاعتراض لا تتجاوز 2000 حرف.',
   'Decisions.DocumentJoined': 'هذا الملف موحَّد في ملف آخر ولا يقبل قرارًا جديدًا يفصله.',
-  'Decisions.JoinTargetInvalid': 'توحيد ملفين غير متاح بعد.',
+  'Decisions.JoinTargetInvalid':
+    'الملف الرئيسي غير صالح للتوحيد: لا يمكن الاطلاع عليه، أو هو الملف نفسه، أو مؤرشف أو ملغى، أو موحَّد في ملف آخر، أو يُنشئ حلقة. وقرار ليس أثره التوحيد لا يقبل ملفًا رئيسيًا.',
   // Module 08 — Relations
   'Relations.SelfRelation': 'لا يمكن ربط الوثيقة بنفسها.',
   'Relations.RelationTypeEmpty': 'نوع الرابط مطلوب.',

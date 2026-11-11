@@ -14,7 +14,7 @@ Write side of Module 08: link the current document to another one and remove a l
 | `model/schemas.ts` | Zod schemas: target + type required, notes ≤ 500; removal reason required, ≤ 500. |
 | `model/types.ts` | `CreateDocumentRelationRequest`, `RemoveDocumentRelationRequest`. |
 | `ui/DocumentPicker.tsx` | Debounced registry search that picks the target document, excluding the current and cancelled ones. |
-| `ui/CreateRelationDialog.tsx` | Target picker, relation type select and optional notes; server errors shown in Arabic. |
+| `ui/CreateRelationDialog.tsx` | Target picker, relation type select (type «موحَّد مع» is omitted; unification is a decision) and optional notes; server errors shown in Arabic. |
 | `ui/RemoveRelationDialog.tsx` | Mandatory-reason confirmation that removes one link. |
 | `index.ts` | Public barrel. |
 
@@ -34,4 +34,5 @@ Write side of Module 08: link the current document to another one and remove a l
 - 2026-11-05: Unsent form input is now kept (per user, per form) after an accidental close or cancel and restored with a toast; it is cleared only after a successful submit (`useDraftForm`).
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-11 | Claude | The create dialog does not offer relation type 5. A join is issued as a decision. |
 | 2026-11-03 | agent | Implemented `document-relation-manage` for Module 08. |

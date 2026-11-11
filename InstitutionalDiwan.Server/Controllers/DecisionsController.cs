@@ -61,13 +61,13 @@ public sealed class DecisionsController : ControllerBase
     /// <summary>Lists every decision recorded on one document, newest first, with each decision's appeals.</summary>
     /// <param name="documentId">Document id (GUID, route). Example: <c>3f1c0a55-6e42-4b18-9d77-2a8c4e91b0d6</c>.</param>
     /// <param name="cancellationToken">Request cancellation token (optional).</param>
-    /// <response code="200">The document's decisions, newest first.</response>
+    /// <response code="200">The document's decisions, newest first. A joined file also includes the principal file's decisions when the caller can view that file.</response>
     /// <response code="403">The caller cannot view the document.</response>
     /// <response code="404">No document has this id.</response>
     [HttpGet("api/documents/{documentId:guid}/decisions")]
     [Authorize(Policy = Permissions.DocumentView)]
     [EndpointSummary("Lists every decision recorded on one document, newest first, with each decision's appeals.")]
-    [EndpointDescription("Lists every decision recorded on one document, newest first, with each decision's appeals. Requires the DOCUMENT_VIEW permission and view access to the document. Responses: 200 (The document's decisions, newest first.), 403 (The caller cannot view the document.), 404 (No document has this id.)")]
+    [EndpointDescription("Lists every decision recorded on one document, newest first, with each decision's appeals. When the document was joined into a principal file, that file's decisions are included for reading only if the caller can view the principal file. Requires the DOCUMENT_VIEW permission and view access to the document. Responses: 200 (The document's decisions, newest first. A joined file also includes the principal file's decisions when the caller can view that file.), 403 (The caller cannot view the document.), 404 (No document has this id.)")]
     [ProducesResponseType<IReadOnlyList<DocumentDecisionResponse>>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
@@ -79,7 +79,28 @@ public sealed class DecisionsController : ControllerBase
         return result.ToActionResult();
     }
 
-    /// <summary>Returns the one suggested next step: refer, send for archive, archive in place, or none.</summary>
+    /// <summary>Lists other unarchived files of the same type that share a person with this document.</summary>
+    /// <param name="documentId">Document id (GUID, route). Example: <c>3f1c0a55-6e42-4b18-9d77-2a8c4e91b0d6</c>.</param>
+    /// <param name="cancellationToken">Request cancellation token (optional).</param>
+    /// <response code="200">Files the caller may view. An empty list means nothing to suggest. The list is not a join.</response>
+    /// <response code="403">The caller cannot view the document.</response>
+    /// <response code="404">No document has this id.</response>
+    [HttpGet("api/documents/{documentId:guid}/join-candidates")]
+    [Authorize(Policy = Permissions.DocumentView)]
+    [EndpointSummary("Lists other unarchived files of the same type that share a person with this document.")]
+    [EndpointDescription("Lists other unarchived files of the same type that share a person with this document and that the caller may view. Canceled files are omitted. The list is a suggestion, not a join. Requires the DOCUMENT_VIEW permission and view access to the document. Responses: 200 (Files the caller may view. An empty list means nothing to suggest. The list is not a join.), 403 (The caller cannot view the document.), 404 (No document has this id.)")]
+    [ProducesResponseType<IReadOnlyList<JoinCandidateResponse>>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> JoinCandidates(
+        [Description("Document id (GUID, route). Example: 3f1c0a55-6e42-4b18-9d77-2a8c4e91b0d6.")] Guid documentId,
+        CancellationToken cancellationToken)
+    {
+        var result = await _sender.Send(new ListJoinCandidatesQuery(documentId), cancellationToken);
+        return result.ToActionResult();
+    }
+
+    /// <summary>Returns the one suggested next step: refer, send for archive, archive in place, move a joined file, or none.</summary>
     /// <param name="documentId">Document id (GUID, route). Example: <c>3f1c0a55-6e42-4b18-9d77-2a8c4e91b0d6</c>.</param>
     /// <param name="cancellationToken">Request cancellation token (optional).</param>
     /// <response code="200">The suggested step. Kind is null when nothing should be offered.</response>
@@ -87,8 +108,8 @@ public sealed class DecisionsController : ControllerBase
     /// <response code="404">No document has this id.</response>
     [HttpGet("api/documents/{documentId:guid}/next-action")]
     [Authorize(Policy = Permissions.DocumentView)]
-    [EndpointSummary("Returns the one suggested next step: refer, send for archive, archive in place, or none.")]
-    [EndpointDescription("Returns the one suggested next step: refer, send for archive, archive in place, or none. The step is a suggestion; the existing movement and archive commands still perform it. Requires the DOCUMENT_VIEW permission and view access to the document. Responses: 200 (The suggested step. Kind is null when nothing should be offered.), 403 (The caller cannot view the document.), 404 (No document has this id.)")]
+    [EndpointSummary("Returns the one suggested next step: refer, send for archive, archive in place, move a joined file, or none.")]
+    [EndpointDescription("Returns the one suggested next step: refer, send for archive, archive in place, move a joined file, or none. A join suggests an ordinary movement only when the principal file is held by a different department and the caller can view that file. The step is a suggestion; the existing movement and archive commands still perform it. Requires the DOCUMENT_VIEW permission and view access to the document. Responses: 200 (The suggested step. Kind is null when nothing should be offered.), 403 (The caller cannot view the document.), 404 (No document has this id.)")]
     [ProducesResponseType<NextActionResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
@@ -110,17 +131,18 @@ public sealed class DecisionsController : ControllerBase
     /// <item><term>decisionDate</term><description>Decision date (date, required). Example: <c>2026-11-11</c>.</description></item>
     /// <item><term>summary</term><description>Short summary (string, optional, at most 2000). Example: <c>منع محاكمة المدعى عليه</c>.</description></item>
     /// <item><term>documentFileId</term><description>An unarchived decision-type file already on this document (GUID, optional). Example: <c>8c4b1e20-5a77-4d33-9f10-6e2b8a41c9d0</c>.</description></item>
+    /// <item><term>joinTargetDocumentId</term><description>The principal file when the decision type's effect is unification (GUID, required for that effect, otherwise omit). Example: <c>6b2d8f40-1c55-4e19-8a30-7d4c9b52e1f0</c>.</description></item>
     /// </list>
     /// </param>
     /// <param name="cancellationToken">Request cancellation token (optional).</param>
-    /// <response code="200">The issued decision. A non-appealable type is born final.</response>
+    /// <response code="200">The issued decision. A non-appealable type, including unification, is born final. Unification also links the file to the principal file.</response>
     /// <response code="401">The token has no user id.</response>
     /// <response code="403">The caller's department does not hold the document.</response>
-    /// <response code="409">Another decision is in force, the number is taken, the type cannot be used, or unification is not available yet.</response>
+    /// <response code="409">Another decision is in force, the number is taken, the type cannot be used, the file is already joined, or the principal file is not a valid unification target.</response>
     [HttpPost("api/documents/{documentId:guid}/decisions")]
     [Authorize(Policy = Permissions.DecisionManage)]
     [EndpointSummary("Issues a decision from the department that currently holds the document.")]
-    [EndpointDescription("Issues a decision from the department that currently holds the document. Requires the DECISION_MANAGE permission and an unlocked department-register visit in the caller's scope. Responses: 200 (The issued decision. A non-appealable type is born final.), 401 (The token has no user id.), 403 (The caller's department does not hold the document.), 409 (Another decision is in force, the number is taken, the type cannot be used, or unification is not available yet.)")]
+    [EndpointDescription("Issues a decision from the department that currently holds the document. A unification decision names the principal file and links this file into it without changing this file's number, status, or location. Requires the DECISION_MANAGE permission and an unlocked department-register visit in the caller's scope. Responses: 200 (The issued decision. A non-appealable type, including unification, is born final. Unification also links the file to the principal file.), 401 (The token has no user id.), 403 (The caller's department does not hold the document.), 409 (Another decision is in force, the number is taken, the type cannot be used, the file is already joined, or the principal file is not a valid unification target.)")]
     [ProducesResponseType<DocumentDecisionResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden)]
@@ -140,7 +162,8 @@ public sealed class DecisionsController : ControllerBase
             request.DecisionNumber,
             request.DecisionDate,
             request.Summary,
-            request.DocumentFileId), cancellationToken);
+            request.DocumentFileId,
+            request.JoinTargetDocumentId), cancellationToken);
         return result.ToActionResult();
     }
 
@@ -178,7 +201,7 @@ public sealed class DecisionsController : ControllerBase
         return result.ToActionResult();
     }
 
-    /// <summary>Cancels a mistaken decision. Only a system-scoped administrator may cancel one.</summary>
+    /// <summary>Cancels a mistaken decision. Only a system-scoped administrator may cancel one. Canceling a unification also removes the join link.</summary>
     /// <param name="decisionId">Decision id (GUID, route). Example: <c>b21e6c80-1d44-4a09-8f55-3c7d9e02a1b4</c>.</param>
     /// <param name="request">
     /// The request payload:
@@ -187,14 +210,14 @@ public sealed class DecisionsController : ControllerBase
     /// </list>
     /// </param>
     /// <param name="cancellationToken">Request cancellation token (optional).</param>
-    /// <response code="200">The canceled decision.</response>
+    /// <response code="200">The canceled decision. A unification's join link is removed in the same save.</response>
     /// <response code="403">The caller is not a system-scoped administrator.</response>
     /// <response code="404">No decision has this id, or it was already canceled.</response>
     /// <response code="409">The reason is empty.</response>
     [HttpPost("api/decisions/{decisionId:guid}/cancel")]
     [Authorize(Policy = Permissions.DecisionManage)]
-    [EndpointSummary("Cancels a mistaken decision. Only a system-scoped administrator may cancel one.")]
-    [EndpointDescription("Cancels a mistaken decision. Only a system-scoped administrator may cancel one, and a reason is required. Requires the DECISION_MANAGE permission. Responses: 200 (The canceled decision.), 403 (The caller is not a system-scoped administrator.), 404 (No decision has this id, or it was already canceled.), 409 (The reason is empty.)")]
+    [EndpointSummary("Cancels a mistaken decision. Only a system-scoped administrator may cancel one. Canceling a unification also removes the join link.")]
+    [EndpointDescription("Cancels a mistaken decision. Only a system-scoped administrator may cancel one, and a reason is required. Canceling a unification removes the JoinedInto link in the same save. Requires the DECISION_MANAGE permission. Responses: 200 (The canceled decision. A unification's join link is removed in the same save.), 403 (The caller is not a system-scoped administrator.), 404 (No decision has this id, or it was already canceled.), 409 (The reason is empty.)")]
     [ProducesResponseType<DocumentDecisionResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]

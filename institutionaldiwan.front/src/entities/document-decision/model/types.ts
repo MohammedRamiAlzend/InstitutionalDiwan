@@ -68,8 +68,16 @@ export interface DecisionRegisterParams {
 
 /** `NextActionResponse`. `kind` is null when the screen should offer nothing. */
 export interface NextActionResponse {
-  kind: 'refer' | 'send-for-archive' | 'archive' | null
+  kind: 'refer' | 'send-for-archive' | 'archive' | 'move' | null
   decisionId: string | null
   destinationDepartmentId: string | null
   movementTypeId: number | null
+}
+
+/** One other file that shares a person with this document. A suggestion, not a join. */
+export interface JoinCandidateResponse {
+  documentId: string
+  title: string
+  officialNumberText: string | null
+  personName: string
 }

@@ -1,13 +1,17 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { documentDecisionKeys, type DocumentDecisionResponse } from '@/entities/document-decision'
 import { documentKeys } from '@/entities/document'
+import { relationKeys } from '@/entities/document-relation'
 import { httpClient } from '@/shared/api'
 
-function useInvalidateDecisions(documentId: string) {
+function useInvalidateDecisions(documentId: string, alsoRelations = false) {
   const queryClient = useQueryClient()
   return () => {
     void queryClient.invalidateQueries({ queryKey: documentDecisionKeys.all })
     void queryClient.invalidateQueries({ queryKey: documentKeys.detail(documentId) })
+    if (alsoRelations) {
+      void queryClient.invalidateQueries({ queryKey: relationKeys.all })
+    }
   }
 }
 
@@ -17,10 +21,11 @@ export interface IssueDecisionRequest {
   decisionDate: string
   summary: string | null
   documentFileId: string | null
+  joinTargetDocumentId: string | null
 }
 
 export function useIssueDecisionMutation(documentId: string) {
-  const invalidate = useInvalidateDecisions(documentId)
+  const invalidate = useInvalidateDecisions(documentId, true)
   return useMutation({
     mutationFn: async (request: IssueDecisionRequest): Promise<DocumentDecisionResponse> => {
       const { data } = await httpClient.post<DocumentDecisionResponse>(
@@ -95,7 +100,7 @@ export function useRecordAppealOutcomeMutation(documentId: string) {
 }
 
 export function useCancelDecisionMutation(documentId: string) {
-  const invalidate = useInvalidateDecisions(documentId)
+  const invalidate = useInvalidateDecisions(documentId, true)
   return useMutation({
     mutationFn: async (input: { decisionId: string; reason: string }): Promise<DocumentDecisionResponse> => {
       const { data } = await httpClient.post<DocumentDecisionResponse>(

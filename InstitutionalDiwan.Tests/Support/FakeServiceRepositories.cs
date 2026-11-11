@@ -265,6 +265,9 @@ internal sealed class FakeDocumentDecisionRepository : IDocumentDecisionReposito
     public List<DocumentDecision> Decisions { get; } = new();
     public OpenDecisionVisit? OpenVisit { get; set; }
 
+    /// <summary>When a document is listed here, that visit wins over <see cref="OpenVisit"/>.</summary>
+    public Dictionary<Guid, OpenDecisionVisit?> VisitsByDocument { get; } = new();
+
     public Task<DocumentDecision?> GetByIdAsync(Guid decisionId, CancellationToken cancellationToken = default)
         => Task.FromResult(Decisions.FirstOrDefault(decision => decision.DecisionId == decisionId));
 
@@ -288,7 +291,11 @@ internal sealed class FakeDocumentDecisionRepository : IDocumentDecisionReposito
             decision.DecisionNumber == decisionNumber));
 
     public Task<OpenDecisionVisit?> FindOpenVisitAsync(Guid documentId, CancellationToken cancellationToken = default)
-        => Task.FromResult(OpenVisit);
+    {
+        if (VisitsByDocument.TryGetValue(documentId, out var visit))
+            return Task.FromResult(visit);
+        return Task.FromResult(OpenVisit);
+    }
 
     public Task<PagedList<DecisionRegisterRow>> ListPagedAsync(
         PageRequest page,

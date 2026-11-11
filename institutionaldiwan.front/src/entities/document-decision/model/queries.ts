@@ -5,6 +5,7 @@ import type {
   DecisionRegisterItemResponse,
   DecisionRegisterParams,
   DocumentDecisionResponse,
+  JoinCandidateResponse,
   NextActionResponse,
 } from './types'
 
@@ -13,6 +14,8 @@ export const documentDecisionKeys = {
   forDocument: (documentId: string) => [...documentDecisionKeys.all, documentId] as const,
   list: (documentId: string) => [...documentDecisionKeys.forDocument(documentId), 'list'] as const,
   next: (documentId: string) => [...documentDecisionKeys.forDocument(documentId), 'next'] as const,
+  candidates: (documentId: string) =>
+    [...documentDecisionKeys.forDocument(documentId), 'join-candidates'] as const,
   register: (params: DecisionRegisterParams) =>
     [...documentDecisionKeys.all, 'register', params] as const,
 }
@@ -39,6 +42,19 @@ export function useDocumentNextAction(
   return useQuery({
     queryKey: documentDecisionKeys.next(documentId ?? ''),
     queryFn: () => documentDecisionApi.nextAction(documentId as string),
+    staleTime: 15 * 1000,
+    ...options,
+    enabled: Boolean(documentId) && (options?.enabled ?? true),
+  })
+}
+
+export function useJoinCandidates(
+  documentId: string | null | undefined,
+  options?: EnabledOptions<JoinCandidateResponse[]>,
+) {
+  return useQuery({
+    queryKey: documentDecisionKeys.candidates(documentId ?? ''),
+    queryFn: () => documentDecisionApi.joinCandidates(documentId as string),
     staleTime: 15 * 1000,
     ...options,
     enabled: Boolean(documentId) && (options?.enabled ?? true),

@@ -23,6 +23,8 @@ internal sealed class IssueDocumentDecisionCommandHandler
     private readonly IDecisionTypeRepository _types;
     private readonly IDocumentDecisionRepository _decisions;
     private readonly IDocumentFileRepository _files;
+    private readonly IDocumentRelationRepository _relations;
+    private readonly IDocumentAccessEvaluator _access;
     private readonly IDepartmentScopeEvaluator _scope;
     private readonly IUnitOfWork _unitOfWork;
     private readonly INotificationPublisher _notifications;
@@ -34,7 +36,9 @@ internal sealed class IssueDocumentDecisionCommandHandler
         IDocumentFileRepository files,
         IDepartmentScopeEvaluator scope,
         IUnitOfWork unitOfWork,
-        INotificationPublisher notifications)
+        INotificationPublisher notifications,
+        IDocumentRelationRepository relations,
+        IDocumentAccessEvaluator access)
     {
         _documents = documents;
         _types = types;
@@ -43,6 +47,8 @@ internal sealed class IssueDocumentDecisionCommandHandler
         _scope = scope;
         _unitOfWork = unitOfWork;
         _notifications = notifications;
+        _relations = relations;
+        _access = access;
     }
 
     public async Task<Result<DocumentDecisionResponse>> Handle(
@@ -63,6 +69,9 @@ internal sealed class IssueDocumentDecisionCommandHandler
         if (visit is null || !await _scope.CanAccessDepartmentAsync(visit.DepartmentId, cancellationToken))
             return Result.Failure<DocumentDecisionResponse>(DomainErrors.Decisions.NotHoldingDepartment);
 
+        if (await DocumentJoin.IsJoinedAsync(_relations, document.DocumentId, cancellationToken))
+            return Result.Failure<DocumentDecisionResponse>(DomainErrors.Decisions.DocumentJoined);
+
         var type = await _types.GetByIdAsync(request.DecisionTypeId, cancellationToken);
         if (type is null)
             return Result.Failure<DocumentDecisionResponse>(DomainErrors.Decisions.TypeNotFound);
@@ -72,6 +81,17 @@ internal sealed class IssueDocumentDecisionCommandHandler
             var file = await DecisionFileChecks.EnsureAsync(_files, document.DocumentId, fileId, cancellationToken);
             if (file.IsFailure)
                 return Result.Failure<DocumentDecisionResponse>(file.Error);
+        }
+
+        var namesTarget = DocumentJoin.NamesATarget(request.JoinTargetDocumentId);
+        if (type.EffectId == DecisionEffect.JoinId)
+        {
+            if (!namesTarget)
+                return Result.Failure<DocumentDecisionResponse>(DomainErrors.Decisions.JoinTargetInvalid);
+        }
+        else if (namesTarget)
+        {
+            return Result.Failure<DocumentDecisionResponse>(DomainErrors.Decisions.JoinTargetInvalid);
         }
 
         var active = await _decisions.GetActiveByDocumentAsync(document.DocumentId, cancellationToken);
@@ -94,6 +114,21 @@ internal sealed class IssueDocumentDecisionCommandHandler
             _unitOfWork.UtcNow);
         if (issued.IsFailure)
             return Result.Failure<DocumentDecisionResponse>(issued.Error);
+
+        if (type.EffectId == DecisionEffect.JoinId)
+        {
+            var linked = await DocumentJoin.LinkPrincipalAsync(
+                _documents,
+                _relations,
+                _access,
+                document.DocumentId,
+                request.JoinTargetDocumentId!.Value,
+                request.UserId,
+                _unitOfWork.UtcNow,
+                cancellationToken);
+            if (linked.IsFailure)
+                return Result.Failure<DocumentDecisionResponse>(linked.Error);
+        }
 
         _decisions.Add(issued.Value);
         await _notifications.PublishToDepartmentAsync(
@@ -158,6 +193,7 @@ internal sealed class CancelDecisionCommandHandler
 {
     private readonly IDocumentDecisionRepository _decisions;
     private readonly IDecisionTypeRepository _types;
+    private readonly IDocumentRelationRepository _relations;
     private readonly IUserContext _userContext;
     private readonly IUnitOfWork _unitOfWork;
 
@@ -165,12 +201,14 @@ internal sealed class CancelDecisionCommandHandler
         IDocumentDecisionRepository decisions,
         IDecisionTypeRepository types,
         IUserContext userContext,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        IDocumentRelationRepository relations)
     {
         _decisions = decisions;
         _types = types;
         _userContext = userContext;
         _unitOfWork = unitOfWork;
+        _relations = relations;
     }
 
     public async Task<Result<DocumentDecisionResponse>> Handle(
@@ -187,6 +225,14 @@ internal sealed class CancelDecisionCommandHandler
         var canceled = decision.Cancel(request.UserId, request.Reason, _unitOfWork.UtcNow);
         if (canceled.IsFailure)
             return Result.Failure<DocumentDecisionResponse>(canceled.Error);
+
+        if (decision.EffectId == DecisionEffect.JoinId)
+        {
+            var unlinked = await DocumentJoin.RemoveLinksAsync(
+                _relations, decision.DocumentId, request.UserId, request.Reason, _unitOfWork.UtcNow, cancellationToken);
+            if (unlinked.IsFailure)
+                return Result.Failure<DocumentDecisionResponse>(unlinked.Error);
+        }
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         var type = await _types.GetByIdAsync(decision.DecisionTypeId, cancellationToken);
@@ -319,18 +365,21 @@ internal sealed class ListDocumentDecisionsQueryHandler
     private readonly IDocumentRepository _documents;
     private readonly IDocumentDecisionRepository _decisions;
     private readonly IDecisionTypeRepository _types;
+    private readonly IDocumentRelationRepository _relations;
     private readonly IDocumentAccessEvaluator _access;
 
     public ListDocumentDecisionsQueryHandler(
         IDocumentRepository documents,
         IDocumentDecisionRepository decisions,
         IDecisionTypeRepository types,
-        IDocumentAccessEvaluator access)
+        IDocumentAccessEvaluator access,
+        IDocumentRelationRepository relations)
     {
         _documents = documents;
         _decisions = decisions;
         _types = types;
         _access = access;
+        _relations = relations;
     }
 
     public async Task<Result<IReadOnlyList<DocumentDecisionResponse>>> Handle(
@@ -343,7 +392,18 @@ internal sealed class ListDocumentDecisionsQueryHandler
         if (!await _access.CanAccessDocumentAsync(request.DocumentId, AccessLevel.ViewId, cancellationToken))
             return Result.Failure<IReadOnlyList<DocumentDecisionResponse>>(DomainErrors.Correspondence.DocumentAccessDenied);
 
-        var decisions = await _decisions.ListByDocumentAsync(request.DocumentId, cancellationToken);
+        var decisions = (await _decisions.ListByDocumentAsync(request.DocumentId, cancellationToken)).ToList();
+        var principalId = await DocumentJoin.PrincipalIdAsync(_relations, request.DocumentId, cancellationToken);
+        if (principalId is { } principal &&
+            await _access.CanAccessDocumentAsync(principal, AccessLevel.ViewId, cancellationToken))
+        {
+            decisions.AddRange(await _decisions.ListByDocumentAsync(principal, cancellationToken));
+        }
+
+        decisions = decisions
+            .OrderByDescending(decision => decision.RecordedAt)
+            .ThenByDescending(decision => decision.DecisionId)
+            .ToList();
         var types = await _types.ListAsync(null, null, cancellationToken);
         var names = types.ToDictionary(type => type.DecisionTypeId, type => type.NameAr);
         IReadOnlyList<DocumentDecisionResponse> responses = decisions
@@ -361,6 +421,7 @@ internal sealed class GetDocumentNextActionQueryHandler
     private readonly IDocumentDecisionRepository _decisions;
     private readonly IDocumentMovementRepository _movements;
     private readonly IInstitutionSettingRepository _settings;
+    private readonly IDocumentRelationRepository _relations;
     private readonly IDocumentAccessEvaluator _access;
 
     public GetDocumentNextActionQueryHandler(
@@ -368,13 +429,15 @@ internal sealed class GetDocumentNextActionQueryHandler
         IDocumentDecisionRepository decisions,
         IDocumentMovementRepository movements,
         IInstitutionSettingRepository settings,
-        IDocumentAccessEvaluator access)
+        IDocumentAccessEvaluator access,
+        IDocumentRelationRepository relations)
     {
         _documents = documents;
         _decisions = decisions;
         _movements = movements;
         _settings = settings;
         _access = access;
+        _relations = relations;
     }
 
     public async Task<Result<NextActionResponse>> Handle(
@@ -392,9 +455,19 @@ internal sealed class GetDocumentNextActionQueryHandler
             document.DocumentId, _settings, _movements, cancellationToken);
         var active = await _decisions.GetActiveByDocumentAsync(document.DocumentId, cancellationToken);
         var visit = await _decisions.FindOpenVisitAsync(document.DocumentId, cancellationToken);
+        Guid? principalDepartmentId = null;
+        if (active is { EffectId: DecisionEffect.JoinId })
+        {
+            var principalId = await DocumentJoin.PrincipalIdAsync(_relations, document.DocumentId, cancellationToken);
+            if (principalId is { } principal &&
+                await _access.CanAccessDocumentAsync(principal, AccessLevel.ViewId, cancellationToken))
+            {
+                principalDepartmentId = (await _decisions.FindOpenVisitAsync(principal, cancellationToken))?.DepartmentId;
+            }
+        }
 
         return Result.Success(NextActionPlanner.Plan(
-            document, active, visit, custody.ArchiveDiwanDepartmentId, custody.IsHeld));
+            document, active, visit, custody.ArchiveDiwanDepartmentId, custody.IsHeld, principalDepartmentId));
     }
 }
 
@@ -452,6 +525,56 @@ internal sealed class ListDecisionsQueryHandler
             page.NormalizedPage,
             page.NormalizedPageSize,
             rows.TotalCount));
+    }
+}
+
+internal sealed class ListJoinCandidatesQueryHandler
+    : IQueryHandler<ListJoinCandidatesQuery, IReadOnlyList<JoinCandidateResponse>>
+{
+    private readonly IDocumentRepository _documents;
+    private readonly IPersonRepository _persons;
+    private readonly IDocumentAccessEvaluator _access;
+    private readonly IDepartmentScopeEvaluator _scope;
+    private readonly IUserContext _userContext;
+    private readonly IClock _clock;
+
+    public ListJoinCandidatesQueryHandler(
+        IDocumentRepository documents,
+        IPersonRepository persons,
+        IDocumentAccessEvaluator access,
+        IDepartmentScopeEvaluator scope,
+        IUserContext userContext,
+        IClock clock)
+    {
+        _documents = documents;
+        _persons = persons;
+        _access = access;
+        _scope = scope;
+        _userContext = userContext;
+        _clock = clock;
+    }
+
+    public async Task<Result<IReadOnlyList<JoinCandidateResponse>>> Handle(
+        ListJoinCandidatesQuery request,
+        CancellationToken cancellationToken)
+    {
+        var document = await _documents.GetByIdAsync(request.DocumentId, cancellationToken);
+        if (document is null)
+            return Result.Failure<IReadOnlyList<JoinCandidateResponse>>(DomainErrors.Correspondence.DocumentNotFound);
+
+        if (!await _access.CanAccessDocumentAsync(request.DocumentId, AccessLevel.ViewId, cancellationToken))
+            return Result.Failure<IReadOnlyList<JoinCandidateResponse>>(DomainErrors.Correspondence.DocumentAccessDenied);
+
+        var access = new DocumentViewAccess(
+            _userContext.UserId,
+            await _scope.GetAccessibleDepartmentIdsAsync(cancellationToken),
+            _clock.UtcNow);
+        var rows = await _persons.ListJoinCandidatesAsync(
+            document.DocumentId, document.DocumentTypeId, access, cancellationToken);
+        IReadOnlyList<JoinCandidateResponse> responses = rows
+            .Select(row => new JoinCandidateResponse(row.DocumentId, row.Title, row.OfficialNumberText, row.PersonName))
+            .ToList();
+        return Result.Success(responses);
     }
 }
 

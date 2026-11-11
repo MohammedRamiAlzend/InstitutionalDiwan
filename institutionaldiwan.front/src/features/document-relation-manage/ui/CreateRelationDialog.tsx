@@ -4,7 +4,12 @@ import { useDraftForm } from '@/shared/lib'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
 import type { DocumentResponse } from '@/entities/document'
-import { LOOKUP_SLUGS, useLookupEntries, usePreselectLookupDefault } from '@/entities/lookup'
+import {
+  DOCUMENT_RELATION_TYPE,
+  LOOKUP_SLUGS,
+  useLookupEntries,
+  usePreselectLookupDefault,
+} from '@/entities/lookup'
 import { toArabicErrorMessage } from '@/shared/api'
 import { Button, Dialog, FormField, Select, Textarea } from '@/shared/ui'
 import { useCreateRelationMutation } from '../api/relationMutations'
@@ -29,9 +34,13 @@ export function CreateRelationDialog({
   const typesQuery = useLookupEntries(LOOKUP_SLUGS.DocumentRelationTypes)
   const [target, setTarget] = useState<DocumentResponse | null>(null)
 
-  const typeOptions = useMemo(
-    () => (typesQuery.data ?? []).map((entry) => ({ value: String(entry.id), label: entry.descAr })),
+  const linkableTypes = useMemo(
+    () => (typesQuery.data ?? []).filter((entry) => entry.id !== DOCUMENT_RELATION_TYPE.JoinedInto),
     [typesQuery.data],
+  )
+  const typeOptions = useMemo(
+    () => linkableTypes.map((entry) => ({ value: String(entry.id), label: entry.descAr })),
+    [linkableTypes],
   )
 
   const {
@@ -47,7 +56,7 @@ export function CreateRelationDialog({
     defaultValues: { targetDocumentId: '', relationTypeId: '', notes: '' },
   })
 
-  usePreselectLookupDefault(typesQuery.data, getValues('relationTypeId'), (value) => setValue('relationTypeId', value))
+  usePreselectLookupDefault(linkableTypes, getValues('relationTypeId'), (value) => setValue('relationTypeId', value))
 
   const onSubmit = handleSubmit(async (values) => {
     try {

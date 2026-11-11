@@ -35,4 +35,5 @@ permanent relation history. Writes live in `features/document-relation-manage`.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-11 | Claude | Direction phrases and the badge variant for relation type 5 «موحَّد مع». |
 | 2026-11-03 | agent | Implemented the Module 08 read slice. |

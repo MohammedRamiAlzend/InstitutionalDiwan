@@ -19,7 +19,8 @@ public sealed record IssueDocumentDecisionRequest(
     string DecisionNumber,
     DateOnly DecisionDate,
     string? Summary,
-    Guid? DocumentFileId);
+    Guid? DocumentFileId,
+    Guid? JoinTargetDocumentId);
 
 public sealed record AttachDecisionFileRequest(Guid DocumentFileId);
 

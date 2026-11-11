@@ -26,6 +26,16 @@ public sealed record DocumentPersonRow(
     int RoleId,
     DateTime CreatedAt);
 
+/// <summary>
+/// Another unarchived document of the same type that shares a person with the document being read.
+/// A suggestion only; it is not a join.
+/// </summary>
+public sealed record JoinCandidateRow(
+    Guid DocumentId,
+    string Title,
+    string? OfficialNumberText,
+    string PersonName);
+
 /// <summary>One of a person's documents with where it stands now and the last thing done to it.</summary>
 public sealed record PersonDocumentRow(
     Guid DocumentId,
@@ -109,6 +119,17 @@ public interface IPersonRepository
 
     Task<IReadOnlyList<DocumentPersonRow>> ListByDocumentAsync(
         Guid documentId,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Unarchived, uncanceled documents of <paramref name="documentTypeId"/> that share a person with
+    /// <paramref name="documentId"/> and that <paramref name="access"/> can view. The current document
+    /// is left out. One row per other document.
+    /// </summary>
+    Task<IReadOnlyList<JoinCandidateRow>> ListJoinCandidatesAsync(
+        Guid documentId,
+        int documentTypeId,
+        DocumentViewAccess access,
         CancellationToken cancellationToken = default);
 
     /// <summary>A page of the person's documents the caller may view. Sort keys: <c>title</c>, <c>status</c>, <c>linkedAt</c> (the default).</summary>

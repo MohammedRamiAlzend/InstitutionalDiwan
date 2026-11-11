@@ -67,7 +67,8 @@ Production requires opting in by adding `SeedingEnvironments.Production` to
 
 | Date | Author | Change |
 | --- | --- | --- |
-| 2026-11-11 | Claude | Audit entity types gained `Decision appeal` / «اعتراض على قرار» (id 18). Appeal outcomes are code constants, not a seeded lookup table. |
+| 2026-11-11 | Claude | `DocumentRelationTypeSeeder` inserts type 5 `JoinedInto` / «موحَّد مع» (asymmetric, cycles prevented). Existing rows are not overwritten, so a running database gains the type on the next startup. No migration. |
+| 2026-11-11 | Claude | Audit entity types gained `Decision appeal` / «اعتراض على قرار» (id 18). | Appeal outcomes are code constants, not a seeded lookup table. |
 | 2026-11-11 | Claude | `DecisionTypeSeeder` (order 320, every mode) seeds the five decision types on the base-record document type. Suspicion is activated with destination `INDIVIDUAL_DIWAN` only when that department exists. Also seeds `DECISION_MANAGE` (23 codes, granted to `ADMIN` and `DIWAN_OPERATOR`), file type «قرار», notification «صدر قرار», and audit entity types for decisions and decision types. |
 | 2026-11-11 | Claude | `MovementTypeSeeder` seeds a fifth movement type, `MovementType.ToArchiveId` «للحفظ». |
 | 2026-11-10 | Claude | Seeds `DEPARTMENT_RECORD_VIEW_ALL` and `DEPARTMENT_RECORD_CORRECT` and grants both to `ADMIN` (22 permissions). |

@@ -4,6 +4,7 @@ import type {
   DecisionRegisterItemResponse,
   DecisionRegisterParams,
   DocumentDecisionResponse,
+  JoinCandidateResponse,
   NextActionResponse,
 } from '../model/types'
 
@@ -18,6 +19,13 @@ export const documentDecisionApi = {
   nextAction: async (documentId: string): Promise<NextActionResponse> => {
     const { data } = await httpClient.get<NextActionResponse>(
       `/documents/${documentId}/next-action`,
+    )
+    return data
+  },
+
+  joinCandidates: async (documentId: string): Promise<JoinCandidateResponse[]> => {
+    const { data } = await httpClient.get<JoinCandidateResponse[]>(
+      `/documents/${documentId}/join-candidates`,
     )
     return data
   },

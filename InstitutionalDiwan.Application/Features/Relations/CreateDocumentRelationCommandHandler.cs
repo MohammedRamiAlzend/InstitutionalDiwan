@@ -64,46 +64,23 @@ internal sealed class CreateDocumentRelationCommandHandler
         if (type is null)
             return Result.Failure<DocumentRelationResponse>(DomainErrors.Relations.RelationTypeNotFound);
 
-        if (request.DocumentId == request.TargetDocumentId)
-            return Result.Failure<DocumentRelationResponse>(DomainErrors.Relations.SelfRelation);
-
         if (!type.IsActive)
             return Result.Failure<DocumentRelationResponse>(DomainErrors.Relations.RelationTypeInactive);
 
-        var (source, destination) = type.NormalizeEndpoints(request.DocumentId, request.TargetDocumentId);
-        if (await _relationRepository.ExistsAsync(source, destination, type.Id, cancellationToken))
-            return Result.Failure<DocumentRelationResponse>(DomainErrors.Relations.DuplicateRelation);
-
-        // A symmetric link has no direction, so it cannot form a directed loop.
-        var wouldCreateCycle = type.PreventCycles && !type.IsSymmetric &&
-            await _relationRepository.WouldCreateCycleAsync(type.Id, source, destination, cancellationToken);
-
         var utcNow = _unitOfWork.UtcNow;
-        var relationResult = DocumentRelation.Create(
+        var relationResult = await DocumentRelationLinking.LinkAsync(
+            _relationRepository,
+            type,
             request.DocumentId,
             request.TargetDocumentId,
-            type,
             request.UserId,
-            wouldCreateCycle,
             request.Notes,
-            utcNow);
+            utcNow,
+            cancellationToken);
         if (relationResult.IsFailure)
             return Result.Failure<DocumentRelationResponse>(relationResult.Error);
 
         var relation = relationResult.Value;
-        var eventResult = DocumentRelationEvent.Record(
-            relation.RelationId,
-            relation.SourceDocumentId,
-            relation.TargetDocumentId,
-            relation.RelationTypeId,
-            RelationActionType.CreatedId,
-            request.UserId,
-            utcNow: utcNow);
-        if (eventResult.IsFailure)
-            return Result.Failure<DocumentRelationResponse>(eventResult.Error);
-
-        _relationRepository.Add(relation);
-        _relationRepository.Add(eventResult.Value);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return DocumentRelationResponse.From(relation, type, target, request.DocumentId);

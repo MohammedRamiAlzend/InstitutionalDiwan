@@ -5,7 +5,7 @@
 
 ## Purpose
 
-Lets users link one document to another (reply to, related, supersedes, duplicate of), read those links
+Lets users link one document to another (reply to, related, supersedes, duplicate of, joined into), read those links
 as a list or a graph, and keep a permanent history of every link made or removed. Creating a link saves
 the `DocumentRelation` and a `DocumentRelationEvent` in one save, inside the command's transaction.
 
@@ -14,10 +14,11 @@ the `DocumentRelation` and a `DocumentRelationEvent` in one save, inside the com
 | File | Purpose |
 | --- | --- |
 | `CreateDocumentRelationCommand.cs` | CQRS command linking a document to another with a type and optional notes. |
-| `CreateDocumentRelationCommandHandler.cs` | Checks, in order: the first document exists, DOWNLOAD access, not archived; the target exists and VIEW access; neither is cancelled; the type exists and is active; no self link; no duplicate; no cycle. Then creates the link and its `Created` event in one save. |
+| `DocumentRelationLinking.cs` | Creates or removes a link and its history row without saving, including the cycle check. Decision issue and cancel use it so the decision and the join share one save. |
+| `CreateDocumentRelationCommandHandler.cs` | Checks the documents, access, archive and canceled state, then `DocumentRelationLinking` and one save. |
 | `CreateDocumentRelationCommandValidator.cs` | Requires the ids and a positive type, and limits the notes to 500 characters. |
 | `RemoveDocumentRelationCommand.cs` | CQRS command removing a link of a document; the reason is required. |
-| `RemoveDocumentRelationCommandHandler.cs` | Checks the document, DOWNLOAD access and that it is not archived, finds a link that touches that document, then deletes it and records the `Removed` event with the reason. |
+| `RemoveDocumentRelationCommandHandler.cs` | Checks the document, DOWNLOAD access and that it is not archived, finds a link that touches that document, then `DocumentRelationLinking.Unlink` and one save. |
 | `RemoveDocumentRelationCommandValidator.cs` | Requires the ids and a non-blank reason of at most 500 characters. |
 | `ListDocumentRelationsQuery.cs` | Query for a document's direct links. |
 | `ListDocumentRelationsQueryHandler.cs` | Returns links in both directions to a caller with VIEW access; links to documents the caller cannot view are left out and counted. |
@@ -51,4 +52,5 @@ the `DocumentRelation` and a `DocumentRelationEvent` in one save, inside the com
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-11 | Claude | `DocumentRelationLinking` creates and removes a link without saving. The public commands and a join decision share that path, so a cycle is still refused. |
 | 2026-11-03 | Claude | Added the Module 08 relations slice (Phase 2). |

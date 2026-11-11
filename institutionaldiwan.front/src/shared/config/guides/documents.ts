@@ -203,7 +203,7 @@ export const DOCUMENT_DETAILS_GUIDE_ENTRIES: readonly GuideEntry[] = [
   {
     id: 'document-details.tab-decisions',
     title: 'تبويب القرار',
-    body: 'يظهر عندما يكون لنوع الوثيقة نوع قرار مفعّل. يعرض القرار النافذ واعتراضاته وسجله، ويقترح الخطوة التالية دون أن ينفّذها: إحالة، أو إرسال للحفظ، أو أرشفة.',
+    body: 'يظهر عندما يكون لنوع الوثيقة نوع قرار مفعّل. يعرض القرار النافذ واعتراضاته وسجله، وقرارات الملف الرئيسي للقراءة بعد التوحيد. يقترح الخطوة التالية دون أن ينفّذها: إحالة، أو نقل عادي إلى ديوان الملف الرئيسي، أو إرسال للحفظ، أو أرشفة.',
     note: 'إصدار القرار لمن يحمل الوثيقة ويملك إدارة القرارات. تسجيل الاعتراض ونتيجته لمن يغطي نطاقه الديوان المُصدر أو الديوان المعترض.',
   },
   {
@@ -225,7 +225,7 @@ export const DOCUMENT_DETAILS_GUIDE_ENTRIES: readonly GuideEntry[] = [
   {
     id: 'document-details.next-action',
     title: 'الخطوة المقترحة',
-    body: 'تفتح الحركة أو حوار الأرشفة مع الوجهة والنوع المناسبين. تبقى أنت من يرسل الحركة أو يؤكد الأرشفة.',
+    body: 'تفتح الحركة أو حوار الأرشفة مع الوجهة والنوع المناسبين. بعد التوحيد، إن اختلف الديوانان، تقترح نقل الملف بحركة عادية إلى ديوان الملف الرئيسي. تبقى أنت من يرسل الحركة أو يؤكد الأرشفة.',
   },
   {
     id: 'document-details.decision-number',
@@ -237,6 +237,17 @@ export const DOCUMENT_DETAILS_GUIDE_ENTRIES: readonly GuideEntry[] = [
     title: 'الوثيقة المراد ربطها',
     body: 'ابحث باسم الوثيقة أو رقم النظام واختر الوثيقة المقابلة. تظهر لك الوثائق التي تملك صلاحية الاطلاع عليها فقط.',
     note: 'لا يمكن ربط الوثيقة بنفسها ولا بوثيقة ملغاة.',
+  },
+  {
+    id: 'document-details.join-target',
+    title: 'الملف الرئيسي',
+    body: 'يُختار عند إصدار قرار التوحيد. يظهر هذا الملف مرتبطًا به، ويبقى رقمه ومكانه كما هما. إن كان الملفان عند ديوانين مختلفين فالنقل حركة عادية بعد الإصدار، ولا تُنشأ وحدها.',
+    note: 'لا يُقبل ملف لا تستطيع الاطلاع عليه، ولا ملف مؤرشف أو ملغى، ولا ملف موحَّد هو نفسه في ملف آخر.',
+  },
+  {
+    id: 'document-details.join-candidates',
+    title: 'اقتراح ملفات للنظر',
+    body: 'يظهر عندما يوجد شخص على هذا الملف في ملف آخر غير مؤرشف من النوع نفسه تستطيع الاطلاع عليه. الاقتراح للنظر فقط، وليس توحيدًا.',
   },
 ]
 
@@ -268,6 +279,8 @@ export const DOCUMENT_DETAILS_GUIDE: PageGuide = {
     'document-details.appeal-outcome',
     'document-details.next-action',
     'document-details.decision-number',
+    'document-details.join-target',
+    'document-details.join-candidates',
     'document-details.relations-grid',
     'document-details.relations-types',
     'document-details.relations-direction',

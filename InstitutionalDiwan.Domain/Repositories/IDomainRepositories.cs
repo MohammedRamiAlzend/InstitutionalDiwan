@@ -371,6 +371,14 @@ public interface IDocumentRelationRepository
     /// on the type so two opposite links cannot both pass the check.
     /// </summary>
     Task<bool> WouldCreateCycleAsync(int relationTypeId, Guid sourceDocumentId, Guid targetDocumentId, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Tracked relations of this type that leave the document, newest first. Unification stores one
+    /// <c>JoinedInto</c> edge from the joined file to the principal file and removes it on cancel.
+    /// </summary>
+    Task<IReadOnlyList<DocumentRelation>> ListOutgoingAsync(
+        Guid sourceDocumentId,
+        int relationTypeId,
+        CancellationToken cancellationToken = default);
     /// <summary>Every relation whose source or target is one of the given documents.</summary>
     Task<IReadOnlyList<DocumentRelation>> ListTouchingAsync(IReadOnlyCollection<Guid> documentIds, CancellationToken cancellationToken = default);
     /// <summary>The relation history of a document, newest first, including relations since removed.</summary>

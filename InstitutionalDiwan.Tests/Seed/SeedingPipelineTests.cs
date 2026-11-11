@@ -95,7 +95,7 @@ public sealed class SeedingPipelineTests
         Assert.Equal(4, await db.StorageProviderTypes.CountAsync());
         Assert.Equal(5, await db.DocumentFileTypes.CountAsync());
         Assert.Equal(1, await db.FileStorageProviders.CountAsync());
-        Assert.Equal(4, await db.DocumentRelationTypes.CountAsync());
+        Assert.Equal(5, await db.DocumentRelationTypes.CountAsync());
         Assert.Equal(3, await db.RelationActionTypes.CountAsync());
         Assert.Equal(3, await db.ArchiveEventTypes.CountAsync());
         Assert.Equal(3, await db.ArchiveLocations.CountAsync());

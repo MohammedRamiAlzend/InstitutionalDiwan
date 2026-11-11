@@ -163,7 +163,9 @@ export function DecisionTypeFormDialog({
           </FormField>
         )}
         {effectId === DECISION_EFFECT.Join && (
-          <p className="text-sm text-muted">إصدار قرار التوحيد غير متاح بعد. يمكن تجهيز النوع فقط.</p>
+          <p className="text-sm text-muted">
+            إصدار هذا النوع يوحّد الملف مع ملف رئيسي يختاره المُصدر. لا يتغيّر رقم الملف ولا مكانه.
+          </p>
         )}
         <FormField label="قابل للاعتراض">
           <Controller

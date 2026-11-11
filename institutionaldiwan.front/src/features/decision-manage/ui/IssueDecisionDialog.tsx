@@ -11,6 +11,7 @@ import { useDraftForm } from '@/shared/lib'
 import { Button, Dialog, FormField, Input, Select, Textarea } from '@/shared/ui'
 import { useIssueDecisionMutation } from '../api/decisionMutations'
 import { issueDecisionSchema, type IssueDecisionFormValues } from '../model/schemas'
+import { JoinTargetPicker } from './JoinTargetPicker'
 
 interface IssueDecisionDialogProps {
   documentId: string
@@ -26,7 +27,7 @@ function todayInput(): string {
   return `${now.getFullYear()}-${month}-${day}`
 }
 
-/** Issues a decision. Join types are omitted until unification can be carried out. */
+/** Issues a decision. A unification decision also names the principal file. */
 export function IssueDecisionDialog({
   documentId,
   documentTypeId,
@@ -41,15 +42,13 @@ export function IssueDecisionDialog({
   const filesQuery = useDocumentFiles(documentId, { enabled: open })
   const departmentsQuery = useDepartmentOptions({ enabled: open })
 
-  const offerable = useMemo(
-    () => (typesQuery.data ?? []).filter((type) => type.effectId !== DECISION_EFFECT.Join),
-    [typesQuery.data],
-  )
+  const offerable = useMemo(() => typesQuery.data ?? [], [typesQuery.data])
 
   const {
     register,
     control,
     handleSubmit,
+    setError,
     formState: { errors },
     draft,
   } = useDraftForm<IssueDecisionFormValues>(
@@ -62,12 +61,14 @@ export function IssueDecisionDialog({
         decisionDate: todayInput(),
         summary: '',
         documentFileId: '',
+        joinTargetDocumentId: '',
       },
     },
   )
 
   const selectedTypeId = useWatch({ control, name: 'decisionTypeId' })
   const selectedType = offerable.find((type) => type.decisionTypeId === selectedTypeId)
+  const isJoin = selectedType?.effectId === DECISION_EFFECT.Join
   const destinationName = departmentsQuery.data?.find(
     (department) => department.departmentId === selectedType?.destinationDepartmentId,
   )?.nameAr
@@ -82,6 +83,10 @@ export function IssueDecisionDialog({
     .map((file) => ({ value: file.fileId, label: file.title }))
 
   const onSubmit = handleSubmit(async (values) => {
+    if (isJoin && !values.joinTargetDocumentId) {
+      setError('joinTargetDocumentId', { message: 'اختر الملف الرئيسي.' })
+      return
+    }
     try {
       await mutation.mutateAsync({
         decisionTypeId: values.decisionTypeId,
@@ -89,8 +94,13 @@ export function IssueDecisionDialog({
         decisionDate: values.decisionDate,
         summary: values.summary.trim() || null,
         documentFileId: values.documentFileId || null,
+        joinTargetDocumentId: isJoin ? values.joinTargetDocumentId : null,
       })
-      toast.success('صدر القرار. الأثر مقترح ولم يُنفَّذ بعد.')
+      toast.success(
+        isJoin
+          ? 'صدر قرار التوحيد وارتبط الملف بالملف الرئيسي. لم يُغيَّر الرقم ولا المكان.'
+          : 'صدر القرار. الأثر مقترح ولم يُنفَّذ بعد.',
+      )
       draft.discard()
       onOpenChange(false)
     } catch (error) {
@@ -141,6 +151,34 @@ export function IssueDecisionDialog({
           <p className="text-sm text-muted">
             بعد الإصدار يُقترح إرسال الوثيقة للحفظ. الأرشفة نفسها تبقى إجراءً منفصلاً.
           </p>
+        )}
+        {isJoin && (
+          <>
+            <p className="text-sm text-muted">
+              يُربط هذا الملف بالملف الرئيسي دون تغيير رقمه أو مكانه. إن كان الملفان عند ديوانين
+              مختلفين، انقل هذا الملف بحركة عادية إلى ديوان الملف الرئيسي بعد الإصدار. لا تُنشأ الحركة
+              تلقائيًا.
+            </p>
+            <FormField
+              label="الملف الرئيسي"
+              required
+              error={errors.joinTargetDocumentId?.message}
+              guideId="document-details.join-target"
+            >
+              <Controller
+                control={control}
+                name="joinTargetDocumentId"
+                render={({ field }) => (
+                  <JoinTargetPicker
+                    excludeDocumentId={documentId}
+                    value={field.value}
+                    invalid={Boolean(errors.joinTargetDocumentId)}
+                    onChange={field.onChange}
+                  />
+                )}
+              />
+            </FormField>
+          </>
         )}
         <FormField label="رقم القرار" required error={errors.decisionNumber?.message} guideId="document-details.decision-number">
           <Input {...register('decisionNumber')} dir="ltr" invalid={Boolean(errors.decisionNumber)} />

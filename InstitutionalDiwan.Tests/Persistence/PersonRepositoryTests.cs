@@ -353,4 +353,45 @@ public sealed class PersonRepositoryTests
         Assert.Empty(await world.Db.DocumentPersons.ToListAsync());
         Assert.Equal(1, await world.Db.Persons.CountAsync());
     }
+
+    [Fact]
+    public async Task JoinCandidates_AreSameTypeUnarchivedFilesTheCallerCanSee()
+    {
+        var world = await CreateWorldAsync();
+        world.Db.DocumentTypes.Add(DocumentType.Create(
+            DocumentType.CircularId, "Circular", "تعميم", DocumentDirection.InternalId).Value);
+        var person = AddPerson(world, "أحمد محمد");
+        var current = AddDocument(world, world.Mine.DepartmentId, "الحالي");
+        var match = AddDocument(world, world.Mine.DepartmentId, "المطابق");
+        var hidden = AddDocument(world, world.Other.DepartmentId, "بعيد");
+        var archived = AddDocument(world, world.Mine.DepartmentId, "مؤرشف");
+        var canceled = AddDocument(world, world.Mine.DepartmentId, "ملغى");
+        var otherType = Document.CreateDraft(
+            "تعميم",
+            DocumentType.CircularId,
+            DocumentDirection.InternalId,
+            world.Mine.DepartmentId,
+            world.Author.UserId,
+            confidentialityLevelId: DocumentConfidentialityLevel.NormalId,
+            utcNow: Now).Value;
+        world.Db.Documents.Add(otherType);
+
+        foreach (var document in new[] { current, match, hidden, archived, canceled, otherType })
+        {
+            Link(world, document, person);
+        }
+
+        Register(world, archived);
+        Assert.True(archived.Archive(
+            world.Author.UserId, hasActiveMovements: false, ArchiveLocation.PhysicalArchiveId, utcNow: Now).IsSuccess);
+        Assert.True(canceled.Cancel(world.Author.UserId, hasActiveMovements: false, "أُلغي", Now).IsSuccess);
+        await world.Db.SaveChangesAsync();
+
+        var rows = await world.Persons.ListJoinCandidatesAsync(
+            current.DocumentId, current.DocumentTypeId, world.MyAccess);
+
+        var only = Assert.Single(rows);
+        Assert.Equal(match.DocumentId, only.DocumentId);
+        Assert.Equal("أحمد محمد", only.PersonName);
+    }
 }

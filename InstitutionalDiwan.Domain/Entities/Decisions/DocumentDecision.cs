@@ -67,9 +67,6 @@ public sealed class DocumentDecision : AggregateRoot<Guid>
         if (!type.IsActive)
             return Result.Failure<DocumentDecision>(DomainErrors.Decisions.TypeInactive);
 
-        if (type.EffectId == DecisionEffect.JoinId)
-            return Result.Failure<DocumentDecision>(DomainErrors.Decisions.JoinTargetInvalid);
-
         if (!type.AllowsDocumentType(documentTypeId))
             return Result.Failure<DocumentDecision>(DomainErrors.Decisions.TypeNotAllowedForDocument);
 

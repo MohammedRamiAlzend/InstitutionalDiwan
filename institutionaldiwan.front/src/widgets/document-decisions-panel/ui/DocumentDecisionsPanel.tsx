@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { Gavel, Paperclip, Route, Scale } from 'lucide-react'
 import { ArchiveDocumentDialog } from '@/features/archive-manage'
 import {
@@ -14,16 +15,20 @@ import {
   DecisionStatusBadge,
   useDocumentDecisions,
   useDocumentNextAction,
+  useJoinCandidates,
   type DecisionAppealResponse,
   type DocumentDecisionResponse,
 } from '@/entities/document-decision'
+import { useDocumentRelations } from '@/entities/document-relation'
 import { useSessionStore } from '@/entities/user'
 import { tokenStorage, toArabicErrorMessage } from '@/shared/api'
 import {
   appealOutcomeLabel,
   APPEAL_OUTCOME,
   decisionEffectLabel,
+  DECISION_EFFECT,
   DECISION_STATUS,
+  DOCUMENT_RELATION_TYPE,
   isDecisionInForce,
   Permissions,
   USER_SCOPE_TYPE,
@@ -98,6 +103,7 @@ const NEXT_ACTION_LABEL = {
   refer: 'إحالة إلى الوجهة',
   'send-for-archive': 'إرسال للحفظ',
   archive: 'أرشفة',
+  move: 'نقل إلى ديوان الملف الرئيسي',
 } as const
 
 /** The decision in force, its history, and the one suggested next step. */
@@ -112,6 +118,8 @@ export function DocumentDecisionsPanel({
 }: DocumentDecisionsPanelProps) {
   const decisionsQuery = useDocumentDecisions(documentId)
   const nextQuery = useDocumentNextAction(documentId)
+  const candidatesQuery = useJoinCandidates(documentId)
+  const relationsQuery = useDocumentRelations(documentId)
   const departmentsQuery = useDepartmentOptions()
   const hasPermission = useSessionStore((state) => state.hasPermission)
   const canManage = hasPermission(Permissions.DecisionManage)
@@ -134,12 +142,24 @@ export function DocumentDecisionsPanel({
   }, [departmentsQuery.data])
 
   const decisions = decisionsQuery.data ?? []
-  const inForce = decisions.find((decision) => isDecisionInForce(decision.statusId))
+  const inForce = decisions.find(
+    (decision) => decision.documentId === documentId && isDecisionInForce(decision.statusId),
+  )
+  const principalLink = (relationsQuery.data?.items ?? []).find(
+    (relation) =>
+      relation.type.relationTypeId === DOCUMENT_RELATION_TYPE.JoinedInto &&
+      relation.direction === 'Outgoing',
+  )
+  const candidates = candidatesQuery.data ?? []
   const next = nextQuery.data
   const nextKind = next?.kind ?? null
   const pendingAppeal = inForce?.appeals.find((appeal) => appeal.outcomeId === APPEAL_OUTCOME.Pending)
   const canRunNext =
-    nextKind === 'archive' ? canArchive : nextKind === 'refer' || nextKind === 'send-for-archive' ? canMove : false
+    nextKind === 'archive'
+      ? canArchive
+      : nextKind === 'refer' || nextKind === 'send-for-archive' || nextKind === 'move'
+        ? canMove
+        : false
 
   const runNext = () => {
     if (!next?.kind) return
@@ -174,7 +194,14 @@ export function DocumentDecisionsPanel({
         header: 'النوع',
         sortable: true,
         sortValue: (row) => row.typeNameAr,
-        cell: (row) => row.typeNameAr,
+        cell: (row) => (
+          <span className="flex flex-col gap-1">
+            <span>{row.typeNameAr}</span>
+            {row.documentId !== documentId && (
+              <span className="text-xs text-muted">من الملف الرئيسي</span>
+            )}
+          </span>
+        ),
       },
       {
         id: 'date',
@@ -208,10 +235,11 @@ export function DocumentDecisionsPanel({
         cell: (row) => <AppealLines appeals={row.appeals} departmentName={departmentName} />,
       },
     ],
-    [departmentName],
+    [departmentName, documentId],
   )
 
   const rowMenu = (row: DocumentDecisionResponse): MenuEntry[] => {
+    if (row.documentId !== documentId) return []
     const items: MenuEntry[] = []
     const pending = row.appeals.find((appeal) => appeal.outcomeId === APPEAL_OUTCOME.Pending)
     if (canManage && row.isAppealable && row.statusId === DECISION_STATUS.Issued) {
@@ -282,6 +310,62 @@ export function DocumentDecisionsPanel({
               <AppealLines appeals={inForce.appeals} departmentName={departmentName} />
             </div>
           )}
+          {inForce.effectId === DECISION_EFFECT.Join && (
+            <p className="text-sm text-muted">
+              هذا الملف موحَّد مع{' '}
+              {principalLink ? (
+                <Link
+                  to={`/documents/${principalLink.relatedDocument.documentId}`}
+                  className="text-accent hover:underline"
+                >
+                  {principalLink.relatedDocument.title}
+                </Link>
+              ) : (
+                'الملف الرئيسي'
+              )}
+              . لم يتغيّر رقمه ولا مكانه.
+              {principalLink?.relatedDocument.officialNumberText ? (
+                <>
+                  {' '}
+                  <span dir="ltr" className="font-mono">
+                    {principalLink.relatedDocument.officialNumberText}
+                  </span>
+                </>
+              ) : null}
+            </p>
+          )}
+        </section>
+      )}
+
+      {candidates.length > 0 && (
+        <section className="flex flex-col gap-2 rounded-xl border border-border bg-surface p-4">
+          <h2 className="flex items-center gap-2 text-sm font-semibold">
+            ملفات قد تخص الأشخاص أنفسهم
+            <GuideChip id="document-details.join-candidates" />
+          </h2>
+          <ul className="flex flex-col gap-1 text-sm text-muted">
+            {candidates.map((candidate) => (
+              <li key={candidate.documentId}>
+                {candidate.personName}
+                {' يظهر أيضًا في '}
+                <Link
+                  to={`/documents/${candidate.documentId}`}
+                  className="text-accent hover:underline"
+                >
+                  {candidate.title}
+                </Link>
+                {candidate.officialNumberText ? (
+                  <>
+                    {' '}
+                    <span dir="ltr" className="font-mono">
+                      {candidate.officialNumberText}
+                    </span>
+                  </>
+                ) : null}
+                . هذا اقتراح للنظر، وليس توحيدًا.
+              </li>
+            ))}
+          </ul>
         </section>
       )}
 

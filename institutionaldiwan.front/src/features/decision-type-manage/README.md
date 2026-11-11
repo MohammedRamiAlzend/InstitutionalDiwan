@@ -26,5 +26,6 @@ Creates and edits decision types. The destination department is shown only for a
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-11 | Claude | The join-effect note says issuing unification links the file to a principal file and does not change its number or place. |
 | 2026-11-11 | Claude | The form asks for one Arabic name. The English name field was removed. |
 | 2026-11-11 | Claude | Added decision-type administration. |

@@ -224,6 +224,7 @@ export const DOCUMENT_RELATION_TYPE = {
   Related: 2,
   Supersedes: 3,
   DuplicateOf: 4,
+  JoinedInto: 5,
 } as const
 
 /** `relation-action-types` — mirrors `RelationActionType` in the Domain. */

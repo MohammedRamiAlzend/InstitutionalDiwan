@@ -17,7 +17,8 @@ internal static class NextActionPlanner
         DocumentDecision? active,
         OpenDecisionVisit? visit,
         Guid? archiveDiwanDepartmentId,
-        bool heldByArchiveDiwan)
+        bool heldByArchiveDiwan,
+        Guid? principalDepartmentId = null)
     {
         if (document.CurrentStatusId is DocumentStatusType.ArchivedId or DocumentStatusType.CanceledId)
             return None();
@@ -31,6 +32,17 @@ internal static class NextActionPlanner
             && holding != destination)
         {
             return new NextActionResponse(NextActionKind.Refer, active.DecisionId, destination, MovementType.ReferralId);
+        }
+
+        // Unification does not move the file. When the two files are held apart, suggest an ordinary
+        // movement of the joined file to the department that holds the principal file.
+        if (active is { IsInForce: true, EffectId: DecisionEffect.JoinId }
+            && principalDepartmentId is { } principalDepartment
+            && holder is { } joinedHolder
+            && joinedHolder != principalDepartment)
+        {
+            return new NextActionResponse(
+                NextActionKind.Move, active.DecisionId, principalDepartment, MovementType.ReferralId);
         }
 
         var sendingToArchive = active is { IsInForce: true, EffectId: DecisionEffect.SendToArchiveId };

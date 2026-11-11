@@ -447,6 +447,6 @@ public static class DomainErrors
         public static readonly Error AppealReferenceTooLong = Error.Validation("Decisions.AppealReferenceTooLong", "The appeal reference cannot exceed 100 characters.");
         public static readonly Error AppealNotesTooLong = Error.Validation("Decisions.AppealNotesTooLong", "The appeal notes cannot exceed 2000 characters.");
         public static readonly Error DocumentJoined = Error.Conflict("Decisions.DocumentJoined", "This file was joined into another and cannot take a new separating decision.");
-        public static readonly Error JoinTargetInvalid = Error.Conflict("Decisions.JoinTargetInvalid", "Unification of two files is not available yet.");
+        public static readonly Error JoinTargetInvalid = Error.Conflict("Decisions.JoinTargetInvalid", "The principal file cannot be used: it is missing, is this same file, is archived or canceled, is itself joined into another file, cannot be viewed, or the link would create a cycle. A decision that does not unify files cannot name a principal file.");
     }
 }

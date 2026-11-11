@@ -26,6 +26,11 @@ const PHRASES: Record<number, Record<RelationDirection, string>> = {
     Incoming: 'لهذه الوثيقة نسخة هي',
     Symmetric: 'مرتبطة بـ',
   },
+  [DOCUMENT_RELATION_TYPE.JoinedInto]: {
+    Outgoing: 'هذه الوثيقة موحَّدة مع',
+    Incoming: 'وُحِّد في هذه الوثيقة',
+    Symmetric: 'مرتبطة بـ',
+  },
 }
 
 const FALLBACK: Record<RelationDirection, string> = {

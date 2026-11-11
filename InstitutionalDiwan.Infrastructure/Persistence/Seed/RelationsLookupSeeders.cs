@@ -13,6 +13,7 @@ public sealed class DocumentRelationTypeSeeder : LookupSeederBase<DocumentRelati
         (DocumentRelationType.RelatedId, "Related", "مرتبط"),
         (DocumentRelationType.SupersedesId, "Supersedes", "يلغي"),
         (DocumentRelationType.DuplicateOfId, "Duplicate of", "نسخة عن"),
+        (DocumentRelationType.JoinedIntoId, "Joined into", "موحَّد مع"),
     };
 
     protected override DocumentRelationType BuildItem(int id, string desc, string descAr)
