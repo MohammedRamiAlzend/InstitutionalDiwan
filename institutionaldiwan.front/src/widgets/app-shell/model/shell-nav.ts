@@ -1,6 +1,7 @@
 import type { LucideIcon } from 'lucide-react'
 import {
   Archive,
+  BookMarked,
   Bug,
   Contact,
   Building2,
@@ -84,6 +85,14 @@ export const SHELL_NAV_GROUPS: readonly ShellNavGroup[] = [
         to: ROUTES.DECISIONS,
         icon: Scale,
         permission: Permissions.DocumentView,
+        available: true,
+      },
+      {
+        id: 'my-registers',
+        label: 'سجلاتي',
+        to: ROUTES.MY_REGISTERS,
+        icon: BookMarked,
+        permission: Permissions.NumberingView,
         available: true,
       },
       {

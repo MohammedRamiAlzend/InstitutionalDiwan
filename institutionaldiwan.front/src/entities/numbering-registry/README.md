@@ -50,6 +50,7 @@ affected `detail(id)`.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-11 | Claude | `DepartmentRegisterLineResponse` gained `registryId`, so a screen can show one register at a time. |
 | 2026-11-10 | Claude | `DepartmentRegisterLineResponse` gained `replacedByNumberText` and `replacesNumberText`. |
 | 2026-11-08 | Claude | Added the shared department register picker. |
 | 2026-10-29 | agent | Module 04 Phase 2: added `unknownPatternTokens` to `model/format.ts` and exported it through the barrel; documented that `registryScopeRank` is ordering-only, not a server-precedence claim. |

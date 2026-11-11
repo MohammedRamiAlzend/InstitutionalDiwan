@@ -387,6 +387,7 @@ public sealed class DepartmentRegisterNumberingTests
         Assert.Equal(FirstVisit, line.RegistryDate);
         Assert.Equal(world.Document.OfficialNumberText, line.CentralNumberText);
         Assert.Equal(1, line.RegistrationCount);
+        Assert.Equal(world.DepartmentEntry(world.HrId)!.RegistryId, line.RegistryId);
     }
 
     [Fact]

@@ -36,6 +36,8 @@ export interface DepartmentRegisterLineResponse {
   replacedByNumberText: string | null
   /** On a newer line: the department's earlier number it replaced. */
   replacesNumberText: string | null
+  /** The department register the line was written in; null only on a response from an older server. */
+  registryId: string | null
 }
 
 /** Optional year filter for the department register book. */

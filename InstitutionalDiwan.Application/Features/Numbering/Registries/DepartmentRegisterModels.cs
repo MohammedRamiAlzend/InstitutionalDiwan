@@ -13,6 +13,8 @@ public sealed record ListDepartmentRegisterQuery(Guid DepartmentId, int? Numberi
 /// One document as it appears in a department's register. When the department renumbered the
 /// document, the replaced line (<c>StatusId</c> 3) carries the number that took its place in
 /// <c>ReplacedByNumberText</c> and the newer line carries the earlier number in <c>ReplacesNumberText</c>.
+/// <c>RegistryId</c> names the department register the line was written in, so a client can show one
+/// register at a time.
 /// </summary>
 public sealed record DepartmentRegisterLineResponse(
     Guid DocumentNumberId,
@@ -25,4 +27,5 @@ public sealed record DepartmentRegisterLineResponse(
     int StatusId,
     int RegistrationCount,
     string? ReplacedByNumberText = null,
-    string? ReplacesNumberText = null);
+    string? ReplacesNumberText = null,
+    Guid? RegistryId = null);

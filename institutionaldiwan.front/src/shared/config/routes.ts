@@ -9,6 +9,7 @@ export const ROUTES = {
   DOCUMENT_DETAIL_PATTERN: '/documents/:documentId',
   MOVEMENTS: '/movements',
   DECISIONS: '/decisions',
+  MY_REGISTERS: '/my-registers',
   ARCHIVE: '/archive',
   NOTIFICATIONS: '/notifications',
   LOOKUPS: '/lookups',

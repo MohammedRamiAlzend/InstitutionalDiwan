@@ -37,6 +37,7 @@ entrances and colour transitions with it — from the display-settings dialog or
 | Module 09 audit navigation | «سجل التدقيق» available under الرقابة والتدقيق for `AUDIT_VIEW`; verified for both a manager and a view-only role. |
 | Department badge / SignalR bell | Pending their slices. |
 ## 6. Change Log
+- 2026-11-11: Added the «سجلاتي» entry under المراسلات (`ROUTES.MY_REGISTERS`, `NUMBERING_VIEW`).
 - 2026-11-11: Added the «القرارات» entry under المراسلات (`ROUTES.DECISIONS`, `DOCUMENT_VIEW`).
 - 2026-11-09: Added the «الأشخاص» entry under المراسلات, behind `PERSON_VIEW`.
 - 2026-11-08: Added the «الأخطاء البرمجية» navigation entry.

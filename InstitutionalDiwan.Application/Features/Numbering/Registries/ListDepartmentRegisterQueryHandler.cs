@@ -103,7 +103,8 @@ internal sealed class ListDepartmentRegisterQueryHandler
                         history.EventTypeId is DocumentNumberEventType.RegisteredInDepartmentId
                             or DocumentNumberEventType.ReRegisteredInDepartmentId),
                     byId.GetValueOrDefault(number.ReplacedByNumberId ?? Guid.Empty)?.OfficialNumberText,
-                    replacedBy.GetValueOrDefault(number.DocumentNumberId)?.OfficialNumberText);
+                    replacedBy.GetValueOrDefault(number.DocumentNumberId)?.OfficialNumberText,
+                    number.RegistryId);
             })
             .ToList();
 

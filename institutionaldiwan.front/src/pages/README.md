@@ -51,6 +51,7 @@ complex business mutations, raw `axios`/`fetch` calls, or reusable domain models
 | `system-errors/` | `/system-errors` behind `SYSTEM_ERRORS_VIEW`. | — | — | — |
 | `persons/` | `/persons` and `/persons/:personId` behind `PERSON_VIEW`. | — | — | — |
 | `decisions/` | `/decisions` behind `DOCUMENT_VIEW`; `?tab=register` or `?tab=types` (types need `LOOKUP_MANAGE`). | — | — | — |
+| `my-registers/` | `/my-registers` behind `NUMBERING_VIEW`; pick a register of your own department. | `GET /api/numbering/registries`, `GET /api/departments/{id}/register` | ✅ Implemented |
 | `audit/` | `/audit` | 09 — `GET /api/audit-logs`, checkpoints, integrity checks/reports (`?panel=logs\|integrity`) | ✅ Implemented (Module 09) |
 | `archive/` | `/archive` | 07 — `GET /api/archive/documents`, saved searches | ✅ Implemented (Module 07) |
 | `notifications/` | `/notifications` | 10 — `GET /api/notifications`, `/hubs/notifications` | ✅ Implemented (Module 10) |
@@ -89,6 +90,7 @@ the cross-module `widgets/visualization-panel` remains planned.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-11 | Claude | Added `my-registers/` (`/my-registers`, the registers of the caller's own department). |
 | 2026-11-11 | Claude | Added `decisions/` (`/decisions`, register and decision-type tabs). |
 | 2026-11-09 | Claude | Added `persons/`. |
 | 2026-11-08 | Claude | Added `system-errors/`. |

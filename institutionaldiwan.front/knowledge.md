@@ -271,7 +271,7 @@ A department has one number in use per document per year (`DepartmentNumberLocke
 
 ### Department register — `/api/departments/{departmentId}/register`
 
-`GET` — `NUMBERING_VIEW`. Optional numbering-year filter.
+`GET` — `NUMBERING_VIEW`. Optional numbering-year filter. Each line carries `registryId`, the department register it was written in. The SPA's `/my-registers` page («سجلاتي») reads the caller's own department book once, lists that department's registers from `GET /api/numbering/registries`, and shows one register at a time with year, status, date, search and sort filters in the URL.
 
 ### Movements — `/api/movements`
 
