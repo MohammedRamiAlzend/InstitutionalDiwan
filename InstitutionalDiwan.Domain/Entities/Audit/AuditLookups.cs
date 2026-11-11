@@ -65,6 +65,9 @@ public sealed class AuditEntityType : LookupEntity
     public const int DecisionId = 16;
     public const int DecisionTypeId = 17;
 
+    /// <summary>An appeal recorded against a decision.</summary>
+    public const int DecisionAppealId = 18;
+
     private AuditEntityType()
     {
     }

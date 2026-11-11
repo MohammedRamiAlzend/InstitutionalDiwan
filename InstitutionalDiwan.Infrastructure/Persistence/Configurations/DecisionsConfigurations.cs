@@ -98,5 +98,44 @@ public sealed class DocumentDecisionConfiguration : IEntityTypeConfiguration<Doc
         builder.HasOne<Department>().WithMany().HasForeignKey(x => x.DestinationDepartmentId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne<DocumentRegistryVisit>().WithMany().HasForeignKey(x => x.RegistryVisitId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne<DocumentFile>().WithMany().HasForeignKey(x => x.DocumentFileId).OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasMany(x => x.Appeals)
+            .WithOne()
+            .HasForeignKey(x => x.DecisionId)
+            .OnDelete(DeleteBehavior.Cascade);
+        builder.Navigation(x => x.Appeals).UsePropertyAccessMode(PropertyAccessMode.Field);
+    }
+}
+
+public sealed class DecisionAppealConfiguration : IEntityTypeConfiguration<DecisionAppeal>
+{
+    public void Configure(EntityTypeBuilder<DecisionAppeal> builder)
+    {
+        builder.ToTable("DECISION_APPEALS");
+        builder.HasKey(x => x.AppealId);
+        builder.Property(x => x.AppealId).HasColumnName("AppealId").ValueGeneratedNever();
+        builder.Property(x => x.DecisionId).HasColumnName("DecisionId").IsRequired();
+        builder.Property(x => x.AppealDate).HasColumnName("AppealDate").HasColumnType("date").IsRequired();
+        builder.Property(x => x.AppellantDepartmentId).HasColumnName("AppellantDepartmentId").IsRequired();
+        builder.Property(x => x.ReferenceNumber).HasColumnName("ReferenceNumber").HasMaxLength(DecisionAppeal.MaxReferenceLength);
+        builder.Property(x => x.Notes).HasColumnName("Notes").HasMaxLength(DecisionAppeal.MaxNotesLength);
+        builder.Property(x => x.OutcomeId).HasColumnName("OutcomeId").IsRequired();
+        builder.Property(x => x.OutcomeDate).HasColumnName("OutcomeDate").HasColumnType("date");
+        builder.Property(x => x.RecordedByUserId).HasColumnName("RecordedByUserId").IsRequired();
+        builder.Property(x => x.RecordedAt).HasColumnName("RecordedAt").HasColumnType("datetime2(3)").IsRequired();
+        builder.Property(x => x.OutcomeRecordedByUserId).HasColumnName("OutcomeRecordedByUserId");
+        builder.Property(x => x.OutcomeRecordedAt).HasColumnName("OutcomeRecordedAt").HasColumnType("datetime2(3)");
+
+        builder.HasIndex(x => x.DecisionId).HasDatabaseName("IX_DECISION_APPEALS_DECISION");
+
+        // One pending appeal per decision. Outcome 1 is pending. The name argument keeps this
+        // index distinct from the decision lookup above. Bracketed identifiers match the other
+        // partial indexes, which SQLite tests already apply.
+        builder.HasIndex(x => x.DecisionId, "UX_DECISION_APPEALS_ONE_PENDING")
+            .IsUnique()
+            .HasFilter("[OutcomeId] = 1");
+
+        builder.HasOne<Department>().WithMany().HasForeignKey(x => x.AppellantDepartmentId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

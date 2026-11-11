@@ -476,6 +476,7 @@ function DocumentDetailsView() {
             documentId={document.documentId}
             documentTitle={document.title}
             documentTypeId={document.documentTypeId}
+            owningDepartmentId={document.owningDepartmentId}
             canIssue={canManageDecisions && !isCanceled && !isArchived}
             canMove={canEdit && !isCanceled && !isArchived}
             canArchive={canArchiveNow}

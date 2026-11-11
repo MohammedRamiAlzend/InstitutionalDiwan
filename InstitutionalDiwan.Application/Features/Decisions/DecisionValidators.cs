@@ -48,6 +48,31 @@ public sealed class AttachDecisionFileCommandValidator : AbstractValidator<Attac
     }
 }
 
+public sealed class RecordDecisionAppealCommandValidator : AbstractValidator<RecordDecisionAppealCommand>
+{
+    public RecordDecisionAppealCommandValidator()
+    {
+        RuleFor(command => command.DecisionId).NotEmpty().WithErrorCode("Decisions.DecisionNotFound");
+        RuleFor(command => command.UserId).NotEmpty().WithErrorCode("Identity.UserIdEmpty");
+        RuleFor(command => command.ReferenceNumber).MaximumLength(DecisionAppeal.MaxReferenceLength)
+            .WithErrorCode("Decisions.AppealReferenceTooLong");
+        RuleFor(command => command.Notes).MaximumLength(DecisionAppeal.MaxNotesLength)
+            .WithErrorCode("Decisions.AppealNotesTooLong");
+    }
+}
+
+public sealed class RecordAppealOutcomeCommandValidator : AbstractValidator<RecordAppealOutcomeCommand>
+{
+    public RecordAppealOutcomeCommandValidator()
+    {
+        RuleFor(command => command.DecisionId).NotEmpty().WithErrorCode("Decisions.DecisionNotFound");
+        RuleFor(command => command.AppealId).NotEmpty().WithErrorCode("Decisions.AppealNotFound");
+        RuleFor(command => command.UserId).NotEmpty().WithErrorCode("Identity.UserIdEmpty");
+        RuleFor(command => command.OutcomeId).Must(AppealOutcome.IsRuling)
+            .WithErrorCode("Decisions.AppealOutcomeInvalid");
+    }
+}
+
 public sealed class CancelDecisionCommandValidator : AbstractValidator<CancelDecisionCommand>
 {
     public CancelDecisionCommandValidator()

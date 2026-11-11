@@ -1,6 +1,6 @@
 # Infrastructure / Persistence / Migrations
 
-> **Status:** Implemented — migrations through `Drop_DecisionType_EnglishName` are generated, including the Module 09 `Add_Audit_Chain_Uniqueness` guard and the additive `Add_Document_Dynamic_Fields`.
+> **Status:** Implemented — migrations through `Add_Decision_Appeals` are generated, including the Module 09 `Add_Audit_Chain_Uniqueness` guard and the additive `Add_Document_Dynamic_Fields`.
 > Startup applies them through `Server/Extensions/DatabaseExtensions.cs`
 > (`Database.MigrateAsync`).
 
@@ -35,6 +35,7 @@ empty migration when the model changed.
 | `20261111085414_Add_Archive_Diwan` | Adds the nullable `INSTITUTION_SETTINGS.ArchiveDiwanDepartmentId` with its index and a restricting foreign key to `DEPARTMENTS`. Additive; existing rows keep null. |
 | `20261111100359_Add_Decisions` | Adds `DECISION_TYPES`, `DECISION_TYPE_DOCUMENT_TYPES` and `DOCUMENT_DECISIONS`, with a unique number per issuing department and year and a filtered unique index so one document has one in-force decision. |
 | `20261111103921_Drop_DecisionType_EnglishName` | Drops `DECISION_TYPES.Name`. A decision type keeps its Arabic name only. |
+| `20261111110728_Add_Decision_Appeals` | Adds `DECISION_APPEALS`: appeal date, appellant department, optional reference and notes, outcome, and who recorded the appeal and its outcome. `AppealDate` and `OutcomeDate` are `date`. Cascade from the decision, restrict on the department. `IX_DECISION_APPEALS_DECISION` plus filtered unique `UX_DECISION_APPEALS_ONE_PENDING` (`[OutcomeId] = 1`). |
 
 ## Custom (hand-written) migration steps
 
@@ -71,6 +72,7 @@ empty migration when the model changed.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-11 | Claude | Added `20261111110728_Add_Decision_Appeals` (`DECISION_APPEALS`, date columns, and one pending appeal per decision). |
 | 2026-11-11 | Claude | Added `20261111103921_Drop_DecisionType_EnglishName`, which drops the English name of a decision type. |
 | 2026-11-11 | Claude | Added `20261111100359_Add_Decisions` (decision types, their document-type links, and document decisions). Applied to the development database by the API's startup migration on 2026-11-11. |
 | 2026-11-11 | Claude | Added `20261111085414_Add_Archive_Diwan` (nullable archive diwan on the institution settings). Applied to the development database by the API's startup migration on 2026-11-11. |

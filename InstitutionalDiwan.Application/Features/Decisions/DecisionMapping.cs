@@ -32,5 +32,22 @@ internal static class DecisionMapping
         decision.RecordedByUserId,
         decision.RecordedAt,
         decision.StatusReason,
-        Appeals: []);
+        decision.Appeals
+            .OrderByDescending(appeal => appeal.AppealDate)
+            .ThenByDescending(appeal => appeal.RecordedAt)
+            .Select(ToAppeal)
+            .ToList());
+
+    private static DecisionAppealResponse ToAppeal(DecisionAppeal appeal) => new(
+        appeal.AppealId,
+        appeal.AppealDate,
+        appeal.AppellantDepartmentId,
+        appeal.ReferenceNumber,
+        appeal.Notes,
+        appeal.OutcomeId,
+        appeal.OutcomeDate,
+        appeal.RecordedByUserId,
+        appeal.RecordedAt,
+        appeal.OutcomeRecordedByUserId,
+        appeal.OutcomeRecordedAt);
 }

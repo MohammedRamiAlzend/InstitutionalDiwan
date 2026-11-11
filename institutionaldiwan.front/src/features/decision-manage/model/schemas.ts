@@ -18,6 +18,22 @@ export const cancelDecisionSchema = z.object({
 
 export type CancelDecisionFormValues = z.infer<typeof cancelDecisionSchema>
 
+export const recordAppealSchema = z.object({
+  appealDate: z.string().regex(DATE_PATTERN, 'تاريخ الاعتراض مطلوب.'),
+  appellantDepartmentId: z.string().min(1, 'القسم المعترض مطلوب.'),
+  referenceNumber: z.string().trim().max(100, 'الرقم المرجعي لا يتجاوز 100 حرف.'),
+  notes: z.string().trim().max(2000, 'الملاحظات لا تتجاوز 2000 حرف.'),
+})
+
+export type RecordAppealFormValues = z.infer<typeof recordAppealSchema>
+
+export const recordAppealOutcomeSchema = z.object({
+  outcomeId: z.string().min(1, 'اختر النتيجة.'),
+  outcomeDate: z.string().regex(DATE_PATTERN, 'تاريخ النتيجة مطلوب.'),
+})
+
+export type RecordAppealOutcomeFormValues = z.infer<typeof recordAppealOutcomeSchema>
+
 export const attachDecisionFileSchema = z.object({
   documentFileId: z.string().min(1, 'اختر نسخة القرار.'),
 })

@@ -54,7 +54,7 @@ public sealed class DecisionPersistenceTests
     }
 
     private static async Task<DocumentDecision> AddDecisionAsync(
-        World world, Guid ownerId, Guid authorId, string number, int statusId = DecisionStatus.FinalId)
+        World world, Guid ownerId, Guid authorId, string number, int statusId = DecisionStatus.FinalId, bool appealable = false)
     {
         var document = Document.CreateDraft(
             null, DocumentType.InternalMemoId, DocumentDirection.InternalId, ownerId, authorId,
@@ -65,7 +65,10 @@ public sealed class DecisionPersistenceTests
         world.Db.Documents.Add(document);
 
         var type = DecisionType.Create(
-            "منع المحاكمة", false, DecisionEffect.SendToArchiveId, null,
+            appealable ? "الظن" : "منع المحاكمة",
+            appealable,
+            appealable ? DecisionEffect.NoneId : DecisionEffect.SendToArchiveId,
+            null,
             [DocumentType.InternalMemoId]).Value;
         world.Db.DecisionTypes.Add(type);
         await world.Db.SaveChangesAsync();
@@ -124,5 +127,41 @@ public sealed class DecisionPersistenceTests
             world.Home.DepartmentId, visitId, null, null, world.Caller.UserId, false, false, Now).Value;
         world.Db.DocumentDecisions.Add(sameNumber);
         await Assert.ThrowsAsync<DbUpdateException>(() => world.Db.SaveChangesAsync());
+    }
+
+    [Fact]
+    public async Task Appeal_RoundTripsWithTheDecision()
+    {
+        var world = await CreateWorldAsync();
+        var decision = await AddDecisionAsync(
+            world, world.Home.DepartmentId, world.Caller.UserId, "APP/2026", appealable: true);
+        var repository = new DocumentDecisionRepository(world.Db);
+
+        var tracked = await repository.GetByIdAsync(decision.DecisionId);
+        Assert.NotNull(tracked);
+        var recorded = tracked.RecordAppeal(
+            new DateOnly(2026, 11, 11), world.Home.DepartmentId, "REF-1", "ملاحظة", world.Caller.UserId, Now);
+        Assert.True(recorded.IsSuccess, recorded.Error.Code);
+        await world.Db.SaveChangesAsync();
+
+        var appealed = await repository.ListByDocumentAsync(decision.DocumentId);
+        var stored = Assert.Single(appealed);
+        Assert.Equal(DecisionStatus.AppealedId, stored.StatusId);
+        var appeal = Assert.Single(stored.Appeals);
+        Assert.Equal(AppealOutcome.PendingId, appeal.OutcomeId);
+        Assert.Equal("REF-1", appeal.ReferenceNumber);
+
+        world.Db.ChangeTracker.Clear();
+        var again = await repository.GetByIdAsync(decision.DecisionId);
+        Assert.NotNull(again);
+        Assert.True(again.RecordAppealOutcome(
+            appeal.AppealId, AppealOutcome.AcceptedId, new DateOnly(2026, 11, 12), world.Caller.UserId, Now).IsSuccess);
+        await world.Db.SaveChangesAsync();
+
+        world.Db.ChangeTracker.Clear();
+        var revoked = Assert.Single(await repository.ListByDocumentAsync(decision.DocumentId));
+        Assert.Equal(DecisionStatus.RevokedId, revoked.StatusId);
+        Assert.Equal(AppealOutcome.AcceptedId, Assert.Single(revoked.Appeals).OutcomeId);
+        Assert.Equal(new DateOnly(2026, 11, 12), revoked.Appeals.Single().OutcomeDate);
     }
 }

@@ -169,6 +169,13 @@ export const DECISION_STATUS = {
   Canceled: 5,
 } as const
 
+/** `AppealOutcome`. Pending is recorded with the appeal; a ruling is accepted or rejected. */
+export const APPEAL_OUTCOME = {
+  Pending: 1,
+  Accepted: 2,
+  Rejected: 3,
+} as const
+
 export const AUDIT_ACTION_TYPE = {
   Create: 1,
   Update: 2,

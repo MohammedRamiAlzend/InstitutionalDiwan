@@ -1555,6 +1555,72 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                     b.ToTable("PARTICIPANT_TARGET_TYPES", (string)null);
                 });
 
+            modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Decisions.DecisionAppeal", b =>
+                {
+                    b.Property<Guid>("AppealId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("AppealId");
+
+                    b.Property<DateOnly>("AppealDate")
+                        .HasColumnType("date")
+                        .HasColumnName("AppealDate");
+
+                    b.Property<Guid>("AppellantDepartmentId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("AppellantDepartmentId");
+
+                    b.Property<Guid>("DecisionId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("DecisionId");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)")
+                        .HasColumnName("Notes");
+
+                    b.Property<DateOnly?>("OutcomeDate")
+                        .HasColumnType("date")
+                        .HasColumnName("OutcomeDate");
+
+                    b.Property<int>("OutcomeId")
+                        .HasColumnType("int")
+                        .HasColumnName("OutcomeId");
+
+                    b.Property<DateTime?>("OutcomeRecordedAt")
+                        .HasColumnType("datetime2(3)")
+                        .HasColumnName("OutcomeRecordedAt");
+
+                    b.Property<Guid?>("OutcomeRecordedByUserId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("OutcomeRecordedByUserId");
+
+                    b.Property<DateTime>("RecordedAt")
+                        .HasColumnType("datetime2(3)")
+                        .HasColumnName("RecordedAt");
+
+                    b.Property<Guid>("RecordedByUserId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("RecordedByUserId");
+
+                    b.Property<string>("ReferenceNumber")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("ReferenceNumber");
+
+                    b.HasKey("AppealId");
+
+                    b.HasIndex("AppellantDepartmentId");
+
+                    b.HasIndex("DecisionId")
+                        .HasDatabaseName("IX_DECISION_APPEALS_DECISION");
+
+                    b.HasIndex(new[] { "DecisionId" }, "UX_DECISION_APPEALS_ONE_PENDING")
+                        .IsUnique()
+                        .HasFilter("[OutcomeId] = 1");
+
+                    b.ToTable("DECISION_APPEALS", (string)null);
+                });
+
             modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Decisions.DecisionType", b =>
                 {
                     b.Property<Guid>("DecisionTypeId")
@@ -4342,6 +4408,21 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Decisions.DecisionAppeal", b =>
+                {
+                    b.HasOne("InstitutionalDiwan.Domain.Entities.Organization.Department", null)
+                        .WithMany()
+                        .HasForeignKey("AppellantDepartmentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("InstitutionalDiwan.Domain.Entities.Decisions.DocumentDecision", null)
+                        .WithMany("Appeals")
+                        .HasForeignKey("DecisionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Decisions.DecisionType", b =>
                 {
                     b.HasOne("InstitutionalDiwan.Domain.Entities.Organization.Department", null)
@@ -4810,6 +4891,11 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Decisions.DecisionType", b =>
                 {
                     b.Navigation("DocumentTypes");
+                });
+
+            modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Decisions.DocumentDecision", b =>
+                {
+                    b.Navigation("Appeals");
                 });
 
             modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Identity.Role", b =>

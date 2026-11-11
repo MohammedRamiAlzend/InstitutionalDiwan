@@ -1,10 +1,13 @@
 using InstitutionalDiwan.Application.Features.Decisions;
+using InstitutionalDiwan.Domain.Entities.Archiving;
 using InstitutionalDiwan.Domain.Entities.Correspondence;
 using InstitutionalDiwan.Domain.Entities.Decisions;
 using InstitutionalDiwan.Domain.Entities.Notifications;
 using InstitutionalDiwan.Domain.Entities.Organization;
 using InstitutionalDiwan.Domain.Errors;
+using InstitutionalDiwan.Domain.Events;
 using InstitutionalDiwan.Domain.Repositories;
+using InstitutionalDiwan.Domain.ValueObjects;
 using InstitutionalDiwan.Tests.Support;
 
 namespace InstitutionalDiwan.Tests.Application;
@@ -45,6 +48,26 @@ public sealed class DecisionTests
             IssueHandler().Handle(
                 new IssueDocumentDecisionCommand(
                     Document.DocumentId, UserId, type.DecisionTypeId, number, date ?? DecisionDate, null, null),
+                CancellationToken.None);
+
+        public RecordDecisionAppealCommandHandler AppealHandler() =>
+            new(Documents, Decisions, Types, Departments, Scope, UnitOfWork);
+
+        public RecordAppealOutcomeCommandHandler OutcomeHandler() =>
+            new(Decisions, Types, Scope, UnitOfWork);
+
+        public Task<InstitutionalDiwan.Domain.Common.Result<DocumentDecisionResponse>> AppealAsync(
+            Guid decisionId, Guid? appellantDepartmentId = null, string? reference = null) =>
+            AppealHandler().Handle(
+                new RecordDecisionAppealCommand(
+                    decisionId, UserId, DecisionDate, appellantDepartmentId, reference, null),
+                CancellationToken.None);
+
+        public Task<InstitutionalDiwan.Domain.Common.Result<DocumentDecisionResponse>> OutcomeAsync(
+            Guid decisionId, Guid appealId, int outcomeId) =>
+            OutcomeHandler().Handle(
+                new RecordAppealOutcomeCommand(
+                    decisionId, appealId, UserId, outcomeId, DecisionDate.AddDays(1)),
                 CancellationToken.None);
     }
 
@@ -202,5 +225,160 @@ public sealed class DecisionTests
         world.Decisions.OpenVisit = new OpenDecisionVisit(Guid.NewGuid(), otherDepartment);
         var other = await world.IssueAsync(type, "2026/1");
         Assert.True(other.IsSuccess, other.Error?.Code);
+    }
+
+    [Fact]
+    public async Task Appeal_MovesIssuedToAppealed_AndRejectionMakesItFinal()
+    {
+        var world = new World();
+        var type = Type(DecisionEffect.ReferId, appealable: true);
+        world.Types.Add(type);
+        var issued = await world.IssueAsync(type, "2026/8");
+        Assert.Equal(DecisionStatus.IssuedId, issued.Value.StatusId);
+        var notices = world.Notifications.Published.Count;
+
+        var pendingRuling = await world.OutcomeAsync(issued.Value.DecisionId, Guid.NewGuid(), AppealOutcome.PendingId);
+        Assert.Equal(DomainErrors.Decisions.AppealNotFound.Code, pendingRuling.Error.Code);
+
+        var appealed = await world.AppealAsync(issued.Value.DecisionId, reference: "ط/1");
+        Assert.True(appealed.IsSuccess, appealed.Error?.Code);
+        Assert.Equal(DecisionStatus.AppealedId, appealed.Value.StatusId);
+        var appeal = Assert.Single(appealed.Value.Appeals);
+        Assert.Equal(AppealOutcome.PendingId, appeal.OutcomeId);
+        Assert.Equal("ط/1", appeal.ReferenceNumber);
+        Assert.Equal(world.HolderId, appeal.AppellantDepartmentId);
+        Assert.Equal(notices, world.Notifications.Published.Count);
+        Assert.Contains(
+            world.Decisions.Decisions.Single().DomainEvents.OfType<DecisionAppealedEvent>(),
+            item => item.AppealId == appeal.AppealId);
+
+        var second = await world.AppealAsync(issued.Value.DecisionId);
+        Assert.Equal(DomainErrors.Decisions.AppealAlreadyPending.Code, second.Error.Code);
+
+        var notARuling = await world.OutcomeAsync(issued.Value.DecisionId, appeal.AppealId, AppealOutcome.PendingId);
+        Assert.Equal(DomainErrors.Decisions.AppealOutcomeInvalid.Code, notARuling.Error.Code);
+
+        var rejected = await world.OutcomeAsync(issued.Value.DecisionId, appeal.AppealId, AppealOutcome.RejectedId);
+        Assert.True(rejected.IsSuccess, rejected.Error?.Code);
+        Assert.Equal(DecisionStatus.FinalId, rejected.Value.StatusId);
+        Assert.Equal(AppealOutcome.RejectedId, Assert.Single(rejected.Value.Appeals).OutcomeId);
+        Assert.True(world.Decisions.Decisions.Single().IsInForce);
+
+        var repeated = await world.OutcomeAsync(issued.Value.DecisionId, appeal.AppealId, AppealOutcome.AcceptedId);
+        Assert.Equal(DomainErrors.Decisions.AppealOutcomeInvalid.Code, repeated.Error.Code);
+
+        var another = await world.IssueAsync(type, "2026/9");
+        Assert.Equal(DomainErrors.Decisions.ActiveDecisionExists.Code, another.Error.Code);
+    }
+
+    [Fact]
+    public async Task Appeal_OnANonAppealableDecision_IsRefused()
+    {
+        var world = new World();
+        var type = Type(DecisionEffect.SendToArchiveId, appealable: false);
+        world.Types.Add(type);
+        var issued = await world.IssueAsync(type, "2026/4");
+        Assert.Equal(DecisionStatus.FinalId, issued.Value.StatusId);
+
+        var appealed = await world.AppealAsync(issued.Value.DecisionId);
+        Assert.Equal(DomainErrors.Decisions.NotAppealable.Code, appealed.Error.Code);
+        Assert.Empty(world.Decisions.Decisions.Single().Appeals);
+        Assert.Equal(DecisionStatus.FinalId, world.Decisions.Decisions.Single().StatusId);
+    }
+
+    [Fact]
+    public async Task AcceptedAppeal_RevokesTheDecision_AndAllowsANewOne()
+    {
+        var world = new World();
+        var type = Type(DecisionEffect.NoneId, appealable: true);
+        world.Types.Add(type);
+        var issued = await world.IssueAsync(type, "2026/1");
+        var appealed = await world.AppealAsync(issued.Value.DecisionId);
+        Assert.True(appealed.IsSuccess, appealed.Error?.Code);
+
+        var accepted = await world.OutcomeAsync(
+            issued.Value.DecisionId, appealed.Value.Appeals.Single().AppealId, AppealOutcome.AcceptedId);
+        Assert.True(accepted.IsSuccess, accepted.Error?.Code);
+        Assert.Equal(DecisionStatus.RevokedId, accepted.Value.StatusId);
+        Assert.Equal(AppealOutcome.AcceptedId, accepted.Value.Appeals.Single().OutcomeId);
+        Assert.False(world.Decisions.Decisions.Single(decision => decision.DecisionId == issued.Value.DecisionId).IsInForce);
+
+        var next = await world.IssueAsync(type, "2026/2");
+        Assert.True(next.IsSuccess, next.Error?.Code);
+        Assert.Equal(DecisionStatus.IssuedId, next.Value.StatusId);
+    }
+
+    [Fact]
+    public async Task Appeal_OnAnArchivedDocument_IsAllowed_AndLeavesTheDocumentArchived()
+    {
+        var world = new World();
+        var type = Type(DecisionEffect.ReferId, appealable: true);
+        world.Types.Add(type);
+        var issued = await world.IssueAsync(type, "2026/3");
+        Assert.True(issued.IsSuccess, issued.Error?.Code);
+
+        Assert.True(world.Document.Register(
+            Guid.NewGuid(), OfficialNumberValue.Create("2026/000099").Value, world.UserId).IsSuccess);
+        Assert.True(world.Document.Archive(
+            world.UserId, hasActiveMovements: false, ArchiveLocation.PhysicalArchiveId).IsSuccess);
+        var documentEvents = world.Document.DomainEvents.Count;
+
+        var appealed = await world.AppealAsync(issued.Value.DecisionId);
+        Assert.True(appealed.IsSuccess, appealed.Error?.Code);
+        Assert.Equal(DecisionStatus.AppealedId, appealed.Value.StatusId);
+        Assert.Equal(DocumentStatusType.ArchivedId, world.Document.CurrentStatusId);
+        Assert.Equal(documentEvents, world.Document.DomainEvents.Count);
+
+        var accepted = await world.OutcomeAsync(
+            issued.Value.DecisionId, appealed.Value.Appeals.Single().AppealId, AppealOutcome.AcceptedId);
+        Assert.True(accepted.IsSuccess, accepted.Error?.Code);
+        Assert.Equal(DecisionStatus.RevokedId, accepted.Value.StatusId);
+        Assert.Equal(DocumentStatusType.ArchivedId, world.Document.CurrentStatusId);
+    }
+
+    [Fact]
+    public async Task Appeal_IsAllowedWhenScopeCoversTheIssuerOrTheAppellant()
+    {
+        var appellant = Department.Create("APP", "النيابة", DepartmentType.SectionId).Value;
+
+        var byAppellant = new World();
+        var type = Type(DecisionEffect.NoneId, appealable: true);
+        byAppellant.Types.Add(type);
+        byAppellant.Departments.Add(appellant);
+        var issued = await byAppellant.IssueAsync(type, "2026/5");
+        byAppellant.Scope.AccessibleDepartments.Clear();
+        byAppellant.Scope.AccessibleDepartments.Add(appellant.DepartmentId);
+        var appealed = await byAppellant.AppealAsync(issued.Value.DecisionId, appellant.DepartmentId);
+        Assert.True(appealed.IsSuccess, appealed.Error?.Code);
+        var ruled = await byAppellant.OutcomeAsync(
+            issued.Value.DecisionId, appealed.Value.Appeals.Single().AppealId, AppealOutcome.RejectedId);
+        Assert.True(ruled.IsSuccess, ruled.Error?.Code);
+
+        var byIssuer = new World();
+        byIssuer.Types.Add(type);
+        byIssuer.Departments.Add(appellant);
+        var issuerDecision = await byIssuer.IssueAsync(type, "2026/6");
+        byIssuer.Scope.AccessibleDepartments.Clear();
+        byIssuer.Scope.AccessibleDepartments.Add(byIssuer.HolderId);
+        var fromIssuer = await byIssuer.AppealAsync(issuerDecision.Value.DecisionId, appellant.DepartmentId);
+        Assert.True(fromIssuer.IsSuccess, fromIssuer.Error?.Code);
+        byIssuer.Scope.AccessibleDepartments.Clear();
+        var deniedOutcome = await byIssuer.OutcomeAsync(
+            issuerDecision.Value.DecisionId, fromIssuer.Value.Appeals.Single().AppealId, AppealOutcome.AcceptedId);
+        Assert.Equal(DomainErrors.Decisions.AppealOutOfScope.Code, deniedOutcome.Error.Code);
+        Assert.Equal(DecisionStatus.AppealedId, byIssuer.Decisions.Decisions.Single().StatusId);
+
+        var outsider = new World();
+        outsider.Types.Add(type);
+        var blocked = await outsider.IssueAsync(type, "2026/7");
+        outsider.Scope.AccessibleDepartments.Clear();
+        var refused = await outsider.AppealAsync(blocked.Value.DecisionId);
+        Assert.Equal(DomainErrors.Decisions.AppealOutOfScope.Code, refused.Error.Code);
+        Assert.Equal(DecisionStatus.IssuedId, outsider.Decisions.Decisions.Single().StatusId);
+
+        var missingDepartment = Guid.NewGuid();
+        outsider.Scope.AccessibleDepartments.Add(outsider.HolderId);
+        var unknown = await outsider.AppealAsync(blocked.Value.DecisionId, missingDepartment);
+        Assert.Equal(DomainErrors.Department.NotFound.Code, unknown.Error.Code);
     }
 }

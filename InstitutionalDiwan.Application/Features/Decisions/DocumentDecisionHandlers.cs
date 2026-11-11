@@ -194,6 +194,125 @@ internal sealed class CancelDecisionCommandHandler
     }
 }
 
+internal sealed class RecordDecisionAppealCommandHandler
+    : ICommandHandler<RecordDecisionAppealCommand, DocumentDecisionResponse>
+{
+    private readonly IDocumentRepository _documents;
+    private readonly IDocumentDecisionRepository _decisions;
+    private readonly IDecisionTypeRepository _types;
+    private readonly IDepartmentRepository _departments;
+    private readonly IDepartmentScopeEvaluator _scope;
+    private readonly IUnitOfWork _unitOfWork;
+
+    public RecordDecisionAppealCommandHandler(
+        IDocumentRepository documents,
+        IDocumentDecisionRepository decisions,
+        IDecisionTypeRepository types,
+        IDepartmentRepository departments,
+        IDepartmentScopeEvaluator scope,
+        IUnitOfWork unitOfWork)
+    {
+        _documents = documents;
+        _decisions = decisions;
+        _types = types;
+        _departments = departments;
+        _scope = scope;
+        _unitOfWork = unitOfWork;
+    }
+
+    public async Task<Result<DocumentDecisionResponse>> Handle(
+        RecordDecisionAppealCommand request,
+        CancellationToken cancellationToken)
+    {
+        var decision = await _decisions.GetByIdAsync(request.DecisionId, cancellationToken);
+        if (decision is null)
+            return Result.Failure<DocumentDecisionResponse>(DomainErrors.Decisions.DecisionNotFound);
+
+        var document = await _documents.GetByIdAsync(decision.DocumentId, cancellationToken);
+        if (document is null)
+            return Result.Failure<DocumentDecisionResponse>(DomainErrors.Correspondence.DocumentNotFound);
+
+        // The appeal changes the decision only. An archived document stays archived, and neither
+        // an open register visit nor custody of the file is required.
+        var appellantDepartmentId = request.AppellantDepartmentId is { } requested && requested != Guid.Empty
+            ? requested
+            : document.OwningDepartmentId;
+
+        if (request.AppellantDepartmentId is { } explicitId && explicitId != Guid.Empty &&
+            await _departments.GetByIdAsync(explicitId, cancellationToken) is null)
+            return Result.Failure<DocumentDecisionResponse>(DomainErrors.Department.NotFound);
+
+        if (!await AppealScope.CoversAsync(_scope, decision.IssuingDepartmentId, appellantDepartmentId, cancellationToken))
+            return Result.Failure<DocumentDecisionResponse>(DomainErrors.Decisions.AppealOutOfScope);
+
+        var recorded = decision.RecordAppeal(
+            request.AppealDate,
+            appellantDepartmentId,
+            request.ReferenceNumber,
+            request.Notes,
+            request.UserId,
+            _unitOfWork.UtcNow);
+        if (recorded.IsFailure)
+            return Result.Failure<DocumentDecisionResponse>(recorded.Error);
+
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        var type = await _types.GetByIdAsync(decision.DecisionTypeId, cancellationToken);
+        return Result.Success(DecisionMapping.ToResponse(decision, type?.NameAr ?? string.Empty));
+    }
+}
+
+internal sealed class RecordAppealOutcomeCommandHandler
+    : ICommandHandler<RecordAppealOutcomeCommand, DocumentDecisionResponse>
+{
+    private readonly IDocumentDecisionRepository _decisions;
+    private readonly IDecisionTypeRepository _types;
+    private readonly IDepartmentScopeEvaluator _scope;
+    private readonly IUnitOfWork _unitOfWork;
+
+    public RecordAppealOutcomeCommandHandler(
+        IDocumentDecisionRepository decisions,
+        IDecisionTypeRepository types,
+        IDepartmentScopeEvaluator scope,
+        IUnitOfWork unitOfWork)
+    {
+        _decisions = decisions;
+        _types = types;
+        _scope = scope;
+        _unitOfWork = unitOfWork;
+    }
+
+    public async Task<Result<DocumentDecisionResponse>> Handle(
+        RecordAppealOutcomeCommand request,
+        CancellationToken cancellationToken)
+    {
+        var decision = await _decisions.GetByIdAsync(request.DecisionId, cancellationToken);
+        if (decision is null)
+            return Result.Failure<DocumentDecisionResponse>(DomainErrors.Decisions.DecisionNotFound);
+
+        var appeal = decision.Appeals.FirstOrDefault(item => item.AppealId == request.AppealId);
+        if (appeal is null)
+        {
+            if (!await _scope.CanAccessDepartmentAsync(decision.IssuingDepartmentId, cancellationToken))
+                return Result.Failure<DocumentDecisionResponse>(DomainErrors.Decisions.AppealOutOfScope);
+
+            return Result.Failure<DocumentDecisionResponse>(DomainErrors.Decisions.AppealNotFound);
+        }
+
+        if (!await AppealScope.CoversAsync(
+                _scope, decision.IssuingDepartmentId, appeal.AppellantDepartmentId, cancellationToken))
+            return Result.Failure<DocumentDecisionResponse>(DomainErrors.Decisions.AppealOutOfScope);
+
+        var recorded = decision.RecordAppealOutcome(
+            request.AppealId, request.OutcomeId, request.OutcomeDate, request.UserId, _unitOfWork.UtcNow);
+        if (recorded.IsFailure)
+            return Result.Failure<DocumentDecisionResponse>(recorded.Error);
+
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        var type = await _types.GetByIdAsync(decision.DecisionTypeId, cancellationToken);
+        return Result.Success(DecisionMapping.ToResponse(decision, type?.NameAr ?? string.Empty));
+    }
+}
+
 internal sealed class ListDocumentDecisionsQueryHandler
     : IQueryHandler<ListDocumentDecisionsQuery, IReadOnlyList<DocumentDecisionResponse>>
 {
@@ -333,6 +452,21 @@ internal sealed class ListDecisionsQueryHandler
             page.NormalizedPage,
             page.NormalizedPageSize,
             rows.TotalCount));
+    }
+}
+
+internal static class AppealScope
+{
+    public static async Task<bool> CoversAsync(
+        IDepartmentScopeEvaluator scope,
+        Guid issuingDepartmentId,
+        Guid appellantDepartmentId,
+        CancellationToken cancellationToken)
+    {
+        if (await scope.CanAccessDepartmentAsync(issuingDepartmentId, cancellationToken))
+            return true;
+
+        return await scope.CanAccessDepartmentAsync(appellantDepartmentId, cancellationToken);
     }
 }
 

@@ -19,7 +19,11 @@ public sealed record DecisionAppealResponse(
     string? ReferenceNumber,
     string? Notes,
     int OutcomeId,
-    DateOnly? OutcomeDate);
+    DateOnly? OutcomeDate,
+    Guid RecordedByUserId,
+    DateTime RecordedAt,
+    Guid? OutcomeRecordedByUserId,
+    DateTime? OutcomeRecordedAt);
 
 public sealed record DocumentDecisionResponse(
     Guid DecisionId,
@@ -114,6 +118,21 @@ public sealed record CancelDecisionCommand(
     Guid DecisionId,
     Guid UserId,
     string Reason) : ICommand<DocumentDecisionResponse>;
+
+public sealed record RecordDecisionAppealCommand(
+    Guid DecisionId,
+    Guid UserId,
+    DateOnly AppealDate,
+    Guid? AppellantDepartmentId,
+    string? ReferenceNumber,
+    string? Notes) : ICommand<DocumentDecisionResponse>;
+
+public sealed record RecordAppealOutcomeCommand(
+    Guid DecisionId,
+    Guid AppealId,
+    Guid UserId,
+    int OutcomeId,
+    DateOnly OutcomeDate) : ICommand<DocumentDecisionResponse>;
 
 public sealed record ListDocumentDecisionsQuery(Guid DocumentId) : IQuery<IReadOnlyList<DocumentDecisionResponse>>;
 

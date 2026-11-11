@@ -563,6 +563,10 @@ internal sealed class TamperEvidentAuditInterceptor : SaveChangesInterceptor
         DecisionRevokedEvent e => new(
             "DECISIONS", AuditActionType.UpdateId, AuditEntityType.DecisionId, e.DecisionId,
             NewJson(new { e.StatusId, e.Reason }), ActorUserId: e.ActorUserId, RelatedDocumentId: e.DocumentId),
+        DecisionAppealedEvent e => new(
+            "DECISIONS", AuditActionType.CreateId, AuditEntityType.DecisionAppealId, e.AppealId,
+            NewJson(new { e.DecisionId, e.AppellantDepartmentId }),
+            ActorUserId: e.ActorUserId, RelatedDocumentId: e.DocumentId),
 
         DocumentRelationRemovedEvent e => new(
             "RELATIONS", AuditActionType.DeleteId, AuditEntityType.DocumentRelationId, e.RelationId,
@@ -636,6 +640,7 @@ internal sealed class TamperEvidentAuditInterceptor : SaveChangesInterceptor
             _ when type == typeof(DocumentField) => ("CORRESPONDENCE", AuditEntityType.DocumentSchemaVersionId),
             _ when type == typeof(DocumentDecision) => ("DECISIONS", AuditEntityType.DecisionId),
             _ when type == typeof(DecisionType) => ("DECISIONS", AuditEntityType.DecisionTypeId),
+            _ when type == typeof(DecisionAppeal) => ("DECISIONS", AuditEntityType.DecisionAppealId),
             _ => (string.Empty, 0)
         };
 

@@ -50,6 +50,50 @@ export function useAttachDecisionFileMutation(documentId: string) {
   })
 }
 
+export function useRecordAppealMutation(documentId: string) {
+  const invalidate = useInvalidateDecisions(documentId)
+  return useMutation({
+    mutationFn: async (input: {
+      decisionId: string
+      appealDate: string
+      appellantDepartmentId: string
+      referenceNumber: string | null
+      notes: string | null
+    }): Promise<DocumentDecisionResponse> => {
+      const { data } = await httpClient.post<DocumentDecisionResponse>(
+        `/decisions/${input.decisionId}/appeals`,
+        {
+          appealDate: input.appealDate,
+          appellantDepartmentId: input.appellantDepartmentId,
+          referenceNumber: input.referenceNumber,
+          notes: input.notes,
+        },
+      )
+      return data
+    },
+    onSuccess: invalidate,
+  })
+}
+
+export function useRecordAppealOutcomeMutation(documentId: string) {
+  const invalidate = useInvalidateDecisions(documentId)
+  return useMutation({
+    mutationFn: async (input: {
+      decisionId: string
+      appealId: string
+      outcomeId: number
+      outcomeDate: string
+    }): Promise<DocumentDecisionResponse> => {
+      const { data } = await httpClient.put<DocumentDecisionResponse>(
+        `/decisions/${input.decisionId}/appeals/${input.appealId}/outcome`,
+        { outcomeId: input.outcomeId, outcomeDate: input.outcomeDate },
+      )
+      return data
+    },
+    onSuccess: invalidate,
+  })
+}
+
 export function useCancelDecisionMutation(documentId: string) {
   const invalidate = useInvalidateDecisions(documentId)
   return useMutation({

@@ -342,9 +342,9 @@ them, while listing, relabelling and (de)activation keep working.
 | `Common/` | ✅ Implemented (`Result`, `Error`, `Entity`, `AggregateRoot`, `ValueObject`, `IDomainEvent`, `DomainException`, `IClock`, `IUnitOfWork`, `PageRequest`, `PagedList<T>`) |
 | `ValueObjects/` | ✅ Implemented (4 value objects) |
 | `Errors/` | Implemented (`DomainErrors` catalog, including `Department.CentralDiwanProtected`, `Identity.RoleInactive`, and `Identity.PasswordChangeRequired`) |
-| `Events/` | ✅ Implemented (35 events) |
+| `Events/` | ✅ Implemented (36 events) |
 | `Repositories/` | ✅ Implemented (21 interfaces) |
-| `Entities/` | ✅ Implemented (67 entities across the module folders, including reference/lookup tables and `Entities/Decisions/`) |
+| `Entities/` | ✅ Implemented (68 entities across the module folders, including reference/lookup tables and `Entities/Decisions/`) |
 
 ### Known issues / TODO
 
@@ -361,6 +361,7 @@ them, while listing, relabelling and (de)activation keep working.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-11 | Claude | Appeals (plan `plans/case-decisions.md`, slice C): `DecisionAppeal`, `AppealOutcome` (1 pending, 2 accepted, 3 rejected), `DecisionAppealedEvent`, audit entity type 18, and the appeal error codes. An issued appealable decision becomes appealed; a rejected outcome makes it final and an accepted outcome revokes it. Join execution stays refused. |
 | 2026-11-11 | Claude | Decision types and decisions (plan `plans/case-decisions.md`, slice B): `Entities/Decisions/` (`DecisionType`, `DocumentDecision`, effect and status lookups), `IDecisionTypeRepository` and `IDocumentDecisionRepository`, `DomainErrors.Decisions`, `DecisionIssuedEvent` and `DecisionRevokedEvent`, file type `DecisionId` (5), notification type `DecisionIssuedId` (12), audit entity types 16 and 17, and permission `DECISION_MANAGE` (23 codes). Issuing a join decision is refused until unification exists. |
 | 2026-11-11 | Claude | Archive diwan (plan `plans/case-decisions.md`, slice A): `InstitutionSetting.ArchiveDiwanDepartmentId` with `SetArchiveDiwan`, movement type `MovementType.ToArchiveId` (5), `DocumentMovement.IsHeldAt`, an optional type on `DocumentMovement.RedirectTo`, and the new `Archiving.*`, `InstitutionSetting.ArchiveDiwan*` and `Department.ArchiveDiwanProtected` errors. |
 | 2026-11-10 | Claude | Department renumbering: `DocumentNumber.SupersedeInDepartment` marks a department line `REPLACED` and links it to the new line through `ReplacedByNumberId` (no reason required), `Document.ReplaceDepartmentNumber` swaps the line in use, `FindDepartmentNumber` returns the line in use, and `AddDepartmentNumber` ignores replaced lines. |

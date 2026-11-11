@@ -107,6 +107,7 @@ public sealed class DiwanDbContext : DbContext, IUnitOfWork
     public DbSet<DecisionType> DecisionTypes => Set<DecisionType>();
     public DbSet<DecisionTypeDocumentType> DecisionTypeDocumentTypes => Set<DecisionTypeDocumentType>();
     public DbSet<DocumentDecision> DocumentDecisions => Set<DocumentDecision>();
+    public DbSet<DecisionAppeal> DecisionAppeals => Set<DecisionAppeal>();
 
     // Module 08: Relations
     public DbSet<DocumentRelation> DocumentRelations => Set<DocumentRelation>();

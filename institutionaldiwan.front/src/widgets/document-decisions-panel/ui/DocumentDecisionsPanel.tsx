@@ -5,6 +5,8 @@ import {
   AttachDecisionFileDialog,
   CancelDecisionDialog,
   IssueDecisionDialog,
+  RecordAppealDialog,
+  RecordAppealOutcomeDialog,
 } from '@/features/decision-manage'
 import { OpenMovementDialog } from '@/features/movement-routing'
 import { useDepartmentOptions } from '@/entities/department'
@@ -12,11 +14,14 @@ import {
   DecisionStatusBadge,
   useDocumentDecisions,
   useDocumentNextAction,
+  type DecisionAppealResponse,
   type DocumentDecisionResponse,
 } from '@/entities/document-decision'
 import { useSessionStore } from '@/entities/user'
 import { tokenStorage, toArabicErrorMessage } from '@/shared/api'
 import {
+  appealOutcomeLabel,
+  APPEAL_OUTCOME,
   decisionEffectLabel,
   DECISION_STATUS,
   isDecisionInForce,
@@ -36,9 +41,16 @@ interface DocumentDecisionsPanelProps {
   documentId: string
   documentTitle: string
   documentTypeId: number
+  owningDepartmentId: string
   canIssue: boolean
   canMove: boolean
   canArchive: boolean
+}
+
+interface OutcomeTarget {
+  decisionId: string
+  appealId: string
+  decisionNumber: string
 }
 
 interface SuggestedMovement {
@@ -48,6 +60,38 @@ interface SuggestedMovement {
 
 function isSystemScope(): boolean {
   return decodeJwtPayload(tokenStorage.get())?.scope_type === String(USER_SCOPE_TYPE.System)
+}
+
+function AppealLines({
+  appeals,
+  departmentName,
+}: {
+  appeals: DecisionAppealResponse[]
+  departmentName: (departmentId: string | null) => string
+}) {
+  if (appeals.length === 0) return <span>—</span>
+  return (
+    <ul className="flex flex-col gap-1">
+      {appeals.map((appeal) => (
+        <li key={appeal.appealId}>
+          <span dir="ltr">{formatDate(appeal.appealDate)}</span>
+          {' · '}
+          {departmentName(appeal.appellantDepartmentId)}
+          {' · '}
+          {appealOutcomeLabel(appeal.outcomeId)}
+          {appeal.referenceNumber ? (
+            <>
+              {' · '}
+              <span dir="ltr" className="font-mono">
+                {appeal.referenceNumber}
+              </span>
+            </>
+          ) : null}
+          {appeal.notes ? ` · ${appeal.notes}` : ''}
+        </li>
+      ))}
+    </ul>
+  )
 }
 
 const NEXT_ACTION_LABEL = {
@@ -61,6 +105,7 @@ export function DocumentDecisionsPanel({
   documentId,
   documentTitle,
   documentTypeId,
+  owningDepartmentId,
   canIssue,
   canMove,
   canArchive,
@@ -78,6 +123,8 @@ export function DocumentDecisionsPanel({
   const [movement, setMovement] = useState<SuggestedMovement | null>(null)
   const [cancelTarget, setCancelTarget] = useState<DocumentDecisionResponse | null>(null)
   const [attachTarget, setAttachTarget] = useState<DocumentDecisionResponse | null>(null)
+  const [appealTarget, setAppealTarget] = useState<DocumentDecisionResponse | null>(null)
+  const [outcomeTarget, setOutcomeTarget] = useState<OutcomeTarget | null>(null)
 
   const departmentName = useMemo(() => {
     const names = new Map(
@@ -90,6 +137,7 @@ export function DocumentDecisionsPanel({
   const inForce = decisions.find((decision) => isDecisionInForce(decision.statusId))
   const next = nextQuery.data
   const nextKind = next?.kind ?? null
+  const pendingAppeal = inForce?.appeals.find((appeal) => appeal.outcomeId === APPEAL_OUTCOME.Pending)
   const canRunNext =
     nextKind === 'archive' ? canArchive : nextKind === 'refer' || nextKind === 'send-for-archive' ? canMove : false
 
@@ -154,12 +202,38 @@ export function DocumentDecisionsPanel({
         header: 'الديوان المُصدر',
         cell: (row) => departmentName(row.issuingDepartmentId),
       },
+      {
+        id: 'appeals',
+        header: 'الاعتراض',
+        cell: (row) => <AppealLines appeals={row.appeals} departmentName={departmentName} />,
+      },
     ],
     [departmentName],
   )
 
   const rowMenu = (row: DocumentDecisionResponse): MenuEntry[] => {
     const items: MenuEntry[] = []
+    const pending = row.appeals.find((appeal) => appeal.outcomeId === APPEAL_OUTCOME.Pending)
+    if (canManage && row.isAppealable && row.statusId === DECISION_STATUS.Issued) {
+      items.push({
+        id: 'appeal',
+        label: 'تسجيل اعتراض',
+        icon: <Scale className="size-4" aria-hidden />,
+        onSelect: () => setAppealTarget(row),
+      })
+    }
+    if (canManage && pending) {
+      items.push({
+        id: 'outcome',
+        label: 'تسجيل النتيجة',
+        onSelect: () =>
+          setOutcomeTarget({
+            decisionId: row.decisionId,
+            appealId: pending.appealId,
+            decisionNumber: row.decisionNumber,
+          }),
+      })
+    }
     if (canManage && row.statusId !== DECISION_STATUS.Canceled) {
       items.push({
         id: 'attach',
@@ -203,6 +277,11 @@ export function DocumentDecisionsPanel({
               : ''}
             {inForce.summary ? ` · ${inForce.summary}` : ''}
           </p>
+          {inForce.appeals.length > 0 && (
+            <div className="text-sm">
+              <AppealLines appeals={inForce.appeals} departmentName={departmentName} />
+            </div>
+          )}
         </section>
       )}
 
@@ -211,6 +290,30 @@ export function DocumentDecisionsPanel({
           <Button type="button" onClick={() => setIssueOpen(true)}>
             <Gavel className="size-4" aria-hidden />
             إصدار قرار
+          </Button>
+        )}
+        {canManage && inForce && inForce.isAppealable && inForce.statusId === DECISION_STATUS.Issued && (
+          <>
+            <Button type="button" variant="outline" onClick={() => setAppealTarget(inForce)}>
+              <Scale className="size-4" aria-hidden />
+              تسجيل اعتراض
+            </Button>
+            <GuideChip id="document-details.record-appeal" />
+          </>
+        )}
+        {canManage && inForce && pendingAppeal && (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() =>
+              setOutcomeTarget({
+                decisionId: inForce.decisionId,
+                appealId: pendingAppeal.appealId,
+                decisionNumber: inForce.decisionNumber,
+              })
+            }
+          >
+            تسجيل النتيجة
           </Button>
         )}
         {canRunNext && nextKind && (
@@ -305,6 +408,30 @@ export function DocumentDecisionsPanel({
           open
           onOpenChange={(open) => {
             if (!open) setAttachTarget(null)
+          }}
+        />
+      )}
+      {appealTarget && (
+        <RecordAppealDialog
+          documentId={documentId}
+          decisionId={appealTarget.decisionId}
+          decisionNumber={appealTarget.decisionNumber}
+          owningDepartmentId={owningDepartmentId}
+          open
+          onOpenChange={(open) => {
+            if (!open) setAppealTarget(null)
+          }}
+        />
+      )}
+      {outcomeTarget && (
+        <RecordAppealOutcomeDialog
+          documentId={documentId}
+          decisionId={outcomeTarget.decisionId}
+          appealId={outcomeTarget.appealId}
+          decisionNumber={outcomeTarget.decisionNumber}
+          open
+          onOpenChange={(open) => {
+            if (!open) setOutcomeTarget(null)
           }}
         />
       )}

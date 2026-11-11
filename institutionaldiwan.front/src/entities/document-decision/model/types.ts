@@ -1,4 +1,4 @@
-/** Reserved until appeals exist. The list on a decision is empty. */
+/** One appeal on a decision. Outcome 1 is pending, 2 accepted, 3 rejected. */
 export interface DecisionAppealResponse {
   appealId: string
   appealDate: string
@@ -7,6 +7,10 @@ export interface DecisionAppealResponse {
   notes: string | null
   outcomeId: number
   outcomeDate: string | null
+  recordedByUserId: string
+  recordedAt: string
+  outcomeRecordedByUserId: string | null
+  outcomeRecordedAt: string | null
 }
 
 /** `DocumentDecisionResponse` — one decision, including the snapshot taken at issuance. */

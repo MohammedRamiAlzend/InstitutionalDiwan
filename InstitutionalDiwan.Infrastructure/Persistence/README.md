@@ -63,6 +63,7 @@ without knowing which provider is underneath.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-11 | Claude | Mapped `DecisionAppeal` (`DECISION_APPEALS`, date columns, one pending appeal per decision). Migration `20261111110728_Add_Decision_Appeals`. Document decision reads include appeals. |
 | 2026-11-11 | Claude | Mapped decision types, their document-type links and document decisions (`Configurations/DecisionsConfigurations.cs`), and registered the two repositories plus `DecisionTypeSeeder`. Migration `Add_Decisions`. |
 | 2026-11-10 | Claude | Mapped `DEPARTMENT_RECORD_VALUES`, department columns on fields and schema versions, and record columns on register visits. |
 | 2026-11-03 | Claude | Module 07 Archiving, Phase 1: repositories, configuration constraints and the `Add_Archiving_Constraints` migration; see the subfolder READMEs. |

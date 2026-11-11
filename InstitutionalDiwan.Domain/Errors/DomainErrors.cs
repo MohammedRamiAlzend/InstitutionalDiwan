@@ -441,6 +441,11 @@ public static class DomainErrors
         public static readonly Error NotAppealable = Error.Conflict("Decisions.NotAppealable", "This decision cannot be appealed.");
         public static readonly Error AppealAlreadyPending = Error.Conflict("Decisions.AppealAlreadyPending", "An appeal is already pending on this decision.");
         public static readonly Error AppealOutcomeInvalid = Error.Validation("Decisions.AppealOutcomeInvalid", "The appeal outcome must be accepted or rejected.");
+        public static readonly Error AppealNotFound = Error.NotFound("Decisions.AppealNotFound", "The appeal was not found.");
+        public static readonly Error AppealOutOfScope = Error.Forbidden("Decisions.AppealOutOfScope", "An appeal can be recorded only when the caller's scope covers the issuing department or the appellant department.");
+        public static readonly Error AppealDateInvalid = Error.Validation("Decisions.AppealDateInvalid", "The appeal date or the outcome date is not a valid year.");
+        public static readonly Error AppealReferenceTooLong = Error.Validation("Decisions.AppealReferenceTooLong", "The appeal reference cannot exceed 100 characters.");
+        public static readonly Error AppealNotesTooLong = Error.Validation("Decisions.AppealNotesTooLong", "The appeal notes cannot exceed 2000 characters.");
         public static readonly Error DocumentJoined = Error.Conflict("Decisions.DocumentJoined", "This file was joined into another and cannot take a new separating decision.");
         public static readonly Error JoinTargetInvalid = Error.Conflict("Decisions.JoinTargetInvalid", "Unification of two files is not available yet.");
     }

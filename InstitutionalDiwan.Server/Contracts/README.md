@@ -23,7 +23,7 @@ commands/queries map between them and the domain.
 | Movements | `CreateMovementRequest` ✅ (document id, destination department, movement type, optional assignee/instructions/due date — the source department is the caller's), `SendMovementRequest` ✅ (optional notes), `ReceiveDocumentRequest` ✅ (optional notes; the register entry must already exist), `CompleteMovementStepRequest` ✅ (optional notes), `RejectMovementStepRequest` ✅ (required reason), `ReturnMovementToSenderRequest` ✅ (required reason), `RedirectMovementRequest` ✅ (new destination, optional assignee/instructions/due date), `CloseMovementRequest` ✅ (optional notes), `CancelMovementRequest` ✅ (required reason); the read models live in `Application/Features/Movements/` |
 | Attachments | `CreateDocumentFileRequest` ✅ (document id, file type, title, primary-scan flag), `UploadDocumentFileVersionRequest` ✅ (multipart `File` + optional `ChangeNotes`); the read models live in `Application/Features/Attachments/` |
 | Archiving | `ArchiveDocumentRequest` ✅, `UnarchiveDocumentRequest` ✅, `SaveSearchRequest` ✅; see [`Archiving/README.md`](Archiving/README.md). The search takes query parameters, and its read models live in `Application/Features/Archiving`. |
-| Decisions | `CreateDecisionTypeRequest` ✅, `UpdateDecisionTypeRequest` ✅, `IssueDocumentDecisionRequest` ✅, `AttachDecisionFileRequest` ✅, `CancelDecisionRequest` ✅; see [`Decisions/README.md`](Decisions/README.md). |
+| Decisions | `CreateDecisionTypeRequest` ✅, `UpdateDecisionTypeRequest` ✅, `IssueDocumentDecisionRequest` ✅, `AttachDecisionFileRequest` ✅, `CancelDecisionRequest` ✅, `RecordDecisionAppealRequest` ✅, `RecordAppealOutcomeRequest` ✅; see [`Decisions/README.md`](Decisions/README.md). |
 | Relations | `CreateDocumentRelationRequest` ✅, `RemoveDocumentRelationRequest` ✅; see [`Relations/README.md`](Relations/README.md). The read models live in `Application/Features/Relations`. |
 | Audit | `CreateAuditCheckpointRequest` ✅ (optional `ToAuditLogId`), `RunAuditIntegrityCheckRequest` ✅ (optional start/end ids); read models (`AuditLogResponse`, `AuditCheckpointResponse`, `AuditIntegrityCheckResponse`) live in `Application/Features/Audit/` |
 | Notifications | `NotificationListResponse`, `UnreadCountResponse` |
@@ -60,6 +60,7 @@ commands/queries map between them and the domain.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-11 | Claude | Added `RecordDecisionAppealRequest` and `RecordAppealOutcomeRequest`. |
 | 2026-11-11 | Claude | Added `Contracts/Decisions` request bodies for creating and updating a decision type, issuing a decision, attaching its file and canceling it. |
 | 2026-11-11 | Claude | `UpdateInstitutionSettingsRequest` gains `ArchiveDiwanDepartmentId` and `RedirectMovementRequest` gains `MovementTypeId`. |
 | 2026-11-10 | Claude | `ReceiveDocumentRequest` gained the optional `IssueNewNumber` flag. |

@@ -57,6 +57,7 @@ public sealed record DocumentRelationRemovedEvent(Guid RelationId, Guid SourceDo
 // Decisions
 public sealed record DecisionIssuedEvent(Guid DecisionId, Guid DocumentId, Guid IssuingDepartmentId, int EffectId, Guid ActorUserId) : DomainEventBase;
 public sealed record DecisionRevokedEvent(Guid DecisionId, Guid DocumentId, int StatusId, Guid ActorUserId, string Reason) : DomainEventBase;
+public sealed record DecisionAppealedEvent(Guid DecisionId, Guid AppealId, Guid DocumentId, Guid AppellantDepartmentId, Guid ActorUserId) : DomainEventBase;
 
 // Module 10: Notifications
 public sealed record NotificationCreatedEvent(Guid NotificationId, int NotificationTypeId, Guid? RelatedDocumentId) : DomainEventBase;

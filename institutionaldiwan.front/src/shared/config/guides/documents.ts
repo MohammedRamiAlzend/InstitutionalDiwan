@@ -203,8 +203,24 @@ export const DOCUMENT_DETAILS_GUIDE_ENTRIES: readonly GuideEntry[] = [
   {
     id: 'document-details.tab-decisions',
     title: 'تبويب القرار',
-    body: 'يظهر عندما يكون لنوع الوثيقة نوع قرار مفعّل. يعرض القرار النافذ وسجله، ويقترح الخطوة التالية دون أن ينفّذها: إحالة، أو إرسال للحفظ، أو أرشفة.',
-    note: 'إصدار القرار لمن يحمل الوثيقة ويملك إدارة القرارات.',
+    body: 'يظهر عندما يكون لنوع الوثيقة نوع قرار مفعّل. يعرض القرار النافذ واعتراضاته وسجله، ويقترح الخطوة التالية دون أن ينفّذها: إحالة، أو إرسال للحفظ، أو أرشفة.',
+    note: 'إصدار القرار لمن يحمل الوثيقة ويملك إدارة القرارات. تسجيل الاعتراض ونتيجته لمن يغطي نطاقه الديوان المُصدر أو الديوان المعترض.',
+  },
+  {
+    id: 'document-details.record-appeal',
+    title: 'تسجيل الاعتراض',
+    body: 'يُسجَّل على قرار صادر قابل للاعتراض. تاريخ الاعتراض والقسم المعترض، ورقم مرجعي وملاحظات إن وُجدا. الافتراضي هو الديوان الذي أنشأ الوثيقة.',
+    note: 'لا مهلة، والاعتراض لا يمنع نقل الوثيقة ولا يُنشئ حركة. يُقبل أيضًا والوثيقة مؤرشفة.',
+  },
+  {
+    id: 'document-details.appeal-reference',
+    title: 'الرقم المرجعي',
+    body: 'رقم اعتراض اختياري كما كُتب لدى الجهة المعترضة. لا يتكرر فحصه في النظام.',
+  },
+  {
+    id: 'document-details.appeal-outcome',
+    title: 'نتيجة الاعتراض',
+    body: 'مقبول يفسخ القرار فيعود إصدار قرار جديد ممكنًا. مردود يجعل القرار نهائيًا.',
   },
   {
     id: 'document-details.next-action',
@@ -247,6 +263,9 @@ export const DOCUMENT_DETAILS_GUIDE: PageGuide = {
     'document-details.tab-department-records',
     'document-details.tab-relations',
     'document-details.tab-decisions',
+    'document-details.record-appeal',
+    'document-details.appeal-reference',
+    'document-details.appeal-outcome',
     'document-details.next-action',
     'document-details.decision-number',
     'document-details.relations-grid',

@@ -39,6 +39,10 @@ public sealed class DocumentDecision : AggregateRoot<Guid>
     public string? StatusReason { get; private set; }
     public DateTime? StatusChangedAt { get; private set; }
 
+    private readonly List<DecisionAppeal> _appeals = new();
+
+    public IReadOnlyCollection<DecisionAppeal> Appeals => _appeals;
+
     public bool IsInForce => DecisionStatus.IsInForce(StatusId);
 
     private DocumentDecision()
@@ -157,6 +161,94 @@ public sealed class DocumentDecision : AggregateRoot<Guid>
         StatusChangedAt = utcNow ?? DateTime.UtcNow;
         return Result.Success();
     }
+
+    /// <summary>
+    /// Records an appeal. Allowed only when the snapshot is appealable and the decision is still
+    /// issued. A second appeal while one is pending is refused. The decision becomes appealed and
+    /// the document is left untouched.
+    /// </summary>
+    public Result<DecisionAppeal> RecordAppeal(
+        DateOnly appealDate,
+        Guid appellantDepartmentId,
+        string? referenceNumber,
+        string? notes,
+        Guid recordedByUserId,
+        DateTime? utcNow = null)
+    {
+        if (!IsAppealable)
+            return Result.Failure<DecisionAppeal>(DomainErrors.Decisions.NotAppealable);
+
+        if (StatusId == DecisionStatus.AppealedId ||
+            _appeals.Any(appeal => appeal.OutcomeId == AppealOutcome.PendingId))
+            return Result.Failure<DecisionAppeal>(DomainErrors.Decisions.AppealAlreadyPending);
+
+        if (StatusId != DecisionStatus.IssuedId)
+            return Result.Failure<DecisionAppeal>(DomainErrors.Decisions.NotAppealable);
+
+        if (!IsPlausibleDate(appealDate))
+            return Result.Failure<DecisionAppeal>(DomainErrors.Decisions.AppealDateInvalid);
+
+        if (appellantDepartmentId == Guid.Empty)
+            return Result.Failure<DecisionAppeal>(DomainErrors.Department.NotFound);
+
+        var reference = string.IsNullOrWhiteSpace(referenceNumber) ? null : referenceNumber.Trim();
+        if (reference is { Length: > DecisionAppeal.MaxReferenceLength })
+            return Result.Failure<DecisionAppeal>(DomainErrors.Decisions.AppealReferenceTooLong);
+
+        var trimmedNotes = string.IsNullOrWhiteSpace(notes) ? null : notes.Trim();
+        if (trimmedNotes is { Length: > DecisionAppeal.MaxNotesLength })
+            return Result.Failure<DecisionAppeal>(DomainErrors.Decisions.AppealNotesTooLong);
+
+        var now = utcNow ?? DateTime.UtcNow;
+        var appeal = DecisionAppeal.Create(
+            DecisionId,
+            appealDate,
+            appellantDepartmentId,
+            reference,
+            trimmedNotes,
+            recordedByUserId,
+            now);
+        _appeals.Add(appeal);
+        StatusId = DecisionStatus.AppealedId;
+        StatusChangedAt = now;
+        RaiseDomainEvent(new DecisionAppealedEvent(
+            DecisionId, appeal.AppealId, DocumentId, appellantDepartmentId, recordedByUserId));
+        return Result.Success(appeal);
+    }
+
+    /// <summary>
+    /// Records a ruling on a pending appeal. Accepted revokes the decision; rejected makes it final.
+    /// </summary>
+    public Result RecordAppealOutcome(
+        Guid appealId,
+        int outcomeId,
+        DateOnly outcomeDate,
+        Guid actorUserId,
+        DateTime? utcNow = null)
+    {
+        var appeal = _appeals.FirstOrDefault(item => item.AppealId == appealId);
+        if (appeal is null)
+            return Result.Failure(DomainErrors.Decisions.AppealNotFound);
+
+        if (StatusId != DecisionStatus.AppealedId || appeal.OutcomeId != AppealOutcome.PendingId)
+            return Result.Failure(DomainErrors.Decisions.AppealOutcomeInvalid);
+
+        if (!AppealOutcome.IsRuling(outcomeId))
+            return Result.Failure(DomainErrors.Decisions.AppealOutcomeInvalid);
+
+        if (!IsPlausibleDate(outcomeDate))
+            return Result.Failure(DomainErrors.Decisions.AppealDateInvalid);
+
+        var now = utcNow ?? DateTime.UtcNow;
+        appeal.RecordOutcome(outcomeId, outcomeDate, actorUserId, now);
+        StatusId = outcomeId == AppealOutcome.AcceptedId
+            ? DecisionStatus.RevokedId
+            : DecisionStatus.FinalId;
+        StatusChangedAt = now;
+        return Result.Success();
+    }
+
+    private static bool IsPlausibleDate(DateOnly date) => date.Year is >= 1900 and <= 2200;
 
     private Result ChangeStatus(int statusId, Guid actorUserId, string? reason, DateTime? utcNow)
     {

@@ -85,8 +85,8 @@ stamp against live identity/role/permission state and restricts forced-change se
 - **Commands:** `CreateDocumentFileCommand` ✅ (metadata + empty version chain, kept for compatibility), `CreateDocumentFileWithVersionCommand` ✅ (atomic initial upload: file + version 1 in one save), `UploadDocumentFileVersionCommand` ✅ (validates extension/size/magic bytes, streams to storage with SHA-256, appends an immutable version), `ArchiveDocumentFileCommand` ✅ (closes the chain; versions stay readable)
 - **Queries:** `DownloadDocumentFileVersionQuery` ✅ (current or named version, DOWNLOAD access), `VerifyAttachmentChecksumQuery` ✅ (recomputes and compares), `ListDocumentFilesQuery` ✅ — see [`Attachments/README.md`](Attachments/README.md)
 
-### Decisions (case decisions, slice B)
-- **Commands:** `CreateDecisionTypeCommand` ✅, `UpdateDecisionTypeCommand` ✅, `ActivateDecisionTypeCommand` ✅, `DeactivateDecisionTypeCommand` ✅, `IssueDocumentDecisionCommand` ✅ (join effect refused), `AttachDecisionFileCommand` ✅, `CancelDecisionCommand` ✅ (system scope only)
+### Decisions (case decisions, slices B and C)
+- **Commands:** `CreateDecisionTypeCommand` ✅, `UpdateDecisionTypeCommand` ✅, `ActivateDecisionTypeCommand` ✅, `DeactivateDecisionTypeCommand` ✅, `IssueDocumentDecisionCommand` ✅ (join effect refused), `AttachDecisionFileCommand` ✅, `CancelDecisionCommand` ✅ (system scope only), `RecordDecisionAppealCommand` ✅, `RecordAppealOutcomeCommand` ✅
 - **Queries:** `ListDecisionTypesQuery` ✅, `ListDocumentDecisionsQuery` ✅, `GetDocumentNextActionQuery` ✅, `ListDecisionsQuery` ✅; see [`Decisions/README.md`](Decisions/README.md)
 
 ### Archiving (Module 07)
@@ -157,7 +157,7 @@ registries, per-document grants/movements) still returns a plain collection on p
 | Movements (routing workflow + inbox/outbox + Central Diwan hub) | ✅ Implemented |
 | Attachments (Module 06: create/upload/archive, list/download/verify) | ✅ Implemented |
 | Audit (Module 09: search, checkpoints, integrity checks/reports, action recorder) | ✅ Implemented |
-| Decisions (types, issue, next action, file, cancel) | ✅ Implemented |
+| Decisions (types, issue, next action, file, cancel, appeal, outcome) | ✅ Implemented |
 | Archiving (Module 07: archive/unarchive, history, access-filtered search, saved searches) | 🟡 Use cases implemented; endpoints pending |
 | Relations (Module 08: create/remove link, list, graph, history) | ✅ Implemented |
 | Notifications | ❌ Not implemented |
@@ -166,6 +166,7 @@ registries, per-document grants/movements) still returns a plain collection on p
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-11 | Claude | Appeal commands on the `Decisions` slice. The document decision list returns appeals. Scope may cover the issuing department or the appellant department, including when the document is archived. |
 | 2026-11-11 | Claude | Added the `Decisions` slice: decision types, issuing, the suggested next action, attaching a file, and canceling a mistaken entry. Join issuance is refused. |
 | 2026-11-10 | Claude | Added the `DepartmentRecords` slice. |
 | 2026-11-09 | Claude | Added `Exports/`: Excel workbook of a displayed table. |

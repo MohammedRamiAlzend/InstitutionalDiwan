@@ -12,7 +12,9 @@ internal sealed class DocumentDecisionRepository : IDocumentDecisionRepository
     public DocumentDecisionRepository(DiwanDbContext context) => _context = context;
 
     public Task<DocumentDecision?> GetByIdAsync(Guid decisionId, CancellationToken cancellationToken = default) =>
-        _context.DocumentDecisions.FirstOrDefaultAsync(decision => decision.DecisionId == decisionId, cancellationToken);
+        _context.DocumentDecisions
+            .Include(decision => decision.Appeals)
+            .FirstOrDefaultAsync(decision => decision.DecisionId == decisionId, cancellationToken);
 
     public Task<DocumentDecision?> GetActiveByDocumentAsync(Guid documentId, CancellationToken cancellationToken = default) =>
         _context.DocumentDecisions.FirstOrDefaultAsync(
@@ -26,6 +28,7 @@ internal sealed class DocumentDecisionRepository : IDocumentDecisionRepository
         Guid documentId,
         CancellationToken cancellationToken = default) =>
         await _context.DocumentDecisions.AsNoTracking()
+            .Include(decision => decision.Appeals)
             .Where(decision => decision.DocumentId == documentId)
             .OrderByDescending(decision => decision.RecordedAt)
             .ToListAsync(cancellationToken);

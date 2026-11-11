@@ -260,6 +260,11 @@ const CODE_MESSAGES: Record<string, string> = {
   'Decisions.NotAppealable': 'هذا القرار غير قابل للاعتراض.',
   'Decisions.AppealAlreadyPending': 'يوجد اعتراض قائم على هذا القرار.',
   'Decisions.AppealOutcomeInvalid': 'نتيجة الاعتراض يجب أن تكون قبولًا أو رفضًا.',
+  'Decisions.AppealNotFound': 'الاعتراض غير موجود.',
+  'Decisions.AppealOutOfScope': 'تسجيل الاعتراض أو نتيجته لمن يغطي نطاقه الديوان المُصدر أو الديوان المعترض.',
+  'Decisions.AppealDateInvalid': 'تاريخ الاعتراض أو تاريخ النتيجة غير صالح.',
+  'Decisions.AppealReferenceTooLong': 'الرقم المرجعي لا يتجاوز 100 حرف.',
+  'Decisions.AppealNotesTooLong': 'ملاحظات الاعتراض لا تتجاوز 2000 حرف.',
   'Decisions.DocumentJoined': 'هذا الملف موحَّد في ملف آخر ولا يقبل قرارًا جديدًا يفصله.',
   'Decisions.JoinTargetInvalid': 'توحيد ملفين غير متاح بعد.',
   // Module 08 — Relations

@@ -126,6 +126,7 @@ mounted dialog.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-11 | Claude | The decisions panel receives the document's owning department, which is the default appellant. |
 | 2026-11-11 | Claude | The details page shows a «القرار» tab when the document type has an active decision type, and renders `DocumentDecisionsPanel`. |
 | 2026-11-11 | Claude | On `/documents/:id`, with an archive diwan designated, «أرشفة» shows to the archive diwan once it holds the document (registered or still in movement) and «إلغاء الأرشفة» follows who holds it; without one the owning-department rule stays. |
 | 2026-11-10 | Claude | The numbers tab shows, on each department line, the number it replaced and the number that replaced it. |

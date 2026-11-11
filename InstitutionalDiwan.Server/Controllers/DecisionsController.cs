@@ -58,7 +58,7 @@ public sealed class DecisionsController : ControllerBase
         return result.ToActionResult();
     }
 
-    /// <summary>Lists every decision recorded on one document. The appeals list is empty until appeals exist.</summary>
+    /// <summary>Lists every decision recorded on one document, newest first, with each decision's appeals.</summary>
     /// <param name="documentId">Document id (GUID, route). Example: <c>3f1c0a55-6e42-4b18-9d77-2a8c4e91b0d6</c>.</param>
     /// <param name="cancellationToken">Request cancellation token (optional).</param>
     /// <response code="200">The document's decisions, newest first.</response>
@@ -66,8 +66,8 @@ public sealed class DecisionsController : ControllerBase
     /// <response code="404">No document has this id.</response>
     [HttpGet("api/documents/{documentId:guid}/decisions")]
     [Authorize(Policy = Permissions.DocumentView)]
-    [EndpointSummary("Lists every decision recorded on one document. The appeals list is empty until appeals exist.")]
-    [EndpointDescription("Lists every decision recorded on one document. The appeals list is empty until appeals exist. Requires the DOCUMENT_VIEW permission and view access to the document. Responses: 200 (The document's decisions, newest first.), 403 (The caller cannot view the document.), 404 (No document has this id.)")]
+    [EndpointSummary("Lists every decision recorded on one document, newest first, with each decision's appeals.")]
+    [EndpointDescription("Lists every decision recorded on one document, newest first, with each decision's appeals. Requires the DOCUMENT_VIEW permission and view access to the document. Responses: 200 (The document's decisions, newest first.), 403 (The caller cannot view the document.), 404 (No document has this id.)")]
     [ProducesResponseType<IReadOnlyList<DocumentDecisionResponse>>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
@@ -209,6 +209,95 @@ public sealed class DecisionsController : ControllerBase
 
         var result = await _sender.Send(
             new CancelDecisionCommand(decisionId, userId, request.Reason), cancellationToken);
+        return result.ToActionResult();
+    }
+
+    /// <summary>Records an appeal on an issued, appealable decision. The issuing department or the appellant department may record it.</summary>
+    /// <param name="decisionId">Decision id (GUID, route). Example: <c>b21e6c80-1d44-4a09-8f55-3c7d9e02a1b4</c>.</param>
+    /// <param name="request">
+    /// The request payload:
+    /// <list type="bullet">
+    /// <item><term>appealDate</term><description>Appeal date (date, required). Example: <c>2026-11-11</c>.</description></item>
+    /// <item><term>appellantDepartmentId</term><description>Appellant department (GUID, optional). When omitted, the document's owning department is used. Example: <c>e7a62f43-9b82-4d01-8c2e-7ab91e506d42</c>.</description></item>
+    /// <item><term>referenceNumber</term><description>Optional reference number (string, at most 100). Example: <c>ط/2026/4</c>.</description></item>
+    /// <item><term>notes</term><description>Optional notes (string, at most 2000). Example: <c>طعن النيابة على القرار</c>.</description></item>
+    /// </list>
+    /// </param>
+    /// <param name="cancellationToken">Request cancellation token (optional).</param>
+    /// <response code="200">The decision, now appealed, including the pending appeal.</response>
+    /// <response code="400">The date is not a valid year, or the reference or the notes are too long.</response>
+    /// <response code="401">The token has no user id.</response>
+    /// <response code="403">The caller's scope covers neither the issuing department nor the appellant department.</response>
+    /// <response code="404">No decision or appellant department has this id.</response>
+    /// <response code="409">The decision cannot be appealed, or an appeal is already pending.</response>
+    [HttpPost("api/decisions/{decisionId:guid}/appeals")]
+    [Authorize(Policy = Permissions.DecisionManage)]
+    [EndpointSummary("Records an appeal on an issued, appealable decision. The issuing department or the appellant department may record it.")]
+    [EndpointDescription("Records an appeal on an issued, appealable decision. The issuing department or the appellant department may record it. Requires the DECISION_MANAGE permission. The document may already be archived; recording the appeal does not move it and does not open a movement. Responses: 200 (The decision, now appealed, including the pending appeal.), 400 (The date is not a valid year, or the reference or the notes are too long.), 401 (The token has no user id.), 403 (The caller's scope covers neither the issuing department nor the appellant department.), 404 (No decision or appellant department has this id.), 409 (The decision cannot be appealed, or an appeal is already pending.)")]
+    [ProducesResponseType<DocumentDecisionResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> RecordAppeal(
+        [Description("Decision id (GUID, route). Example: b21e6c80-1d44-4a09-8f55-3c7d9e02a1b4.")] Guid decisionId,
+        [FromBody] RecordDecisionAppealRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (CurrentUserId is not { } userId)
+            return Unauthorized();
+
+        var result = await _sender.Send(new RecordDecisionAppealCommand(
+            decisionId,
+            userId,
+            request.AppealDate,
+            request.AppellantDepartmentId,
+            request.ReferenceNumber,
+            request.Notes), cancellationToken);
+        return result.ToActionResult();
+    }
+
+    /// <summary>Records the outcome of a pending appeal: accepted revokes the decision, rejected makes it final.</summary>
+    /// <param name="decisionId">Decision id (GUID, route). Example: <c>b21e6c80-1d44-4a09-8f55-3c7d9e02a1b4</c>.</param>
+    /// <param name="appealId">Appeal id (GUID, route). Example: <c>c31f7d90-2e55-4b10-9a66-4d8e0f13b2c5</c>.</param>
+    /// <param name="request">
+    /// The request payload:
+    /// <list type="bullet">
+    /// <item><term>outcomeId</term><description>Ruling: 2 accepted or 3 rejected (integer, required). Example: <c>2</c>.</description></item>
+    /// <item><term>outcomeDate</term><description>Date of the ruling (date, required). Example: <c>2026-11-12</c>.</description></item>
+    /// </list>
+    /// </param>
+    /// <param name="cancellationToken">Request cancellation token (optional).</param>
+    /// <response code="200">The decision after the ruling. Accepted is revoked; rejected is final.</response>
+    /// <response code="400">The outcome is not accepted or rejected, the appeal is not pending, or the date is not a valid year.</response>
+    /// <response code="401">The token has no user id.</response>
+    /// <response code="403">The caller's scope covers neither the issuing department nor the appellant department.</response>
+    /// <response code="404">No decision or appeal has this id.</response>
+    [HttpPut("api/decisions/{decisionId:guid}/appeals/{appealId:guid}/outcome")]
+    [Authorize(Policy = Permissions.DecisionManage)]
+    [EndpointSummary("Records the outcome of a pending appeal: accepted revokes the decision, rejected makes it final.")]
+    [EndpointDescription("Records the outcome of a pending appeal: accepted revokes the decision, rejected makes it final. Requires the DECISION_MANAGE permission. The issuing department or the appellant department may record it, including when the document is archived. Responses: 200 (The decision after the ruling. Accepted is revoked; rejected is final.), 400 (The outcome is not accepted or rejected, the appeal is not pending, or the date is not a valid year.), 401 (The token has no user id.), 403 (The caller's scope covers neither the issuing department nor the appellant department.), 404 (No decision or appeal has this id.)")]
+    [ProducesResponseType<DocumentDecisionResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> RecordAppealOutcome(
+        [Description("Decision id (GUID, route). Example: b21e6c80-1d44-4a09-8f55-3c7d9e02a1b4.")] Guid decisionId,
+        [Description("Appeal id (GUID, route). Example: c31f7d90-2e55-4b10-9a66-4d8e0f13b2c5.")] Guid appealId,
+        [FromBody] RecordAppealOutcomeRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (CurrentUserId is not { } userId)
+            return Unauthorized();
+
+        var result = await _sender.Send(new RecordAppealOutcomeCommand(
+            decisionId,
+            appealId,
+            userId,
+            request.OutcomeId,
+            request.OutcomeDate), cancellationToken);
         return result.ToActionResult();
     }
 

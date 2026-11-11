@@ -68,6 +68,7 @@ Used by documents, users, employees, external organizations, audit logs, and int
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-11 | Claude | Arabic messages for `Decisions.AppealNotFound`, `AppealOutOfScope`, `AppealDateInvalid`, `AppealReferenceTooLong` and `AppealNotesTooLong`. |
 | 2026-11-11 | Claude | Added Arabic messages for every `Decisions.*` code, including the appeal and join codes reserved for later slices. |
 | 2026-11-11 | Claude | Added Arabic messages for the archive diwan errors: six `Archiving.*` codes, three `InstitutionSetting.ArchiveDiwan*` codes and `Department.ArchiveDiwanProtected`. |
 | 2026-11-10 | Claude | Reworded `Numbering.DepartmentNumberLocked` to point at the new-number option of the receive dialog. |

@@ -100,7 +100,7 @@ public sealed class SeedingPipelineTests
         Assert.Equal(3, await db.ArchiveEventTypes.CountAsync());
         Assert.Equal(3, await db.ArchiveLocations.CountAsync());
         Assert.Equal(8, await db.AuditActionTypes.CountAsync());
-        Assert.Equal(17, await db.AuditEntityTypes.CountAsync());
+        Assert.Equal(18, await db.AuditEntityTypes.CountAsync());
         Assert.Equal(12, await db.NotificationTypes.CountAsync());
         Assert.Equal(3, await db.NotificationPriorities.CountAsync());
         Assert.Equal(3, await db.NotificationChannels.CountAsync());
