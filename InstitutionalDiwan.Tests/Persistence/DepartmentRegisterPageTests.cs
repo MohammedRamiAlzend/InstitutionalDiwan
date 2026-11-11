@@ -224,6 +224,38 @@ public sealed class DepartmentRegisterPageTests
     }
 
     [Fact]
+    public async Task FiltersByAFormFieldValue_OnTheChosenVersionOnly()
+    {
+        var world = await CreateWorldAsync();
+        AddLine(world, AddDocument(world, "أ"), world.BookA, "1/2026", new DateTime(2026, 3, 1), world.FormV1, "CASE-777");
+        AddLine(world, AddDocument(world, "ب"), world.BookA, "2/2026", new DateTime(2026, 3, 2), world.FormV1, "CASE-888");
+        AddLine(world, AddDocument(world, "ج"), world.BookA, "3/2026", new DateTime(2026, 3, 3), world.FormV2, "CASE-777");
+        AddLine(world, AddDocument(world, "د"), world.BookA, "4/2026", new DateTime(2026, 3, 4), world.FormV1);
+        await world.Db.SaveChangesAsync();
+        var fieldId = world.FormV1.Fields.Single().DocumentFieldId;
+
+        DepartmentRegisterFilter On(DocumentTypeSchemaVersion form, DocumentFieldFilter filter) =>
+            new(world.Department.DepartmentId, SchemaVersionId: form.SchemaVersionId, FieldFilters: new[] { filter });
+
+        var contains = await PageAsync(world, On(world.FormV1, new DocumentFieldFilter(
+            fieldId, DocumentFieldDataType.Text, FieldFilterOperator.Contains, Text: "777")));
+        Assert.Equal(new[] { "1/2026" }, Numbers(contains));
+
+        var equals = await PageAsync(world, On(world.FormV1, new DocumentFieldFilter(
+            fieldId, DocumentFieldDataType.Text, FieldFilterOperator.Equals, Text: "CASE-888")));
+        Assert.Equal(new[] { "2/2026" }, Numbers(equals));
+        Assert.Equal(1, equals.TotalCount);
+
+        var otherVersion = await PageAsync(world, On(world.FormV2, new DocumentFieldFilter(
+            fieldId, DocumentFieldDataType.Text, FieldFilterOperator.Contains, Text: "777")));
+        Assert.Equal(new[] { "3/2026" }, Numbers(otherVersion));
+
+        var nothing = await PageAsync(world, On(world.FormV1, new DocumentFieldFilter(
+            fieldId, DocumentFieldDataType.Text, FieldFilterOperator.Contains, Text: "999")));
+        Assert.Empty(nothing.Items);
+    }
+
+    [Fact]
     public async Task ALineTheCallerCannotViewKeepsItsNumberButNotItsTitle()
     {
         var world = await CreateWorldAsync();

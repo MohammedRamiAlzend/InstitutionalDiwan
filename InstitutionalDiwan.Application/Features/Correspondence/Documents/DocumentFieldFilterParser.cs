@@ -41,7 +41,20 @@ internal static class DocumentFieldFilterParser
 
     public static Result<IReadOnlyList<DocumentFieldFilter>> Parse(
         IReadOnlyList<string> raw,
-        IReadOnlyList<DocumentField> fields)
+        IReadOnlyList<DocumentField> fields) =>
+        Parse(raw, fields.Select(field => new FieldRef(field.DocumentFieldId, field.Key, field.DataType)).ToList());
+
+    /// <summary>Parses filters against the fields of one department record form version.</summary>
+    public static Result<IReadOnlyList<DocumentFieldFilter>> Parse(
+        IReadOnlyList<string> raw,
+        IEnumerable<DocumentTypeSchemaVersionField> fields) =>
+        Parse(raw, fields.Select(field => new FieldRef(field.DocumentFieldId, field.FieldKey, field.DataType)).ToList());
+
+    private sealed record FieldRef(Guid DocumentFieldId, string Key, DocumentFieldDataType DataType);
+
+    private static Result<IReadOnlyList<DocumentFieldFilter>> Parse(
+        IReadOnlyList<string> raw,
+        IReadOnlyList<FieldRef> fields)
     {
         if (raw.Count > MaxFilters)
             return Result.Failure<IReadOnlyList<DocumentFieldFilter>>(DomainErrors.DocumentFields.TooManyFilters);
@@ -59,7 +72,7 @@ internal static class DocumentFieldFilterParser
         return Result.Success<IReadOnlyList<DocumentFieldFilter>>(filters);
     }
 
-    private static Result<DocumentFieldFilter> ParseOne(string item, IReadOnlyList<DocumentField> fields)
+    private static Result<DocumentFieldFilter> ParseOne(string item, IReadOnlyList<FieldRef> fields)
     {
         var first = item.IndexOf(':');
         var second = first < 0 ? -1 : item.IndexOf(':', first + 1);

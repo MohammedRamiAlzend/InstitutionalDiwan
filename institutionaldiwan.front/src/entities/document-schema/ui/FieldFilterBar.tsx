@@ -19,6 +19,12 @@ import { FieldFilterDialog } from './FieldFilterDialog'
 
 interface FieldFilterBarProps {
   documentTypeId: number | undefined
+  /**
+   * An explicit field list (for example one department record form version) instead of the document
+   * type's creation form. Every field is then offered in the dialog; the bar still shows only the
+   * ones marked filterable.
+   */
+  fields?: readonly SchemaFieldResponse[]
   /** Raw `key:operator:value` URL values. */
   raw: readonly string[]
   onChange: (raw: string[]) => void
@@ -125,10 +131,13 @@ function QuickFilter({ field, value, disabled, onCommit }: QuickFilterProps) {
  * Dynamic-field filters of a document table: the fields marked filterable sit on the bar, and
  * «تصفية بالحقول» opens every operator. All of it is the table's URL state.
  */
-export function FieldFilterBar({ documentTypeId, raw, onChange }: FieldFilterBarProps) {
+export function FieldFilterBar({ documentTypeId, fields: explicitFields, raw, onChange }: FieldFilterBarProps) {
   const [open, setOpen] = useState(false)
-  const schemaQuery = useDocumentTypeSchema(documentTypeId)
-  const fields = useMemo(() => schemaQuery.data?.schema?.fields ?? [], [schemaQuery.data])
+  const schemaQuery = useDocumentTypeSchema(explicitFields ? undefined : documentTypeId)
+  const fields = useMemo(
+    () => explicitFields ?? schemaQuery.data?.schema?.fields ?? [],
+    [explicitFields, schemaQuery.data],
+  )
   const filters = useMemo(
     () => raw.map(decodeFieldFilter).filter((filter): filter is FieldFilterValue => filter !== null),
     [raw],
@@ -137,7 +146,10 @@ export function FieldFilterBar({ documentTypeId, raw, onChange }: FieldFilterBar
   const filterable = fields.filter((field) => field.behavior.isFilterable)
   // A shared link may filter on a field no longer marked filterable; it must stay editable.
   const dialogFields = fields.filter(
-    (field) => field.behavior.isFilterable || filters.some((filter) => filter.key === field.key),
+    (field) =>
+      explicitFields !== undefined ||
+      field.behavior.isFilterable ||
+      filters.some((filter) => filter.key === field.key),
   )
 
   const quickFilterOf = (field: SchemaFieldResponse) =>
@@ -157,12 +169,14 @@ export function FieldFilterBar({ documentTypeId, raw, onChange }: FieldFilterBar
   }
 
   const hint =
-    documentTypeId === undefined
+    documentTypeId === undefined && explicitFields === undefined
       ? 'اختر نوع وثيقة أولًا.'
       : schemaQuery.isLoading
         ? 'جارٍ تحميل حقول النوع…'
         : dialogFields.length === 0
-          ? 'لا حقول قابلة للتصفية لهذا النوع.'
+          ? explicitFields !== undefined
+            ? 'لا حقول قابلة للتصفية في هذا النموذج.'
+            : 'لا حقول قابلة للتصفية لهذا النوع.'
           : undefined
 
   return (

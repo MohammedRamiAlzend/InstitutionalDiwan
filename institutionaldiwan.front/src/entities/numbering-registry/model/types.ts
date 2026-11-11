@@ -78,6 +78,8 @@ export interface DepartmentRegisterEntriesParams {
   dateFrom?: string
   dateTo?: string
   schemaVersionId?: string
+  /** `key:operator:value` comparisons on the chosen version's fields; they need `schemaVersionId`. */
+  fieldFilters?: string[]
   page: number
   pageSize: number
   search?: string

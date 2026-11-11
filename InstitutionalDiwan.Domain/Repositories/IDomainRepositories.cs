@@ -208,7 +208,8 @@ public sealed record DepartmentRegisterFilter(
     DateTime? RegistryDateTo = null,
     int? DocumentTypeId = null,
     Guid? SchemaVersionId = null,
-    DocumentFieldSort? FieldSort = null);
+    DocumentFieldSort? FieldSort = null,
+    IReadOnlyList<DocumentFieldFilter>? FieldFilters = null);
 
 /// <summary>One line of a department register page, with what a screen needs beside the line itself.</summary>
 public sealed record DepartmentRegisterRow(

@@ -131,6 +131,41 @@ public sealed class DepartmentRegisterEntriesHandlerTests
     }
 
     [Fact]
+    public async Task FieldFilters_NeedAFormVersion()
+    {
+        var world = new World();
+
+        var result = await world.Entries().Handle(
+            new ListDepartmentRegisterEntriesQuery(world.Hr.DepartmentId, FieldFilters: new[] { "case_no:contains:7" }),
+            CancellationToken.None);
+
+        Assert.Equal(DomainErrors.DocumentFields.FilterRequiresDocumentType.Code, result.Error.Code);
+    }
+
+    [Fact]
+    public async Task FieldFilters_AreCheckedAgainstTheFormsFields_ThenHandedToTheQuery()
+    {
+        var world = new World();
+        var form = world.AddForm(world.Hr, 1);
+
+        var unknown = await world.Entries().Handle(
+            new ListDepartmentRegisterEntriesQuery(
+                world.Hr.DepartmentId, SchemaVersionId: form.SchemaVersionId, FieldFilters: new[] { "missing:eq:1" }),
+            CancellationToken.None);
+        Assert.Equal(DomainErrors.DocumentFields.FilterFieldNotFound.Code, unknown.Error.Code);
+
+        var good = await world.Entries().Handle(
+            new ListDepartmentRegisterEntriesQuery(
+                world.Hr.DepartmentId, SchemaVersionId: form.SchemaVersionId, FieldFilters: new[] { "case_no:contains:7" }),
+            CancellationToken.None);
+        Assert.True(good.IsSuccess, good.Error?.Code);
+        var filter = Assert.Single(world.Numbers.LastRegisterFilter!.FieldFilters!);
+        Assert.Equal(form.Fields.Single().DocumentFieldId, filter.DocumentFieldId);
+        Assert.Equal(FieldFilterOperator.Contains, filter.Operator);
+        Assert.Equal("7", filter.Text);
+    }
+
+    [Fact]
     public async Task TheFormsList_IsPerTypeNewestFirst_WithoutDraftsOrOtherDepartments()
     {
         var world = new World();

@@ -120,6 +120,12 @@ internal sealed class DocumentNumberRepository : IDocumentNumberRepository
         if (versionId is { } version)
             lines = lines.Where(number => number.Visits.Any(visit => visit.SchemaVersionId == version));
 
+        if (versionId is { } filteredVersion && filter.FieldFilters is { Count: > 0 } fieldFilters)
+        {
+            foreach (var fieldFilter in fieldFilters)
+                lines = lines.WhereRecordFieldMatches(_context, filteredVersion, fieldFilter);
+        }
+
         // A line stays in the book even when its document is hidden from the caller, but the hidden
         // document's title and central number are neither shown nor searchable.
         var viewable = _context.Documents.AsNoTracking().WhereViewableBy(_context, access);

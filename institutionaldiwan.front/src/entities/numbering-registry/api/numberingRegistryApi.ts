@@ -37,11 +37,20 @@ export const numberingRegistryApi = {
   departmentRegisterEntries: async ({
     departmentId,
     search,
+    fieldFilters,
     ...params
   }: DepartmentRegisterEntriesParams): Promise<PagedResult<DepartmentRegisterEntryResponse>> => {
     const { data } = await httpClient.get<PagedResult<DepartmentRegisterEntryResponse>>(
       `/departments/${departmentId}/register/entries`,
-      { params: { ...params, search: search?.trim() || undefined } },
+      {
+        params: {
+          ...params,
+          search: search?.trim() || undefined,
+          fieldFilters: fieldFilters?.length ? fieldFilters : undefined,
+        },
+        // ASP.NET binds repeated keys (`fieldFilters=a&fieldFilters=b`), not `fieldFilters[]`.
+        paramsSerializer: { indexes: null },
+      },
     )
     return data
   },

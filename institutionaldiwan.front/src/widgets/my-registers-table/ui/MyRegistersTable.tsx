@@ -10,6 +10,7 @@ import {
 } from '@/entities/document'
 import {
   FIELD_DATA_TYPE,
+  FieldFilterBar,
   formatFieldValue,
   SCHEMA_STATUS,
   useDepartmentRegisterForms,
@@ -37,6 +38,9 @@ import {
 } from '@/shared/ui'
 
 const NO_FORM = 'none'
+
+/** URL parameter holding the repeated `key:operator:value` filters on the chosen form's fields. */
+const FIELD_FILTER_PARAM = 'f'
 
 const STATUS_OPTIONS = [
   { value: 'all', label: 'كل الحالات' },
@@ -81,8 +85,9 @@ export function MyRegistersTable() {
     defaultSortKey: 'registryDate',
     defaultSortDirection: 'desc',
     filterKeys: ['registry', 'type', 'version', 'year', 'status', 'from', 'to'],
-    // A version belongs to one document type's form.
-    resetOnChange: { type: ['version'] },
+    repeatedKeys: [FIELD_FILTER_PARAM],
+    // A version belongs to one document type's form, and field filters to one version.
+    resetOnChange: { type: ['version', FIELD_FILTER_PARAM], version: [FIELD_FILTER_PARAM] },
   })
   const navigate = useNavigate()
 
@@ -153,6 +158,7 @@ export function MyRegistersTable() {
   const from = table.filters.from ?? ''
   const to = table.filters.to ?? ''
 
+  const fieldFilters = table.repeated[FIELD_FILTER_PARAM] ?? []
   const formsReady = !formsQuery.isLoading
   const params: DepartmentRegisterEntriesParams | null =
     departmentId && registryId && formsReady
@@ -164,6 +170,7 @@ export function MyRegistersTable() {
           dateFrom: from || undefined,
           dateTo: to || undefined,
           schemaVersionId: version?.schemaVersionId,
+          fieldFilters: version ? fieldFilters : undefined,
           page: table.page,
           pageSize: table.pageSize,
           search: table.search || undefined,
@@ -342,7 +349,12 @@ export function MyRegistersTable() {
     (params !== null && entriesQuery.isLoading)
   const noRegisters = !isLoading && Boolean(departmentId) && registries.length === 0
   const hasNarrowing = Boolean(
-    year !== undefined || Number.isFinite(statusId) || from || to || table.search,
+    year !== undefined ||
+      Number.isFinite(statusId) ||
+      from ||
+      to ||
+      table.search ||
+      fieldFilters.length > 0,
   )
 
   const emptyTitle = noRegisters
@@ -460,17 +472,26 @@ export function MyRegistersTable() {
                 onChange={(event) => table.setFilter('to', event.target.value)}
                 className="w-40"
               />
-              {(year !== undefined || Number.isFinite(statusId) || from || to) && (
+              {form && version && (
+                <FieldFilterBar
+                  documentTypeId={form.documentTypeId}
+                  fields={version.fields}
+                  raw={fieldFilters}
+                  onChange={(raw) => table.setRepeated(FIELD_FILTER_PARAM, raw)}
+                />
+              )}
+              {(year !== undefined ||
+                Number.isFinite(statusId) ||
+                from ||
+                to ||
+                fieldFilters.length > 0) && (
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
-                  onClick={() => {
-                    table.setFilter('year', null)
-                    table.setFilter('status', null)
-                    table.setFilter('from', null)
-                    table.setFilter('to', null)
-                  }}
+                  onClick={() =>
+                    table.removeParams(['year', 'status', 'from', 'to', FIELD_FILTER_PARAM])
+                  }
                 >
                   مسح المرشحات
                 </Button>

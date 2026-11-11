@@ -62,14 +62,17 @@ public sealed class DepartmentRegistersController : ControllerBase
     /// <param name="search">Free-text search across the register number, the document title, the central number and the text values of the chosen form (string, optional). Example: <c>45</c>.</param>
     /// <param name="sortBy">Sort key: registryNumber, registryDate, document, centralNumber, numberingYear, status, registrationCount, or field:{key} for a field of the chosen form (string, optional). Example: <c>registryDate</c>.</param>
     /// <param name="sortDescending">Sort descending when true (boolean, optional). Example: <c>true</c>.</param>
+    /// <param name="fieldFilters">Filters on the chosen form's fields as key:operator:value, repeated up to 5 times and combined with AND; requires schemaVersionId (string array, optional). Example: <c>case_no:contains:77</c>.</param>
     /// <param name="cancellationToken">Request cancellation token (optional).</param>
     /// <response code="200">One page of register lines with the paging counters.</response>
     /// <response code="401">The token is missing, expired, or invalid.</response>
+    /// <response code="400">A field filter is malformed, names an unknown field, or has no form version.</response>
     /// <response code="403">The token lacks NUMBERING_VIEW, or the department is outside the caller's scope.</response>
     /// <response code="404">No department with that id exists, or the form version is not one of its issued forms.</response>
     [HttpGet("entries")]
     [EndpointSummary("Lists a page of one department's register lines, narrowed and ordered on the server.")]
-    [EndpointDescription("Lists a page of one department's register lines, newest registration first by default. Search, filters, sorting and paging all run in the database. Passing schemaVersionId limits the page to lines with a visit on that department record form version and returns that visit's values keyed by field key. A line whose document the caller cannot view keeps its number, but its title and central number are empty and never match a search. The department must be inside the caller's organizational scope. Requires the NUMBERING_VIEW permission. Responses: 200 (One page of register lines with the paging counters.), 401 (The token is missing, expired, or invalid.), 403 (The token lacks NUMBERING_VIEW, or the department is outside the caller's scope.), 404 (No department with that id exists, or the form version is not one of its issued forms.)")]
+    [EndpointDescription("Lists a page of one department's register lines, newest registration first by default. Search, filters, sorting and paging all run in the database. Passing schemaVersionId limits the page to lines with a visit on that department record form version and returns that visit's values keyed by field key; fieldFilters then narrow by those values, judged on each line's latest visit on the version (a filter without a version is rejected). A line whose document the caller cannot view keeps its number, but its title and central number are empty and never match a search. The department must be inside the caller's organizational scope. Requires the NUMBERING_VIEW permission. Responses: 200 (One page of register lines with the paging counters.), 401 (The token is missing, expired, or invalid.), 403 (The token lacks NUMBERING_VIEW, or the department is outside the caller's scope.), 404 (No department with that id exists, or the form version is not one of its issued forms.)")]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<PagedResult<DepartmentRegisterEntryResponse>>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden)]
@@ -87,6 +90,7 @@ public sealed class DepartmentRegistersController : ControllerBase
         [Description("Free-text search across the register number, the document title, the central number and the text values of the chosen form (string, optional). Example: 45.")] [FromQuery] string? search = null,
         [Description("Sort key: registryNumber, registryDate, document, centralNumber, numberingYear, status, registrationCount, or field:{key} for a field of the chosen form (string, optional). Example: registryDate.")] [FromQuery] string? sortBy = null,
         [Description("Sort descending when true (boolean, optional). Example: true.")] [FromQuery] bool sortDescending = true,
+        [Description("Filters on the chosen form's fields as key:operator:value, repeated up to 5 times and combined with AND; requires schemaVersionId (string array, optional, query parameter). Example: case_no:contains:77.")] [FromQuery] string[]? fieldFilters = null,
         CancellationToken cancellationToken = default)
     {
         var result = await _sender.Send(
@@ -102,7 +106,8 @@ public sealed class DepartmentRegistersController : ControllerBase
                 pageSize,
                 search,
                 sortBy,
-                sortDescending),
+                sortDescending,
+                fieldFilters),
             cancellationToken);
 
         return result.ToActionResult();

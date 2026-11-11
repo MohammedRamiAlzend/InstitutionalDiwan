@@ -34,6 +34,8 @@ export interface TableState {
   setFilter: (key: string, value: string | null) => void
   setRepeated: (key: string, values: readonly string[]) => void
   clearFilters: () => void
+  /** Removes just these URL parameters (and resets the page) in one write. */
+  removeParams: (keys: readonly string[]) => void
   clearQuery: () => void
 }
 
@@ -197,6 +199,15 @@ export function useTableState(options: TableStateOptions = {}): TableState {
     }, true)
   }, [filterKeys, repeatedKeys, update])
 
+  const removeParams = useCallback(
+    (keys: readonly string[]) => {
+      update((next) => {
+        for (const key of keys) next.delete(key)
+      }, true)
+    },
+    [update],
+  )
+
   return {
     page,
     pageSize,
@@ -213,6 +224,7 @@ export function useTableState(options: TableStateOptions = {}): TableState {
     setFilter,
     setRepeated,
     clearFilters,
+    removeParams,
     clearQuery,
   }
 }

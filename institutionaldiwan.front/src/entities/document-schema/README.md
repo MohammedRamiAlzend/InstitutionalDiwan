@@ -17,7 +17,7 @@ Read side of the per-document-type field schemas: a type's field identities, its
 | `model/values.ts` | Form-value helpers: `toFieldValueMap`, `toFieldValueRequests`, `withFieldDefaults`, `withFixedValues`, `visibleFields`, `formatFieldValue`, `validateFieldValues` (local mirror of the backend rules) and `normalizeNumberText`. |
 | `ui/DynamicFieldInputs.tsx` | The visible fields of a schema over a key → text map, in the schema's sections and widths; used by create and the details panel. |
 | `ui/FieldValueControl.tsx` | The input for one field's data type (text, long text, number, date, yes/no, select, multi-select); also the editor's default-value input. |
-| `ui/FieldFilterBar.tsx` | Quick filters for fields marked filterable, the «تصفية بالحقول» button and the chips of other filters; used by the registry and the archive. |
+| `ui/FieldFilterBar.tsx` | Quick filters for fields marked filterable, the «تصفية بالحقول» button and the chips of other filters; used by the registry and the archive; an explicit `fields` list (a department record form version) replaces the document type's creation form and offers every field in the dialog. |
 | `ui/FieldFilterDialog.tsx` | Up to five field/operator/value rows with local validation. |
 | `ui/SchemaBadges.tsx` | `SchemaStatusBadge` (draft / published / retired) and `FieldTypeBadge`. |
 | `index.ts` | Public barrel. |
@@ -39,6 +39,7 @@ Read side of the per-document-type field schemas: a type's field identities, its
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-11 | Claude | `FieldFilterBar` takes an optional `fields` list, so the «سجلاتي» page filters on a record form version's fields. |
 | 2026-11-11 | Claude | Added `departmentRegisterForms` and `useDepartmentRegisterForms` (a department's issued record forms per document type, versions newest first). |
 | 2026-11-10 | Claude | Schema reads take an optional department (record forms); added department-record types, `departmentRecords` API and `useDepartmentRecords`. |
 | 2026-11-08 | Claude | `schemaApi` fills in `behavior` when the API predates it, so a server not yet upgraded no longer blanks the page. |

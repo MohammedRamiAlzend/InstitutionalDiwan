@@ -3,6 +3,7 @@ using InstitutionalDiwan.Application.Abstractions.Authorization;
 using InstitutionalDiwan.Application.Abstractions.Messaging;
 using InstitutionalDiwan.Application.Common;
 using InstitutionalDiwan.Application.Features.Correspondence.DocumentFields;
+using InstitutionalDiwan.Application.Features.Correspondence.Documents;
 using InstitutionalDiwan.Domain.Common;
 using InstitutionalDiwan.Domain.Entities.Correspondence;
 using InstitutionalDiwan.Domain.Entities.Numbering;
@@ -17,7 +18,9 @@ namespace InstitutionalDiwan.Application.Features.Numbering.Registries;
 /// version of the department: only lines with a visit on that version come back, each with that visit's
 /// values. <paramref name="SortBy"/> is a column name (<c>registryNumber</c>, <c>registryDate</c>,
 /// <c>document</c>, <c>centralNumber</c>, <c>numberingYear</c>, <c>status</c>, <c>registrationCount</c>)
-/// or <c>field:{key}</c> for a field of the chosen version.
+/// or <c>field:{key}</c> for a field of the chosen version. <paramref name="FieldFilters"/> are
+/// <c>key:operator:value</c> comparisons on the chosen version's fields (they need a version); a line
+/// matches when its latest visit on that version stores a satisfying value.
 /// </summary>
 public sealed record ListDepartmentRegisterEntriesQuery(
     Guid DepartmentId,
@@ -31,7 +34,8 @@ public sealed record ListDepartmentRegisterEntriesQuery(
     int PageSize = 20,
     string? Search = null,
     string? SortBy = null,
-    bool SortDescending = true) : IQuery<PagedResult<DepartmentRegisterEntryResponse>>;
+    bool SortDescending = true,
+    IReadOnlyList<string>? FieldFilters = null) : IQuery<PagedResult<DepartmentRegisterEntryResponse>>;
 
 /// <summary>
 /// A register line with the record values of its latest visit on the chosen form version. <c>Values</c>
@@ -58,7 +62,7 @@ public sealed record DepartmentRegisterEntryResponse(
 
 internal sealed class ListDepartmentRegisterEntriesQueryHandler
     : IQueryHandler<ListDepartmentRegisterEntriesQuery, PagedResult<DepartmentRegisterEntryResponse>>
-{
+            {
     private const string FieldSortPrefix = "field:";
 
     private readonly IDepartmentRepository _departmentRepository;
@@ -110,6 +114,21 @@ internal sealed class ListDepartmentRegisterEntriesQueryHandler
             }
         }
 
+        IReadOnlyList<DocumentFieldFilter>? fieldFilters = null;
+        if (request.FieldFilters is { Count: > 0 })
+        {
+            if (version is null)
+            {
+                return Result.Failure<PagedResult<DepartmentRegisterEntryResponse>>(
+                    DomainErrors.DocumentFields.FilterRequiresDocumentType);
+            }
+
+            var parsed = DocumentFieldFilterParser.Parse(request.FieldFilters, version.Fields);
+            if (parsed.IsFailure)
+                return Result.Failure<PagedResult<DepartmentRegisterEntryResponse>>(parsed.Error);
+            fieldFilters = parsed.Value;
+        }
+
         // A sort on a record field names the field by key; the repository needs its id and type.
         var sortBy = request.SortBy;
         DocumentFieldSort? fieldSort = null;
@@ -136,7 +155,8 @@ internal sealed class ListDepartmentRegisterEntriesQueryHandler
             request.DateTo,
             DocumentTypeId: version?.DocumentTypeId,
             SchemaVersionId: version?.SchemaVersionId,
-            FieldSort: fieldSort);
+            FieldSort: fieldSort,
+            FieldFilters: fieldFilters);
 
         var result = await _documentNumberRepository.ListDepartmentRegisterPagedAsync(
             page, access, filter, cancellationToken);

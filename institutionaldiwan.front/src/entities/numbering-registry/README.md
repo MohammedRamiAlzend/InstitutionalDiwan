@@ -50,6 +50,7 @@ affected `detail(id)`.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-11 | Claude | `DepartmentRegisterEntriesParams` gained `fieldFilters`, sent as repeated keys. |
 | 2026-11-11 | Claude | Added `departmentRegisterEntries` (`GET .../register/entries`) with `useDepartmentRegisterEntries` and its keys. |
 | 2026-11-11 | Claude | `DepartmentRegisterLineResponse` gained `registryId`, so a screen can show one register at a time. |
 | 2026-11-10 | Claude | `DepartmentRegisterLineResponse` gained `replacedByNumberText` and `replacesNumberText`. |

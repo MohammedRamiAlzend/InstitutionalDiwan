@@ -33,7 +33,7 @@ entries ordered by the department's own date, with the central Diwan number kept
 | `NumberingRegistryValidation.cs` | Shared scope (department/document type/direction) and reset-policy lookup checks used by create and update. |
 | `DepartmentRegisterModels.cs` | `ListDepartmentRegisterQuery` (department + optional year) and the `DepartmentRegisterLineResponse` read model for the register book. |
 | `ListDepartmentRegisterQueryHandler.cs` | 404s on an unknown department, 403s on one outside the caller's scope (`Correspondence.DepartmentOutOfScope`), blanks the title and central number of documents the caller cannot view, loads the department's entries, joins the documents in one batch, and reports each line's register number, date, and arrival count. |
-| `DepartmentRegisterEntries.cs` | `ListDepartmentRegisterEntriesQuery`, `DepartmentRegisterEntryResponse` and its handler: one server-narrowed page of a department register (register, year, status, day range, search, sort) that can show the values of one department record form version, newest visit per line. A form of another department, or a draft, is `DepartmentRecords.FormNotFound`; a `field:{key}` sort on an unknown key falls back to the default order. |
+| `DepartmentRegisterEntries.cs` | `ListDepartmentRegisterEntriesQuery`, `DepartmentRegisterEntryResponse` and its handler: one server-narrowed page of a department register (register, year, status, day range, search, sort) that can show the values of one department record form version, newest visit per line. `FieldFilters` (`key:operator:value`, up to 5, AND) are parsed with the shared `DocumentFieldFilterParser` against the chosen version's fields and need a version (`DocumentFields.FilterRequiresDocumentType` otherwise). A form of another department, or a draft, is `DepartmentRecords.FormNotFound`; a `field:{key}` sort on an unknown key falls back to the default order. |
 | `DepartmentRegisterForms.cs` | `GetDepartmentRegisterFormsQuery` and its handler: the published or retired record forms a department has issued, per document type with versions newest first. |
 
 ## Conventions / Notes
@@ -58,6 +58,7 @@ entries ordered by the department's own date, with the central Diwan number kept
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-11 | Claude | `ListDepartmentRegisterEntriesQuery` accepts `FieldFilters` on the chosen form version's fields. `DocumentFieldFilterParser` can also parse against a version's fields. |
 | 2026-11-11 | Claude | Added the paged register page (`DepartmentRegisterEntries`) with form-version values and the forms list (`DepartmentRegisterForms`), so «سجلاتي» searches, filters, sorts and pages on the server. |
 | 2026-11-11 | Claude | `DepartmentRegisterLineResponse` carries `RegistryId`, the register the line was written in, so the «سجلاتي» page can show one register at a time. |
 | 2026-11-10 | Claude | `DepartmentRegisterLineResponse` carries `ReplacedByNumberText` and `ReplacesNumberText`, so the register book shows a renumbered document's old and new lines linked. |

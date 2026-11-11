@@ -27,13 +27,13 @@ from the shared `DataTable` (client mode).
 
 - The registers are the ones whose `departmentId` is the caller's primary department; the department
   comes from `useMyPrimaryDepartmentId`.
-- Filters live in the URL (`registry`, `type`, `version`, `year`, `status`, `from`, `to`) together with the search, sort
+- Filters live in the URL (`registry`, `type`, `version`, `year`, `status`, `from`, `to`, repeated `f`) together with the search, sort
   and page; changing the form type resets the version. A department with exactly one register opens it without a choice.
 - Nothing is filtered in the browser: search, filters, sort and paging are sent to `GET .../register/entries`.
 - The form type defaults to the register's document type when the department has a form for it; the
   version defaults to the newest. The chosen version's fields become columns (sortable by type) and the
   grid keeps only lines recorded on that version, showing the latest visit's values. «بلا بيانات نموذج»
-  shows every line without form data. Field-value filters are not offered; the search covers text values.
+  shows every line without form data. Field-value filters (`f=key:operator:value`, repeated in the URL, up to 5) use the shared `FieldFilterBar` on the chosen version's fields and reset when the form or version changes; the search also covers text values.
 - A line whose document the caller cannot view keeps its number but shows `RestrictedDocumentLabel`
   and no «فتح الوثيقة» entry, the same as the department register book.
 - Search covers the register number, the document title, the central number and the form values.
@@ -49,5 +49,6 @@ from the shared `DataTable` (client mode).
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-11 | Claude | Added field-value filters on the chosen form version; «مسح المرشحات» now clears in one URL write (it only cleared the last parameter before). |
 | 2026-11-11 | Claude | Moved to server mode and added the form type/version selects with field columns. |
 | 2026-11-11 | Claude | Added the widget behind `/my-registers`. |
