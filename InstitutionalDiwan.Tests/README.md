@@ -139,6 +139,7 @@ indexes) runs against a private SQLite in-memory database through `Support/TestC
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-11 | Claude | `DepartmentRegisterPageTests.FilterSearchAndSortReadOnlyTheLatestVisit` (a line with two visits); the test world seeds the re-registration event. 979 tests pass. |
 | 2026-11-11 | Claude | Register page field-value filters: SQLite test (contains, equals, other version, no match) and two handler tests (a version is required; unknown field refused; typed filter handed to the query). 978 tests pass. |
 | 2026-11-11 | Claude | Department register page: `Application/DepartmentRegisterEntriesHandlerTests` (scope, form checks, sort mapping, forms list) and `Persistence/DepartmentRegisterPageTests` (SQLite: filters, paging, form-version values, search, field sort, hidden titles). 975 tests pass. |
 | 2026-11-11 | Claude | Slice D: a join creates a `JoinedInto` relation, a cycle or a hidden principal file is refused, a separating decision on the joined file is refused, canceling the join removes the relation, and the principal file's decisions stay hidden from a caller who cannot view it. |

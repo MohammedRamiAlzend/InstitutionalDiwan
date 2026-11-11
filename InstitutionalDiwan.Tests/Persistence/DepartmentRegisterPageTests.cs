@@ -39,7 +39,12 @@ public sealed class DepartmentRegisterPageTests
             DocumentNumberScope.Create(DocumentNumberScope.DepartmentId, "Department", "قسم").Value);
         db.DocumentNumberStatuses.Add(DocumentNumberStatus.Create(DocumentNumberStatus.ActiveId, "Active", "فعال").Value);
         db.NumberingResetPolicies.Add(NumberingResetPolicy.Create(NumberingResetPolicy.YearlyId, "Yearly", "سنوي").Value);
-        foreach (var id in new[] { DocumentNumberEventType.IssuedId, DocumentNumberEventType.RegisteredInDepartmentId })
+        foreach (var id in new[]
+                 {
+                     DocumentNumberEventType.IssuedId,
+                     DocumentNumberEventType.RegisteredInDepartmentId,
+                     DocumentNumberEventType.ReRegisteredInDepartmentId
+                 })
             db.DocumentNumberEventTypes.Add(DocumentNumberEventType.Create(id, $"Event {id}", $"حدث {id}").Value);
 
         var department = Department.Create("HR", "الموارد", DepartmentType.SectionId).Value;
@@ -253,6 +258,39 @@ public sealed class DepartmentRegisterPageTests
         var nothing = await PageAsync(world, On(world.FormV1, new DocumentFieldFilter(
             fieldId, DocumentFieldDataType.Text, FieldFilterOperator.Contains, Text: "999")));
         Assert.Empty(nothing.Items);
+    }
+
+    [Fact]
+    public async Task FilterSearchAndSortReadOnlyTheLatestVisit()
+    {
+        var world = await CreateWorldAsync();
+        // Line 1: an old visit said "OLD-1", the latest says "Z-NEW". Line 2 has the single value "M-MID".
+        var first = AddLine(world, AddDocument(world, "أ"), world.BookA, "1/2026", new DateTime(2026, 3, 1), world.FormV1, "OLD-1");
+        var again = first.RecordVisit(world.Actor.UserId, new DateTime(2026, 4, 1), utcNow: Now.AddMinutes(1));
+        Assert.True(again.IsSuccess, again.Error?.Code);
+        var reopened = again.Value.OpenRecord(
+            world.FormV1, new[] { new DocumentFieldValueInput("case_no", "Z-NEW") }, world.Actor.UserId, Now, requireComplete: false);
+        Assert.True(reopened.IsSuccess, reopened.Error?.Code);
+        AddLine(world, AddDocument(world, "ب"), world.BookA, "2/2026", new DateTime(2026, 3, 2), world.FormV1, "M-MID");
+        await world.Db.SaveChangesAsync();
+        var fieldId = world.FormV1.Fields.Single().DocumentFieldId;
+        var version = world.FormV1.SchemaVersionId;
+        var departmentId = world.Department.DepartmentId;
+
+        DepartmentRegisterFilter Filtered(string text) => new(
+            departmentId, SchemaVersionId: version,
+            FieldFilters: new[] { new DocumentFieldFilter(fieldId, DocumentFieldDataType.Text, FieldFilterOperator.Contains, Text: text) });
+
+        // The old value no longer matches; the latest one does.
+        Assert.Empty((await PageAsync(world, Filtered("OLD"))).Items);
+        Assert.Equal(new[] { "1/2026" }, Numbers(await PageAsync(world, Filtered("Z-NEW"))));
+
+        var form = new DepartmentRegisterFilter(departmentId, SchemaVersionId: version);
+        Assert.Empty((await PageAsync(world, form, new PageRequest(1, 50, "OLD"))).Items);
+        Assert.Equal(new[] { "1/2026" }, Numbers(await PageAsync(world, form, new PageRequest(1, 50, "Z-NEW"))));
+
+        var sorted = form with { FieldSort = new DocumentFieldSort(fieldId, DocumentFieldDataType.Text) };
+        Assert.Equal(new[] { "2/2026", "1/2026" }, Numbers(await PageAsync(world, sorted, new PageRequest(1, 50, null, null, false))));
     }
 
     [Fact]

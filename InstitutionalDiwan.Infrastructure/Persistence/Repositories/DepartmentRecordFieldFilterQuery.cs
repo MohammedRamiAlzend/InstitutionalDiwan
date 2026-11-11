@@ -22,18 +22,28 @@ internal static class DepartmentRecordFieldFilterQuery
     {
         var fieldId = filter.DocumentFieldId;
         var predicate = Predicate(filter);
-        var visits = context.DocumentRegistryVisits.Where(visit => visit.SchemaVersionId == schemaVersionId);
+        var latest = LatestVisits(context, schemaVersionId);
 
         return lines.Where(number => context.DepartmentRecordValues
             .Where(value => value.DocumentFieldId == fieldId)
             .Where(predicate)
-            .Any(value => visits.Any(visit =>
+            .Any(value => latest.Any(visit =>
                 visit.VisitId == value.VisitId &&
-                visit.DocumentNumberId == number.DocumentNumberId &&
-                !visits.Any(later =>
-                    later.DocumentNumberId == visit.DocumentNumberId &&
-                    (later.RegistryDate > visit.RegistryDate ||
-                     (later.RegistryDate == visit.RegistryDate && later.RecordedAt > visit.RecordedAt))))));
+                visit.DocumentNumberId == number.DocumentNumberId)));
+    }
+
+    /// <summary>
+    /// The latest visit of each register line on one form version (by registry date, then recorded
+    /// time): the visit whose values the page shows, and so the only one that filters, sorts and
+    /// searches may read.
+    /// </summary>
+    public static IQueryable<DocumentRegistryVisit> LatestVisits(DiwanDbContext context, Guid schemaVersionId)
+    {
+        var visits = context.DocumentRegistryVisits.Where(visit => visit.SchemaVersionId == schemaVersionId);
+        return visits.Where(visit => !visits.Any(later =>
+            later.DocumentNumberId == visit.DocumentNumberId &&
+            (later.RegistryDate > visit.RegistryDate ||
+             (later.RegistryDate == visit.RegistryDate && later.RecordedAt > visit.RecordedAt))));
     }
 
     private static Expression<Func<DepartmentRecordValue, bool>> Predicate(DocumentFieldFilter filter)

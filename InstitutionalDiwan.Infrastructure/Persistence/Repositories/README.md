@@ -98,6 +98,7 @@ Concrete EF Core implementations of the repository interfaces declared in
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-11 | Claude | The department register page now filters, sorts and searches form values on each line's latest visit of the version (`DepartmentRecordFieldFilterQuery.LatestVisits`), the same visit it displays; before, sort and search read any visit. |
 | 2026-11-11 | Claude | Added `DepartmentRecordFieldFilterQuery`, the department-record counterpart of `DocumentFieldFilterQuery`; the register page applies it. No schema change. |
 | 2026-11-11 | Claude | `DocumentNumberRepository.ListDepartmentRegisterPagedAsync` and `DocumentTypeSchemaVersionRepository.ListIssuedByDepartmentAsync`. No schema change. |
 | 2026-11-11 | Claude | `ListOutgoingAsync` returns tracked relations of one type leaving a document. `ListJoinCandidatesAsync` lists other viewable files of the same type that share a person. No schema change. |

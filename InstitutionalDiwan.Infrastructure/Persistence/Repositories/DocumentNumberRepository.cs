@@ -144,15 +144,27 @@ internal sealed class DocumentNumberRepository : IDocumentNumberRepository
         if (page.NormalizedSearch is { } search)
         {
             var pattern = $"%{search}%";
-            query = query.Where(row =>
-                EF.Functions.Like(row.Number.OfficialNumberText, pattern) ||
-                (row.Title != null && EF.Functions.Like(row.Title, pattern)) ||
-                (row.Central != null && EF.Functions.Like(row.Central, pattern)) ||
-                (versionId != null && row.Number.Visits.Any(visit =>
-                    visit.SchemaVersionId == versionId &&
-                    visit.Values.Any(value =>
-                        (value.TextValue != null && EF.Functions.Like(value.TextValue, pattern)) ||
-                        (value.OptionKey != null && EF.Functions.Like(value.OptionKey, pattern))))));
+            if (versionId is { } searched)
+            {
+                // The form values the page shows are the latest visit's, so only those are searched.
+                var latestVisits = DepartmentRecordFieldFilterQuery.LatestVisits(_context, searched);
+                query = query.Where(row =>
+                    EF.Functions.Like(row.Number.OfficialNumberText, pattern) ||
+                    (row.Title != null && EF.Functions.Like(row.Title, pattern)) ||
+                    (row.Central != null && EF.Functions.Like(row.Central, pattern)) ||
+                    latestVisits.Any(visit =>
+                        visit.DocumentNumberId == row.Number.DocumentNumberId &&
+                        visit.Values.Any(value =>
+                            (value.TextValue != null && EF.Functions.Like(value.TextValue, pattern)) ||
+                            (value.OptionKey != null && EF.Functions.Like(value.OptionKey, pattern)))));
+            }
+            else
+            {
+                query = query.Where(row =>
+                    EF.Functions.Like(row.Number.OfficialNumberText, pattern) ||
+                    (row.Title != null && EF.Functions.Like(row.Title, pattern)) ||
+                    (row.Central != null && EF.Functions.Like(row.Central, pattern)));
+            }
         }
 
         var ordered = filter.FieldSort is { } sort && versionId is not null
@@ -246,13 +258,13 @@ internal sealed class DocumentNumberRepository : IDocumentNumberRepository
         return ordered.ThenBy(row => row.Number.OfficialNumberText).ThenBy(row => row.Number.DocumentNumberId);
     }
 
-    /// <summary>Orders by the value of one record field on the line's visits of the chosen version.</summary>
+    /// <summary>Orders by the value of one record field on the line's latest visit of the chosen version.</summary>
     private IOrderedQueryable<RegisterLine> OrderByRecordField(
         IQueryable<RegisterLine> query, DocumentFieldSort sort, Guid versionId, bool descending)
     {
         var fieldId = sort.DocumentFieldId;
         var valuesOfField = _context.DepartmentRecordValues.Where(value => value.DocumentFieldId == fieldId);
-        var visitsOfVersion = _context.DocumentRegistryVisits.Where(visit => visit.SchemaVersionId == versionId);
+        var visitsOfVersion = DepartmentRecordFieldFilterQuery.LatestVisits(_context, versionId);
 
         var ordered = (sort.DataType, descending) switch
         {
