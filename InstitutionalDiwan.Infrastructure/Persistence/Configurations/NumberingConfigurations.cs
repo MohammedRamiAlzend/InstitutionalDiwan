@@ -123,6 +123,10 @@ public sealed class DocumentRegistryVisitConfiguration : IEntityTypeConfiguratio
             .HasFilter("[MovementStepId] IS NOT NULL")
             .HasDatabaseName("UX_DOC_REG_VISITS_NUMBER_STEP");
 
+        // The department register page narrows lines to a form version and finds each line's latest visit on it.
+        builder.HasIndex(x => new { x.SchemaVersionId, x.DocumentNumberId, x.RegistryDate })
+            .HasDatabaseName("IX_DOC_REG_VISITS_VERSION_NUMBER_DATE");
+
         builder.HasOne<DocumentTypeSchemaVersion>().WithMany().HasForeignKey(x => x.SchemaVersionId).OnDelete(DeleteBehavior.Restrict);
 
         builder.HasMany(x => x.Values)
@@ -156,6 +160,10 @@ public sealed class DepartmentRecordValueConfiguration : IEntityTypeConfiguratio
         builder.HasIndex(x => new { x.VisitId, x.DocumentFieldId })
             .IsUnique()
             .HasDatabaseName("UX_DEPT_RECORD_VALUES_VISIT_FIELD");
+
+        // Filtering and sorting by one field start from the field, then reach the visit.
+        builder.HasIndex(x => new { x.DocumentFieldId, x.VisitId })
+            .HasDatabaseName("IX_DEPT_RECORD_VALUES_FIELD_VISIT");
 
         builder.HasOne<DocumentField>().WithMany().HasForeignKey(x => x.DocumentFieldId).OnDelete(DeleteBehavior.Restrict);
     }

@@ -280,7 +280,7 @@ internal sealed class DocumentNumberRepository : IDocumentNumberRepository
             _ => query.OrderBy(row => valuesOfField.Where(value => visitsOfVersion.Any(visit => visit.VisitId == value.VisitId && visit.DocumentNumberId == row.Number.DocumentNumberId)).Select(value => value.TextValue).FirstOrDefault())
         };
 
-        return ordered.ThenBy(row => row.Number.DocumentNumberId);
+        return ordered.ThenBy(row => row.Number.OfficialNumberText).ThenBy(row => row.Number.DocumentNumberId);
     }
 
     public async Task<IReadOnlyList<DocumentNumber>> ListByDepartmentAsync(

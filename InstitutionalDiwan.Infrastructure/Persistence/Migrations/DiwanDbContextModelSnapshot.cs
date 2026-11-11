@@ -3055,7 +3055,8 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
 
                     b.HasKey("ValueId");
 
-                    b.HasIndex("DocumentFieldId");
+                    b.HasIndex("DocumentFieldId", "VisitId")
+                        .HasDatabaseName("IX_DEPT_RECORD_VALUES_FIELD_VISIT");
 
                     b.HasIndex("VisitId", "DocumentFieldId")
                         .IsUnique()
@@ -3366,8 +3367,6 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
 
                     b.HasKey("VisitId");
 
-                    b.HasIndex("SchemaVersionId");
-
                     b.HasIndex("DocumentNumberId", "MovementStepId")
                         .IsUnique()
                         .HasDatabaseName("UX_DOC_REG_VISITS_NUMBER_STEP")
@@ -3377,6 +3376,9 @@ namespace InstitutionalDiwan.Infrastructure.Persistence.Migrations
                         .IsUnique()
                         .HasDatabaseName("UX_DOC_REG_VISITS_NUMBER_DATE")
                         .HasFilter("[MovementStepId] IS NULL");
+
+                    b.HasIndex("SchemaVersionId", "DocumentNumberId", "RegistryDate")
+                        .HasDatabaseName("IX_DOC_REG_VISITS_VERSION_NUMBER_DATE");
 
                     b.ToTable("DOCUMENT_REGISTRY_VISITS", (string)null);
                 });

@@ -139,6 +139,7 @@ indexes) runs against a private SQLite in-memory database through `Support/TestC
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-11 | Claude | `Persistence/DepartmentRegisterFieldTypeFilterTests`: number, date (calendar day), boolean and select filters, two filters combined with AND, and sorts by number, date and boolean fields on record values. The field sort now breaks ties by register number. 984 tests pass. |
 | 2026-11-11 | Claude | `DepartmentRegisterPageTests.FilterSearchAndSortReadOnlyTheLatestVisit` (a line with two visits); the test world seeds the re-registration event. 979 tests pass. |
 | 2026-11-11 | Claude | Register page field-value filters: SQLite test (contains, equals, other version, no match) and two handler tests (a version is required; unknown field refused; typed filter handed to the query). 978 tests pass. |
 | 2026-11-11 | Claude | Department register page: `Application/DepartmentRegisterEntriesHandlerTests` (scope, form checks, sort mapping, forms list) and `Persistence/DepartmentRegisterPageTests` (SQLite: filters, paging, form-version values, search, field sort, hidden titles). 975 tests pass. |
