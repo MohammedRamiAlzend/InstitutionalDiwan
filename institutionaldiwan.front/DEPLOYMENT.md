@@ -2,7 +2,7 @@
 
 > **Applies to:** `institutionaldiwan.front` (React 19 + TypeScript 6 + Vite 8 SPA), a standalone
 > project outside the `InstitutionalDiwan.slnx` solution.
-> **Last updated:** 2026-10-27.
+> **Last updated:** 2026-11-15.
 >
 > The `@` alias, the dev proxy, and `.env.example` are **configured** (see `vite.config.ts`). The
 > optional local HTTPS dev certificate is still to-be.
@@ -97,9 +97,22 @@ The SPA is static files; the API is a separate ASP.NET Core process. Pick one of
 Serve `dist/` and reverse-proxy `/api` and `/hubs` to the backend on the same hostname. This avoids
 CORS, keeps bearer tokens on one origin, and lets SignalR use relative `/hubs/...` URLs.
 
-**The API host is API-only.** `InstitutionalDiwan.Server` no longer serves `wwwroot`, static assets,
-or the `index.html` fallback, so copying `dist/` into the server folder has no effect. Terminate the
-SPA at the reverse proxy and forward `/api` and `/hubs` to Kestrel.
+**Kestrel can also serve the SPA itself.** `InstitutionalDiwan.Server` ships static-file middleware
+and the `/index.html` fallback, and its publish profiles
+(`InstitutionalDiwan.Server/Properties/PublishProfiles/Http-4567.pubxml` and `Https-5678.pubxml`)
+run `npm ci` / `npm run build` and copy `dist/` into the server's `wwwroot` automatically:
+
+```bash
+# from the repository root — SPA build + dist -> wwwroot + Kestrel binding
+dotnet publish InstitutionalDiwan.Server -c Release -p:PublishProfile=Http-4567    # http://0.0.0.0:4567
+dotnet publish InstitutionalDiwan.Server -c Release -p:PublishProfile=Https-5678   # https://0.0.0.0:5678
+```
+
+In that model the browser and the API share an origin, so `VITE_API_BASE_URL=/api` is correct and
+no CORS is involved. Details: [`../InstitutionalDiwan.Server/Properties/README.md`](../InstitutionalDiwan.Server/Properties/README.md).
+
+**Or keep the SPA behind a reverse proxy.** Terminate the SPA at the proxy and forward `/api` and
+`/hubs` to Kestrel (or point the site root at `dist/`); the API host then only speaks JSON.
 
 ```bash
 cd institutionaldiwan.front
@@ -356,6 +369,7 @@ make retries idempotent or clearly resumable.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-15 | opencode | Section 4 now documents the API-side publish profiles (`Http-4567` / `Https-5678`) that build the SPA and copy `dist/` into the server's `wwwroot`; corrected the stale "the API host no longer serves wwwroot" note. |
 | 2026-10-27 | agent | Updated the status to reflect the configured `@` alias, dev proxy, and committed `.env.example` (HTTPS dev certificate still optional/to-be). |
 | 2026-10-26 | agent | Ported the guide from the previous client project and adapted it for the standalone front end: marked the proxy/cert/.env as not configured yet, removed Visual Studio assumptions, and removed the server-adjacent copy step now that the API host is API-only. |
 | 2026-10-25 | Buffy | (Inherited from the client docs) Added the publishing/configuration/API-wiring guide; replaced the template sample proxy with env-driven `^/api` and `^/hubs` routes and documented the `.env` keys. |

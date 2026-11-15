@@ -26,12 +26,14 @@ Earlier design notes called the project `NewDiwan.Presentation`; the actual asse
 | [`Contracts/`](Contracts/README.md) | HTTP request/response DTO records grouped by module | ✅ Correspondence, Organization, Identity, Numbering, Movements, Attachments, Audit, Lookups |
 | [`Middleware/`](Middleware/README.md) | Global exception handling, correlation-id tracking, action-level audit, forced-password recovery gate, security headers | Implemented: request context, global exceptions, action auditing, `ForcedPasswordChangeMiddleware`, `SecurityHeadersMiddleware`. |
 | [`Extensions/`](Extensions/README.md) | `Result` → HTTP mapping, DI registration, OpenAPI/Scalar, auth setup, per-address rate limiting | ✅ `ResultExtensions`, `DatabaseExtensions`, `AuthenticationExtensions`, `OpenApiExtensions`, `RateLimitingExtensions` |
+| [`Properties/`](Properties/README.md) | Launch profiles plus the `Http-4567` / `Https-5678` publish profiles (SPA build, `dist` → `wwwroot`, Kestrel binding) | ✅ Both publish profiles verified end to end |
 
 ## Current `Program.cs`
 
 ```csharp
 var builder = WebApplication.CreateBuilder(args);
 
+builder.AddInstitutionalJwtSigningKey();   // Jwt:SecretKey from config, or generated once under keys/
 builder.Services.AddControllers();
 builder.Services.AddApplication();                              // MediatR + validators + behaviors
 builder.Services.AddInfrastructure(builder.Configuration);      // DbContext + repositories + seeders + auth services
@@ -41,6 +43,7 @@ builder.Services.AddInstitutionalAuthentication(builder.Configuration);  // JWT 
 builder.Services.AddOpenApi("v1", options => options.AddDocumentTransformer<BearerSecuritySchemeTransformer>());
 
 var app = builder.Build();
+if (jwtSigningKey.Generated) app.Logger.LogWarning("generated JWT key at {KeyPath}", jwtSigningKey.KeyPath);
 
 app.UseMiddleware<RequestContextLoggingMiddleware>();   // correlation id + IP + logging scope
 app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
@@ -54,7 +57,13 @@ if (app.Environment.IsDevelopment())
 }
 else
 {
-    app.UseHttpsRedirection();
+    // Redirect only when this instance terminates TLS itself; the plain-HTTP publish profile
+    // binds http://0.0.0.0:4567, where a redirect has no target.
+    var urls = app.Configuration["Urls"] ?? Environment.GetEnvironmentVariable("ASPNETCORE_URLS") ?? "";
+    if (urls.Contains("https://", StringComparison.OrdinalIgnoreCase))
+    {
+        app.UseHttpsRedirection();
+    }
 }
 
 await app.InitializeDatabaseAsync();   // migrate (Development) + ordered, environment-gated seeding
@@ -68,15 +77,42 @@ app.Run();
 ```
 
 Wired today: authentication/authorization policies, request-context logging, the global exception
-middleware, action-level auditing, MediatR, FluentValidation, the `DbContext`, and the
-Application/Infrastructure DI entry points. Not yet wired: CORS and SignalR.
+middleware, action-level auditing, MediatR, FluentValidation, the `DbContext`, SignalR
+(`/hubs/notifications`), static-file hosting of the published SPA, and the Application/Infrastructure
+DI entry points. Not yet wired: CORS.
 
 ## Hosting
 
-The project is an API-only host. HTTP profiles listen on `http://localhost:5028` and
-`https://localhost:7126`. There is no SPA proxy, no static-file middleware, and no
-`index.html` fallback: the server does not serve the front end, which lives in the separate
-`institutionaldiwan.front` project. Cross-origin access for that front end is not configured yet.
+Two modes are supported out of the box.
+
+**Development (local, API only).** `dotnet run` uses `Properties/launchSettings.json`:
+`http://localhost:5028` and `https://localhost:7126`, Scalar at `/scalar/v1`. `UseDefaultFiles` /
+`UseStaticFiles` / `MapFallbackToFile("/index.html")` are wired, so anything present in `wwwroot`
+is served, but in day-to-day development the SPA runs on Vite (`:5173`) and proxies `/api` and
+`/hubs` to this host.
+
+**Publish (API + SPA in one process).** The folder publish profiles in
+[`Properties/`](Properties/README.md) build `institutionaldiwan.front`, copy `dist/` into `wwwroot`,
+and seed the Kestrel binding:
+
+| Profile | Kestrel binding | Output folder | Certificate |
+| --- | --- | --- | --- |
+| `Http-4567` | `http://0.0.0.0:4567` | `publish/Http-4567/` | — |
+| `Https-5678` | `https://0.0.0.0:5678` | `publish/Https-5678/` | PFX via `ASPNETCORE_Kestrel__Certificates__Default__*` |
+
+```bash
+dotnet publish InstitutionalDiwan.Server -c Release -p:PublishProfile=Http-4567
+dotnet publish InstitutionalDiwan.Server -c Release -p:PublishProfile=Https-5678
+```
+
+The SPA is compiled with the relative `/api` and `/hubs` bases, so it talks to the same origin it is
+served from — no CORS policy is needed. A plain `dotnet publish` without a profile stays API-only.
+
+`Jwt:SecretKey` is resolved at startup: an explicit value (`Jwt__SecretKey`, user-secrets) wins,
+otherwise a random key is generated once and stored at `Jwt:SigningKeyPath`
+(default `keys/jwt-signing.key` next to the app) so restarts and redeployments keep the same signer.
+The key is never part of the publish output; back up that folder with the deployment. Set the
+production connection string in the service environment.
 
 ## Package footprint
 
@@ -93,13 +129,17 @@ project-references Application and Infrastructure.
 | Contracts / Middleware / Extensions | ✅ Contracts complete for the live modules; request-context + global exception middleware in place; extensions implemented |
 | DI for Application/Infrastructure | ✅ Wired |
 | Authentication / Authorization setup | Implemented: live JWT account/session-stamp validation, permission policies, and endpoint-aware forced-password recovery enforcement. |
-| SignalR | ❌ Not wired |
+| JWT signing key | ✅ Configured key wins; otherwise generated once and persisted at `Jwt:SigningKeyPath` (`keys/jwt-signing.key`), never shipped in the publish output |
+| SignalR | ✅ `/hubs/notifications` (`NotificationsHub`), token via `access_token`, wired in `Program.cs`; single instance, no backplane |
+| Publish profiles | ✅ `Properties/PublishProfiles/Http-4567.pubxml` and `Https-5678.pubxml` — SPA build + `dist` → `wwwroot` + Kestrel binding; verified end to end |
 | `InstitutionalDiwan.Server.http` | ✅ Sample `GET /api/audit-logs` request (replace `@token` with a valid JWT) |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-15 | opencode | Auth: `Jwt:SecretKey` is now optional at startup — `AddInstitutionalJwtSigningKey` uses the configured key when present, otherwise generates a 64-byte random key once and persists it at `Jwt:SigningKeyPath` (default `keys/jwt-signing.key`, git-ignored), so the published artifact carries no signing secret and redeployments do not rotate it. |
+| 2026-11-15 | opencode | Publishing: added the `Http-4567` (`http://0.0.0.0:4567`) and `Https-5678` (`https://0.0.0.0:5678`) folder publish profiles. On publish they run `npm ci`/`npm run build`, copy `institutionaldiwan.front/dist` into `wwwroot`, add it to the publish output, and seed `appsettings.Production.json` with the Kestrel `Urls` binding; the SPA is compiled with the relative `/api` and `/hubs` bases. `UseHttpsRedirection` now only runs when the instance has an `https://` binding. Documented in `Properties/README.md` and refreshed the stale Hosting/SignalR sections. |
 | 2026-11-15 | Qoder | Security: added `SecurityHeadersMiddleware` (nosniff, frame denial, no-referrer, HSTS outside Development, no-store on `/api/auth`) and suppressed the Kestrel `Server` header. |
 | 2026-11-15 | Qoder | Security: added per-address rate limiting on the anonymous auth endpoints (`RateLimitingExtensions`) — login 30/min and register 5/hour per address, excess rejected with a 429 `ProblemDetails`; `UseRateLimiter` sits right after the exception middleware. |
 | 2026-11-13 | Claude | Targets `net11.0`: JwtBearer, OpenApi and EF Core Design on 11.0.0, `Scalar.AspNetCore` on 2.21.0. The API starts, migrates and serves `/openapi/v1.json` and `/scalar/v1`. |

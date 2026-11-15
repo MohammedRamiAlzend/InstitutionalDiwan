@@ -1,25 +1,132 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
-  <PropertyGroup>
-    <TargetFramework>net11.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <UserSecretsId>58f8f568-ec12-4c6d-9371-fd09952c2250</UserSecretsId>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net11.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<UserSecretsId>58f8f568-ec12-4c6d-9371-fd09952c2250</UserSecretsId>
+		<SpaRoot>..\institutionaldiwan.front</SpaRoot>
+		<SpaProxyLaunchCommand>npm run dev</SpaProxyLaunchCommand>
+		<SpaProxyServerUrl>http://localhost:5173</SpaProxyServerUrl>
+		<!-- Publish-time SPA integration is opt-in: the publish profiles under
+		     Properties/PublishProfiles turn it on, a plain `dotnet publish` stays API-only. -->
+		<PublishFrontend Condition="'$(PublishFrontend)' == ''">false</PublishFrontend>
+		<!-- Baked into the SPA bundle at build time (VITE_* keys are public). Keep it relative
+		     while the SPA is served from wwwroot on the same origin; set an absolute domain only
+		     when the SPA is hosted on another origin (that needs CORS on this API). -->
+		<FrontendApiBaseUrl Condition="'$(FrontendApiBaseUrl)' == ''">/api</FrontendApiBaseUrl>
+		<FrontendHubBaseUrl Condition="'$(FrontendHubBaseUrl)' == ''">/hubs</FrontendHubBaseUrl>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="11.0.0" />
-    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="11.0.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="11.0.0">
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
-    <PackageReference Include="Scalar.AspNetCore" Version="2.21.0" />
-  </ItemGroup>
+	<ItemGroup>
+		<!-- wwwroot is generated from institutionaldiwan.front/dist by PublishFrontendBuild below.
+		     Never hand-edit it, and never publish a stale copy by accident. -->
+		<Content Update="wwwroot\**" CopyToPublishDirectory="Never" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\InstitutionalDiwan.Application\InstitutionalDiwan.Application.csproj" />
-    <ProjectReference Include="..\InstitutionalDiwan.Infrastructure\InstitutionalDiwan.Infrastructure.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="11.0.0" />
+		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="11.0.0" />
+		<PackageReference Include="Microsoft.AspNetCore.SpaProxy" Version="11.0.0" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="11.0.0">
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+			<PrivateAssets>all</PrivateAssets>
+		</PackageReference>
+		<PackageReference Include="Scalar.AspNetCore" Version="2.21.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\InstitutionalDiwan.Application\InstitutionalDiwan.Application.csproj" />
+		<ProjectReference Include="..\InstitutionalDiwan.Infrastructure\InstitutionalDiwan.Infrastructure.csproj" />
+	</ItemGroup>
+
+	<!-- =====================================================================================
+	     Publish-time SPA pipeline (enabled by the publish profiles in Properties/PublishProfiles)
+	     ===================================================================================== -->
+
+	<!-- 1) npm ci (first time only) + npm run build, then stage dist/ into wwwroot and add every
+	        staged file to the publish manifest so it ships inside the API output. -->
+	<Target Name="PublishFrontendBuild" AfterTargets="ComputeFilesToPublish" Condition="'$(PublishFrontend)' == 'true'">
+		<Error Condition="!Exists('$(SpaRoot)\package.json')"
+		       Text="PublishFrontend is enabled but '$(SpaRoot)\package.json' was not found. Fix SpaRoot in InstitutionalDiwan.Server.csproj." />
+
+		<Message Importance="high" Text="PublishFrontend: npm ci in $(SpaRoot) (node_modules is missing)" Condition="!Exists('$(SpaRoot)\node_modules')" />
+		<Exec WorkingDirectory="$(SpaRoot)" Command="npm ci --no-audit --no-fund" Condition="!Exists('$(SpaRoot)\node_modules')" />
+
+		<Message Importance="high" Text="PublishFrontend: npm run build (VITE_API_BASE_URL=$(FrontendApiBaseUrl), VITE_HUB_BASE_URL=$(FrontendHubBaseUrl))" />
+		<Exec WorkingDirectory="$(SpaRoot)" Command="npm run build"
+		      EnvironmentVariables="VITE_API_BASE_URL=$(FrontendApiBaseUrl);VITE_HUB_BASE_URL=$(FrontendHubBaseUrl)" />
+
+		<Error Condition="!Exists('$(SpaRoot)\dist\index.html')"
+		       Text="'npm run build' did not produce '$(SpaRoot)\dist\index.html' — check the front-end build." />
+
+		<ItemGroup>
+			<_FrontendDistFile Include="$(SpaRoot)\dist\**\*" />
+		</ItemGroup>
+
+		<!-- wwwroot mirrors dist/ exactly: wipe the previous copy, then stage the fresh one. -->
+		<RemoveDir Directories="$(MSBuildProjectDirectory)\wwwroot" />
+		<Copy SourceFiles="@(_FrontendDistFile)"
+		      DestinationFiles="@(_FrontendDistFile->'$(MSBuildProjectDirectory)\wwwroot\%(RecursiveDir)%(Filename)%(Extension)')"
+		      SkipUnchangedFiles="true" />
+
+		<ItemGroup>
+			<_FrontendWwwrootFile Include="$(MSBuildProjectDirectory)\wwwroot\**\*" />
+			<ResolvedFileToPublish Include="@(_FrontendWwwrootFile)" Exclude="@(ResolvedFileToPublish)">
+				<RelativePath>wwwroot\%(RecursiveDir)%(Filename)%(Extension)</RelativePath>
+				<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+				<ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+			</ResolvedFileToPublish>
+		</ItemGroup>
+	</Target>
+
+	<!-- 2) Seed appsettings.Production.json with the Kestrel binding of the profile. `dotnet
+	        InstitutionalDiwan.Server.dll` then listens on that address with no extra arguments
+	        (ASPNETCORE_URLS and the Kestrel certificate env vars still override it). -->
+	<Target Name="PublishRuntimeBinding" AfterTargets="Publish" Condition="'$(PublishRuntimeUrls)' != ''">
+		<Warning Condition="Exists('$(PublishDir)appsettings.Production.json')"
+		         Text="$(PublishDir)appsettings.Production.json already exists, so the profile did not write it. Keep an 'Urls' entry set to $(PublishRuntimeUrls) there (or set ASPNETCORE_URLS), otherwise Kestrel binds to the default ports." />
+
+		<WriteLinesToFile Condition="!Exists('$(PublishDir)appsettings.Production.json')"
+		                  File="$(PublishDir)appsettings.Production.json"
+		                  Overwrite="true"
+		                  WriteOnlyWhenDifferent="true"
+		                  Lines="{&#xD;&#xA;  &quot;Urls&quot;: &quot;$(PublishRuntimeUrls)&quot;,&#xD;&#xA;  &quot;AllowedHosts&quot;: &quot;*&quot;&#xD;&#xA;}" />
+
+		<Message Importance="high" Text="PublishRuntimeBinding: Kestrel will listen on $(PublishRuntimeUrls); the SPA bundle calls $(FrontendApiBaseUrl)." />
+	</Target>
+
+	<!-- 3) A start script per profile: sets the runtime environment (environment name, binding,
+	        signing-key location, optional certificate / connection string) and launches the app. -->
+	<Target Name="PublishStartScript" AfterTargets="Publish" Condition="'$(PublishStartScriptName)' != '' and '$(PublishRuntimeUrls)' != ''">
+		<ItemGroup>
+			<_StartScriptLine Include="&#64;echo off" />
+			<_StartScriptLine Include="setlocal" />
+			<_StartScriptLine Include="cd /d &quot;%25~dp0&quot;" />
+			<_StartScriptLine Include="REM Generated by the $(PublishProfile) publish profile - a new publish overwrites this file." />
+			<_StartScriptLine Include="REM The binding also lives in appsettings.Production.json; ASPNETCORE_URLS wins over it." />
+			<_StartScriptLine Include="set &quot;ASPNETCORE_ENVIRONMENT=Production&quot;" />
+			<_StartScriptLine Include="set &quot;ASPNETCORE_URLS=$(PublishRuntimeUrls)&quot;" />
+			<_StartScriptLine Include="REM HTTPS needs a server certificate - set both lines before the first start:" Condition="'$(PublishScheme)' == 'https'" />
+			<_StartScriptLine Include="REM set &quot;ASPNETCORE_Kestrel__Certificates__Default__Path=C:\certs\institutionaldiwan.pfx&quot;" Condition="'$(PublishScheme)' == 'https'" />
+			<_StartScriptLine Include="REM set &quot;ASPNETCORE_Kestrel__Certificates__Default__Password=CHANGE-ME&quot;" Condition="'$(PublishScheme)' == 'https'" />
+			<_StartScriptLine Include="REM JWT signing key: kept outside the publish folder, so re-publishing cannot rotate it." />
+			<_StartScriptLine Include="REM Delete the next line to fall back to keys\jwt-signing.key next to the app." />
+			<_StartScriptLine Include="set &quot;Jwt__SigningKeyPath=%25ProgramData%25\InstitutionalDiwan\jwt-signing.key&quot;" />
+			<_StartScriptLine Include="REM Database: uncomment and adjust when this server has no local SQL Server." />
+			<_StartScriptLine Include="REM set &quot;ConnectionStrings__DefaultConnection=Server=.;Database=InstitutionalDiwan%3BTrusted_Connection=True%3BMultipleActiveResultSets=true%3BTrustServerCertificate=True&quot;" />
+			<_StartScriptLine Include="echo Starting InstitutionalDiwan on $(PublishRuntimeUrls)  (Ctrl+C stops it)" />
+			<_StartScriptLine Include="dotnet &quot;%25~dp0InstitutionalDiwan.Server.dll&quot;" />
+			<_StartScriptLine Include="if errorlevel 1 pause" />
+			<_StartScriptLine Include="endlocal" />
+		</ItemGroup>
+
+		<WriteLinesToFile File="$(PublishDir)$(PublishStartScriptName)"
+		                  Lines="@(_StartScriptLine)"
+		                  Overwrite="true"
+		                  WriteOnlyWhenDifferent="true" />
+
+		<Message Importance="high" Text="PublishStartScript: wrote $(PublishStartScriptName) (run it to start on $(PublishRuntimeUrls))." />
+	</Target>
 
 </Project>

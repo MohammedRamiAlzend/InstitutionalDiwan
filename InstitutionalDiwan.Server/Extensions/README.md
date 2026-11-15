@@ -17,6 +17,7 @@ consistently shaped.
 | `DatabaseExtensions.cs` | `InitializeDatabaseAsync`: applies pending migrations in Development (other environments only seed when the database is reachable) and then runs the registered `ISeeder`s through `SeederRunner`, ordered by `Order` and filtered by each seeder's declared environments. |
 | `AuthenticationExtensions.cs` | `AddInstitutionalAuthentication`: JWT bearer validation plus live account/activity and HMAC session-stamp checks against current active roles/permissions; registers permission policies and their handler. |
 | `OpenApiExtensions.cs` | `AddInstitutionalOpenApi`: registers the OpenAPI document, the Bearer security scheme transformer, and the Scalar API reference used in Development. |
+| `JwtSigningKeyExtensions.cs` | `AddInstitutionalJwtSigningKey`: resolves `Jwt:SecretKey` during startup. A configured key (user-secrets, `Jwt__SecretKey`) wins; otherwise a 64-byte random key is generated once under `Jwt:SigningKeyPath` (default `keys/jwt-signing.key`, relative to the content root), reused on every restart, written with `0600` on Unix, and surfaced through a startup warning. Avoids shipping a signing secret inside the publish artifact while still starting without manual setup. |
 
 ## Error → HTTP mapping
 
@@ -48,6 +49,7 @@ The `ProblemDetails` body carries the domain error code as `Title` and its descr
 | `ResultExtensions` | ✅ Implemented (ErrorType → status code incl. Conflict → 409) |
 | `DatabaseExtensions` | ✅ Implemented (migrate + ordered, environment-gated seeding) |
 | `AuthenticationExtensions` | ✅ Implemented (`AddInstitutionalAuthentication`) |
+| `JwtSigningKeyExtensions` | ✅ Implemented (`AddInstitutionalJwtSigningKey`: configured key wins, otherwise generate-once + persist; verified generate, reuse and override paths) |
 | `OpenApiExtensions` | ✅ Implemented (`AddInstitutionalOpenApi`, Bearer scheme) |
 | `AddApplication` / `AddInfrastructure` DI registration | ✅ Implemented (in the Application/Infrastructure projects) |
 
@@ -55,6 +57,7 @@ The `ProblemDetails` body carries the domain error code as `Title` and its descr
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-15 | opencode | Added `JwtSigningKeyExtensions`: `Jwt:SecretKey` is taken from configuration when supplied, otherwise generated once (64 random bytes, base64) and persisted at `Jwt:SigningKeyPath` (`keys/jwt-signing.key`), so every start after the first reuses the same signer and no secret is baked into the publish output. `AddInstitutionalAuthentication` now points at that path in its failure message. |
 | 2026-11-09 | Claude | `AddInstitutionalAuthentication` registers `PersonPolicies.Suggest` (either `DOCUMENT_CREATE` or `DOCUMENT_EDIT`). |
 | 2026-11-08 | Claude | `ResultExtensions` leaves the problem details where the error log can read the domain code. |
 | 2026-11-08 | Claude | `DocumentFieldMapping` carries the field `Behavior`. |

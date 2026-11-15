@@ -31,7 +31,9 @@ current-work-factor hash used to equalize login timing for unknown usernames.
 ### `JwtOptions.cs` (`JwtOptions.SectionName = "Jwt"`)
 Implemented. Strongly-typed binding for `Issuer`, `Audience`, `SecretKey`, and
 `AccessTokenExpirationMinutes`. The signing key must be at least 32 bytes; supply it from
-user-secrets / environment / a secret store, not from the repo.
+user-secrets / environment / a secret store, not from the repo. When it is absent the server
+generates one on first start and persists it at `Jwt:SigningKeyPath` (read directly by
+`InstitutionalDiwan.Server/Extensions/JwtSigningKeyExtensions.cs`, not bound here).
 
 ### `JwtProvider.cs` (`: IJwtProvider`)
 Implemented. Generates signed JWT **access tokens** carrying:
@@ -90,6 +92,7 @@ and the one-policy-per-permission authorization setup live in `Server/Extensions
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-15 | opencode | Documented that `Jwt:SecretKey` may be omitted: the server generates and persists a key at `Jwt:SigningKeyPath` on first start (`Server/Extensions/JwtSigningKeyExtensions.cs`). |
 | 2026-11-15 | Qoder | Security: `PasswordHasher` now derives at 600,000 PBKDF2 iterations and exposes `NeedsRehash` + `DummyHash`; login upgrades older hashes silently and burns one dummy verification for unknown usernames so timing cannot enumerate accounts. |
 | 2026-11-15 | Qoder | Security: added `LoginAttemptTracker` (`ILoginAttemptTracker`, in-memory) — five failed login attempts within 15 minutes lock the username out for 15 minutes; failed attempts count for unknown usernames too so the lockout cannot be used to enumerate accounts. |
 | 2026-10-28 | Qoder | Add shared keyed session stamps over account/profile/password and active authorization state; exclude LastLoginAt, emit no credentials, and reject unstamped legacy JWTs without migrations or signing-key changes. |
