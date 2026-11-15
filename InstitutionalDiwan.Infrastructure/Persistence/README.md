@@ -1,8 +1,8 @@
 # Infrastructure / Persistence
 
 > **Status:** Implemented (partially) — `DiwanDbContext` and ten configuration files exist, plus 19
-> of 21 repositories, eight written migrations, the ordered seeder pipeline, and the tamper-evident
-> audit interceptor. The outbox interceptor remains empty.
+> of 21 repositories, a single consolidated `InitialCreate` migration, the ordered seeder pipeline,
+> and the tamper-evident audit interceptor. The outbox interceptor remains empty.
 
 ## Purpose
 
@@ -19,7 +19,7 @@ without knowing which provider is underneath.
 | `Repositories/` | 🟡 Partial (23 of 25) | `UserRepository`, `RoleRepository`, `PermissionRepository`, `EmployeeRepository`, `DepartmentRepository`, `DepartmentTypeRepository`, `DocumentRepository`, `DocumentTypeRepository`, `NumberingRegistryRepository`, `DocumentNumberRepository`, `DocumentAccessGrantRepository`, `LookupRepository`, `InstitutionSettingRepository`, `ExternalOrganizationRepository`, `DocumentMovementRepository`, `DocumentFileRepository`, `DocumentFileTypeRepository`, `FileStorageProviderRepository`, `AuditLogRepository`; relation and notification repositories pending. |
 | `Interceptors/` | 🟡 Partial | `TamperEvidentAuditInterceptor` is registered; domain-event/outbox dispatch is pending. |
 | `Transactions/` | ✅ Written | `EfTransactionManager` / `EfTransactionScope` — commit on success, rollback on dispose. |
-| `Migrations/` | ✅ Written (7) | `InitialCreate`, `AddUniqueOfficialNumber` (unique official-number + year index), three lookup refactors (`Refactor_DepartmentTypes_ToLookup`, `Refactor_CorrespondenceNumbering_ToLookups`, `Refactor_AllRemaining_ToLookups`), `InitialCreate2`, and `Add_Department_Register_Numbers` (department registers + `ScopeId`-filtered uniqueness). |
+| `Migrations/` | ✅ Written (1) | Consolidated `InitialCreate` — the full SQL Server schema (84 tables, `UX_*`/`IX_*` indexes, FKs) in one migration, regenerated for .NET 11; earlier incremental migrations squashed. |
 | `Seed/` | ✅ Written | `ISeeder` + `SeederRunner` (ordering + environment gating); 34 `LookupSeederBase<T>` seeders, `InstitutionSettingSeeder` (95), `DepartmentSeeder` (96, demo tree), `EmployeeSeeder` (97, demo personnel), `PermissionSeeder` (100), `RoleSeeder` (200), `UserSeeder` (300). |
 
 ## `DiwanDbContext` design
@@ -56,13 +56,14 @@ without knowing which provider is underneath.
 | All 66 entity configurations | ✅ Written |
 | Repository implementations | 🟡 23 of 25 (files, audit, lookups, institution settings, external organizations, movements, document fields, archiving included; relations/notifications pending) |
 | Interceptors | 🟡 `TamperEvidentAuditInterceptor` implemented; outbox interceptor pending |
-| Migrations | ✅ 10 written (`Add_Archiving_Constraints`, `InitialCreate`, `AddUniqueOfficialNumber`, three lookup refactors, `InitialCreate2`, `Add_Department_Register_Numbers`, `Add_Audit_Chain_Uniqueness`, `Add_Document_Dynamic_Fields`) |
+| Migrations | ✅ 1 written (consolidated `InitialCreate`, regenerated for .NET 11) |
 | Seed data | ✅ 33 reference catalogs + institution settings + a 15-department demo tree + 28 demo employees + permissions + system roles + demo users (`Seed/` — ordered + environment-gated) |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-15 | Qoder | Squashed the migration history into a single consolidated `InitialCreate` (84 tables, SQL Server) regenerated with the local `dotnet-ef` 11.0.0 tool; existing development databases must be dropped or recreated. |
 | 2026-11-11 | Claude | Relation type 5 is seed data only. `DocumentRelationRepository.ListOutgoingAsync` and `PersonRepository.ListJoinCandidatesAsync` need no migration. |
 | 2026-11-11 | Claude | Mapped `DecisionAppeal` | (`DECISION_APPEALS`, date columns, one pending appeal per decision). Migration `20261111110728_Add_Decision_Appeals`. Document decision reads include appeals. |
 | 2026-11-11 | Claude | Mapped decision types, their document-type links and document decisions (`Configurations/DecisionsConfigurations.cs`), and registered the two repositories plus `DecisionTypeSeeder`. Migration `Add_Decisions`. |

@@ -1,69 +1,47 @@
 # Infrastructure / Persistence / Migrations
 
-> **Status:** Implemented — migrations through `Add_Institution_Logo` are generated, including the Module 09 `Add_Audit_Chain_Uniqueness` guard and the additive `Add_Document_Dynamic_Fields`.
-> Startup applies them through `Server/Extensions/DatabaseExtensions.cs`
-> (`Database.MigrateAsync`).
+> **Status:** Implemented — one consolidated `InitialCreate` migration holds the full SQL Server
+> schema for the .NET 11 target. Startup applies it in Development through
+> `Server/Extensions/DatabaseExtensions.cs` (`Database.MigrateAsync`).
 
 ## Purpose
 
-Holds the EF Core SQL Server migration files that create and evolve the InstitutionalDiwan schema,
-plus the hand-written steps that express database-level guarantees the ORM cannot.
+Holds the EF Core SQL Server migrations for the InstitutionalDiwan schema. The incremental
+migration history was squashed into a single `InitialCreate` during the .NET 11 upgrade, so a
+fresh database is created by applying exactly one migration.
+
+## Migration
+
+| Migration | What it does |
+| --- | --- |
+| `20261115073415_InitialCreate` | Creates the full schema: 84 tables, `UX_*`/`IX_*` indexes, foreign keys and constraints, as declared by the entity configurations in `Configurations/`. |
+
+> Existing databases that predate the squash have an `__EFMigrationsHistory` that no longer
+> matches the code. Drop them (or the history) before the next startup, otherwise
+> `MigrateAsync` tries to apply `InitialCreate` on top of existing objects and fails.
 
 ## Generating a migration
 
+The repo pins `dotnet-ef` 11.0.0 in [`.config/dotnet-tools.json`](../../../../.config/dotnet-tools.json) —
+use it through the local tool manifest:
+
 ```bash
-dotnet ef migrations add <MigrationName> --project InstitutionalDiwan.Infrastructure --startup-project InstitutionalDiwan.Server --output-dir Persistence/Migrations
+dotnet tool run dotnet-ef migrations add <MigrationName> \
+  --project InstitutionalDiwan.Infrastructure \
+  --startup-project InstitutionalDiwan.Server \
+  --output-dir Persistence/Migrations
 ```
 
 Always build first (or omit `--no-build`): scaffolding from a stale assembly silently produces an
 empty migration when the model changed.
-
-## Existing migrations
-
-| Migration | What it does |
-| --- | --- |
-| `20261014200146_InitialCreate` | Creates the full schema (40+ tables, `UX_*`/`IX_*` indexes, FKs). |
-| `20261018071440_AddUniqueOfficialNumber` | Replaces the non-unique `IX_DOC_NUMBERS_TEXT` on `DOCUMENT_NUMBERS.OfficialNumberText` with the unique `UX_DOC_NUMBERS_TEXT_YEAR (OfficialNumberText, NumberingYear)` — the database-level backstop behind the official-number duplicate check. |
-| `20261020105152_Add_Department_Register_Numbers` | Adds `DOCUMENT_NUMBERS.ScopeId`/`DepartmentId`/`RegistryDate`, `DOCUMENT_NUMBER_HISTORY.EffectiveDate`, `DOCUMENT_MOVEMENT_STEPS.RegistryNumberId`, and the `DOCUMENT_NUMBER_SCOPES` lookup (rows 1–2 inserted inside the migration so the new FK holds for existing rows). Replaces the two global unique indexes with `ScopeId`-filtered ones (`UX_DOC_NUMBERS_REG_YEAR_SEQ`, `UX_DOC_NUMBERS_TEXT_YEAR` for central numbers only), adds `UX_DOC_NUMBERS_DEPT_TEXT_YEAR` + `UX_DOC_NUMBERS_DOC_DEPT` for department registers, and backfills `RegistryDate = IssuedAt` for existing central numbers. |
-| `20261025100040_Add_Audit_Chain_Uniqueness` | Adds the unique `UX_AUDIT_LOGS_PREVIOUS_HASH` index on `AUDIT_LOGS.PreviousHash`, so a chain row can have exactly one successor. Concurrent appends then surface as a duplicate-key conflict instead of forking the hash chain. |
-| `20261102114522_Add_Document_Dynamic_Fields` | Purely additive: nullable `DOCUMENTS.SchemaVersionId` (FK, restrict) and the `DOCUMENT_FIELDS`, `DOCUMENT_TYPE_SCHEMA_VERSIONS`, `DOCUMENT_TYPE_SCHEMA_VERSION_FIELDS` and `DOCUMENT_FIELD_VALUES` tables, with the unique key per type, the one-draft-per-type filtered unique index, the version-number unique index and the sparse typed-value indexes. Existing rows and tables are untouched. |
-
-| `20261103064712_Add_Archiving_Constraints` | Foreign keys from `DOCUMENT_ARCHIVE_EVENTS` to documents, users and status types and from `SAVED_SEARCHES` to users (all restrict); unique `UX_SAVED_SEARCHES_USER_NAME`, filtered unique `UX_SAVED_SEARCHES_USER_DEFAULT` (one default per user), and `IX_DOC_ARCHIVE_EVENTS_TYPE_DATE`, which replaces the single-column event-type index. Both tables were empty, so no data migration is needed. |
-| `20261103090137_Add_Relations_Constraints` | Foreign keys from `DOCUMENT_RELATIONS` to documents (source and target), users and `DOCUMENT_RELATION_TYPES`, and from `DOCUMENT_RELATION_EVENTS` to documents, users, types and action types (all restrict); deliberately none from the events to `RelationId`, because the history outlives a removed link. Adds `CK_DOC_RELATIONS_NOT_SELF`, `IX_DOC_RELATIONS_TARGET` and the event indexes by document and date. Both tables were empty, so no data migration is needed. |
-| `20261110080858_DepartmentRecords` | Additive: nullable `DepartmentId` on `DOCUMENT_FIELDS` and `DOCUMENT_TYPE_SCHEMA_VERSIONS` with one partial unique index per form (creation form `DepartmentId IS NULL`, department forms `IS NOT NULL`); record columns on `DOCUMENT_REGISTRY_VISITS` (`SchemaVersionId`, `LockedAt`, update and correction stamps); new `DEPARTMENT_RECORD_VALUES`; the visit-date unique index now covers hand-written visits only, plus one visit per movement step. Existing rows stay valid. |
-| `20261110112943_Department_Number_Renumbering` | Recreates `UX_DOC_NUMBERS_DOC_DEPT` with the filter `[DepartmentId] IS NOT NULL AND [StatusId] <> 3`: one department line in use per document per year, while lines replaced by a renumbering stay beside it. Existing rows stay valid. |
-| `20261111085414_Add_Archive_Diwan` | Adds the nullable `INSTITUTION_SETTINGS.ArchiveDiwanDepartmentId` with its index and a restricting foreign key to `DEPARTMENTS`. Additive; existing rows keep null. |
-| `20261111100359_Add_Decisions` | Adds `DECISION_TYPES`, `DECISION_TYPE_DOCUMENT_TYPES` and `DOCUMENT_DECISIONS`, with a unique number per issuing department and year and a filtered unique index so one document has one in-force decision. |
-| `20261111103921_Drop_DecisionType_EnglishName` | Drops `DECISION_TYPES.Name`. A decision type keeps its Arabic name only. |
-| `20261111110728_Add_Decision_Appeals` | Adds `DECISION_APPEALS`: appeal date, appellant department, optional reference and notes, outcome, and who recorded the appeal and its outcome. `AppealDate` and `OutcomeDate` are `date`. Cascade from the decision, restrict on the department. `IX_DECISION_APPEALS_DECISION` plus filtered unique `UX_DECISION_APPEALS_ONE_PENDING` (`[OutcomeId] = 1`). |
-| `20261111134113_Add_Other_Diwans_May_Create_Documents` | Adds the `OtherDiwansMayCreateDocuments` bit to `INSTITUTION_SETTINGS`, default true, so existing installations keep creating from every department. |
-| `20261111193125_Add_Department_Register_Page_Indexes` | Index only: `IX_DOC_REG_VISITS_VERSION_NUMBER_DATE` (visits by form version, register line, date) and `IX_DEPT_RECORD_VALUES_FIELD_VISIT` (record values by field, visit) for the register page; they replace the single-column foreign-key indexes on `SchemaVersionId` and `DocumentFieldId`. |
-| `20261111205409_Add_Institution_Logo` | Adds `INSTITUTION_SETTINGS.LogoUpdatedAt` and the `INSTITUTION_LOGOS` table (logo bytes and media type, one row per setting, cascade on delete); renames the placeholder institution name «المؤسسة» to «الديوان المؤسسي» so the title stays as the shell showed it. |
 
 ## Custom (hand-written) migration steps
 
 | Step | Purpose |
 | --- | --- |
 | `AUDIT_LOGS` immutability | SQL Server `TRIGGER` (or `DENY UPDATE, DELETE` grants) so audit records cannot be altered even by the standard application connection. Complements the domain-level SHA-256 hash chain. |
-| `DEPARTMENT_TREE_PATHS` | Closure-table maintenance (or indexed view) to make department subtree queries fast and cycle detection cheap (Module 01). |
 | Full-Text Search | `CONTAINS` / `FREETEXT` catalog and indexes on `DOCUMENTS.Title` and `DOCUMENTS.SubjectSummary` (Module 07). |
 | Unique/referential guards | The unique indexes (`UX_*`) and restricted/cascading foreign keys are already declared in `Configurations/`, so they arrive with the generated migration; verify deletes still respect a `Restrict` on self-referencing `DEPARTMENTS.ParentDepartmentId` and `DEPARTMENT_TYPES`. |
-
-## Implementation status
-
-| Item | State |
-| --- | --- |
-| Initial migration | ✅ Created + applied |
-| Unique official-number index (`UX_DOC_NUMBERS_TEXT_YEAR`) | ✅ Created + applied (2026-10-18) |
-| Department register numbering (`Add_Department_Register_Numbers`) | ✅ Created + applied against LocalDB (2026-10-20) |
-| Audit chain uniqueness (`Add_Audit_Chain_Uniqueness`) | ✅ Created + applied against LocalDB (2026-10-25) |
-| Dynamic document fields (`Add_Document_Dynamic_Fields`) | ✅ Created (2026-11-02) + applied to the development database |
-| Archiving constraints (`Add_Archiving_Constraints`) | ✅ Created (2026-11-03) and verified on a scratch SQL Server database; applied to the development database (verified with `dotnet ef migrations list`, 2026-11-03) |
-| Relations constraints (`Add_Relations_Constraints`) | ✅ Created (2026-11-03) and applied to the development database (verified with `dotnet ef migrations list`, 2026-11-03) |
-| Notifications constraints (`Add_Notifications_Constraints`) | ✅ Created (2026-11-03), verified on a scratch SQL Server database (all 12 migrations apply) and applied to the development database: foreign keys from recipients (user, department) and notifications (document, movement), inbox, retention and unique recipient indexes, the 4000-character outbox payload limit, and a data step that sets the registration notice channels to `IN_APP` |
-| Audit immutability trigger / DENY | ❌ Not created |
-| Closure table / indexed view | ❌ Not created |
-| Full-text catalog & indexes | ❌ Not created |
 
 ## Notes
 
@@ -75,28 +53,4 @@ empty migration when the model changed.
 
 | Date | Author | Change |
 | --- | --- | --- |
-| 2026-11-12 | Claude | Added `Add_Institution_Logo`. |
-| 2026-11-11 | Claude | Added `Add_Department_Register_Page_Indexes`. |
-| 2026-11-11 | Claude |  |
-| 2026-11-11 | Claude | Added `20261111110728_Add_Decision_Appeals` (`DECISION_APPEALS`, date columns, and one pending appeal per decision). |
-| 2026-11-11 | Claude | Added `20261111103921_Drop_DecisionType_EnglishName`, which drops the English name of a decision type. |
-| 2026-11-11 | Claude | Added `20261111100359_Add_Decisions` (decision types, their document-type links, and document decisions). Applied to the development database by the API's startup migration on 2026-11-11. |
-| 2026-11-11 | Claude | Added `20261111085414_Add_Archive_Diwan` (nullable archive diwan on the institution settings). Applied to the development database by the API's startup migration on 2026-11-11. |
-| 2026-11-10 | Claude | Added `20261110112943_Department_Number_Renumbering`: `UX_DOC_NUMBERS_DOC_DEPT` now skips replaced lines (`[StatusId] <> 3`), so a department keeps its replaced numbers beside the one in use. Existing rows stay valid. |
-| 2026-11-10 | Claude | Added `DepartmentRecords`: department forms (partial unique indexes per form), record columns on visits, `DEPARTMENT_RECORD_VALUES`, and visit-date uniqueness limited to hand-written visits. |
-| 2026-11-09 | Claude | Added `Remove_Document_Date_And_External_Reference`, dropping those three columns from `DOCUMENTS`. |
-| 2026-11-09 | Claude | Added `Add_Document_DisplayName`: `Title` becomes nullable, and `DisplayName` is added and filled for existing documents. |
-| 2026-11-09 | Claude | Added `Add_Persons`: `PERSONS`, `DOCUMENT_PERSONS`, `DOCUMENT_PERSON_ROLES`, `GENDERS`, `NATIONALITIES`, a filtered unique index on the national number, and a unique (document, person) index. |
-| 2026-11-08 | Claude | Added `Add_System_Errors`: `SYSTEM_ERRORS` with a unique fingerprint and an index on the last occurrence. |
-| 2026-11-08 | Claude | Added `Add_Document_Field_Behavior`: JSON `Behavior` column on `DOCUMENT_TYPE_SCHEMA_VERSION_FIELDS`; existing rows default to filterable, as every field was offered as a filter before. |
-| 2026-11-08 | Claude | Added `Department_Register_Visits`: `DOCUMENT_REGISTRY_VISITS` with backfill from register history, `RegistryVisitId` on steps, and `UX_DOC_NUMBERS_DOC_DEPT` widened to include the year. |
-| 2026-11-05 | Claude | Added `Add_Lookup_IsDefault`: `IsDefault bit NOT NULL DEFAULT 0` on all 33 lookup tables. |
-| 2026-11-05 | Claude | Added `Make_Document_Classification_Nullable`: `DOCUMENTS.DirectionId`, `ConfidentialityLevelId` and `PriorityLevelId` become nullable; existing values are kept. |
-| 2026-11-03 | Claude | Added `Add_Notifications_Constraints` (Module 10): FKs, inbox/retention/unique indexes, payload limit and the `IN_APP` channel fix; verified on a scratch database first. |
-| 2026-11-03 | Claude | Confirmed all 11 migrations are applied to the development database (`dotnet ef migrations list` shows none pending; `database update` was a no-op). |
-| 2026-11-03 | Claude | Added `Add_Relations_Constraints` for Module 08 (Phase 1). |
-| 2026-11-03 | Claude | Added `Add_Archiving_Constraints` for Module 07 (Phase 1) and verified it by applying the full chain to a scratch SQL Server database, since dropped. Recorded that `Add_Document_Dynamic_Fields` is now applied to the development database. |
-| 2026-11-02 | Claude | Added `Add_Document_Dynamic_Fields` for the dynamic document fields plan (Phase 1). Generated with `dotnet ef` against a build in a separate configuration, because the running API locks the default `bin`; the snapshot diff is additions only. |
-| 2026-10-25 | opencode | Added `Add_Audit_Chain_Uniqueness` (unique `UX_AUDIT_LOGS_PREVIOUS_HASH`) so concurrent audit appends cannot fork the chain. |
-| 2026-10-20 | Buffy | Added `Add_Department_Register_Numbers`: scope columns + lookup seed rows, history `EffectiveDate`, movement-step `RegistryNumberId`, `ScopeId`-filtered uniqueness replacing the global indexes, one-line-per-department index, and the `RegistryDate` backfill; verified by applying it to a throwaway LocalDB database and probing the indexes. |
-| 2026-10-18 | opencode | Added `AddUniqueOfficialNumber` — drops `IX_DOC_NUMBERS_TEXT`, creates unique `UX_DOC_NUMBERS_TEXT_YEAR (OfficialNumberText, NumberingYear)` so a duplicate official number + year can never be saved (409 backstop for `CreateDocumentCommand`). |
+| 2026-11-15 | Qoder | Squashed the incremental migration history into a single consolidated `InitialCreate` (84 tables) regenerated with the local `dotnet-ef` 11.0.0 tool; existing development databases must be dropped or recreated. |

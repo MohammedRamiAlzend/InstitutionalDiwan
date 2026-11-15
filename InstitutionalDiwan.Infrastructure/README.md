@@ -20,7 +20,7 @@ All code uses the `InstitutionalDiwan.*` namespaces — the legacy `NewDiwan.*` 
 
 | Folder | Responsibility | Code status |
 | --- | --- | --- |
-| [`Persistence/`](Persistence/README.md) | `DiwanDbContext`, `Configurations/`, `Repositories/`, `Interceptors/`, `Migrations/`, `Seed/` | ⚠️ `DbContext` + 10 configuration files + 19 repositories + 8 migrations + ordered seeders |
+| [`Persistence/`](Persistence/README.md) | `DiwanDbContext`, `Configurations/`, `Repositories/`, `Interceptors/`, `Migrations/`, `Seed/` | ⚠️ `DbContext` + 10 configuration files + 19 repositories + 1 consolidated migration + ordered seeders |
 | [`Authentication/`](Authentication/README.md) | JWT token generation, password hashing, HTTP `UserContext` | ✅ `PasswordHasher` + `JwtProvider` + `UserContext` implemented |
 | [`Context/`](Context/README.md) | Ambient request metadata (`IRequestContext`) | ✅ `HttpRequestContext` implemented |
 | [`Authorization/`](Authorization/README.md) | Permission-based RBAC + organizational scope and document-access evaluators | ✅ `DepartmentScopeEvaluator` + `DocumentAccessEvaluator` implemented |
@@ -83,7 +83,7 @@ Persistence/Configurations/
 | Repositories | 🟡 19 of 21 implemented — `UserRepository`, `RoleRepository`, `PermissionRepository`, `DepartmentRepository`, `DepartmentTypeRepository`, `DocumentRepository`, `DocumentTypeRepository`, `NumberingRegistryRepository`, `DocumentNumberRepository`, `EmployeeRepository`, `DocumentAccessGrantRepository`, `LookupRepository`, `InstitutionSettingRepository`, `ExternalOrganizationRepository`, `DocumentMovementRepository`, `DocumentFileRepository`, `DocumentFileTypeRepository`, `FileStorageProviderRepository`, `AuditLogRepository`; relation and notification repositories pending |
 | Seed | ✅ Ordered, environment-aware seeders (33 lookup seeders, `InstitutionSettingSeeder`, `DepartmentSeeder` demo tree, `EmployeeSeeder` demo personnel, `PermissionSeeder`, `RoleSeeder`, `UserSeeder`) |
 | Authentication | ✅ `PasswordHasher` (PBKDF2) + `JwtProvider` + `UserContext` (reads `sub`/`dept_id`/`scope_type`/`permission` claims) |
-| Migrations | ✅ 9 written (`InitialCreate`, `AddUniqueOfficialNumber`, `Refactor_DepartmentTypes_ToLookup`, `Refactor_CorrespondenceNumbering_ToLookups`, `Refactor_AllRemaining_ToLookups`, `InitialCreate2`, `Add_Department_Register_Numbers`, `Add_Audit_Chain_Uniqueness`, `Add_Document_Dynamic_Fields`) |
+| Migrations | ✅ 1 written (consolidated `InitialCreate` — the full SQL Server schema in one migration, regenerated for .NET 11; earlier incremental migrations squashed) |
 | Interceptors | ✅ `TamperEvidentAuditInterceptor` (domain events incl. `UserLoggedIn`, generic old/new snapshots, SHA-256 chain, sensitive-field redaction, no writes outside an HTTP request) |
 | Authorization | ✅ `DepartmentScopeEvaluator` + `DocumentAccessEvaluator` implementing the Application contracts |
 | Storage | ✅ `LocalFileStorageService` + `FileSignatureValidator` |
@@ -94,6 +94,7 @@ Persistence/Configurations/
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-15 | Qoder | Squashed the entire migration history into a single consolidated `InitialCreate` (84 tables, SQL Server) regenerated with the local `dotnet-ef` 11.0.0 tool; existing development databases must be dropped or recreated. |
 | 2026-11-13 | Claude | Targets `net11.0` with EF Core 11.0.0. Dropped the `Microsoft.Extensions.Options.ConfigurationExtensions` and `System.Security.Cryptography.Pkcs` references, which .NET 11 already provides (NU1510). |
 | 2026-11-11 | Claude | Archive diwan: `INSTITUTION_SETTINGS.ArchiveDiwanDepartmentId` (mapping and migration `Add_Archive_Diwan`), the seeded movement type 5 «للحفظ», and reading access for the archive diwan over the documents it holds in `DocumentAccessEvaluator` and `DocumentViewAccessQuery`. |
 | 2026-11-09 | Claude | Added `Exports/` with `TableExcelWriter`. |
