@@ -12,8 +12,12 @@ public sealed class PasswordHasher : IPasswordHasher
     private const string Prefix = "PBKDF2";
     private const int SaltSize = 16;
     private const int KeySize = 32;
-    private const int Iterations = 100_000;
+    private const int Iterations = 600_000;
     private static readonly HashAlgorithmName Algorithm = HashAlgorithmName.SHA256;
+    private static readonly Lazy<string> LazyDummyHash = new(
+        () => new PasswordHasher().Hash("dummy-password-for-login-timing"));
+
+    public string DummyHash => LazyDummyHash.Value;
 
     public string Hash(string password)
     {
@@ -53,5 +57,17 @@ public sealed class PasswordHasher : IPasswordHasher
         {
             return false;
         }
+    }
+
+    public bool NeedsRehash(string passwordHash)
+    {
+        if (string.IsNullOrWhiteSpace(passwordHash))
+            return false;
+
+        var parts = passwordHash.Split('$');
+        return parts.Length == 4 &&
+               string.Equals(parts[0], Prefix, StringComparison.Ordinal) &&
+               int.TryParse(parts[1], out var iterations) &&
+               iterations < Iterations;
     }
 }

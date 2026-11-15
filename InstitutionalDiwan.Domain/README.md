@@ -361,6 +361,7 @@ them, while listing, relabelling and (de)activation keep working.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-15 | Qoder | Security: `User` gained `UpgradePasswordHash` — a silent work-factor upgrade after login that replaces only the hash (no `UpdatedAt`/`MustChangePassword` side effects, so other live sessions stay valid). |
 | 2026-11-12 | Claude | Added `InstitutionLogo` (the uploaded logo image, kept apart from `InstitutionSetting`, which gained `LogoUpdatedAt` and `MarkLogoChanged`), the `InstitutionSetting.Logo*` errors, and the logo methods of `IInstitutionSettingRepository`. |
 | 2026-11-11 | Claude |  |
 | 2026-11-11 | Claude | Slice D: `DocumentRelationType.JoinedIntoId` (5). `IDocumentRelationRepository.ListOutgoingAsync` and `IPersonRepository.ListJoinCandidatesAsync`. A join decision can be issued; `Decisions.JoinTargetInvalid` means the principal file is invalid, and `Decisions.DocumentJoined` refuses a later separating decision. |

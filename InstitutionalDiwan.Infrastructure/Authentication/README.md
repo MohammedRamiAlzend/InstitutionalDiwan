@@ -23,8 +23,10 @@ the contracts in [`../../InstitutionalDiwan.Application/Abstractions/`](../../In
 ## Components
 
 ### `PasswordHasher.cs` (`: IPasswordHasher`)
-Implemented. PBKDF2 (HMAC-SHA256) with a self-describing stored value of the form
-`PBKDF2&<iterations>$&<base64-salt>$&<base64-key>`. Verification uses constant-time comparison.
+Implemented. PBKDF2 (HMAC-SHA256, 600,000 iterations) with a self-describing stored value of the form
+`PBKDF2&<iterations>$&<base64-salt>$&<base64-key>`. Verification uses constant-time comparison,
+`NeedsRehash` reports hashes below the current work factor, and `DummyHash` is a precomputed
+current-work-factor hash used to equalize login timing for unknown usernames.
 
 ### `JwtOptions.cs` (`JwtOptions.SectionName = "Jwt"`)
 Implemented. Strongly-typed binding for `Issuer`, `Audience`, `SecretKey`, and
@@ -88,6 +90,7 @@ and the one-policy-per-permission authorization setup live in `Server/Extensions
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-15 | Qoder | Security: `PasswordHasher` now derives at 600,000 PBKDF2 iterations and exposes `NeedsRehash` + `DummyHash`; login upgrades older hashes silently and burns one dummy verification for unknown usernames so timing cannot enumerate accounts. |
 | 2026-11-15 | Qoder | Security: added `LoginAttemptTracker` (`ILoginAttemptTracker`, in-memory) — five failed login attempts within 15 minutes lock the username out for 15 minutes; failed attempts count for unknown usernames too so the lockout cannot be used to enumerate accounts. |
 | 2026-10-28 | Qoder | Add shared keyed session stamps over account/profile/password and active authorization state; exclude LastLoginAt, emit no credentials, and reject unstamped legacy JWTs without migrations or signing-key changes. |
 | 2026-10-22 | Buffy | `UserContext` now also exposes `Username` and `Roles` (from `unique_name`/`Name` and the `role` claims) for `GetUserProfileQuery`. |

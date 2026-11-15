@@ -41,6 +41,32 @@ public sealed class LoginThrottleTests
     }
 
     [Fact]
+    public async Task Login_WithLegacyHash_RehashesSilently()
+    {
+        var world = new World(passwordHash: "legacy:" + Password);
+        var before = world.Holder.UpdatedAt;
+
+        var result = await world.Handler.Handle(new LoginCommand("holder", Password), CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal($"fake:{Password}", world.Holder.PasswordHash);
+        Assert.False(world.Holder.MustChangePassword);
+        Assert.Equal(before, world.Holder.UpdatedAt);
+    }
+
+    [Fact]
+    public async Task Login_WithLegacyHashAndForcedChange_KeepsTheOldHash()
+    {
+        var world = new World(passwordHash: "legacy:" + Password, mustChangePassword: true);
+
+        var result = await world.Handler.Handle(new LoginCommand("holder", Password), CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal("legacy:" + Password, world.Holder.PasswordHash);
+        Assert.True(world.Holder.MustChangePassword);
+    }
+
+    [Fact]
     public async Task FourFailures_StillReturnInvalidCredentials()
     {
         var world = new World();

@@ -41,9 +41,11 @@ internal sealed class LoginCommandHandler : ICommandHandler<LoginCommand, LoginR
         var user = await _userRepository.GetByUsernameAsync(username, cancellationToken);
 
         // Same error for "unknown user" and "wrong password" so the endpoint cannot be used to
-        // enumerate accounts.
+        // enumerate accounts; an unknown username still burns one PBKDF2 verification so the
+        // response timing cannot tell the two cases apart either.
         if (user is null)
         {
+            _passwordHasher.Verify(request.Password, _passwordHasher.DummyHash);
             if (await _loginAttemptTracker.RegisterFailureAsync(username, cancellationToken))
                 return Result.Failure<LoginResponse>(DomainErrors.Identity.LoginThrottled);
 
@@ -61,6 +63,14 @@ internal sealed class LoginCommandHandler : ICommandHandler<LoginCommand, LoginR
         if (!user.IsActive)
             return Result.Failure<LoginResponse>(DomainErrors.Identity.UserInactive);
 
+        // Upgrade hashes stored under an older work factor. Forced-change accounts skip this —
+        // they rehash at their own work factor when they change the password.
+        if (!user.MustChangePassword && _passwordHasher.NeedsRehash(user.PasswordHash))
+        {
+            var upgrade = user.UpgradePasswordHash(_passwordHasher.Hash(request.Password));
+            if (upgrade.IsFailure)
+                return Result.Failure<LoginResponse>(upgrade.Error);
+        }
 
         await _loginAttemptTracker.ResetAsync(username, cancellationToken);
         user.RecordLogin(_unitOfWork.UtcNow);

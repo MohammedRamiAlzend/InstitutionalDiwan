@@ -172,6 +172,20 @@ public sealed class User : AggregateRoot<Guid>
     }
 
     /// <summary>
+    /// Silent work-factor upgrade after a successful login: replaces the stored hash with one at the
+    /// current work factor without touching <see cref="MustChangePassword"/> or <see cref="UpdatedAt"/>,
+    /// so other live sessions stay valid and the forced-change flow is unaffected.
+    /// </summary>
+    public Result UpgradePasswordHash(string? newPasswordHash)
+    {
+        if (string.IsNullOrWhiteSpace(newPasswordHash))
+            return Result.Failure(DomainErrors.Identity.PasswordHashEmpty);
+
+        PasswordHash = newPasswordHash;
+        return Result.Success();
+    }
+
+    /// <summary>
     /// Administrative reset of a forgotten password. Unlike <see cref="ChangePasswordHash"/> the owner
     /// never typed the new password, so the must-change flag is set and the reset is recorded with the
     /// administrator who performed it.

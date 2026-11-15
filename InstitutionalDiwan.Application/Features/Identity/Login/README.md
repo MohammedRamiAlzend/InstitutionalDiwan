@@ -15,7 +15,7 @@ host extracted from the presented token — and the reachable departments come f
 | File | Purpose |
 | --- | --- |
 | `LoginCommand.cs` | CQRS command carrying the submitted username and password. |
-| `LoginCommandHandler.cs` | Looks the account up by normalized username, verifies the password hash (same failure for unknown user and wrong password so accounts cannot be enumerated), rejects inactive accounts, stamps `LastLoginAt` with `IUnitOfWork.UtcNow`, and issues the token. Failed attempts run through `ILoginAttemptTracker`; after five failures in a window the account is locked out (`Identity.LoginThrottled`, 429) and a successful login clears the counter. |
+| `LoginCommandHandler.cs` | Looks the account up by normalized username, verifies the password hash (same failure for unknown user and wrong password so accounts cannot be enumerated, and an unknown username still burns one dummy PBKDF2 verification so timing cannot tell them apart), rejects inactive accounts, upgrades legacy hashes silently on success (`NeedsRehash` → `User.UpgradePasswordHash`, skipped for forced-change accounts), stamps `LastLoginAt` with `IUnitOfWork.UtcNow`, and issues the token. Failed attempts run through `ILoginAttemptTracker`; after five failures in a window the account is locked out (`Identity.LoginThrottled`, 429) and a successful login clears the counter. |
 | `LoginCommandValidator.cs` | FluentValidation rules for the credential payload. |
 | `LoginResponse.cs` | Result of a successful authentication: access token, expiry, user id, username, must-change-password flag, role codes, and permission codes. |
 | `GetUserProfileQuery.cs` | Parameterless query for the caller's profile; the caller is ambient, so the query carries no state. |
@@ -45,6 +45,7 @@ host extracted from the presented token — and the reachable departments come f
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-15 | Qoder | Security: hashes stored under an older PBKDF2 work factor are silently upgraded on a successful login (`NeedsRehash` → `User.UpgradePasswordHash`, without touching `UpdatedAt`/`MustChangePassword`), and unknown usernames burn one dummy verification so login timing cannot enumerate accounts. |
 | 2026-11-15 | Qoder | Security: `LoginCommandHandler` now throttles failed attempts through `ILoginAttemptTracker` — five failures within the window lock the username out and return 429 `Identity.LoginThrottled`; failed attempts count for unknown usernames too so the lockout cannot serve as an account-enumeration oracle. |
 | 2026-11-11 | Claude |  |
 | 2026-11-04 | Claude | `UserProfileResponse` (`GET /api/auth/me`) gained `primaryDepartmentId` so the SPA can fix the department of a register-number entry to the caller's own. |
