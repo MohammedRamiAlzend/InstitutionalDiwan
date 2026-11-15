@@ -180,6 +180,7 @@ public static class DomainErrors
         public static readonly Error RegistryInactive = Error.Conflict("Numbering.RegistryInactive", "Cannot allocate numbers from an inactive numbering registry.");
         public static readonly Error OfficialNumberTaken = Error.Conflict("Numbering.OfficialNumberTaken", "The official number is already taken for the specified numbering year.");
         public static readonly Error RegistryNotFound = Error.NotFound("Numbering.RegistryNotFound", "The numbering registry was not found.");
+        public static readonly Error RegistryOutOfScope = Error.Forbidden("Numbering.RegistryOutOfScope", "The numbering registry is outside the caller's organizational scope.");
         public static readonly Error RegistryCodeAlreadyExists = Error.Conflict("Numbering.RegistryCodeAlreadyExists", "A numbering registry with this code already exists.");
         public static readonly Error RegistryTemplateLocked = Error.Conflict("Numbering.RegistryTemplateLocked", "The registry format cannot be changed after numbers have been issued from it.");
         public static readonly Error NumberNotFound = Error.NotFound("Numbering.NumberNotFound", "The official number was not found for this document.");

@@ -17,7 +17,7 @@ public sealed class GetRegistryByIdQueryHandlerTests
         var registries = new FakeNumberingRegistryRepository();
         registries.Add(registry.Value);
 
-        var handler = new GetRegistryByIdQueryHandler(registries);
+        var handler = new GetRegistryByIdQueryHandler(registries, new FakeDepartmentScopeEvaluator());
         var result = await handler.Handle(
             new GetRegistryByIdQuery(registry.Value.RegistryId),
             CancellationToken.None);
@@ -34,12 +34,50 @@ public sealed class GetRegistryByIdQueryHandlerTests
     [Fact]
     public async Task Handle_WhenRegistryIsMissing_ReturnsNotFound()
     {
-        var handler = new GetRegistryByIdQueryHandler(new FakeNumberingRegistryRepository());
+        var handler = new GetRegistryByIdQueryHandler(
+            new FakeNumberingRegistryRepository(), new FakeDepartmentScopeEvaluator());
 
         var result = await handler.Handle(new GetRegistryByIdQuery(Guid.NewGuid()), CancellationToken.None);
 
         Assert.True(result.IsFailure);
         Assert.Equal(DomainErrors.Numbering.RegistryNotFound.Code, result.Error.Code);
         Assert.Equal(ErrorType.NotFound, result.Error.Type);
+    }
+
+    [Fact]
+    public async Task Handle_WhenDepartmentRegistryIsOutOfScope_ReturnsNotFound()
+    {
+        var registry = NumberingRegistry.Create("outgoing", "صادر", departmentId: Guid.NewGuid());
+        Assert.True(registry.IsSuccess);
+        var registries = new FakeNumberingRegistryRepository();
+        registries.Add(registry.Value);
+
+        var scope = new FakeDepartmentScopeEvaluator();
+        scope.AccessibleDepartments.Add(Guid.NewGuid());
+        var handler = new GetRegistryByIdQueryHandler(registries, scope);
+        var result = await handler.Handle(
+            new GetRegistryByIdQuery(registry.Value.RegistryId), CancellationToken.None);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(DomainErrors.Numbering.RegistryNotFound.Code, result.Error.Code);
+        Assert.Equal(ErrorType.NotFound, result.Error.Type);
+    }
+
+    [Fact]
+    public async Task Handle_WithInstitutionWideScope_ReturnsDepartmentRegistry()
+    {
+        var departmentId = Guid.NewGuid();
+        var registry = NumberingRegistry.Create("outgoing", "صادر", departmentId: departmentId);
+        Assert.True(registry.IsSuccess);
+        var registries = new FakeNumberingRegistryRepository();
+        registries.Add(registry.Value);
+
+        var handler = new GetRegistryByIdQueryHandler(
+            registries, new FakeDepartmentScopeEvaluator { InstitutionWide = true });
+        var result = await handler.Handle(
+            new GetRegistryByIdQuery(registry.Value.RegistryId), CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(registry.Value.RegistryId, result.Value.RegistryId);
     }
 }

@@ -1,3 +1,4 @@
+using InstitutionalDiwan.Application.Abstractions.Authorization;
 using InstitutionalDiwan.Application.Abstractions.Messaging;
 using InstitutionalDiwan.Domain.Common;
 using InstitutionalDiwan.Domain.Errors;
@@ -14,6 +15,7 @@ internal sealed class UpdateNumberingRegistryCommandHandler
     private readonly IDocumentTypeRepository _documentTypeRepository;
     private readonly ILookupRepository _lookupRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IDepartmentScopeEvaluator _departmentScopeEvaluator;
 
     public UpdateNumberingRegistryCommandHandler(
         INumberingRegistryRepository registryRepository,
@@ -21,7 +23,8 @@ internal sealed class UpdateNumberingRegistryCommandHandler
         IDepartmentRepository departmentRepository,
         IDocumentTypeRepository documentTypeRepository,
         ILookupRepository lookupRepository,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        IDepartmentScopeEvaluator departmentScopeEvaluator)
     {
         _registryRepository = registryRepository;
         _documentNumberRepository = documentNumberRepository;
@@ -29,6 +32,7 @@ internal sealed class UpdateNumberingRegistryCommandHandler
         _documentTypeRepository = documentTypeRepository;
         _lookupRepository = lookupRepository;
         _unitOfWork = unitOfWork;
+        _departmentScopeEvaluator = departmentScopeEvaluator;
     }
 
     public async Task<Result<NumberingRegistryResponse>> Handle(
@@ -38,6 +42,15 @@ internal sealed class UpdateNumberingRegistryCommandHandler
         var registry = await _registryRepository.GetByIdAsync(request.RegistryId, cancellationToken);
         if (registry is null)
             return Result.Failure<NumberingRegistryResponse>(DomainErrors.Numbering.RegistryNotFound);
+
+        var accessible = await _departmentScopeEvaluator.GetAccessibleDepartmentIdsAsync(cancellationToken);
+        var registryScopeError = RegistryScopeGuard.CheckModify(registry.DepartmentId, accessible);
+        if (registryScopeError is not null)
+            return Result.Failure<NumberingRegistryResponse>(registryScopeError);
+
+        var targetScopeError = RegistryScopeGuard.CheckTarget(request.DepartmentId, accessible);
+        if (targetScopeError is not null)
+            return Result.Failure<NumberingRegistryResponse>(targetScopeError);
 
         var scopeResult = await NumberingRegistryValidation.ValidateScopeAsync(
             request.DepartmentId,

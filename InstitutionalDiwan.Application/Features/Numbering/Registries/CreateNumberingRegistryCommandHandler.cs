@@ -1,3 +1,4 @@
+using InstitutionalDiwan.Application.Abstractions.Authorization;
 using InstitutionalDiwan.Application.Abstractions.Messaging;
 using InstitutionalDiwan.Domain.Common;
 using InstitutionalDiwan.Domain.Entities.Numbering;
@@ -14,19 +15,22 @@ internal sealed class CreateNumberingRegistryCommandHandler
     private readonly IDocumentTypeRepository _documentTypeRepository;
     private readonly ILookupRepository _lookupRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IDepartmentScopeEvaluator _departmentScopeEvaluator;
 
     public CreateNumberingRegistryCommandHandler(
         INumberingRegistryRepository registryRepository,
         IDepartmentRepository departmentRepository,
         IDocumentTypeRepository documentTypeRepository,
         ILookupRepository lookupRepository,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        IDepartmentScopeEvaluator departmentScopeEvaluator)
     {
         _registryRepository = registryRepository;
         _departmentRepository = departmentRepository;
         _documentTypeRepository = documentTypeRepository;
         _lookupRepository = lookupRepository;
         _unitOfWork = unitOfWork;
+        _departmentScopeEvaluator = departmentScopeEvaluator;
     }
 
     public async Task<Result<NumberingRegistryResponse>> Handle(
@@ -44,6 +48,11 @@ internal sealed class CreateNumberingRegistryCommandHandler
             return Result.Failure<NumberingRegistryResponse>(
                 DomainErrors.Numbering.RegistryCodeAlreadyExists);
         }
+
+        var accessible = await _departmentScopeEvaluator.GetAccessibleDepartmentIdsAsync(cancellationToken);
+        var scopeError = RegistryScopeGuard.CheckTarget(request.DepartmentId, accessible);
+        if (scopeError is not null)
+            return Result.Failure<NumberingRegistryResponse>(scopeError);
 
         var scopeResult = await NumberingRegistryValidation.ValidateScopeAsync(
             request.DepartmentId,

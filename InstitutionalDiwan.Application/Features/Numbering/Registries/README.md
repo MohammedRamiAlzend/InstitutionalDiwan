@@ -30,6 +30,7 @@ entries ordered by the department's own date, with the central Diwan number kept
 | `UpdateNumberingRegistryCommandValidator.cs` | FluentValidation rules for the update payload. |
 | `DeactivateNumberingRegistryCommand.cs` / `DeactivateNumberingRegistryCommandHandler.cs` | Stops the registry being selected for new numbers; issued numbers are untouched. |
 | `ActivateNumberingRegistryCommand.cs` / `ActivateNumberingRegistryCommandHandler.cs` | Reactivates a registry so scope matching can select it again. |
+| `RegistryScopeGuard.cs` | Applies the caller's department scope (via `IDepartmentScopeEvaluator`) to registry reads and writes: reads return global + in-scope registries (out-of-scope gets 404 `RegistryNotFound`), and writes need scope over the registry's department (403 `RegistryOutOfScope`; a global registry is only writable institution-wide). |
 | `NumberingRegistryValidation.cs` | Shared scope (department/document type/direction) and reset-policy lookup checks used by create and update. |
 | `DepartmentRegisterModels.cs` | `ListDepartmentRegisterQuery` (department + optional year) and the `DepartmentRegisterLineResponse` read model for the register book. |
 | `ListDepartmentRegisterQueryHandler.cs` | 404s on an unknown department, 403s on one outside the caller's scope (`Correspondence.DepartmentOutOfScope`), blanks the title and central number of documents the caller cannot view, loads the department's entries, joins the documents in one batch, and reports each line's register number, date, and arrival count. |
@@ -58,6 +59,7 @@ entries ordered by the department's own date, with the central Diwan number kept
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-15 | Qoder | Security: registry reads and writes now honor the caller's department scope (`RegistryScopeGuard` + `IDepartmentScopeEvaluator`). Out-of-scope registries are hidden on read (404 `RegistryNotFound`); creating or editing a registry outside the caller's scope is 403 `RegistryOutOfScope`, and a department-scoped caller can no longer clear a registry's department to make it global. |
 | 2026-11-11 | Claude | `ListDepartmentRegisterEntriesQuery` accepts `FieldFilters` on the chosen form version's fields. `DocumentFieldFilterParser` can also parse against a version's fields. |
 | 2026-11-11 | Claude | Added the paged register page (`DepartmentRegisterEntries`) with form-version values and the forms list (`DepartmentRegisterForms`), so «سجلاتي» searches, filters, sorts and pages on the server. |
 | 2026-11-11 | Claude | `DepartmentRegisterLineResponse` carries `RegistryId`, the register the line was written in, so the «سجلاتي» page can show one register at a time. |
