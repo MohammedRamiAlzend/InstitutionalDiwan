@@ -47,6 +47,7 @@ internal sealed class RegisterCommandHandler : ICommandHandler<RegisterCommand, 
             primaryDepartmentId: Guid.Empty, // self-registered accounts have no department yet
             scopeTypeId: UserScopeType.DepartmentId,
             mustChangePassword: false,
+            isActive: false, // an administrator must activate the account before it can sign in
             utcNow: _unitOfWork.UtcNow);
 
         if (userResult.IsFailure)

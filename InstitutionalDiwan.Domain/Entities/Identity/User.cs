@@ -41,6 +41,7 @@ public sealed class User : AggregateRoot<Guid>
         Guid? employeeId = null,
         int scopeTypeId = UserScopeType.DepartmentId,
         bool mustChangePassword = true,
+        bool isActive = true,
         DateTime? utcNow = null)
     {
         if (string.IsNullOrWhiteSpace(username))
@@ -57,7 +58,7 @@ public sealed class User : AggregateRoot<Guid>
             PrimaryDepartmentId = primaryDepartmentId,
             EmployeeId = employeeId,
             ScopeTypeId = scopeTypeId > 0 ? scopeTypeId : UserScopeType.DepartmentId,
-            IsActive = true,
+            IsActive = isActive,
             MustChangePassword = mustChangePassword,
             CreatedAt = utcNow ?? DateTime.UtcNow
         };

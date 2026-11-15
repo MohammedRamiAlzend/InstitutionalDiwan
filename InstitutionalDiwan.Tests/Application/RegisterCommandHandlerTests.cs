@@ -22,7 +22,7 @@ public sealed class RegisterCommandHandlerTests
         => new(users, roles, new FakePasswordHasher(), unitOfWork);
 
     [Fact]
-    public async Task Handle_WithNewUsername_CreatesActiveUserWithUserRole()
+    public async Task Handle_WithNewUsername_CreatesInactiveUserWithUserRole()
     {
         var users = new FakeUserRepository();
         var roles = new FakeRoleRepository();
@@ -41,7 +41,7 @@ public sealed class RegisterCommandHandlerTests
 
         var stored = Assert.Single(users.Users);
         Assert.Equal(result.Value.UserId, stored.UserId);
-        Assert.True(stored.IsActive);
+        Assert.False(stored.IsActive); // pending administrator activation
         Assert.Single(stored.UserRoles);
         Assert.True(new FakePasswordHasher().Verify("Str0ng!Pass", stored.PasswordHash));
         Assert.Equal(1, unitOfWork.SaveChangesCallCount);
