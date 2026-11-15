@@ -98,6 +98,7 @@ Concrete EF Core implementations of the repository interfaces declared in
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-13 | Claude | `DocumentRelationRepository` takes its relation-type lock with `ExecuteSqlAsync`; EF Core 11 makes `ExecuteSqlInterpolatedAsync` obsolete. The SQL and its parameters are unchanged. |
 | 2026-11-12 | Claude | `InstitutionSettingRepository` gained `GetLogoAsync`, `AddLogo` and `RemoveLogo`. |
 | 2026-11-11 | Claude | A sort on a form field breaks ties by register number, then id, like the column sorts. |
 | 2026-11-11 | Claude | The department register page now filters, sorts and searches form values on each line's latest visit of the version (`DepartmentRecordFieldFilterQuery.LatestVisits`), the same visit it displays; before, sort and search read any visit. |

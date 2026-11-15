@@ -444,7 +444,7 @@ public sealed class RelationsTests
         var world = await CreateWorldAsync();
         var a = await world.DocumentAsync("أ");
 
-        await Assert.ThrowsAsync<Microsoft.Data.Sqlite.SqliteException>(() => world.Db.Database.ExecuteSqlInterpolatedAsync(
+        await Assert.ThrowsAsync<Microsoft.Data.Sqlite.SqliteException>(() => world.Db.Database.ExecuteSqlAsync(
             $"""
             INSERT INTO DOCUMENT_RELATIONS (RelationId, SourceDocumentId, TargetDocumentId, RelationTypeId, CreatedByUserId, CreatedAt)
             VALUES ({Guid.NewGuid()}, {a.DocumentId}, {a.DocumentId}, {ReplyTo}, {world.Author.UserId}, {Now()})

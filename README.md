@@ -18,7 +18,7 @@
 > throughout (login, session invalidation, departments, settings, documents, movements, numbering,
 > audit, attachments).
 
-The unified institutional correspondence system: a clean-architecture ASP.NET Core 10 API that
+The unified institutional correspondence system: a clean-architecture ASP.NET Core 11 API that
 registers documents, allocates official numbers, routes them between departments, and keeps an
 auditable trail — with an Arabic-first React 19 front end developed separately on top.
 
@@ -50,7 +50,7 @@ in a `README.md` per subfolder — see the "Known gap" note below.
 | --- | --- | --- |
 | 2026-11-09 | Claude | Documents no longer have a title or summary in the interface: the system names each one from its type and department register number. |
 | 2026-11-09 | Claude | People named on documents (plan `plans/document-persons.md`): a shared persons register with a lookup of roles, names captured when a document is created, and a person screen showing their documents, where each one is now, and a merged timeline, behind `PERSON_VIEW` and `PERSON_MANAGE`. |
-| .NET SDK | 10.0 | Building and running the API and the tests |
+| .NET SDK | 11.0 (pinned in `global.json`) | Building and running the API and the tests |
 | SQL Server | 2019+ / LocalDB | The `InstitutionalDiwan` database (`Server=.;Trusted_Connection=True`) |
 | Node.js | 20+ (24 recommended) | The standalone front end and the `add-endpoint-docs.mjs` script; not needed to build or run the API |
 
@@ -136,6 +136,7 @@ browser-verified; Module 07 is implemented (build and lint pass, verified agains
 | --- | --- |
 | `AGENT.md` | The repository rules every agent and contributor must follow, including the mandatory README structure. |
 | `InstitutionalDiwan.slnx` | The solution file: the five .NET projects (the React front end is not part of it). |
+| `global.json` | Pins the .NET SDK to 11.0.100, rolling forward to newer feature bands. |
 | `build.cmd` | Windows convenience wrapper around `dotnet build`. |
 | `add-endpoint-docs.mjs` | Node script that fills in the OpenAPI summary, description, and parameter examples of a new endpoint; idempotent, run it with Node. |
 | `plans/` | Implementation plans that have not been executed yet. |
@@ -162,6 +163,7 @@ have no `README.md` of their own yet — their content is documented in the encl
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-13 | Claude | Upgraded the backend to .NET 11: every project targets `net11.0`, the Microsoft packages are on 11.0.0 and `Scalar.AspNetCore` on 2.21.0. A new `global.json` pins SDK 11.0.100 (latest feature band). EF Core 11 sees no model change, so there is no new migration. All 1000 tests pass. |
 | 2026-11-11 | Claude |  |
 | 2026-11-11 | Claude | Implemented slice D of `plans/case-decisions.md`: issuing «التوحيد» links the file to a principal file with relation type «موحَّد مع» (id 5) in the same save. The joined file keeps its number, status and place. Canceling that decision removes the link. No new permission and no migration. |
 | 2026-11-11 | Claude | Implemented slice C of `plans/case-decisions.md`: an appeal on an issued appealable decision, and an outcome that either makes the decision final or revokes it. `POST /api/decisions/{id}/appeals` and `PUT /api/decisions/{id}/appeals/{appealId}/outcome` use the existing `DECISION_MANAGE` permission. Migration `20261111110728_Add_Decision_Appeals`. 946 tests pass. Joining two files stays refused. |

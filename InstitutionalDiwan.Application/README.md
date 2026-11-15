@@ -58,6 +58,7 @@ See each subfolder's README for the full design and per-folder status tables.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-13 | Claude | Targets `net11.0`. Dropped the explicit `Microsoft.Extensions.DependencyInjection.Abstractions` and `Microsoft.Extensions.Logging.Abstractions` references, which .NET 11 already provides (NU1510). |
 | 2026-11-11 | Claude | Registered `ArchiveDiwanRouting` for the route to the archive diwan (plan `plans/case-decisions.md`, slice A). |
 | 2026-11-10 | Claude | Registers `DepartmentRecordService` (opens and locks department records) and adds the `Features/DepartmentRecords` slice. |
 | 2026-11-08 | Claude | Registered `IDocumentFieldOptionResolver` for select fields fed by departments, external organizations or lookup catalogs. |

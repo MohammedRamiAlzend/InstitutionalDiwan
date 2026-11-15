@@ -102,6 +102,7 @@ project-references Application and Infrastructure.
 | --- | --- | --- |
 | 2026-11-15 | Qoder | Security: added `SecurityHeadersMiddleware` (nosniff, frame denial, no-referrer, HSTS outside Development, no-store on `/api/auth`) and suppressed the Kestrel `Server` header. |
 | 2026-11-15 | Qoder | Security: added per-address rate limiting on the anonymous auth endpoints (`RateLimitingExtensions`) — login 30/min and register 5/hour per address, excess rejected with a 429 `ProblemDetails`; `UseRateLimiter` sits right after the exception middleware. |
+| 2026-11-13 | Claude | Targets `net11.0`: JwtBearer, OpenApi and EF Core Design on 11.0.0, `Scalar.AspNetCore` on 2.21.0. The API starts, migrates and serves `/openapi/v1.json` and `/scalar/v1`. |
 | 2026-11-03 | Claude | Module 10: added `NotificationsController`, the SignalR hub `/hubs/notifications` (token via `access_token` query string, connection closed when the token expires) and the `IRealtimeNotifier` binding. The hub is single-instance: no backplane, so a multi-instance deployment needs Redis or Azure SignalR and one outbox processor. |
 | 2026-11-03 | Claude | Module 07 Archiving, Phase 3: archive and saved search endpoints, and concurrency conflicts now answer 409. |
 | 2026-11-02 | Claude | Dynamic document fields, Phase 3: `DocumentFieldsController` with 14 routes, field contracts, `fieldValues` on document creation. |

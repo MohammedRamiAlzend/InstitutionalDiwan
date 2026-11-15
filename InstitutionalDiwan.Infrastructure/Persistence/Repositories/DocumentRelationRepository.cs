@@ -156,7 +156,7 @@ internal sealed class DocumentRelationRepository : IDocumentRelationRepository
             return;
 
         var resource = $"relations-cycle:{relationTypeId}";
-        await _context.Database.ExecuteSqlInterpolatedAsync(
+        await _context.Database.ExecuteSqlAsync(
             $"""
             DECLARE @result int;
             EXEC @result = sp_getapplock
