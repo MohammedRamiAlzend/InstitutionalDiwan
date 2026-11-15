@@ -6,6 +6,7 @@ using InstitutionalDiwan.Server.Extensions;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using System.ComponentModel;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
@@ -41,6 +42,7 @@ public sealed class AuthController : ControllerBase
     /// <response code="403">The account is inactive.</response>
     [HttpPost("login")]
     [AllowAnonymous]
+    [EnableRateLimiting(RateLimitPolicies.Login)]
     [EndpointSummary("Authenticate user")]
     [EndpointDescription("Authenticates a user with username and password and returns a signed JWT access token. Use the token in the Authorization header as 'Bearer {token}'.")]
     [Produces("application/json", Type = typeof(LoginResponse))]
@@ -76,6 +78,7 @@ public sealed class AuthController : ControllerBase
     /// <response code="404">The default USER role has not been seeded yet.</response>
     /// <response code="409">The username is already taken.</response>
     [HttpPost("register")]
+    [EnableRateLimiting(RateLimitPolicies.Register)]
     [EndpointSummary("Creates a new user account and assigns the default USER role.")]
     [EndpointDescription("Creates a new user account and assigns the default USER role. Registers a new user with the provided credentials. On success, the default USER role is assigned. Responses: 200 (The account was created; returns RegisterResponse.), 400 (The payload failed validation (username too short, password under 8 characters, etc.).), 404 (The default USER role has not been seeded yet.), 409 (The username is already taken.)")]
     [AllowAnonymous]

@@ -8,7 +8,8 @@ public enum ErrorType
     NotFound = 3,
     Conflict = 4,
     Unauthorized = 5,
-    Forbidden = 6
+    Forbidden = 6,
+    TooManyRequests = 7
 }
 
 public sealed record Error(string Code, string Description, ErrorType Type = ErrorType.Failure)
@@ -33,4 +34,7 @@ public sealed record Error(string Code, string Description, ErrorType Type = Err
 
     public static Error Forbidden(string code, string description) =>
         new(code, description, ErrorType.Forbidden);
+
+    public static Error TooManyRequests(string code, string description) =>
+        new(code, description, ErrorType.TooManyRequests);
 }

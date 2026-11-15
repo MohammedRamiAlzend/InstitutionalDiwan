@@ -12,6 +12,7 @@ builder.Services.AddScoped<InstitutionalDiwan.Application.Abstractions.Notificat
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddInstitutionalOpenApi();
+builder.Services.AddInstitutionalRateLimiting();
 builder.Services.AddInstitutionalAuthentication(builder.Configuration);
 builder.Services.AddOpenApi("v1", options =>
 {
@@ -21,6 +22,7 @@ var app = builder.Build();
 
 app.UseMiddleware<RequestContextLoggingMiddleware>();
 app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
+app.UseRateLimiter();
 
 if (app.Environment.IsDevelopment())
 {

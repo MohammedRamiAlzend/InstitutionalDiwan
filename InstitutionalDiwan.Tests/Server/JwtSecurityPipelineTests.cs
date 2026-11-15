@@ -309,6 +309,8 @@ public sealed class JwtSecurityPipelineTests
             builder.Services.AddScoped<IUnitOfWork>(services => services.GetRequiredService<DiwanDbContext>());
             builder.Services.AddSingleton<IClock>(new TestClock(DateTime.UtcNow));
             builder.Services.AddSingleton<IPasswordHasher, PasswordHasher>();
+            builder.Services.AddMemoryCache();
+            builder.Services.AddSingleton<ILoginAttemptTracker, LoginAttemptTracker>();
             builder.Services.AddScoped<IJwtProvider, JwtProvider>();
             builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection(JwtOptions.SectionName));
             builder.Services.AddHttpContextAccessor();

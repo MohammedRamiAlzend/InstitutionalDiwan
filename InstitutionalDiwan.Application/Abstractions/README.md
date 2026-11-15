@@ -42,6 +42,7 @@ technology choices swappable.
 | `IUserContext` | `bool IsAuthenticated`, `Guid UserId`, `string Username`, `IReadOnlySet<string> Roles`, `Guid PrimaryDepartmentId`, `int ScopeTypeId`, `IReadOnlySet<string> Permissions` | Ambient current user projected from the JWT claims (`sub`, `unique_name`, `role`, `dept_id`, `scope_type`, one `permission` claim per code). ✅ Implemented (`Infrastructure/Authentication/UserContext.cs`). |
 | `IJwtProvider` | `GenerateAccessToken(...)` + permission/role claims | ✅ Implemented; consumed by `LoginCommand` and the auth controller. |
 | `IPasswordHasher` | `string Hash(string)`, `bool Verify(string, string)` | ✅ Implemented (PBKDF2 in `Infrastructure/Authentication/PasswordHasher.cs`). |
+| `ILoginAttemptTracker` | `Task<bool> IsLockedOutAsync(string)`, `Task<bool> RegisterFailureAsync(string)`, `Task ResetAsync(string)` | Throttles failed logins per username (five failures → 15-minute lockout, counted for unknown usernames too so the lockout cannot enumerate accounts). ✅ Implemented (`Infrastructure/Authentication/LoginAttemptTracker.cs`). |
 
 ### `Authorization/`
 
@@ -139,6 +140,7 @@ technology choices swappable.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-15 | Qoder | Security: added `Authentication/ILoginAttemptTracker` — per-username login throttling (five failures → 15-minute lockout), implemented by `Infrastructure/Authentication/LoginAttemptTracker.cs`. |
 | 2026-11-03 | Claude | Added `IDepartmentScopeEvaluator.GetAccessibleDepartmentIdsAsync` so list queries can apply organizational scope in the database (Module 07 archive search). |
 | 2026-10-26 | Qoder | Added the `Audit/` group (`IAuditActionRecorder`, `AuditActionRecord`) so the web host can append action-level audit rows without depending on persistence, and marked it implemented by `AuditActionRecorder`. |
 | 2026-10-25 | opencode | Added `Context/IRequestContext` and `Persistence/ITransactionManager`, and marked `IDateTimeProvider` implemented by Infrastructure `DateTimeProvider` for Module 09. |

@@ -24,8 +24,8 @@ Earlier design notes called the project `NewDiwan.Presentation`; the actual asse
 | --- | --- | --- |
 | [`Controllers/`](Controllers/README.md) | REST controllers, one per module (plus the generic lookups controller) | ✅ 17 controllers live |
 | [`Contracts/`](Contracts/README.md) | HTTP request/response DTO records grouped by module | ✅ Correspondence, Organization, Identity, Numbering, Movements, Attachments, Audit, Lookups |
-| [`Middleware/`](Middleware/README.md) | Global exception handling, correlation-id tracking, action-level audit, forced-password recovery gate | Implemented: request context, global exceptions, action auditing, and `ForcedPasswordChangeMiddleware`. |
-| [`Extensions/`](Extensions/README.md) | `Result` → HTTP mapping, DI registration, OpenAPI/Scalar, auth setup | ✅ `ResultExtensions`, `DatabaseExtensions`, `AuthenticationExtensions`, `OpenApiExtensions` |
+| [`Middleware/`](Middleware/README.md) | Global exception handling, correlation-id tracking, action-level audit, forced-password recovery gate | Implemented: request context, global exceptions, action auditing, `ForcedPasswordChangeMiddleware`. |
+| [`Extensions/`](Extensions/README.md) | `Result` → HTTP mapping, DI registration, OpenAPI/Scalar, auth setup, per-address rate limiting | ✅ `ResultExtensions`, `DatabaseExtensions`, `AuthenticationExtensions`, `OpenApiExtensions`, `RateLimitingExtensions` |
 
 ## Current `Program.cs`
 
@@ -36,6 +36,7 @@ builder.Services.AddControllers();
 builder.Services.AddApplication();                              // MediatR + validators + behaviors
 builder.Services.AddInfrastructure(builder.Configuration);      // DbContext + repositories + seeders + auth services
 builder.Services.AddInstitutionalOpenApi();
+builder.Services.AddInstitutionalRateLimiting();               // per-address windows on login (30/min) and register (5/hour)
 builder.Services.AddInstitutionalAuthentication(builder.Configuration);  // JWT + one policy per permission
 builder.Services.AddOpenApi("v1", options => options.AddDocumentTransformer<BearerSecuritySchemeTransformer>());
 
@@ -43,6 +44,7 @@ var app = builder.Build();
 
 app.UseMiddleware<RequestContextLoggingMiddleware>();   // correlation id + IP + logging scope
 app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
+app.UseRateLimiter();   // 429 (ProblemDetails) for the anonymous auth endpoints over their window
 
 if (app.Environment.IsDevelopment())
 {
@@ -97,6 +99,7 @@ project-references Application and Infrastructure.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-15 | Qoder | Security: added per-address rate limiting on the anonymous auth endpoints (`RateLimitingExtensions`) — login 30/min and register 5/hour per address, excess rejected with a 429 `ProblemDetails`; `UseRateLimiter` sits right after the exception middleware. |
 | 2026-11-03 | Claude | Module 10: added `NotificationsController`, the SignalR hub `/hubs/notifications` (token via `access_token` query string, connection closed when the token expires) and the `IRealtimeNotifier` binding. The hub is single-instance: no backplane, so a multi-instance deployment needs Redis or Azure SignalR and one outbox processor. |
 | 2026-11-03 | Claude | Module 07 Archiving, Phase 3: archive and saved search endpoints, and concurrency conflicts now answer 409. |
 | 2026-11-02 | Claude | Dynamic document fields, Phase 3: `DocumentFieldsController` with 14 routes, field contracts, `fieldValues` on document creation. |

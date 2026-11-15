@@ -14,6 +14,7 @@ the contracts in [`../../InstitutionalDiwan.Application/Abstractions/`](../../In
 | File | Purpose |
 | --- | --- |
 | `PasswordHasher.cs` | Hashes and verifies passwords with PBKDF2 and constant-time comparison. |
+| `LoginAttemptTracker.cs` | In-memory login throttle (`ILoginAttemptTracker`): five failed attempts within 15 minutes lock the username out for 15 minutes; counters are memory-cache entries that expire on their own. |
 | `JwtOptions.cs` | Binds the existing JWT issuer, audience, signing key, and token lifetime settings. |
 | `JwtProvider.cs` | Issues signed access tokens with identity, roles, permissions, and a keyed session stamp. |
 | `JwtSessionStamp.cs` | Canonically HMACs current identity/profile/password state and effective active role/permission sets; validates stamps in constant time without exposing credentials. |
@@ -73,6 +74,7 @@ sets — it fails safe instead of throwing.
 | Component | State |
 | --- | --- |
 | `PasswordHasher` | ✅ Implemented |
+| `LoginAttemptTracker` | ✅ Implemented (in-memory, `IMemoryCache`) |
 | `JwtOptions` | ✅ Implemented |
 | `JwtProvider` | ✅ Implemented |
 | `JwtSessionStamp` + live bearer validation | Implemented (shared keyed stamp; validation in `Server/Extensions/AuthenticationExtensions.cs`) |
@@ -86,6 +88,7 @@ and the one-policy-per-permission authorization setup live in `Server/Extensions
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-15 | Qoder | Security: added `LoginAttemptTracker` (`ILoginAttemptTracker`, in-memory) — five failed login attempts within 15 minutes lock the username out for 15 minutes; failed attempts count for unknown usernames too so the lockout cannot be used to enumerate accounts. |
 | 2026-10-28 | Qoder | Add shared keyed session stamps over account/profile/password and active authorization state; exclude LastLoginAt, emit no credentials, and reject unstamped legacy JWTs without migrations or signing-key changes. |
 | 2026-10-22 | Buffy | `UserContext` now also exposes `Username` and `Roles` (from `unique_name`/`Name` and the `role` claims) for `GetUserProfileQuery`. |
 | 2026-10-19 | Buffy | Added `UserContext` (`: IUserContext`) reading `sub` / `dept_id` / `scope_type` / `permission` claims through `IHttpContextAccessor`; registered together with `AddHttpContextAccessor` in `Infrastructure/DependencyInjection.cs`. |

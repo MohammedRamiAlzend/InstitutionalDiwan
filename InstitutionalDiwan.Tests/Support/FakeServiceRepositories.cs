@@ -7,6 +7,7 @@ using InstitutionalDiwan.Domain.Entities.Identity;
 using InstitutionalDiwan.Domain.Entities.Movements;
 using InstitutionalDiwan.Domain.Entities.Organization;
 using InstitutionalDiwan.Domain.Repositories;
+using InstitutionalDiwan.Infrastructure.Authentication;
 
 namespace InstitutionalDiwan.Tests.Support;
 
@@ -240,6 +241,41 @@ internal sealed class FakeUserContext : IUserContext
     public int ScopeTypeId { get; set; } = UserScopeType.DepartmentId;
     public IReadOnlySet<string> Permissions { get; set; } =
         new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+}
+
+/// <summary>In-memory login throttle with the same thresholds as the real tracker.</summary>
+internal sealed class FakeLoginAttemptTracker : ILoginAttemptTracker
+{
+    public const int MaxFailures = LoginAttemptTracker.MaxFailures;
+
+    private readonly Dictionary<string, int> _failures = new(StringComparer.OrdinalIgnoreCase);
+    public HashSet<string> LockedOut { get; } = new(StringComparer.OrdinalIgnoreCase);
+
+    public Task<bool> IsLockedOutAsync(string username, CancellationToken cancellationToken = default)
+        => Task.FromResult(LockedOut.Contains(username));
+
+    public Task<bool> RegisterFailureAsync(string username, CancellationToken cancellationToken = default)
+    {
+        _failures.TryGetValue(username, out var failures);
+        failures++;
+        _failures[username] = failures;
+
+        if (failures >= MaxFailures)
+        {
+            _failures.Remove(username);
+            LockedOut.Add(username);
+            return Task.FromResult(true);
+        }
+
+        return Task.FromResult(false);
+    }
+
+    public Task ResetAsync(string username, CancellationToken cancellationToken = default)
+    {
+        _failures.Remove(username);
+        LockedOut.Remove(username);
+        return Task.CompletedTask;
+    }
 }
 
 internal sealed class FakeDepartmentScopeEvaluator : IDepartmentScopeEvaluator

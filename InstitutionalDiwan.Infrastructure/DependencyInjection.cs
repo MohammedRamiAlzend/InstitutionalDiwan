@@ -161,6 +161,8 @@ public static class DependencyInjection
 
         services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
         services.AddSingleton<IPasswordHasher, PasswordHasher>();
+        services.AddMemoryCache();
+        services.AddSingleton<ILoginAttemptTracker, LoginAttemptTracker>();
         services.AddScoped<IJwtProvider, JwtProvider>();
 
         return services;

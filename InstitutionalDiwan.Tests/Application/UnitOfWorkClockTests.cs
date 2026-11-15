@@ -90,7 +90,8 @@ public sealed class UnitOfWorkClockTests
             new FakeRoleRepository(),
             new FakePasswordHasher(),
             new FakeJwtProvider(),
-            unitOfWork).Handle(new LoginCommand("holder", Password), CancellationToken.None);
+            unitOfWork,
+            new FakeLoginAttemptTracker()).Handle(new LoginCommand("holder", Password), CancellationToken.None);
 
         Assert.True(result.IsSuccess);
         Assert.Equal(FixedNow, user.Value.LastLoginAt);
