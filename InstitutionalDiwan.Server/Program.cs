@@ -6,6 +6,7 @@ using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.WebHost.ConfigureKestrel(serverOptions => serverOptions.AddServerHeader = false);
 builder.Services.AddControllers();
 builder.Services.AddSignalR();
 builder.Services.AddScoped<InstitutionalDiwan.Application.Abstractions.Notifications.IRealtimeNotifier, InstitutionalDiwan.Server.Hubs.SignalRRealtimeNotifier>();
@@ -22,6 +23,7 @@ var app = builder.Build();
 
 app.UseMiddleware<RequestContextLoggingMiddleware>();
 app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
+app.UseMiddleware<SecurityHeadersMiddleware>();
 app.UseRateLimiter();
 
 if (app.Environment.IsDevelopment())

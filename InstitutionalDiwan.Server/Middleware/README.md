@@ -17,6 +17,7 @@ ASP.NET Core HTTP pipeline middleware that applies request-wide concerns before 
 | `GlobalExceptionHandlingMiddleware.cs` | Maps unexpected failures to safe ProblemDetails responses; unique-key violations and optimistic concurrency conflicts answer 409. |
 | `AuditActionMiddleware.cs` | Audits authenticated API actions, including authorization failures. |
 | `ForcedPasswordChangeMiddleware.cs` | Blocks forced-change sessions before endpoints execute; only anonymous endpoints and the selected authenticated GET `Auth.Me` / POST `Auth.ChangePassword` actions are exempt. |
+| `SecurityHeadersMiddleware.cs` | Baseline browser-security headers on every response: `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer`, HSTS outside Development, and `Cache-Control: no-store` on `/api/auth`. |
 | `SkipActionAuditAttribute.cs` | Marks a polled, read-only action (the notification unread count) so `AuditActionMiddleware` does not record it. |
 
 ## Components
@@ -61,11 +62,12 @@ produces the response.
 
 ## Pipeline position
 
-Register request-context logging **outermost**, then exception handling, then authentication, then
-the audit action middleware, forced-password-change gate, authorization, then controllers:
+Register request-context logging **outermost**, then exception handling, security headers, rate
+limiting, then authentication, then the audit action middleware, forced-password-change gate,
+authorization, then controllers:
 
 ```
-RequestContextLogging → GlobalExceptionHandling → Authentication → AuditActionMiddleware → ForcedPasswordChange → Authorization → Endpoints
+RequestContextLogging → GlobalExceptionHandling → SecurityHeaders → RateLimiter → Authentication → AuditActionMiddleware → ForcedPasswordChange → Authorization → Endpoints
 ```
 
 Request-context logging must come first so the correlation id is already in the logging scope when
@@ -82,11 +84,13 @@ the exception, record the failure, and rethrow.
 | `GlobalExceptionHandlingMiddleware` | ✅ Implemented (500 fallback + 409 for unique-key violations) |
 | `RequestContextLoggingMiddleware` | ✅ Implemented (correlation id, IP, user id, response header) |
 | `AuditActionMiddleware` | ✅ Implemented (one `Operation` row per authenticated `/api` action, including reads and failures) |
+| `SecurityHeadersMiddleware` | ✅ Implemented (nosniff, frame denial, no-referrer, HSTS outside Development, no-store on `/api/auth`) |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-15 | Qoder | Security: added `SecurityHeadersMiddleware` — `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer` on every response, HSTS outside Development, and `Cache-Control: no-store` on the authentication endpoints; the Kestrel `Server` header is now suppressed. |
 | 2026-11-08 | Claude | Added `SystemErrorCapture`; `GlobalExceptionHandlingMiddleware` feeds it with exceptions and refused API requests. |
 | 2026-11-03 | Claude | `AuditActionMiddleware` skips actions marked `[SkipActionAudit]`; used by `GET /api/notifications/unread-count`, which the bell polls. |
 | 2026-11-03 | Claude | `AuditActionMiddleware` maps the `DocumentRelations` controller to the `RELATIONS` module (Module 08, Phase 3). |
