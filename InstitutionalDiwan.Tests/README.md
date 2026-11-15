@@ -140,6 +140,7 @@ indexes) runs against a private SQLite in-memory database through `Support/TestC
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-15 | Qoder | Security (H1): `UserSeederTests` expects demo accounts to require a password change on first login. |
 | 2026-11-12 | Claude | Added `Application/InstitutionLogoTests.cs`; `FakeInstitutionSettingRepository` keeps a logo. `dotnet test` now 1000. |
 | 2026-11-11 | Claude | `Persistence/DepartmentRegisterFieldTypeFilterTests`: number, date (calendar day), boolean and select filters, two filters combined with AND, and sorts by number, date and boolean fields on record values. The field sort now breaks ties by register number. 984 tests pass. |
 | 2026-11-11 | Claude | `DepartmentRegisterPageTests.FilterSearchAndSortReadOnlyTheLatestVisit` (a line with two visits); the test world seeds the re-registration event. 979 tests pass. |

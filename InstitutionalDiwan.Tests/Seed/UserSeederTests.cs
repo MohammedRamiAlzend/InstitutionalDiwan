@@ -97,7 +97,8 @@ public sealed class UserSeederTests
         Assert.True(hasher.Verify(UserSeeder.DemoPassword, admin.PasswordHash));
         Assert.True(hasher.Verify(UserSeeder.DemoPassword, user.PasswordHash));
         Assert.True(admin.IsActive);
-        Assert.False(admin.MustChangePassword);
+        Assert.True(admin.MustChangePassword);
+        Assert.True(user.MustChangePassword);
     }
 
     [Fact]

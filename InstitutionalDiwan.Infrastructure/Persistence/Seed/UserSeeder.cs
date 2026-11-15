@@ -97,7 +97,7 @@ public sealed class UserSeeder : ISeeder
             passwordHash,
             primaryDepartmentId: primaryDepartmentId,
             scopeTypeId: scopeTypeId,
-            mustChangePassword: false);
+            mustChangePassword: true);
 
         if (userResult.IsFailure)
             throw new InvalidOperationException(

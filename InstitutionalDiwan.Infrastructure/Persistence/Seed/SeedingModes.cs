@@ -39,14 +39,15 @@ public static class SeedingModes
 }
 
 /// <summary>Seeding settings read from the <c>Seeding</c> configuration section.</summary>
-public sealed record SeedingOptions(string Mode, string DefaultPassword)
+public sealed record SeedingOptions(string Mode, string DefaultPassword, bool AllowInProduction = false)
 {
     /// <summary>Password given to every seeded account unless configured otherwise.</summary>
     public const string DefaultSeedPassword = "12345678";
 
     public static SeedingOptions Default { get; } = new(SeedingModes.Everything, DefaultSeedPassword);
 
-    public static SeedingOptions From(string? mode, string? defaultPassword) => new(
+    public static SeedingOptions From(string? mode, string? defaultPassword, bool allowInProduction = false) => new(
         SeedingModes.Parse(mode),
-        string.IsNullOrWhiteSpace(defaultPassword) ? DefaultSeedPassword : defaultPassword);
+        string.IsNullOrWhiteSpace(defaultPassword) ? DefaultSeedPassword : defaultPassword,
+        allowInProduction);
 }

@@ -107,7 +107,7 @@ public sealed class StandardAccountSeeder : ISeeder
                 primaryDepartmentId: departmentId,
                 employeeId: employee.EmployeeId,
                 scopeTypeId: seed.ScopeTypeId,
-                mustChangePassword: false);
+                mustChangePassword: true);
             if (userResult.IsFailure)
                 throw new InvalidOperationException(
                     $"Invalid user seed data '{username}': {userResult.Error.Code} - {userResult.Error.Description}");

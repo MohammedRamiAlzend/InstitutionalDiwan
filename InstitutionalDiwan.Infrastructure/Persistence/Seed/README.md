@@ -49,7 +49,7 @@ Set `Seeding:Mode` in appsettings (or the `Seeding__Mode` environment variable):
 | `Standard` | Reference data, the three diwans, `superadmin` and the six diwan accounts — every password `Seeding:DefaultPassword` (default `12345678`). Environment-independent. |
 | `None` | Reference data and only `superadmin`. |
 
-> **Security:** the standard and super-admin seeders run in every environment, so a well-known password reaches Production unless `Seeding:DefaultPassword` is overridden there. Set the mode and password per environment. Switching mode never removes rows a previous mode created.
+> **Security:** seeding is skipped in Production unless `Seeding:AllowInProduction` is explicitly set to `true`, so the shared default password can never create a production account by accident (schema management there stays with the deployment tooling). Every seeded account — superadmin, the standard diwan accounts, and the demo users — is created with `mustChangePassword: true` and must set its own password at first login. Set the mode and password per environment. Switching mode never removes rows a previous mode created.
 
 Order matters: the lookup catalogs are seeded before permissions/roles so business tables can
 reference them, roles grant permission codes that the catalog defines first, and demo users are
@@ -67,6 +67,7 @@ Production requires opting in by adding `SeedingEnvironments.Production` to
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-15 | Qoder | Security hardening: seeding is skipped in Production unless `Seeding:AllowInProduction=true`; `SuperAdminSeeder`, `StandardAccountSeeder` and `UserSeeder` now create accounts with `mustChangePassword: true` so the shared default password is replaced at first login. |
 | 2026-11-12 | Claude | `InstitutionSettingSeeder` names the institution «الديوان المؤسسي» instead of the placeholder «المؤسسة», since the shell now prints the stored name. |
 | 2026-11-11 | Claude | `DocumentRelationTypeSeeder` inserts type 5 `JoinedInto` / «موحَّد مع» (asymmetric, cycles prevented). Existing rows are not overwritten, so a running database gains the type on the next startup. No migration. |
 | 2026-11-11 | Claude | Audit entity types gained `Decision appeal` / «اعتراض على قرار» (id 18). | Appeal outcomes are code constants, not a seeded lookup table. |

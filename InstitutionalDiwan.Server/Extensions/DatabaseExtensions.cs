@@ -37,7 +37,19 @@ public static class DatabaseExtensions
 
         var seedingOptions = SeedingOptions.From(
             app.Configuration["Seeding:Mode"],
-            app.Configuration["Seeding:DefaultPassword"]);
+            app.Configuration["Seeding:DefaultPassword"],
+            bool.TryParse(app.Configuration["Seeding:AllowInProduction"], out var allowInProduction) && allowInProduction);
+
+        // Accounts are never created with the shared default password in Production unless the
+        // deployment explicitly opts in; schema management there stays with the deployment tooling.
+        if (!seedingOptions.AllowInProduction &&
+            string.Equals(environmentName, SeedingEnvironments.Production, StringComparison.OrdinalIgnoreCase))
+        {
+            app.Logger.LogWarning(
+                "Seeding skipped in environment {Environment}: Seeding:AllowInProduction is false.",
+                environmentName);
+            return;
+        }
 
         var seedingContext = new SeederContext(
             context,

@@ -47,7 +47,7 @@ public sealed class SuperAdminSeeder : ISeeder
             context.PasswordHasher.Hash(context.Options.DefaultPassword),
             primaryDepartmentId: centralDiwanId,
             scopeTypeId: UserScopeType.SystemId,
-            mustChangePassword: false);
+            mustChangePassword: true);
 
         if (created.IsFailure)
             throw new InvalidOperationException(
