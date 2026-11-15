@@ -105,6 +105,11 @@ dotnet publish InstitutionalDiwan.Server -c Release -p:PublishProfile=Http-4567
 dotnet publish InstitutionalDiwan.Server -c Release -p:PublishProfile=Https-5678
 ```
 
+Each output folder also gets a launcher — `start-http.cmd` / `start-https.cmd` — that exports the
+runtime environment (binding, `Jwt__SigningKeyPath` under `%ProgramData%`, and for HTTPS the
+certificate from `%ProgramData%\InstitutionalDiwan\diwan.pfx`) and starts the app; details in
+[`Properties/README.md`](Properties/README.md#start-scripts).
+
 The SPA is compiled with the relative `/api` and `/hubs` bases, so it talks to the same origin it is
 served from — no CORS policy is needed. A plain `dotnet publish` without a profile stays API-only.
 
@@ -138,6 +143,7 @@ project-references Application and Infrastructure.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-15 | opencode | Publishing: each profile now also writes `start-http.cmd` / `start-https.cmd` into the output folder (environment, binding, `Jwt__SigningKeyPath` under `%ProgramData%`, certificate loaded from `%ProgramData%\InstitutionalDiwan\diwan.pfx` for HTTPS). |
 | 2026-11-15 | opencode | Auth: `Jwt:SecretKey` is now optional at startup — `AddInstitutionalJwtSigningKey` uses the configured key when present, otherwise generates a 64-byte random key once and persists it at `Jwt:SigningKeyPath` (default `keys/jwt-signing.key`, git-ignored), so the published artifact carries no signing secret and redeployments do not rotate it. |
 | 2026-11-15 | opencode | Publishing: added the `Http-4567` (`http://0.0.0.0:4567`) and `Https-5678` (`https://0.0.0.0:5678`) folder publish profiles. On publish they run `npm ci`/`npm run build`, copy `institutionaldiwan.front/dist` into `wwwroot`, add it to the publish output, and seed `appsettings.Production.json` with the Kestrel `Urls` binding; the SPA is compiled with the relative `/api` and `/hubs` bases. `UseHttpsRedirection` now only runs when the instance has an `https://` binding. Documented in `Properties/README.md` and refreshed the stale Hosting/SignalR sections. |
 | 2026-11-15 | Qoder | Security: added `SecurityHeadersMiddleware` (nosniff, frame denial, no-referrer, HSTS outside Development, no-store on `/api/auth`) and suppressed the Kestrel `Server` header. |

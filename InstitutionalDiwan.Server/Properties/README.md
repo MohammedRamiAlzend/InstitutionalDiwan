@@ -39,8 +39,51 @@ Each profile runs, in order:
    into it, so `wwwroot` mirrors `dist/` exactly. Those files are added to the publish manifest.
 4. After publish: `appsettings.Production.json` in the output folder is seeded with
    `"Urls": "<binding>"` and `"AllowedHosts": "*"`.
+5. After publish: a `start-<scheme>.cmd` is written next to the assembly (see below).
 
 `wwwroot/` and `publish/` are generated and git-ignored; never edit them by hand.
+
+## Start scripts
+
+Each publish also drops a Windows launcher in the output folder:
+
+| Profile | Script | What it sets |
+| --- | --- | --- |
+| `Http-4567` | `start-http.cmd` | `ASPNETCORE_ENVIRONMENT=Production`, `ASPNETCORE_URLS=http://0.0.0.0:4567`, `Jwt__SigningKeyPath=%ProgramData%\InstitutionalDiwan\jwt-signing.key` |
+| `Https-5678` | `start-https.cmd` | same, with `https://0.0.0.0:5678`, plus `Kestrel:Certificates:Default:Path=%ProgramData%\InstitutionalDiwan\diwan.pfx` |
+
+Both scripts `cd` to their own folder (so `wwwroot`, `appsettings.Production.json` and relative
+paths resolve), start `dotnet InstitutionalDiwan.Server.dll`, and pause on a non-zero exit so a
+startup failure stays readable. The connection string is left commented out — uncomment it on a
+server that is not using the local SQL Server from `appsettings.json`.
+
+### HTTPS certificate
+
+`start-https.cmd` expects the PFX at `%ProgramData%\InstitutionalDiwan\diwan.pfx` (also outside the
+publish folder, same reason as the key). If the PFX has a password, put it in
+`%ProgramData%\InstitutionalDiwan\diwan.pfx.pass` — the script reads it with `set /p` and exports it
+as `ASPNETCORE_Kestrel__Certificates__Default__Password`, so the password never sits in the publish
+folder or in source control. A PFX without a password needs no `.pass` file.
+
+If the PFX is missing the script prints the expected path and exits with code 1 instead of letting
+Kestrel die with a certificate error. To use a different location, either copy the PFX there or set
+the two `ASPNETCORE_Kestrel__Certificates__Default__*` variables before running the script.
+
+```powershell
+# one-off export, then delete the certificate from your personal store
+$pwd = ConvertTo-SecureString -String "your-password" -Force -AsPlainText
+Export-PfxCertificate -Cert Cert:\LocalMachine\My\<thumbprint> `
+  -FilePath "$env:ProgramData\InstitutionalDiwan\diwan.pfx" -Password $pwd
+Set-Content "$env:ProgramData\InstitutionalDiwan\diwan.pfx.pass" "your-password" -NoNewline
+```
+
+The signing key defaults to `%ProgramData%\InstitutionalDiwan\`, intentionally **outside** the
+publish folder: re-publishing, deleting the folder, or syncing it to OneDrive can never rotate the
+key. Delete that `set` line to fall back to `keys\jwt-signing.key` beside the app.
+
+The scripts are generated on every publish (edit them freely; a new publish overwrites them). They
+are Windows-only — on Linux export the same variables (`ASPNETCORE_URLS`, `Jwt__SigningKeyPath`, …)
+in the service unit.
 
 ## SPA API base URL
 
@@ -117,6 +160,7 @@ the certificate; `UseHttpsRedirection` is skipped when the app itself has no `ht
 | SPA build + `dist` → `wwwroot` on publish | ✅ `PublishFrontendBuild` target in `InstitutionalDiwan.Server.csproj`, opt-in via `PublishFrontend=true` |
 | API base URL passed to the SPA build | ✅ `FrontendApiBaseUrl` / `FrontendHubBaseUrl` → `VITE_API_BASE_URL` / `VITE_HUB_BASE_URL` |
 | Kestrel binding per profile | ✅ seeded `appsettings.Production.json` (`PublishRuntimeBinding` target) |
+| Start scripts | ✅ `start-http.cmd` / `start-https.cmd` generated per profile (`PublishStartScript` target); both verified end to end, HTTPS reading `%ProgramData%\InstitutionalDiwan\diwan.pfx` + `.pass` |
 | Plain `dotnet publish` | ✅ stays API-only (`wwwroot` is not published without a profile) |
 | JWT signing key | ✅ configured value wins, otherwise generated once and persisted (`keys/jwt-signing.key`); never in the artifact |
 | HTTPS certificate handling | ✅ documented env-var contract (no certificate is shipped) |
@@ -125,5 +169,7 @@ the certificate; `UseHttpsRedirection` is skipped when the app itself has no `ht
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-15 | opencode | Added the `PublishStartScript` target: every publish writes `start-http.cmd` / `start-https.cmd` (environment, binding, `Jwt__SigningKeyPath` outside the publish folder, certificate/connection-string lines) and pauses on failure. Republishing now refreshes the seeded `appsettings.Production.json` instead of warning, unless the project has its own. |
+| 2026-11-15 | opencode | `start-https.cmd` now loads its certificate from `%ProgramData%\InstitutionalDiwan\diwan.pfx` (password optionally from `diwan.pfx.pass`) and fails with a readable message when the file is missing. |
 | 2026-11-15 | opencode | Documented the JWT signing-key behaviour (`Jwt__SecretKey` optional; generated once at `Jwt__SigningKeyPath`, default `keys/jwt-signing.key`, never shipped in the publish output) and added `Jwt:SigningKeyPath` to `appsettings.json`. |
 | 2026-11-15 | opencode | Added `Http-4567` / `Https-5678` folder publish profiles: they build the SPA, copy `dist/` into `wwwroot`, and seed the Kestrel binding; documented the runtime environment variables. |
