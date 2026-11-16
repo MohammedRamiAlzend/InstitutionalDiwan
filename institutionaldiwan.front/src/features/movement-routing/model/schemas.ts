@@ -51,13 +51,10 @@ export const movementReasonSchema = z.object({
 
 export type MovementReasonFormValues = z.infer<typeof movementReasonSchema>
 
+/** Redirecting: only the new destination and optional instructions are asked for. */
 export const redirectMovementSchema = z.object({
   newDestinationDepartmentId: z.string().min(1, 'اختر القسم الوجهة الجديد.'),
-  /** A movement type id, or blank to keep the movement's current type. */
-  movementTypeId: z.string(),
-  assignedToUserId: z.string(),
   instructions: optionalInstructions,
-  dueDate: optionalDate,
 })
 
 export type RedirectMovementFormValues = z.infer<typeof redirectMovementSchema>

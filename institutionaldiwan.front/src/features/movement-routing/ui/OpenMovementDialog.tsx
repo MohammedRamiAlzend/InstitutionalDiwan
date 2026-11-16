@@ -16,7 +16,11 @@ import {
   Select,
   Textarea,
 } from '@/shared/ui'
-import { useCreateMovementMutation } from '../api/movementMutations'
+import {
+  useCancelMovementMutation,
+  useCreateMovementMutation,
+  useSendMovementMutation,
+} from '../api/movementMutations'
 import { openMovementSchema, type OpenMovementFormValues } from '../model/schemas'
 import { useAssigneeOptions } from '../model/useAssigneeOptions'
 import { ArchiveRouteHint } from './ArchiveRouteHint'
@@ -33,8 +37,9 @@ interface OpenMovementDialogProps {
 }
 
 /**
- * Opens a draft movement from the caller's primary department. The Central Diwan must sit on one
- * side of every hop, so the dialog says so before the API answers that rule.
+ * Opens a movement from the caller's primary department and sends it immediately, so the document
+ * leaves the caller's hands in one step and no unsent draft lingers. The Central Diwan must sit on
+ * one side of every hop, so the dialog says so before the API answers that rule.
  */
 export function OpenMovementDialog({
   documentId,
@@ -44,7 +49,10 @@ export function OpenMovementDialog({
   initialDestinationId,
   initialMovementTypeId,
 }: OpenMovementDialogProps) {
-  const mutation = useCreateMovementMutation()
+  const createMutation = useCreateMovementMutation()
+  const sendMutation = useSendMovementMutation()
+  const cancelMutation = useCancelMovementMutation()
+  const pending = createMutation.isPending || sendMutation.isPending || cancelMutation.isPending
   const departmentsQuery = useDepartmentOptions({ enabled: open })
   const typesQuery = useLookupEntries(LOOKUP_SLUGS.MovementTypes)
   const [assigneeSearch, setAssigneeSearch] = useState('')
@@ -96,7 +104,7 @@ export function OpenMovementDialog({
 
   const onSubmit = handleSubmit(async (values) => {
     try {
-      await mutation.mutateAsync({
+      const created = await createMutation.mutateAsync({
         documentId,
         destinationDepartmentId: values.destinationDepartmentId,
         movementTypeId: Number(values.movementTypeId),
@@ -104,7 +112,20 @@ export function OpenMovementDialog({
         instructions: values.instructions.trim() || null,
         dueDate: values.dueDate || null,
       })
-      toast.success('فُتحت الحركة كمسودة. أرسلها الآن لتصل إلى القسم الوجهة.')
+      try {
+        await sendMutation.mutateAsync({ movementId: created.movementId })
+      } catch (sendError) {
+        // Roll the unsent draft back so it cannot block the document; a stray draft would
+        // otherwise be stranded because the movements tab no longer offers «إرسال».
+        await cancelMutation
+          .mutateAsync({
+            movementId: created.movementId,
+            reason: 'تعذّر إرسال الحركة؛ أُلغيت المسودة تلقائيًا.',
+          })
+          .catch(() => undefined)
+        throw sendError
+      }
+      toast.success('أُرسلت الحركة إلى القسم الوجهة.')
       draft.discard()
       onOpenChange(false)
     } catch {
@@ -117,7 +138,7 @@ export function OpenMovementDialog({
       open={open}
       onOpenChange={onOpenChange}
       title="فتح حركة"
-      description={`توجيه «${documentTitle}» من قسمك الأساسي إلى قسم آخر.`}
+      description={`إرسال «${documentTitle}» من قسمك الأساسي إلى قسم آخر مباشرةً.`}
       size="lg"
       footer={
         <>
@@ -125,18 +146,18 @@ export function OpenMovementDialog({
             type="button"
             variant="outline"
             onClick={() => onOpenChange(false)}
-            disabled={mutation.isPending}
+            disabled={pending}
           >
             إلغاء
           </Button>
           <Button
             type="submit"
             form="open-movement-form"
-            loading={mutation.isPending}
+            loading={pending}
             disabled={departmentOptions.length === 0}
           >
             <Route className="size-4 rtl:-scale-x-100" aria-hidden />
-            فتح الحركة
+            إرسال الحركة
           </Button>
         </>
       }
@@ -149,7 +170,7 @@ export function OpenMovementDialog({
       >
         <p className="rounded-lg border border-border bg-surface-muted px-3 py-2 text-xs text-muted sm:col-span-2">
           الديوان المركزي إلزامي: يمر كل توجيه عبر الديوان المركزي ما لم يكن قسمك أو القسم الوجهة
-          هو الديوان المركزي. تبقى الحركة مسودة حتى تُرسلها، ولا يمكن الاستلام قبل أن يسجّل القسم
+          هو الديوان المركزي. تُرسل الحركة فورًا عند الحفظ، ولا يمكن الاستلام قبل أن يسجّل القسم
           الوجهة رقمه في سجلّه.
         </p>
 
@@ -167,7 +188,7 @@ export function OpenMovementDialog({
                 value={field.value || undefined}
                 onValueChange={field.onChange}
                 options={departmentOptions}
-                disabled={mutation.isPending || departmentsQuery.isLoading}
+                disabled={pending || departmentsQuery.isLoading}
                 invalid={Boolean(errors.destinationDepartmentId)}
                 placeholder={
                   departmentsQuery.isLoading ? 'جارٍ التحميل…' : 'اختر القسم…'
@@ -187,7 +208,7 @@ export function OpenMovementDialog({
                 value={field.value || undefined}
                 onValueChange={field.onChange}
                 options={typeOptions}
-                disabled={mutation.isPending || typesQuery.isLoading}
+                disabled={pending || typesQuery.isLoading}
                 invalid={Boolean(errors.movementTypeId)}
                 aria-label="نوع الحركة"
               />
@@ -211,7 +232,7 @@ export function OpenMovementDialog({
             startIcon={<Search className="size-4" aria-hidden />}
             value={assigneeSearch}
             onChange={(event) => setAssigneeSearch(event.target.value)}
-            disabled={mutation.isPending}
+            disabled={pending}
           />
         </FormField>
 
@@ -224,7 +245,7 @@ export function OpenMovementDialog({
                 value={field.value || 'none'}
                 onValueChange={(value) => field.onChange(value === 'none' ? '' : value)}
                 options={assigneeOptions.options}
-                disabled={mutation.isPending || assigneeOptions.isLoading}
+                disabled={pending || assigneeOptions.isLoading}
                 aria-label="المكلَّف"
               />
             )}
@@ -244,12 +265,12 @@ export function OpenMovementDialog({
           />
         </FormField>
 
-        {mutation.error && (
+        {(createMutation.error ?? sendMutation.error) && (
           <p
             role="alert"
             className="rounded-lg bg-danger/10 px-3 py-2 text-sm text-danger sm:col-span-2"
           >
-            {toArabicErrorMessage(mutation.error)}
+            {toArabicErrorMessage(createMutation.error ?? sendMutation.error)}
           </p>
         )}
       </form>

@@ -16,10 +16,10 @@ inbox, outbox, and the document timeline refresh together.
 | `model/types.ts` | Request payload types |
 | `model/schemas.ts` | Zod schemas (`movementNotesSchema`, `movementReasonSchema`, `redirectMovementSchema`, `openMovementSchema`) |
 | `model/constants.ts` | Arabic action labels, action icons, destructive-action set |
-| `model/useAssigneeOptions.ts` | Assignee search options for redirect/open |
-| `ui/OpenMovementDialog.tsx` | Opens a movement from a registered document |
-| `ui/MovementActionDialog.tsx` | One dialog per action (optional notes, required reason, redirect form) |
-| `ui/ArchiveRouteHint.tsx` | The note shown under the movement type when «للحفظ» is chosen: such a document goes to the department that created it, which alone sends it to the archive diwan |
+| `model/useAssigneeOptions.ts` | Assignee search options for the open dialog |
+| `ui/OpenMovementDialog.tsx` | Opens a movement from a registered document and sends it immediately; a failed send rolls the draft back with a cancel |
+| `ui/MovementActionDialog.tsx` | One dialog per action (optional notes, required reason, redirect form — destination + instructions) |
+| `ui/ArchiveRouteHint.tsx` | The note shown under the movement type in the open dialog when «للحفظ» is chosen: such a document goes to the department that created it, which alone sends it to the archive diwan |
 | `ui/ReceiveMovementDialog.tsx` | Receives a movement with its register date, showing the department's number locked or asking for one when the year has none. |
 | `ui/MovementActionButtons.tsx` | Inline action cluster filtered by `getMovementActions` |
 | `index.ts` | Public barrel |
@@ -28,7 +28,9 @@ inbox, outbox, and the document timeline refresh together.
 
 - Opening a movement is only offered for `REGISTERED` documents without an active movement; the
   destination list includes the Central Diwan requirement, and `Movements.CentralDiwanRoutingRequired`
-  / `Movements.CentralDiwanNotConfigured` surface as Arabic banners.
+  / `Movements.CentralDiwanNotConfigured` surface as Arabic banners. Opening sends immediately
+  (create then send in one submit); if the send fails, the dialog cancels the draft back so no
+  unsent movement can strand the document.
 - The receive dialog explains that the destination department must have recorded its own register
   number; when it has not, the API answers `Numbering.DepartmentRegistrationRequired` and the
   mutation error is rendered inline.
@@ -50,6 +52,8 @@ inbox, outbox, and the document timeline refresh together.
 - 2026-11-05: Unsent form input is now kept (per user, per form) after an accidental close or cancel and restored with a toast; it is cleared only after a successful submit (`useDraftForm`).
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-15 | Qoder | The redirect dialog now asks only for the new destination department and optional instructions; «نوع الحركة», «تاريخ الاستحقاق», «البحث عن مكلَّف» and «المكلَّف» are no longer shown or sent (the movement keeps its type and assignment). |
+| 2026-11-15 | Qoder | `OpenMovementDialog` now sends immediately: one submit creates the movement and sends it, and a failed send cancels the draft back, because the document-detail movements tab only offers «استلام» and «إعادة توجيه» and an unsent draft would otherwise be stranded. |
 | 2026-11-11 | Claude | `OpenMovementDialog` accepts an optional destination and movement type so a decision's suggested step can open the same dialog already filled in. |
 | 2026-11-11 | Claude | The redirect dialog has a «نوع الحركة» select (default «دون تغيير») that sends `movementTypeId`; choosing «للحفظ» there or in the open dialog shows `ArchiveRouteHint`. |
 | 2026-11-10 | Claude | The receive dialog offers "تسجيل الوثيقة برقم جديد" when the department already has a number that year and sends `issueNewNumber`; the toast names the replaced number. |

@@ -68,8 +68,9 @@ export function DocumentMovementsTab({
             حركات الوثيقة
           </h2>
           <p className="max-w-2xl text-xs text-muted">
-            كل حركة تفتح مسارًا بين قسمين يمر عبر الديوان المركزي. الاستلام يتطلب تسجيل القسم
-            لرقمه أولًا، والرفض يعيد الوثيقة إلى الديوان.
+            كل حركة تفتح مسارًا بين قسمين يمر عبر الديوان المركزي. ما دامت الحركة موجَّهة إلى قسمك
+            يظهر زران فقط: استلامها أو إعادة توجيهها، وبعد مغادرتها قسمك تختفي الأزرار حتى تعود
+            إليك. الاستلام يتطلب تسجيل القسم لرقمه أولًا.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -185,12 +186,15 @@ function MovementCard({
 }: MovementCardProps) {
   const coversDepartment = useCoversDepartment()
   const step = currentMovementStep(movement)
+  // The tab offers only these two actions: while the movement is addressed to the caller's
+  // department they appear, and once it leaves they vanish until it comes back. The remaining
+  // transitions (complete, reject, return, close, cancel) stay in the department queues.
   const actions = getMovementActions(
     movement.statusId,
     step?.stepStatusId ?? 0,
     canEdit,
     getMovementCustody(step, coversDepartment),
-  )
+  ).filter((action) => action === 'receive' || action === 'redirect')
   const terminal = isMovementTerminal(movement.statusId)
 
   return (

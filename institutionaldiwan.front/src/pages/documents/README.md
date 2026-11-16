@@ -44,7 +44,7 @@ atomic first upload).
 | `ui/DocumentDetailsPage.tsx` («الحقول» tab) | Mounts `DocumentFieldsPanel` for `?tab=fields`; the tab is hidden when the document has no pinned schema, and values are editable only for a draft with `DOCUMENT_EDIT`. |
 | `ui/DocumentDetailsPage.tsx` («تصدير PDF») | Header action that mounts `DocumentPrintSheet` until the print dialog closes. |
 | `ui/DocumentNumbersTab.tsx` | Numbers tab: central number card (status, registration date, issuer, cancellation reason, replace/cancel actions, dated event list), department register cards, and the «سجل الأرقام» history grid on the shared `DataTable` (`tableId="document-numbers"`, client mode, column chooser, sorting, URL-backed search, row menu نسخ الرقم/نسخ المعرّف); statuses and event labels come from `DOCUMENT_NUMBER_STATUS`/`DOCUMENT_NUMBER_EVENT_TYPE`, and the API's English `Replaces …` note is translated to «يستبدل الرقم …». |
-| `ui/DocumentMovementsTab.tsx` | Movements tab: one `MovementCard` per movement (type/status badges, action buttons from `getMovementActions`, ordered step chain with per-step outcome label, registry number and department, and the event log), plus the open-movement and action dialogs. |
+| `ui/DocumentMovementsTab.tsx` | Movements tab: one `MovementCard` per movement (type/status badges, only the two action buttons «استلام» and «إعادة توجيه» — shown while the movement is addressed to the caller's department and hidden once it leaves — ordered step chain with per-step outcome label, registry number and department, and the event log), plus the open-movement dialog (which sends immediately) and the action dialogs. |
 | `ui/DocumentFilesTab.tsx` | Files tab: the section card (heading plus the archiving-does-not-hide note and the versions/verify mention) around `widgets/document-attachments-panel`; receives `canManage` from the page and passes it down, otherwise carries no state — the grid owns the query, filters, download, and the five dialogs. |
 | `ui/DocumentTimeline.tsx` | Structural Arabic timeline rebuilt from `eventKind`/status/number-event ids; hides the server's English descriptions. |
 | `ui/ParticipantTarget.tsx` | Resolves the single participant target (department name, external organization name via by-id read, or person name). |
@@ -91,9 +91,8 @@ atomic first upload).
 | استبدال الرقم | number active, caller holds `NUMBERING_MANAGE` |
 | إلغاء الرقم | number active, caller holds `NUMBERING_MANAGE` |
 | تبويب الحركات | caller holds `DOCUMENT_VIEW` (shown, not disabled, otherwise) |
-| فتح حركة | movements tab open, status = REGISTERED, no active movement, caller holds `DOCUMENT_EDIT` |
-| إرسال / إعادة توجيه / إغلاق / إلغاء الحركة | movement status allows it (`getMovementActions`), caller holds `DOCUMENT_EDIT`, and caller's scope covers the side of the current step: sender for send, cancel and a draft's redirect; receiver for redirect once sent; either for close |
-| استلام / إكمال / رفض / إرجاع | movement/step status allows it, caller holds `DOCUMENT_EDIT`, and caller's scope covers the current step's receiver; receive still needs the destination department's register number |
+| فتح حركة | movements tab open, status = REGISTERED, no active movement, caller holds `DOCUMENT_EDIT`; the dialog sends immediately (create + send in one submit), so opening is the moment the document leaves the caller's department |
+| استلام / إعادة توجيه | the only two buttons the movements tab shows, and only while the movement is addressed to the caller's department (`getMovementActions` custody, filtered to these two actions); once the movement leaves the department the buttons disappear until it comes back. The remaining transitions (complete, reject, return, close, cancel) stay available from the department queues' row menus |
 | إلغاء الوثيقة | caller holds `DOCUMENT_EDIT` and the document is neither canceled nor archived. The server also requires MANAGE access, which depends on grant levels the client is never told, so a denial arrives as the Arabic `Correspondence.DocumentAccessDenied` message in the dialog |
 | تبويب الملفات | caller holds `DOCUMENT_VIEW` (the route gate); no separate permission hides it |
 | تنزيل الإصدار الحالي | files tab open and the file has a version. Offered to every viewer because the per-document DOWNLOAD level is never exposed to the client — a denial surfaces as the Arabic `403` message |
@@ -126,6 +125,7 @@ mounted dialog.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-15 | Qoder | The movements tab shows only «استلام» and «إعادة توجيه» while the movement is addressed to the caller's department and hides all buttons once it leaves; «فتح حركة» sends immediately so the document leaves the caller's department at the moment of opening. |
 | 2026-11-11 | Claude | The decisions panel receives the document's owning department, which is the default appellant. |
 | 2026-11-11 | Claude | The details page shows a «القرار» tab when the document type has an active decision type, and renders `DocumentDecisionsPanel`. |
 | 2026-11-11 | Claude | On `/documents/:id`, with an archive diwan designated, «أرشفة» shows to the archive diwan once it holds the document (registered or still in movement) and «إلغاء الأرشفة» follows who holds it; without one the owning-department rule stays. |

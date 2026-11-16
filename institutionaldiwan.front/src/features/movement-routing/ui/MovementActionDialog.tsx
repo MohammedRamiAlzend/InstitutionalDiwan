@@ -1,18 +1,14 @@
-import { useMemo, useState } from 'react'
-import { Controller, useForm, useWatch } from 'react-hook-form'
+import { useMemo } from 'react'
+import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Search } from 'lucide-react'
 import { toast } from 'sonner'
 import { useDepartmentOptions } from '@/entities/department'
-import { LOOKUP_SLUGS, useLookupEntries } from '@/entities/lookup'
 import type { MovementAction } from '@/entities/movement'
 import { toArabicErrorMessage } from '@/shared/api'
-import { MOVEMENT_TYPE } from '@/shared/config'
 import {
   Button,
   Dialog,
   FormField,
-  Input,
   Select,
   Textarea,
 } from '@/shared/ui'
@@ -33,13 +29,8 @@ import {
   type MovementReasonFormValues,
   type RedirectMovementFormValues,
 } from '../model/schemas'
-import { useAssigneeOptions } from '../model/useAssigneeOptions'
 import { MOVEMENT_ACTION_LABELS } from '../model/constants'
-import { ArchiveRouteHint } from './ArchiveRouteHint'
 import { ReceiveMovementDialog } from './ReceiveMovementDialog'
-
-/** Radix Select forbids empty item values, so "keep the current type" uses a sentinel. */
-const KEEP_TYPE = 'keep'
 
 interface MovementActionDialogProps {
   action: MovementAction
@@ -456,9 +447,6 @@ function RedirectActionDialog({
 }: ActionDialogBaseProps) {
   const mutation = useRedirectMovementMutation()
   const departmentsQuery = useDepartmentOptions({ enabled: open })
-  const typesQuery = useLookupEntries(LOOKUP_SLUGS.MovementTypes)
-  const [assigneeSearch, setAssigneeSearch] = useState('')
-  const assigneeOptions = useAssigneeOptions(assigneeSearch, open)
 
   const {
     register,
@@ -469,14 +457,9 @@ function RedirectActionDialog({
     resolver: zodResolver(redirectMovementSchema),
     defaultValues: {
       newDestinationDepartmentId: '',
-      movementTypeId: '',
-      assignedToUserId: '',
       instructions: '',
-      dueDate: '',
     },
   })
-
-  const selectedTypeId = useWatch({ control, name: 'movementTypeId' })
 
   const departmentOptions = useMemo(
     () =>
@@ -489,24 +472,12 @@ function RedirectActionDialog({
     [departmentsQuery.data],
   )
 
-  const typeOptions = useMemo(
-    () => [
-      { value: KEEP_TYPE, label: 'دون تغيير' },
-      ...(typesQuery.data ?? []).map((type) => ({ value: String(type.id), label: type.descAr })),
-    ],
-    [typesQuery.data],
-  )
-  const forArchive = selectedTypeId === String(MOVEMENT_TYPE.ToArchive)
-
   const onSubmit = handleSubmit(async (values) => {
     try {
       await mutation.mutateAsync({
         movementId,
         newDestinationDepartmentId: values.newDestinationDepartmentId,
-        movementTypeId: values.movementTypeId ? Number(values.movementTypeId) : null,
-        assignedToUserId: values.assignedToUserId || null,
         instructions: values.instructions.trim() || null,
-        dueDate: values.dueDate || null,
       })
       toast.success('أُعيد توجيه الحركة إلى القسم الجديد.')
       onOpenChange(false)
@@ -573,57 +544,6 @@ function RedirectActionDialog({
                   departmentsQuery.isLoading ? 'جارٍ التحميل…' : 'اختر القسم…'
                 }
                 aria-label="القسم الوجهة الجديد"
-              />
-            )}
-          />
-        </FormField>
-
-        <FormField label="نوع الحركة" className="sm:col-span-2">
-          <Controller
-            control={control}
-            name="movementTypeId"
-            render={({ field }) => (
-              <Select
-                value={field.value || KEEP_TYPE}
-                onValueChange={(value) => field.onChange(value === KEEP_TYPE ? '' : value)}
-                options={typeOptions}
-                disabled={mutation.isPending || typesQuery.isLoading}
-                aria-label="نوع الحركة"
-              />
-            )}
-          />
-          {forArchive && <ArchiveRouteHint />}
-        </FormField>
-
-        <FormField label="تاريخ الاستحقاق" error={errors.dueDate?.message}>
-          <Input type="date" dir="ltr" invalid={Boolean(errors.dueDate)} {...register('dueDate')} />
-        </FormField>
-
-        <FormField
-          label="البحث عن مكلَّف (اختياري)"
-          htmlFor="redirect-movement-assignee-search"
-        >
-          <Input
-            id="redirect-movement-assignee-search"
-            placeholder="ابحث باسم المستخدم…"
-            startIcon={<Search className="size-4" aria-hidden />}
-            value={assigneeSearch}
-            onChange={(event) => setAssigneeSearch(event.target.value)}
-            disabled={mutation.isPending}
-          />
-        </FormField>
-
-        <FormField label="المكلَّف" className="sm:col-span-2">
-          <Controller
-            control={control}
-            name="assignedToUserId"
-            render={({ field }) => (
-              <Select
-                value={field.value || 'none'}
-                onValueChange={(value) => field.onChange(value === 'none' ? '' : value)}
-                options={assigneeOptions.options}
-                disabled={mutation.isPending || assigneeOptions.isLoading}
-                aria-label="المكلَّف"
               />
             )}
           />
