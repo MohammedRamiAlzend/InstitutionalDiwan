@@ -9,6 +9,7 @@ using InstitutionalDiwan.Domain.Entities.Movements;
 using InstitutionalDiwan.Domain.Entities.Numbering;
 using InstitutionalDiwan.Domain.Entities.Organization;
 using InstitutionalDiwan.Domain.Entities.Relations;
+using InstitutionalDiwan.Domain.Entities.Ui;
 using InstitutionalDiwan.Domain.Events;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
@@ -641,6 +642,7 @@ internal sealed class TamperEvidentAuditInterceptor : SaveChangesInterceptor
             _ when type == typeof(DocumentDecision) => ("DECISIONS", AuditEntityType.DecisionId),
             _ when type == typeof(DecisionType) => ("DECISIONS", AuditEntityType.DecisionTypeId),
             _ when type == typeof(DecisionAppeal) => ("DECISIONS", AuditEntityType.DecisionAppealId),
+            _ when type == typeof(UiLabelOverride) => ("ORGANIZATION", AuditEntityType.UiLabelOverrideId),
             _ => (string.Empty, 0)
         };
 

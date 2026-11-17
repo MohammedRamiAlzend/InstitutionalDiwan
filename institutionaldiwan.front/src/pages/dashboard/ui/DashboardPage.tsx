@@ -37,8 +37,8 @@ function DashboardContent() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="لوحة التحكم"
-        description="نظرة سريعة على حسابك وما هو متاح في مساحة العمل."
+        titleKey="page.dashboard.title"
+        descriptionKey="page.dashboard.description"
         badge={<Badge variant="outline">النسخة الأولية</Badge>}
         pageGuide="dashboard"
       />

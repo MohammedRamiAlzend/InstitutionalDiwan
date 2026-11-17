@@ -49,8 +49,8 @@ function MovementsView() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="الحركات"
-        description="تابع الوثائق المرسلة إلى قسمك والمرسلة منه. يُعرض الصندوقان لقسمك المبدئي؛ تفتح الحركة وتُدار من صفحة الوثيقة عند الحاجة."
+        titleKey="page.movements.title"
+        descriptionKey="page.movements.description"
         pageGuide="movements"
       />
 

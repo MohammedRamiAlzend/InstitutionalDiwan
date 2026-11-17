@@ -68,7 +68,7 @@ GlobalUsing.cs Global usings for entities, common, and errors
 
 A single static catalog nested by module (`DomainErrors.Department`, `.Identity`, `.Correspondence`,
 `.Numbering`, `.Movements`, `.Attachments`, `.Relations`, `.Archiving`, `.Audit`, `.Notifications`,
-`.InstitutionSetting`, `.Lookup`, `.DocumentFields`, `.Decisions`). Each entry is a strongly-typed `Error` with a stable code such as
+`.InstitutionSetting`, `.Lookup`, `.DocumentFields`, `.Decisions`, `.UiLabel`). Each entry is a strongly-typed `Error` with a stable code such as
 `Correspondence.OnlyDraftEditable` so the API can produce deterministic ProblemDetails.
 
 The `.Archiving` group covers Module 07: `SearchNotFound` (NotFound), `SearchNameTaken` / `SearchLimitReached` (Conflict), and the validation errors `EventTypeInvalid`, `LocationNotFound`, `UnarchiveReasonEmpty`, `ReasonTooLong`, `SearchNameEmpty`, `SearchNameTooLong`, `CriteriaJsonEmpty`, and `CriteriaInvalid`. `Correspondence.OnlyRegisteredArchivable` and `Correspondence.DocumentArchived` (both Conflict) guard the document itself: only a `REGISTERED` document can be archived, and an archived document rejects changes until it is unarchived.
@@ -133,7 +133,7 @@ deterministically.
 `IDocumentRepository`, `IDocumentTypeRepository`, `IDocumentFieldRepository`, `IDocumentTypeSchemaVersionRepository`, `INumberingRegistryRepository`,
 `IDocumentNumberRepository`, `IDocumentMovementRepository`, `IDocumentFileRepository`,
 `IDocumentFileTypeRepository`, `IFileStorageProviderRepository`, `IDocumentArchiveRepository`, `ISavedSearchRepository`, `IDocumentRelationRepository`,
-`IAuditLogRepository`, `INotificationRepository`, and `ILookupRepository`. They expose `GetByIdAsync`, a few targeted lookups (`HasActiveChildrenAsync`,
+`IAuditLogRepository`, `INotificationRepository`, `ILookupRepository`, and `IUiLabelOverrideRepository`. They expose `GetByIdAsync`, a few targeted lookups (`HasActiveChildrenAsync`,
 `GetActiveForScopeAsync`, `HasActiveMovementsAsync`, `GetLatestAsync` for audit hash chaining), and
 `Add`/`Remove` — no `SaveChanges` (that is `IUnitOfWork`). `IDocumentRepository.ListPagedAsync` requires a
 `DocumentViewAccess` (caller, organizational scope, and the instant grants are valid at), so a document
@@ -172,6 +172,7 @@ integrity reports have their own add/list/latest methods; no update or delete is
 | 08 | Relations | `DocumentRelation`, `DocumentRelationType`, `DocumentRelationEvent` | `DocumentRelation` |
 | 09 | Audit & Integrity | `AuditLog`, `AuditCheckpoint`, `AuditIntegrityCheck` | (`AuditLog` is an `Entity<long>`) |
 | 10 | Notifications & Outbox | `Notification`, `NotificationRecipient`, `NotificationOutbox`, `NotificationType` | `Notification` |
+| — | UI customization | `UiLabelOverride` (`Entities/Ui/`) — superadmin replacements for built-in UI labels; only overridden keys are stored | `UiLabelOverride` |
 
 #### Selected invariants already encoded
 - **Dynamic document fields** (plan: `plans/document-dynamic-fields-backend.md`) — `DocumentField` is the
@@ -344,7 +345,7 @@ them, while listing, relabelling and (de)activation keep working.
 | `Errors/` | Implemented (`DomainErrors` catalog, including `Department.CentralDiwanProtected`, `Identity.RoleInactive`, and `Identity.PasswordChangeRequired`) |
 | `Events/` | ✅ Implemented (36 events) |
 | `Repositories/` | ✅ Implemented (21 interfaces) |
-| `Entities/` | ✅ Implemented (68 entities across the module folders, including reference/lookup tables and `Entities/Decisions/`) |
+| `Entities/` | ✅ Implemented (69 entities across the module folders, including reference/lookup tables, `Entities/Decisions/`, and `Entities/Ui/`) |
 
 ### Known issues / TODO
 
@@ -361,6 +362,7 @@ them, while listing, relabelling and (de)activation keep working.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-17 | Qoder | UI labels (plan `plans/ui-labels-edit-mode.md`, Phase 0): added `Entities/Ui/UiLabelOverride` (key/value replacement for a built-in UI label, key normalization + 150/200 length limits), `DomainErrors.UiLabel`, `IUiLabelOverrideRepository`, and `AuditEntityType.UiLabelOverrideId` (19). |
 | 2026-11-15 | Qoder | Security (M1): `User.Create` gained an `isActive` parameter (default `true`) so self-registration can create accounts that are inactive until an administrator activates them. |
 | 2026-11-15 | Qoder | Security: `User` gained `UpgradePasswordHash` — a silent work-factor upgrade after login that replaces only the hash (no `UpdatedAt`/`MustChangePassword` side effects, so other live sessions stay valid). |
 | 2026-11-13 | Claude | Targets `net11.0`. |

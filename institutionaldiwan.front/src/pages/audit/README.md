@@ -50,6 +50,8 @@ context menus (`AUDIT_MANAGE` items hidden otherwise).
 
 ## Change Log
 
+- 2026-11-17: UI labels Phase 3 (`plans/ui-labels-edit-mode.md`): the page header title/description render from the catalog (`page.audit.title` / `.description`) via `PageHeader` `titleKey`/`descriptionKey`.
+
 | Date | Author | Change |
 | --- | --- | --- |
 | 2026-10-25 | Buffy | Documented the shared data-grid contract and context menus for the audit log and integrity reports. |

@@ -44,6 +44,8 @@ chart / table views, department management dialogs, and read-only employee explo
 
 ## 6. Change Log
 
+- 2026-11-17: UI labels Phase 3 (`plans/ui-labels-edit-mode.md`): the page header title/description render from the catalog (`page.departments.title` / `.description`) via `PageHeader` `titleKey`/`descriptionKey`.
+
 - 2026-10-28: Refresh Module 01 documentation for department management, lazy employee branches, paged roster/details/menus, the department-type chart, and shared request states; leave final verification pending.
 - 2026-10-28: Diagram nodes in the Mermaid view are now clickable (and keyboard-activatable) and open
   the same detail dialog as the tree and table; verified in-browser with a filtered diagram.

@@ -1,3 +1,4 @@
+import { t } from '@/shared/lib'
 import { Dialog } from './dialog'
 import { Button } from './button'
 
@@ -19,12 +20,14 @@ export function ConfirmDialog({
   onOpenChange,
   title,
   description,
-  confirmLabel = 'تأكيد',
-  cancelLabel = 'إلغاء',
+  confirmLabel,
+  cancelLabel,
   onConfirm,
   loading,
   destructive,
 }: ConfirmDialogProps) {
+  const confirmText = confirmLabel ?? t('common.action.confirm')
+  const cancelText = cancelLabel ?? t('common.action.cancel')
   return (
     <Dialog
       open={open}
@@ -40,7 +43,7 @@ export function ConfirmDialog({
             onClick={() => onOpenChange(false)}
             disabled={loading}
           >
-            {cancelLabel}
+            {cancelText}
           </Button>
           <Button
             type="button"
@@ -48,7 +51,7 @@ export function ConfirmDialog({
             loading={loading}
             onClick={onConfirm}
           >
-            {confirmLabel}
+            {confirmText}
           </Button>
         </>
       }

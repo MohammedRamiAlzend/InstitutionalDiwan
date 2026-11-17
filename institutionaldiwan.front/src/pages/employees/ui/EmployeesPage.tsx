@@ -10,8 +10,8 @@ export function EmployeesPage() {
       <GuideProvider pageId="employees">
         <div className="flex flex-col gap-6">
           <PageHeader
-            title="إدارة الموظفين"
-            description="أضف سجلات الموظفين واربطها بالأقسام، وحدّث بياناتهم الوظيفية وحالة تفعيلهم."
+            titleKey="page.employees.title"
+            descriptionKey="page.employees.description"
             pageGuide="employees"
           />
           <GuideRegion id="employees.grid">

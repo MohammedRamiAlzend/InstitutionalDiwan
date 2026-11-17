@@ -27,6 +27,7 @@ commands/queries map between them and the domain.
 | Relations | `CreateDocumentRelationRequest` ✅, `RemoveDocumentRelationRequest` ✅; see [`Relations/README.md`](Relations/README.md). The read models live in `Application/Features/Relations`. |
 | Audit | `CreateAuditCheckpointRequest` ✅ (optional `ToAuditLogId`), `RunAuditIntegrityCheckRequest` ✅ (optional start/end ids); read models (`AuditLogResponse`, `AuditCheckpointResponse`, `AuditIntegrityCheckResponse`) live in `Application/Features/Audit/` |
 | Notifications | `NotificationListResponse`, `UnreadCountResponse` |
+| Ui | `SetUiLabelOverrideRequest` ✅ (`Value`, ≤200 chars); the `{ version, overrides }` read model lives in `Application/Features/Ui/UiLabels/` |
 
 ## Conventions
 
@@ -54,12 +55,14 @@ commands/queries map between them and the domain.
 | Identity `AssignUserDepartmentScopeRequest` | ✅ Implemented |
 | Attachments `CreateDocumentFileRequest`, `UploadDocumentFileVersionRequest` | ✅ Implemented |
 | Audit `CreateAuditCheckpointRequest`, `RunAuditIntegrityCheckRequest` | ✅ Implemented |
+| Ui `SetUiLabelOverrideRequest` | ✅ Implemented |
 | Other request/response records | ❌ Not implemented |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-17 | Qoder | Added `Ui/SetUiLabelOverrideRequest` for `PUT /api/ui-labels/{key}` (editable UI terminology, Phase 0). |
 | 2026-11-11 | Claude |  |
 | 2026-11-11 | Claude | Added `RecordDecisionAppealRequest` and `RecordAppealOutcomeRequest`. |
 | 2026-11-11 | Claude | Added `Contracts/Decisions` request bodies for creating and updating a decision type, issuing a decision, attaching its file and canceling it. |

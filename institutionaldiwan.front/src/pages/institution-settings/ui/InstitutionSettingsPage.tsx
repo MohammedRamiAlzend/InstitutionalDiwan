@@ -9,8 +9,8 @@ export function InstitutionSettingsPage() {
       <GuideProvider pageId="institution-settings">
         <div className="flex flex-col gap-6">
           <PageHeader
-            title="إعدادات المؤسسة"
-            description="إدارة بيانات المؤسسة والديوان المركزي وسياسة الترقيم والموظف المسؤول."
+            titleKey="page.institution-settings.title"
+            descriptionKey="page.institution-settings.description"
             pageGuide="institution-settings"
           />
           <InstitutionSettingsForm />

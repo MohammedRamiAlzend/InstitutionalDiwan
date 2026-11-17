@@ -20,7 +20,7 @@ All code uses the `InstitutionalDiwan.*` namespaces — the legacy `NewDiwan.*` 
 
 | Folder | Responsibility | Code status |
 | --- | --- | --- |
-| [`Persistence/`](Persistence/README.md) | `DiwanDbContext`, `Configurations/`, `Repositories/`, `Interceptors/`, `Migrations/`, `Seed/` | ⚠️ `DbContext` + 10 configuration files + 19 repositories + 1 consolidated migration + ordered seeders |
+| [`Persistence/`](Persistence/README.md) | `DiwanDbContext`, `Configurations/`, `Repositories/`, `Interceptors/`, `Migrations/`, `Seed/` | ⚠️ `DbContext` + 11 configuration files + 20 repositories + 2 migrations + ordered seeders |
 | [`Authentication/`](Authentication/README.md) | JWT token generation, password hashing, HTTP `UserContext` | ✅ `PasswordHasher` + `JwtProvider` + `UserContext` implemented |
 | [`Context/`](Context/README.md) | Ambient request metadata (`IRequestContext`) | ✅ `HttpRequestContext` implemented |
 | [`Authorization/`](Authorization/README.md) | Permission-based RBAC + organizational scope and document-access evaluators | ✅ `DepartmentScopeEvaluator` + `DocumentAccessEvaluator` implemented |
@@ -79,11 +79,11 @@ Persistence/Configurations/
 | --- | --- |
 | EF Core provider package (`SqlServer`) | ✅ Referenced |
 | `DiwanDbContext` | ✅ Written and compiling |
-| Entity configurations | ✅ Written for all 67 entities (10 configuration files) |
-| Repositories | 🟡 19 of 21 implemented — `UserRepository`, `RoleRepository`, `PermissionRepository`, `DepartmentRepository`, `DepartmentTypeRepository`, `DocumentRepository`, `DocumentTypeRepository`, `NumberingRegistryRepository`, `DocumentNumberRepository`, `EmployeeRepository`, `DocumentAccessGrantRepository`, `LookupRepository`, `InstitutionSettingRepository`, `ExternalOrganizationRepository`, `DocumentMovementRepository`, `DocumentFileRepository`, `DocumentFileTypeRepository`, `FileStorageProviderRepository`, `AuditLogRepository`; relation and notification repositories pending |
+| Entity configurations | ✅ Written for all 68 entities (11 configuration files, incl. `UiConfigurations.cs`) |
+| Repositories | 🟡 19 of 21 implemented — `UserRepository`, `RoleRepository`, `PermissionRepository`, `DepartmentRepository`, `DepartmentTypeRepository`, `DocumentRepository`, `DocumentTypeRepository`, `NumberingRegistryRepository`, `DocumentNumberRepository`, `EmployeeRepository`, `DocumentAccessGrantRepository`, `LookupRepository`, `InstitutionSettingRepository`, `ExternalOrganizationRepository`, `DocumentMovementRepository`, `DocumentFileRepository`, `DocumentFileTypeRepository`, `FileStorageProviderRepository`, `AuditLogRepository`, `UiLabelOverrideRepository`; relation and notification repositories pending |
 | Seed | ✅ Ordered, environment-aware seeders (33 lookup seeders, `InstitutionSettingSeeder`, `DepartmentSeeder` demo tree, `EmployeeSeeder` demo personnel, `PermissionSeeder`, `RoleSeeder`, `UserSeeder`) |
 | Authentication | ✅ `PasswordHasher` (PBKDF2) + `JwtProvider` + `UserContext` (reads `sub`/`dept_id`/`scope_type`/`permission` claims) |
-| Migrations | ✅ 1 written (consolidated `InitialCreate` — the full SQL Server schema in one migration, regenerated for .NET 11; earlier incremental migrations squashed) |
+| Migrations | ✅ 2 written (consolidated `InitialCreate` — the full SQL Server schema, regenerated for .NET 11; `AddUiLabelOverrides` — the `UI_LABEL_OVERRIDES` table) |
 | Interceptors | ✅ `TamperEvidentAuditInterceptor` (domain events incl. `UserLoggedIn`, generic old/new snapshots, SHA-256 chain, sensitive-field redaction, no writes outside an HTTP request) |
 | Authorization | ✅ `DepartmentScopeEvaluator` + `DocumentAccessEvaluator` implementing the Application contracts |
 | Storage | ✅ `LocalFileStorageService` + `FileSignatureValidator` |
@@ -94,6 +94,7 @@ Persistence/Configurations/
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-17 | Qoder | UI labels (plan `plans/ui-labels-edit-mode.md`, Phase 0): `UiLabelOverrideConfiguration` (`UI_LABEL_OVERRIDES`, unique key index), `UiLabelOverrideRepository` + DI registration, `UiLabelOverrides` DbSet, `AddUiLabelOverrides` migration, audit mapping (`ORGANIZATION` / entity type 19) and its `AuditEntityTypeSeeder` row. |
 | 2026-11-15 | Qoder | Squashed the entire migration history into a single consolidated `InitialCreate` (84 tables, SQL Server) regenerated with the local `dotnet-ef` 11.0.0 tool; existing development databases must be dropped or recreated. |
 | 2026-11-13 | Claude | Targets `net11.0` with EF Core 11.0.0. Dropped the `Microsoft.Extensions.Options.ConfigurationExtensions` and `System.Security.Cryptography.Pkcs` references, which .NET 11 already provides (NU1510). |
 | 2026-11-11 | Claude | Archive diwan: `INSTITUTION_SETTINGS.ArchiveDiwanDepartmentId` (mapping and migration `Add_Archive_Diwan`), the seeded movement type 5 «للحفظ», and reading access for the archive diwan over the documents it holds in `DocumentAccessEvaluator` and `DocumentViewAccessQuery`. |

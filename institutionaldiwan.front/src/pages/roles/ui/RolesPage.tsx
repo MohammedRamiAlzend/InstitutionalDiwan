@@ -10,8 +10,8 @@ export function RolesPage() {
       <GuideProvider pageId="roles">
         <div className="flex flex-col gap-6">
           <PageHeader
-            title="الأدوار والصلاحيات"
-            description="أنشئ الأدوار المؤسسية وحدّث بياناتها، وحدد الصلاحيات الممنوحة لكل دور من مصفوفة الصلاحيات."
+            titleKey="page.roles.title"
+            descriptionKey="page.roles.description"
             pageGuide="roles"
           />
           <GuideRegion id="roles.grid">

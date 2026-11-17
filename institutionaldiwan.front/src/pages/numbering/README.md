@@ -45,6 +45,8 @@ the server rejects direct writes with 403.
 
 ## 6. Change Log
 
+- 2026-11-17: UI labels Phase 3 (`plans/ui-labels-edit-mode.md`): the page header title/description render from the catalog (`page.numbering.title` / `.description`) via `PageHeader` `titleKey`/`descriptionKey`.
+
 - 2026-10-30: Module 04 Phase 5 — verified the page in-browser as manager and read-only user: the
   manager flow (create/deactivate/activate, URL filters, duplicate banner, template lock, next-number
   preview) and a `NUM-VIEW` user (no create button, view/copy row menus only). The department register

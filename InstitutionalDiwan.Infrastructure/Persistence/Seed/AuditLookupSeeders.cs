@@ -48,6 +48,7 @@ public sealed class AuditEntityTypeSeeder : LookupSeederBase<AuditEntityType>
         (AuditEntityType.DecisionId, "Decision", "قرار"),
         (AuditEntityType.DecisionTypeId, "Decision type", "نوع قرار"),
         (AuditEntityType.DecisionAppealId, "Decision appeal", "اعتراض على قرار"),
+        (AuditEntityType.UiLabelOverrideId, "UI label", "تسمية واجهة"),
     };
 
     protected override AuditEntityType BuildItem(int id, string desc, string descAr) =>

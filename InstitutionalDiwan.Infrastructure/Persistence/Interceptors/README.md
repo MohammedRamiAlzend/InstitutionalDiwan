@@ -19,7 +19,8 @@ so a business change and its audit trail commit or roll back together. The inter
   `DocumentFileVersionUploaded`, `UserLoggedIn`, etc.) into precise audit rows with module, action,
   entity type, related document, and old/new JSON; `UserLoggedInEvent` is raised during the anonymous
   login request and is attributed to the authenticated user it describes, so logins are recorded;
-- falls back to a generic old/new snapshot for tracked aggregate types that publish no event;
+- falls back to a generic old/new snapshot for tracked aggregate types that publish no event
+  (including `UiLabelOverride`, mapped to `ORGANIZATION` / audit entity type 19);
 - fills `PreviousHash → EventHash` with a SHA-256 chain, including any explicit row already pending in
   the same save, and re-seals those pending rows onto the predecessor that is current once the chain
   lock is held;
@@ -83,6 +84,7 @@ scoped-interceptor lifetime issues with `AddDbContext`.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-17 | Qoder | Maps `UiLabelOverride` onto `ORGANIZATION` / audit entity type 19, so every UI label replacement/reset is chained like other entity writes. |
 | 2026-11-11 | Claude | Maps `DecisionAppeal` and `DecisionAppealed` onto audit entity type 18. Recording an appeal does not publish a notification. |
 | 2026-11-11 | Claude | Maps `DocumentDecision` and `DecisionType`, and the `DecisionIssued` / `DecisionRevoked` events, onto audit entity types 16 and 17. |
 | 2026-11-10 | Claude | Register visits and department record values are now audited (open, edit, lock, correction). |

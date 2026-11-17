@@ -68,6 +68,9 @@ public sealed class AuditEntityType : LookupEntity
     /// <summary>An appeal recorded against a decision.</summary>
     public const int DecisionAppealId = 18;
 
+    /// <summary>A superadmin replacement for a built-in UI label.</summary>
+    public const int UiLabelOverrideId = 19;
+
     private AuditEntityType()
     {
     }

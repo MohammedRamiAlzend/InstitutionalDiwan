@@ -13,7 +13,7 @@ Arabic typography. This is the single source of visual tokens for the SPA.
 | --- | --- |
 | `tokens.css` | **The single source of truth for color**: the raw Forest / Golden Wheat / Charcoal palette, the semantic light and dark theme mappings, and the functional status colors. |
 | `guide-tour.css` | Dresses the Driver.js guide popover (`.diwan-tour`) in the semantic tokens: theme, RTL/LTR, logical close button, arrow colors. Imported by `index.css` after `driver.css`. |
-| `index.css` | `@import "tailwindcss";`, imports `tokens.css`, maps the semantic variables to Tailwind utilities via `@theme inline` (e.g. `bg-background`, `text-foreground`, `bg-accent`, `text-accent-contrast`, `bg-overlay`), Arabic font stack (`Readex Pro` / `Cairo`), base focus rings, `dir`-safe base rules, shared overlay/popover/page entrance animations, the `html[data-density='compact']` scale, the `html[data-motion='off']` switch, and the print token override. |
+| `index.css` | `@import "tailwindcss";`, imports `tokens.css`, maps the semantic variables to Tailwind utilities via `@theme inline` (e.g. `bg-background`, `text-foreground`, `bg-accent`, `text-accent-contrast`, `bg-overlay`), Arabic font stack (`Readex Pro` / `Cairo`), base focus rings, `dir`-safe base rules, shared overlay/popover/page entrance animations, the `html[data-density='compact']` scale, the `html[data-motion='off']` switch, the `html[data-label-edit='on'] .diwan-label-editable` inline-edit hint (dashed focus-ring outline + muted surface on hover/focus, tokens only), and the print token override. |
 
 ## Design tokens (contract)
 
@@ -176,12 +176,13 @@ Rules:
 | --- | --- |
 | `tokens.css` (palette + light/dark semantic tokens) | ✅ Implemented |
 | `guide-tour.css` | ✅ Implemented |
-| `index.css` | ✅ Implemented (Tailwind v4 entry + `@theme inline` mapping + overlay/content/page entrance animations + compact density scale + `data-motion` switch) |
+| `index.css` | ✅ Implemented (Tailwind v4 entry + `@theme inline` mapping + overlay/content/page entrance animations + compact density scale + `data-motion` switch + `data-label-edit` inline-edit hint) |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-17 | Qoder | UI labels, Phase 2 (`plans/ui-labels-edit-mode.md`): added the unlayered `html[data-label-edit='on'] .diwan-label-editable` rules — a dashed `--color-focus-ring` outline (offset, no layout shift) and `--color-surface-muted` background on hover/focus, so editable labels are hinted in both themes and directions using tokens only. |
 | 2026-11-09 | Claude | `index.css` gained the `print-sheet` rules: while one is mounted, printing shows only that sheet. |
 | 2026-11-02 | agent | Added `guide-tour.css` and imported Driver.js styles; the `data-motion` switch no longer touches `.driver-popover`, so the guide tour keeps its animation. |
 | 2026-11-01 | agent | Added `animate-overlay-out` / `animate-content-out` keyframes and utilities for popup closes, extended the `data-motion='off'` kill rule with `[data-state]` so variant-prefixed exit classes are covered, and documented the specificity/Presence contract. |

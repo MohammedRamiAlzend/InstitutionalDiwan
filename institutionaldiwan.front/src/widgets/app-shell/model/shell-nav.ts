@@ -19,11 +19,12 @@ import {
   ShieldCheck,
   Users,
 } from 'lucide-react'
-import { Permissions, ROUTES, type PermissionCode } from '@/shared/config'
+import { Permissions, ROUTES, type LabelKey, type PermissionCode } from '@/shared/config'
 
 export interface ShellNavItem {
   id: string
-  label: string
+  /** Catalog key; the renderer resolves it through the labels store so renames apply live. */
+  labelKey: LabelKey
   to: string
   icon: LucideIcon
   /** Hidden entirely when the caller lacks this permission. */
@@ -34,25 +35,25 @@ export interface ShellNavItem {
 
 export interface ShellNavGroup {
   id: string
-  label: string
+  labelKey: LabelKey
   items: readonly ShellNavItem[]
 }
 
 export const SHELL_NAV_GROUPS: readonly ShellNavGroup[] = [
   {
     id: 'overview',
-    label: 'نظرة عامة',
+    labelKey: 'nav.group.overview',
     items: [
       {
         id: 'dashboard',
-        label: 'لوحة التحكم',
+        labelKey: 'nav.dashboard',
         to: ROUTES.DASHBOARD,
         icon: LayoutDashboard,
         available: true,
       },
       {
         id: 'notifications',
-        label: 'الإشعارات',
+        labelKey: 'nav.notifications',
         to: ROUTES.NOTIFICATIONS,
         icon: Bell,
         available: true,
@@ -61,11 +62,11 @@ export const SHELL_NAV_GROUPS: readonly ShellNavGroup[] = [
   },
   {
     id: 'correspondence',
-    label: 'المراسلات',
+    labelKey: 'nav.group.correspondence',
     items: [
       {
         id: 'documents',
-        label: 'الوثائق',
+        labelKey: 'nav.documents',
         to: ROUTES.DOCUMENTS,
         icon: FileText,
         permission: Permissions.DocumentView,
@@ -73,7 +74,7 @@ export const SHELL_NAV_GROUPS: readonly ShellNavGroup[] = [
       },
       {
         id: 'movements',
-        label: 'الحركات',
+        labelKey: 'nav.movements',
         to: ROUTES.MOVEMENTS,
         icon: Inbox,
         permission: Permissions.DocumentView,
@@ -81,7 +82,7 @@ export const SHELL_NAV_GROUPS: readonly ShellNavGroup[] = [
       },
       {
         id: 'decisions',
-        label: 'القرارات',
+        labelKey: 'nav.decisions',
         to: ROUTES.DECISIONS,
         icon: Scale,
         permission: Permissions.DocumentView,
@@ -89,7 +90,7 @@ export const SHELL_NAV_GROUPS: readonly ShellNavGroup[] = [
       },
       {
         id: 'my-registers',
-        label: 'سجلاتي',
+        labelKey: 'nav.my-registers',
         to: ROUTES.MY_REGISTERS,
         icon: BookMarked,
         permission: Permissions.NumberingView,
@@ -97,7 +98,7 @@ export const SHELL_NAV_GROUPS: readonly ShellNavGroup[] = [
       },
       {
         id: 'persons',
-        label: 'الأشخاص',
+        labelKey: 'nav.persons',
         to: ROUTES.PERSONS,
         icon: Contact,
         permission: Permissions.PersonView,
@@ -105,7 +106,7 @@ export const SHELL_NAV_GROUPS: readonly ShellNavGroup[] = [
       },
       {
         id: 'archive',
-        label: 'الأرشيف',
+        labelKey: 'nav.archive',
         to: ROUTES.ARCHIVE,
         icon: Archive,
         permission: Permissions.DocumentView,
@@ -115,11 +116,11 @@ export const SHELL_NAV_GROUPS: readonly ShellNavGroup[] = [
   },
   {
     id: 'organization',
-    label: 'التنظيم',
+    labelKey: 'nav.group.organization',
     items: [
       {
         id: 'departments',
-        label: 'الأقسام',
+        labelKey: 'nav.departments',
         to: ROUTES.DEPARTMENTS,
         icon: Building2,
         permission: Permissions.DepartmentManage,
@@ -127,7 +128,7 @@ export const SHELL_NAV_GROUPS: readonly ShellNavGroup[] = [
       },
       {
         id: 'institution-settings',
-        label: 'إعدادات المؤسسة',
+        labelKey: 'nav.institution-settings',
         to: ROUTES.INSTITUTION_SETTINGS,
         icon: Settings2,
         permission: Permissions.DepartmentManage,
@@ -137,11 +138,11 @@ export const SHELL_NAV_GROUPS: readonly ShellNavGroup[] = [
   },
   {
     id: 'access',
-    label: 'إدارة الوصول',
+    labelKey: 'nav.group.access',
     items: [
       {
         id: 'users',
-        label: 'المستخدمون',
+        labelKey: 'nav.users',
         to: ROUTES.USERS,
         icon: Users,
         permission: Permissions.UserManage,
@@ -149,7 +150,7 @@ export const SHELL_NAV_GROUPS: readonly ShellNavGroup[] = [
       },
       {
         id: 'roles',
-        label: 'الأدوار والصلاحيات',
+        labelKey: 'nav.roles',
         to: ROUTES.ROLES,
         icon: ShieldCheck,
         permission: Permissions.RoleManage,
@@ -157,7 +158,7 @@ export const SHELL_NAV_GROUPS: readonly ShellNavGroup[] = [
       },
       {
         id: 'employees',
-        label: 'الموظفون',
+        labelKey: 'nav.employees',
         to: ROUTES.EMPLOYEES,
         icon: IdCard,
         permission: Permissions.EmployeeManage,
@@ -167,11 +168,11 @@ export const SHELL_NAV_GROUPS: readonly ShellNavGroup[] = [
   },
   {
     id: 'governance',
-    label: 'الرقابة والتدقيق',
+    labelKey: 'nav.group.governance',
     items: [
       {
         id: 'numbering',
-        label: 'الترقيم',
+        labelKey: 'nav.numbering',
         to: ROUTES.NUMBERING,
         icon: Hash,
         permission: Permissions.NumberingView,
@@ -179,7 +180,7 @@ export const SHELL_NAV_GROUPS: readonly ShellNavGroup[] = [
       },
       {
         id: 'document-schemas',
-        label: 'مخططات الحقول',
+        labelKey: 'nav.document-schemas',
         to: ROUTES.DOCUMENT_SCHEMAS,
         icon: ListPlus,
         permission: Permissions.LookupManage,
@@ -187,7 +188,7 @@ export const SHELL_NAV_GROUPS: readonly ShellNavGroup[] = [
       },
       {
         id: 'lookups',
-        label: 'الجداول المرجعية',
+        labelKey: 'nav.lookups',
         to: ROUTES.LOOKUPS,
         icon: Library,
         permission: Permissions.LookupManage,
@@ -195,7 +196,7 @@ export const SHELL_NAV_GROUPS: readonly ShellNavGroup[] = [
       },
       {
         id: 'audit',
-        label: 'سجل التدقيق',
+        labelKey: 'nav.audit',
         to: ROUTES.AUDIT,
         icon: ScrollText,
         permission: Permissions.AuditView,
@@ -203,7 +204,7 @@ export const SHELL_NAV_GROUPS: readonly ShellNavGroup[] = [
       },
       {
         id: 'system-errors',
-        label: 'الأخطاء البرمجية',
+        labelKey: 'nav.system-errors',
         to: ROUTES.SYSTEM_ERRORS,
         icon: Bug,
         permission: Permissions.SystemErrorsView,

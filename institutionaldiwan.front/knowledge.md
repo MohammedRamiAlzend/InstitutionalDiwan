@@ -376,6 +376,44 @@ Only PNG, JPEG, WebP and plain SVG up to 1 MB are accepted, judged from the byte
 `ETag` (304 on revalidation) and a sandboxing `Content-Security-Policy`; 404 `InstitutionSetting.LogoNotFound` without a
 logo. The SPA addresses it as `/api/branding/logo?v=<logoUpdatedAt>`.
 
+### UI labels — `/api/ui-labels` (editable terminology, plan `plans/ui-labels-edit-mode.md`)
+
+`GET /api/ui-labels` (any signed-in user) → `{ version, overrides }` where `overrides` is a key→value map of
+superadmin replacements for built-in UI labels (`nav.documents`, `common.save`, …) and `version` is the tick
+count of the newest write (0 when nothing is overridden) — cache it and revalidate. `PUT /api/ui-labels/{key}`
+body `{ value }` (≤200 chars) upserts one replacement; `DELETE /api/ui-labels/{key}` restores the built-in
+default (unknown key = successful no-op). Both writes return the full `{ version, overrides }` set.
+Writes require the `UI_LABELS_MANAGE` policy: the `SUPER_ADMIN` role **and** the `superadmin` account name —
+not a grantable permission code, so the SPA must gate the edit mode on the username/role, not on a permission.
+Errors (400): `UiLabel.KeyInvalid` (lowercase letter/digit segments separated by single dots or dashes, ≤150),
+`UiLabel.ValueEmpty`, `UiLabel.ValueTooLong`. Keys are normalized to lowercase server-side. Placeholder parity
+(`{name}`) is the front end's responsibility. Phase 1 consumes the read: `entities/ui-label`
+(`useUiLabelsQuery`) feeds `app/providers/LabelsBootGate`, which caches the snapshot in
+`diwan.uiLabels.v1`, reveals the app cache-first (branded loading screen only on a browser's first
+visit), revalidates in the background, and falls back to the built-in defaults on failure. The
+sidebar (`widgets/app-shell`) resolves its labels from `shared/lib/labels` (`t`/`useLabel`/`<Label>`).
+Phase 2 adds the inline edit mode: `shared/lib/labelEdit` (`diwan.labelEdit` → `html[data-label-edit]`,
+resolved early in `index.html`) plus `features/ui-label-manage` — `useSetUiLabelMutation`/
+`useResetUiLabelMutation` (optimistic apply → confirm from the response → rollback, then invalidate
+`uiLabelKeys.overrides()`), `uiLabelValueSchema(defaultText)` (non-empty, ≤200, no HTML, placeholder
+parity), and `LabelEditor` (in-place input, Enter saves / Esc cancels, trapped focus). The editor reaches
+the shared `<Label>` through `LabelEditContext` (`shared/ui/label-edit-context`), provided by
+`UiLabelEditProvider` in `AppProviders`, so no upward import is needed. The shell toggle and active-mode
+banner render only for `user.username === 'superadmin'`, and `LabelsBootGate` forces the mode off for any
+other session; the server policy is the final guard (403). Capability-only key props were added —
+`data-table` column `headerKey`, `form-field` `labelKey`, `page-header` `titleKey`/`descriptionKey` — with
+the actual text migration in Phases 3–4.
+Phase 3 migrates the shared chrome and structure into the catalog: `common.ts` grew to cover generic
+actions, the unified `data-table` tools (search/columns/sort/pagination/export), `confirm-dialog` defaults,
+the shell menu + label-edit banner, the account menu, the settings dialog, and the `common.error.*`
+fallbacks; `pages.ts` holds the static page titles/descriptions (`page.<slug>.title`/`.description`, consumed
+by `PageHeader` on 18 pages — dynamic titles and feature-flag descriptions stay in code); and `errors.ts`
+holds the full backend error catalog (~358 codes, `error.<code-lowercased>`). `shared/api/errorMessages.ts`
+no longer contains Arabic text: `CODE_MESSAGES` maps each code to a `LabelKey` and `toArabicErrorMessage`
+resolves it through `t()` (status/generic/network fallbacks use `common.error.*`), so error messages are
+renamable like any other label. Pagination keeps its `dir="ltr"` number spans; only the surrounding words
+became `<Label>`s. Per-domain area catalogs remain for Phase 4.
+
 ### Users — `/api/users`
 
 `GET` (paged list), `GET /{userId}`, `POST`, `PUT /{userId}`, `DELETE /{userId}`,

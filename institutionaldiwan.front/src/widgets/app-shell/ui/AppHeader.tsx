@@ -4,6 +4,7 @@ import { BrandName } from '@/entities/branding'
 import { useSessionStore } from '@/entities/user'
 import { useLogout } from '@/features/auth'
 import { ROUTES } from '@/shared/config'
+import { t } from '@/shared/lib'
 import {
   Button,
   DropdownMenu,
@@ -42,25 +43,25 @@ export function AppHeader({
   const navigate = useNavigate()
 
   const initial = user?.username.trim().charAt(0).toUpperCase() || '؟'
-  const roles = user?.roles.length ? user.roles.join('، ') : 'مستخدم'
+  const roles = user?.roles.length ? user.roles.join('، ') : t('account.default-role')
 
   const userMenu: MenuEntry[] = [
     {
       id: 'change-password',
-      label: 'تغيير كلمة المرور',
+      label: t('account.change-password'),
       icon: <KeyRound className="size-4" aria-hidden />,
       onSelect: () => navigate(ROUTES.CHANGE_PASSWORD),
     },
     {
       id: 'display-settings',
-      label: 'إعدادات العرض',
+      label: t('account.display-settings'),
       icon: <Settings2 className="size-4" aria-hidden />,
       onSelect: onOpenSettings,
     },
     { type: 'separator' },
     {
       id: 'logout',
-      label: 'تسجيل الخروج',
+      label: t('account.logout'),
       icon: <LogOut className="size-4 rtl:-scale-x-100" aria-hidden />,
       danger: true,
       onSelect: logout,
@@ -75,7 +76,7 @@ export function AppHeader({
         size="icon"
         className="size-9 lg:hidden"
         onClick={onOpenSidebar}
-        aria-label="فتح القائمة"
+        aria-label={t('shell.sidebar-open')}
       >
         <Menu className="size-5" aria-hidden />
       </Button>
@@ -96,14 +97,14 @@ export function AppHeader({
               type="button"
               variant="ghost"
               size="icon"
-              aria-label="إجراءات مساحة العمل"
-              title="إجراءات مساحة العمل"
+              aria-label={t('shell.workspace-actions')}
+              title={t('shell.workspace-actions')}
             >
               <MoreHorizontal className="size-5" aria-hidden />
             </Button>
           }
           entries={menuEntries}
-          label="مساحة العمل"
+          label={t('shell.menu-label')}
         />
 
         {headerSlot}
@@ -115,7 +116,7 @@ export function AppHeader({
             trigger={
               <button
                 type="button"
-                aria-label="قائمة الحساب"
+                aria-label={t('account.menu-label')}
                 className="flex cursor-pointer items-center gap-2 rounded-full border border-transparent p-1 transition-colors hover:bg-surface-muted"
               >
                 <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent text-sm font-bold text-accent-contrast">

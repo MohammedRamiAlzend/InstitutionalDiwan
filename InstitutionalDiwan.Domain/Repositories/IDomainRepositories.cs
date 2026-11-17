@@ -273,6 +273,14 @@ public interface IInstitutionSettingRepository
     void RemoveLogo(InstitutionLogo logo);
 }
 
+public interface IUiLabelOverrideRepository
+{
+    Task<IReadOnlyList<UiLabelOverride>> ListAllAsync(CancellationToken cancellationToken = default);
+    Task<UiLabelOverride?> GetByKeyAsync(string key, CancellationToken cancellationToken = default);
+    void Add(UiLabelOverride labelOverride);
+    void Remove(UiLabelOverride labelOverride);
+}
+
 public interface IExternalOrganizationRepository
 {
     Task<ExternalOrganization?> GetByIdAsync(Guid externalOrganizationId, CancellationToken cancellationToken = default);

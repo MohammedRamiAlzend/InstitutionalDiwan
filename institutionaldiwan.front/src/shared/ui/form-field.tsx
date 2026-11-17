@@ -1,9 +1,13 @@
 import { useId, type ReactNode } from 'react'
+import type { LabelKey } from '@/shared/config'
 import { cn, useTutorial } from '@/shared/lib'
 import { GuideChip } from './guide'
+import { Label } from './label'
 
 interface FormFieldProps {
-  label: string
+  label?: string
+  /** Catalog key for the label; takes priority over `label` and is editable in place. */
+  labelKey?: LabelKey
   required?: boolean
   error?: string
   htmlFor?: string
@@ -18,6 +22,7 @@ interface FormFieldProps {
 /** Label + control + Arabic error message wrapper; integrates with react-hook-form. */
 export function FormField({
   label,
+  labelKey,
   required,
   error,
   htmlFor,
@@ -32,7 +37,7 @@ export function FormField({
 
   const labelElement = (
     <label htmlFor={id} className="text-sm font-medium text-foreground">
-      {label}
+      {labelKey ? <Label k={labelKey} /> : label}
       {required && <span className="text-danger"> *</span>}
     </label>
   )

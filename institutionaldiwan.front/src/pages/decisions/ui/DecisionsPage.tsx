@@ -42,8 +42,8 @@ function DecisionsView() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="القرارات"
-        description="القرارات الصادرة على الوثائق التي تملك الاطلاع عليها، وأنواع القرارات التي يُعدّها مدير القوائم."
+        titleKey="page.decisions.title"
+        descriptionKey="page.decisions.description"
         pageGuide="decisions"
       />
 

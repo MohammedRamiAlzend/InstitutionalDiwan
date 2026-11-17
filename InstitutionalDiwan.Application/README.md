@@ -44,7 +44,7 @@ alongside `AddInfrastructure()`.
 
 | Item | State |
 | --- | --- |
-| Commands / Queries / Validators / DTOs | ✅ Implemented (Lookups, Organization/Departments, Identity/Users·Roles·Permissions·Employees·AccessGrants·Login·Register·ChangePassword, Correspondence/Documents, Movements, Attachments, Audit) |
+| Commands / Queries / Validators / DTOs | ✅ Implemented (Lookups, Organization/Departments, Identity/Users·Roles·Permissions·Employees·AccessGrants·Login·Register·ChangePassword, Correspondence/Documents, Movements, Attachments, Audit, Ui/UiLabels) |
 | Pipeline behaviors | ✅ Validation, logging, and transaction implemented; caching planned |
 | Abstractions | ✅ `Messaging/`, `Authentication/`, `Authorization/`, `Storage/`, `Time/`, `Context/`, `Persistence/`, and `Audit/` implemented; data/caching planned |
 | `DependencyInjection.cs` | ✅ Implemented (`AddApplication`) |
@@ -58,6 +58,7 @@ See each subfolder's README for the full design and per-folder status tables.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-17 | Qoder | Added the `Features/Ui/UiLabels` slice (get/set/reset UI label replacements with a cache version) for `plans/ui-labels-edit-mode.md`, Phase 0. |
 | 2026-11-13 | Claude | Targets `net11.0`. Dropped the explicit `Microsoft.Extensions.DependencyInjection.Abstractions` and `Microsoft.Extensions.Logging.Abstractions` references, which .NET 11 already provides (NU1510). |
 | 2026-11-11 | Claude | Registered `ArchiveDiwanRouting` for the route to the archive diwan (plan `plans/case-decisions.md`, slice A). |
 | 2026-11-10 | Claude | Registers `DepartmentRecordService` (opens and locks department records) and adds the `Features/DepartmentRecords` slice. |

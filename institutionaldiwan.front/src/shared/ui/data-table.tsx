@@ -27,11 +27,16 @@ import {
   MAX_PAGE_SIZE,
   MIN_PAGE_SIZE,
   resetColumnVisibility,
+  resolveLabel,
   saveColumnVisibility,
+  t,
   useDebouncedValue,
+  useLabelsStore,
   type SortDirection,
 } from '@/shared/lib'
+import type { LabelKey } from '@/shared/config'
 import { toArabicErrorMessage } from '@/shared/api'
+import { Label } from './label'
 import type { MenuEntry } from './menu'
 import {
   dispatchContextMenu,
@@ -48,6 +53,8 @@ import { Skeleton } from './skeleton'
 export interface DataTableColumn<T> {
   id: string
   header: string
+  /** Catalog key for the header; takes priority over `header` and repaints on rename. */
+  headerKey?: LabelKey
   cell: (row: T) => ReactNode
   sortable?: boolean
   /** Server sort key; defaults to the column id. */
@@ -139,7 +146,7 @@ export function DataTable<T>({
   onPageSizeChange,
   search = '',
   onSearchChange,
-  searchPlaceholder = 'بحث…',
+  searchPlaceholder = t('table.search-placeholder'),
   sortKey = null,
   sortDirection = 'asc',
   onSortChange,
@@ -150,7 +157,7 @@ export function DataTable<T>({
   rowSearchText,
   toolbar,
   filters,
-  emptyTitle = 'لا توجد بيانات للعرض.',
+  emptyTitle = t('table.empty-title'),
   emptyDescription,
   emptyAction,
   className,
@@ -159,6 +166,12 @@ export function DataTable<T>({
   const [visibility, setVisibility] = useState<Record<string, boolean>>(() =>
     loadColumnVisibility(tableId, columns),
   )
+
+  // Headers resolve from the labels store so a rename repaints the visible text, the column
+  // chooser, the sort aria-label and the export alike.
+  const overrides = useLabelsStore((state) => state.overrides)
+  const headerOf = (column: DataTableColumn<T>) =>
+    column.headerKey ? resolveLabel(column.headerKey, overrides) : column.header
 
   const effectiveVisibility = useMemo(() => {
     const map: Record<string, boolean> = {}
@@ -260,10 +273,10 @@ export function DataTable<T>({
   }
 
   const columnMenuEntries: MenuEntry[] = [
-    { type: 'label', label: 'أعمدة الجدول' },
+    { type: 'label', label: t('table.columns-menu-title') },
     ...columns.map<MenuEntry>((column) => ({
       id: `column-${column.id}`,
-      label: column.header,
+      label: headerOf(column),
       icon: effectiveVisibility[column.id] ? (
         <Check className="size-4 text-accent" aria-hidden />
       ) : (
@@ -276,7 +289,7 @@ export function DataTable<T>({
     { type: 'separator' },
     {
       id: 'reset-columns',
-      label: 'إعادة الأعمدة الافتراضية',
+      label: t('table.columns-reset'),
       icon: <RotateCcw className="size-4" aria-hidden />,
       onSelect: resetColumns,
     },
@@ -323,10 +336,10 @@ export function DataTable<T>({
                 <button
                   type="button"
                   onClick={() => handleSort(column)}
-                  aria-label={`فرز حسب ${column.header}`}
+                  aria-label={t('table.sort-by', { name: headerOf(column) })}
                   className="inline-flex cursor-pointer items-center gap-1 text-start transition-colors hover:text-foreground"
                 >
-                  {column.header}
+                  {headerOf(column)}
                   {active ? (
                     sortDirection === 'asc' ? (
                       <ArrowUp className="size-3.5" aria-hidden />
@@ -338,14 +351,14 @@ export function DataTable<T>({
                   )}
                 </button>
               ) : (
-                column.header
+                headerOf(column)
               )}
             </th>
           )
         })}
         {rowMenu && (
-          <th scope="col" aria-label="إجراءات الصف" className="w-12 px-2 py-2.5">
-            <span className="sr-only">إجراءات</span>
+          <th scope="col" aria-label={t('table.row-actions')} className="w-12 px-2 py-2.5">
+            <span className="sr-only">{t('table.actions')}</span>
             <GuideChip id="table.rowMenu" className="mx-auto" />
           </th>
         )}
@@ -382,7 +395,7 @@ export function DataTable<T>({
                   variant="outline"
                   size="icon"
                   onClick={onRefresh}
-                  aria-label="تحديث البيانات"
+                  aria-label={t('table.refresh')}
                   className="size-10"
                 >
                   <RefreshCw className={cn('size-4', spinner)} aria-hidden />
@@ -394,17 +407,17 @@ export function DataTable<T>({
               trigger={
                 <Button type="button" variant="outline" size="sm" className="h-10">
                   <Columns3 className="size-4" aria-hidden />
-                  الأعمدة
+                  {t('table.columns')}
                 </Button>
               }
               entries={columnMenuEntries}
-              label="تخصيص الجدول"
+              label={t('table.customize')}
             />
             <GuideChip id="table.columns" />
             <DataTableExport
               tableRef={tableRef}
-              title={caption ?? 'جدول البيانات'}
-              headers={visibleColumns.map((column) => column.header)}
+              title={caption ?? t('table.data-caption')}
+              headers={visibleColumns.map((column) => headerOf(column))}
               shownRows={pagedRows.length}
               totalRows={effectiveTotal}
               disabled={isLoading || pagedRows.length === 0}
@@ -423,7 +436,7 @@ export function DataTable<T>({
           <span>{toArabicErrorMessage(error)}</span>
           {onRetry && (
             <Button type="button" variant="outline" size="sm" onClick={onRetry}>
-              إعادة المحاولة
+              {t('common.action.retry')}
             </Button>
           )}
         </div>
@@ -434,7 +447,7 @@ export function DataTable<T>({
             they escape the clip and widen the whole page on a phone. */}
         <div className="relative overflow-x-auto">
           <table ref={tableRef} className="w-full border-collapse text-sm">
-            <caption className="sr-only">{caption ?? 'جدول البيانات'}</caption>
+            <caption className="sr-only">{caption ?? t('table.data-caption')}</caption>
             {headerMenu && headerMenu.length > 0 ? (
               <ContextMenu entries={headerMenu}>{header}</ContextMenu>
             ) : (
@@ -518,7 +531,7 @@ export function DataTable<T>({
                                   variant="ghost"
                                   size="icon"
                                   className="size-8"
-                                  aria-label={label ? `إجراءات ${label}` : 'إجراءات الصف'}
+                                  aria-label={label ? t('table.row-actions-named', { name: label }) : t('table.row-actions')}
                                 >
                                   <MoreHorizontal className="size-4" aria-hidden />
                                 </Button>
@@ -548,12 +561,12 @@ export function DataTable<T>({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2 text-xs text-muted">
           <span>
-            عرض <span dir="ltr">{formatNumber(rangeStart)}–{formatNumber(rangeEnd)}</span> من{' '}
-            <span dir="ltr">{formatNumber(effectiveTotal)}</span>
+            <Label k="table.showing" /> <span dir="ltr">{formatNumber(rangeStart)}–{formatNumber(rangeEnd)}</span>{' '}
+            <Label k="table.of" /> <span dir="ltr">{formatNumber(effectiveTotal)}</span>
           </span>
           <span className="hidden sm:inline">·</span>
           <label className="flex items-center gap-1.5">
-            <span className="hidden sm:inline">صفوف في الصفحة</span>
+            <span className="hidden sm:inline"><Label k="table.rows-per-page" /></span>
             <input
               type="number"
               dir="ltr"
@@ -568,8 +581,8 @@ export function DataTable<T>({
                 event.preventDefault()
                 event.currentTarget.blur()
               }}
-              aria-label={`عدد الصفوف في الصفحة، من ${MIN_PAGE_SIZE} إلى ${MAX_PAGE_SIZE}`}
-              title={`من ${MIN_PAGE_SIZE} إلى ${MAX_PAGE_SIZE}`}
+              aria-label={t('table.rows-per-page-aria', { min: MIN_PAGE_SIZE, max: MAX_PAGE_SIZE })}
+              title={t('table.rows-per-page-title', { min: MIN_PAGE_SIZE, max: MAX_PAGE_SIZE })}
               className="h-8 w-16 rounded-lg border border-border bg-surface px-2 text-center text-xs text-foreground transition-colors focus:border-focus-ring focus:outline-none"
             />
           </label>
@@ -578,7 +591,7 @@ export function DataTable<T>({
 
         <div className="flex items-center gap-2">
           <span className="text-xs text-muted">
-            الصفحة <span dir="ltr">{formatNumber(page)}</span> من{' '}
+            <Label k="table.page-word" /> <span dir="ltr">{formatNumber(page)}</span> <Label k="table.of" />{' '}
             <span dir="ltr">{formatNumber(totalPages)}</span>
           </span>
           <Button
@@ -588,7 +601,7 @@ export function DataTable<T>({
             className="size-8"
             onClick={() => onPageChange(page - 1)}
             disabled={page <= 1 || isLoading}
-            aria-label="الصفحة السابقة"
+            aria-label={t('table.prev-page')}
           >
             <ChevronLeft className="size-4 rtl:rotate-180" aria-hidden />
           </Button>
@@ -599,7 +612,7 @@ export function DataTable<T>({
             className="size-8"
             onClick={() => onPageChange(page + 1)}
             disabled={page >= totalPages || isLoading}
-            aria-label="الصفحة التالية"
+            aria-label={t('table.next-page')}
           >
             <ChevronRight className="size-4 rtl:rotate-180" aria-hidden />
           </Button>

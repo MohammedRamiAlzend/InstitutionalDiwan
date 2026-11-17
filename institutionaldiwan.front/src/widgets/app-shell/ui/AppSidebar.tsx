@@ -10,10 +10,12 @@ import {
 import { toast } from 'sonner'
 import { BrandMark, BrandName } from '@/entities/branding'
 import { useSessionStore } from '@/entities/user'
-import { cn } from '@/shared/lib'
+import type { LabelKey } from '@/shared/config'
+import { cn, resolveLabel, t, useLabelsStore } from '@/shared/lib'
 import {
   Button,
   ContextMenu,
+  Label,
   dispatchContextMenu,
   isContextMenuShortcut,
   type MenuEntry,
@@ -31,9 +33,9 @@ interface AppSidebarProps {
 async function copyLink(path: string): Promise<void> {
   try {
     await navigator.clipboard.writeText(new URL(path, window.location.origin).href)
-    toast.success('تم نسخ الرابط')
+    toast.success(t('common.link-copied'))
   } catch {
-    toast.error('تعذّر نسخ الرابط')
+    toast.error(t('common.link-copy-failed'))
   }
 }
 
@@ -47,6 +49,11 @@ export function AppSidebar({
   const permissions = useSessionStore((state) => state.user?.permissions)
   const groups = useMemo(() => filterNavGroups(permissions ?? []), [permissions])
   const [closedGroups, setClosedGroups] = useState<string[]>([])
+
+  // Subscribe to the labels store so renames repaint both the visible text and the
+  // string props (aria-label/title/menu entries) in expanded and collapsed modes alike.
+  const overrides = useLabelsStore((state) => state.overrides)
+  const label = (key: LabelKey) => resolveLabel(key, overrides)
 
   const isGroupOpen = (groupId: string) =>
     collapsed || !closedGroups.includes(groupId)
@@ -67,7 +74,7 @@ export function AppSidebar({
     const entries: MenuEntry[] = [
       {
         id: `${item.id}-open`,
-        label: 'فتح',
+        label: label('common.open'),
         icon: <ArrowUpRight className="size-4 rtl:-scale-x-100" aria-hidden />,
         disabled: !item.available,
         onSelect: () => {
@@ -77,7 +84,7 @@ export function AppSidebar({
       },
       {
         id: `${item.id}-copy`,
-        label: 'نسخ الرابط',
+        label: label('common.copy-link'),
         icon: <Link2 className="size-4" aria-hidden />,
         disabled: !item.available,
         onSelect: () => {
@@ -91,7 +98,7 @@ export function AppSidebar({
         { type: 'separator' },
         {
           id: `${item.id}-toggle-group`,
-          label: groupOpen ? 'طي المجموعة' : 'توسيع المجموعة',
+          label: groupOpen ? label('common.collapse-group') : label('common.expand-group'),
           icon: <ChevronDown className="size-4" aria-hidden />,
           onSelect: () => toggleGroup(groupId),
         },
@@ -120,7 +127,9 @@ export function AppSidebar({
             <p className="truncate font-heading text-sm font-bold text-foreground">
               <BrandName />
             </p>
-            <p className="truncate text-[11px] text-muted">منصة المراسلات الرسمية</p>
+            <p className="truncate text-[11px] text-muted">
+              <Label k="nav.tagline" />
+            </p>
           </div>
         )}
         {onToggleCollapsed && (
@@ -130,8 +139,8 @@ export function AppSidebar({
             size="icon"
             className={cn('size-8 shrink-0', !collapsed && 'ms-auto')}
             onClick={onToggleCollapsed}
-            aria-label={collapsed ? 'توسيع القائمة' : 'طي القائمة'}
-            title={collapsed ? 'توسيع القائمة' : 'طي القائمة'}
+            aria-label={collapsed ? label('nav.expand-menu') : label('nav.collapse-menu')}
+            title={collapsed ? label('nav.expand-menu') : label('nav.collapse-menu')}
           >
             {collapsed ? (
               <PanelLeftOpen className="size-4 rtl:-scale-x-100" aria-hidden />
@@ -142,7 +151,7 @@ export function AppSidebar({
         )}
       </div>
 
-      <nav aria-label="القائمة الرئيسية" className="flex-1 overflow-y-auto px-2 py-3">
+      <nav aria-label={label('nav.main-menu')} className="flex-1 overflow-y-auto px-2 py-3">
         {groups.map((group) => {
           const open = isGroupOpen(group.id)
           return (
@@ -154,7 +163,9 @@ export function AppSidebar({
                   aria-expanded={open}
                   className="flex w-full cursor-pointer items-center justify-between rounded-md px-2 py-1.5 text-[11px] font-semibold text-muted transition-colors hover:text-foreground"
                 >
-                  <span>{group.label}</span>
+                  <span>
+                    <Label k={group.labelKey} />
+                  </span>
                   <ChevronDown
                     className={cn(
                       'size-3.5 transition-transform',
@@ -183,8 +194,8 @@ export function AppSidebar({
                           event.preventDefault()
                           dispatchContextMenu(event.currentTarget)
                         }}
-                        aria-label={collapsed ? item.label : undefined}
-                        title={collapsed ? item.label : undefined}
+                        aria-label={collapsed ? label(item.labelKey) : undefined}
+                        title={collapsed ? label(item.labelKey) : undefined}
                         className="block rounded-lg"
                       >
                         {({ isActive }) => (
@@ -198,15 +209,15 @@ export function AppSidebar({
                             )}
                           >
                             <Icon className="size-4.5 shrink-0" aria-hidden />
-                            {!collapsed && <span className="truncate">{item.label}</span>}
+                            {!collapsed && <Label k={item.labelKey} className="truncate" />}
                           </span>
                         )}
                       </NavLink>
                     ) : (
                       <span
                         aria-disabled="true"
-                        aria-label={collapsed ? item.label : undefined}
-                        title={collapsed ? item.label : undefined}
+                        aria-label={collapsed ? label(item.labelKey) : undefined}
+                        title={collapsed ? label(item.labelKey) : undefined}
                         className={cn(
                           'flex w-full cursor-not-allowed items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted opacity-70',
                           collapsed && 'justify-center px-2',
@@ -215,9 +226,9 @@ export function AppSidebar({
                         <Icon className="size-4.5 shrink-0" aria-hidden />
                         {!collapsed && (
                           <>
-                            <span className="flex-1 truncate">{item.label}</span>
+                            <Label k={item.labelKey} className="flex-1 truncate" />
                             <span className="rounded border border-border px-1.5 py-0.5 text-[10px] leading-none">
-                              قريبًا
+                              <Label k="common.coming-soon" />
                             </span>
                           </>
                         )}

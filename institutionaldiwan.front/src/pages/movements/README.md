@@ -43,6 +43,8 @@ Route guard: `DOCUMENT_VIEW`. Actions inside use `DOCUMENT_EDIT` and domain move
 
 ## Change Log
 
+- 2026-11-17: UI labels Phase 3 (`plans/ui-labels-edit-mode.md`): the page header title/description render from the catalog (`page.movements.title` / `.description`) via `PageHeader` `titleKey`/`descriptionKey`.
+
 | Date | Author | Change |
 | --- | --- | --- |
 | 2026-10-29 | Cursor | Implemented the page and wired it into the router and sidebar; removed the unbuilt `departmentId` parameter from the URL contract. |

@@ -10,8 +10,8 @@ export function MyRegistersPage() {
       <GuideProvider pageId="my-registers">
         <div className="flex flex-col gap-6">
           <PageHeader
-            title="سجلاتي"
-            description="اختر أحد سجلات قسمك لتتصفّح أسطره: ابحث برقم السجل أو الوثيقة، وصفِّ بالسنة والحالة والتاريخ، واعرض بيانات نموذج سجل القسم حسب إصداره."
+            titleKey="page.my-registers.title"
+            descriptionKey="page.my-registers.description"
             pageGuide="my-registers"
           />
           <MyRegistersTable />

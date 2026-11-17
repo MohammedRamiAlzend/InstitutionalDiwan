@@ -32,6 +32,8 @@ actions to `widgets/roles-table`.
 
 ## 6. Change Log
 
+- 2026-11-17: UI labels Phase 3 (`plans/ui-labels-edit-mode.md`): the page header title/description render from the catalog (`page.roles.title` / `.description`) via `PageHeader` `titleKey`/`descriptionKey`.
+
 - 2026-10-28: Noted after Phase 5 that employee records live on `/employees`; this page owns roles and their permission matrix only.
 - 2026-10-28: Implemented Phase 4 — the `/roles` page mounts `widgets/roles-table` behind the
   `ROLE_MANAGE` guard; created this slice README.

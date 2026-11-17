@@ -29,6 +29,13 @@ public static class DomainErrors
             Error.Validation("Lookup.CatalogReadOnly", $"The '{lookup}' catalog cannot be extended through the generic lookups endpoint because it requires additional fields.");
     }
 
+    public static class UiLabel
+    {
+        public static readonly Error KeyInvalid = Error.Validation("UiLabel.KeyInvalid", "A UI label key must be 1-150 characters: lowercase letter/digit segments separated by single dots or dashes.");
+        public static readonly Error ValueEmpty = Error.Validation("UiLabel.ValueEmpty", "A UI label value is required.");
+        public static readonly Error ValueTooLong = Error.Validation("UiLabel.ValueTooLong", "A UI label value cannot exceed 200 characters.");
+    }
+
     public static class Department
     {
         public static readonly Error CodeEmpty = Error.Validation("Department.CodeEmpty", "Department code is required.");

@@ -160,12 +160,14 @@ registries, per-document grants/movements) still returns a plain collection on p
 | Decisions (types, issue, next action, file, cancel, appeal, outcome, join) | ✅ Implemented |
 | Archiving (Module 07: archive/unarchive, history, access-filtered search, saved searches) | 🟡 Use cases implemented; endpoints pending |
 | Relations (Module 08: create/remove link, list, graph, history) | ✅ Implemented |
+| Ui/`UiLabels` (get/set/reset superadmin UI label replacements, cache version) | ✅ Implemented ([Ui/UiLabels/README.md](Ui/UiLabels/README.md)) |
 | Notifications | ❌ Not implemented |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-17 | Qoder | Added the `Ui/UiLabels` slice (plan `plans/ui-labels-edit-mode.md`, Phase 0): get/set/reset UI label replacements with a cache version; writes are superadmin-only at the host. |
 | 2026-11-11 | Claude | Slice D: a join decision creates a `JoinedInto` link in the same save, and canceling it removes that link. `ListJoinCandidatesQuery` suggests other files; it does not join them. |
 | 2026-11-11 | Claude | Appeal commands on the `Decisions` slice. The document decision list returns appeals. Scope may cover the issuing department or the appellant department, including when the document is archived. |
 | 2026-11-11 | Claude | Added the `Decisions` slice: decision types, issuing, the suggested next action, attaching a file, and canceling a mistaken entry. Join issuance is refused. |

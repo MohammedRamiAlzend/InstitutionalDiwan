@@ -57,6 +57,7 @@ public sealed class DiwanDbContext : DbContext, IUnitOfWork
     public DbSet<DocumentTypeSchemaVersion> DocumentTypeSchemaVersions => Set<DocumentTypeSchemaVersion>();
     public DbSet<DocumentTypeSchemaVersionField> DocumentTypeSchemaVersionFields => Set<DocumentTypeSchemaVersionField>();
     public DbSet<InstitutionalDiwan.Domain.Entities.Diagnostics.SystemError> SystemErrors => Set<InstitutionalDiwan.Domain.Entities.Diagnostics.SystemError>();
+    public DbSet<InstitutionalDiwan.Domain.Entities.Ui.UiLabelOverride> UiLabelOverrides => Set<InstitutionalDiwan.Domain.Entities.Ui.UiLabelOverride>();
     public DbSet<DocumentFieldValue> DocumentFieldValues => Set<DocumentFieldValue>();
     public DbSet<ExternalOrganization> ExternalOrganizations => Set<ExternalOrganization>();
     public DbSet<ParticipantRole> ParticipantRoles => Set<ParticipantRole>();

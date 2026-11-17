@@ -10,8 +10,8 @@ export function DocumentSchemasPage() {
       <GuideProvider pageId="document-schemas">
         <div className="flex flex-col gap-6">
           <PageHeader
-            title="مخططات الحقول"
-            description="حقول إضافية لكل نوع وثيقة تظهر في نموذج الإنشاء. كل تغيير يمرّ عبر نسخة جديدة تُنشر ولا تؤثر في الوثائق الموجودة."
+            titleKey="page.document-schemas.title"
+            descriptionKey="page.document-schemas.description"
             pageGuide="document-schemas"
           />
           <DocumentSchemaEditor />

@@ -10,8 +10,8 @@ export function NotificationsPage() {
     <GuideProvider pageId="notifications">
       <div className="flex flex-col gap-6">
         <PageHeader
-          title="الإشعارات"
-          description="تنبيهات الوثائق والإحالات الموجّهة إليك أو إلى قسمك. تصل لحظيًا عند اتصال التحديث الفوري، وإلا فتُحدَّث القائمة عند فتح الصفحة."
+          titleKey="page.notifications.title"
+          descriptionKey="page.notifications.description"
           pageGuide="notifications"
         />
         <GuideRegion id="notifications.grid">

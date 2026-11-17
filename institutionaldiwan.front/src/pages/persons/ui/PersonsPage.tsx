@@ -10,8 +10,8 @@ export function PersonsPage() {
       <GuideProvider pageId="persons">
         <div className="flex flex-col gap-6">
           <PageHeader
-            title="الأشخاص"
-            description="المدعى عليهم والمدعون وغيرهم ممن وردت أسماؤهم في الوثائق. ابحث بالاسم وافتح ملف الشخص لتتابع وثائقه."
+            titleKey="page.persons.title"
+            descriptionKey="page.persons.description"
             pageGuide="persons"
           />
           <GuideRegion id="persons.grid">

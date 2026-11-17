@@ -31,5 +31,7 @@ actions to `widgets/employees-table`.
 
 ## 6. Change Log
 
+- 2026-11-17: UI labels Phase 3 (`plans/ui-labels-edit-mode.md`): the page header title/description render from the catalog (`page.employees.title` / `.description`) via `PageHeader` `titleKey`/`descriptionKey`.
+
 - 2026-10-28: Implemented Phase 5 — the `/employees` page mounts `widgets/employees-table` behind the
   `EMPLOYEE_MANAGE` guard; created this slice README.

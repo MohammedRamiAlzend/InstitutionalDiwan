@@ -1,7 +1,8 @@
 # Infrastructure / Persistence / Migrations
 
-> **Status:** Implemented — one consolidated `InitialCreate` migration holds the full SQL Server
-> schema for the .NET 11 target. Startup applies it in Development through
+> **Status:** Implemented — the consolidated `InitialCreate` migration holds the full SQL Server
+> schema for the .NET 11 target, followed by incremental migrations (currently
+> `AddUiLabelOverrides`). Startup applies them in Development through
 > `Server/Extensions/DatabaseExtensions.cs` (`Database.MigrateAsync`).
 
 ## Purpose
@@ -15,6 +16,7 @@ fresh database is created by applying exactly one migration.
 | Migration | What it does |
 | --- | --- |
 | `20261115073415_InitialCreate` | Creates the full schema: 84 tables, `UX_*`/`IX_*` indexes, foreign keys and constraints, as declared by the entity configurations in `Configurations/`. |
+| `20261117093850_AddUiLabelOverrides` | Creates `UI_LABEL_OVERRIDES` (LabelId PK, unique `UX_UI_LABEL_OVERRIDES_KEY` on `Key`, Value ≤ 200, UpdatedAt, UpdatedByUserId) for the editable UI terminology (plan `plans/ui-labels-edit-mode.md`). |
 
 > Existing databases that predate the squash have an `__EFMigrationsHistory` that no longer
 > matches the code. Drop them (or the history) before the next startup, otherwise
@@ -53,4 +55,5 @@ empty migration when the model changed.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-17 | Qoder | Added `AddUiLabelOverrides` (the `UI_LABEL_OVERRIDES` table with a unique key index) — the first incremental migration after the squash. |
 | 2026-11-15 | Qoder | Squashed the incremental migration history into a single consolidated `InitialCreate` (84 tables) regenerated with the local `dotnet-ef` 11.0.0 tool; existing development databases must be dropped or recreated. |

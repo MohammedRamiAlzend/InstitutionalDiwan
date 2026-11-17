@@ -53,8 +53,8 @@ function AuditView() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="سجل التدقيق"
-        description="سلسلة تدقيق غير قابلة للتعديل: كل إجراء يُخزَّن مع تجزئة تربطه بالسجل السابق. ابحث في السجلات وفُتش تكامل السلسلة عند الحاجة؛ كل عملية بحث تُسجَّل هي أيضًا."
+        titleKey="page.audit.title"
+        descriptionKey="page.audit.description"
         pageGuide="audit"
       />
 

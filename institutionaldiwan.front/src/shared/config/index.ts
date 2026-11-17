@@ -54,3 +54,5 @@ export {
 export type { FileTypeUploadLimits } from './attachmentLimits'
 export { getGuideEntry, getPageGuide } from './guides'
 export type { GuideEntry, PageGuide } from './guides'
+export { LABEL_DEFAULTS } from './labels'
+export type { LabelKey } from './labels'

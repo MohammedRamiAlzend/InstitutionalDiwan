@@ -31,6 +31,8 @@ Renders the users administration route. The page is a thin composition unit: it 
 
 ## 6. Change Log
 
+- 2026-11-17: UI labels Phase 3 (`plans/ui-labels-edit-mode.md`): the page header title/description render from the catalog (`page.users.title` / `.description`) via `PageHeader` `titleKey`/`descriptionKey`.
+
 - 2026-11-01: Became the tutorial-mode witness page (Phase 0): wrapped in `GuideProvider pageId="users"`, given `pageGuide="users"` on the header, and the grid wrapped in `GuideRegion id="users.grid"`. Content lives in `shared/config/guides/users.ts`.
 - 2026-10-28: Documented the boundary after Phase 5 — roles and employees administration live on their own routes (`/roles`, `/employees`); this page stays focused on user accounts and their assignments.
 - 2026-10-28: Implemented Phase 3 — the `/users` page mounts `widgets/users-table` behind the `USER_MANAGE` guard; role and employee administration deferred to their own routes.

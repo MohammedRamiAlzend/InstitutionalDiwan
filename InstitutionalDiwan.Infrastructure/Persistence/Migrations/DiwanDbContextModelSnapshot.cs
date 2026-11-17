@@ -16,7 +16,7 @@ partial class DiwanDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261115073415_InitialCreate";
+    public override string LastMigrationId => "20261117093850_AddUiLabelOverrides";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -4181,6 +4181,41 @@ partial class DiwanDbContextModelSnapshot : ModelSnapshot
                 b.HasKey("Id");
 
                 b.ToTable("RELATION_ACTION_TYPES");
+            });
+
+        modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Ui.UiLabelOverride", b =>
+            {
+                b.Property<Guid>("LabelId")
+                    .HasColumnType("uniqueidentifier")
+                    .HasColumnName("LabelId");
+
+                b.Property<string>("Key")
+                    .IsRequired()
+                    .HasMaxLength(150)
+                    .HasColumnType("nvarchar(150)")
+                    .HasColumnName("Key");
+
+                b.Property<DateTime>("UpdatedAt")
+                    .HasColumnType("datetime2(3)")
+                    .HasColumnName("UpdatedAt");
+
+                b.Property<Guid?>("UpdatedByUserId")
+                    .HasColumnType("uniqueidentifier")
+                    .HasColumnName("UpdatedByUserId");
+
+                b.Property<string>("Value")
+                    .IsRequired()
+                    .HasMaxLength(200)
+                    .HasColumnType("nvarchar(200)")
+                    .HasColumnName("Value");
+
+                b.HasKey("LabelId");
+
+                b.HasIndex("Key")
+                    .IsUnique()
+                    .HasDatabaseName("UX_UI_LABEL_OVERRIDES_KEY");
+
+                b.ToTable("UI_LABEL_OVERRIDES");
             });
 
         modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Archiving.DocumentArchiveEvent", b =>

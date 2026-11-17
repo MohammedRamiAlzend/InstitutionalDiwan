@@ -56,6 +56,7 @@ error handling, and form/dialog UI.
 | `document-relation-manage/` | `POST /api/documents/{id}/relations`, `DELETE /api/documents/{id}/relations/{relationId}` | `DOCUMENT_EDIT`; document not archived or cancelled |
 | `document-schema-manage/` | `POST /api/document-types/{id}/fields`, `POST /api/document-types/{id}/schema-versions`, `DELETE /api/schema-versions/{id}`, `POST|PUT|DELETE /api/schema-versions/{id}/fields`, `POST /api/schema-versions/{id}/publish` | `LOOKUP_MANAGE`; draft-only edits; publish freezes the version |
 | `document-field-values/` | `PUT /api/documents/{id}/fields` | `DOCUMENT_EDIT` + DOWNLOAD access; draft documents only |
+| `ui-label-manage/` | `PUT /api/ui-labels/{key}`, `DELETE /api/ui-labels/{key}` | Superadmin-account-only writes; optimistic apply + rollback; per-key Zod (length, placeholders, no HTML); in-place editor bridged to `<Label>` via `LabelEditContext` |
 
 ## Conventions
 
@@ -93,11 +94,13 @@ error handling, and form/dialog UI.
 | `document-relation-manage/` | ✅ Implemented (Module 08: add-link dialog with document picker, type and notes; remove-link dialog with mandatory reason). |
 | `attachment-upload/` | ✅ Implemented for Module 06 Phases 3–4 (atomic upload, version upload, archive confirmation, versions list with per-version download, checksum verify with three named digests). Browser-verified in Module 06 Phase 5 across manager, `USER`, and read-only roles. |
 | Final integration verification | Pending; Module 02 audit fixes still in progress. |
+| `ui-label-manage/` | ✅ Implemented (UI labels Phase 2: upsert/reset mutations, per-key validation, in-place editor + context bridge); browser verification pending manual login. |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-17 | Qoder | UI labels, Phase 2 (`plans/ui-labels-edit-mode.md`): added `ui-label-manage` — upsert/reset mutations with optimistic apply and rollback, `uiLabelValueSchema` (length/placeholders/no-HTML), the in-place `LabelEditor`, and `UiLabelEditProvider` bridging the editor into the shared `<Label>` via `LabelEditContext`. |
 | 2026-11-11 | Claude | `decision-manage` issues a unification decision onto a principal file. The manual relation dialog hides type «موحَّد مع». |
 | 2026-11-11 | Claude | `decision-manage` records an appeal and its outcome. |
 | 2026-11-11 | Claude | Added `decision-type-manage` and `decision-manage`. Unarchive also refreshes the decision queries. |

@@ -15,6 +15,13 @@ export {
 } from './tutorial'
 export type { Tutorial } from './tutorial'
 export {
+  getLabelEditMode,
+  applyLabelEditMode,
+  setLabelEditMode,
+  useLabelEdit,
+} from './labelEdit'
+export type { LabelEditMode } from './labelEdit'
+export {
   columnPreferenceKey,
   loadColumnVisibility,
   saveColumnVisibility,
@@ -46,3 +53,10 @@ export {
   useSelectedRegistryId,
   resolveSelectedRegistryId,
 } from './selectedRegistry'
+export {
+  useLabelsStore,
+  resolveLabel,
+  t,
+  useLabel,
+} from './labels'
+export type { UiLabelSnapshot, LabelParams } from './labels'

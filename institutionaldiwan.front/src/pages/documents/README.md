@@ -126,6 +126,8 @@ mounted dialog.
 
 ## Change Log
 
+- 2026-11-17: UI labels Phase 3 (`plans/ui-labels-edit-mode.md`): the page header title renders from the catalog (`page.documents.title`) via `PageHeader` `titleKey`; the description stays a feature-flag-composed string and the document-details title stays dynamic (the document's subject).
+
 | Date | Author | Change |
 | --- | --- | --- |
 | 2026-11-17 | Qoder | Visual de-nesting pass after the layout redesign: the numbers section's three inner cards, its event rows and department lines, the grant rows, and the diwan panel's per-department cards all lost their borders/backgrounds in favor of light top dividers — one card level per section. The sidebar's boxed tiles became a compact divided `dl` list (two columns on small screens, one on xl). Same information, no structural change. |

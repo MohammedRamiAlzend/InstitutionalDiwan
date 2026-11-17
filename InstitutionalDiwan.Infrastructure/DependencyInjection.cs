@@ -85,6 +85,7 @@ public static class DependencyInjection
         services.AddScoped<INumberingRegistryRepository, NumberingRegistryRepository>();
         services.AddScoped<ILookupRepository, LookupRepository>();
         services.AddScoped<IInstitutionSettingRepository, InstitutionSettingRepository>();
+        services.AddScoped<IUiLabelOverrideRepository, UiLabelOverrideRepository>();
         services.AddScoped<IExternalOrganizationRepository, ExternalOrganizationRepository>();
         services.AddScoped<IPersonRepository, PersonRepository>();
         services.AddScoped<IDocumentMovementRepository, DocumentMovementRepository>();

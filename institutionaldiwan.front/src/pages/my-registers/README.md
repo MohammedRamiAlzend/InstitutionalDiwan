@@ -22,6 +22,8 @@ lines with search, filters and sort. It needs `NUMBERING_VIEW`.
 
 ## Change Log
 
+- 2026-11-17: UI labels Phase 3 (`plans/ui-labels-edit-mode.md`): the page header title/description render from the catalog (`page.my-registers.title` / `.description`) via `PageHeader` `titleKey`/`descriptionKey`.
+
 | Date | Author | Change |
 | --- | --- | --- |
 | 2026-11-11 | Claude | The guide mentions filtering by form field values. |

@@ -2,7 +2,7 @@ import { useState, type RefObject } from 'react'
 import { Download, FileSpreadsheet, FileText } from 'lucide-react'
 import { toast } from 'sonner'
 import { httpClient, toArabicErrorMessage } from '@/shared/api'
-import { formatDateTime, formatNumber, saveBlobAsFile } from '@/shared/lib'
+import { formatDateTime, formatNumber, saveBlobAsFile, t } from '@/shared/lib'
 import { Button } from './button'
 import { DropdownMenu } from './dropdown-menu'
 import type { MenuEntry } from './menu'
@@ -117,7 +117,10 @@ export function DataTableExport({
   const entries: MenuEntry[] = [
     {
       type: 'label',
-      label: `الصفوف المعروضة: ${formatNumber(shownRows)} من ${formatNumber(totalRows)}`,
+      label: t('table.export-shown-rows', {
+        shown: formatNumber(shownRows),
+        total: formatNumber(totalRows),
+      }),
     },
     {
       id: 'export-excel',
@@ -139,18 +142,18 @@ export function DataTableExport({
         trigger={
           <Button type="button" variant="outline" size="sm" className="h-10" disabled={disabled || isSaving}>
             <Download className="size-4" aria-hidden />
-            {isSaving ? 'جارٍ التصدير…' : 'تصدير'}
+            {isSaving ? t('table.exporting') : t('table.export')}
           </Button>
         }
         entries={entries}
-        label="تصدير الجدول"
+        label={t('table.export-menu')}
       />
       {snapshot && (
         <PrintSheet fileName={safeFileName(title)} orientation="landscape" onDone={() => setSnapshot(null)}>
           <header className="mb-3 flex items-baseline justify-between gap-4 border-b-2 border-accent pb-2">
             <h1 className="text-lg font-bold text-foreground">{title}</h1>
             <p className="text-xs text-muted">
-              <span dir="ltr">{snapshot.printedAt}</span> · عدد الصفوف:{' '}
+              <span dir="ltr">{snapshot.printedAt}</span> · {t('table.export-row-count')}{' '}
               <span dir="ltr">{formatNumber(snapshot.rows.length)}</span>
             </p>
           </header>

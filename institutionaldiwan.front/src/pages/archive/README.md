@@ -35,6 +35,8 @@ and unarchiving happen on the document details page (`pages/documents`), not her
 
 ## Change Log
 
+- 2026-11-17: UI labels Phase 3 (`plans/ui-labels-edit-mode.md`): the page header title/description render from the catalog (`page.archive.title` / `.description`) via `PageHeader` `titleKey`/`descriptionKey`.
+
 | Date | Author | Change |
 | --- | --- | --- |
 | 2026-11-03 | agent | Implemented the page, the `/archive` route and the «الأرشيف» sidebar entry for Module 07. |

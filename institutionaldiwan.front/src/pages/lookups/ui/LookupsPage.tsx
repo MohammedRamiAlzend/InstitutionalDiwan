@@ -17,8 +17,8 @@ export function LookupsPage() {
       <GuideProvider pageId="lookups">
         <div className="flex flex-col gap-6">
           <PageHeader
-            title="الجداول المرجعية"
-            description="القيم التي تظهر في القوائم المنسدلة عبر النظام. أي تغيير يسري فورًا على بقية الشاشات."
+            titleKey="page.lookups.title"
+            descriptionKey="page.lookups.description"
             pageGuide="lookups"
           />
           <div className="grid gap-6 lg:grid-cols-[18rem_1fr]">

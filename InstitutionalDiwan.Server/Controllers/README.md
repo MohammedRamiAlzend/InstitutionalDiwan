@@ -34,6 +34,7 @@ access live here.
 | `DocumentRelationsController.cs` | `api/documents/{id}/relations` (`graph`, `events`, `{relationId}`) | `DOCUMENT_VIEW` reads; `DOCUMENT_EDIT` create and remove; per-document access in the handlers | Module 08: a document's links, the relations graph, the permanent relation history, and creating or removing a link. |
 | `InstitutionSettingsController.cs` | `api/institution-settings` | `DEPARTMENT_MANAGE` | Reads and replaces the singleton institution settings (Central Diwan guards); `PUT`/`DELETE /logo` upload (multipart, PNG/JPEG/WebP/SVG up to 1 MB) and remove the institution logo. |
 | `BrandingController.cs` | `api/branding` | anonymous | The public identity for the sign-in page, shell and browser tab: `GET` returns the institution name and logo version; `GET /logo` streams the uploaded logo with an ETag and a sandboxing CSP. |
+| `UiLabelsController.cs` | `api/ui-labels` | any signed-in user reads; `UI_LABELS_MANAGE` policy (the seeded `superadmin` account only) writes | Editable UI terminology: `GET` returns all label replacements + cache version; `PUT {key}` upserts one replacement; `DELETE {key}` restores the built-in default (unknown key = no-op). Writes return the full set. |
 | `UsersController.cs` | `api/users` | `USER_MANAGE` | User CRUD (paged/searchable list), activate/deactivate, assign/revoke roles, `POST {id}/reset-password` (forced change at next sign-in), `POST {id}/department-assignments`, `DELETE {id}/department-assignments/{assignmentId}`, `GET {id}/effective-permissions`. |
 | `RolesController.cs` | `api/roles` | `ROLE_MANAGE` | Role CRUD, activate, grant/revoke permissions. |
 | `PermissionsController.cs` | `api/permissions` | `ROLE_MANAGE` | The permission catalog. |
@@ -152,6 +153,7 @@ plain JSON array.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-17 | Qoder | Added `UiLabelsController` (`GET/PUT/DELETE /api/ui-labels`, plan `plans/ui-labels-edit-mode.md` Phase 0). Writes require the `UI_LABELS_MANAGE` policy — the `SUPER_ADMIN` role **and** the `superadmin` account name, so the right cannot be delegated through role management. |
 | 2026-11-12 | Claude | Added `BrandingController` (anonymous `GET /api/branding` and `GET /api/branding/logo`) and the `PUT`/`DELETE /api/institution-settings/logo` endpoints. |
 | 2026-11-11 | Claude | `DepartmentRegistersController`: added `GET .../register/entries` and `GET .../register/forms` (`NUMBERING_VIEW`). |
 | 2026-11-11 | Claude |  |

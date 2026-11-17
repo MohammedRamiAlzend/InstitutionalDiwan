@@ -19,7 +19,8 @@ never use magic strings.
 | `env.ts` | Typed `import.meta.env` access (`API_BASE_URL` optional; default relative `/api`), `DEFAULT_TIMEZONE = 'Asia/Damascus'`. |
 | `attachmentLimits.ts` | Module 06 upload constraints the lookup response does not expose: `DOCUMENT_FILE_TYPE_LIMITS` (`maxBytes` + `allowedExtensions` per file type, mirroring `AttachmentsLookupSeeders.cs:37-45`), `MAX_UPLOAD_BYTES` (51 MB = `DocumentFilesController.MaxUploadBytes`), and `fileTypeLimits(fileTypeId)` which returns `null` for a type this client does not know so the server decides instead of a guessed limit blocking a valid upload. The server re-checks every rule and stays authoritative. |
 | `guides/` | The tutorial-mode script: `types.ts` (`GuideEntry { id, title, body, note? }`, `PageGuide { pageId, intro, entryIds }`), `common.ts` (the six grid-tool entries `table.search` / `table.columns` / `table.pageSize` / `table.refresh` / `table.rowMenu` / `table.empty`, written once because `DataTable` renders them for every grid), one file per explained page (`users.ts` …), and `index.ts` exposing `getGuideEntry(id)` / `getPageGuide(pageId)`. Arabic UI copy only — user-facing text lives here, developer documentation stays in READMEs, and `npm run check:guides` fails if a JSX id has no entry or an entry has no user. |
-| `index.ts` | Public barrel exporting permissions, routes, environment, all lookup ID maps (including numbering, the correspondence catalogs, and `DOCUMENT_FILE_TYPE`), the attachment upload limits, and the guide lookup functions. |
+| `labels/` | The editable UI-labels catalog (UI labels plan, `plans/ui-labels-edit-mode.md`): `common.ts` + `nav.ts` frozen Arabic defaults, aggregated by `index.ts` into `LABEL_DEFAULTS` with the derived `LabelKey` union (an unknown key is a build error). The app renders fully from these defaults; the server stores only administrator overrides. New area files join as the migration phases land. |
+| `index.ts` | Public barrel exporting permissions, routes, environment, all lookup ID maps (including numbering, the correspondence catalogs, and `DOCUMENT_FILE_TYPE`), the attachment upload limits, the guide lookup functions, and the UI-labels catalog (`LABEL_DEFAULTS`, `LabelKey`). |
 
 ## Example `routes.ts` shape
 
@@ -50,11 +51,14 @@ export const ROUTES = {
 | `DOCUMENT_NUMBER_STATUS`, `DOCUMENT_NUMBER_EVENT_TYPE` | ✅ Exported (Module 04 Phase 1) and consumed (Phase 4) by `NumberStatusBadge` and the document numbers history grid, so no numeric literals remain in those views. |
 | `DOCUMENT_FILE_TYPE`, `attachmentLimits.ts` | ✅ Added in Module 06 Phase 0; consumed by the upload form's pre-validation and the files grid from Phase 3. |
 | `guides/` | ✅ Tutorial catalogue complete for every page: `common.ts` (grid tools) plus one file per page (`users`, `roles`, `employees`, `movements`, `documents` incl. document details, `departments`, `numbering`, `institution-settings`, `audit`, `dashboard`) — 60 entries, checked by `npm run check:guides`. |
+| `labels/` | ✅ Phase 1 starter catalog: `common.ts` (sidebar chrome/actions) + `nav.ts` (groups, items, shell chrome), `LABEL_DEFAULTS` + `LabelKey` through the barrel; consumed by the sidebar proof. Wider areas land in Phases 3–4. |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-17 | Qoder | UI labels Phase 3 (`plans/ui-labels-edit-mode.md`): the `labels/` catalog grew to `common.ts` (actions, table tools, shell/account/settings chrome, `common.error.*`), `pages.ts` (static page titles/descriptions) and `errors.ts` (full ~358-code error catalog), all aggregated into `LABEL_DEFAULTS`. |
+| 2026-11-17 | Qoder | UI labels, Phase 1 (`plans/ui-labels-edit-mode.md`): added `labels/` (`common.ts` + `nav.ts` frozen Arabic defaults → `LABEL_DEFAULTS` + derived `LabelKey`) and exported them through the barrel; the sidebar is the first consumer. |
 | 2026-11-17 | Qoder | `documents.create` guide body now says the register is preselected from the choice made under «الوثائق» in the sidebar and can be changed in the form. |
 | 2026-11-17 | Qoder | Details-tab layout redesign: `document-details.section-archive` became `document-details.section-logs` (the unified newest-first timeline of status/participant/number/archive events plus the department records); `tab-details` describes the sticky summary sidebar, the chip navigation and the collapsible sections; `section-numbers`/`section-grants` mention their collapsible headers. |
 | 2026-11-16 | Qoder | Document-details guide follows the tab merge: the five tab entries (`tab-numbers`, `tab-grants`, `tab-fields`, `tab-department-records`, `tab-archive`) became `section-*` entries pointed at the merged regions inside the details tab; `document-details.tabs` and `tab-details` describe the six-tab order and the bundled «السجلات» section, and `tab-movements` describes the receive/redirect-only buttons. |

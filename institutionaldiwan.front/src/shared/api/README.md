@@ -19,7 +19,7 @@ need: `uploadForm` (multipart with progress) and `downloadBlob` (binary read plu
 | --- | --- |
 | `httpClient.ts` | Axios instance with base URL from `ENV.API_BASE_URL` (`/api`), JWT request interceptor, and an `async` error interceptor that clears the token and redirects to `/login` on `401`. Also exports `uploadForm<T>(url, form, { onProgress })` for multipart posts and `downloadBlob(url, params?)` for `responseType: 'blob'` reads. |
 | `problemDetails.ts` | `ApiError` (`code`/`detail`/`status`), `toApiError` normalizer, `toApiErrorAsync` for the unread-`Blob` body a binary request leaves behind, and `isConflictError`. |
-| `errorMessages.ts` | `toArabicErrorMessage(error)` maps Identity, Department (including `CentralDiwanProtected`), InstitutionSetting, Lookup, Correspondence, Numbering, Movements, Attachments, and Audit codes to Arabic, with HTTP/network/generic fallbacks. |
+| `errorMessages.ts` | `toArabicErrorMessage(error)` maps Identity, Department (including `CentralDiwanProtected`), InstitutionSetting, Lookup, Correspondence, Numbering, Movements, Attachments, Audit, and UiLabel codes to Arabic, with HTTP/network/generic fallbacks. |
 | `tokenStorage.ts` | Read/write/clear helpers for the JWT access token in `localStorage` (`diwan.token`). |
 | `signalrClient.ts` | HubConnection factory — **implement only after** the server exposes hubs (not implemented). |
 | `index.ts` | Barrel exporting `httpClient`, `uploadForm`, `downloadBlob`, `ApiError`, `toApiError`, `toApiErrorAsync`, `isConflictError`, `toArabicErrorMessage`, `tokenStorage`, and the `UploadOptions` / `BlobDownload` types. |
@@ -68,6 +68,8 @@ Used by documents, users, employees, external organizations, audit logs, and int
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-17 | Qoder | UI labels Phase 3 (`plans/ui-labels-edit-mode.md`): `errorMessages.ts` no longer holds Arabic text — `CODE_MESSAGES` maps each backend code to a catalog key (`error.<code>`, ~358 entries in `labels/errors.ts`) and `toArabicErrorMessage` resolves it through `t()`; status/generic/network fallbacks use `common.error.*`. Error messages are now renamable like any label. |
+| 2026-11-17 | Qoder | UI labels, Phase 2 (`plans/ui-labels-edit-mode.md`): added the Arabic `UiLabel.*` catalog (`KeyInvalid`, `ValueEmpty`, `ValueTooLong`) for the inline label editor's server failures. |
 | 2026-11-11 | Claude |  |
 | 2026-11-11 | Claude | `Decisions.JoinTargetInvalid` now describes an invalid principal file. `Decisions.DocumentJoined` already described a joined file that cannot take a separating decision. |
 | 2026-11-11 | Claude | Arabic messages for `Decisions.AppealNotFound`, `AppealOutOfScope`, `AppealDateInvalid`, `AppealReferenceTooLong` and `AppealNotesTooLong`. |

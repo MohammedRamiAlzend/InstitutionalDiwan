@@ -1,8 +1,8 @@
 # Infrastructure / Persistence
 
-> **Status:** Implemented (partially) — `DiwanDbContext` and ten configuration files exist, plus 19
-> of 21 repositories, a single consolidated `InitialCreate` migration, the ordered seeder pipeline,
-> and the tamper-evident audit interceptor. The outbox interceptor remains empty.
+> **Status:** Implemented (partially) — `DiwanDbContext` and eleven configuration files exist, plus 20
+> of 22 repositories, the consolidated `InitialCreate` migration followed by `AddUiLabelOverrides`,
+> the ordered seeder pipeline, and the tamper-evident audit interceptor. The outbox interceptor remains empty.
 
 ## Purpose
 
@@ -14,12 +14,12 @@ without knowing which provider is underneath.
 
 | Path | State | Notes |
 | --- | --- | --- |
-| `DiwanDbContext.cs` | ✅ Written | `DbContext, IUnitOfWork`; 67 `DbSet`s; applies configurations by assembly scan. |
-| `Configurations/` | ✅ Written (10 files) | `IEntityTypeConfiguration<T>` for all 67 entities. |
-| `Repositories/` | 🟡 Partial (23 of 25) | `UserRepository`, `RoleRepository`, `PermissionRepository`, `EmployeeRepository`, `DepartmentRepository`, `DepartmentTypeRepository`, `DocumentRepository`, `DocumentTypeRepository`, `NumberingRegistryRepository`, `DocumentNumberRepository`, `DocumentAccessGrantRepository`, `LookupRepository`, `InstitutionSettingRepository`, `ExternalOrganizationRepository`, `DocumentMovementRepository`, `DocumentFileRepository`, `DocumentFileTypeRepository`, `FileStorageProviderRepository`, `AuditLogRepository`; relation and notification repositories pending. |
+| `DiwanDbContext.cs` | ✅ Written | `DbContext, IUnitOfWork`; 68 `DbSet`s (incl. `UiLabelOverrides`); applies configurations by assembly scan. |
+| `Configurations/` | ✅ Written (11 files) | `IEntityTypeConfiguration<T>` for all 68 entities (incl. `UiConfigurations.cs`). |
+| `Repositories/` | 🟡 Partial (24 of 26) | `UserRepository`, `RoleRepository`, `PermissionRepository`, `EmployeeRepository`, `DepartmentRepository`, `DepartmentTypeRepository`, `DocumentRepository`, `DocumentTypeRepository`, `NumberingRegistryRepository`, `DocumentNumberRepository`, `DocumentAccessGrantRepository`, `LookupRepository`, `InstitutionSettingRepository`, `ExternalOrganizationRepository`, `DocumentMovementRepository`, `DocumentFileRepository`, `DocumentFileTypeRepository`, `FileStorageProviderRepository`, `AuditLogRepository`, `UiLabelOverrideRepository`; relation and notification repositories pending. |
 | `Interceptors/` | 🟡 Partial | `TamperEvidentAuditInterceptor` is registered; domain-event/outbox dispatch is pending. |
 | `Transactions/` | ✅ Written | `EfTransactionManager` / `EfTransactionScope` — commit on success, rollback on dispose. |
-| `Migrations/` | ✅ Written (1) | Consolidated `InitialCreate` — the full SQL Server schema (84 tables, `UX_*`/`IX_*` indexes, FKs) in one migration, regenerated for .NET 11; earlier incremental migrations squashed. |
+| `Migrations/` | ✅ Written (2) | Consolidated `InitialCreate` — the full SQL Server schema (84 tables, `UX_*`/`IX_*` indexes, FKs), regenerated for .NET 11 — plus `AddUiLabelOverrides` (`UI_LABEL_OVERRIDES`). |
 | `Seed/` | ✅ Written | `ISeeder` + `SeederRunner` (ordering + environment gating); 34 `LookupSeederBase<T>` seeders, `InstitutionSettingSeeder` (95), `DepartmentSeeder` (96, demo tree), `EmployeeSeeder` (97, demo personnel), `PermissionSeeder` (100), `RoleSeeder` (200), `UserSeeder` (300). |
 
 ## `DiwanDbContext` design
@@ -63,6 +63,7 @@ without knowing which provider is underneath.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-17 | Qoder | UI labels, Phase 0: `UiConfigurations.cs` (`UI_LABEL_OVERRIDES` with unique `UX_UI_LABEL_OVERRIDES_KEY`), the `UiLabelOverrides` DbSet, `UiLabelOverrideRepository`, migration `AddUiLabelOverrides`, and the audit entity-type 19 mapping + seed row. |
 | 2026-11-15 | Qoder | Squashed the migration history into a single consolidated `InitialCreate` (84 tables, SQL Server) regenerated with the local `dotnet-ef` 11.0.0 tool; existing development databases must be dropped or recreated. |
 | 2026-11-11 | Claude | Relation type 5 is seed data only. `DocumentRelationRepository.ListOutgoingAsync` and `PersonRepository.ListJoinCandidatesAsync` need no migration. |
 | 2026-11-11 | Claude | Mapped `DecisionAppeal` | (`DECISION_APPEALS`, date columns, one pending appeal per decision). Migration `20261111110728_Add_Decision_Appeals`. Document decision reads include appeals. |

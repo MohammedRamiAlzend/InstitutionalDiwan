@@ -23,6 +23,8 @@
 
 ## Change Log
 
+- 2026-11-17: UI labels Phase 3 (`plans/ui-labels-edit-mode.md`): the page header title/description render from the catalog (`page.decisions.title` / `.description`) via `PageHeader` `titleKey`/`descriptionKey`.
+
 | Date | Author | Change |
 | --- | --- | --- |
 | 2026-11-11 | Claude | Added the decisions page. |

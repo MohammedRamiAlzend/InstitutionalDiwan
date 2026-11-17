@@ -1,13 +1,13 @@
 # Infrastructure / Persistence / Repositories
 
-> **Status:** Partially implemented — 24 of the 25 repository interfaces have implementations
+> **Status:** Partially implemented — 25 of the 26 repository interfaces have implementations
 > (`UserRepository`, `RoleRepository`, `PermissionRepository`, `EmployeeRepository`,
 > `DepartmentRepository`, `DepartmentTypeRepository`, `DocumentRepository`, `DocumentTypeRepository`,
 > `NumberingRegistryRepository`, `DocumentNumberRepository`, `DocumentAccessGrantRepository`,
 > `LookupRepository`, `InstitutionSettingRepository`, `ExternalOrganizationRepository`,
 > `DocumentMovementRepository`, `DocumentFileRepository`, `DocumentFileTypeRepository`,
 > `FileStorageProviderRepository`, `AuditLogRepository`, `DocumentFieldRepository`,
-> `DocumentTypeSchemaVersionRepository`, `DocumentArchiveRepository`, `SavedSearchRepository`, `DocumentRelationRepository`); the notification repository
+> `DocumentTypeSchemaVersionRepository`, `DocumentArchiveRepository`, `SavedSearchRepository`, `DocumentRelationRepository`, `UiLabelOverrideRepository`); the notification repository
 > has none yet.
 
 ## Purpose
@@ -38,6 +38,7 @@ Concrete EF Core implementations of the repository interfaces declared in
 | `DocumentAccessGrantRepository.cs` | Loads per-document `DocumentAccessGrant` rows by id and by document, for grant/revoke/list. |
 | `LookupRepository.cs` | The one generic repository: resolves a kebab-case lookup slug to its `DbSet<TLookup>` through `LookupCatalog`, then lists/fetches/creates/relabels/(de)activates entries and answers `IsInUseAsync` from EF foreign-key metadata. Backs `/api/lookups/{lookup}`. |
 | `InstitutionSettingRepository.cs` | Loads the single `InstitutionSetting` row (table is a singleton by convention; the seeder owns the first insert) and attaches updates; `GetLogoAsync`/`AddLogo`/`RemoveLogo` keep the logo image in its own table so reading the settings never loads the bytes. |
+| `UiLabelOverrideRepository.cs` | The superadmin UI label replacements: `ListAllAsync` (ordered by key), `GetByKeyAsync`, `Add`, `Remove`. One row per overridden key; an absent key means the front end's built-in default. |
 | `ExternalOrganizationRepository.cs` | Loads `ExternalOrganization` by id or normalized (upper-cased) code and lists them by code; `ListPagedAsync` adds the active filter, a code/name search, and `Skip`/`Take` for the external-correspondent CRUD endpoints. |
 | `PersonRepository.cs` | Persons and their read models: name suggestions, the access-filtered list, a person's documents with current location and last action, the timeline merged from five sources, and join candidates (other unarchived, uncanceled documents of the same type that share a person and that the caller may view). |
 | `DecisionTypeRepository.cs` | Decision types and the document types each one may be issued on. |
@@ -92,12 +93,14 @@ Concrete EF Core implementations of the repository interfaces declared in
 | `DocumentArchiveRepository`, `SavedSearchRepository` | ✅ Implemented (2026-11-03) |
 | `DocumentRelationRepository` | ✅ Implemented (2026-11-03) |
 | `DecisionTypeRepository`, `DocumentDecisionRepository` | ✅ Implemented (2026-11-11) |
+| `UiLabelOverrideRepository` | ✅ Implemented (2026-11-17) |
 | `NotificationRepository` | ❌ Not implemented |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-17 | Qoder | Added `UiLabelOverrideRepository` (list/by-key/add/remove over `UI_LABEL_OVERRIDES`) for the editable UI terminology, Phase 0. |
 | 2026-11-13 | Claude | `DocumentRelationRepository` takes its relation-type lock with `ExecuteSqlAsync`; EF Core 11 makes `ExecuteSqlInterpolatedAsync` obsolete. The SQL and its parameters are unchanged. |
 | 2026-11-12 | Claude | `InstitutionSettingRepository` gained `GetLogoAsync`, `AddLogo` and `RemoveLogo`. |
 | 2026-11-11 | Claude | A sort on a form field breaks ties by register number, then id, like the column sorts. |

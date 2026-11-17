@@ -35,6 +35,8 @@ This is institution configuration, separate from the shell's local theme/density
 
 ## Change Log
 
+- 2026-11-17: UI labels Phase 3 (`plans/ui-labels-edit-mode.md`): the page header title/description render from the catalog (`page.institution-settings.title` / `.description`) via `PageHeader` `titleKey`/`descriptionKey`.
+
 | Date | Author | Change |
 | --- | --- | --- |
 | 2026-10-28 | agent | Document the new Module 01 settings route, its permission boundary, and separation from local display settings. |

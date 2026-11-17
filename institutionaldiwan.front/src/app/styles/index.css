@@ -206,3 +206,22 @@ html[data-motion='off'] *:not(.driver-popover, .driver-popover *) {
   scroll-behavior: auto;
   transition-duration: 0s;
 }
+
+/* Inline label-edit mode (superadmin only). The editable hint is driven by the
+   early-resolved <html data-label-edit> attribute and semantic tokens, so it works in
+   light/dark and RTL/LTR alike. Outlines (not borders) avoid shifting the layout. */
+html[data-label-edit='on'] .diwan-label-editable {
+  cursor: text;
+  border-radius: 0.25rem;
+  outline: 1px dashed transparent;
+  outline-offset: 2px;
+  transition:
+    outline-color 120ms ease,
+    background-color 120ms ease;
+}
+
+html[data-label-edit='on'] .diwan-label-editable:hover,
+html[data-label-edit='on'] .diwan-label-editable:focus-visible {
+  outline-color: var(--color-focus-ring);
+  background-color: var(--color-surface-muted);
+}

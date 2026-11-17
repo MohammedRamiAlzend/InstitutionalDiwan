@@ -30,6 +30,11 @@
         // the help chips from appearing a moment after the first page paints.
         var tutorial = localStorage.getItem('diwan.tutorial') === 'on' ? 'on' : 'off'
         document.documentElement.dataset.tutorial = tutorial
+
+        // Label-edit mode is opt-in too; resolving it here keeps the editable outlines
+        // from flashing in a moment after the first page paints for the superadmin.
+        var labelEdit = localStorage.getItem('diwan.labelEdit') === 'on' ? 'on' : 'off'
+        document.documentElement.dataset.labelEdit = labelEdit
       })()
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />

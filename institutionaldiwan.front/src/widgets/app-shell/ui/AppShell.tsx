@@ -1,8 +1,9 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
-import { CircleHelp, Pause, Play, RefreshCw, Rows3, Settings2 } from 'lucide-react'
+import { CircleHelp, Pause, PenLine, Play, RefreshCw, Rows3, Settings2 } from 'lucide-react'
 import { useBrandName } from '@/entities/branding'
+import { useSessionStore } from '@/entities/user'
 import {
   ContextMenu,
   ErrorBoundary,
@@ -10,7 +11,15 @@ import {
   isContextMenuShortcut,
   type MenuEntry,
 } from '@/shared/ui'
-import { setTutorialChoice, useTutorial } from '@/shared/lib'
+import {
+  resolveLabel,
+  setLabelEditMode,
+  setTutorialChoice,
+  t,
+  useLabelEdit,
+  useLabelsStore,
+  useTutorial,
+} from '@/shared/lib'
 import { AppHeader } from './AppHeader'
 import { AppSidebar } from './AppSidebar'
 import { SettingsDialog } from './SettingsDialog'
@@ -46,6 +55,10 @@ export function AppShell({ headerSlot }: AppShellProps = {}) {
   const [density, setDensity] = useState<Density>(getStoredDensity)
   const [motion, setMotion] = useState<Motion>(getStoredMotion)
   const tutorial = useTutorial()
+  const labelEdit = useLabelEdit()
+  // The label-edit capability is bound to the superadmin account itself (not a grantable
+  // permission), so the toggle and banner are absent from the DOM for everyone else.
+  const isSuperAdmin = useSessionStore((state) => state.user?.username) === 'superadmin'
 
   useEffect(() => {
     applyDensity(density)
@@ -76,7 +89,9 @@ export function AppShell({ headerSlot }: AppShellProps = {}) {
   }, [mobileOpen])
 
   const brandName = useBrandName()
-  const title = findNavItem(location.pathname)?.label ?? brandName
+  const overrides = useLabelsStore((state) => state.overrides)
+  const navItem = findNavItem(location.pathname)
+  const title = navItem ? resolveLabel(navItem.labelKey, overrides) : brandName
 
   // Only an explicit choice is stored, so `prefers-reduced-motion` keeps steering until then.
   const changeMotion = (next: Motion) => {
@@ -87,7 +102,7 @@ export function AppShell({ headerSlot }: AppShellProps = {}) {
   const shellMenu: MenuEntry[] = [
     {
       id: 'refresh-data',
-      label: 'تحديث البيانات',
+      label: t('shell.refresh'),
       icon: <RefreshCw className="size-4" aria-hidden />,
       onSelect: () => {
         void queryClient.invalidateQueries()
@@ -95,14 +110,14 @@ export function AppShell({ headerSlot }: AppShellProps = {}) {
     },
     {
       id: 'toggle-density',
-      label: density === 'comfortable' ? 'العرض المضغوط' : 'العرض المريح',
+      label: density === 'comfortable' ? t('shell.density-compact') : t('shell.density-comfortable'),
       icon: <Rows3 className="size-4" aria-hidden />,
       onSelect: () =>
         setDensity((previous) => (previous === 'comfortable' ? 'compact' : 'comfortable')),
     },
     {
       id: 'toggle-motion',
-      label: motion === 'on' ? 'إيقاف الحركات' : 'تفعيل الحركات',
+      label: motion === 'on' ? t('shell.motion-off') : t('shell.motion-on'),
       icon:
         motion === 'on' ? (
           <Pause className="size-4" aria-hidden />
@@ -113,14 +128,24 @@ export function AppShell({ headerSlot }: AppShellProps = {}) {
     },
     {
       id: 'toggle-tutorial',
-      label: tutorial === 'on' ? 'إيقاف الوضع التعليمي' : 'تفعيل الوضع التعليمي',
+      label: tutorial === 'on' ? t('shell.tutorial-off') : t('shell.tutorial-on'),
       icon: <CircleHelp className="size-4" aria-hidden />,
       onSelect: () => setTutorialChoice(tutorial === 'on' ? 'off' : 'on'),
     },
+    ...(isSuperAdmin
+      ? [
+          {
+            id: 'toggle-label-edit',
+            label: labelEdit === 'on' ? t('shell.label-edit-off') : t('shell.label-edit-on'),
+            icon: <PenLine className="size-4" aria-hidden />,
+            onSelect: () => setLabelEditMode(labelEdit === 'on' ? 'off' : 'on'),
+          } satisfies MenuEntry,
+        ]
+      : []),
     { type: 'separator' },
     {
       id: 'open-settings',
-      label: 'إعدادات العرض',
+      label: t('shell.display-settings'),
       icon: <Settings2 className="size-4" aria-hidden />,
       onSelect: () => setSettingsOpen(true),
     },
@@ -139,7 +164,7 @@ export function AppShell({ headerSlot }: AppShellProps = {}) {
         <div className="fixed inset-0 z-40 lg:hidden">
           <button
             type="button"
-            aria-label="إغلاق القائمة"
+            aria-label={t('shell.sidebar-close')}
             onClick={() => setMobileOpen(false)}
             className="absolute inset-0 cursor-pointer bg-overlay animate-overlay-in"
           />
@@ -150,6 +175,22 @@ export function AppShell({ headerSlot }: AppShellProps = {}) {
       )}
 
       <div className="flex min-w-0 flex-1 flex-col">
+        {isSuperAdmin && labelEdit === 'on' && (
+          <div
+            role="status"
+            className="sticky top-0 z-30 flex flex-wrap items-center gap-3 border-b border-border bg-accent px-4 py-2 text-sm text-accent-contrast sm:px-6 lg:px-8"
+          >
+            <PenLine className="size-4 shrink-0" aria-hidden />
+            <span className="min-w-0 flex-1">{t('shell.banner-text')}</span>
+            <button
+              type="button"
+              onClick={() => setLabelEditMode('off')}
+              className="shrink-0 cursor-pointer rounded-md bg-accent-contrast px-3 py-1 text-xs font-semibold text-accent transition-opacity hover:opacity-90"
+            >
+              {t('shell.banner-end')}
+            </button>
+          </div>
+        )}
         <AppHeader
           title={title}
           onOpenSidebar={() => setMobileOpen(true)}
@@ -161,7 +202,7 @@ export function AppShell({ headerSlot }: AppShellProps = {}) {
         <ContextMenu entries={shellMenu}>
           <main
             tabIndex={0}
-            aria-label="محتوى الصفحة"
+            aria-label={t('shell.page-content')}
             onKeyDown={(event) => {
               if (event.target !== event.currentTarget) return
               if (!isContextMenuShortcut(event)) return

@@ -10,8 +10,8 @@ export function SystemErrorsPage() {
       <GuideProvider pageId="system-errors">
         <div className="flex flex-col gap-6">
           <PageHeader
-            title="الأخطاء البرمجية"
-            description="كل خطأ يقع في الخادم أو في متصفح المستخدمين، مجمَّعًا بحيث يكون الخطأ المتكرر صفًا واحدًا. تابع حالته وصدّره إلى Excel للعمل عليه."
+            titleKey="page.system-errors.title"
+            descriptionKey="page.system-errors.description"
             pageGuide="system-errors"
           />
           <GuideRegion id="system-errors.grid">

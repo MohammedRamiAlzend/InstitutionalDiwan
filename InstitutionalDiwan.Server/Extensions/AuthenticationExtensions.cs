@@ -2,6 +2,7 @@ using InstitutionalDiwan.Domain.Common;
 using InstitutionalDiwan.Domain.Entities.Identity;
 using InstitutionalDiwan.Domain.Repositories;
 using InstitutionalDiwan.Infrastructure.Authentication;
+using InstitutionalDiwan.Infrastructure.Persistence.Seed;
 using InstitutionalDiwan.Server.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -82,6 +83,17 @@ public static class AuthenticationExtensions
                 policy.RequireAssertion(context =>
                     context.User.HasClaim(JwtProvider.PermissionClaimType, Permissions.DocumentCreate) ||
                     context.User.HasClaim(JwtProvider.PermissionClaimType, Permissions.DocumentEdit)));
+
+            // UI label editing belongs to the seeded superadmin account itself, not to a grantable
+            // permission: the SUPER_ADMIN role alone could be assigned to other accounts through
+            // USER_MANAGE, so the policy also pins the account name.
+            options.AddPolicy(UiLabelPolicies.Manage, policy =>
+                policy.RequireAssertion(context =>
+                    context.User.IsInRole(SuperAdminSeeder.RoleCode) &&
+                    string.Equals(
+                        context.User.Identity?.Name,
+                        SuperAdminSeeder.Username,
+                        StringComparison.OrdinalIgnoreCase)));
         });
 
         services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();

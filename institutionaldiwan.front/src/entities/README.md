@@ -44,6 +44,7 @@ read-only presentational UI. Entities never perform write mutations.
 | `notification/` | `NotificationResponse`, `UnreadCountResponse` (`GET /api/notifications`, `/api/notifications/unread-count`) | `useNotifications`, `useUnreadCount`, `notificationKeys`, `NotificationItem`, `NotificationPriorityBadge`, `NotificationTypeIcon` |
 | `document-relation/` | `DocumentRelationResponse`, `RelationGraphResponse`, `DocumentRelationEventResponse` (`GET /api/documents/{id}/relations`, `/graph`, `/events`) | `useDocumentRelations`, `useRelationGraph`, `useRelationEvents`, `relationGraphToMermaid`, `RelationTypeBadge` |
 | `document-schema/` | `DocumentFieldResponse`, `SchemaVersionResponse`, `DocumentFieldsResponse` (`/document-types/{id}/fields`, `/schema`, `/schema-versions`, `/schema-versions/{id}`, `/documents/{id}/fields`) | `useDocumentTypeFields`, `useSchemaVersions`, `useSchemaVersion`, `useDocumentTypeSchema`, `useDocumentFields`, `DynamicFieldInputs`, value validation helpers, badges |
+| `ui-label/` | `UiLabelOverridesResponse` (`GET /api/ui-labels`, any authenticated caller) | `useUiLabelsQuery`, `uiLabelKeys` | ✅ Read implemented (UI labels Phase 1); `app/providers/LabelsBootGate` applies it to the labels store. Writes land in `features/ui-label-manage` (Phase 2). |
 
 ## Conventions
 
@@ -77,11 +78,13 @@ read-only presentational UI. Entities never perform write mutations.
 | `notification/` | ✅ Inbox and unread-count reads (search, sort, filters, per-type counts), user-scoped query keys, row/priority/type-icon UI (Module 10). |
 | `document-relation/` | ✅ Links, graph and history reads, query keys/hooks, direction phrases, Mermaid/tree builders, badges (Module 08). |
 | `document-file/` | ✅ File/version/checksum types, `documentFileApi` (document-scoped list, blob download, on-demand verify), query keys/hooks (verify disabled until an explicit action), `ChecksumBadge`, and `FileArchivedBadge`; mounted by `widgets/document-attachments-panel`. |
+| `ui-label/` | ✅ Overrides read (`UiLabelOverridesResponse`, `uiLabelApi.get`), `uiLabelKeys`, `useUiLabelsQuery` (UI labels Phase 1); consumed by `app/providers/LabelsBootGate`. |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-17 | Qoder | UI labels, Phase 1 (`plans/ui-labels-edit-mode.md`): added the `ui-label` read slice — `UiLabelOverridesResponse`, `uiLabelApi.get` (`GET /api/ui-labels`), `uiLabelKeys`, and `useUiLabelsQuery`; `app/providers/LabelsBootGate` owns applying the result to the labels store. |
 | 2026-11-12 | Claude | Added `branding/`: the institution name and logo read from the anonymous `GET /api/branding`, with `BrandMark`, `BrandName` and `BrandingEffects`. |
 | 2026-11-11 | Claude | A document decision's appeals are part of the read model. |
 | 2026-11-11 | Claude | `document-decision` reads join candidates. `document-relation` phrases type «موحَّد مع». |

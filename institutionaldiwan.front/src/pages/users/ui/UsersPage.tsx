@@ -10,8 +10,8 @@ export function UsersPage() {
       <GuideProvider pageId="users">
         <div className="flex flex-col gap-6">
           <PageHeader
-            title="إدارة المستخدمين"
-            description="أنشئ حسابات المستخدمين، وحدّث أقسامهم ونطاقات وصولهم، وأسند الأدوار وإسنادات الأقسام."
+            titleKey="page.users.title"
+            descriptionKey="page.users.description"
             pageGuide="users"
           />
           <GuideRegion id="users.grid">

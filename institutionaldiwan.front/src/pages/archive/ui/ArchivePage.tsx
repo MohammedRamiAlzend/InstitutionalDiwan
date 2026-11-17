@@ -13,8 +13,8 @@ export function ArchivePage() {
       <GuideProvider pageId="archive">
         <div className="flex flex-col gap-6">
           <PageHeader
-            title="الأرشيف"
-            description="الوثائق المؤرشفة التي يحق لك الاطلاع عليها. الوثيقة المؤرشفة مجمّدة أمام التعديل حتى تُلغى أرشفتها من صفحة تفاصيلها."
+            titleKey="page.archive.title"
+            descriptionKey="page.archive.description"
             pageGuide="archive"
           />
           <GuideRegion id="archive.grid">
