@@ -23,6 +23,7 @@ Holds reusable, domain-agnostic UI primitives (Tailwind CSS v4 + Radix UI where 
 | `context-menu.tsx` | The single right-click primitive: opens at the pointer, inherits direction, returns focus, and honors `Shift+F10` / `ContextMenu` dispatch from the grid. |
 | `menu.ts` | Shared `MenuEntry` types (`MenuAction`, `MenuSeparator`, `MenuLabel`), style constants (`menuContentClass` carries the entrance/exit animation both menu surfaces share), `documentDirection()`, and the keyboard helpers `isContextMenuShortcut` / `dispatchContextMenu` used by tables and the app shell. |
 | `badge.tsx` | Status/classification badge with `neutral`, `accent`, `success`, `warning`, `danger`, and `outline` variants. |
+| `collapsible-section.tsx` | `CollapsibleSection`: a bordered section whose header toggles its body (optional accent icon before the title, hint under it, chevron flip, `aria-expanded`) with a 200ms grid-rows height animation; `visibility` joins the transition so collapsed content leaves the tab order only after the close animation, and the shell's motion-off switch zeroes it like every transition. An `actions` slot sits outside the toggle button so header buttons never collapse the section. Uncontrolled (`defaultOpen`) or controlled (`open` + `onOpenChange`) for callers that drive several sections from one place. Children stay mounted while collapsed so forms and queries inside keep their state; `id`/`className` pass through for anchor navigation. |
 | `skeleton.tsx` | Pulse placeholder used for table and region loading states. |
 | `page-header.tsx` | Page title, optional description/actions, and badge cluster. `pageGuide` adds the «شرح هذه الصفحة» button at the head of the action cluster — it renders nothing when tutorial mode is off or when no `GuideProvider` with that page id wraps the page. |
 | `data-table-export.tsx` | The «تصدير» menu of every table: reads the table as displayed and exports it to Excel through the API or to PDF through `print-sheet`. |
@@ -49,6 +50,9 @@ Holds reusable, domain-agnostic UI primitives (Tailwind CSS v4 + Radix UI where 
 ## Change Log
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-17 | Qoder | `CollapsibleSection` expand/collapse became animated: the body wrapper transitions `grid-template-rows` between `1fr` and `0fr` over 200ms (replacing the instant `hidden` attribute), with `visibility` in the transition so closed content stays focusable until the animation ends and leaves the tab order after; the motion-off switch suppresses it through the global `transition-duration: 0s` rule. |
+| 2026-11-17 | Qoder | `CollapsibleSection` gained an accent `icon`, an `actions` slot outside the toggle button, controlled `open`/`onOpenChange` alongside `defaultOpen`, and `id`/`className` pass-through — the details tab drives its four sections from one open-state and jumps to them by anchor. |
+| 2026-11-16 | Qoder | Added `collapsible-section.tsx` (`CollapsibleSection`) and exported it through the barrel; the document-details tab uses it for the merged «حقول الوثيقة» section. |
 | 2026-11-09 | Claude | Added `data-table-export` (the «تصدير» menu on every `DataTable`) and `print-sheet`. |
 | 2026-11-09 | Claude | `DataTable`'s scroller is positioned, so its sr-only cells no longer widen the whole page on a phone. |
 | 2026-11-08 | Claude | `ErrorBoundary` reports render failures to the developer's error log. |

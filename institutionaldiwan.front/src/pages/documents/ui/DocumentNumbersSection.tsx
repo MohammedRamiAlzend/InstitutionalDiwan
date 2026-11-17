@@ -36,6 +36,7 @@ import {
 import {
   Badge,
   Button,
+  CollapsibleSection,
   DataTable,
   Skeleton,
   type DataTableColumn,
@@ -71,20 +72,25 @@ function latestNumberNote(number: DocumentNumberResponse): string | null {
   return note ? formatNumberNote(note) : null
 }
 
-interface DocumentNumbersTabProps {
+interface DocumentNumbersSectionProps {
   documentId: string
   documentStatusId: number
   canManage: boolean
   departmentNames: Map<string, string>
+  /** Controlled collapse state, driven by the details tab's section navigation. */
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
 }
 
-/** Numbers tab: central number, department register lines, and the full number history. */
-export function DocumentNumbersTab({
+/** Numbers section of the details tab: central number, department register lines, and the full number history. */
+export function DocumentNumbersSection({
   documentId,
   documentStatusId,
   canManage,
   departmentNames,
-}: DocumentNumbersTabProps) {
+  open,
+  onOpenChange,
+}: DocumentNumbersSectionProps) {
   const historyQuery = useDocumentNumberHistory(documentId)
   const entriesQuery = useDocumentRegistryNumbers(documentId)
   const table = useTableState({
@@ -221,11 +227,18 @@ export function DocumentNumbersTab({
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <section className="flex flex-col gap-4 rounded-xl border border-border bg-surface p-5">
+    <CollapsibleSection
+      title="الأرقام"
+      icon={<Hash className="size-4" aria-hidden />}
+      hint="الرقم المركزي، أرقام سجلات الدوائر، وسجل الأرقام الكامل."
+      open={open}
+      onOpenChange={onOpenChange}
+    >
+      <div className="flex flex-col gap-5">
+      <section className="flex flex-col gap-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="flex flex-col gap-1">
-            <h2 className="text-base font-semibold text-foreground">الرقم المركزي</h2>
+            <h3 className="text-sm font-semibold text-foreground">الرقم المركزي</h3>
             <p className="max-w-2xl text-xs text-muted">
               رقم الديوان الرسمي للوثيقة، ويبقى ثابتًا عند تسجيل أرقام الدوائر في سجلاتها.
             </p>
@@ -353,7 +366,7 @@ export function DocumentNumbersTab({
                 {central.history.map((event) => (
                   <li
                     key={event.historyId}
-                    className="flex flex-wrap items-center gap-2 rounded-lg border border-border px-3 py-2 text-xs"
+                    className="flex flex-wrap items-center gap-2 py-1 text-xs"
                   >
                     <Badge variant="outline">
                       {numberEventLabels[event.eventTypeId] ?? `حدث #${event.eventTypeId}`}
@@ -380,10 +393,10 @@ export function DocumentNumbersTab({
         )}
       </section>
 
-      <section className="flex flex-col gap-4 rounded-xl border border-border bg-surface p-5">
+      <section className="flex flex-col gap-4 border-t border-border pt-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="flex flex-col gap-1">
-            <h2 className="text-base font-semibold text-foreground">أرقام سجلات الدوائر</h2>
+            <h3 className="text-sm font-semibold text-foreground">أرقام سجلات الدوائر</h3>
             <p className="max-w-2xl text-xs text-muted">
               الأرقام التي كتبتها الدوائر في سجلاتها الخاصة للوثيقة، مع كل تاريخ تسجيل أو إعادة
               تسجيل. إذا سجّلت الدائرة الوثيقة برقم جديد يبقى رقمها السابق هنا مستبدَلًا ومرتبطًا به.
@@ -409,11 +422,11 @@ export function DocumentNumbersTab({
             لم تسجّل أي دائرة رقمًا خاصًا بها لهذه الوثيقة بعد.
           </p>
         ) : (
-          <ul className="flex flex-col gap-3">
+          <ul className="flex flex-col gap-4">
             {entries?.departmentNumbers.map((line: DepartmentRegistryNumberResponse) => (
               <li
                 key={line.documentNumberId}
-                className="flex flex-col gap-2 rounded-lg border border-border bg-background px-4 py-3"
+                className="flex flex-col gap-2 border-t border-border pt-4 first:border-t-0 first:pt-0"
               >
                 <div className="flex flex-wrap items-center gap-2">
                   <code dir="ltr" className="font-mono text-sm font-semibold text-foreground">
@@ -492,9 +505,9 @@ export function DocumentNumbersTab({
         )}
       </section>
 
-      <section className="flex flex-col gap-4 rounded-xl border border-border bg-surface p-5">
+      <section className="flex flex-col gap-4 border-t border-border pt-5">
         <div className="flex flex-col gap-1">
-          <h2 className="text-base font-semibold text-foreground">سجل الأرقام</h2>
+          <h3 className="text-sm font-semibold text-foreground">سجل الأرقام</h3>
           <p className="max-w-2xl text-xs text-muted">
             كل رقم صدر للوثيقة، بما فيه الأرقام الملغاة والمستبدلة؛ لا يُحذف أي سجل.
           </p>
@@ -583,6 +596,7 @@ export function DocumentNumbersTab({
           }}
         />
       )}
-    </div>
+      </div>
+    </CollapsibleSection>
   )
 }

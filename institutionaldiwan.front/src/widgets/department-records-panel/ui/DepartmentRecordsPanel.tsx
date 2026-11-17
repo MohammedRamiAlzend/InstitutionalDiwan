@@ -42,12 +42,12 @@ export function DepartmentRecordsPanel({ documentId }: DepartmentRecordsPanelPro
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-5">
       {records.map((record) => (
         <section
           key={record.registryNumberId}
           aria-label={`سجل ${record.departmentNameAr}`}
-          className="flex flex-col gap-3 rounded-xl border border-border bg-surface p-4"
+          className="flex flex-col gap-3 border-t border-border pt-5 first:border-t-0 first:pt-0"
         >
           <header className="flex flex-wrap items-center gap-2">
             <h3 className="text-sm font-semibold text-foreground">{record.departmentNameAr}</h3>

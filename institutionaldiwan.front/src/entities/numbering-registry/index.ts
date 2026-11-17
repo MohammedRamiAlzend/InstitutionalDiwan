@@ -13,8 +13,14 @@ export {
   useDepartmentRegister,
   useDepartmentRegisterEntries,
 } from './model/queries'
-export { useDepartmentRegistryOptions } from './model/departmentRegistries'
-export type { DepartmentRegistryOptions } from './model/departmentRegistries'
+export {
+  useDepartmentRegistries,
+  useDepartmentRegistryOptions,
+} from './model/departmentRegistries'
+export type {
+  DepartmentRegistries,
+  DepartmentRegistryOptions,
+} from './model/departmentRegistries'
 export { DepartmentRegistrySelect } from './ui/DepartmentRegistrySelect'
 export { RegistryScopeCard } from './ui/RegistryScopeCard'
 export {

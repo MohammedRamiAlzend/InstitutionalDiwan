@@ -16,8 +16,9 @@ not ask for it.
 
 ## 2. Strict FSD Rules
 
-- Allowed Imports: `@/entities/department`, `@/entities/document`, `@/entities/person`,
-  `@/entities/lookup`, `@/entities/user`, and `@/shared/*`.
+- Allowed Imports: `@/entities/department`, `@/entities/document`, `@/entities/document-schema`,
+  `@/entities/person`, `@/entities/lookup`, `@/entities/numbering-registry`, `@/entities/user`,
+  and `@/shared/*`.
 - Forbidden Imports: NEVER import from `@/app`, `@/pages`, `@/widgets`, or sibling `@/features/*` slices.
 - Public API: export the request types, form value types, both mutation hooks, and
   `CreateDocumentDialog` via `src/features/document-create/index.ts`.
@@ -42,6 +43,10 @@ not ask for it.
 ## 5. Behaviour notes
 
 - Default mode is **draft**; it starts on **register** only for callers holding `NUMBERING_MANAGE`.
+- In register mode with `NUMBERING_VIEW`, the register field preselects the choice stored by the
+  sidebar's register sub-items (`resolveSelectedRegistryId(readSelectedRegistryId(), options)` —
+  stored if still active, else the first register). A restored draft keeps its own choice, and the
+  user can still change the field; without the permission the server picks the best match.
 - The dialog renders `toArabicErrorMessage` for other failures and stays open so the user can correct
   the input.
 - `Numbering.OfficialNumberTaken` is shown once, on the official-number field; the form-level alert is
@@ -57,6 +62,7 @@ not ask for it.
 | Browser verification | ✅ Verified in-browser (2026-10-28) against the live API: draft «مسودة تحقق Phase 2» saved as DRAFT with «بدون رقم»; registering an existing `15/2024` returned `409 Numbering.OfficialNumberTaken` as the Arabic field error «رقم النظام مستخدم مسبقًا في هذه السنة.» with the dialog staying open; registering `999/2026` closed the dialog, showed the toast «تم تسجيل الوثيقة برقم 999/2026.», and the row appeared first in the registry; the numbering-year default rendered `2026` from the browser clock. |
 
 ## 7. Change Log
+- 2026-11-17: The register field preselects the sidebar-chosen register (`shared/lib/selectedRegistry`), falling back to the first active register; restored drafts keep their own choice.
 - 2026-11-09: The department register section moved to the top of the form.
 - 2026-11-09: While `FEATURES.drafts` is off the form hides the mode choice and always registers.
 - 2026-11-09: Removed the recipient block: it only recorded a participant and read as if it sent the document. Recipients are added from «إضافة مشارك» on the document page.

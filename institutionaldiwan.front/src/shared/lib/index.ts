@@ -40,3 +40,9 @@ export { sha256Hex, ChecksumUnsupportedError } from './crypto'
 export { decodeJwtPayload, readMustChangePassword } from './jwt'
 export type { JwtClaims } from './jwt'
 export { safeRelativeUrl } from './safeRelativeUrl'
+export {
+  readSelectedRegistryId,
+  writeSelectedRegistryId,
+  useSelectedRegistryId,
+  resolveSelectedRegistryId,
+} from './selectedRegistry'

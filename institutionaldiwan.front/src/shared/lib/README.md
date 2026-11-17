@@ -14,6 +14,7 @@ Contains pure, framework-independent helper functions for class merging, `Asia/D
 | `download.ts` | `parseContentDisposition(header)` extracts a display file name, preferring RFC 5987 `filename*=UTF-8''…` over a plain `filename=` and stripping any path segments; `saveBlobAsFile(blob, fileName)` triggers the browser download through a temporary object URL. |
 | `arabic.ts` | Normalizes Arabic search strings (unified hamzas, taa marbuta, and Eastern/Western numerals). (❌ pending) |
 | `columnPreferences.ts` | Reads/writes the per-table column visibility selection in `localStorage` under `diwan.table.<tableId>.columns.v1`; parses defensively, merges with the table's default columns, and exposes a reset to defaults. View state only — never sent to the API. |
+| `selectedRegistry.ts` | The register chosen under «الوثائق» in the sidebar, in `localStorage` under `diwan.documents.selectedRegistry.v1`: `readSelectedRegistryId`, `writeSelectedRegistryId` (also fires a same-tab change event), `useSelectedRegistryId` (`useSyncExternalStore` over that event plus cross-tab `storage`), and `resolveSelectedRegistryId(stored, options)` — the stored choice when still among the options, else the first. View state only; the create-document form reads it as its default register. |
 | `formDraft.ts` | Form-draft persistence in `localStorage` under `diwan.formDraft.<formId>.<userId>.v1`: `readFormDraft`, `writeFormDraft`, `clearFormDraft` `useFormDraftAutosave` and `useDraftForm` (a `useForm` wrapper; scope set by `setFormDraftScope`) (debounced save, flush on unmount, `discard()` after a successful submit). Unsent input only; never sent to the API. |
 | `useTableState.ts` | Table view state in URL search params (`page`, `pageSize`, `search`, `sort`, `dir`, plus caller-declared filter keys); resets to page 1 when search, filters, sort, or size change. Page size defaults to 10 and is clamped to `MIN_PAGE_SIZE`..`MAX_PAGE_SIZE` (1..100, the same ceiling as the server's `PageRequest.MaxPageSize`); both bounds are exported so the grid can offer them as input limits, and a value equal to the effective `defaultPageSize` stays out of the URL. `removeParams(keys)` removes chosen parameters in one write. `clearQuery()` removes the search and every filter in one URL write, because two sequential setters would each rebuild from the same stale params and restore what the other cleared. |
 | `useDebouncedValue.ts` | Generic debounce hook used by table search inputs. |
@@ -24,12 +25,13 @@ Contains pure, framework-independent helper functions for class merging, `Asia/D
 | Item | State |
 | --- | --- |
 | `cn.ts`, `theme.ts` | ✅ Implemented |
-| `date.ts`, `format.ts`, `formDraft.ts`, `columnPreferences.ts`, `useTableState.ts`, `useDebouncedValue.ts`, `jwt.ts`, `tutorial.ts` | ✅ Implemented |
+| `date.ts`, `format.ts`, `formDraft.ts`, `columnPreferences.ts`, `useTableState.ts`, `useDebouncedValue.ts`, `jwt.ts`, `tutorial.ts`, `selectedRegistry.ts` | ✅ Implemented |
 | `crypto.ts`, `download.ts` | ✅ Implemented (Module 06 Phase 1) |
 | `arabic.ts` | ❌ Pending the search slice |
 ## Change Log
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-17 | agent | Added `selectedRegistry.ts`: the sidebar register choice (`diwan.documents.selectedRegistry.v1`) with a live hook and a stored-if-valid-else-first resolver, consumed by `DocumentsRegisterNav` and the create-document dialog. |
 | 2026-11-11 | Claude | `useTableState` gained `removeParams(keys)`, a one-write clear for a chosen set of parameters. |
 | 2026-11-05 | Claude | `formDraft.ts` gained `useDraftForm` (drop-in `useForm` with draft persistence, restore toast and `draft.discard()`) and `setFormDraftScope`; password/secret/token fields and files are never stored. |
 | 2026-11-05 | Claude | Added `formDraft.ts` (`formDraftKey`, `readFormDraft`, `writeFormDraft`, `clearFormDraft`, `useFormDraftAutosave`). |

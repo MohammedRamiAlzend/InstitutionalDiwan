@@ -10,10 +10,13 @@ import {
 import { toArabicErrorMessage } from '@/shared/api'
 import { Permissions } from '@/shared/config'
 import { formatDate, formatDateTime, formatShortId } from '@/shared/lib'
-import { Badge, Button, Skeleton } from '@/shared/ui'
+import { Badge, Button, CollapsibleSection, Skeleton } from '@/shared/ui'
 
-interface DocumentGrantsTabProps {
+interface DocumentGrantsSectionProps {
   documentId: string
+  /** Controlled collapse state, driven by the details tab's section navigation. */
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
 }
 
 interface RevokeTarget {
@@ -64,7 +67,7 @@ function GrantRow({ grant, canManage, onRevoke }: GrantRowProps) {
   const revoker = useUserLabel(grant.revokedByUserId ?? '')
 
   return (
-    <li className="flex flex-col gap-2 rounded-lg border border-border bg-background px-4 py-3">
+    <li className="flex flex-col gap-2 border-t border-border pt-4 first:border-t-0 first:pt-0">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="flex min-w-0 flex-col gap-1">
           <div className="flex flex-wrap items-center gap-2">
@@ -134,8 +137,12 @@ function GrantRow({ grant, canManage, onRevoke }: GrantRowProps) {
   )
 }
 
-/** Grants tab: every grant recorded on the document, including revoked rows. */
-export function DocumentGrantsTab({ documentId }: DocumentGrantsTabProps) {
+/** Grants section of the details tab: every grant recorded on the document, including revoked rows. */
+export function DocumentGrantsSection({
+  documentId,
+  open,
+  onOpenChange,
+}: DocumentGrantsSectionProps) {
   const grantsQuery = useDocumentAccessGrants(documentId)
   const canManage = useSessionStore((state) => state.hasPermission(Permissions.AccessGrantManage))
 
@@ -146,28 +153,32 @@ export function DocumentGrantsTab({ documentId }: DocumentGrantsTabProps) {
   const activeCount = grants.filter((grant) => resolveGrantState(grant) === 'active').length
 
   return (
-    <section className="rounded-xl border border-border bg-surface p-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <CollapsibleSection
+      title="تصاريح الوصول"
+      icon={<ShieldCheck className="size-4" aria-hidden />}
+      hint="تصاريح إضافية تمنح مستخدمًا محددًا مستوى وصول على هذه الوثيقة، مع المانح وتاريخ الانتهاء وسجل الإلغاء."
+      open={open}
+      onOpenChange={onOpenChange}
+      actions={
         <div className="flex flex-wrap items-center gap-2">
-          <h2 className="text-base font-semibold text-foreground">تصاريح الوصول</h2>
           <Badge variant="outline">{grants.length}</Badge>
           <Badge variant="success">{activeCount} ساري</Badge>
+          {canManage && (
+            <Button type="button" size="sm" onClick={() => setGrantOpen(true)}>
+              <UserPlus className="size-4" aria-hidden />
+              منح وصول
+            </Button>
+          )}
         </div>
-        {canManage && (
-          <Button type="button" size="sm" onClick={() => setGrantOpen(true)}>
-            <UserPlus className="size-4" aria-hidden />
-            منح وصول
-          </Button>
-        )}
-      </div>
-
+      }
+    >
       {grantsQuery.isLoading ? (
-        <div className="mt-4 flex flex-col gap-3">
+        <div className="flex flex-col gap-3">
           <Skeleton className="h-20 w-full" />
           <Skeleton className="h-20 w-full" />
         </div>
       ) : grantsQuery.isError ? (
-        <div className="mt-6 flex flex-col items-center gap-2 text-center">
+        <div className="flex flex-col items-center gap-2 text-center">
           <p className="text-sm font-medium text-danger">
             {toArabicErrorMessage(grantsQuery.error)}
           </p>
@@ -181,7 +192,7 @@ export function DocumentGrantsTab({ documentId }: DocumentGrantsTabProps) {
           </Button>
         </div>
       ) : grants.length === 0 ? (
-        <div className="mt-6 flex flex-col items-center gap-2 rounded-lg border border-dashed border-border px-4 py-10 text-center">
+        <div className="flex flex-col items-center gap-2 rounded-lg border border-dashed border-border px-4 py-10 text-center">
           <ShieldCheck className="size-5 text-muted" aria-hidden />
           <p className="text-sm font-medium text-foreground">لا توجد تصاريح وصول بعد.</p>
           <p className="max-w-md text-xs text-muted">
@@ -196,7 +207,7 @@ export function DocumentGrantsTab({ documentId }: DocumentGrantsTabProps) {
           )}
         </div>
       ) : (
-        <ul className="mt-4 flex flex-col gap-3">
+        <ul className="flex flex-col gap-4">
           {grants.map((grant) => (
             <GrantRow
               key={grant.grantId}
@@ -226,6 +237,6 @@ export function DocumentGrantsTab({ documentId }: DocumentGrantsTabProps) {
           }}
         />
       )}
-    </section>
+    </CollapsibleSection>
   )
 }

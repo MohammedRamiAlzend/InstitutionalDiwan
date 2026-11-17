@@ -34,68 +34,43 @@ import {
   PageHeader,
   Skeleton,
 } from '@/shared/ui'
-import { DepartmentRecordsPanel } from '@/widgets/department-records-panel'
-import { DocumentFieldsPanel } from '@/widgets/document-fields-panel'
 import { DocumentPrintSheet } from '@/widgets/document-print-sheet'
 import { DocumentDecisionsPanel } from '@/widgets/document-decisions-panel'
 import { DocumentRelationsPanel } from '@/widgets/document-relations-panel'
-import { DocumentArchiveTab } from './DocumentArchiveTab'
+import { DocumentDetailsTab } from './DocumentDetailsTab'
 import { DocumentFilesTab } from './DocumentFilesTab'
-import { DocumentGrantsTab } from './DocumentGrantsTab'
 import { DocumentMovementsTab } from './DocumentMovementsTab'
-import { DocumentNumbersTab } from './DocumentNumbersTab'
-import { DocumentOverviewTab } from './DocumentOverviewTab'
 import { DocumentParticipantsTab } from './DocumentParticipantsTab'
 import { DocumentPersonsTab } from './DocumentPersonsTab'
 
 const TABS = [
   { key: 'details', label: 'التفاصيل', available: true },
-  { key: 'participants', label: 'المشاركون', available: true },
-  { key: 'persons', label: 'الأشخاص المرتبطون', available: true },
-  { key: 'numbers', label: 'الأرقام', available: true },
   { key: 'movements', label: 'الحركات', available: true },
-  { key: 'files', label: 'الملفات', available: true },
-  { key: 'grants', label: 'التصاريح', available: true },
-  { key: 'fields', label: 'الحقول', available: true },
-  { key: 'department-records', label: 'سجل الديوان', available: true },
-  { key: 'relations', label: 'الروابط', available: true },
+  { key: 'persons', label: 'الأشخاص المرتبطون', available: true },
+  { key: 'participants', label: 'المشاركون', available: true },
   { key: 'decisions', label: 'القرار', available: true },
-  { key: 'archive', label: 'سجل الأرشفة', available: true },
+  { key: 'relations', label: 'الروابط', available: true },
+  { key: 'files', label: 'الملفات', available: true },
 ] as const
 
 type TabKey = (typeof TABS)[number]['key']
 type AvailableTabKey =
   | 'details'
-  | 'participants'
-  | 'persons'
-  | 'numbers'
   | 'movements'
-  | 'files'
-  | 'grants'
-  | 'fields'
-  | 'department-records'
-  | 'relations'
+  | 'persons'
+  | 'participants'
   | 'decisions'
-  | 'archive'
+  | 'relations'
+  | 'files'
 
 /** Unknown, not-yet-available, or permission-hidden tabs fall back to the details tab. */
-function resolveTab(
-  raw: string | null,
-  canManageGrants: boolean,
-  canViewNumbering: boolean,
-  showDecisions: boolean,
-): AvailableTabKey {
-  if (raw === 'participants' && FEATURES.participants) return 'participants'
-  if (raw === 'persons') return 'persons'
-  if (raw === 'numbers' && canViewNumbering) return 'numbers'
+function resolveTab(raw: string | null, showDecisions: boolean): AvailableTabKey {
   if (raw === 'movements') return 'movements'
-  if (raw === 'files') return 'files'
-  if (raw === 'grants' && canManageGrants) return 'grants'
-  if (raw === 'fields') return 'fields'
-  if (raw === 'department-records') return 'department-records'
-  if (raw === 'relations') return 'relations'
+  if (raw === 'persons') return 'persons'
+  if (raw === 'participants' && FEATURES.participants) return 'participants'
   if (raw === 'decisions' && showDecisions) return 'decisions'
-  if (raw === 'archive') return 'archive'
+  if (raw === 'relations') return 'relations'
+  if (raw === 'files') return 'files'
   return 'details'
 }
 
@@ -132,12 +107,7 @@ function DocumentDetailsView() {
   const showDecisionsTab =
     (decisionTypesQuery.data?.length ?? 0) > 0 ||
     (decisionTypesQuery.isLoading && searchParams.get('tab') === 'decisions')
-  const activeTab = resolveTab(
-    searchParams.get('tab'),
-    canManageGrants,
-    canViewNumbering,
-    showDecisionsTab,
-  )
+  const activeTab = resolveTab(searchParams.get('tab'), showDecisionsTab)
   const timelineQuery = useDocumentTimeline(documentId)
   // A document pinned to no schema has no dynamic fields, so its tab stays hidden.
   const fieldsQuery = useDocumentFields(documentId)
@@ -330,10 +300,6 @@ function DocumentDetailsView() {
         {TABS.filter(
           (tab) =>
             (tab.key !== 'participants' || FEATURES.participants) &&
-            (tab.key !== 'grants' || canManageGrants) &&
-            (tab.key !== 'numbers' || canViewNumbering) &&
-            (tab.key !== 'fields' || hasDynamicFields) &&
-            (tab.key !== 'department-records' || hasDepartmentRecords) &&
             (tab.key !== 'decisions' || showDecisionsTab),
         ).map((tab) => {
           const isActive = activeTab === tab.key
@@ -367,13 +333,19 @@ function DocumentDetailsView() {
 
       {activeTab === 'details' && (
         <GuideRegion id="document-details.tab-details">
-        <DocumentOverviewTab
+        <DocumentDetailsTab
           document={document}
           statusHistory={details.statusHistory}
           timeline={timelineQuery.data ?? []}
           timelineLoading={timelineQuery.isLoading}
           participantsById={participantsById}
           departmentNames={departmentNames}
+          canEdit={canEdit}
+          canViewNumbering={canViewNumbering}
+          canManageNumbering={canManageNumbering}
+          canManageGrants={canManageGrants}
+          hasDynamicFields={hasDynamicFields}
+          hasDepartmentRecords={hasDepartmentRecords}
         />
         </GuideRegion>
       )}
@@ -402,16 +374,6 @@ function DocumentDetailsView() {
           />
         </GuideRegion>
       )}
-      {activeTab === 'numbers' && canViewNumbering && (
-        <GuideRegion id="document-details.tab-numbers">
-        <DocumentNumbersTab
-          documentId={document.documentId}
-          documentStatusId={document.statusId}
-          canManage={canManageNumbering && !isArchived}
-          departmentNames={departmentNames}
-        />
-        </GuideRegion>
-      )}
       {activeTab === 'movements' && (
         <GuideRegion id="document-details.tab-movements">
         <DocumentMovementsTab
@@ -429,29 +391,6 @@ function DocumentDetailsView() {
           documentId={document.documentId}
           canManage={canEdit && !isCanceled && !isArchived}
         />
-        </GuideRegion>
-      )}
-      {activeTab === 'grants' && canManageGrants && (
-        <GuideRegion id="document-details.tab-grants">
-          <DocumentGrantsTab documentId={document.documentId} />
-        </GuideRegion>
-      )}
-      {activeTab === 'fields' && hasDynamicFields && (
-        <GuideRegion id="document-details.tab-fields">
-          <DocumentFieldsPanel
-            documentId={document.documentId}
-            canEdit={canEdit && isDraft}
-            lockedReason={
-              canEdit && !isDraft
-                ? 'قيم الحقول تُقفل عند تسجيل الوثيقة؛ لا تُعدَّل إلا في المسودة.'
-                : undefined
-            }
-          />
-        </GuideRegion>
-      )}
-      {activeTab === 'department-records' && (
-        <GuideRegion id="document-details.tab-department-records">
-          <DepartmentRecordsPanel documentId={document.documentId} />
         </GuideRegion>
       )}
       {activeTab === 'relations' && (
@@ -481,11 +420,6 @@ function DocumentDetailsView() {
             canMove={canEdit && !isCanceled && !isArchived}
             canArchive={canArchiveNow}
           />
-        </GuideRegion>
-      )}
-      {activeTab === 'archive' && (
-        <GuideRegion id="document-details.tab-archive">
-          <DocumentArchiveTab documentId={document.documentId} />
         </GuideRegion>
       )}
 

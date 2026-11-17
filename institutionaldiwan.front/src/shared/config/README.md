@@ -55,6 +55,9 @@ export const ROUTES = {
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-17 | Qoder | `documents.create` guide body now says the register is preselected from the choice made under «الوثائق» in the sidebar and can be changed in the form. |
+| 2026-11-17 | Qoder | Details-tab layout redesign: `document-details.section-archive` became `document-details.section-logs` (the unified newest-first timeline of status/participant/number/archive events plus the department records); `tab-details` describes the sticky summary sidebar, the chip navigation and the collapsible sections; `section-numbers`/`section-grants` mention their collapsible headers. |
+| 2026-11-16 | Qoder | Document-details guide follows the tab merge: the five tab entries (`tab-numbers`, `tab-grants`, `tab-fields`, `tab-department-records`, `tab-archive`) became `section-*` entries pointed at the merged regions inside the details tab; `document-details.tabs` and `tab-details` describe the six-tab order and the bundled «السجلات» section, and `tab-movements` describes the receive/redirect-only buttons. |
 | 2026-11-11 | Claude | Added `ROUTES.MY_REGISTERS` (`/my-registers`) and the `my-registers` tutorial guide. |
 | 2026-11-11 | Claude | `DOCUMENT_RELATION_TYPE.JoinedInto` is 5. The document-details guide explains the principal file and the join suggestion. The decisions guide no longer says unification cannot be issued. |
 | 2026-11-11 | Claude | `APPEAL_OUTCOME` (1 pending, 2 accepted, 3 rejected) and the appeal guide entries on the document details page. A revoked decision is labelled «مفسوخ». |

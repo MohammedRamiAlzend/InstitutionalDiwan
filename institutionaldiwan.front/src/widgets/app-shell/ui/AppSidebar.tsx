@@ -19,6 +19,7 @@ import {
   type MenuEntry,
 } from '@/shared/ui'
 import { filterNavGroups, type ShellNavItem } from '../model/shell-nav'
+import { DocumentsRegisterNav } from './DocumentsRegisterNav'
 
 interface AppSidebarProps {
   collapsed?: boolean
@@ -226,6 +227,7 @@ export function AppSidebar({
                     return (
                       <li key={item.id}>
                         <ContextMenu entries={entries}>{content}</ContextMenu>
+                        {item.id === 'documents' && !collapsed && <DocumentsRegisterNav />}
                       </li>
                     )
                   })}

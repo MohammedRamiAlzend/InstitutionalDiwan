@@ -1,27 +1,27 @@
 # `src/pages/documents` — Correspondence Registry & Document Details
 
 > **Status:** Registry page ✅ implemented (Module 03 Phase 2), document details ✅ implemented
-> (Module 03 Phase 3), the access-grants tab ✅ implemented (Module 03 Phase 4), the numbers tab
-> ✅ implemented (Module 03 Phase 5), the movements tab ✅ implemented (Module 03 Phase 6), the
-> external-organizations admin tab ✅ implemented (Module 03 Phase 7), and the files tab
+> (Module 03 Phase 3), the access-grants section ✅ implemented (Module 03 Phase 4), the numbers
+> section ✅ implemented (Module 03 Phase 5), the movements tab ✅ implemented (Module 03 Phase 6),
+> the external-organizations admin tab ✅ implemented (Module 03 Phase 7), and the files tab
 > ✅ implemented (Module 06 Phases 2–4: grid, download, upload, versions, archiving, verify).
-> `/documents` now hosts the registry and the correspondent catalog; `/documents/:documentId` renders
-> details, participants, access grants, official numbers/department registrations, movement routing
-> with its timeline, status history, the audit timeline, and the document's attachment files with
-> their full write actions for editors.
+> `/documents` hosts the registry and the correspondent catalog; `/documents/:documentId` renders
+> six tabs — details, movements, related persons, decision, relations, files — where the details
+> tab shows a sticky «بيانات الوثيقة» summary sidebar beside collapsible sections for the official
+> numbers, the access grants, the dynamic fields, and a «السجلات» section holding one unified
+> timeline (status transitions, participants, numbers, archive operations) plus the department
+> records, with chip navigation and scrollspy between the sections.
 
 ## Purpose
 
 Renders the correspondence registry at `/documents` (tabbed with the external-correspondent
 administration tab, Phase 7) and the document detail at
-`/documents/:documentId`. Detail composes Phase 3 metadata/participants/timeline, the Phase 3
-lifecycle actions (draft edit, register, participant, cancel), the Phase 4 access-grant tab
-(grant/revoke behind `ACCESS_GRANT_MANAGE`), the Phase 5 numbers tab (issue, cancel, replace,
-department registration, and full number history behind `NUMBERING_VIEW`/`NUMBERING_MANAGE`), and
-the Phase 6 movements tab (open/send/receive/complete/reject/return/redirect/close/cancel behind
-`DOCUMENT_EDIT`, with the movement chain and event log), and the Module 06 files tab (the attachment
-grid with its filters, download, and — for `DOCUMENT_EDIT` on a document that is not canceled — the
-atomic first upload).
+`/documents/:documentId`. Detail composes the merged details tab (metadata, numbers, grants,
+fields, logs), the movements tab (open/send/receive/complete/reject/return/redirect/close/cancel
+behind `DOCUMENT_EDIT`, with the movement chain and event log), the related-persons tab, the
+decision tab, the relations tab, and the Module 06 files tab (the attachment grid with its
+filters, download, and — for `DOCUMENT_EDIT` on a document that is not canceled — the atomic
+first upload).
 
 ## Strict FSD Rules
 
@@ -34,19 +34,18 @@ atomic first upload).
 | File | Purpose |
 | --- | --- |
 | `ui/DocumentsPage.tsx` | Registry page: `RequirePermission DOCUMENT_VIEW`, «الوثائق» header, the `registry`/`organizations` tab switcher (URL-backed), and the matching table. |
-| `ui/DocumentDetailsPage.tsx` | Detail page: fetch details/timeline, header status mutations filtered by status + permission, URL tabs, and the four lifecycle dialogs. |
-| `ui/DocumentOverviewTab.tsx` | Details tab: metadata grid, status history (with cancel/edit reasons), and the audit timeline section. |
-| `ui/DocumentParticipantsTab.tsx` | Participants tab: role, target type, resolved target name, primary flag, notes, and the add action. |
+| `ui/DocumentDetailsPage.tsx` | Detail page: fetch details/timeline, header status mutations filtered by status + permission, URL tabs (`details` → `movements` → `persons` → `decisions` → `relations` → `files`), and the four lifecycle dialogs. |
+| `ui/DocumentDetailsTab.tsx` | Merged details tab: a sticky «بيانات الوثيقة» sidebar — a compact divided `dl` list with accent icons (type, status, system number, registration/creation dates, owning department, creator), two columns on small screens and one on xl — beside a column of collapsible sections: numbers, grants, «حقول الوثيقة», and «السجلات» (unified timeline + department records). Chip navigation with `IntersectionObserver` scrollspy jumps to a section, expanding it first; smooth scroll honors the shell's motion-off switch. |
+| `ui/DocumentParticipantsTab.tsx` | Participants tab (behind `FEATURES.participants`): role, target type, resolved target name, primary flag, notes, and the add action. |
 | `ui/DocumentPersonsTab.tsx` | People named on the document: full grid with role change and removal for `DOCUMENT_EDIT`, frozen on archived or canceled documents. |
-| `ui/DocumentGrantsTab.tsx` | Access-grants tab: per-grant level label, active/expired/revoked state badge, grantee name (or short id without `USER_MANAGE`), grant/expiry/revocation metadata, and the منح/إلغاء dialogs. |
-| `ui/DocumentArchiveTab.tsx` | Archive-history tab: event type, status transition, location, actor and reason, newest first, with loading/error/empty states. |
+| `ui/DocumentGrantsSection.tsx` | Access-grants section inside the details tab, wrapped in a `CollapsibleSection` whose header actions carry the total/active counts and the «منح وصول» button: per-grant level label, active/expired/revoked state badge, grantee name (or short id without `USER_MANAGE`), grant/expiry/revocation metadata, and the منح/إلغاء dialogs. Grant rows are borderless, separated by light top dividers. |
 | `ui/DocumentDetailsPage.tsx` («الروابط» tab) | Mounts `DocumentRelationsPanel` for `?tab=relations`; writes need `DOCUMENT_EDIT` and a document that is neither archived nor cancelled. |
-| `ui/DocumentDetailsPage.tsx` («الحقول» tab) | Mounts `DocumentFieldsPanel` for `?tab=fields`; the tab is hidden when the document has no pinned schema, and values are editable only for a draft with `DOCUMENT_EDIT`. |
+| `ui/DocumentDetailsTab.tsx` («الحقول» section) | Mounts `DocumentFieldsPanel` inside a `CollapsibleSection`; the section is hidden when the document has no pinned schema, and values are editable only for a draft with `DOCUMENT_EDIT`. |
 | `ui/DocumentDetailsPage.tsx` («تصدير PDF») | Header action that mounts `DocumentPrintSheet` until the print dialog closes. |
-| `ui/DocumentNumbersTab.tsx` | Numbers tab: central number card (status, registration date, issuer, cancellation reason, replace/cancel actions, dated event list), department register cards, and the «سجل الأرقام» history grid on the shared `DataTable` (`tableId="document-numbers"`, client mode, column chooser, sorting, URL-backed search, row menu نسخ الرقم/نسخ المعرّف); statuses and event labels come from `DOCUMENT_NUMBER_STATUS`/`DOCUMENT_NUMBER_EVENT_TYPE`, and the API's English `Replaces …` note is translated to «يستبدل الرقم …». |
+| `ui/DocumentNumbersSection.tsx` | Numbers section inside the details tab, wrapped in a `CollapsibleSection` («الأرقام»); the three inner blocks are borderless and separated by light top dividers (one card level, not three): central number block (status, registration date, issuer, cancellation reason, replace/cancel actions, borderless event rows), department register lines separated by dividers, and the «سجل الأرقام» history grid on the shared `DataTable` (`tableId="document-numbers"`, client mode, column chooser, sorting, URL-backed search, row menu نسخ الرقم/نسخ المعرّف); statuses and event labels come from `DOCUMENT_NUMBER_STATUS`/`DOCUMENT_NUMBER_EVENT_TYPE`, and the API's English `Replaces …` note is translated to «يستبدل الرقم …». |
 | `ui/DocumentMovementsTab.tsx` | Movements tab: one `MovementCard` per movement (type/status badges, only the two action buttons «استلام» and «إعادة توجيه» — shown while the movement is addressed to the caller's department and hidden once it leaves — ordered step chain with per-step outcome label, registry number and department, and the event log), plus the open-movement dialog (which sends immediately) and the action dialogs. |
 | `ui/DocumentFilesTab.tsx` | Files tab: the section card (heading plus the archiving-does-not-hide note and the versions/verify mention) around `widgets/document-attachments-panel`; receives `canManage` from the page and passes it down, otherwise carries no state — the grid owns the query, filters, download, and the five dialogs. |
-| `ui/DocumentTimeline.tsx` | Structural Arabic timeline rebuilt from `eventKind`/status/number-event ids; hides the server's English descriptions. |
+| `ui/DocumentTimeline.tsx` | Unified «السجلات» timeline, newest first: status transitions (with reasons), participant and number events rebuilt from `eventKind`/ids (the server's English descriptions are hidden; `STATUS` entries are skipped because the status history carries them), and archive operations from `useDocumentArchiveEvents` with type badge, status transition, location and reason. One vertical track with per-source icons; an archive fetch failure shows an inline Arabic retry banner without hiding the other rows. |
 | `ui/ParticipantTarget.tsx` | Resolves the single participant target (department name, external organization name via by-id read, or person name). |
 | `index.ts` | Public barrel exporting both pages. |
 
@@ -66,10 +65,15 @@ atomic first upload).
 - List: `?tab=registry|organizations` (default `registry`); the registry adds
   `?page=&pageSize=&search=&statusId=&directionId=&documentTypeId=&owningDepartmentId=&sortBy=&sortDescending=`,
   and the organizations tab adds `?page=&pageSize=&search=&include=active|all`.
-- Detail: `?tab=details|participants|numbers|movements|files|grants`; unknown or unauthorized tabs
-  fall back to `details`. `grants` is live behind `ACCESS_GRANT_MANAGE`; `numbers` is live behind
-  `NUMBERING_VIEW`; `movements` and `files` are live for `DOCUMENT_VIEW`. Every tab chip is now
-  available, so no «قريبًا» badge remains.
+- Detail: `?tab=details|movements|persons|decisions|relations|files` (plus `participants` behind
+  `FEATURES.participants`); unknown or unauthorized tabs fall back to `details`. `decisions`
+  shows only when the document type has an active decision type. The merged `details` tab holds
+  the numbers section (visible with `NUMBERING_VIEW`), the grants section (visible with
+  `ACCESS_GRANT_MANAGE`), the collapsible fields section (visible with a pinned schema), and the
+  collapsible «السجلات» section: one unified timeline plus the department-records block (visible
+  when the server returned readable records). Old tab URLs (`?tab=numbers`, `?tab=grants`, `?tab=fields`,
+  `?tab=department-records`, `?tab=archive`) now fall back to `details`, where the same content
+  lives. Every tab chip is available, so no «قريبًا» badge remains.
 - Inside the files tab the grid adds `?status=active|archived`, `?fileType=<id>`, `?search=`,
   `?sort=`, `?dir=`, `?page=`, and `?pageSize=`. Switching tabs writes `?tab=` alone, which drops
   those grid params — a deliberate consequence of the existing tab switcher, not of the files tab.
@@ -82,12 +86,12 @@ atomic first upload).
 | تسجيل برقم | status = DRAFT and caller holds `DOCUMENT_CREATE` |
 | إضافة مشارك | status ≠ CANCELED and caller holds `DOCUMENT_EDIT` |
 | إلغاء الوثيقة | status ∉ {ARCHIVED, CANCELED} and caller holds `DOCUMENT_EDIT` |
-| تبويب التصاريح | caller holds `ACCESS_GRANT_MANAGE` (hidden, not disabled, otherwise) |
-| منح وصول | grants tab open and caller holds `ACCESS_GRANT_MANAGE` |
+| قسم التصاريح (ضمن التفاصيل) | caller holds `ACCESS_GRANT_MANAGE` (hidden, not disabled, otherwise) |
+| منح وصول | grants section open and caller holds `ACCESS_GRANT_MANAGE` |
 | إلغاء تصريح | grant state ≠ revoked and caller holds `ACCESS_GRANT_MANAGE` |
-| تبويب الأرقام | caller holds `NUMBERING_VIEW` (hidden, not disabled, otherwise) |
-| إصدار رقم | numbers tab open, status = DRAFT, no central number, caller holds `NUMBERING_MANAGE` |
-| تسجيل رقم الدائرة | numbers tab open, a central number exists, caller holds `NUMBERING_MANAGE` |
+| قسم الأرقام (ضمن التفاصيل) | caller holds `NUMBERING_VIEW` (hidden, not disabled, otherwise) |
+| إصدار رقم | numbers section open, status = DRAFT, no central number, caller holds `NUMBERING_MANAGE` |
+| تسجيل رقم الدائرة | numbers section open, a central number exists, caller holds `NUMBERING_MANAGE` |
 | استبدال الرقم | number active, caller holds `NUMBERING_MANAGE` |
 | إلغاء الرقم | number active, caller holds `NUMBERING_MANAGE` |
 | تبويب الحركات | caller holds `DOCUMENT_VIEW` (shown, not disabled, otherwise) |
@@ -114,9 +118,8 @@ mounted dialog.
 | `ui/DocumentsPage.tsx` | ✅ Implemented (Module 03 Phase 2); organizations tab added in Phase 7 |
 | External-organizations tab | ✅ Implemented (Module 03 Phase 7: registry/organizations switcher, grid, create/edit/status dialogs) |
 | `ui/DocumentDetailsPage.tsx` + tabs | ✅ Implemented (Module 03 Phase 3) |
-| `ui/DocumentGrantsTab.tsx` | ✅ Implemented (Module 03 Phase 4) |
-| `ui/DocumentArchiveTab.tsx` | ✅ Implemented (Module 07) |
-| `ui/DocumentNumbersTab.tsx` | ✅ Implemented (Module 03 Phase 5); history grid moved onto `DataTable` in Module 04 Phase 4 |
+| `ui/DocumentGrantsSection.tsx` | ✅ Implemented (Module 03 Phase 4); merged into the details tab on 2026-11-16; collapsible with header actions on 2026-11-17 |
+| `ui/DocumentNumbersSection.tsx` | ✅ Implemented (Module 03 Phase 5); history grid moved onto `DataTable` in Module 04 Phase 4; merged into the details tab on 2026-11-16; collapsible on 2026-11-17 |
 | `ui/DocumentMovementsTab.tsx` | ✅ Implemented (Module 03 Phase 6) |
 | `ui/DocumentFilesTab.tsx` | ✅ Implemented (Module 06 Phases 2–4) — the tab chip went from a disabled «قريبًا» placeholder to live, mounting `widgets/document-attachments-panel`, and forwards `canManage` so editors get upload, new version, and archiving while viewers keep download, versions, and verify; browser verification ✅ in Module 06 Phase 5 (three roles, including the access-level denial) |
 | Browser verification | Registry ✅ (2026-10-28); details ✅ (2026-10-28): draft actions, `?tab=participants`, person + department participants, draft edit, register (`2026/000004`), cancel with reason, status history, timeline, and canceled-document gating. Grants ✅ (2026-10-28): `?tab=grants` loaded, empty submit and past expiry rejected in Arabic, grant to `user` at «عرض» with expiry/reason appeared immediately with counts, revoke kept the row as «ملغى» with timestamp + revoker, and a `USER`-role login saw no grants chip and fell back to details. Numbers ✅ (2026-10-29): draft issue → registered `2026/000005`, department registration `DEP-2026-001`, duplicate `2026/000007` rejected in Arabic with the dialog retained and the document still draft, replace `2026/000008` → `2026/000009`, and cancel `2026/000009` with an Arabic reason; a `USER`-role login saw no numbers tab and the issue/department/registry endpoints returned 403. Movements ✅ (2026-10-29): the full two-department cycle (open+send from the Central Diwan, receive at HR against `HR-2026-118`, reject with a reason, automatic reroute back to the Central Diwan, receive at the Central Diwan against `CEN-2026-1000`, close) updated the queues and the movements tab at every step; the chain showed the rejected step as «رُفضت» followed by the registered receive, with Arabic notes and the full event log, and the document returned to «مسجل» with «فتح حركة» available again. Organizations ✅ (2026-10-29): `?tab=organizations` loaded from the URL, a new `MOI-01`/«حكومي» correspondent was created («تمت إضافة الجهة الخارجية.»), a second record with the same code kept the dialog open with «توجد جهة خارجية أخرى بنفس الرمز.», editing carried the disabled code and prefilled fields («تم تحديث بيانات الجهة الخارجية.»), and the participant picker offered «وزارة الداخلية — محدَّث · MOI-01»; after «إيقاف الجهة» the row showed «موقوف» under `include=all` and the participant picker listed no external organizations, and «تفعيل الجهة» restored «نشط» and the option. Files ✅ (2026-11-01, Module 06 Phase 5): `?tab=files` over the permanent fixture document in three roles — manager (grid, filters, search/sort, column chooser, both empty states, upload, second version with the first marked «مُستبدل», downloads of current and replaced versions under Arabic names, verify with matching digest, archive with the badge and the write entries then hidden), `USER` with `DOCUMENT_EDIT` (write UI present, but a VIEW-only grant made download and upload answer «لا تملك صلاحية الوصول إلى هذه الوثيقة.» while the same calls succeeded on a MANAGE-granted document), and read-only (no write buttons at all). |
@@ -125,6 +128,9 @@ mounted dialog.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-17 | Qoder | Visual de-nesting pass after the layout redesign: the numbers section's three inner cards, its event rows and department lines, the grant rows, and the diwan panel's per-department cards all lost their borders/backgrounds in favor of light top dividers — one card level per section. The sidebar's boxed tiles became a compact divided `dl` list (two columns on small screens, one on xl). Same information, no structural change. |
+| 2026-11-17 | Qoder | Redesigned the details tab layout (same information, better presentation): a sticky «بيانات الوثيقة» sidebar of icon tiles, chip navigation with scrollspy, and collapsible numbers/grants/fields/logs sections driven by one controlled open-state. The three read-only logs (status history, audit timeline, archive events) merged into one newest-first unified `DocumentTimeline` on a single icon track; `DocumentArchiveSection.tsx` was removed (absorbed). The department records stay a separate editable block inside «السجلات» because they carry visit forms, not read-only events. |
+| 2026-11-16 | Qoder | Reorganized the detail tabs to the agreed order (التفاصيل، الحركات، الأشخاص المرتبطون، القرار، الروابط، الملفات) and merged the numbers, grants, fields, department-records and archive tabs into the details tab: numbers and grants as sections, fields inside a `CollapsibleSection` («حقول الوثيقة»), and the three logs plus the audit timeline bundled into one «السجلات» section at the bottom. `DocumentOverviewTab` was absorbed into the new `ui/DocumentDetailsTab.tsx`; `DocumentNumbersTab`/`DocumentGrantsTab`/`DocumentArchiveTab` were renamed to `*Section`. Old tab URLs fall back to details. |
 | 2026-11-15 | Qoder | The movements tab shows only «استلام» and «إعادة توجيه» while the movement is addressed to the caller's department and hides all buttons once it leaves; «فتح حركة» sends immediately so the document leaves the caller's department at the moment of opening. |
 | 2026-11-11 | Claude | The decisions panel receives the document's owning department, which is the default appellant. |
 | 2026-11-11 | Claude | The details page shows a «القرار» tab when the document type has an active decision type, and renders `DocumentDecisionsPanel`. |

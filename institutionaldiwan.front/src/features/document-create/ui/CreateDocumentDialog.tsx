@@ -23,6 +23,8 @@ import {
   clearFormDraft,
   formDraftKey,
   readFormDraft,
+  readSelectedRegistryId,
+  resolveSelectedRegistryId,
   useFormDraftAutosave,
 } from '@/shared/lib'
 import {
@@ -164,6 +166,14 @@ export function CreateDocumentDialog({ open, onOpenChange }: CreateDocumentDialo
   const registries = useDepartmentRegistryOptions(ownDepartmentId, {
     enabled: open && mode === 'register' && canViewNumbering,
   })
+
+  // The register picked in the sidebar is the default here; a restored draft keeps its own choice.
+  const registryId = useWatch({ control, name: 'registryId' })
+  useEffect(() => {
+    if (!open || mode !== 'register' || !canViewNumbering || registryId) return
+    const preferred = resolveSelectedRegistryId(readSelectedRegistryId(), registries.options)
+    if (preferred) setValue('registryId', preferred)
+  }, [open, mode, canViewNumbering, registryId, registries.options, setValue])
 
   // Dynamic fields follow the chosen type's published schema; a type without one shows no section.
   const schemaQuery = useDocumentTypeSchema(documentTypeId ? Number(documentTypeId) : undefined, {

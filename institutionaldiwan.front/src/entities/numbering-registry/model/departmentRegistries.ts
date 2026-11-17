@@ -1,5 +1,35 @@
 import { useMemo } from 'react'
 import { useNumberingRegistries } from './queries'
+import type { NumberingRegistryResponse } from './types'
+
+export interface DepartmentRegistries {
+  registries: NumberingRegistryResponse[]
+  isLoading: boolean
+  /** The list loaded and the department has no active register. */
+  isEmpty: boolean
+}
+
+/** The department's active registers, as full rows. */
+export function useDepartmentRegistries(
+  departmentId: string | null | undefined,
+  { enabled = true }: { enabled?: boolean } = {},
+): DepartmentRegistries {
+  const query = useNumberingRegistries({ enabled: enabled && Boolean(departmentId) })
+
+  const registries = useMemo(
+    () =>
+      (query.data ?? []).filter(
+        (registry) => registry.isActive && registry.departmentId === departmentId,
+      ),
+    [query.data, departmentId],
+  )
+
+  return {
+    registries,
+    isLoading: query.isLoading,
+    isEmpty: query.isSuccess && registries.length === 0,
+  }
+}
 
 export interface DepartmentRegistryOptions {
   options: { value: string; label: string }[]
@@ -13,18 +43,16 @@ export function useDepartmentRegistryOptions(
   departmentId: string | null | undefined,
   { enabled = true }: { enabled?: boolean } = {},
 ): DepartmentRegistryOptions {
-  const query = useNumberingRegistries({ enabled: enabled && Boolean(departmentId) })
+  const { registries, isLoading, isEmpty } = useDepartmentRegistries(departmentId, { enabled })
 
   const options = useMemo(
     () =>
-      (query.data ?? [])
-        .filter((registry) => registry.isActive && registry.departmentId === departmentId)
-        .map((registry) => ({
-          value: registry.registryId,
-          label: `${registry.code} — ${registry.nameAr}`,
-        })),
-    [query.data, departmentId],
+      registries.map((registry) => ({
+        value: registry.registryId,
+        label: `${registry.code} — ${registry.nameAr}`,
+      })),
+    [registries],
   )
 
-  return { options, isLoading: query.isLoading, isEmpty: query.isSuccess && options.length === 0 }
+  return { options, isLoading, isEmpty }
 }
