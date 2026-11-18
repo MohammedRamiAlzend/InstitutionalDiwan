@@ -3,7 +3,7 @@ import type { DocumentParticipantResponse } from '@/entities/document'
 import { LOOKUP_SLUGS, LookupLabel } from '@/entities/lookup'
 import { FEATURES } from '@/shared/config'
 import { formatDateTime } from '@/shared/lib'
-import { Badge, Button } from '@/shared/ui'
+import { Badge, Button, Label } from '@/shared/ui'
 import { ParticipantTarget } from './ParticipantTarget'
 
 interface DocumentParticipantsTabProps {
@@ -24,28 +24,28 @@ export function DocumentParticipantsTab({
     <section className="rounded-xl border border-border bg-surface p-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2">
-          <h2 className="text-base font-semibold text-foreground">المشاركون</h2>
+          <h2 className="text-base font-semibold text-foreground"><Label k="docdetails.tab.participants" /></h2>
           <Badge variant="outline">{participants.length}</Badge>
         </div>
         {canAdd && (
           <Button type="button" size="sm" onClick={onAdd}>
             <UserPlus className="size-4" aria-hidden />
-            إضافة مشارك
+            <Label k="docdetails.action.add-participant" />
           </Button>
         )}
       </div>
 
       {participants.length === 0 ? (
         <div className="mt-6 flex flex-col items-center gap-2 rounded-lg border border-dashed border-border px-4 py-10 text-center">
-          <p className="text-sm font-medium text-foreground">لا يوجد مشاركون بعد.</p>
+          <p className="text-sm font-medium text-foreground"><Label k="docdetails.participants.empty-title" /></p>
           <p className="max-w-md text-xs text-muted">
-            أضف الجهة المرسلة أو المستلمة أو نسخة إلى الوثيقة.
-            {FEATURES.externalOrganizations && ' تُقبل جهة خارجية واحدة فقط لكل وثيقة.'}
+            <Label k="docdetails.participants.empty-description" />
+            {FEATURES.externalOrganizations && <Label k="docdetails.participants.empty-external-suffix" />}
           </p>
           {canAdd && (
             <Button type="button" size="sm" variant="outline" onClick={onAdd}>
               <UserPlus className="size-4" aria-hidden />
-              إضافة أول مشارك
+              <Label k="docdetails.action.add-first-participant" />
             </Button>
           )}
         </div>
@@ -63,7 +63,7 @@ export function DocumentParticipantsTab({
                     id={participant.roleId}
                     className="font-medium"
                   />
-                  {participant.isPrimary && <Badge variant="accent">أساسي</Badge>}
+                  {participant.isPrimary && <Badge variant="accent"><Label k="docdetails.participant.primary" /></Badge>}
                 </div>
                 <div className="flex flex-wrap items-center gap-1.5">
                   <LookupLabel

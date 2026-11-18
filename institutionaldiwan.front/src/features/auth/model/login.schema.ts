@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import type { PermissionCode } from '@/shared/config'
+import { t } from '@/shared/lib'
 
 /** `POST /api/auth/login` request body. */
 export interface LoginRequest {
@@ -19,8 +20,8 @@ export interface LoginResponse {
 }
 
 export const loginSchema = z.object({
-  username: z.string().trim().min(1, 'اسم المستخدم مطلوب.'),
-  password: z.string().min(1, 'كلمة المرور مطلوبة.'),
+  username: z.string().trim().min(1, t('auth.login.validation.username-required')),
+  password: z.string().min(1, t('auth.login.validation.password-required')),
 })
 
 export type LoginFormValues = z.infer<typeof loginSchema>

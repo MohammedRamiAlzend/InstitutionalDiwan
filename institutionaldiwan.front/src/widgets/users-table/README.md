@@ -37,6 +37,7 @@ Composes the user reads (`entities/user`) with the user writes (`features/user-m
 - ✅ Server-side sorting (username, status, last login, creation time) is wired through the grid header and `GET /api/users?sortBy=…&sortDescending=…`.
 
 ## 6. Change Log
+- 2026-11-18: UI labels Phase 4 (ب3): all static Arabic resolves through the `user.*` catalog — headers via `headerKey`, status/self/required badges via `t()`/`<Label>`, row/header/empty menus, copy toasts, caption/search/empty states via `t()`, toolbar create + empty actions via `<Label>`, and the suspend/activate confirm via `t()`. User/department/role/employee names stay data-driven.
 - 2026-11-04: User, department and employee references now render as «name + short id» (`UserLabel` / `DepartmentLabel` / `EmployeeLabel`) instead of a bare id.
 
 - 2026-11-01: Tutorial mode Phase 0: added the `users.create` help chip beside «مستخدم جديد»; the page's guide ids live in `shared/config/guides/users.ts` and are covered by `npm run check:guides`.

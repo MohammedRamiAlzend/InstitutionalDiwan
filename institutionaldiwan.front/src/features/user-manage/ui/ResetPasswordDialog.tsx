@@ -4,7 +4,8 @@ import { KeyRound, Wand2 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { UserResponse } from '@/entities/user'
 import { toArabicErrorMessage } from '@/shared/api'
-import { Button, Dialog, PasswordField } from '@/shared/ui'
+import { t } from '@/shared/lib'
+import { Button, Dialog, Label, PasswordField } from '@/shared/ui'
 import {
   resetUserPasswordSchema,
   type ResetUserPasswordFormValues,
@@ -54,9 +55,7 @@ export function ResetPasswordDialog({ open, onOpenChange, user }: ResetPasswordD
         userId: user.userId,
         request: { newPassword: values.newPassword },
       })
-      toast.success(
-        'تمت إعادة تعيين كلمة المرور. سيُطلب من المستخدم تعيين كلمة مرور جديدة عند أول تسجيل دخول.',
-      )
+      toast.success(t('user.reset.toast'))
       reset({ newPassword: '', confirmPassword: '' })
       onOpenChange(false)
     } catch {
@@ -74,8 +73,8 @@ export function ResetPasswordDialog({ open, onOpenChange, user }: ResetPasswordD
     <Dialog
       open={open}
       onOpenChange={onOpenChange}
-      title="إعادة تعيين كلمة المرور"
-      description={`عيّن كلمة مرور مؤقتة للمستخدم «${user.username}» ثم سلّمها له بطريقة آمنة.`}
+      title={t('user.menu.reset-password')}
+      description={t('user.reset.description', { name: user.username })}
       size="md"
       footer={
         <>
@@ -85,14 +84,14 @@ export function ResetPasswordDialog({ open, onOpenChange, user }: ResetPasswordD
             onClick={() => onOpenChange(false)}
             disabled={resetMutation.isPending}
           >
-            إلغاء
+            <Label k="common.action.cancel" />
           </Button>
           <Button
             type="submit"
             form="reset-password-form"
             loading={resetMutation.isPending}
           >
-            إعادة تعيين كلمة المرور
+            <Label k="user.menu.reset-password" />
           </Button>
         </>
       }
@@ -107,20 +106,19 @@ export function ResetPasswordDialog({ open, onOpenChange, user }: ResetPasswordD
           role="status"
           className="rounded-lg bg-warning/10 px-3 py-2 text-xs text-warning"
         >
-          سيتوقف عمل كلمة المرور القديمة فورًا، وسيُطلب من المستخدم تعيين كلمة مرور جديدة عند
-          أول تسجيل دخول.
+          {t('user.reset.warning')}
         </p>
 
         <div className="flex justify-end">
           <Button type="button" variant="ghost" size="sm" onClick={fillGeneratedPassword}>
             <Wand2 className="size-4" aria-hidden />
-            توليد كلمة مرور مؤقتة
+            <Label k="user.reset.generate" />
           </Button>
         </div>
 
         <PasswordField
           id="reset-new-password"
-          label="كلمة المرور المؤقتة"
+          label={t('user.form.password')}
           autoComplete="new-password"
           error={errors.newPassword?.message}
           registration={register('newPassword')}
@@ -128,7 +126,7 @@ export function ResetPasswordDialog({ open, onOpenChange, user }: ResetPasswordD
 
         <PasswordField
           id="reset-confirm-password"
-          label="تأكيد كلمة المرور المؤقتة"
+          label={t('user.reset.confirm-password')}
           autoComplete="new-password"
           error={errors.confirmPassword?.message}
           registration={register('confirmPassword')}
@@ -146,7 +144,7 @@ export function ResetPasswordDialog({ open, onOpenChange, user }: ResetPasswordD
 
       <p className="flex items-center gap-1 text-xs text-muted">
         <KeyRound className="size-3.5" aria-hidden />
-        الكلمة المؤقتة لا تُخزَّن في السجلات؛ احتفظ بها فقط حتى تسليمها للمستخدم.
+        {t('user.reset.note')}
       </p>
     </Dialog>
   )

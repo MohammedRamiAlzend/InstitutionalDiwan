@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { toArabicErrorMessage } from '@/shared/api'
-import { formatNumber, formatShortId, useDebouncedValue } from '@/shared/lib'
-import { Button, Input, Select } from '@/shared/ui'
+import { formatNumber, formatShortId, t, useDebouncedValue } from '@/shared/lib'
+import { Button, Input, Label, Select } from '@/shared/ui'
 import { useEmployeeOptionById as useEmployeeById, useEmployeeOptions as useEmployees } from '../model/options'
 
 interface EmployeePickerProps {
@@ -41,7 +41,7 @@ export function EmployeePicker({
   if (value && !options.some((option) => option.value === value)) {
     options.unshift({
       value,
-      label: selectedQuery.data?.fullNameAr ?? `موظف ${formatShortId(value)}`,
+      label: selectedQuery.data?.fullNameAr ?? t('employee.picker.fallback', { id: formatShortId(value) }),
       disabled: false,
     })
   }
@@ -55,8 +55,8 @@ export function EmployeePicker({
             setSearch(event.target.value)
             setPage(1)
           }}
-          placeholder="ابحث باسم الموظف أو رقمه…"
-          aria-label={`بحث ${label}`}
+          placeholder={t('employee.picker.search-placeholder')}
+          aria-label={t('employee.picker.search-aria', { label })}
         />
       )}
       <Select
@@ -71,19 +71,19 @@ export function EmployeePicker({
         <div role="alert" className="flex items-center justify-between gap-2 text-xs text-danger">
           <span>{toArabicErrorMessage(query.error)}</span>
           <Button type="button" variant="outline" size="sm" onClick={() => void query.refetch()}>
-            إعادة المحاولة
+            <Label k="common.action.retry" />
           </Button>
         </div>
       )}
       {!disabled && query.data && (
         <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted" aria-live="polite">
-          <span>النتائج: {formatNumber(query.data.totalCount)} — الصفحة {formatNumber(page)}</span>
+          <span>{t('employee.picker.results', { count: formatNumber(query.data.totalCount), page: formatNumber(page) })}</span>
           <div className="flex gap-1">
             <Button type="button" variant="ghost" size="sm" disabled={page === 1 || query.isFetching} onClick={() => setPage(page - 1)}>
-              السابق
+              <Label k="employee.picker.prev" />
             </Button>
             <Button type="button" variant="ghost" size="sm" disabled={!query.data.hasNext || query.isFetching} onClick={() => setPage(page + 1)}>
-              التالي
+              <Label k="employee.picker.next" />
             </Button>
           </div>
         </div>

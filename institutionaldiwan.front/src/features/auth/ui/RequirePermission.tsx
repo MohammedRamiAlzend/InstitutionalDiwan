@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { ShieldAlert } from 'lucide-react'
 import type { PermissionCode } from '@/shared/config'
 import { useSessionStore } from '@/entities/user'
+import { Label } from '@/shared/ui'
 interface RequirePermissionProps {
   permission: PermissionCode
   /** Optional explicit permission list override (defaults to the session store). */
@@ -14,10 +15,11 @@ export function ForbiddenState() {
   return (
     <div className="flex min-h-64 flex-col items-center justify-center gap-3 text-center">
       <ShieldAlert className="size-10 text-warning" aria-hidden />
-      <h2 className="text-xl font-bold text-foreground">لا تملك صلاحية الوصول</h2>
+      <h2 className="text-xl font-bold text-foreground">
+        <Label k="auth.forbidden.title" />
+      </h2>
       <p className="max-w-md text-sm text-muted">
-        هذه الصفحة مخصصة لمستخدمين مصرح لهم بصلاحية مختلفة. إذا كنت بحاجة إلى
-        الوصول، تواصل مع مشرف النظام.
+        <Label k="auth.forbidden.description" />
       </p>
     </div>
   )

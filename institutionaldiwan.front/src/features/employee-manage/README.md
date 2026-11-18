@@ -37,5 +37,6 @@ The form dialog is mounted by `widgets/employees-table`; the slice renders no pa
 
 ## 6. Change Log
 
+- 2026-11-18: UI labels Phase 4 (ب3): `EmployeeFormDialog` and the Zod schema resolve all static Arabic through the `employee.*` catalog — dialog title/description, field labels (`labelKey`), placeholders/aria, the denied-permission notes, toasts and buttons via `t()`/`<Label>`. The English/example placeholders (`Example: Ahmed…`, `name@example.com`, `+963…`) stay literal; employee/department names stay data-driven.
 - 2026-11-05: Unsent form input is now kept (per user, per form) after an accidental close or cancel and restored with a toast; it is cleared only after a successful submit (`useDraftForm`).
 - 2026-10-28: Implemented Phase 5 — employee request types, Zod schema, three mutations, and the create/edit dialog; created this README.

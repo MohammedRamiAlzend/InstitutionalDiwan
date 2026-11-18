@@ -7,8 +7,8 @@ import { usePersonTimeline, type PersonTimelineEntryResponse, type PersonTimelin
 import { UserLabel } from '@/entities/user'
 import { toArabicErrorMessage } from '@/shared/api'
 import { ROUTES } from '@/shared/config'
-import { formatDateTime, useTableState } from '@/shared/lib'
-import { Button, Skeleton } from '@/shared/ui'
+import { formatDateTime, t, useTableState } from '@/shared/lib'
+import { Button, Label, Skeleton } from '@/shared/ui'
 
 const KIND_ICONS: Record<PersonTimelineKind, LucideIcon> = {
   STATUS: Waypoints,
@@ -27,11 +27,11 @@ function EventSummary({ entry }: { entry: PersonTimelineEntryResponse }) {
     case 'STATUS':
       return (
         <div className="flex flex-wrap items-center gap-1.5">
-          <span className="text-xs text-muted">تغيير الحالة</span>
+          <span className="text-xs text-muted">{t('persons.status-change')}</span>
           {entry.fromStatusId !== null && (
             <>
               <DocumentStatusBadge statusId={entry.fromStatusId} />
-              <span className="text-xs text-muted">إلى</span>
+              <span className="text-xs text-muted">{t('persons.timeline.to')}</span>
             </>
           )}
           <DocumentStatusBadge statusId={entry.toStatusId ?? 0} />
@@ -43,13 +43,13 @@ function EventSummary({ entry }: { entry: PersonTimelineEntryResponse }) {
           <LookupLabel lookup={LOOKUP_SLUGS.MovementEventTypes} id={entry.movementEventTypeId} className="font-medium" />
           {entry.fromDepartmentId && (
             <>
-              <span className="text-xs text-muted">من</span>
+              <span className="text-xs text-muted">{t('persons.timeline.from')}</span>
               <DepartmentLabel departmentId={entry.fromDepartmentId} className="text-sm" />
             </>
           )}
           {entry.toDepartmentId && (
             <>
-              <span className="text-xs text-muted">إلى</span>
+              <span className="text-xs text-muted">{t('persons.timeline.to')}</span>
               <DepartmentLabel departmentId={entry.toDepartmentId} className="text-sm" />
             </>
           )}
@@ -63,7 +63,7 @@ function EventSummary({ entry }: { entry: PersonTimelineEntryResponse }) {
           <LookupLabel lookup={LOOKUP_SLUGS.ArchiveEventTypes} id={entry.archiveEventTypeId} className="font-medium" />
           {entry.archiveLocationId !== null && (
             <>
-              <span className="text-xs text-muted">في</span>
+              <span className="text-xs text-muted">{t('persons.timeline.in')}</span>
               <LookupLabel lookup={LOOKUP_SLUGS.ArchiveLocations} id={entry.archiveLocationId} />
             </>
           )}
@@ -72,7 +72,7 @@ function EventSummary({ entry }: { entry: PersonTimelineEntryResponse }) {
     case 'PERSON':
       return (
         <div className="flex flex-wrap items-center gap-1.5">
-          <span className="text-xs text-muted">رُبط بالوثيقة بصفة</span>
+          <span className="text-xs text-muted">{t('persons.timeline.linked-as')}</span>
           <LookupLabel lookup={LOOKUP_SLUGS.DocumentPersonRoles} id={entry.roleId} className="font-medium" />
         </div>
       )
@@ -99,7 +99,7 @@ export function PersonTimeline({ personId }: PersonTimelineProps) {
       <div className="flex flex-col items-center gap-3 rounded-xl border border-border bg-surface px-6 py-10 text-center">
         <p className="text-sm font-medium text-danger">{toArabicErrorMessage(timelineQuery.error)}</p>
         <Button type="button" variant="outline" onClick={() => void timelineQuery.refetch()}>
-          إعادة المحاولة
+          <Label k="common.action.retry" />
         </Button>
       </div>
     )
@@ -109,7 +109,7 @@ export function PersonTimeline({ personId }: PersonTimelineProps) {
   const totalPages = timelineQuery.data?.totalPages ?? 0
 
   if (entries.length === 0) {
-    return <p className="text-sm text-muted">لا توجد أحداث مسجلة بعد.</p>
+    return <p className="text-sm text-muted">{t('persons.timeline.empty')}</p>
   }
 
   return (
@@ -137,7 +137,7 @@ export function PersonTimeline({ personId }: PersonTimelineProps) {
                 <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
                   <span dir="ltr">{formatDateTime(entry.occurredAt)}</span>
                   <span aria-hidden>·</span>
-                  <span>بواسطة</span>
+                  <span>{t('persons.timeline.by')}</span>
                   <UserLabel userId={entry.actorUserId} />
                 </div>
               </div>
@@ -147,7 +147,7 @@ export function PersonTimeline({ personId }: PersonTimelineProps) {
       </ol>
 
       {totalPages > 1 && (
-        <nav aria-label="صفحات السجل الزمني" className="flex items-center justify-center gap-3">
+        <nav aria-label={t('persons.timeline.pages-aria')} className="flex items-center justify-center gap-3">
           <Button
             type="button"
             variant="outline"
@@ -156,7 +156,7 @@ export function PersonTimeline({ personId }: PersonTimelineProps) {
             onClick={() => table.setPage(table.page - 1)}
           >
             <ChevronRight className="size-4" aria-hidden />
-            الأحدث
+            <Label k="persons.timeline.newer" />
           </Button>
           <span className="text-sm text-muted">
             {table.page} / {totalPages}
@@ -168,7 +168,7 @@ export function PersonTimeline({ personId }: PersonTimelineProps) {
             disabled={table.page >= totalPages}
             onClick={() => table.setPage(table.page + 1)}
           >
-            الأقدم
+            <Label k="persons.timeline.older" />
             <ChevronLeft className="size-4" aria-hidden />
           </Button>
         </nav>

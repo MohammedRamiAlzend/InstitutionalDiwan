@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { fileTypeLimits, MAX_UPLOAD_BYTES } from '@/shared/config'
-import { formatFileSize } from '@/shared/lib'
+import { formatFileSize, t } from '@/shared/lib'
 
 /**
  * A pre-check rejection is the client's guess at a rule the server enforces anyway, so each message
@@ -25,13 +25,13 @@ function fileExtensionOf(fileName: string): string {
  * show, or `null` when nothing local rejects the file; the server stays the last judge either way.
  */
 export function fileRejection(file: File | null, fileTypeId: number | null): string | null {
-  if (!file) return withCode('اختر ملفًا للرفع.', 'Attachments.FileEmpty')
-  if (file.size === 0) return withCode('الملف المرفوع فارغ.', 'Attachments.FileEmpty')
+  if (!file) return withCode(t('attachment.validation.file-empty'), 'Attachments.FileEmpty')
+  if (file.size === 0) return withCode(t('attachment.validation.file-zero'), 'Attachments.FileEmpty')
 
   if (file.size > MAX_UPLOAD_BYTES) {
     // The request itself is capped in the server, so this rejection is not about the file type.
     return withCode(
-      `حجم الملف يتجاوز الحد الأقصى للطلب (${formatFileSize(MAX_UPLOAD_BYTES)}).`,
+      t('attachment.validation.request-too-large', { size: formatFileSize(MAX_UPLOAD_BYTES) }),
       'Attachments.FileTooLarge',
     )
   }
@@ -44,8 +44,8 @@ export function fileRejection(file: File | null, fileTypeId: number | null): str
   if (!limits.allowedExtensions.includes(extension)) {
     return withCode(
       extension
-        ? `الامتداد ${extension} غير مسموح لنوع الملف المحدد؛ المسموح ${limits.allowedExtensions.join('، ')}.`
-        : `الملف بلا امتداد، والمسموح لنوع الملف المحدد ${limits.allowedExtensions.join('، ')}.`,
+        ? t('attachment.validation.extension-not-allowed', { extension, allowed: limits.allowedExtensions.join('، ') })
+        : t('attachment.validation.no-extension', { allowed: limits.allowedExtensions.join('، ') }),
       'Attachments.ExtensionNotAllowed',
     )
   }
@@ -54,7 +54,7 @@ export function fileRejection(file: File | null, fileTypeId: number | null): str
     // Only the limit is quoted: `formatFileSize` rounds, so a file one byte over 20 MB would read as
     // «20 م.ب يتجاوز 20 م.ب».
     return withCode(
-      `حجم الملف يتجاوز الحد الأقصى لنوعه (${formatFileSize(limits.maxBytes)}).`,
+      t('attachment.validation.type-too-large', { size: formatFileSize(limits.maxBytes) }),
       'Attachments.FileTooLarge',
     )
   }
@@ -66,7 +66,7 @@ export function fileRejection(file: File | null, fileTypeId: number | null): str
 const changeNotesField = z
   .string()
   .trim()
-  .max(500, withCode('ملاحظات التغيير يجب ألا تتجاوز 500 حرف.', 'Attachments.ChangeNotesTooLong'))
+  .max(500, withCode(t('attachment.validation.notes-max'), 'Attachments.ChangeNotesTooLong'))
 
 /**
  * Nullable, not required-with-message: an unpicked file arrives as `null` here and is reported by the
@@ -75,12 +75,12 @@ const changeNotesField = z
 const fileField = z.file().nullable()
 
 const fields = {
-  fileTypeId: z.string().min(1, withCode('اختر نوع الملف.', 'Attachments.FileTypeEmpty')),
+  fileTypeId: z.string().min(1, withCode(t('attachment.validation.type-required'), 'Attachments.FileTypeEmpty')),
   title: z
     .string()
     .trim()
-    .min(1, withCode('عنوان الملف مطلوب.', 'Attachments.TitleEmpty'))
-    .max(300, withCode('عنوان الملف يجب ألا يتجاوز 300 حرف.', 'Attachments.TitleTooLong')),
+    .min(1, withCode(t('attachment.validation.title-required'), 'Attachments.TitleEmpty'))
+    .max(300, withCode(t('attachment.validation.title-max'), 'Attachments.TitleTooLong')),
   isPrimaryScan: z.boolean(),
   changeNotes: changeNotesField,
   file: fileField,

@@ -32,6 +32,7 @@ import { Permissions } from '@/shared/config'
 import {
   formatDate,
   formatDateTime,
+  t,
   useTableState,
 } from '@/shared/lib'
 import {
@@ -40,6 +41,7 @@ import {
   ConfirmDialog,
   DataTable,
   GuideChip,
+  Label,
   type DataTableColumn,
   type MenuEntry,
 } from '@/shared/ui'
@@ -101,9 +103,9 @@ export function UsersTable() {
   const copyValue = async (value: string, label: string) => {
     try {
       await navigator.clipboard.writeText(value)
-      toast.success(`تم نسخ ${label}.`)
+      toast.success(t('user.toast.copied', { label }))
     } catch {
-      toast.error('تعذّر النسخ إلى الحافظة.')
+      toast.error(t('user.toast.copy-failed'))
     }
   }
 
@@ -114,7 +116,7 @@ export function UsersTable() {
         userId: statusUser.userId,
         active: !statusUser.isActive,
       })
-      toast.success(statusUser.isActive ? 'تم إيقاف الحساب.' : 'تم تفعيل الحساب.')
+      toast.success(statusUser.isActive ? t('user.toast.suspended') : t('user.toast.activated'))
       setStatusUser(null)
     } catch (error) {
       toast.error(toArabicErrorMessage(error))
@@ -125,7 +127,7 @@ export function UsersTable() {
     () => [
       {
         id: 'username',
-        header: 'اسم المستخدم',
+        headerKey: 'user.column.username',
         sortable: true,
         hideable: false,
         cell: (user) => (
@@ -133,13 +135,13 @@ export function UsersTable() {
             <span dir="ltr" className="font-mono text-sm text-foreground">
               {user.username}
             </span>
-            {user.userId === currentUserId && <Badge variant="outline">أنت</Badge>}
+            {user.userId === currentUserId && <Badge variant="outline"><Label k="user.self-badge" /></Badge>}
           </div>
         ),
       },
       {
         id: 'department',
-        header: 'القسم الأساسي',
+        headerKey: 'user.column.department',
         cell: (user) => {
           const department = departmentById.get(user.primaryDepartmentId)
           return department ? (
@@ -155,12 +157,12 @@ export function UsersTable() {
       },
       {
         id: 'scope',
-        header: 'نطاق الوصول',
+        headerKey: 'user.column.scope',
         cell: (user) => <UserScopeBadge scopeTypeId={user.scopeTypeId} />,
       },
       {
         id: 'roles',
-        header: 'الأدوار',
+        headerKey: 'user.column.roles',
         cell: (user) =>
           user.roles.length === 0 ? (
             <span className="text-muted">—</span>
@@ -176,29 +178,29 @@ export function UsersTable() {
       },
       {
         id: 'status',
-        header: 'الحالة',
+        headerKey: 'user.column.status',
         sortable: true,
         sortKey: 'isActive',
         cell: (user) => (
           <Badge variant={user.isActive ? 'success' : 'danger'}>
-            {user.isActive ? 'نشط' : 'موقوف'}
+            {user.isActive ? t('user.status.active') : t('user.status.suspended')}
           </Badge>
         ),
       },
       {
         id: 'mustChangePassword',
-        header: 'تغيير كلمة المرور',
+        headerKey: 'user.column.must-change',
         defaultHidden: true,
         cell: (user) =>
           user.mustChangePassword ? (
-            <Badge variant="warning">مطلوب</Badge>
+            <Badge variant="warning"><Label k="user.must-change.required" /></Badge>
           ) : (
             <span className="text-muted">—</span>
           ),
       },
       {
         id: 'employee',
-        header: 'الموظف المرتبط',
+        headerKey: 'user.column.employee',
         defaultHidden: true,
         cell: (user) =>
           user.employeeId ? (
@@ -209,7 +211,7 @@ export function UsersTable() {
       },
       {
         id: 'lastLoginAt',
-        header: 'آخر دخول',
+        headerKey: 'user.column.last-login',
         sortable: true,
         cell: (user) => (
           <span dir="ltr" className="whitespace-nowrap text-xs text-muted">
@@ -219,7 +221,7 @@ export function UsersTable() {
       },
       {
         id: 'createdAt',
-        header: 'تاريخ الإنشاء',
+        headerKey: 'user.column.created-at',
         sortable: true,
         defaultHidden: true,
         cell: (user) => (
@@ -230,7 +232,7 @@ export function UsersTable() {
       },
       {
         id: 'updatedAt',
-        header: 'آخر تحديث',
+        headerKey: 'user.column.updated-at',
         defaultHidden: true,
         cell: (user) => (
           <span dir="ltr" className="whitespace-nowrap text-xs text-muted">
@@ -248,26 +250,26 @@ export function UsersTable() {
     return [
       {
         id: 'edit',
-        label: 'تعديل البيانات',
+        label: t('user.menu.edit'),
         icon: <Pencil className="size-4" aria-hidden />,
         onSelect: () => openEdit(user),
       },
       {
         id: 'roles',
-        label: 'إدارة الأدوار',
+        label: t('user.menu.roles'),
         icon: <ShieldCheck className="size-4" aria-hidden />,
         disabled: !canManageUsers,
         onSelect: () => setRolesUser(user),
       },
       {
         id: 'access',
-        label: 'الصلاحيات والإسنادات',
+        label: t('user.menu.access'),
         icon: <KeyRound className="size-4" aria-hidden />,
         onSelect: () => setAccessUser(user),
       },
       {
         id: 'reset-password',
-        label: 'إعادة تعيين كلمة المرور',
+        label: t('user.menu.reset-password'),
         icon: <LockKeyhole className="size-4" aria-hidden />,
         disabled: isSelf,
         onSelect: () => setResetUser(user),
@@ -275,7 +277,7 @@ export function UsersTable() {
       { type: 'separator' },
       {
         id: 'toggle-active',
-        label: user.isActive ? 'إيقاف الحساب' : 'تفعيل الحساب',
+        label: user.isActive ? t('user.menu.suspend') : t('user.menu.activate'),
         icon: user.isActive ? (
           <UserX className="size-4" aria-hidden />
         ) : (
@@ -288,15 +290,15 @@ export function UsersTable() {
       { type: 'separator' },
       {
         id: 'copy-username',
-        label: 'نسخ اسم المستخدم',
+        label: t('user.menu.copy-username'),
         icon: <Copy className="size-4" aria-hidden />,
-        onSelect: () => void copyValue(user.username, 'اسم المستخدم'),
+        onSelect: () => void copyValue(user.username, t('user.copy.username')),
       },
       {
         id: 'copy-id',
-        label: 'نسخ المعرّف',
+        label: t('user.menu.copy-id'),
         icon: <Hash className="size-4" aria-hidden />,
-        onSelect: () => void copyValue(user.userId, 'المعرّف'),
+        onSelect: () => void copyValue(user.userId, t('user.copy.id')),
       },
     ]
   }
@@ -304,13 +306,13 @@ export function UsersTable() {
   const headerMenu: MenuEntry[] = [
     {
       id: 'create',
-      label: 'مستخدم جديد',
+      label: t('user.create'),
       icon: <Plus className="size-4" aria-hidden />,
       onSelect: openCreate,
     },
     {
       id: 'refresh',
-      label: 'تحديث البيانات',
+      label: t('table.refresh'),
       icon: <RefreshCw className="size-4" aria-hidden />,
       onSelect: () => void usersQuery.refetch(),
     },
@@ -319,13 +321,13 @@ export function UsersTable() {
   const emptyMenu: MenuEntry[] = [
     {
       id: 'create',
-      label: 'مستخدم جديد',
+      label: t('user.create'),
       icon: <Plus className="size-4" aria-hidden />,
       onSelect: openCreate,
     },
     {
       id: 'refresh',
-      label: 'تحديث البيانات',
+      label: t('table.refresh'),
       icon: <RefreshCw className="size-4" aria-hidden />,
       onSelect: () => void usersQuery.refetch(),
     },
@@ -335,7 +337,7 @@ export function UsersTable() {
     <>
       <DataTable
         tableId="users-table"
-        caption="قائمة المستخدمين"
+        caption={t('user.caption')}
         columns={columns}
         rows={usersQuery.data?.items}
         rowKey={(user) => user.userId}
@@ -354,7 +356,7 @@ export function UsersTable() {
         sortKey={table.sortKey}
         sortDirection={table.sortDirection}
         onSortChange={table.setSort}
-        searchPlaceholder="ابحث باسم المستخدم…"
+        searchPlaceholder={t('user.search-placeholder')}
         rowMenu={buildRowMenu}
         headerMenu={headerMenu}
         emptyMenu={emptyMenu}
@@ -363,26 +365,26 @@ export function UsersTable() {
           <>
             <Button type="button" onClick={openCreate}>
               <Plus className="size-4" aria-hidden />
-              مستخدم جديد
+              <Label k="user.create" />
             </Button>
             <GuideChip id="users.create" />
           </>
         }
-        emptyTitle={table.search ? 'لا توجد نتائج مطابقة.' : 'لا يوجد مستخدمون بعد.'}
+        emptyTitle={table.search ? t('user.empty.search-title') : t('user.empty.title')}
         emptyDescription={
           table.search
-            ? 'جرّب تعديل عبارة البحث أو امسحها لعرض كل المستخدمين.'
-            : 'ابدأ بإنشاء أول حساب مستخدم في النظام.'
+            ? t('user.empty.search-description')
+            : t('user.empty.description')
         }
         emptyAction={
           table.search ? (
             <Button type="button" variant="outline" onClick={() => table.setSearch('')}>
-              مسح البحث
+              <Label k="user.empty.clear-search" />
             </Button>
           ) : (
             <Button type="button" onClick={openCreate}>
               <Plus className="size-4" aria-hidden />
-              إنشاء مستخدم
+              <Label k="user.empty.create" />
             </Button>
           )
         }
@@ -432,15 +434,15 @@ export function UsersTable() {
         onOpenChange={(open) => {
           if (!open) setStatusUser(null)
         }}
-        title={statusUser?.isActive ? 'إيقاف حساب المستخدم' : 'تفعيل حساب المستخدم'}
+        title={statusUser?.isActive ? t('user.confirm.suspend-title') : t('user.confirm.activate-title')}
         description={
           statusUser
             ? statusUser.isActive
-              ? `سيمنع «${statusUser.username}» من تسجيل الدخول حتى إعادة تفعيله.`
-              : `سيعود «${statusUser.username}» قادرًا على تسجيل الدخول من جديد.`
+              ? t('user.confirm.suspend-description', { name: statusUser.username })
+              : t('user.confirm.activate-description', { name: statusUser.username })
             : undefined
         }
-        confirmLabel={statusUser?.isActive ? 'إيقاف الحساب' : 'تفعيل الحساب'}
+        confirmLabel={statusUser?.isActive ? t('user.confirm.suspend') : t('user.confirm.activate')}
         destructive={statusUser?.isActive}
         loading={statusMutation.isPending}
         onConfirm={() => void handleToggleStatus()}

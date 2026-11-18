@@ -4,8 +4,8 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { Hash } from 'lucide-react'
 import type { AuditIntegrityCheckResponse } from '@/entities/audit-log'
 import { toArabicErrorMessage } from '@/shared/api'
-import { formatNumber } from '@/shared/lib'
-import { Button, Dialog, FormField, Input } from '@/shared/ui'
+import { formatNumber, t } from '@/shared/lib'
+import { Button, Dialog, FormField, Input, Label } from '@/shared/ui'
 import { useRunIntegrityCheckMutation } from '../api/runIntegrityCheck'
 import { integrityRangeSchema, type IntegrityRangeFormValues } from '../model/integrity.schema'
 
@@ -59,8 +59,8 @@ export function RunIntegrityCheckDialog({
     <Dialog
       open={open}
       onOpenChange={onOpenChange}
-      title="فحص سلامة سلسلة التدقيق"
-      description="يعيد الفحص حساب كل تجزئة ويتحقق من الربط بين السجلات. يُفحص كامل السلسلة عند ترك الحقلين فارغين."
+      title={t('audit.integrity.dialog.title')}
+      description={t('audit.integrity.dialog.description')}
       footer={
         <>
           <Button
@@ -69,10 +69,10 @@ export function RunIntegrityCheckDialog({
             onClick={() => onOpenChange(false)}
             disabled={mutation.isPending}
           >
-            إغلاق
+            <Label k="common.action.close" />
           </Button>
           <Button type="submit" form="integrity-check-form" loading={mutation.isPending}>
-            تشغيل الفحص
+            <Label k="audit.integrity.dialog.run" />
           </Button>
         </>
       }
@@ -84,26 +84,26 @@ export function RunIntegrityCheckDialog({
         className="flex flex-col gap-4"
       >
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <FormField label="من معرّف السجل (اختياري)" error={errors.startAuditLogId?.message}>
+          <FormField labelKey="audit.integrity.field.start" error={errors.startAuditLogId?.message}>
             <Input
               type="number"
               inputMode="numeric"
               dir="ltr"
               min={1}
-              placeholder="بداية السلسلة"
+              placeholder={t('audit.integrity.field.start-placeholder')}
               startIcon={<Hash className="size-4" aria-hidden />}
               invalid={Boolean(errors.startAuditLogId)}
               {...register('startAuditLogId')}
             />
           </FormField>
 
-          <FormField label="إلى معرّف السجل (اختياري)" error={errors.endAuditLogId?.message}>
+          <FormField labelKey="audit.integrity.field.end" error={errors.endAuditLogId?.message}>
             <Input
               type="number"
               inputMode="numeric"
               dir="ltr"
               min={1}
-              placeholder="نهاية السلسلة"
+              placeholder={t('audit.integrity.field.end-placeholder')}
               startIcon={<Hash className="size-4" aria-hidden />}
               invalid={Boolean(errors.endAuditLogId)}
               {...register('endAuditLogId')}
@@ -123,9 +123,9 @@ export function RunIntegrityCheckDialog({
               role="status"
               className="rounded-lg border border-success/40 bg-success/10 px-3 py-2 text-sm text-success"
             >
-              السلسلة سليمة: فُحص{' '}
-              {formatNumber(result.endAuditLogId - result.startAuditLogId + 1)} سجلًا من{' '}
-              <span dir="ltr">#{formatNumber(result.startAuditLogId)}</span> إلى{' '}
+              {t('audit.integrity.result.valid-prefix')}{' '}
+              {formatNumber(result.endAuditLogId - result.startAuditLogId + 1)} {t('audit.integrity.result.valid-middle')}{' '}
+              <span dir="ltr">#{formatNumber(result.startAuditLogId)}</span> {t('audit.integrity.result.valid-to')}{' '}
               <span dir="ltr">#{formatNumber(result.endAuditLogId)}</span>.
             </div>
           ) : (
@@ -133,10 +133,10 @@ export function RunIntegrityCheckDialog({
               role="alert"
               className="flex flex-col gap-1 rounded-lg border border-danger/40 bg-danger/10 px-3 py-2 text-sm text-danger"
             >
-              <p className="font-medium">اكُتشفت تجاوزات في سلسلة التدقيق.</p>
+              <p className="font-medium">{t('audit.integrity.result.breached-title')}</p>
               {result.firstCorruptedLogId !== null && (
                 <p>
-                  أول سجل متأثر:{' '}
+                  {t('audit.integrity.result.first-corrupted')}{' '}
                   <span dir="ltr" className="font-mono">
                     #{formatNumber(result.firstCorruptedLogId)}
                   </span>
@@ -147,7 +147,7 @@ export function RunIntegrityCheckDialog({
                   {result.failureDetails}
                 </p>
               )}
-              <p className="text-xs">حُفظ التقرير في قائمة تقارير السلامة.</p>
+              <p className="text-xs">{t('audit.integrity.result.saved')}</p>
             </div>
           ))}
       </form>

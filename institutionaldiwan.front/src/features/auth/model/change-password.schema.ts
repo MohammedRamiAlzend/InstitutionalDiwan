@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { t } from '@/shared/lib'
 
 /** `POST /api/auth/change-password` request body. */
 export interface ChangePasswordRequest {
@@ -9,21 +10,21 @@ export interface ChangePasswordRequest {
 /** Mirrors `ChangePasswordCommandValidator`; the confirmation field is client-only. */
 export const changePasswordSchema = z
   .object({
-    currentPassword: z.string().min(1, 'كلمة المرور الحالية مطلوبة.'),
+    currentPassword: z.string().min(1, t('auth.change-password.validation.current-required')),
     newPassword: z
       .string()
-      .min(1, 'كلمة المرور الجديدة مطلوبة.')
-      .min(8, 'كلمة المرور الجديدة قصيرة جدًا، الحد الأدنى 8 أحرف.')
-      .max(200, 'كلمة المرور الجديدة تتجاوز الحد الأقصى للأحرف.'),
-    confirmPassword: z.string().min(1, 'تأكيد كلمة المرور مطلوب.'),
+      .min(1, t('auth.change-password.validation.new-required'))
+      .min(8, t('auth.change-password.validation.new-min'))
+      .max(200, t('auth.change-password.validation.new-max')),
+    confirmPassword: z.string().min(1, t('auth.change-password.validation.confirm-required')),
   })
   .refine((values) => values.newPassword === values.confirmPassword, {
     path: ['confirmPassword'],
-    message: 'كلمتا المرور غير متطابقتين.',
+    message: t('auth.change-password.validation.mismatch'),
   })
   .refine((values) => values.newPassword !== values.currentPassword, {
     path: ['newPassword'],
-    message: 'يجب أن تختلف كلمة المرور الجديدة عن الحالية.',
+    message: t('auth.change-password.validation.same'),
   })
 
 export type ChangePasswordFormValues = z.infer<typeof changePasswordSchema>

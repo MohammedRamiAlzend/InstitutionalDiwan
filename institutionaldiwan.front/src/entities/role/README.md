@@ -19,6 +19,7 @@ Models Module 02 `Role` (`RoleResponse`) and `Permission` (`PermissionResponse`)
 ## Change Log
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-18 | Qoder | UI labels Phase 4 (ب5-متبقٍ): `moduleLabels.ts` maps each permission module to a catalog key (`role.module.*`) and `permissionModuleLabel` resolves it through `t()`; `RoleBadge`'s system-role aria uses `role.badge.system-aria`. |
 | 2026-10-28 | agent | Added `model/options.ts` (`useRoleOptions`) for the permission-scoped `GET /api/identity-options/roles` read used by the users grid and the roles dialog. |
 | 2026-10-28 | agent | Added `model/moduleLabels.ts` so the user access dialog and the role permission matrix share one Arabic module-label mapping; removed the duplicated map from `features/user-manage`. |
 | 2026-10-27 | agent | Implemented Phase 2 role and permission-catalog reads plus `RoleBadge`; live API shapes verified. |

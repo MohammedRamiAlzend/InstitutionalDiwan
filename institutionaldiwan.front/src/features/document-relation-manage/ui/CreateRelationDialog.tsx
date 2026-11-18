@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Controller } from 'react-hook-form'
-import { useDraftForm } from '@/shared/lib'
+import { t, useDraftForm } from '@/shared/lib'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
 import type { DocumentResponse } from '@/entities/document'
@@ -11,7 +11,7 @@ import {
   usePreselectLookupDefault,
 } from '@/entities/lookup'
 import { toArabicErrorMessage } from '@/shared/api'
-import { Button, Dialog, FormField, Select, Textarea } from '@/shared/ui'
+import { Button, Dialog, FormField, Label, Select, Textarea } from '@/shared/ui'
 import { useCreateRelationMutation } from '../api/relationMutations'
 import { createRelationSchema, type CreateRelationFormValues } from '../model/schemas'
 import { DocumentPicker } from './DocumentPicker'
@@ -65,7 +65,7 @@ export function CreateRelationDialog({
         relationTypeId: Number(values.relationTypeId),
         notes: values.notes.trim() || undefined,
       })
-      toast.success('تمت إضافة الرابط.')
+      toast.success(t('relation.create.toast'))
       draft.discard()
       onOpenChange(false)
     } catch {
@@ -80,8 +80,8 @@ export function CreateRelationDialog({
         if (!nextOpen && mutation.isPending) return
         onOpenChange(nextOpen)
       }}
-      title="إضافة رابط"
-      description={`اربط «${documentTitle}» بوثيقة أخرى. الرابط يظهر في الوثيقتين، وحذفه يُسجَّل بسبب في سجل الروابط.`}
+      title={t('relation.grid.action.add')}
+      description={t('relation.create.description', { title: documentTitle })}
       size="md"
       footer={
         <>
@@ -91,17 +91,17 @@ export function CreateRelationDialog({
             onClick={() => onOpenChange(false)}
             disabled={mutation.isPending}
           >
-            تراجع
+            <Label k="relation.action.back" />
           </Button>
           <Button type="submit" form="create-relation-form" loading={mutation.isPending}>
-            إضافة الرابط
+            <Label k="relation.create.submit" />
           </Button>
         </>
       }
     >
       <form id="create-relation-form" onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
         <FormField
-          label="الوثيقة المراد ربطها"
+          labelKey="relation.create.field-target"
           required
           error={errors.targetDocumentId?.message}
           guideId="document-details.relations-target"
@@ -118,7 +118,7 @@ export function CreateRelationDialog({
         </FormField>
 
         <FormField
-          label="نوع الرابط"
+          labelKey="relation.create.field-type"
           required
           error={errors.relationTypeId?.message}
           guideId="document-details.relations-types"
@@ -128,21 +128,21 @@ export function CreateRelationDialog({
             name="relationTypeId"
             render={({ field }) => (
               <Select
-                aria-label="نوع الرابط"
+                aria-label={t('relation.create.field-type')}
                 value={field.value}
                 onValueChange={field.onChange}
                 options={typeOptions}
-                placeholder="اختر نوع الرابط"
+                placeholder={t('relation.create.type-placeholder')}
                 invalid={Boolean(errors.relationTypeId)}
               />
             )}
           />
         </FormField>
 
-        <FormField label="ملاحظات" error={errors.notes?.message}>
+        <FormField labelKey="relation.create.field-notes" error={errors.notes?.message}>
           <Textarea
             rows={3}
-            placeholder="اختياري، مثال: جواب على طلب سابق."
+            placeholder={t('relation.create.notes-placeholder')}
             invalid={Boolean(errors.notes)}
             {...register('notes')}
           />

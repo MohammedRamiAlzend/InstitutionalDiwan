@@ -57,6 +57,7 @@ another layer's surface by itself.
 - 2026-11-05: Unsent form input is now kept (per user, per form) after an accidental close or cancel and restored with a toast; it is cleared only after a successful submit (`useDraftForm`).
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-18 | Qoder | UI labels Phase 4 (ب4): the issue/replace/cancel/department-registration dialogs and the registry form resolve titles, descriptions, fields (`FormField labelKey`), buttons, placeholders and toasts via `t()`/`<Label>`/`resolveLabel`; the Zod schema messages via `t()` (`numbering.validation.*`). Data-driven names/codes/number text stay out. |
 | 2026-11-08 | Claude | Department registration uses the shared register picker and locks the register of an existing number. |
 | 2026-11-08 | Claude | Department registration locks the number when the department already has one for the date's year. |
 | 2026-11-05 | Claude | Issue and replace dialogs no longer ask for a numbering year; numbers are system GUIDs. |

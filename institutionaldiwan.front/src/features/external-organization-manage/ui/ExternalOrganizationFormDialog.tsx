@@ -1,13 +1,13 @@
 import { useMemo } from 'react'
 import { Controller } from 'react-hook-form'
-import { useDraftForm } from '@/shared/lib'
+import { t, useDraftForm } from '@/shared/lib'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Building2, Contact, Hash } from 'lucide-react'
 import { toast } from 'sonner'
 import type { ExternalOrganizationResponse } from '@/entities/external-organization'
 import { LOOKUP_SLUGS, useLookupEntries } from '@/entities/lookup'
 import { toArabicErrorMessage } from '@/shared/api'
-import { Button, Dialog, FormField, Input, Select } from '@/shared/ui'
+import { Button, Dialog, FormField, Input, Label, Select } from '@/shared/ui'
 import {
   externalOrganizationFormSchema,
   type ExternalOrganizationFormValues,
@@ -79,7 +79,7 @@ export function ExternalOrganizationFormDialog({
             contactInfo: values.contactInfo || null,
           },
         })
-        toast.success('تم تحديث بيانات الجهة الخارجية.')
+        toast.success(t('external-org.form.toast-updated'))
       } else {
         await createMutation.mutateAsync({
           code: values.code,
@@ -88,7 +88,7 @@ export function ExternalOrganizationFormDialog({
           nameEn: values.nameEn || null,
           contactInfo: values.contactInfo || null,
         })
-        toast.success('تمت إضافة الجهة الخارجية.')
+        toast.success(t('external-org.form.toast-created'))
       }
       draft.discard()
       onOpenChange(false)
@@ -101,11 +101,11 @@ export function ExternalOrganizationFormDialog({
     <Dialog
       open={open}
       onOpenChange={onOpenChange}
-      title={isEdit ? 'تعديل الجهة الخارجية' : 'جهة خارجية جديدة'}
+      title={isEdit ? t('external-org.form.edit-title') : t('external-org.create')}
       description={
         isEdit
-          ? 'حدّث اسم الجهة ونوعها وبيانات الاتصال. لا يمكن تغيير الرمز بعد الإنشاء.'
-          : 'أضف جهة مراسلة خارجية (وزارة أو شركة أو فرد) لتظهر في اختيار جهات المشاركين.'
+          ? t('external-org.form.edit-description')
+          : t('external-org.form.create-description')
       }
       footer={
         <>
@@ -115,7 +115,7 @@ export function ExternalOrganizationFormDialog({
             onClick={() => onOpenChange(false)}
             disabled={pending}
           >
-            إلغاء
+            <Label k="common.action.cancel" />
           </Button>
           <Button
             type="submit"
@@ -123,7 +123,7 @@ export function ExternalOrganizationFormDialog({
             loading={pending}
             disabled={typesQuery.isLoading}
           >
-            {isEdit ? 'حفظ التعديلات' : 'إضافة الجهة'}
+            {isEdit ? <Label k="external-org.form.save" /> : <Label k="external-org.form.submit" />}
           </Button>
         </>
       }
@@ -134,7 +134,7 @@ export function ExternalOrganizationFormDialog({
         noValidate
         className="grid gap-4 sm:grid-cols-2"
       >
-        <FormField label="رمز الجهة" required error={errors.code?.message}>
+        <FormField labelKey="external-org.form.code" required error={errors.code?.message}>
           <Input
             id="external-organization-code"
             dir="ltr"
@@ -146,7 +146,7 @@ export function ExternalOrganizationFormDialog({
           />
         </FormField>
 
-        <FormField label="نوع الجهة" required error={errors.organizationTypeId?.message}>
+        <FormField labelKey="external-org.form.type" required error={errors.organizationTypeId?.message}>
           <Controller
             control={control}
             name="organizationTypeId"
@@ -158,23 +158,23 @@ export function ExternalOrganizationFormDialog({
                 disabled={pending || typesQuery.isLoading}
                 invalid={Boolean(errors.organizationTypeId)}
                 placeholder={
-                  typesQuery.isLoading ? 'جارٍ تحميل الأنواع…' : 'اختر النوع…'
+                  typesQuery.isLoading ? t('external-org.form.type-loading') : t('external-org.form.type-placeholder')
                 }
-                aria-label="نوع الجهة"
+                aria-label={t('external-org.form.type')}
               />
             )}
           />
         </FormField>
 
         <FormField
-          label="اسم الجهة بالعربية"
+          labelKey="external-org.form.name-ar"
           required
           error={errors.nameAr?.message}
           className="sm:col-span-2"
         >
           <Input
             id="external-organization-name-ar"
-            placeholder="مثال: وزارة الداخلية"
+            placeholder={t('external-org.form.name-ar-placeholder')}
             startIcon={<Building2 className="size-4" aria-hidden />}
             invalid={Boolean(errors.nameAr)}
             {...register('nameAr')}
@@ -182,7 +182,7 @@ export function ExternalOrganizationFormDialog({
         </FormField>
 
         <FormField
-          label="اسم الجهة بالإنجليزية"
+          labelKey="external-org.form.name-en"
           error={errors.nameEn?.message}
           className="sm:col-span-2"
         >
@@ -197,14 +197,14 @@ export function ExternalOrganizationFormDialog({
         </FormField>
 
         <FormField
-          label="بيانات الاتصال (بريد إلكتروني أو هاتف)"
+          labelKey="external-org.form.contact"
           error={errors.contactInfo?.message}
           className="sm:col-span-2"
         >
           <Input
             id="external-organization-contact"
             dir="ltr"
-            placeholder="name@example.com أو +963 9xx xxx xxx"
+            placeholder={t('external-org.form.contact-placeholder')}
             startIcon={<Contact className="size-4" aria-hidden />}
             invalid={Boolean(errors.contactInfo)}
             {...register('contactInfo')}

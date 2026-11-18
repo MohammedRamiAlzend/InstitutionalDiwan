@@ -5,7 +5,8 @@ import { toast } from 'sonner'
 import { LOOKUP_SLUGS, useLookupEntries, usePreselectLookupDefault } from '@/entities/lookup'
 import { PersonNamesInput } from '@/entities/person'
 import { toArabicErrorMessage } from '@/shared/api'
-import { Button, Dialog, FormField, Select } from '@/shared/ui'
+import { t } from '@/shared/lib'
+import { Button, Dialog, FormField, Label, Select } from '@/shared/ui'
 import { useAddDocumentPersonMutation } from '../api/documentPersonMutations'
 import { addDocumentPersonsSchema, type AddDocumentPersonsFormValues } from '../model/schemas'
 
@@ -54,12 +55,12 @@ export function AddDocumentPersonsDialog({ documentId, open, onOpenChange }: Add
       } catch (error) {
         // Those before it are saved; keep only what still needs attention in the form.
         setValue('persons', values.persons.slice(index))
-        setFailure(`تعذّرت إضافة «${person.fullName}»: ${toArabicErrorMessage(error)}`)
+        setFailure(t('persons.add.failure', { name: person.fullName, error: toArabicErrorMessage(error) }))
         return
       }
     }
 
-    toast.success(values.persons.length > 1 ? 'تمت إضافة الأشخاص.' : 'تمت إضافة الشخص.')
+    toast.success(values.persons.length > 1 ? t('persons.add.toast-many') : t('persons.add.toast-one'))
     onOpenChange(false)
   })
 
@@ -67,21 +68,21 @@ export function AddDocumentPersonsDialog({ documentId, open, onOpenChange }: Add
     <Dialog
       open={open}
       onOpenChange={onOpenChange}
-      title="إضافة أشخاص إلى الوثيقة"
-      description="ابحث عن شخص مسجّل واختره، أو اكتب اسمًا جديدًا. يمكن إضافة أكثر من شخص."
+      title={t('persons.add.title')}
+      description={t('persons.add.description')}
       footer={
         <>
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={addMutation.isPending}>
-            إلغاء
+            <Label k="common.action.cancel" />
           </Button>
           <Button type="submit" form="document-persons-add-form" loading={addMutation.isPending}>
-            إضافة
+            <Label k="persons.add.submit" />
           </Button>
         </>
       }
     >
       <form id="document-persons-add-form" onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
-        <FormField label="الأسماء" required error={errors.persons?.message}>
+        <FormField labelKey="persons.add.field-names" required error={errors.persons?.message}>
           <Controller
             control={control}
             name="persons"
@@ -96,7 +97,7 @@ export function AddDocumentPersonsDialog({ documentId, open, onOpenChange }: Add
           />
         </FormField>
 
-        <FormField label="الصفة" required error={errors.roleId?.message}>
+        <FormField labelKey="persons.field-role" required error={errors.roleId?.message}>
           <Controller
             control={control}
             name="roleId"
@@ -107,8 +108,8 @@ export function AddDocumentPersonsDialog({ documentId, open, onOpenChange }: Add
                 options={roleOptions}
                 disabled={addMutation.isPending || rolesQuery.isLoading}
                 invalid={Boolean(errors.roleId)}
-                placeholder="اختر الصفة…"
-                aria-label="الصفة"
+                placeholder={t('persons.role-placeholder')}
+                aria-label={t('persons.role-aria')}
               />
             )}
           />

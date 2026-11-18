@@ -2,20 +2,24 @@ import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
 import {
-  SYSTEM_ERROR_STATUS_LABELS,
+  SYSTEM_ERROR_STATUS_LABEL_KEYS,
   type SystemErrorDetailsResponse,
   type SystemErrorStatus,
 } from '@/entities/system-error'
 import { toArabicErrorMessage } from '@/shared/api'
-import { Button, FormField, Select, Textarea } from '@/shared/ui'
+import { resolveLabel, t, useLabelsStore } from '@/shared/lib'
+import { Button, FormField, Label, Select, Textarea } from '@/shared/ui'
 import { useUpdateSystemErrorMutation } from '../api/systemErrorMutations'
 import { updateSystemErrorSchema, type UpdateSystemErrorFormValues } from '../model/schemas'
-
-const STATUS_OPTIONS = Object.entries(SYSTEM_ERROR_STATUS_LABELS).map(([value, label]) => ({ value, label }))
 
 /** Where the developer stands with one error: status and free notes. */
 export function UpdateSystemErrorForm({ error }: { error: SystemErrorDetailsResponse }) {
   const mutation = useUpdateSystemErrorMutation(error.summary.systemErrorId)
+  const overrides = useLabelsStore((state) => state.overrides)
+  const statusOptions = Object.entries(SYSTEM_ERROR_STATUS_LABEL_KEYS).map(([value, key]) => ({
+    value,
+    label: resolveLabel(key, overrides),
+  }))
   const {
     control,
     register,
@@ -29,22 +33,22 @@ export function UpdateSystemErrorForm({ error }: { error: SystemErrorDetailsResp
   const onSubmit = handleSubmit((values) =>
     mutation.mutate(
       { status: Number(values.status) as SystemErrorStatus, notes: values.notes || null },
-      { onSuccess: () => toast.success('حُفظت حالة الخطأ.') },
+      { onSuccess: () => toast.success(t('system-error.form.toast-saved')) },
     ),
   )
 
   return (
     <form onSubmit={onSubmit} noValidate className="flex flex-col gap-3">
-      <FormField label="الحالة" required>
+      <FormField labelKey="system-error.column.status" required>
         <Controller
           control={control}
           name="status"
           render={({ field }) => (
-            <Select aria-label="حالة الخطأ" value={field.value} onValueChange={field.onChange} options={STATUS_OPTIONS} />
+            <Select aria-label={t('system-error.form.status-aria')} value={field.value} onValueChange={field.onChange} options={statusOptions} />
           )}
         />
       </FormField>
-      <FormField label="ملاحظات المطور" error={errors.notes?.message}>
+      <FormField labelKey="system-error.form.notes" error={errors.notes?.message}>
         <Textarea rows={3} invalid={Boolean(errors.notes)} {...register('notes')} />
       </FormField>
       {mutation.error && (
@@ -54,7 +58,7 @@ export function UpdateSystemErrorForm({ error }: { error: SystemErrorDetailsResp
       )}
       <div>
         <Button type="submit" loading={mutation.isPending}>
-          حفظ
+          <Label k="common.action.save" />
         </Button>
       </div>
     </form>

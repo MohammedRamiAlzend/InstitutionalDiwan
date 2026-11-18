@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from 'react'
 import { Controller } from 'react-hook-form'
-import { useDraftForm } from '@/shared/lib'
+import { t, useDraftForm } from '@/shared/lib'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Building2, Hash, UserRound } from 'lucide-react'
 import { toast } from 'sonner'
@@ -16,6 +16,7 @@ import {
   Dialog,
   FormField,
   Input,
+  Label,
   Select,
   Skeleton,
   Textarea,
@@ -139,7 +140,7 @@ function DepartmentFormDialogContent({
     }
 
     return [
-      { value: NONE, label: 'بدون قسم أعلى (قسم رئيسي)' },
+      { value: NONE, label: t('department.form.no-parent') },
       ...departments
         .filter((item) => !excluded.has(item.departmentId))
         .map((item) => ({
@@ -167,7 +168,7 @@ function DepartmentFormDialogContent({
             notes: values.notes || null,
           },
         })
-        toast.success('تم تحديث بيانات القسم.')
+        toast.success(t('department.form.toast-updated'))
       } else {
         await createMutation.mutateAsync({
           code: values.code,
@@ -180,7 +181,7 @@ function DepartmentFormDialogContent({
           canReceiveExternal: values.canReceiveExternal,
           notes: values.notes || null,
         })
-        toast.success('تم إنشاء القسم بنجاح.')
+        toast.success(t('department.form.toast-created'))
       }
       draft.discard()
       onOpenChange(false)
@@ -195,11 +196,11 @@ function DepartmentFormDialogContent({
     <Dialog
       open
       onOpenChange={onOpenChange}
-      title={isEdit ? 'تعديل القسم' : 'قسم جديد'}
+      title={isEdit ? t('department.menu.edit') : t('department.create')}
       description={
         isEdit
-          ? 'حدّث اسم القسم وقسمه الأعلى ومديره وملاحظاته. لا يمكن تغيير الرمز أو النوع.'
-          : 'أضف قسمًا تنظيميًا واربطه بقسم أعلى. يمكن إسناد مدير القسم بعد إنشائه.'
+          ? t('department.form.edit-description')
+          : t('department.form.create-description')
       }
       size="lg"
       footer={
@@ -210,7 +211,7 @@ function DepartmentFormDialogContent({
             onClick={() => onOpenChange(false)}
             disabled={pending}
           >
-            إلغاء
+            <Label k="common.action.cancel" />
           </Button>
           <Button
             type="submit"
@@ -218,7 +219,7 @@ function DepartmentFormDialogContent({
             loading={pending}
             disabled={loadingDetail || (isEdit && detailQuery.isError)}
           >
-            {isEdit ? 'حفظ التعديلات' : 'إنشاء القسم'}
+            {isEdit ? <Label k="department.form.save" /> : <Label k="department.form.submit" />}
           </Button>
         </>
       }
@@ -241,7 +242,7 @@ function DepartmentFormDialogContent({
             size="sm"
             onClick={() => void detailQuery.refetch()}
           >
-            إعادة المحاولة
+            <Label k="common.action.retry" />
           </Button>
         </div>
       ) : (
@@ -251,11 +252,11 @@ function DepartmentFormDialogContent({
           noValidate
           className="grid gap-4 sm:grid-cols-2"
         >
-          <FormField label="رمز القسم" htmlFor="department-code" required error={errors.code?.message}>
+          <FormField labelKey="department.field.code" htmlFor="department-code" required error={errors.code?.message}>
             <Input
               id="department-code"
               dir="ltr"
-              placeholder="مثال: HR-01"
+              placeholder={t('department.form.code-placeholder')}
               startIcon={<Hash className="size-4" aria-hidden />}
               disabled={isEdit}
               invalid={Boolean(errors.code)}
@@ -263,7 +264,7 @@ function DepartmentFormDialogContent({
             />
           </FormField>
 
-          <FormField label="نوع القسم" required error={errors.departmentTypeId?.message}>
+          <FormField labelKey="department.field.type" required error={errors.departmentTypeId?.message}>
             <Controller
               control={control}
               name="departmentTypeId"
@@ -274,15 +275,15 @@ function DepartmentFormDialogContent({
                   options={typeOptions}
                   disabled={isEdit || typeQuery.isLoading}
                   invalid={Boolean(errors.departmentTypeId)}
-                  placeholder={typeQuery.isLoading ? 'جارٍ تحميل الأنواع…' : 'اختر النوع…'}
-                  aria-label="نوع القسم"
+                  placeholder={typeQuery.isLoading ? t('department.form.type-loading') : t('department.form.type-placeholder')}
+                  aria-label={t('department.field.type')}
                 />
               )}
             />
           </FormField>
 
           <FormField
-            label="اسم القسم بالعربية"
+            labelKey="department.form.name-ar"
             htmlFor="department-name-ar"
             required
             error={errors.nameAr?.message}
@@ -290,7 +291,7 @@ function DepartmentFormDialogContent({
           >
             <Input
               id="department-name-ar"
-              placeholder="مثال: دائرة الموارد البشرية"
+              placeholder={t('department.form.name-ar-placeholder')}
               startIcon={<Building2 className="size-4" aria-hidden />}
               invalid={Boolean(errors.nameAr)}
               {...register('nameAr')}
@@ -298,7 +299,7 @@ function DepartmentFormDialogContent({
           </FormField>
 
           <FormField
-            label="اسم القسم بالإنجليزية"
+            labelKey="department.form.name-en"
             htmlFor="department-name-en"
             error={errors.nameEn?.message}
             className="sm:col-span-2"
@@ -313,7 +314,7 @@ function DepartmentFormDialogContent({
           </FormField>
 
           <FormField
-            label="القسم الأعلى"
+            labelKey="department.field.parent"
             error={errors.parentDepartmentId?.message}
             className="sm:col-span-2"
           >
@@ -328,9 +329,9 @@ function DepartmentFormDialogContent({
                   disabled={pending || departmentsQuery.isLoading}
                   invalid={Boolean(errors.parentDepartmentId)}
                   placeholder={
-                    departmentsQuery.isLoading ? 'جارٍ تحميل الأقسام…' : 'اختر القسم الأعلى…'
+                    departmentsQuery.isLoading ? t('department.form.parent-loading') : t('department.form.parent-placeholder')
                   }
-                  aria-label="القسم الأعلى"
+                  aria-label={t('department.field.parent')}
                 />
               )}
             />
@@ -338,7 +339,7 @@ function DepartmentFormDialogContent({
 
           {isEdit && (
             <FormField
-              label="مدير القسم"
+              labelKey="department.field.manager"
               error={errors.managerEmployeeId?.message}
               className="sm:col-span-2"
             >
@@ -351,14 +352,14 @@ function DepartmentFormDialogContent({
                     onValueChange={(id) => field.onChange(id ?? NONE)}
                     disabled={pending || !canPickEmployees}
                     invalid={Boolean(errors.managerEmployeeId)}
-                    label="مدير القسم"
-                    noneLabel="بدون مدير"
+                    label={t('department.field.manager')}
+                    noneLabel={t('department.form.no-manager')}
                   />
                 )}
               />
               {!canPickEmployees && (
                 <p role="status" className="mt-1.5 text-xs text-warning">
-                  لا تملك صلاحية إدارة الموظفين، لذلك لا يمكنك تغيير مدير القسم.
+                  {t('department.form.manager-denied')}
                 </p>
               )}
             </FormField>
@@ -373,8 +374,8 @@ function DepartmentFormDialogContent({
                 <Checkbox
                   checked={field.value}
                   onCheckedChange={field.onChange}
-                  label="السماح بالمراسلات الخارجية الصادرة"
-                  description="يستطيع القسم إرسال وثائق إلى جهات خارج المؤسسة."
+                  label={t('department.form.send-label')}
+                  description={t('department.form.send-description')}
                 />
               )}
             />
@@ -385,8 +386,8 @@ function DepartmentFormDialogContent({
                 <Checkbox
                   checked={field.value}
                   onCheckedChange={field.onChange}
-                  label="السماح بالمراسلات الخارجية الواردة"
-                  description="يستطيع القسم استقبال وثائق من جهات خارج المؤسسة."
+                  label={t('department.form.receive-label')}
+                  description={t('department.form.receive-description')}
                 />
               )}
             />
@@ -394,14 +395,14 @@ function DepartmentFormDialogContent({
           )}
 
           <FormField
-            label="ملاحظات"
+            labelKey="department.field.notes"
             htmlFor="department-notes"
             error={errors.notes?.message}
             className="sm:col-span-2"
           >
             <Textarea
               id="department-notes"
-              placeholder="ملاحظات إدارية عن القسم (اختياري)…"
+              placeholder={t('department.form.notes-placeholder')}
               invalid={Boolean(errors.notes)}
               {...register('notes')}
             />
@@ -410,7 +411,7 @@ function DepartmentFormDialogContent({
           {!isEdit && (
             <p role="status" className="sm:col-span-2 rounded-lg bg-surface-muted px-3 py-2 text-xs text-muted">
               <UserRound className="me-1 inline size-3.5" aria-hidden />
-              لإسناد مدير للقسم، افتحه للتعديل بعد إنشائه.
+              {t('department.form.manager-note')}
             </p>
           )}
 
@@ -421,7 +422,7 @@ function DepartmentFormDialogContent({
                 void departmentsQuery.refetch()
                 void typeQuery.refetch()
               }}>
-                إعادة المحاولة
+                <Label k="common.action.retry" />
               </Button>
             </div>
           )}

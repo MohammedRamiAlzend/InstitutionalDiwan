@@ -5,7 +5,7 @@ import { BrandMark, BrandName } from '@/entities/branding'
 import { useUiLabelsQuery } from '@/entities/ui-label'
 import { useSessionStore } from '@/entities/user'
 import { tokenStorage } from '@/shared/api'
-import { getLabelEditMode, setLabelEditMode, useLabelsStore } from '@/shared/lib'
+import { getLabelEditMode, setLabelEditMode, t, useLabelsStore } from '@/shared/lib'
 
 /** Branded full-page loading screen; tokens are resolved early in index.html, so no white flash. */
 function BootScreen() {
@@ -21,7 +21,7 @@ function BootScreen() {
       </p>
       <div className="flex items-center gap-2 text-sm text-muted">
         <Loader2 className="size-4 animate-spin" aria-hidden />
-        <span>جارٍ تجهيز الواجهة…</span>
+        <span>{t('common.boot.loading')}</span>
       </div>
     </div>
   )
@@ -52,7 +52,7 @@ export function LabelsBootGate({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (labelsQuery.isError) {
       markReady()
-      if (user) toast.warning('تعذّر تحميل تسميات الواجهة؛ عُرضت الأسماء الافتراضية.')
+      if (user) toast.warning(t('common.boot.failed'))
     }
   }, [labelsQuery.isError, markReady, user])
 

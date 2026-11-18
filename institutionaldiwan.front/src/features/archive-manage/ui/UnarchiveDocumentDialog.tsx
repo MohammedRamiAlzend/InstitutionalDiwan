@@ -1,8 +1,8 @@
-import { useDraftForm } from '@/shared/lib'
+import { t, useDraftForm } from '@/shared/lib'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
 import { toArabicErrorMessage } from '@/shared/api'
-import { Button, Dialog, FormField, Textarea } from '@/shared/ui'
+import { Button, Dialog, FormField, Label, Textarea } from '@/shared/ui'
 import { useUnarchiveDocumentMutation } from '../api/archiveMutations'
 import { unarchiveDocumentSchema, type UnarchiveDocumentFormValues } from '../model/schemas'
 
@@ -35,7 +35,7 @@ export function UnarchiveDocumentDialog({
   const onSubmit = handleSubmit(async (values) => {
     try {
       await mutation.mutateAsync({ reason: values.reason.trim() })
-      toast.success('أُلغيت أرشفة الوثيقة.')
+      toast.success(t('archive.unarchive.toast'))
       draft.discard()
       onOpenChange(false)
     } catch {
@@ -50,8 +50,8 @@ export function UnarchiveDocumentDialog({
         if (!nextOpen && mutation.isPending) return
         onOpenChange(nextOpen)
       }}
-      title="إلغاء أرشفة الوثيقة"
-      description={`ستعود «${documentTitle}» إلى حالتها قبل الأرشفة وتصبح قابلة للتعديل من جديد.`}
+      title={t('archive.unarchive.title')}
+      description={t('archive.unarchive.description', { title: documentTitle })}
       size="sm"
       footer={
         <>
@@ -61,20 +61,20 @@ export function UnarchiveDocumentDialog({
             onClick={() => onOpenChange(false)}
             disabled={mutation.isPending}
           >
-            تراجع
+            <Label k="archive.dismiss" />
           </Button>
           <Button type="submit" form="unarchive-document-form" loading={mutation.isPending}>
-            إلغاء الأرشفة
+            <Label k="archive.unarchive.submit" />
           </Button>
         </>
       }
     >
       <form id="unarchive-document-form" onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
-        <FormField label="سبب إلغاء الأرشفة" required error={errors.reason?.message}>
+        <FormField labelKey="archive.unarchive.field-reason" required error={errors.reason?.message}>
           <Textarea
             rows={3}
             autoFocus
-            placeholder="مثال: وردت مراسلة جديدة تتعلق بالمعاملة."
+            placeholder={t('archive.unarchive.reason-placeholder')}
             invalid={Boolean(errors.reason)}
             {...register('reason')}
           />

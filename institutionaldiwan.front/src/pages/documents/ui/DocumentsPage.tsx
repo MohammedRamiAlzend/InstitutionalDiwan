@@ -2,22 +2,22 @@ import { useSearchParams } from 'react-router-dom'
 import { Building2, ScrollText } from 'lucide-react'
 import { RequirePermission } from '@/features/auth'
 import { FEATURES, Permissions } from '@/shared/config'
-import { cn } from '@/shared/lib'
-import { GuideProvider, GuideRegion, PageHeader } from '@/shared/ui'
+import { cn, t } from '@/shared/lib'
+import { GuideProvider, GuideRegion, Label, PageHeader } from '@/shared/ui'
 import { DocumentRegistryTable } from '@/widgets/document-registry-table'
 import { ExternalOrganizationsTable } from '@/widgets/external-organizations-table'
 
 const TABS = [
   {
     key: 'registry',
-    label: 'سجل الوثائق',
-    hint: 'استعرض الوثائق الصادرة والواردة والداخلية',
+    labelKey: 'documents.registry-title',
+    hintKey: 'documents.registry-hint',
     icon: ScrollText,
   },
   {
     key: 'organizations',
-    label: 'الجهات الخارجية',
-    hint: 'جهات المراسلة الخارجية المتاحة للمشاركين',
+    labelKey: 'documents.organizations-title',
+    hintKey: 'documents.organizations-hint',
     icon: Building2,
   },
 ] as const
@@ -52,7 +52,7 @@ function DocumentsView() {
     <div className="flex flex-col gap-6">
       <PageHeader
         titleKey="page.documents.title"
-        description={`استعرض الوثائق الصادرة والواردة والداخلية، أو أنشئ وثيقة جديدة${FEATURES.drafts ? ' كمسودة أو برقم رسمي' : ''}${FEATURES.externalOrganizations ? '، وأدر جهات المراسلة الخارجية' : ''}.`}
+        description={`${t('documents.page-description')}${FEATURES.drafts ? t('documents.page-description-drafts') : ''}${FEATURES.externalOrganizations ? t('documents.page-description-external') : ''}.`}
         pageGuide="documents"
       />
 
@@ -60,7 +60,7 @@ function DocumentsView() {
       <GuideRegion id="documents.tabs">
       <div
         role="tablist"
-        aria-label="أقسام صفحة الوثائق"
+        aria-label={t('documents.tabs-aria')}
         className="flex flex-wrap items-center gap-2"
       >
         {TABS.map((tab) => {
@@ -88,9 +88,9 @@ function DocumentsView() {
                 )}
               >
                 <Icon className="size-4" aria-hidden />
-                {tab.label}
+                <Label k={tab.labelKey} />
               </span>
-              <span className="text-xs text-muted">{tab.hint}</span>
+              <span className="text-xs text-muted"><Label k={tab.hintKey} /></span>
             </button>
           )
         })}

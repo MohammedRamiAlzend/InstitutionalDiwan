@@ -23,12 +23,13 @@ import {
   useCreateDraftMutation,
 } from '@/features/document-schema-manage'
 import { toArabicErrorMessage } from '@/shared/api'
-import { cn, formatDate, useTableState } from '@/shared/lib'
+import { cn, formatDate, resolveLabel, t, useLabelsStore, useTableState } from '@/shared/lib'
 import {
   Badge,
   Button,
   DataTable,
   GuideRegion,
+  Label,
   Select,
   type DataTableColumn,
   type MenuEntry,
@@ -50,20 +51,20 @@ function pickVersionId(
 
 function constraintsOf(field: SchemaFieldResponse): string {
   const parts: string[] = []
-  if (field.maxLength !== null) parts.push(`الطول ≤ ${field.maxLength}`)
-  if (field.minNumber !== null) parts.push(`من ${field.minNumber}`)
-  if (field.maxNumber !== null) parts.push(`إلى ${field.maxNumber}`)
-  if (field.options.length > 0) parts.push(`${field.options.length} خيارًا`)
-  if (field.regexPattern) parts.push('نمط Regex')
+  if (field.maxLength !== null) parts.push(t('schema.constraints.max-length', { max: field.maxLength }))
+  if (field.minNumber !== null) parts.push(t('schema.constraints.min-number', { min: field.minNumber }))
+  if (field.maxNumber !== null) parts.push(t('schema.constraints.max-number', { max: field.maxNumber }))
+  if (field.options.length > 0) parts.push(t('schema.constraints.options-count', { count: field.options.length }))
+  if (field.regexPattern) parts.push(t('schema.constraints.regex'))
   const { behavior } = field
-  if (behavior.minLength !== null) parts.push(`الطول ≥ ${behavior.minLength}`)
-  if (behavior.minDate || behavior.maxDate) parts.push('حدود تاريخ')
-  if (behavior.isReadOnly) parts.push('للقراءة فقط')
-  else if (behavior.defaultValue) parts.push('قيمة افتراضية')
-  if (behavior.visibleWhenFieldKey) parts.push('مشروط')
-  if (behavior.isFilterable) parts.push('قابل للتصفية')
-  if (behavior.showInTable) parts.push('عمود')
-  if (behavior.optionSource !== FIELD_OPTION_SOURCE.Static) parts.push('خيارات مرتبطة')
+  if (behavior.minLength !== null) parts.push(t('schema.constraints.min-length', { min: behavior.minLength }))
+  if (behavior.minDate || behavior.maxDate) parts.push(t('schema.constraints.date-bounds'))
+  if (behavior.isReadOnly) parts.push(t('schema.constraints.read-only'))
+  else if (behavior.defaultValue) parts.push(t('schema.constraints.default-value'))
+  if (behavior.visibleWhenFieldKey) parts.push(t('schema.constraints.conditional'))
+  if (behavior.isFilterable) parts.push(t('schema.constraints.filterable'))
+  if (behavior.showInTable) parts.push(t('schema.constraints.column'))
+  if (behavior.optionSource !== FIELD_OPTION_SOURCE.Static) parts.push(t('schema.constraints.linked-options'))
   return parts.join(' · ') || '—'
 }
 
@@ -77,6 +78,7 @@ export function DocumentSchemaEditor() {
   const [searchParams, setSearchParams] = useSearchParams()
   const typesQuery = useLookupEntries(LOOKUP_SLUGS.DocumentTypes)
   const table = useTableState({ filterKeys: [] })
+  const overrides = useLabelsStore((state) => state.overrides)
 
   const typeParam = searchParams.get('type')
   const documentTypeId = typeParam && Number.isInteger(Number(typeParam)) ? Number(typeParam) : undefined
@@ -104,15 +106,15 @@ export function DocumentSchemaEditor() {
 
   const formOptions = useMemo<SelectOption[]>(
     () => [
-      { value: CREATION_FORM, label: 'نموذج الإنشاء' },
+      { value: CREATION_FORM, label: resolveLabel('schema.editor.creation-form', overrides) },
       ...(departmentsQuery.data ?? [])
         .filter((department) => department.isActive || department.departmentId === departmentId)
         .map((department) => ({
           value: department.departmentId,
-          label: `سجل ديوان: ${department.nameAr}`,
+          label: resolveLabel('schema.editor.department-form', overrides, { name: department.nameAr }),
         })),
     ],
-    [departmentsQuery.data, departmentId],
+    [departmentsQuery.data, departmentId, overrides],
   )
 
   const update = (next: Record<string, string | null>) => {
@@ -128,14 +130,14 @@ export function DocumentSchemaEditor() {
     () => [
       {
         id: 'displayOrder',
-        header: 'الترتيب',
+        headerKey: 'schema.column.order',
         sortable: true,
         sortValue: (field) => field.displayOrder,
         cell: (field) => <span className="text-xs text-muted">{field.displayOrder}</span>,
       },
       {
         id: 'labelAr',
-        header: 'العنوان',
+        headerKey: 'schema.column.label',
         hideable: false,
         sortable: true,
         sortValue: (field) => field.labelAr,
@@ -143,7 +145,7 @@ export function DocumentSchemaEditor() {
       },
       {
         id: 'key',
-        header: 'المفتاح',
+        headerKey: 'schema.column.key',
         sortable: true,
         sortValue: (field) => field.key,
         cell: (field) => (
@@ -154,26 +156,26 @@ export function DocumentSchemaEditor() {
       },
       {
         id: 'dataType',
-        header: 'النوع',
+        headerKey: 'schema.column.type',
         sortable: true,
         sortValue: (field) => field.dataType,
         cell: (field) => <FieldTypeBadge dataType={field.dataType} />,
       },
       {
         id: 'required',
-        header: 'إجباري',
+        headerKey: 'schema.column.required',
         sortable: true,
         sortValue: (field) => (field.isRequired ? 1 : 0),
         cell: (field) =>
           field.isRequired ? (
-            <Badge variant="accent">إجباري</Badge>
+            <Badge variant="accent">{t('schema.column.required')}</Badge>
           ) : (
             <span className="text-xs text-muted">—</span>
           ),
       },
       {
         id: 'constraints',
-        header: 'القيود',
+        headerKey: 'schema.column.constraints',
         cell: (field) => <span className="text-xs text-muted">{constraintsOf(field)}</span>,
       },
     ],
@@ -187,7 +189,7 @@ export function DocumentSchemaEditor() {
 
   const refreshEntry: MenuEntry = {
     id: 'refresh',
-    label: 'تحديث المخطط',
+    label: t('schema.editor.refresh'),
     icon: <RefreshCw className="size-4" aria-hidden />,
     onSelect: refresh,
   }
@@ -203,7 +205,7 @@ export function DocumentSchemaEditor() {
   const startDraft = () =>
     createDraft.mutate(undefined, {
       onSuccess: (draft) => {
-        toast.success('بدأت مسودة جديدة.')
+        toast.success(t('schema.editor.toast-draft-started'))
         update({ version: draft.schemaVersionId })
       },
       onError: (error) => toast.error(toArabicErrorMessage(error)),
@@ -214,13 +216,13 @@ export function DocumentSchemaEditor() {
       ? [
           {
             id: 'edit',
-            label: 'تعديل الإعدادات',
+            label: t('schema.menu.edit'),
             icon: <Pencil className="size-4" aria-hidden />,
             onSelect: () => setDialog({ type: 'edit', field }),
           },
           {
             id: 'remove',
-            label: 'إزالة من المسودة',
+            label: t('schema.menu.remove'),
             icon: <Trash2 className="size-4" aria-hidden />,
             danger: true,
             onSelect: () => setDialog({ type: 'remove', field }),
@@ -236,17 +238,17 @@ export function DocumentSchemaEditor() {
         variant="outline"
         disabled={hasDraft}
         loading={createDraft.isPending}
-        title={hasDraft ? 'للنوع مسودة قائمة؛ انشرها أو احذفها أولًا.' : undefined}
+        title={hasDraft ? t('schema.editor.draft-exists-title') : undefined}
         onClick={startDraft}
       >
         <Plus className="size-4" aria-hidden />
-        مسودة جديدة
+        <Label k="schema.editor.new-draft" />
       </Button>
       {isDraft && (
         <>
           <Button type="button" size="sm" onClick={() => setDialog({ type: 'add' })}>
             <Plus className="size-4" aria-hidden />
-            إضافة حقل
+            <Label k="schema.editor.add-field" />
           </Button>
           <Button
             type="button"
@@ -256,7 +258,7 @@ export function DocumentSchemaEditor() {
             onClick={() => setDialog({ type: 'publish' })}
           >
             <Rocket className="size-4" aria-hidden />
-            نشر النسخة
+            <Label k="schema.editor.publish" />
           </Button>
           <Button
             type="button"
@@ -265,7 +267,7 @@ export function DocumentSchemaEditor() {
             onClick={() => setDialog({ type: 'delete' })}
           >
             <Trash2 className="size-4" aria-hidden />
-            حذف المسودة
+            <Label k="schema.editor.delete-draft" />
           </Button>
         </>
       )}
@@ -276,18 +278,22 @@ export function DocumentSchemaEditor() {
     <div className="flex flex-col gap-4">
       <GuideRegion id="document-schemas.type">
         <div className="flex flex-wrap items-center gap-3">
-          <span className="text-sm font-medium text-foreground">نوع الوثيقة</span>
+          <span className="text-sm font-medium text-foreground">
+            <Label k="schema.editor.type-label" />
+          </span>
           <Select
-            aria-label="اختيار نوع الوثيقة"
+            aria-label={t('schema.editor.type-aria')}
             value={documentTypeId === undefined ? undefined : String(documentTypeId)}
             onValueChange={(value) => update({ type: value, version: null })}
             options={typeOptions}
-            placeholder="اختر نوع الوثيقة…"
+            placeholder={t('schema.editor.type-placeholder')}
             className="w-64"
           />
-          <span className="text-sm font-medium text-foreground">النموذج</span>
+          <span className="text-sm font-medium text-foreground">
+            <Label k="schema.editor.form-label" />
+          </span>
           <Select
-            aria-label="اختيار النموذج: نموذج الإنشاء أو سجل ديوان"
+            aria-label={t('schema.editor.form-aria')}
             value={departmentId ?? CREATION_FORM}
             onValueChange={(value) =>
               update({ dept: value === CREATION_FORM ? null : value, version: null })
@@ -298,21 +304,21 @@ export function DocumentSchemaEditor() {
         </div>
         {departmentId && (
           <p className="mt-2 text-xs text-muted">
-            يملأ الديوان هذا النموذج عند استلام وثيقة من هذا النوع، ويُقفل سجله عند خروج الوثيقة منه.
+            <Label k="schema.editor.department-hint" />
           </p>
         )}
       </GuideRegion>
 
       {documentTypeId === undefined ? (
         <p className="rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted">
-          اختر نوع وثيقة لعرض حقوله ونسخ مخططه.
+          <Label k="schema.editor.select-type-prompt" />
         </p>
       ) : (
         <>
           <GuideRegion id="document-schemas.versions">
             <div
               role="tablist"
-              aria-label="نسخ المخطط"
+              aria-label={t('schema.editor.versions-aria')}
               className="flex flex-wrap items-center gap-2"
             >
               {versionsQuery.isError && (
@@ -321,7 +327,9 @@ export function DocumentSchemaEditor() {
                 </span>
               )}
               {versionsQuery.data?.length === 0 && (
-                <span className="text-sm text-muted">لا توجد نسخ مخطط لهذا النوع بعد.</span>
+                <span className="text-sm text-muted">
+                  <Label k="schema.editor.no-versions" />
+                </span>
               )}
               {versionsQuery.data?.map((version) => {
                 const isActive = version.schemaVersionId === selectedVersionId
@@ -343,7 +351,7 @@ export function DocumentSchemaEditor() {
                       <span dir="ltr">v{version.versionNumber}</span>
                       <SchemaStatusBadge status={version.status} />
                     </span>
-                    <span className="text-xs text-muted">{version.fieldCount} حقلًا</span>
+                    <span className="text-xs text-muted">{t('schema.editor.field-count', { count: version.fieldCount })}</span>
                     <span dir="ltr" className="whitespace-nowrap text-xs text-muted">
                       {formatDate(version.publishedAt ?? version.createdAt)}
                     </span>
@@ -357,7 +365,7 @@ export function DocumentSchemaEditor() {
             <DataTable
               tableId="document-schema-fields"
               mode="client"
-              caption="حقول نسخة المخطط"
+              caption={t('schema.editor.caption')}
               columns={columns}
               rows={fields}
               rowKey={(field) => field.documentFieldId}
@@ -375,7 +383,7 @@ export function DocumentSchemaEditor() {
               onPageSizeChange={table.setPageSize}
               search={table.search}
               onSearchChange={table.setSearch}
-              searchPlaceholder="ابحث بعنوان الحقل أو مفتاحه…"
+              searchPlaceholder={t('schema.editor.search-placeholder')}
               sortKey={table.sortKey}
               sortDirection={table.sortDirection}
               onSortChange={table.setSort}
@@ -383,11 +391,11 @@ export function DocumentSchemaEditor() {
               rowMenu={buildRowMenu}
               headerMenu={[refreshEntry]}
               emptyMenu={[refreshEntry]}
-              emptyTitle={table.search ? 'لا حقول مطابقة.' : 'لا حقول في هذه النسخة.'}
+              emptyTitle={table.search ? t('schema.empty.search-title') : t('schema.empty.title')}
               emptyDescription={
                 table.search
-                  ? 'جرّب تعديل البحث لعرض حقول أخرى.'
-                  : 'تظهر هنا حقول النسخة المحددة بترتيب عرضها.'
+                  ? t('schema.empty.search-description')
+                  : t('schema.empty.description')
               }
             />
           </GuideRegion>

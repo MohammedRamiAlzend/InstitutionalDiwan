@@ -2,21 +2,21 @@ import { useSearchParams } from 'react-router-dom'
 import { Inbox, Send } from 'lucide-react'
 import { RequirePermission } from '@/features/auth'
 import { Permissions } from '@/shared/config'
-import { cn } from '@/shared/lib'
-import { GuideProvider, GuideRegion, PageHeader } from '@/shared/ui'
+import { cn, t } from '@/shared/lib'
+import { GuideProvider, GuideRegion, Label, PageHeader } from '@/shared/ui'
 import { MovementQueueTable } from '@/widgets/movement-inbox'
 
 const TABS = [
   {
     key: 'inbox',
-    label: 'الوارد',
-    hint: 'حركات موجهة إلى قسمك المبدئي',
+    labelKey: 'movements.tab.inbox',
+    hintKey: 'movements.tab.inbox-hint',
     icon: Inbox,
   },
   {
     key: 'outbox',
-    label: 'الصادر',
-    hint: 'حركات أرسلها قسمك المبدئي',
+    labelKey: 'movements.tab.outbox',
+    hintKey: 'movements.tab.outbox-hint',
     icon: Send,
   },
 ] as const
@@ -57,7 +57,7 @@ function MovementsView() {
       <GuideRegion id="movements.tabs">
       <div
         role="tablist"
-        aria-label="صناديق الحركات"
+        aria-label={t('movements.tabs-aria')}
         className="flex flex-wrap items-center gap-2"
       >
         {TABS.map((tab) => {
@@ -85,9 +85,9 @@ function MovementsView() {
                 )}
               >
                 <Icon className="size-4" aria-hidden />
-                {tab.label}
+                <Label k={tab.labelKey} />
               </span>
-              <span className="text-xs text-muted">{tab.hint}</span>
+              <span className="text-xs text-muted"><Label k={tab.hintKey} /></span>
             </button>
           )
         })}

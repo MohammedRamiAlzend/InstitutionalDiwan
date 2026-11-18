@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { t } from '@/shared/lib'
 
 /** Mirrors the server's `Value` column limit. */
 export const UI_LABEL_MAX_LENGTH = 200
@@ -18,11 +19,11 @@ export function uiLabelValueSchema(defaultText: string) {
   return z
     .string()
     .trim()
-    .min(1, 'التسمية مطلوبة.')
-    .max(UI_LABEL_MAX_LENGTH, `التسمية تتجاوز الحد الأقصى (${UI_LABEL_MAX_LENGTH} حرفًا).`)
-    .refine((value) => !/[<>]/.test(value), 'التسمية لا تقبل وسوم HTML.')
+    .min(1, t('label-editor.validation.required'))
+    .max(UI_LABEL_MAX_LENGTH, t('label-editor.validation.max', { max: UI_LABEL_MAX_LENGTH }))
+    .refine((value) => !/[<>]/.test(value), t('label-editor.validation.html'))
     .refine(
       (value) => required.every((name) => value.includes(`{${name}}`)),
-      `يجب الإبقاء على العناصر النائبة: ${required.map((name) => `{${name}}`).join('، ')}.`,
+      t('label-editor.validation.placeholders', { placeholders: required.map((name) => `{${name}}`).join('، ') }),
     )
 }

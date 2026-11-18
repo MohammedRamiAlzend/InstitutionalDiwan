@@ -26,4 +26,5 @@
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-18 | Qoder | UI labels Phase 4 (ب4): the lookups page catalog/group headings resolve via `lookupCatalogMeta` `labelKey` + `<Label>` (slug fallback) and static chrome via `t()` (`lookup.*`). |
 | 2026-11-04 | Claude | Added the Module 01 lookups administration page. |

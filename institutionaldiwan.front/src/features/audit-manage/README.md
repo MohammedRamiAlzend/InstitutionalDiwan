@@ -43,5 +43,6 @@ Write side of the audit compliance API: seal checkpoints and run integrity verif
 - 2026-11-05: Unsent form input is now kept (per user, per form) after an accidental close or cancel and restored with a toast; it is cleared only after a successful submit (`useDraftForm`).
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-18 | Qoder | UI labels Phase 4 (ب4): the checkpoint/integrity dialogs and their Zod messages resolve via `t()`/`<Label>` (`audit.*`). Action/entity-type lookup `descAr`, user/department names and hashes stay data. |
 | 2026-10-25 | Cursor | Added audit-manage feature docs for checkpoints and integrity checks. |
 | 2026-10-29 | Cursor | Implemented both mutations and dialogs, the Arabic 409 handling, and the in-dialog integrity result panel. |

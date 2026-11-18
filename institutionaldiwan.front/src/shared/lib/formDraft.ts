@@ -7,6 +7,7 @@ import {
   type UseFormProps,
 } from 'react-hook-form'
 import { toast } from 'sonner'
+import { t } from './labels'
 
 let draftScope = 'anonymous'
 
@@ -136,9 +137,9 @@ export function useDraftForm<T extends FieldValues>(
       const saved = readFormDraft<Partial<T>>(key)
       if (saved && Object.keys(saved).length > 0) {
         reset({ ...getValues(), ...saved } as T, { keepDefaultValues: true })
-        toast.info('استُعيدت بياناتك غير المرسلة.', {
+        toast.info(t('common.draft.restored'), {
           action: {
-            label: 'مسح وبدء من جديد',
+            label: t('common.draft.discard'),
             onClick: () => {
               clearFormDraft(key)
               reset()

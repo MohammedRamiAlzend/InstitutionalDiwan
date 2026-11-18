@@ -1,11 +1,14 @@
 import type { LucideIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
-import { cn } from '@/shared/lib'
+import type { LabelKey } from '@/shared/config'
+import { cn, type LabelParams } from '@/shared/lib'
+import { Label } from '@/shared/ui'
 
 interface FormSectionProps {
   icon: LucideIcon
-  title: string
-  hint?: string
+  titleKey: LabelKey
+  hintKey?: LabelKey
+  hintParams?: LabelParams
   /** Sits at the far end of the header: a badge or the switch that opens the section. */
   aside?: ReactNode
   children?: ReactNode
@@ -13,7 +16,7 @@ interface FormSectionProps {
 }
 
 /** One titled group of the create form. Without children only its header shows. */
-export function FormSection({ icon: Icon, title, hint, aside, children, className }: FormSectionProps) {
+export function FormSection({ icon: Icon, titleKey, hintKey, hintParams, aside, children, className }: FormSectionProps) {
   return (
     <section className={cn('rounded-xl border border-border bg-surface', className)}>
       <header className="flex items-center gap-3 px-4 py-3">
@@ -21,8 +24,8 @@ export function FormSection({ icon: Icon, title, hint, aside, children, classNam
           <Icon className="size-4.5" aria-hidden />
         </span>
         <div className="flex min-w-0 flex-1 flex-col">
-          <h3 className="text-sm font-semibold text-foreground">{title}</h3>
-          {hint && <p className="text-xs leading-5 text-muted">{hint}</p>}
+          <h3 className="text-sm font-semibold text-foreground"><Label k={titleKey} /></h3>
+          {hintKey && <p className="text-xs leading-5 text-muted"><Label k={hintKey} params={hintParams} /></p>}
         </div>
         {aside && <div className="shrink-0">{aside}</div>}
       </header>

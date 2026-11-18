@@ -1,24 +1,25 @@
 import { z } from 'zod'
+import { t } from '@/shared/lib'
 
 const documentFields = {
-  documentTypeId: z.string().min(1, 'اختر نوع الوثيقة.'),
+  documentTypeId: z.string().min(1, t('documents.create.validation.type-required')),
   registryId: z.string(),
   registryNumberText: z
     .string()
     .trim()
-    .max(100, 'رقم السجل يتجاوز الحد الأقصى للأحرف.'),
+    .max(100, t('documents.create.validation.registry-number-max')),
   registryDate: z.string(),
   destinationDepartmentId: z.string(),
   movementTypeId: z.string(),
   movementInstructions: z
     .string()
     .trim()
-    .max(1000, 'التعليمات تتجاوز الحد الأقصى للأحرف.'),
+    .max(1000, t('documents.create.validation.instructions-max')),
   mode: z.enum(['draft', 'register']),
   persons: z.array(
     z.object({
       personId: z.string().nullable(),
-      fullName: z.string().trim().min(1).max(300, 'الاسم يتجاوز الحد الأقصى للأحرف.'),
+      fullName: z.string().trim().min(1).max(300, t('documents.create.validation.name-max')),
     }),
   ),
 }
@@ -31,7 +32,7 @@ export const createDocumentSchema = z.object(documentFields).superRefine((values
     ctx.addIssue({
       code: 'custom',
       path: ['registryNumberText'],
-      message: 'رقم السجل مطلوب عند التسجيل الفوري.',
+      message: t('documents.create.validation.registry-number-required'),
     })
   }
 
@@ -39,7 +40,7 @@ export const createDocumentSchema = z.object(documentFields).superRefine((values
     ctx.addIssue({
       code: 'custom',
       path: ['registryDate'],
-      message: 'تاريخ السجل مطلوب عند التسجيل الفوري.',
+      message: t('documents.create.validation.registry-date-required'),
     })
   }
 
@@ -47,7 +48,7 @@ export const createDocumentSchema = z.object(documentFields).superRefine((values
     ctx.addIssue({
       code: 'custom',
       path: ['movementTypeId'],
-      message: 'اختر نوع الحركة.',
+      message: t('documents.create.validation.movement-type-required'),
     })
   }
 })

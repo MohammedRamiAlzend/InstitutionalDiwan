@@ -23,11 +23,13 @@ Administration view of one document type's field schema: version history chips a
 | Item | State |
 | --- | --- |
 | Editor | ✅ Implemented |
+| UI labels migration (ب4) | ✅ Version tabs, fields grid, constraints, form selector and toolbar resolve from the `schema.*` catalog (2026-11-18) |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-18 | Qoder | UI labels Phase 4 (ب4): `DocumentSchemaEditor` column headers via `headerKey`, constraints/required badge/menus/caption/search/empty/aria via `t()`, the creation/department form options via `resolveLabel` (overrides subscription), and the toolbar/selector/hint/version-count text via `<Label>`/`t()`. Type/department names stay data. |
 | 2026-11-10 | Claude | Form selector (`?dept=`): edit the creation form or a department record form. |
 | 2026-11-08 | Claude | The constraints column lists the new field behavior. |
 | 2026-11-03 | Claude | Implemented per plan `plans/document-dynamic-fields-frontend.md`. |

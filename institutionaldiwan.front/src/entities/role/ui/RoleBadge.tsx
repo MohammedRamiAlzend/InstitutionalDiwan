@@ -1,5 +1,5 @@
 import { Lock } from 'lucide-react'
-import { cn } from '@/shared/lib'
+import { cn, t } from '@/shared/lib'
 
 interface RoleBadgeProps {
   nameAr: string
@@ -28,7 +28,7 @@ export function RoleBadge({
         <Lock
           role="img"
           className="size-3.5 shrink-0 text-muted"
-          aria-label="دور معرّف من النظام"
+          aria-label={t('role.badge.system-aria')}
         />
       )}
     </span>

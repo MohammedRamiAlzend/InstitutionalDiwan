@@ -1,4 +1,5 @@
 import { AxiosError } from 'axios'
+import { t } from '@/shared/lib'
 import type { ProblemDetails } from '@/shared/types'
 
 /**
@@ -33,10 +34,10 @@ export function toApiError(error: unknown): ApiError {
         status,
       )
     }
-    return new ApiError('NetworkError', 'تعذّر الاتصال بالخادم.', status)
+    return new ApiError('NetworkError', t('common.api.network'), status)
   }
 
-  return new ApiError('Unknown', 'حدث خطأ غير متوقع.', 0)
+  return new ApiError('Unknown', t('common.api.unknown'), 0)
 }
 
 export function isConflictError(error: unknown, expectedCode?: string): boolean {

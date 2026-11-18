@@ -21,6 +21,8 @@ import { Permissions } from '@/shared/config'
 import {
   formatDate,
   formatDateTime,
+  t,
+  useLabel,
   useTableState,
 } from '@/shared/lib'
 import {
@@ -29,6 +31,7 @@ import {
   ConfirmDialog,
   DataTable,
   GuideChip,
+  Label,
   Select,
   type DataTableColumn,
   type MenuEntry,
@@ -48,6 +51,7 @@ export function EmployeesTable() {
 
   const hasPermission = useSessionStore((state) => state.hasPermission)
   const canManageEmployees = hasPermission(Permissions.EmployeeManage)
+  const allDepartmentsLabel = useLabel('employee.filter.all-departments')
 
   const departmentsQuery = useDepartmentOptions({ enabled: canManageEmployees })
 
@@ -81,9 +85,9 @@ export function EmployeesTable() {
   const copyValue = async (value: string, label: string) => {
     try {
       await navigator.clipboard.writeText(value)
-      toast.success(`تم نسخ ${label}.`)
+      toast.success(t('employee.toast.copied', { label }))
     } catch {
-      toast.error('تعذّر النسخ إلى الحافظة.')
+      toast.error(t('employee.toast.copy-failed'))
     }
   }
 
@@ -95,7 +99,7 @@ export function EmployeesTable() {
         active: !statusEmployee.isActive,
       })
       toast.success(
-        statusEmployee.isActive ? 'تم إيقاف الموظف.' : 'تم تفعيل الموظف.',
+        statusEmployee.isActive ? t('employee.toast.suspended') : t('employee.toast.activated'),
       )
       setStatusEmployee(null)
     } catch (error) {
@@ -107,7 +111,7 @@ export function EmployeesTable() {
     () => [
       {
         id: 'employee',
-        header: 'الموظف',
+        headerKey: 'employee.column.employee',
         sortable: true,
         sortKey: 'fullNameAr',
         hideable: false,
@@ -126,7 +130,7 @@ export function EmployeesTable() {
       },
       {
         id: 'employeeNumber',
-        header: 'الرقم الوظيفي',
+        headerKey: 'employee.column.number',
         sortable: true,
         cell: (employee) =>
           employee.employeeNumber ? (
@@ -139,7 +143,7 @@ export function EmployeesTable() {
       },
       {
         id: 'department',
-        header: 'القسم',
+        headerKey: 'employee.column.department',
         cell: (employee) => {
           const department = departmentById.get(employee.departmentId)
           return department ? (
@@ -155,7 +159,7 @@ export function EmployeesTable() {
       },
       {
         id: 'jobTitleAr',
-        header: 'المسمى الوظيفي',
+        headerKey: 'employee.column.job-title',
         cell: (employee) =>
           employee.jobTitleAr ? (
             <span className="text-xs text-foreground">{employee.jobTitleAr}</span>
@@ -165,7 +169,7 @@ export function EmployeesTable() {
       },
       {
         id: 'email',
-        header: 'البريد الإلكتروني',
+        headerKey: 'employee.column.email',
         defaultHidden: true,
         cell: (employee) =>
           employee.email ? (
@@ -182,7 +186,7 @@ export function EmployeesTable() {
       },
       {
         id: 'phone',
-        header: 'الهاتف',
+        headerKey: 'employee.column.phone',
         defaultHidden: true,
         cell: (employee) =>
           employee.phone ? (
@@ -195,18 +199,18 @@ export function EmployeesTable() {
       },
       {
         id: 'status',
-        header: 'الحالة',
+        headerKey: 'employee.column.status',
         sortable: true,
         sortKey: 'isActive',
         cell: (employee) => (
           <Badge variant={employee.isActive ? 'success' : 'danger'}>
-            {employee.isActive ? 'نشط' : 'موقوف'}
+            {employee.isActive ? t('employee.status.active') : t('employee.status.suspended')}
           </Badge>
         ),
       },
       {
         id: 'createdAt',
-        header: 'تاريخ الإنشاء',
+        headerKey: 'employee.column.created-at',
         sortable: true,
         defaultHidden: true,
         cell: (employee) => (
@@ -217,7 +221,7 @@ export function EmployeesTable() {
       },
       {
         id: 'updatedAt',
-        header: 'آخر تحديث',
+        headerKey: 'employee.column.updated-at',
         defaultHidden: true,
         cell: (employee) => (
           <span dir="ltr" className="whitespace-nowrap text-xs text-muted">
@@ -232,14 +236,14 @@ export function EmployeesTable() {
   const buildRowMenu = (employee: EmployeeResponse): MenuEntry[] => [
     {
       id: 'edit',
-      label: 'تعديل البيانات',
+      label: t('employee.menu.edit'),
       icon: <Pencil className="size-4" aria-hidden />,
       onSelect: () => openEdit(employee),
     },
     { type: 'separator' },
     {
       id: 'toggle-active',
-      label: employee.isActive ? 'إيقاف الموظف' : 'تفعيل الموظف',
+      label: employee.isActive ? t('employee.menu.suspend') : t('employee.menu.activate'),
       icon: employee.isActive ? (
         <UserX className="size-4" aria-hidden />
       ) : (
@@ -251,30 +255,30 @@ export function EmployeesTable() {
     { type: 'separator' },
     {
       id: 'copy-number',
-      label: 'نسخ الرقم الوظيفي',
+      label: t('employee.menu.copy-number'),
       icon: <Copy className="size-4" aria-hidden />,
       disabled: !employee.employeeNumber,
       onSelect: () =>
-        void copyValue(employee.employeeNumber ?? '', 'الرقم الوظيفي'),
+        void copyValue(employee.employeeNumber ?? '', t('employee.copy.number')),
     },
     {
       id: 'copy-id',
-      label: 'نسخ المعرّف',
+      label: t('employee.menu.copy-id'),
       icon: <Hash className="size-4" aria-hidden />,
-      onSelect: () => void copyValue(employee.employeeId, 'المعرّف'),
+      onSelect: () => void copyValue(employee.employeeId, t('employee.copy.id')),
     },
   ]
 
   const headerMenu: MenuEntry[] = [
     {
       id: 'create',
-      label: 'موظف جديد',
+      label: t('employee.create'),
       icon: <Plus className="size-4" aria-hidden />,
       onSelect: openCreate,
     },
     {
       id: 'refresh',
-      label: 'تحديث البيانات',
+      label: t('table.refresh'),
       icon: <RefreshCw className="size-4" aria-hidden />,
       onSelect: () => void employeesQuery.refetch(),
     },
@@ -284,7 +288,7 @@ export function EmployeesTable() {
     <>
       <DataTable
         tableId="employees-table"
-        caption="قائمة الموظفين"
+        caption={t('employee.caption')}
         columns={columns}
         rows={employeesQuery.data?.items}
         rowKey={(employee) => employee.employeeId}
@@ -306,21 +310,21 @@ export function EmployeesTable() {
         filters={
           <div className="flex flex-wrap items-center gap-2">
             <Select
-              aria-label="تصفية حسب القسم"
+              aria-label={t('employee.filter.department-aria')}
               value={table.filters.departmentId || 'all'}
               onValueChange={(id) => table.setFilter('departmentId', id === 'all' ? null : id)}
               options={[
-                { value: 'all', label: 'كل الأقسام' },
+                { value: 'all', label: allDepartmentsLabel },
                 ...(departmentsQuery.data ?? []).map((department) => ({ value: department.departmentId, label: department.nameAr })),
               ]}
               disabled={departmentsQuery.isLoading}
             />
             {departmentsQuery.error && (
-              <Button type="button" variant="outline" onClick={() => void departmentsQuery.refetch()}>إعادة تحميل الأقسام</Button>
+              <Button type="button" variant="outline" onClick={() => void departmentsQuery.refetch()}><Label k="employee.filter.reload-departments" /></Button>
             )}
           </div>
         }
-        searchPlaceholder="ابحث باسم الموظف أو رقمه الوظيفي…"
+        searchPlaceholder={t('employee.search-placeholder')}
         rowMenu={buildRowMenu}
         headerMenu={headerMenu}
         emptyMenu={headerMenu}
@@ -329,26 +333,26 @@ export function EmployeesTable() {
           <>
             <Button type="button" onClick={openCreate}>
               <Plus className="size-4" aria-hidden />
-              موظف جديد
+              <Label k="employee.create" />
             </Button>
             <GuideChip id="employees.create" />
           </>
         }
-        emptyTitle={table.search ? 'لا توجد نتائج مطابقة.' : 'لا يوجد موظفون بعد.'}
+        emptyTitle={table.search ? t('employee.empty.search-title') : t('employee.empty.title')}
         emptyDescription={
           table.search
-            ? 'جرّب تعديل عبارة البحث أو امسحها لعرض كل الموظفين.'
-            : 'ابدأ بإضافة أول سجل موظف وربطه بقسم.'
+            ? t('employee.empty.search-description')
+            : t('employee.empty.description')
         }
         emptyAction={
           table.search ? (
             <Button type="button" variant="outline" onClick={() => table.setSearch('')}>
-              مسح البحث
+              <Label k="employee.empty.clear-search" />
             </Button>
           ) : (
             <Button type="button" onClick={openCreate}>
               <Plus className="size-4" aria-hidden />
-              إضافة موظف
+              <Label k="employee.empty.add" />
             </Button>
           )
         }
@@ -368,15 +372,15 @@ export function EmployeesTable() {
         onOpenChange={(open) => {
           if (!open) setStatusEmployee(null)
         }}
-        title={statusEmployee?.isActive ? 'إيقاف الموظف' : 'تفعيل الموظف'}
+        title={statusEmployee?.isActive ? t('employee.confirm.suspend-title') : t('employee.confirm.activate-title')}
         description={
           statusEmployee
             ? statusEmployee.isActive
-              ? `سيُعلَّم الموظف «${statusEmployee.fullNameAr}» كموقوف، ولن يظهر ضمن الموظفين الفعّالين للإسناد.`
-              : `سيعود الموظف «${statusEmployee.fullNameAr}» فعّالًا ومتاحًا للإسناد.`
+              ? t('employee.confirm.suspend-description', { name: statusEmployee.fullNameAr })
+              : t('employee.confirm.activate-description', { name: statusEmployee.fullNameAr })
             : undefined
         }
-        confirmLabel={statusEmployee?.isActive ? 'إيقاف الموظف' : 'تفعيل الموظف'}
+        confirmLabel={statusEmployee?.isActive ? t('employee.confirm.suspend') : t('employee.confirm.activate')}
         destructive={statusEmployee?.isActive}
         loading={statusMutation.isPending}
         onConfirm={() => void handleToggleStatus()}

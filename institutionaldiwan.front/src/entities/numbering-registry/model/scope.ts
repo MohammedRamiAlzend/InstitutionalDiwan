@@ -1,3 +1,4 @@
+import { t } from '@/shared/lib'
 import type { NumberingRegistryResponse } from './types'
 
 /** The three optional scope dimensions a registry can constrain. */
@@ -44,17 +45,25 @@ export function describeRegistryScope(
   scope: RegistryScopeFields,
   labels: RegistryScopeLabels = {},
 ): string {
-  if (registryScopeRank(scope) === 0) return 'كل النطاقات (سجل شامل)'
+  if (registryScopeRank(scope) === 0) return t('numbering.scope.global')
 
   const parts: string[] = []
   if (scope.departmentId !== null) {
-    parts.push(`الدائرة: ${labels.departmentName ?? 'دائرة محددة'}`)
+    parts.push(
+      t('numbering.scope.department', {
+        name: labels.departmentName ?? t('numbering.scope.department-fallback'),
+      }),
+    )
   }
   if (scope.documentTypeId !== null) {
-    parts.push(`النوع: ${labels.documentTypeLabel ?? `#${scope.documentTypeId}`}`)
+    parts.push(
+      t('numbering.scope.type', { label: labels.documentTypeLabel ?? `#${scope.documentTypeId}` }),
+    )
   }
   if (scope.directionId !== null) {
-    parts.push(`الاتجاه: ${labels.directionLabel ?? `#${scope.directionId}`}`)
+    parts.push(
+      t('numbering.scope.direction', { label: labels.directionLabel ?? `#${scope.directionId}` }),
+    )
   }
   return parts.join(' · ')
 }

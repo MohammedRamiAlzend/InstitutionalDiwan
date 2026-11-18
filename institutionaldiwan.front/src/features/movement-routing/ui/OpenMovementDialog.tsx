@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Controller, useWatch } from 'react-hook-form'
-import { useDraftForm } from '@/shared/lib'
+import { t, useDraftForm } from '@/shared/lib'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Route, Search } from 'lucide-react'
 import { toast } from 'sonner'
@@ -13,6 +13,7 @@ import {
   Dialog,
   FormField,
   Input,
+  Label,
   Select,
   Textarea,
 } from '@/shared/ui'
@@ -120,12 +121,12 @@ export function OpenMovementDialog({
         await cancelMutation
           .mutateAsync({
             movementId: created.movementId,
-            reason: 'تعذّر إرسال الحركة؛ أُلغيت المسودة تلقائيًا.',
+            reason: t('movements.open.auto-cancel-reason'),
           })
           .catch(() => undefined)
         throw sendError
       }
-      toast.success('أُرسلت الحركة إلى القسم الوجهة.')
+      toast.success(t('movements.open.toast'))
       draft.discard()
       onOpenChange(false)
     } catch {
@@ -137,8 +138,8 @@ export function OpenMovementDialog({
     <Dialog
       open={open}
       onOpenChange={onOpenChange}
-      title="فتح حركة"
-      description={`إرسال «${documentTitle}» من قسمك الأساسي إلى قسم آخر مباشرةً.`}
+      title={t('movements.open.title')}
+      description={t('movements.open.description', { title: documentTitle })}
       size="lg"
       footer={
         <>
@@ -148,7 +149,7 @@ export function OpenMovementDialog({
             onClick={() => onOpenChange(false)}
             disabled={pending}
           >
-            إلغاء
+            <Label k="common.action.cancel" />
           </Button>
           <Button
             type="submit"
@@ -157,7 +158,7 @@ export function OpenMovementDialog({
             disabled={departmentOptions.length === 0}
           >
             <Route className="size-4 rtl:-scale-x-100" aria-hidden />
-            إرسال الحركة
+            <Label k="movements.send.submit" />
           </Button>
         </>
       }
@@ -169,13 +170,11 @@ export function OpenMovementDialog({
         className="grid gap-4 sm:grid-cols-2"
       >
         <p className="rounded-lg border border-border bg-surface-muted px-3 py-2 text-xs text-muted sm:col-span-2">
-          الديوان المركزي إلزامي: يمر كل توجيه عبر الديوان المركزي ما لم يكن قسمك أو القسم الوجهة
-          هو الديوان المركزي. تُرسل الحركة فورًا عند الحفظ، ولا يمكن الاستلام قبل أن يسجّل القسم
-          الوجهة رقمه في سجلّه.
+          <Label k="movements.open.central-hint" />
         </p>
 
         <FormField
-          label="القسم الوجهة"
+          labelKey="movements.open.field-destination"
           required
           error={errors.destinationDepartmentId?.message}
           className="sm:col-span-2"
@@ -191,15 +190,15 @@ export function OpenMovementDialog({
                 disabled={pending || departmentsQuery.isLoading}
                 invalid={Boolean(errors.destinationDepartmentId)}
                 placeholder={
-                  departmentsQuery.isLoading ? 'جارٍ التحميل…' : 'اختر القسم…'
+                  departmentsQuery.isLoading ? t('movements.loading') : t('movements.destination-placeholder')
                 }
-                aria-label="القسم الوجهة"
+                aria-label={t('movements.open.field-destination')}
               />
             )}
           />
         </FormField>
 
-        <FormField label="نوع الحركة" required error={errors.movementTypeId?.message}>
+        <FormField labelKey="movements.field.movement-type" required error={errors.movementTypeId?.message}>
           <Controller
             control={control}
             name="movementTypeId"
@@ -210,25 +209,25 @@ export function OpenMovementDialog({
                 options={typeOptions}
                 disabled={pending || typesQuery.isLoading}
                 invalid={Boolean(errors.movementTypeId)}
-                aria-label="نوع الحركة"
+                aria-label={t('movements.field.movement-type')}
               />
             )}
           />
           {selectedTypeId === String(MOVEMENT_TYPE.ToArchive) && <ArchiveRouteHint />}
         </FormField>
 
-        <FormField label="تاريخ الاستحقاق" error={errors.dueDate?.message}>
+        <FormField labelKey="movements.field.due-date" error={errors.dueDate?.message}>
           <Input type="date" dir="ltr" invalid={Boolean(errors.dueDate)} {...register('dueDate')} />
         </FormField>
 
         <FormField
-          label="البحث عن مكلَّف (اختياري)"
+          labelKey="movements.open.assignee-search-label"
           htmlFor="open-movement-assignee-search"
           className="sm:col-span-2"
         >
           <Input
             id="open-movement-assignee-search"
-            placeholder="ابحث باسم المستخدم…"
+            placeholder={t('movements.open.assignee-search-placeholder')}
             startIcon={<Search className="size-4" aria-hidden />}
             value={assigneeSearch}
             onChange={(event) => setAssigneeSearch(event.target.value)}
@@ -236,7 +235,7 @@ export function OpenMovementDialog({
           />
         </FormField>
 
-        <FormField label="المكلَّف" className="sm:col-span-2">
+        <FormField labelKey="movements.field.assignee" className="sm:col-span-2">
           <Controller
             control={control}
             name="assignedToUserId"
@@ -246,20 +245,20 @@ export function OpenMovementDialog({
                 onValueChange={(value) => field.onChange(value === 'none' ? '' : value)}
                 options={assigneeOptions.options}
                 disabled={pending || assigneeOptions.isLoading}
-                aria-label="المكلَّف"
+                aria-label={t('movements.field.assignee')}
               />
             )}
           />
         </FormField>
 
         <FormField
-          label="تعليمات"
+          labelKey="movements.field.instructions"
           error={errors.instructions?.message}
           className="sm:col-span-2"
         >
           <Textarea
             rows={2}
-            placeholder="إرشادات اختيارية للقسم الوجهة…"
+            placeholder={t('movements.open.instructions-placeholder')}
             invalid={Boolean(errors.instructions)}
             {...register('instructions')}
           />

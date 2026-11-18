@@ -32,12 +32,14 @@ import {
   isDecisionInForce,
   Permissions,
   USER_SCOPE_TYPE,
+  type LabelKey,
 } from '@/shared/config'
-import { decodeJwtPayload, formatDate, useTableState } from '@/shared/lib'
+import { decodeJwtPayload, formatDate, t, useTableState } from '@/shared/lib'
 import {
   Button,
   DataTable,
   GuideChip,
+  Label,
   type DataTableColumn,
   type MenuEntry,
 } from '@/shared/ui'
@@ -99,12 +101,12 @@ function AppealLines({
   )
 }
 
-const NEXT_ACTION_LABEL = {
-  refer: 'إحالة إلى الوجهة',
-  'send-for-archive': 'إرسال للحفظ',
-  archive: 'أرشفة',
-  move: 'نقل إلى ديوان الملف الرئيسي',
-} as const
+const NEXT_ACTION_LABEL_KEYS: Record<string, LabelKey> = {
+  refer: 'decisions.next.refer',
+  'send-for-archive': 'decisions.next.send-for-archive',
+  archive: 'decisions.next.archive',
+  move: 'decisions.next.move',
+}
 
 /** The decision in force, its history, and the one suggested next step. */
 export function DocumentDecisionsPanel({
@@ -179,7 +181,7 @@ export function DocumentDecisionsPanel({
     () => [
       {
         id: 'number',
-        header: 'الرقم',
+        headerKey: 'decisions.panel.column.number',
         hideable: false,
         sortable: true,
         sortValue: (row) => row.decisionNumber,
@@ -191,47 +193,47 @@ export function DocumentDecisionsPanel({
       },
       {
         id: 'type',
-        header: 'النوع',
+        headerKey: 'decisions.panel.column.type',
         sortable: true,
         sortValue: (row) => row.typeNameAr,
         cell: (row) => (
           <span className="flex flex-col gap-1">
             <span>{row.typeNameAr}</span>
             {row.documentId !== documentId && (
-              <span className="text-xs text-muted">من الملف الرئيسي</span>
+              <span className="text-xs text-muted"><Label k="decisions.panel.from-principal" /></span>
             )}
           </span>
         ),
       },
       {
         id: 'date',
-        header: 'التاريخ',
+        headerKey: 'decisions.panel.column.date',
         sortable: true,
         sortValue: (row) => row.decisionDate,
         cell: (row) => <span dir="ltr">{formatDate(row.decisionDate)}</span>,
       },
       {
         id: 'effect',
-        header: 'الأثر',
+        headerKey: 'decisions.panel.column.effect',
         sortable: true,
         sortValue: (row) => row.effectId,
         cell: (row) => decisionEffectLabel(row.effectId),
       },
       {
         id: 'status',
-        header: 'الحالة',
+        headerKey: 'decisions.panel.column.status',
         sortable: true,
         sortValue: (row) => row.statusId,
         cell: (row) => <DecisionStatusBadge statusId={row.statusId} />,
       },
       {
         id: 'issuer',
-        header: 'الديوان المُصدر',
+        headerKey: 'decisions.panel.column.issuer',
         cell: (row) => departmentName(row.issuingDepartmentId),
       },
       {
         id: 'appeals',
-        header: 'الاعتراض',
+        headerKey: 'decisions.panel.column.appeals',
         cell: (row) => <AppealLines appeals={row.appeals} departmentName={departmentName} />,
       },
     ],
@@ -245,7 +247,7 @@ export function DocumentDecisionsPanel({
     if (canManage && row.isAppealable && row.statusId === DECISION_STATUS.Issued) {
       items.push({
         id: 'appeal',
-        label: 'تسجيل اعتراض',
+        label: t('decisions.panel.record-appeal'),
         icon: <Scale className="size-4" aria-hidden />,
         onSelect: () => setAppealTarget(row),
       })
@@ -253,7 +255,7 @@ export function DocumentDecisionsPanel({
     if (canManage && pending) {
       items.push({
         id: 'outcome',
-        label: 'تسجيل النتيجة',
+        label: t('decisions.panel.record-outcome'),
         onSelect: () =>
           setOutcomeTarget({
             decisionId: row.decisionId,
@@ -265,7 +267,7 @@ export function DocumentDecisionsPanel({
     if (canManage && row.statusId !== DECISION_STATUS.Canceled) {
       items.push({
         id: 'attach',
-        label: 'ربط نسخة',
+        label: t('decisions.panel.attach'),
         icon: <Paperclip className="size-4" aria-hidden />,
         onSelect: () => setAttachTarget(row),
       })
@@ -273,7 +275,7 @@ export function DocumentDecisionsPanel({
     if (canManage && systemScope && row.statusId !== DECISION_STATUS.Canceled) {
       items.push({
         id: 'cancel',
-        label: 'إلغاء الإدخال',
+        label: t('decisions.panel.cancel'),
         danger: true,
         onSelect: () => setCancelTarget(row),
       })
@@ -288,7 +290,7 @@ export function DocumentDecisionsPanel({
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 className="flex items-center gap-2 text-sm font-semibold">
               <Scale className="size-4 text-accent" aria-hidden />
-              القرار النافذ
+              <Label k="decisions.panel.in-force-title" />
             </h2>
             <DecisionStatusBadge statusId={inForce.statusId} />
           </div>
@@ -300,9 +302,17 @@ export function DocumentDecisionsPanel({
           </p>
           <p className="text-sm text-muted">
             {decisionEffectLabel(inForce.effectId)}
-            {inForce.destinationDepartmentId
-              ? ` · الوجهة ${departmentName(inForce.destinationDepartmentId)}`
-              : ''}
+            {inForce.destinationDepartmentId ? (
+              <>
+                {' · '}
+                <Label
+                  k="decisions.panel.destination-prefix"
+                  params={{ destination: departmentName(inForce.destinationDepartmentId) }}
+                />
+              </>
+            ) : (
+              ''
+            )}
             {inForce.summary ? ` · ${inForce.summary}` : ''}
           </p>
           {inForce.appeals.length > 0 && (
@@ -312,7 +322,7 @@ export function DocumentDecisionsPanel({
           )}
           {inForce.effectId === DECISION_EFFECT.Join && (
             <p className="text-sm text-muted">
-              هذا الملف موحَّد مع{' '}
+              <Label k="decisions.panel.join-prefix" />{' '}
               {principalLink ? (
                 <Link
                   to={`/documents/${principalLink.relatedDocument.documentId}`}
@@ -321,9 +331,9 @@ export function DocumentDecisionsPanel({
                   {principalLink.relatedDocument.title}
                 </Link>
               ) : (
-                'الملف الرئيسي'
+                <Label k="decisions.panel.join-principal-fallback" />
               )}
-              . لم يتغيّر رقمه ولا مكانه.
+              <Label k="decisions.panel.join-suffix" />
               {principalLink?.relatedDocument.officialNumberText ? (
                 <>
                   {' '}
@@ -340,14 +350,14 @@ export function DocumentDecisionsPanel({
       {candidates.length > 0 && (
         <section className="flex flex-col gap-2 rounded-xl border border-border bg-surface p-4">
           <h2 className="flex items-center gap-2 text-sm font-semibold">
-            ملفات قد تخص الأشخاص أنفسهم
+            <Label k="decisions.panel.candidates-title" />
             <GuideChip id="document-details.join-candidates" />
           </h2>
           <ul className="flex flex-col gap-1 text-sm text-muted">
             {candidates.map((candidate) => (
               <li key={candidate.documentId}>
-                {candidate.personName}
-                {' يظهر أيضًا في '}
+                {candidate.personName}{' '}
+                <Label k="decisions.panel.candidate-appears-in" />{' '}
                 <Link
                   to={`/documents/${candidate.documentId}`}
                   className="text-accent hover:underline"
@@ -362,7 +372,7 @@ export function DocumentDecisionsPanel({
                     </span>
                   </>
                 ) : null}
-                . هذا اقتراح للنظر، وليس توحيدًا.
+                <Label k="decisions.panel.candidate-suffix" />
               </li>
             ))}
           </ul>
@@ -373,14 +383,14 @@ export function DocumentDecisionsPanel({
         {canIssue && (
           <Button type="button" onClick={() => setIssueOpen(true)}>
             <Gavel className="size-4" aria-hidden />
-            إصدار قرار
+            <Label k="decisions.panel.issue" />
           </Button>
         )}
         {canManage && inForce && inForce.isAppealable && inForce.statusId === DECISION_STATUS.Issued && (
           <>
             <Button type="button" variant="outline" onClick={() => setAppealTarget(inForce)}>
               <Scale className="size-4" aria-hidden />
-              تسجيل اعتراض
+              <Label k="decisions.panel.record-appeal" />
             </Button>
             <GuideChip id="document-details.record-appeal" />
           </>
@@ -397,14 +407,14 @@ export function DocumentDecisionsPanel({
               })
             }
           >
-            تسجيل النتيجة
+            <Label k="decisions.panel.record-outcome" />
           </Button>
         )}
         {canRunNext && nextKind && (
           <>
             <Button type="button" variant="outline" onClick={runNext}>
               <Route className="size-4" aria-hidden />
-              {NEXT_ACTION_LABEL[nextKind]}
+              <Label k={NEXT_ACTION_LABEL_KEYS[nextKind]} />
             </Button>
             <GuideChip id="document-details.next-action" />
           </>
@@ -417,7 +427,7 @@ export function DocumentDecisionsPanel({
         rows={decisions}
         rowKey={(row) => row.decisionId}
         mode="client"
-        caption="سجل قرارات الوثيقة"
+        caption={t('decisions.panel.caption')}
         isLoading={decisionsQuery.isLoading}
         error={decisionsQuery.error}
         onRetry={() => void decisionsQuery.refetch()}
@@ -430,18 +440,18 @@ export function DocumentDecisionsPanel({
         onPageSizeChange={table.setPageSize}
         search={table.search}
         onSearchChange={table.setSearch}
-        searchPlaceholder="ابحث برقم القرار أو نوعه"
+        searchPlaceholder={t('decisions.panel.search-placeholder')}
         sortKey={table.sortKey}
         sortDirection={table.sortDirection}
         onSortChange={table.setSort}
         rowSearchText={(row) => `${row.decisionNumber} ${row.typeNameAr} ${row.summary ?? ''}`}
         rowMenu={canManage ? rowMenu : undefined}
         rowLabel={(row) => row.decisionNumber}
-        emptyTitle="لا قرارات على هذه الوثيقة"
+        emptyTitle={t('decisions.panel.empty-title')}
         emptyDescription={
           decisionsQuery.isError
             ? toArabicErrorMessage(decisionsQuery.error)
-            : 'يظهر القرار هنا بعد أن يصدره الديوان الذي يحمل الوثيقة.'
+            : t('decisions.panel.empty-description')
         }
       />
 

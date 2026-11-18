@@ -19,7 +19,7 @@ import {
 } from '@/entities/user'
 import { toArabicErrorMessage } from '@/shared/api'
 import { Permissions } from '@/shared/config'
-import { formatDate } from '@/shared/lib'
+import { formatDate, t } from '@/shared/lib'
 import {
   Badge,
   Button,
@@ -27,6 +27,7 @@ import {
   Dialog,
   FormField,
   Input,
+  Label,
   Select,
   Skeleton,
 } from '@/shared/ui'
@@ -124,7 +125,7 @@ export function UserAccessDialog({ open, onOpenChange, user }: UserAccessDialogP
       return [
         {
           module: 'ALL',
-          label: 'الصلاحيات',
+          label: t('user.access.permissions-fallback'),
           items: codes.map((code) => ({ code, name: code })),
         },
       ]
@@ -183,7 +184,7 @@ export function UserAccessDialog({ open, onOpenChange, user }: UserAccessDialogP
         },
       })
       reset(defaultAssignmentValues())
-      toast.success('تمت إضافة إسناد القسم.')
+      toast.success(t('user.access.toast-assigned'))
     } catch (error) {
       setActionError(toArabicErrorMessage(error))
     }
@@ -194,7 +195,7 @@ export function UserAccessDialog({ open, onOpenChange, user }: UserAccessDialogP
     setActionError(null)
     try {
       await endMutation.mutateAsync({ userId: user.userId, assignmentId })
-      toast.success('تم إنهاء إسناد القسم.')
+      toast.success(t('user.access.toast-ended'))
     } catch (error) {
       setActionError(toArabicErrorMessage(error))
     } finally {
@@ -206,12 +207,12 @@ export function UserAccessDialog({ open, onOpenChange, user }: UserAccessDialogP
     <Dialog
       open={open}
       onOpenChange={onOpenChange}
-      title="الصلاحيات والإسنادات"
-      description={`نطاق الوصول والصلاحيات الفعلية وإسنادات الأقسام للمستخدم «${user.username}».`}
+      title={t('user.menu.access')}
+      description={t('user.access.description', { name: user.username })}
       size="lg"
       footer={
         <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-          إغلاق
+          <Label k="common.action.close" />
         </Button>
       }
     >
@@ -230,7 +231,7 @@ export function UserAccessDialog({ open, onOpenChange, user }: UserAccessDialogP
             size="sm"
             onClick={() => void effectiveQuery.refetch()}
           >
-            إعادة المحاولة
+            <Label k="common.action.retry" />
           </Button>
         </div>
       ) : effective ? (
@@ -238,13 +239,13 @@ export function UserAccessDialog({ open, onOpenChange, user }: UserAccessDialogP
           <section className="flex flex-col gap-3">
             <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground">
               <KeyRound className="size-4 text-accent" aria-hidden />
-              الصلاحيات الفعلية
+              <Label k="user.access.effective-title" />
             </h3>
 
             <div className="flex flex-wrap items-center gap-2 text-sm">
               <UserScopeBadge scopeTypeId={effective.scopeTypeId} />
               {effective.roleCodes.length === 0 ? (
-                <span className="text-muted">لا أدوار مسندة</span>
+                <span className="text-muted">{t('user.access.no-roles')}</span>
               ) : (
                 effective.roleCodes.map((code) => (
                   <Badge key={code} variant="accent">
@@ -253,13 +254,13 @@ export function UserAccessDialog({ open, onOpenChange, user }: UserAccessDialogP
                 ))
               )}
               <Badge variant="outline">
-                {effective.permissions.length} صلاحية
+                {t('user.access.permission-count', { count: effective.permissions.length })}
               </Badge>
             </div>
 
             {groupedPermissions.length === 0 ? (
               <p className="rounded-lg bg-surface-muted px-3 py-2 text-sm text-muted">
-                لا توجد صلاحيات فعلية لهذا المستخدم.
+                {t('user.access.no-permissions')}
               </p>
             ) : (
               <div className="grid gap-2 sm:grid-cols-2">
@@ -291,19 +292,19 @@ export function UserAccessDialog({ open, onOpenChange, user }: UserAccessDialogP
           <section className="flex flex-col gap-3 border-t border-border pt-4">
             <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground">
               <Network className="size-4 text-accent" aria-hidden />
-              إسنادات الأقسام
+              <Label k="user.access.assignments-title" />
             </h3>
 
             {userQuery.isError ? (
               <div role="alert" className="text-sm text-danger">
                 {toArabicErrorMessage(userQuery.error)}
-                <Button type="button" variant="outline" onClick={() => void userQuery.refetch()}>إعادة المحاولة</Button>
+                <Button type="button" variant="outline" onClick={() => void userQuery.refetch()}><Label k="common.action.retry" /></Button>
               </div>
             ) : userQuery.isLoading ? (
-              <p role="status" className="text-sm text-muted">جارٍ تحميل سجل الإسنادات…</p>
+              <p role="status" className="text-sm text-muted">{t('user.access.assignments-loading')}</p>
             ) : assignments.length === 0 ? (
               <p className="rounded-lg bg-surface-muted px-3 py-2 text-sm text-muted">
-                لا توجد إسنادات أقسام لهذا المستخدم.
+                {t('user.access.assignments-empty')}
               </p>
             ) : (
               <ul className="flex flex-col gap-2">
@@ -311,8 +312,8 @@ export function UserAccessDialog({ open, onOpenChange, user }: UserAccessDialogP
                   const department = departmentById.get(assignment.departmentId)
                   const typeLabel =
                     assignment.assignmentTypeId === ASSIGNMENT_TYPE.Primary
-                      ? 'أساسي'
-                      : 'إضافي'
+                      ? t('user.access.type-primary')
+                      : t('user.access.type-additional')
 
                   return (
                     <li
@@ -336,13 +337,13 @@ export function UserAccessDialog({ open, onOpenChange, user }: UserAccessDialogP
                           )}
                           <Badge variant="neutral">{typeLabel}</Badge>
                           {assignment.includeSubtree && (
-                            <Badge variant="accent">يشمل الفروع</Badge>
+                            <Badge variant="accent"><Label k="user.access.include-subtree-badge" /></Badge>
                           )}
                           <Badge variant="outline">
-                            {!assignment.isActive ? 'منتهٍ يدويًا'
-                              : new Date(assignment.startDate).getTime() > now ? 'مجدول'
-                              : assignment.endDate && new Date(assignment.endDate).getTime() < now ? 'انتهت مدته'
-                              : 'فعّال حاليًا'}
+                            {!assignment.isActive ? t('user.access.status-ended-manual')
+                              : new Date(assignment.startDate).getTime() > now ? t('user.access.status-scheduled')
+                              : assignment.endDate && new Date(assignment.endDate).getTime() < now ? t('user.access.status-expired')
+                              : t('user.access.status-active')}
                           </Badge>
                         </span>
                         <span className="flex items-center gap-1 text-xs text-muted">
@@ -352,7 +353,7 @@ export function UserAccessDialog({ open, onOpenChange, user }: UserAccessDialogP
                           <span dir="ltr">
                             {assignment.endDate
                               ? formatDate(assignment.endDate)
-                              : 'مفتوح'}
+                              : t('user.access.end-open')}
                           </span>
                         </span>
                       </div>
@@ -367,7 +368,7 @@ export function UserAccessDialog({ open, onOpenChange, user }: UserAccessDialogP
                           disabled={endMutation.isPending}
                           onClick={() => handleEnd(assignment.assignmentId)}
                         >
-                          إنهاء
+                          <Label k="user.access.end" />
                         </Button>
                       )}
                     </li>
@@ -381,7 +382,7 @@ export function UserAccessDialog({ open, onOpenChange, user }: UserAccessDialogP
                 role="status"
                 className="rounded-lg bg-warning/10 px-3 py-2 text-xs text-warning"
               >
-                تحتاج صلاحية إدارة المستخدمين لإضافة الإسنادات وإنهائها.
+                {t('user.access.denied')}
               </p>
             ) : (
               <form
@@ -390,11 +391,11 @@ export function UserAccessDialog({ open, onOpenChange, user }: UserAccessDialogP
                 className="grid gap-3 rounded-lg bg-surface-muted/60 p-3 sm:grid-cols-2"
               >
                 <p className="text-xs font-semibold text-muted sm:col-span-2">
-                  إضافة إسناد قسم
+                  <Label k="user.access.add-title" />
                 </p>
 
                 <FormField
-                  label="القسم"
+                  labelKey="user.access.department"
                   required
                   error={errors.departmentId?.message}
                 >
@@ -410,17 +411,17 @@ export function UserAccessDialog({ open, onOpenChange, user }: UserAccessDialogP
                         invalid={Boolean(errors.departmentId)}
                         placeholder={
                           departmentsQuery.isLoading
-                            ? 'جارٍ تحميل الأقسام…'
-                            : 'اختر القسم…'
+                            ? t('user.form.department-loading')
+                            : t('user.form.department-placeholder')
                         }
-                        aria-label="قسم الإسناد"
+                        aria-label={t('user.access.department-aria')}
                       />
                     )}
                   />
                 </FormField>
 
                 <FormField
-                  label="نوع الإسناد"
+                  labelKey="user.access.type"
                   required
                   error={errors.assignmentTypeId?.message}
                 >
@@ -433,15 +434,15 @@ export function UserAccessDialog({ open, onOpenChange, user }: UserAccessDialogP
                         onValueChange={field.onChange}
                         options={assignmentTypeOptions}
                         invalid={Boolean(errors.assignmentTypeId)}
-                        placeholder="اختر النوع…"
-                        aria-label="نوع الإسناد"
+                        placeholder={t('user.access.type-placeholder')}
+                        aria-label={t('user.access.type-aria')}
                       />
                     )}
                   />
                 </FormField>
 
                 <FormField
-                  label="تاريخ البدء"
+                  labelKey="user.access.start-date"
                   required
                   error={errors.startDate?.message}
                 >
@@ -454,7 +455,7 @@ export function UserAccessDialog({ open, onOpenChange, user }: UserAccessDialogP
                   />
                 </FormField>
 
-                <FormField label="تاريخ الانتهاء" error={errors.endDate?.message}>
+                <FormField labelKey="user.access.end-date" error={errors.endDate?.message}>
                   <Input
                     id="assignment-end"
                     type="date"
@@ -472,7 +473,7 @@ export function UserAccessDialog({ open, onOpenChange, user }: UserAccessDialogP
                       <Checkbox
                         checked={field.value}
                         onCheckedChange={field.onChange}
-                        label="يشمل القسم والأقسام الفرعية"
+                        label={t('user.access.include-subtree-label')}
                       />
                     )}
                   />
@@ -494,7 +495,7 @@ export function UserAccessDialog({ open, onOpenChange, user }: UserAccessDialogP
                     loading={assignMutation.isPending}
                     disabled={departmentOptions.length === 0}
                   >
-                    إضافة الإسناد
+                    <Label k="user.access.add-submit" />
                   </Button>
                 </div>
               </form>

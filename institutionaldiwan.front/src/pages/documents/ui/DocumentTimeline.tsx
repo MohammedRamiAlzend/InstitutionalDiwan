@@ -14,17 +14,17 @@ import {
 import { LOOKUP_SLUGS, LookupLabel } from '@/entities/lookup'
 import { UserLabel } from '@/entities/user'
 import { toArabicErrorMessage } from '@/shared/api'
-import { DOCUMENT_NUMBER_EVENT_TYPE } from '@/shared/config'
-import { formatDateTime, formatShortId } from '@/shared/lib'
-import { Button, Skeleton } from '@/shared/ui'
+import { DOCUMENT_NUMBER_EVENT_TYPE, type LabelKey } from '@/shared/config'
+import { formatDateTime, formatShortId, resolveLabel, t, useLabelsStore } from '@/shared/lib'
+import { Button, Label, Skeleton } from '@/shared/ui'
 import { ParticipantTarget } from './ParticipantTarget'
 
-const NUMBER_EVENT_LABELS: Record<number, string> = {
-  [DOCUMENT_NUMBER_EVENT_TYPE.Issued]: 'صدر رقم رسمي',
-  [DOCUMENT_NUMBER_EVENT_TYPE.Cancelled]: 'أُلغي رقم النظام',
-  [DOCUMENT_NUMBER_EVENT_TYPE.Replaced]: 'استُبدل رقم النظام',
-  [DOCUMENT_NUMBER_EVENT_TYPE.RegisteredInDepartment]: 'سُجّل رقم الدائرة',
-  [DOCUMENT_NUMBER_EVENT_TYPE.ReRegisteredInDepartment]: 'أُعيد تسجيل رقم الدائرة',
+const NUMBER_EVENT_LABELS: Record<number, LabelKey> = {
+  [DOCUMENT_NUMBER_EVENT_TYPE.Issued]: 'docdetails.timeline.number-event.issued',
+  [DOCUMENT_NUMBER_EVENT_TYPE.Cancelled]: 'docdetails.timeline.number-event.cancelled',
+  [DOCUMENT_NUMBER_EVENT_TYPE.Replaced]: 'docdetails.timeline.number-event.replaced',
+  [DOCUMENT_NUMBER_EVENT_TYPE.RegisteredInDepartment]: 'docdetails.timeline.number-event.registered-dept',
+  [DOCUMENT_NUMBER_EVENT_TYPE.ReRegisteredInDepartment]: 'docdetails.timeline.number-event.re-registered-dept',
 }
 
 type TimelineKind = 'status' | 'participant' | 'number' | 'archive'
@@ -118,20 +118,20 @@ export function DocumentTimeline({
           role="alert"
           className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-danger/40 bg-danger/10 px-3 py-2 text-sm text-danger"
         >
-          <span>تعذّر تحميل سجل الأرشفة: {toArabicErrorMessage(archiveQuery.error)}</span>
+          <span>{t('docdetails.timeline.archive-error', { error: toArabicErrorMessage(archiveQuery.error) })}</span>
           <Button
             type="button"
             variant="outline"
             size="sm"
             onClick={() => void archiveQuery.refetch()}
           >
-            إعادة المحاولة
+            <Label k="common.action.retry" />
           </Button>
         </div>
       )}
 
       {rows.length === 0 ? (
-        <p className="text-sm text-muted">لا توجد أحداث مسجلة بعد.</p>
+        <p className="text-sm text-muted"><Label k="docdetails.timeline.empty" /></p>
       ) : (
         <ol className="flex flex-col gap-4 border-s-2 border-border ps-5">
           {rows.map((row) => {
@@ -149,12 +149,12 @@ export function DocumentTimeline({
                 <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
                   <span dir="ltr">{formatDateTime(row.at)}</span>
                   <span aria-hidden>·</span>
-                  <span>بواسطة</span>
+                  <Label k="docdetails.by" />
                   <UserLabel userId={row.actorUserId} />
                   {row.archiveEvent && row.archiveEvent.archiveLocationId !== null && (
                     <>
                       <span aria-hidden>·</span>
-                      <span>الموقع:</span>
+                      <Label k="docdetails.timeline.location" />
                       <LookupLabel
                         lookup={LOOKUP_SLUGS.ArchiveLocations}
                         id={row.archiveEvent.archiveLocationId}
@@ -180,22 +180,24 @@ function TimelineRowBody({
   participantsById: Map<string, DocumentParticipantResponse>
   departmentNames: Map<string, string>
 }) {
+  const overrides = useLabelsStore((state) => state.overrides)
+
   if (row.kind === 'status' && row.statusEntry) {
     const entry = row.statusEntry
     return (
       <>
         <div className="flex flex-wrap items-center gap-1.5">
-          <span className="text-xs text-muted">تغيير الحالة</span>
+          <span className="text-xs text-muted"><Label k="docdetails.timeline.status-change" /></span>
           {entry.fromStatusId !== null && (
             <>
               <DocumentStatusBadge statusId={entry.fromStatusId} />
-              <span className="text-xs text-muted">إلى</span>
+              <span className="text-xs text-muted"><Label k="docdetails.timeline.to" /></span>
             </>
           )}
           <DocumentStatusBadge statusId={entry.toStatusId} />
         </div>
         {entry.reason && (
-          <p className="text-xs leading-6 text-foreground">السبب: {entry.reason}</p>
+          <p className="text-xs leading-6 text-foreground"><Label k="docdetails.timeline.reason" /> {entry.reason}</p>
         )}
       </>
     )
@@ -209,7 +211,7 @@ function TimelineRowBody({
 
     return (
       <div className="flex flex-wrap items-center gap-1.5">
-        <span className="text-xs text-muted">إضافة مشارك</span>
+        <span className="text-xs text-muted"><Label k="docdetails.action.add-participant" /></span>
         {participant ? (
           <>
             <LookupLabel lookup={LOOKUP_SLUGS.ParticipantRoles} id={participant.roleId} />
@@ -223,7 +225,7 @@ function TimelineRowBody({
             />
           </>
         ) : (
-          <span className="text-sm text-foreground">مشارك</span>
+          <span className="text-sm text-foreground"><Label k="docdetails.timeline.participant-fallback" /></span>
         )}
       </div>
     )
@@ -235,8 +237,8 @@ function TimelineRowBody({
       <div className="flex flex-wrap items-center gap-1.5">
         <span className="text-sm text-foreground">
           {entry.numberEventTypeId !== null
-            ? (NUMBER_EVENT_LABELS[entry.numberEventTypeId] ?? 'حدث رقم')
-            : 'حدث رقم'}
+            ? resolveLabel(NUMBER_EVENT_LABELS[entry.numberEventTypeId] ?? 'docdetails.timeline.number-event.unknown', overrides)
+            : t('docdetails.timeline.number-event.unknown')}
         </span>
         {entry.documentNumberId && (
           <span
@@ -265,7 +267,7 @@ function TimelineRowBody({
         </div>
         {event.reason && (
           <p className="whitespace-pre-line text-xs leading-6 text-foreground">
-            السبب: {event.reason}
+            <Label k="docdetails.timeline.reason" /> {event.reason}
           </p>
         )}
       </>

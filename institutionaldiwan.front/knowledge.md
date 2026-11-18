@@ -89,7 +89,7 @@
 - Dev server: `npm run dev` (stock Vite, normally `http://localhost:5173`; the HTTPS/port convention
   is to-be once the proxy and certificate are configured)
 - Typecheck & build: `npm run build` (`tsc -b && vite build`)
-- Lint: `npm run lint` (`eslint .`)
+- Lint: `npm run lint` (`eslint .` + `scripts/check-guide-ids.mjs` + `scripts/check-label-keys.mjs`)
 
 ## Architecture: Feature-Sliced Design (FSD v2.1)
 
@@ -413,6 +413,97 @@ no longer contains Arabic text: `CODE_MESSAGES` maps each code to a `LabelKey` a
 resolves it through `t()` (status/generic/network fallbacks use `common.error.*`), so error messages are
 renamable like any other label. Pagination keeps its `dir="ltr"` number spans; only the surrounding words
 became `<Label>`s. Per-domain area catalogs remain for Phase 4.
+Phase 4 migrates one sidebar area per reviewable batch. The first unit (the correspondence list screen)
+added `documents.ts` (`DOCUMENT_LABELS`, `documents.*`): `DocumentsPage` tabs render via `<Label>`,
+`DocumentRegistryTable` column headers use `headerKey` (the `DataTableColumn.header` prop is now optional,
+so a column can be key-only; `headerOf` falls back to `header ?? ''`), the three «الكل» filter options use
+`useLabel` for live repaint, buttons/empty actions use `<Label>`, and menus/toasts/aria/placeholders/caption/
+empty states use `t()`. `RegisterNumberFilter` placeholder/aria use `t()`. `features/document-create`'s
+`FormSection`/`ChoiceCard` now take `titleKey`/`hintKey` (rendered via `<Label>`), `FormField`s use `labelKey`,
+the feature-flag-composed dialog description is composed from `t()` parts, and Zod messages resolve through
+`t('documents.create.validation.*')`. Data-driven text (document titles, type/department names, schema field
+labels) and the feature-flag-composed `DocumentsPage` description stay out of the catalog. No endpoint or
+permission change.
+The second unit (the routing area) added `movements.ts` (`MOVEMENT_LABELS`, `movements.*`): `MovementsPage`
+inbox/outbox tabs render via `<Label>`; `MovementQueueTable` column headers use `headerKey`, the two «الكل»
+filter options use `useLabel`, the step/route/overdue cells and buttons/empty actions use `<Label>`, and
+menus/toasts/aria/caption/search/empty states use `t()`. `features/movement-routing`'s `MOVEMENT_ACTION_LABELS`
+became `MOVEMENT_ACTION_LABEL_KEYS` (`Record<MovementAction, LabelKey>` → `movements.action.*`), resolved via
+`t()` in the queue row menu and dialog titles and via `<Label>` in `MovementActionButtons`; every action dialog
+(open/send/receive/complete/close/reject/return/redirect/cancel) renders titles/descriptions/hints/toasts through
+`t()`, fields through `FormField labelKey`, and buttons through `<Label>`; Zod messages resolve through
+`t('movements.validation.*')`; the assignee «بدون إسناد» option uses `useLabel`. `entities/movement`'s
+`translateMovementNote` resolves its two templates through `t('movements.note.*', { detail })`. Data-driven text
+(document titles, department/type/status names, schema field labels) and the `FIN-001/2026` example placeholder
+stay out. No endpoint or permission change.
+The third unit (the decisions read surface) added `decisions.ts` (`DECISION_LABELS`, `decisions.*`):
+`DecisionsPage` register/types tabs render via `<Label>` (tablist aria via `t()`); `DecisionRegisterTable`
+column headers use `headerKey`, the three «الكل» filter placeholders use `useLabel`, the clear-filters button
+uses `<Label>`, and menus/aria/caption/search/empty states use `t()`; `DecisionTypesTable` column headers use
+`headerKey`, the appealable/active cells and the new-type button use `<Label>`, the status filter options and
+placeholder use `useLabel`, and toasts/menus/aria/caption/search/empty states use `t()`. The shared resolvers in
+`shared/config/decisionLabels.ts` (`decisionEffectLabel`/`decisionStatusLabel`/`appealOutcomeLabel`) now map the
+seeded IDs to `decisions.effect.*`/`decisions.status.*`/`decisions.appeal-outcome.*` keys and resolve through `t()`
+(with `{id}` fallbacks); their signatures are unchanged, so `DecisionStatusBadge`, the document decisions panel and
+the issue/type dialogs keep working and inherit the renames. `isDecisionInForce` stays a pure ID check. Data-driven
+text (document titles, decision-type/department names) stays out. The decisions write dialogs
+(`features/decision-manage` six dialogs + `JoinTargetPicker`, `features/decision-type-manage` form) and
+`widgets/document-decisions-panel` are also done (sub-unit ب): titles/descriptions/toasts/placeholders/aria/Zod
+resolve through `t('decisions.issue/cancel/appeal/outcome/attach/join/type.*')`, fields through `FormField labelKey`,
+buttons through `<Label>` (cancel/save reuse `common.action.*`); the outcome options reuse `decisions.appeal-outcome.*`
+via `useLabel`; the panel's `NEXT_ACTION_LABEL` became `NEXT_ACTION_LABEL_KEYS` (`Record<string, LabelKey>` →
+`decisions.next.*`) and its card/join/candidate text, buttons and `headerKey` columns render from `decisions.panel.*`.
+The decisions area is now fully catalogued. No endpoint or permission change.
+The fourth unit (my-registers) added `my-registers.ts` (`MY_REGISTERS_LABELS`, `my-registers.*`):
+`widgets/my-registers-table` renders caption/search/aria/placeholders/row menus/copy toasts/empty states via
+`t('my-registers.*')`, column headers via `headerKey`, the status filter options + the «موقوف» register suffix +
+«بلا بيانات نموذج» via `useLabel`, the version label composed through `t('my-registers.version.*')`, the
+linked-number prefix and clear buttons via `<Label>`; the refresh menu reuses `table.refresh`. The dynamic
+form-field columns keep `field.labelAr`; `FieldFilterBar` belongs to the document-schema area. Data-driven text
+(register/document/type names) stays out. No endpoint or permission change.
+The fifth unit (persons) added `persons.ts` (`PERSONS_LABELS`, `persons.*`): `widgets/persons-table`,
+`widgets/person-documents-table` and `widgets/person-timeline` render caption/search/aria/row menus/empty states
+via `t()`, column headers via `headerKey`, filter «الكل» options via `useLabel`, and buttons/badges/connectors via
+`<Label>`/`t()`; `PersonDetailsPage` tabs use `<Label>` (`persons.details.tab.*`) and back links/aria resolve from
+`persons.details.*`; `features/document-person-manage` (add-persons + change-role dialogs and their Zod schemas)
+renders from `persons.add.*`/`persons.change-role.*` with a shared `persons.field-role`/`persons.role-*`; and the
+shared `entities/person` `PersonNamesInput` renders from `persons.names.*` (placeholder, suggestion details,
+new-option, duplicate alert, chips aria, «جديد» badge, remove aria). «تغيير الحالة» is shared as
+`persons.status-change`; retry/refresh/save/cancel reuse `common.action.*`/`table.refresh`. Data-driven text
+(person/document names, lookup `descAr`) stays out; `normalizeName.ts` keeps its Arabic folding regexes (functional
+data). No endpoint or permission change.
+The sixth unit (archive) added `archive.ts` (`ARCHIVE_LABELS`, `archive.*`): `widgets/archive-search-table`
+(`ArchiveSearchTable` + `SavedSearchesBar`) renders caption/search/aria/row menus/copy toasts/empty states via
+`t()`, column headers via `headerKey`, the «كل الأنواع/المواقع/الأقسام» filter options via `useLabel`, and the
+date-range labels, reload/clear/save-search buttons and saved-search chips aria via `<Label>`/`t()`;
+`features/archive-manage` (archive/unarchive/save-search/delete-search dialogs and their Zod schemas) renders from
+`archive.archive/unarchive/save/delete.*` with `FormField labelKey`, `<Label>` buttons (save reuses
+`common.action.save`) and `t()` Zod messages. «تراجع»/«إعادة التحميل» share `archive.dismiss`/`archive.reload`;
+refresh reuses `table.refresh`. Data-driven text (document titles, lookup `descAr`, department/saved-search names)
+stays out; `FieldFilterBar` belongs to the document-schema area; `entities/archive` criteria/badge are logic/data
+(unchanged). No endpoint or permission change. **ب1 (المراسلات) اكتمل** — documents, movements, decisions,
+my-registers, persons, archive.
+The remaining Phase 4 batches landed the same way (catalog area file + `headerKey`/`labelKey`/`useLabel`/
+`resolveLabel`/`<Label>`/`t()`, data-driven text excluded): ب2 organization (`departments.ts`,
+`institution-settings.ts`, `external-organizations.ts`), ب3 access (`access.ts` — users/roles/employees),
+ب4 governance (`numbering.ts`, `document-schemas.ts`, `lookups.ts`, `audit.ts`, `system-errors.ts`) plus the
+document-details page and the `document-manage`/`access-grant`, attachments (`attachments.ts`) and relations
+(`relations.ts`) dialogs/panels, and ب5 the remainder (`auth.ts`, `dashboard.ts`, `notifications.ts`,
+`print.ts`, the audit page tabs) and the misc shared chrome/entities (`common.ts` extensions, `guides.ts`
+tutorial chrome, `label-editor.ts`, `access.ts` scope/module/picker keys, `UserScopeBadge`, `EmployeePicker`,
+`RoleBadge`, `moduleLabels`, `BrandingEffects` tab title, `shared/ui` primitives, `shared/lib` format/crypto/
+formDraft, `shared/api/problemDetails`, `LabelsBootGate`, `DocumentsRegisterNav`). **المرحلة 4 اكتملت** —
+every static UI string resolves from the catalog; only data (entity names/codes, lookup `descAr`, document
+titles, schema field labels, server reasons/notes, guide content, branding default name) and doc comments stay
+in code. No endpoint or permission change in any Phase 4 batch.
+Phase 5 adds the consistency guard `scripts/check-label-keys.mjs`, wired into `npm run lint` (and
+`npm run check:labels`): it parses every `labels/*.ts` key/default, fails on duplicate keys, on unknown keys
+passed to explicit label calls (`t`/`useLabel`/`resolveLabel`, `<Label k>`, `labelKey`/`headerKey`/`hintKey`),
+and on malformed `{token}` placeholders — whitelisting the literal pattern tokens `{YEAR}`/`{SEQ}`/`{SEQ:D6}`
+and driver.js `{{current}}`/`{{total}}` — and warns on catalog keys never referenced in source (orphans).
+Typed-key existence is also enforced by `tsc -b`. The catalog holds ~3006 keys with zero orphans; the unused
+`common.action.delete` default was removed. The optional ESLint rule against new Arabic literals was deferred
+(the guard plus a per-batch `[؀-ۿ]` grep cover it). No endpoint or permission change.
 
 ### Users — `/api/users`
 

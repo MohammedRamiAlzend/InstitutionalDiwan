@@ -26,6 +26,7 @@ lines with search, filters and sort. It needs `NUMBERING_VIEW`.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-18 | Qoder | UI labels Phase 4 (my-registers): the `my-registers-table` widget now renders from the `my-registers.*` catalog (see the widget README). The page header already resolved from `page.my-registers.*` in Phase 3. |
 | 2026-11-11 | Claude | The guide mentions filtering by form field values. |
 | 2026-11-11 | Claude | The page text and guide mention the form data and its version. |
 | 2026-11-11 | Claude | Added the «سجلاتي» page. |

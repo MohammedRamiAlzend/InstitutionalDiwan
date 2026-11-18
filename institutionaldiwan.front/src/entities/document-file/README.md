@@ -22,8 +22,8 @@ stored checksum, and present the archive/integrity state. Writes live in
 | `model/types.ts` | `DocumentFileResponse`, `DocumentFileVersionResponse`, `AttachmentChecksumResponse` — camelCase mirrors of the Application contracts. |
 | `model/queries.ts` | `documentFileKeys` factory, `useDocumentFiles`, `useVerifyChecksum`. |
 | `model/versions.ts` | `currentVersionOf(file)` — `versions.find(isCurrent) ?? versions[0]`, `undefined` for an empty history. |
-| `ui/ChecksumBadge.tsx` | «بصمة مطابقة» / «بصمة غير مطابقة» / «لم يُتحقق منها» from a nullable `isMatch`. |
-| `ui/FileArchivedBadge.tsx` | «نشط» / «مؤرشف». Archiving stops new versions but never hides the file or its downloads. |
+| `ui/ChecksumBadge.tsx` | «بصمة مطابقة» / «بصمة غير مطابقة» / «لم يُتحقق منها» from a nullable `isMatch`; labels resolve via `useLabel` (`attachment.checksum.*`). |
+| `ui/FileArchivedBadge.tsx` | «نشط» / «مؤرشف» via `useLabel` (`attachment.state.*`). Archiving stops new versions but never hides the file or its downloads. |
 | `index.ts` | Public barrel — import from `@/entities/document-file`, never from a subpath. |
 
 ## Query keys (contract)
@@ -68,7 +68,7 @@ Mutations in `features/attachment-upload` invalidate `documentFileKeys.byDocumen
 | --- | --- |
 | Docs | ✅ |
 | Types, API client, query keys/hooks | ✅ Module 06 Phase 0 |
-| `ChecksumBadge`, `FileArchivedBadge` | ✅ Module 06 Phase 0; `FileArchivedBadge` mounted in Phase 2, `ChecksumBadge` mounted by the Phase 4 verify and upload dialogs |
+| `ChecksumBadge`, `FileArchivedBadge` | ✅ Module 06 Phase 0; `FileArchivedBadge` mounted in Phase 2, `ChecksumBadge` mounted by the Phase 4 verify and upload dialogs; labels catalog-driven (`attachment.*`) since UI labels Phase 4 |
 | Download read | ✅ Module 06 Phase 2; `downloadFileVersion` shared with the versions dialog in Phase 4 |
 | Version list UI / grid | ✅ Module 06 Phase 2 (`widgets/document-attachments-panel`); the per-file versions dialog landed in Phase 4 |
 
@@ -76,6 +76,7 @@ Mutations in `features/attachment-upload` invalidate `documentFileKeys.byDocumen
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-18 | Qoder | UI labels Phase 4 (ب4 المرفقات): `FileArchivedBadge` (`attachment.state.*`) and `ChecksumBadge` (`attachment.checksum.*`) resolve their labels via `useLabel` off `LabelKey` maps. File titles/names/digests stay data. |
 | 2026-11-01 | agent | Module 06 Phase 5: all three reads exercised live in the browser against the permanent fixture document — list (with the archived file included), download of the current and of a replaced version under their original Arabic names, and verify returning a matching recomputed digest. A VIEW-only grant was confirmed to reach list and verify but not download (403, Arabic). No code change. |
 | 2026-11-01 | agent | Module 06 Phase 4: extracted `currentVersionOf` into `model/versions.ts` and added `api/downloadFileVersion.ts`, so the grid, the versions dialog, and the two upload dialogs resolve the current version and the saved file name through one pair of functions instead of three copies. |
 | 2026-11-01 | agent | Module 06 Phase 2: added `documentFileApi.download(fileId, versionId?)`, returning `{ blob, contentDisposition }` through `shared/api`'s `downloadBlob` so the widget can save the bytes under the server's own file name. Documented that the per-document DOWNLOAD denial cannot be predicted client-side and is surfaced as an Arabic `403` instead. |

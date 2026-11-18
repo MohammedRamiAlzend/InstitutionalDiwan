@@ -12,7 +12,7 @@ Read side of the per-document-type field schemas: a type's field identities, its
 | --- | --- |
 | `api/schemaApi.ts` | `fields`, `versions`, `version`, `typeSchema`, `documentFields` → the `GET` routes of `DocumentFieldsController`. |
 | `model/types.ts` | Response types mirroring `DocumentFieldResponses.cs`, the integer enums (`FIELD_DATA_TYPE`, `SCHEMA_STATUS`) and the limits mirrored from the backend. |
-| `model/labels.ts` | Arabic labels for data types and version statuses. |
+| `model/labels.ts` | `FIELD_DATA_TYPE_LABEL_KEYS` / `SCHEMA_STATUS_LABEL_KEYS`: catalog keys (`schema.data-type.*` / `schema.status.*`) for data types and version statuses, resolved through `useLabel`/`t()`. |
 | `model/queries.ts` | `schemaKeys` factory and the `useDocumentTypeFields`, `useSchemaVersions`, `useSchemaVersion`, `useDocumentTypeSchema`, `useDocumentFields` hooks. |
 | `model/values.ts` | Form-value helpers: `toFieldValueMap`, `toFieldValueRequests`, `withFieldDefaults`, `withFixedValues`, `visibleFields`, `formatFieldValue`, `validateFieldValues` (local mirror of the backend rules) and `normalizeNumberText`. |
 | `ui/DynamicFieldInputs.tsx` | The visible fields of a schema over a key → text map, in the schema's sections and widths; used by create and the details panel. |
@@ -28,17 +28,20 @@ Read side of the per-document-type field schemas: a type's field identities, its
 - `GET /document-types/{id}/schema` answers `schema: null` for a type with no published version; callers hide the dynamic section then.
 - Administration reads need `LOOKUP_MANAGE`; the type schema needs `DOCUMENT_VIEW`; a document's fields also need VIEW access to it.
 - Error responses carry only the `DocumentFields.*` code plus an English detail, with no structured field key, so per-field errors must be caught by local validation before submit.
+- Static chrome (badges, value formatting, validation messages, filter operators, control placeholders/aria) resolves from the `schema.*` label catalog (`shared/config/labels/document-schemas.ts`) via `t()`/`useLabel`/`<Label>`, so it is renamable in label-edit mode. Data-driven text (`field.labelAr`, `option.labelAr`, section/help/placeholder texts, regex error messages) stays as returned by the API.
 
 ## Implementation status
 
 | Item | State |
 | --- | --- |
 | Reads, keys, hooks, labels, badges, value helpers, dynamic inputs | ✅ Implemented and verified in-browser against the live API (2026-11-03) |
+| UI labels migration (ب4) | ✅ Static chrome resolves from the `schema.*` catalog; data-driven field text stays out (2026-11-18) |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-18 | Qoder | UI labels Phase 4 (ب4): `model/labels.ts` now exposes `*_LABEL_KEYS` (`schema.data-type.*`/`schema.status.*`) instead of Arabic strings; badges resolve via `useLabel`; `values.ts`/`filters.ts` messages and operator labels via `t()`; `FieldValueControl`/`DynamicFieldInputs`/`FieldFilterBar`/`FieldFilterDialog` placeholders, aria, hints and yes/no options via `t()`/`resolveLabel`/`<Label>`. Data-driven field text unchanged. |
 | 2026-11-11 | Claude | `FieldFilterBar` takes an optional `fields` list, so the «سجلاتي» page filters on a record form version's fields. |
 | 2026-11-11 | Claude | Added `departmentRegisterForms` and `useDepartmentRegisterForms` (a department's issued record forms per document type, versions newest first). |
 | 2026-11-10 | Claude | Schema reads take an optional department (record forms); added department-record types, `departmentRecords` API and `useDepartmentRecords`. |

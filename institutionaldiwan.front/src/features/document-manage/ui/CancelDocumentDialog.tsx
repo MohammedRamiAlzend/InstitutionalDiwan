@@ -1,8 +1,8 @@
-import { useDraftForm } from '@/shared/lib'
+import { t, useDraftForm } from '@/shared/lib'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
 import { toArabicErrorMessage } from '@/shared/api'
-import { Button, Dialog, FormField, Textarea } from '@/shared/ui'
+import { Button, Dialog, FormField, Label, Textarea } from '@/shared/ui'
 import { useCancelDocumentMutation } from '../api/documentMutations'
 import {
   cancelDocumentSchema,
@@ -38,7 +38,7 @@ export function CancelDocumentDialog({
   const onSubmit = handleSubmit(async (values) => {
     try {
       await mutation.mutateAsync({ reason: values.reason.trim() })
-      toast.success('تم إلغاء الوثيقة.')
+      toast.success(t('docdetails.cancel.toast'))
       draft.discard()
       onOpenChange(false)
     } catch {
@@ -50,8 +50,8 @@ export function CancelDocumentDialog({
     <Dialog
       open={open}
       onOpenChange={onOpenChange}
-      title="إلغاء الوثيقة"
-      description={`سيتم إلغاء «${documentTitle}» مع تسجيل السبب في سجل الحالة. لا يمكن إلغاء وثيقة لديها حركة نشطة.`}
+      title={t('docdetails.action.cancel')}
+      description={t('docdetails.cancel.description', { title: documentTitle })}
       size="sm"
       footer={
         <>
@@ -61,7 +61,7 @@ export function CancelDocumentDialog({
             onClick={() => onOpenChange(false)}
             disabled={mutation.isPending}
           >
-            تراجع
+            <Label k="docdetails.action.back" />
           </Button>
           <Button
             type="submit"
@@ -69,17 +69,17 @@ export function CancelDocumentDialog({
             variant="destructive"
             loading={mutation.isPending}
           >
-            تأكيد الإلغاء
+            <Label k="docdetails.action.confirm-cancel" />
           </Button>
         </>
       }
     >
       <form id="document-cancel-form" onSubmit={onSubmit} noValidate>
-        <FormField label="سبب الإلغاء" required error={errors.reason?.message}>
+        <FormField labelKey="docdetails.cancel.field-reason" required error={errors.reason?.message}>
           <Textarea
             rows={3}
             autoFocus
-            placeholder="مثال: مُكرّرة؛ استُبدلت بنسخة مصححة."
+            placeholder={t('docdetails.cancel.reason-placeholder')}
             invalid={Boolean(errors.reason)}
             {...register('reason')}
           />

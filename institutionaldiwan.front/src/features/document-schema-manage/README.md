@@ -29,11 +29,13 @@ Write side of the per-document-type field schemas: define a field, start/delete 
 | Item | State |
 | --- | --- |
 | All writes | ✅ Implemented and verified in-browser (draft, add, edit, remove, publish, delete draft) |
+| UI labels migration (ب4) | ✅ Settings/behavior forms, confirm dialogs and Zod messages resolve from the `schema.*` catalog (2026-11-18) |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-18 | Qoder | UI labels Phase 4 (ب4): `FieldSettingsDialog`/`FieldBehaviorSection` titles, fields (`FormField labelKey`), checkboxes, option/source/lookup options (moved inside the component with an overrides subscription, resolving `lookupCatalogMeta.labelKey`), aria and toasts via `t()`/`resolveLabel`/`<Label>`; `SchemaConfirmDialogs` and both Zod schemas via `t()`; `previewField` label via `t()`. Data-driven field text and Latin example placeholders unchanged. |
 | 2026-11-10 | Claude | Drafts and new fields follow the selected form (creation form or a department record form). |
 | 2026-11-09 | Claude | The `organization-types` lookup source is hidden while `FEATURES.externalOrganizations` is off. |
 | 2026-11-09 | Claude | The external organizations option source is hidden while `FEATURES.externalOrganizations` is off. |

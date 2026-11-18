@@ -2,7 +2,8 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { LogIn, User } from 'lucide-react'
 import { toArabicErrorMessage } from '@/shared/api'
-import { Button, FormField, Input, PasswordField } from '@/shared/ui'
+import { t } from '@/shared/lib'
+import { Button, FormField, Input, Label, PasswordField } from '@/shared/ui'
 import {
   loginSchema,
   type LoginFormValues,
@@ -34,14 +35,14 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-5" noValidate>
       <FormField
-        label="اسم المستخدم"
+        labelKey="auth.login.username"
         required
         error={errors.username?.message}
       >
         <Input
           id="username"
           autoComplete="username"
-          placeholder="اسم المستخدم"
+          placeholder={t('auth.login.username')}
           startIcon={<User className="size-4" aria-hidden />}
           invalid={Boolean(errors.username)}
           {...register('username')}
@@ -50,9 +51,9 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
 
       <PasswordField
         id="password"
-        label="كلمة المرور"
+        label={t('auth.login.password')}
         autoComplete="current-password"
-        placeholder="كلمة المرور"
+        placeholder={t('auth.login.password')}
         error={errors.password?.message}
         registration={register('password')}
       />
@@ -64,7 +65,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
       )}
 
       <Button type="submit" size="lg" loading={loginMutation.isPending}>
-        تسجيل الدخول
+        <Label k="auth.login.submit" />
         <LogIn className="size-4 rtl:-scale-x-100" aria-hidden />
       </Button>
     </form>

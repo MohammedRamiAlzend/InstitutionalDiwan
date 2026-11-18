@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Plus, Trash2 } from 'lucide-react'
-import { Button, Dialog, Input, Select } from '@/shared/ui'
+import { resolveLabel, t, useLabelsStore } from '@/shared/lib'
+import { Button, Dialog, Input, Label, Select } from '@/shared/ui'
 import {
   MAX_FIELD_FILTERS,
   fieldFilterOperatorLabel,
@@ -25,10 +26,10 @@ interface Row {
   value: string
 }
 
-const BOOLEAN_OPTIONS = [
-  { value: 'true', label: 'نعم' },
-  { value: 'false', label: 'لا' },
-]
+const BOOLEAN_OPTION_KEYS = [
+  { value: 'true', key: 'schema.value.yes' },
+  { value: 'false', key: 'schema.value.no' },
+] as const
 
 function blankRow(field: SchemaFieldResponse): Row {
   return {
@@ -48,6 +49,11 @@ export function FieldFilterDialog({
 }: FieldFilterDialogProps) {
   const [rows, setRows] = useState<Row[]>(() => initial.map((filter) => ({ ...filter })))
   const [submitted, setSubmitted] = useState(false)
+  const overrides = useLabelsStore((state) => state.overrides)
+  const booleanOptions = BOOLEAN_OPTION_KEYS.map((option) => ({
+    value: option.value,
+    label: resolveLabel(option.key, overrides),
+  }))
 
   const fieldByKey = new Map(fields.map((field) => [field.key, field]))
   const fieldOptions = fields.map((field) => ({ value: field.key, label: field.labelAr }))
@@ -62,7 +68,7 @@ export function FieldFilterDialog({
 
   const errorFor = (row: Row): string | null => {
     const field = fieldByKey.get(row.key)
-    return field ? validateFieldFilterValue(field.dataType, row.value) : 'اختر حقلًا.'
+    return field ? validateFieldFilterValue(field.dataType, row.value) : t('schema.filter-dialog.field-required')
   }
 
   const apply = () => {
@@ -77,22 +83,24 @@ export function FieldFilterDialog({
       open={open}
       onOpenChange={onOpenChange}
       size="lg"
-      title="تصفية بقيم الحقول"
-      description="تُجمع المرشحات بـ «و»: تظهر الوثائق التي تحقق كلها. الوثائق التي لا تحمل قيمة لحقل ما لا تطابق مرشحه."
+      title={t('schema.filter-dialog.title')}
+      description={t('schema.filter-dialog.description')}
       footer={
         <>
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-            إلغاء
+            <Label k="common.action.cancel" />
           </Button>
           <Button type="button" onClick={apply}>
-            تطبيق
+            <Label k="schema.filter-dialog.apply" />
           </Button>
         </>
       }
     >
       <div className="flex flex-col gap-3">
         {rows.length === 0 && (
-          <p className="text-sm text-muted">لا توجد مرشحات. أضف مرشحًا للبدء.</p>
+          <p className="text-sm text-muted">
+            <Label k="schema.filter-dialog.empty" />
+          </p>
         )}
 
         {rows.map((row, index) => {
@@ -104,13 +112,13 @@ export function FieldFilterDialog({
               className="grid gap-2 rounded-lg border border-border p-3 sm:grid-cols-[1fr_11rem_1fr_auto]"
             >
               <Select
-                aria-label="الحقل"
+                aria-label={t('schema.filter-dialog.field-aria')}
                 value={row.key}
                 onValueChange={(key) => changeField(index, key)}
                 options={fieldOptions}
               />
               <Select
-                aria-label="المعامل"
+                aria-label={t('schema.filter-dialog.operator-aria')}
                 value={row.operator}
                 onValueChange={(operator) =>
                   patch(index, { operator: operator as FieldFilterOperator })
@@ -122,15 +130,15 @@ export function FieldFilterDialog({
               />
               {field?.dataType === FIELD_DATA_TYPE.Boolean ? (
                 <Select
-                  aria-label="القيمة"
+                  aria-label={t('schema.filter-dialog.value-aria')}
                   value={row.value}
                   onValueChange={(value) => patch(index, { value })}
-                  options={BOOLEAN_OPTIONS}
+                  options={booleanOptions}
                 />
               ) : field?.dataType === FIELD_DATA_TYPE.Select ||
                 field?.dataType === FIELD_DATA_TYPE.MultiSelect ? (
                 <Select
-                  aria-label="القيمة"
+                  aria-label={t('schema.filter-dialog.value-aria')}
                   value={row.value || undefined}
                   onValueChange={(value) => patch(index, { value })}
                   options={field.options.map((option) => ({
@@ -141,7 +149,7 @@ export function FieldFilterDialog({
                 />
               ) : (
                 <Input
-                  aria-label="القيمة"
+                  aria-label={t('schema.filter-dialog.value-aria')}
                   dir={
                     field?.dataType === FIELD_DATA_TYPE.Number ||
                     field?.dataType === FIELD_DATA_TYPE.Date
@@ -159,7 +167,7 @@ export function FieldFilterDialog({
                 type="button"
                 variant="ghost"
                 size="sm"
-                aria-label="حذف المرشح"
+                aria-label={t('schema.filter-dialog.remove-aria')}
                 onClick={() => setRows((current) => current.filter((_, i) => i !== index))}
               >
                 <Trash2 className="size-4" aria-hidden />
@@ -182,10 +190,12 @@ export function FieldFilterDialog({
             onClick={() => setRows((current) => [...current, blankRow(fields[0])])}
           >
             <Plus className="size-4" aria-hidden />
-            إضافة مرشح
+            <Label k="schema.filter-dialog.add" />
           </Button>
           {rows.length >= MAX_FIELD_FILTERS && (
-            <span className="ms-2 text-xs text-muted">الحد الأقصى {MAX_FIELD_FILTERS} مرشحات.</span>
+            <span className="ms-2 text-xs text-muted">
+              {t('schema.filter-dialog.max-hint', { max: MAX_FIELD_FILTERS })}
+            </span>
           )}
         </div>
       </div>

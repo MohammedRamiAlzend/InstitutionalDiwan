@@ -39,4 +39,5 @@ and unarchiving happen on the document details page (`pages/documents`), not her
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-18 | Qoder | UI labels Phase 4 (archive): the `archive-search-table` widget and `archive-manage` dialogs now render from the `archive.*` catalog (see their READMEs). The page header already resolved from `page.archive.*` in Phase 3. |
 | 2026-11-03 | agent | Implemented the page, the `/archive` route and the «الأرشيف» sidebar entry for Module 07. |

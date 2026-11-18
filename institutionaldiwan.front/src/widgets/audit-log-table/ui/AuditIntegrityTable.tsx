@@ -9,11 +9,12 @@ import {
 import { useSessionStore, UserLabel } from '@/entities/user'
 import { RunIntegrityCheckDialog } from '@/features/audit-manage'
 import { Permissions } from '@/shared/config'
-import { formatDateTime, formatNumber, formatShortId, useTableState } from '@/shared/lib'
+import { formatDateTime, formatNumber, formatShortId, t, useTableState } from '@/shared/lib'
 import {
   Button,
   DataTable,
   GuideChip,
+  Label,
   type DataTableColumn,
   type MenuEntry,
 } from '@/shared/ui'
@@ -35,9 +36,9 @@ export function AuditIntegrityTable() {
   const copyValue = async (value: string, label: string) => {
     try {
       await navigator.clipboard.writeText(value)
-      toast.success(`تم نسخ ${label}.`)
+      toast.success(t('audit.toast.copied', { label }))
     } catch {
-      toast.error('تعذّر النسخ إلى الحافظة.')
+      toast.error(t('audit.toast.copy-failed'))
     }
   }
 
@@ -45,7 +46,7 @@ export function AuditIntegrityTable() {
     () => [
       {
         id: 'checkId',
-        header: 'معرّف الفحص',
+        headerKey: 'audit.integrity.column.check-id',
         hideable: false,
         cell: (report) => (
           <span dir="ltr" title={report.checkId} className="font-mono text-xs text-foreground">
@@ -55,7 +56,7 @@ export function AuditIntegrityTable() {
       },
       {
         id: 'executedAtUtc',
-        header: 'وقت التنفيذ',
+        headerKey: 'audit.integrity.column.executed-at',
         hideable: false,
         cell: (report) => (
           <span dir="ltr" className="whitespace-nowrap text-xs text-foreground">
@@ -65,7 +66,7 @@ export function AuditIntegrityTable() {
       },
       {
         id: 'range',
-        header: 'النطاق',
+        headerKey: 'audit.integrity.column.range',
         cell: (report) => (
           <span dir="ltr" className="whitespace-nowrap font-mono text-xs text-muted">
             #{formatNumber(report.startAuditLogId)} – #{formatNumber(report.endAuditLogId)}
@@ -74,12 +75,12 @@ export function AuditIntegrityTable() {
       },
       {
         id: 'isValid',
-        header: 'النتيجة',
+        headerKey: 'audit.integrity.column.result',
         cell: (report) => <IntegrityStatusBadge isValid={report.isValid} />,
       },
       {
         id: 'firstCorruptedLogId',
-        header: 'أول سجل متأثر',
+        headerKey: 'audit.integrity.column.first-corrupted',
         cell: (report) =>
           report.firstCorruptedLogId === null ? (
             <span className="text-muted">—</span>
@@ -91,7 +92,7 @@ export function AuditIntegrityTable() {
       },
       {
         id: 'failureDetails',
-        header: 'تفاصيل الفشل',
+        headerKey: 'audit.integrity.column.failure-details',
         defaultHidden: true,
         cell: (report) =>
           report.failureDetails ? (
@@ -108,7 +109,7 @@ export function AuditIntegrityTable() {
       },
       {
         id: 'executedByUserId',
-        header: 'المنفّذ',
+        headerKey: 'audit.integrity.column.executed-by',
         defaultHidden: true,
         cell: (report) => <UserLabel userId={report.executedByUserId} />,
       },
@@ -120,17 +121,17 @@ export function AuditIntegrityTable() {
     const entries: MenuEntry[] = [
       {
         id: 'copy-check-id',
-        label: 'نسخ معرّف الفحص',
+        label: t('audit.integrity.menu.copy-check-id'),
         icon: <Copy className="size-4" aria-hidden />,
-        onSelect: () => void copyValue(report.checkId, 'معرّف الفحص'),
+        onSelect: () => void copyValue(report.checkId, t('audit.integrity.column.check-id')),
       },
       {
         id: 'copy-corrupted-id',
-        label: 'نسخ معرّف أول سجل متأثر',
+        label: t('audit.integrity.menu.copy-corrupted-id'),
         icon: <Hash className="size-4" aria-hidden />,
         disabled: report.firstCorruptedLogId === null,
         onSelect: () =>
-          void copyValue(String(report.firstCorruptedLogId), 'معرّف أول سجل متأثر'),
+          void copyValue(String(report.firstCorruptedLogId), t('audit.integrity.copy.corrupted-id')),
       },
     ]
 
@@ -141,7 +142,7 @@ export function AuditIntegrityTable() {
       { type: 'separator' },
       {
         id: 'rerun-range',
-        label: 'إعادة فحص هذا النطاق',
+        label: t('audit.integrity.menu.rerun-range'),
         icon: <ShieldCheck className="size-4" aria-hidden />,
         onSelect: () => setCheckRange({ start: report.startAuditLogId, end: report.endAuditLogId }),
       },
@@ -150,14 +151,14 @@ export function AuditIntegrityTable() {
 
   const refreshEntry: MenuEntry = {
     id: 'refresh',
-    label: 'تحديث البيانات',
+    label: t('table.refresh'),
     icon: <RefreshCw className="size-4" aria-hidden />,
     onSelect: () => void reportsQuery.refetch(),
   }
 
   const runEntry: MenuEntry = {
     id: 'run-integrity',
-    label: 'فحص سلامة السلسلة',
+    label: t('audit.menu.run-integrity'),
     icon: <ShieldCheck className="size-4" aria-hidden />,
     onSelect: () => setCheckOpen(true),
   }
@@ -168,7 +169,7 @@ export function AuditIntegrityTable() {
     <>
       <DataTable
         tableId="audit-integrity-reports"
-        caption="تقارير سلامة سلسلة التدقيق"
+        caption={t('audit.integrity.caption')}
         columns={columns}
         rows={reportsQuery.data?.items}
         rowKey={(report) => report.checkId}
@@ -185,20 +186,20 @@ export function AuditIntegrityTable() {
         rowMenu={buildRowMenu}
         headerMenu={headerMenu}
         emptyMenu={headerMenu}
-        rowLabel={(report) => `فحص ${formatShortId(report.checkId)}`}
+        rowLabel={(report) => t('audit.integrity.row-label', { id: formatShortId(report.checkId) })}
         toolbar={
           canManage ? (
             <>
               <Button type="button" variant="outline" onClick={() => setCheckOpen(true)}>
                 <ShieldCheck className="size-4" aria-hidden />
-                فحص السلامة
+                <Label k="audit.toolbar.check" />
               </Button>
               <GuideChip id="audit.check" />
             </>
           ) : undefined
         }
-        emptyTitle="لا توجد تقارير سلامة بعد."
-        emptyDescription="شغّل فحصًا للتحقق من تكامل السلسلة؛ سيُحفظ التقرير هنا."
+        emptyTitle={t('audit.integrity.empty.title')}
+        emptyDescription={t('audit.integrity.empty.description')}
       />
 
       {(checkOpen || checkRange !== null) && (

@@ -1,9 +1,9 @@
-import { useDraftForm } from '@/shared/lib'
+import { t, useDraftForm } from '@/shared/lib'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
 import type { DocumentNumberResponse } from '@/entities/document'
 import { toArabicErrorMessage } from '@/shared/api'
-import { Button, Dialog, FormField, Textarea } from '@/shared/ui'
+import { Button, Dialog, FormField, Label, Textarea } from '@/shared/ui'
 import { useReplaceOfficialNumberMutation } from '../api/numberMutations'
 import { replaceNumberSchema, type ReplaceNumberFormValues } from '../model/schemas'
 
@@ -42,7 +42,7 @@ export function ReplaceNumberDialog({
           ? Number(values.numberingYear)
           : null,
       })
-      toast.success(`تم استبدال الرقم بالرقم ${replacement.officialNumberText}.`)
+      toast.success(t('numbering.replace.toast', { number: replacement.officialNumberText }))
       draft.discard()
       onOpenChange(false)
     } catch {
@@ -54,8 +54,8 @@ export function ReplaceNumberDialog({
     <Dialog
       open={open}
       onOpenChange={onOpenChange}
-      title="استبدال رقم النظام"
-      description={`سيُخصص الرقم التالي ويُربط بالرقم «${number.officialNumberText}» الذي سيبقى في السجل بحالة «مُستبدل»، وتُحدَّث الوثيقة بالرقم الجديد.`}
+      title={t('numbering.replace.title')}
+      description={t('numbering.replace.description', { number: number.officialNumberText })}
       size="sm"
       footer={
         <>
@@ -65,19 +65,19 @@ export function ReplaceNumberDialog({
             onClick={() => onOpenChange(false)}
             disabled={mutation.isPending}
           >
-            تراجع
+            <Label k="numbering.action.back" />
           </Button>
           <Button type="submit" form="replace-number-form" loading={mutation.isPending}>
-            استبدال الرقم
+            <Label k="numbering.replace.submit" />
           </Button>
         </>
       }
     >
       <form id="replace-number-form" onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
-        <FormField label="سبب الاستبدال" required error={errors.reason?.message}>
+        <FormField labelKey="numbering.replace.reason" required error={errors.reason?.message}>
           <Textarea
             rows={3}
-            placeholder="مثال: خطأ في السنة؛ صدر الرقم بسنة خاطئة."
+            placeholder={t('numbering.replace.reason-placeholder')}
             invalid={Boolean(errors.reason)}
             {...register('reason')}
           />

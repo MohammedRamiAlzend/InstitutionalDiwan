@@ -10,8 +10,8 @@ import {
 } from '@/features/decision-type-manage'
 import { toArabicErrorMessage } from '@/shared/api'
 import { decisionEffectLabel } from '@/shared/config'
-import { useTableState } from '@/shared/lib'
-import { Badge, Button, DataTable, GuideRegion, Select, type DataTableColumn, type MenuEntry } from '@/shared/ui'
+import { useTableState, t, useLabel } from '@/shared/lib'
+import { Badge, Button, DataTable, GuideRegion, Label, Select, type DataTableColumn, type MenuEntry } from '@/shared/ui'
 
 /** Client grid of decision types. A used type is deactivated, never deleted. */
 export function DecisionTypesTable() {
@@ -26,6 +26,10 @@ export function DecisionTypesTable() {
   const deactivate = useDeactivateDecisionTypeMutation()
   const [formOpen, setFormOpen] = useState(false)
   const [editing, setEditing] = useState<DecisionTypeResponse | null>(null)
+
+  const activeFilterLabel = useLabel('decisions.types.filter.active')
+  const inactiveFilterLabel = useLabel('decisions.types.filter.inactive')
+  const allStatusesLabel = useLabel('decisions.filter.all-statuses')
 
   const departmentName = useMemo(() => {
     const names = new Map(
@@ -45,10 +49,10 @@ export function DecisionTypesTable() {
     try {
       if (type.isActive) {
         await deactivate.mutateAsync(type.decisionTypeId)
-        toast.success('تم إيقاف نوع القرار.')
+        toast.success(t('decisions.types.toast.deactivated'))
       } else {
         await activate.mutateAsync(type.decisionTypeId)
-        toast.success('تم تفعيل نوع القرار.')
+        toast.success(t('decisions.types.toast.activated'))
       }
     } catch (error) {
       toast.error(toArabicErrorMessage(error))
@@ -59,7 +63,7 @@ export function DecisionTypesTable() {
     () => [
       {
         id: 'name',
-        header: 'الاسم',
+        headerKey: 'decisions.types.column.name',
         hideable: false,
         sortable: true,
         sortValue: (row) => row.nameAr,
@@ -67,28 +71,32 @@ export function DecisionTypesTable() {
       },
       {
         id: 'effect',
-        header: 'الأثر',
+        headerKey: 'decisions.types.column.effect',
         sortable: true,
         sortValue: (row) => row.effectId,
         cell: (row) => decisionEffectLabel(row.effectId),
       },
       {
         id: 'destination',
-        header: 'الوجهة',
+        headerKey: 'decisions.types.column.destination',
         cell: (row) => departmentName(row.destinationDepartmentId),
       },
       {
         id: 'appealable',
-        header: 'الاعتراض',
-        cell: (row) => (row.isAppealable ? 'قابل' : 'غير قابل'),
+        headerKey: 'decisions.types.column.appealable',
+        cell: (row) => (
+          <Label k={row.isAppealable ? 'decisions.types.appealable.yes' : 'decisions.types.appealable.no'} />
+        ),
       },
       {
         id: 'active',
-        header: 'الحالة',
+        headerKey: 'decisions.types.column.status',
         sortable: true,
         sortValue: (row) => (row.isActive ? 1 : 0),
         cell: (row) => (
-          <Badge variant={row.isActive ? 'success' : 'outline'}>{row.isActive ? 'مفعّل' : 'موقوف'}</Badge>
+          <Badge variant={row.isActive ? 'success' : 'outline'}>
+            <Label k={row.isActive ? 'decisions.types.active.yes' : 'decisions.types.active.no'} />
+          </Badge>
         ),
       },
     ],
@@ -98,7 +106,7 @@ export function DecisionTypesTable() {
   const rowMenu = (row: DecisionTypeResponse): MenuEntry[] => [
     {
       id: 'edit',
-      label: 'تعديل',
+      label: t('decisions.types.row.edit'),
       icon: <Pencil className="size-4" aria-hidden />,
       onSelect: () => {
         setEditing(row)
@@ -107,7 +115,7 @@ export function DecisionTypesTable() {
     },
     {
       id: 'toggle',
-      label: row.isActive ? 'إيقاف' : 'تفعيل',
+      label: t(row.isActive ? 'decisions.types.row.deactivate' : 'decisions.types.row.activate'),
       icon: row.isActive ? <PowerOff className="size-4" aria-hidden /> : <Power className="size-4" aria-hidden />,
       onSelect: () => void toggle(row),
     },
@@ -118,7 +126,7 @@ export function DecisionTypesTable() {
       <DataTable
         tableId="decision-types"
         mode="client"
-        caption="أنواع القرارات"
+        caption={t('decisions.tab.types')}
         columns={columns}
         rows={rows}
         rowKey={(row) => row.decisionTypeId}
@@ -134,15 +142,15 @@ export function DecisionTypesTable() {
         onPageSizeChange={table.setPageSize}
         search={table.search}
         onSearchChange={table.setSearch}
-        searchPlaceholder="اسم النوع"
+        searchPlaceholder={t('decisions.types.search-placeholder')}
         sortKey={table.sortKey}
         sortDirection={table.sortDirection}
         onSortChange={table.setSort}
         rowSearchText={(row) => row.nameAr}
         rowMenu={rowMenu}
         rowLabel={(row) => row.nameAr}
-        emptyTitle="لا أنواع مطابقة"
-        emptyDescription="أضف نوعًا جديدًا أو وسّع المرشح."
+        emptyTitle={t('decisions.types.empty.title')}
+        emptyDescription={t('decisions.types.empty.description')}
         toolbar={
           <Button
             type="button"
@@ -152,19 +160,19 @@ export function DecisionTypesTable() {
             }}
           >
             <Plus className="size-4" aria-hidden />
-            نوع جديد
+            <Label k="decisions.types.action.new" />
           </Button>
         }
         filters={
           <Select
-            aria-label="حالة النوع"
+            aria-label={t('decisions.types.filter.status-aria')}
             value={table.filters.active || undefined}
             onValueChange={(value) => table.setFilter('active', value)}
             options={[
-              { value: 'active', label: 'المفعّلة' },
-              { value: 'inactive', label: 'الموقوفة' },
+              { value: 'active', label: activeFilterLabel },
+              { value: 'inactive', label: inactiveFilterLabel },
             ]}
-            placeholder="كل الحالات"
+            placeholder={allStatusesLabel}
           />
         }
       />

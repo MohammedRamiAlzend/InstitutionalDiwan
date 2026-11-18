@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Hash } from 'lucide-react'
+import { t } from '@/shared/lib'
 import { Input } from '@/shared/ui'
 
 const COMMIT_DELAY_MS = 300
@@ -15,7 +16,7 @@ export function RegisterNumberFilter({ value, onChange }: RegisterNumberFilterPr
   const [committed, setCommitted] = useState(value)
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
-  // The value also changes from outside: «مسح المرشحات» or the browser's back button.
+  // The value also changes from outside: the clear-filters button or the browser's back button.
   if (value !== committed) {
     setCommitted(value)
     setText(value)
@@ -27,8 +28,8 @@ export function RegisterNumberFilter({ value, onChange }: RegisterNumberFilterPr
     <div className="w-40">
       <Input
         dir="ltr"
-        aria-label="تصفية برقم السجل"
-        placeholder="رقم السجل"
+        aria-label={t('documents.filter.register-number-aria')}
+        placeholder={t('documents.filter.register-number')}
         startIcon={<Hash className="size-4" aria-hidden />}
         value={text}
         onChange={(event) => {

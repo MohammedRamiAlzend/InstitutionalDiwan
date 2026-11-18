@@ -7,8 +7,8 @@ import {
   type DocumentResponse,
 } from '@/entities/document'
 import { DOCUMENT_STATUS } from '@/shared/config'
-import { cn, useDebouncedValue } from '@/shared/lib'
-import { Input, Skeleton } from '@/shared/ui'
+import { cn, t, useDebouncedValue } from '@/shared/lib'
+import { Input, Label, Skeleton } from '@/shared/ui'
 
 const PAGE_SIZE = 8
 
@@ -51,7 +51,7 @@ export function DocumentPicker({
           className="shrink-0 text-sm text-accent hover:underline"
           onClick={() => onSelect(null)}
         >
-          تغيير
+          <Label k="relation.picker.change" />
         </button>
       </div>
     )
@@ -60,15 +60,15 @@ export function DocumentPicker({
   return (
     <div className="flex flex-col gap-2">
       <Input
-        aria-label="بحث عن وثيقة"
-        placeholder="ابحث باسم الوثيقة أو رقم النظام"
+        aria-label={t('relation.picker.search-aria')}
+        placeholder={t('relation.picker.search-placeholder')}
         startIcon={<Search className="size-4" aria-hidden />}
         value={term}
         invalid={invalid}
         onChange={(event) => setTerm(event.target.value)}
       />
       <ul
-        aria-label="نتائج البحث عن وثيقة"
+        aria-label={t('relation.picker.results-aria')}
         className="max-h-56 overflow-y-auto rounded-lg border border-border"
       >
         {query.isLoading && (
@@ -77,7 +77,7 @@ export function DocumentPicker({
           </li>
         )}
         {!query.isLoading && candidates.length === 0 && (
-          <li className="p-3 text-sm text-muted">لا توجد وثائق مطابقة.</li>
+          <li className="p-3 text-sm text-muted"><Label k="relation.picker.empty" /></li>
         )}
         {candidates.map((document) => (
           <li key={document.documentId}>

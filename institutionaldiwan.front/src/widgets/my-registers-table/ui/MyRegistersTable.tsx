@@ -25,13 +25,14 @@ import {
 } from '@/entities/numbering-registry'
 import { useMyPrimaryDepartmentId } from '@/entities/user'
 import { DOCUMENT_NUMBER_STATUS, ROUTES } from '@/shared/config'
-import { formatDate, formatNumber, useTableState } from '@/shared/lib'
+import { formatDate, formatNumber, t, useLabel, useTableState } from '@/shared/lib'
 import {
   Badge,
   Button,
   DataTable,
   GuideRegion,
   Input,
+  Label,
   Select,
   type DataTableColumn,
   type MenuEntry,
@@ -41,13 +42,6 @@ const NO_FORM = 'none'
 
 /** URL parameter holding the repeated `key:operator:value` filters on the chosen form's fields. */
 const FIELD_FILTER_PARAM = 'f'
-
-const STATUS_OPTIONS = [
-  { value: 'all', label: 'كل الحالات' },
-  { value: String(DOCUMENT_NUMBER_STATUS.Active), label: 'نشط' },
-  { value: String(DOCUMENT_NUMBER_STATUS.Replaced), label: 'مُستبدل' },
-  { value: String(DOCUMENT_NUMBER_STATUS.Cancelled), label: 'ملغى' },
-] as const
 
 /** The server orders a form field by its stored column, which these types order meaningfully. */
 const SORTABLE_FIELD_TYPES: ReadonlySet<number> = new Set([
@@ -96,6 +90,22 @@ export function MyRegistersTable() {
   const formsQuery = useDepartmentRegisterForms(departmentId)
   const typesQuery = useLookupEntries(LOOKUP_SLUGS.DocumentTypes)
 
+  const suspendedLabel = useLabel('my-registers.registry.suspended')
+  const noFormLabel = useLabel('my-registers.type.no-form')
+  const statusAllLabel = useLabel('my-registers.status.all')
+  const statusActiveLabel = useLabel('my-registers.status.active')
+  const statusReplacedLabel = useLabel('my-registers.status.replaced')
+  const statusCancelledLabel = useLabel('my-registers.status.cancelled')
+  const statusOptions = useMemo(
+    () => [
+      { value: 'all', label: statusAllLabel },
+      { value: String(DOCUMENT_NUMBER_STATUS.Active), label: statusActiveLabel },
+      { value: String(DOCUMENT_NUMBER_STATUS.Replaced), label: statusReplacedLabel },
+      { value: String(DOCUMENT_NUMBER_STATUS.Cancelled), label: statusCancelledLabel },
+    ],
+    [statusAllLabel, statusActiveLabel, statusReplacedLabel, statusCancelledLabel],
+  )
+
   const registries = useMemo(
     () =>
       (registriesQuery.data ?? []).filter((registry) => registry.departmentId === departmentId),
@@ -105,9 +115,9 @@ export function MyRegistersTable() {
     () =>
       registries.map((registry) => ({
         value: registry.registryId,
-        label: `${registry.code} — ${registry.nameAr}${registry.isActive ? '' : ' (موقوف)'}`,
+        label: `${registry.code} — ${registry.nameAr}${registry.isActive ? '' : ` ${suspendedLabel}`}`,
       })),
-    [registries],
+    [registries, suspendedLabel],
   )
 
   // A department with a single register needs no choosing.
@@ -134,23 +144,23 @@ export function MyRegistersTable() {
 
   const typeName = useMemo(() => {
     const names = new Map((typesQuery.data ?? []).map((entry) => [entry.id, entry.descAr]))
-    return (id: number) => names.get(id) ?? `نوع ${id}`
+    return (id: number) => names.get(id) ?? t('my-registers.type.fallback', { id })
   }, [typesQuery.data])
   const typeOptions = useMemo(
     () => [
-      { value: NO_FORM, label: 'بلا بيانات نموذج' },
+      { value: NO_FORM, label: noFormLabel },
       ...forms.map((entry) => ({
         value: String(entry.documentTypeId),
         label: typeName(entry.documentTypeId),
       })),
     ],
-    [forms, typeName],
+    [forms, typeName, noFormLabel],
   )
   const versionOptions = (form?.versions ?? []).map((candidate, index) => ({
     value: candidate.schemaVersionId,
-    label: `الإصدار ${candidate.versionNumber}${index === 0 ? ' (الأحدث)' : ''}${
-      candidate.status === SCHEMA_STATUS.Retired ? ' — متقاعد' : ''
-    }`,
+    label: `${t('my-registers.version.label', { number: candidate.versionNumber })}${
+      index === 0 ? ` ${t('my-registers.version.newest')}` : ''
+    }${candidate.status === SCHEMA_STATUS.Retired ? ` — ${t('my-registers.version.retired')}` : ''}`,
   }))
 
   const year = /^\d{4}$/.test(table.filters.year ?? '') ? Number(table.filters.year) : undefined
@@ -183,9 +193,9 @@ export function MyRegistersTable() {
   const copyValue = async (value: string, label: string) => {
     try {
       await navigator.clipboard.writeText(value)
-      toast.success(`تم نسخ ${label}.`)
+      toast.success(t('my-registers.toast.copied', { label }))
     } catch {
-      toast.error('تعذّر النسخ إلى الحافظة.')
+      toast.error(t('my-registers.toast.copy-failed'))
     }
   }
 
@@ -197,7 +207,7 @@ export function MyRegistersTable() {
   const columns: DataTableColumn<DepartmentRegisterEntryResponse>[] = [
       {
         id: 'registryNumber',
-        header: 'رقم السجل',
+        headerKey: 'my-registers.column.registry-number',
         hideable: false,
         sortable: true,
         sortKey: 'registryNumber',
@@ -209,7 +219,7 @@ export function MyRegistersTable() {
       },
       {
         id: 'registryDate',
-        header: 'تاريخ التسجيل',
+        headerKey: 'my-registers.column.registry-date',
         sortable: true,
         sortKey: 'registryDate',
         cell: (entry) => (
@@ -220,7 +230,7 @@ export function MyRegistersTable() {
       },
       {
         id: 'document',
-        header: 'الوثيقة',
+        headerKey: 'my-registers.column.document',
         sortable: true,
         sortKey: 'document',
         cell: (entry) =>
@@ -239,7 +249,7 @@ export function MyRegistersTable() {
       ...fieldColumns,
       {
         id: 'centralNumber',
-        header: 'رقم الديوان',
+        headerKey: 'my-registers.column.central-number',
         sortable: true,
         sortKey: 'centralNumber',
         cell: (entry) => (
@@ -250,13 +260,19 @@ export function MyRegistersTable() {
       },
       {
         id: 'linkedNumber',
-        header: 'الرقم المرتبط',
+        headerKey: 'my-registers.column.linked-number',
         cell: (entry) => {
           const linked = entry.replacedByNumberText ?? entry.replacesNumberText
           if (!linked) return <span className="text-xs text-muted">—</span>
           return (
             <span className="inline-flex items-center gap-1.5 whitespace-nowrap text-xs text-muted">
-              {entry.replacedByNumberText ? 'استُبدل بـ' : 'بدل'}
+              <Label
+                k={
+                  entry.replacedByNumberText
+                    ? 'my-registers.linked.replaced-by'
+                    : 'my-registers.linked.replaces'
+                }
+              />
               <code dir="ltr" className="text-foreground">
                 {linked}
               </code>
@@ -266,7 +282,7 @@ export function MyRegistersTable() {
       },
       {
         id: 'numberingYear',
-        header: 'السنة',
+        headerKey: 'my-registers.column.year',
         sortable: true,
         sortKey: 'numberingYear',
         defaultHidden: true,
@@ -278,14 +294,14 @@ export function MyRegistersTable() {
       },
       {
         id: 'status',
-        header: 'الحالة',
+        headerKey: 'my-registers.column.status',
         sortable: true,
         sortKey: 'status',
         cell: (entry) => <NumberStatusBadge statusId={entry.statusId} />,
       },
       {
         id: 'registrationCount',
-        header: 'مرات التسجيل',
+        headerKey: 'my-registers.column.registration-count',
         sortable: true,
         sortKey: 'registrationCount',
         defaultHidden: true,
@@ -299,7 +315,7 @@ export function MyRegistersTable() {
       : ([
           {
             id: 'open-document',
-            label: 'فتح الوثيقة',
+            label: t('my-registers.row.open'),
             icon: <ArrowUpRight className="size-4" aria-hidden />,
             onSelect: () => openDocument(entry),
           },
@@ -307,23 +323,25 @@ export function MyRegistersTable() {
         ] as MenuEntry[])),
     {
       id: 'copy-registry-number',
-      label: 'نسخ رقم السجل',
+      label: t('my-registers.row.copy-registry'),
       icon: <Copy className="size-4" aria-hidden />,
-      onSelect: () => void copyValue(entry.registryNumberText, 'رقم السجل'),
+      onSelect: () =>
+        void copyValue(entry.registryNumberText, t('my-registers.column.registry-number')),
     },
     {
       id: 'copy-central-number',
-      label: 'نسخ رقم الديوان',
+      label: t('my-registers.row.copy-central'),
       icon: <Copy className="size-4" aria-hidden />,
       disabled: !entry.centralNumberText,
       onSelect: () =>
-        entry.centralNumberText && void copyValue(entry.centralNumberText, 'رقم الديوان'),
+        entry.centralNumberText &&
+        void copyValue(entry.centralNumberText, t('my-registers.column.central-number')),
     },
     {
       id: 'copy-document-id',
-      label: 'نسخ معرّف الوثيقة',
+      label: t('my-registers.row.copy-id'),
       icon: <Hash className="size-4" aria-hidden />,
-      onSelect: () => void copyValue(entry.documentId, 'معرّف الوثيقة'),
+      onSelect: () => void copyValue(entry.documentId, t('my-registers.copy.document-id')),
     },
   ]
 
@@ -336,7 +354,7 @@ export function MyRegistersTable() {
   const headerMenu: MenuEntry[] = [
     {
       id: 'refresh',
-      label: 'تحديث البيانات',
+      label: t('table.refresh'),
       icon: <RefreshCw className="size-4" aria-hidden />,
       onSelect: refetch,
     },
@@ -358,28 +376,28 @@ export function MyRegistersTable() {
   )
 
   const emptyTitle = noRegisters
-    ? 'لا سجلات لقسمك'
+    ? t('my-registers.empty.no-registers-title')
     : !registryId
-      ? 'اختر سجلًا لعرض أسطره'
+      ? t('my-registers.empty.choose-title')
       : hasNarrowing
-        ? 'لا توجد نتائج مطابقة.'
+        ? t('my-registers.empty.no-match-title')
         : version
-          ? 'لا أسطر على هذا الإصدار.'
-          : 'لا أسطر في هذا السجل بعد.'
+          ? t('my-registers.empty.no-version-lines-title')
+          : t('my-registers.empty.no-lines-title')
   const emptyDescription = noRegisters
-    ? 'لم يُنشأ لقسمك سجل ترقيم. يُنشئه مسؤول الترقيم من صفحة «الترقيم».'
+    ? t('my-registers.empty.no-registers-description')
     : !registryId
-      ? 'تظهر هنا الأسطر المسجّلة في السجل الذي تختاره من سجلات قسمك.'
+      ? t('my-registers.empty.choose-description')
       : hasNarrowing
-        ? 'جرّب تعديل البحث أو المرشحات، أو امسحها لعرض كل أسطر السجل.'
+        ? t('my-registers.empty.no-match-description')
         : version
-          ? 'لا أسطر لها زيارة مسجّلة على هذا الإصدار من النموذج. جرّب إصدارًا آخر أو «بلا بيانات نموذج».'
-          : 'تُضاف الأسطر عند تسجيل وثيقة في هذا السجل أو استلامها.'
+          ? t('my-registers.empty.no-version-lines-description')
+          : t('my-registers.empty.no-lines-description')
 
   return (
     <DataTable
       tableId="my-registers"
-      caption="سجلاتي"
+      caption={t('my-registers.caption')}
       columns={columns}
       rows={params ? entriesQuery.data?.items : []}
       rowKey={(entry) => entry.documentNumberId}
@@ -396,7 +414,7 @@ export function MyRegistersTable() {
       onPageSizeChange={table.setPageSize}
       search={table.search}
       onSearchChange={table.setSearch}
-      searchPlaceholder="ابحث برقم السجل أو الوثيقة أو رقم الديوان أو قيم النموذج…"
+      searchPlaceholder={t('my-registers.search-placeholder')}
       sortKey={table.sortKey}
       sortDirection={table.sortDirection}
       onSortChange={table.setSort}
@@ -408,16 +426,20 @@ export function MyRegistersTable() {
           <div className="flex flex-col gap-2">
             <div className="flex flex-wrap items-end gap-2">
               <Select
-                aria-label="اختيار السجل"
+                aria-label={t('my-registers.filter.registry-aria')}
                 value={registryId || undefined}
                 onValueChange={(value) => table.setFilter('registry', value)}
                 options={registryOptions}
                 disabled={isLoading || registries.length === 0}
-                placeholder={isLoading ? 'جارٍ التحميل…' : 'اختر السجل…'}
+                placeholder={
+                  isLoading
+                    ? t('my-registers.filter.registry-loading')
+                    : t('my-registers.filter.registry-placeholder')
+                }
                 className="w-64"
               />
               <Select
-                aria-label="نموذج سجل القسم"
+                aria-label={t('my-registers.filter.form-aria')}
                 value={form ? String(form.documentTypeId) : NO_FORM}
                 onValueChange={(value) => table.setFilter('type', value)}
                 options={typeOptions}
@@ -426,7 +448,7 @@ export function MyRegistersTable() {
               />
               {form && (
                 <Select
-                  aria-label="إصدار النموذج"
+                  aria-label={t('my-registers.filter.version-aria')}
                   value={version?.schemaVersionId}
                   onValueChange={(value) => table.setFilter('version', value)}
                   options={versionOptions}
@@ -436,7 +458,7 @@ export function MyRegistersTable() {
             </div>
             <div className="flex flex-wrap items-end gap-2">
               <Input
-                aria-label="تصفية حسب سنة الترقيم"
+                aria-label={t('my-registers.filter.year-aria')}
                 type="number"
                 inputMode="numeric"
                 dir="ltr"
@@ -444,18 +466,18 @@ export function MyRegistersTable() {
                 max={2200}
                 value={table.filters.year ?? ''}
                 onChange={(event) => table.setFilter('year', event.target.value)}
-                placeholder="كل السنوات"
+                placeholder={t('my-registers.filter.year-placeholder')}
                 className="w-32"
               />
               <Select
-                aria-label="تصفية حسب حالة الرقم"
+                aria-label={t('my-registers.filter.status-aria')}
                 value={Number.isFinite(statusId) ? String(statusId) : 'all'}
                 onValueChange={(value) => table.setFilter('status', value === 'all' ? null : value)}
-                options={[...STATUS_OPTIONS]}
+                options={statusOptions}
                 className="w-36"
               />
               <Input
-                aria-label="من تاريخ"
+                aria-label={t('my-registers.filter.from-aria')}
                 type="date"
                 dir="ltr"
                 value={from}
@@ -464,7 +486,7 @@ export function MyRegistersTable() {
                 className="w-40"
               />
               <Input
-                aria-label="إلى تاريخ"
+                aria-label={t('my-registers.filter.to-aria')}
                 type="date"
                 dir="ltr"
                 value={to}
@@ -493,7 +515,7 @@ export function MyRegistersTable() {
                     table.removeParams(['year', 'status', 'from', 'to', FIELD_FILTER_PARAM])
                   }
                 >
-                  مسح المرشحات
+                  <Label k="my-registers.filter.clear" />
                 </Button>
               )}
             </div>
@@ -505,7 +527,7 @@ export function MyRegistersTable() {
       emptyAction={
         registryId && table.search ? (
           <Button type="button" variant="outline" onClick={() => table.setSearch('')}>
-            مسح البحث
+            <Label k="my-registers.empty.clear-search" />
           </Button>
         ) : undefined
       }

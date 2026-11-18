@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { t } from '@/shared/lib'
 
 const positiveAuditLogId = (message: string) =>
   z.string().trim().superRefine((value, ctx) => {
@@ -11,8 +12,8 @@ const positiveAuditLogId = (message: string) =>
 /** Both ends are optional: an empty range verifies the whole chain. */
 export const integrityRangeSchema = z
   .object({
-    startAuditLogId: positiveAuditLogId('معرّف بداية النطاق يجب أن يكون رقمًا صحيحًا موجبًا.'),
-    endAuditLogId: positiveAuditLogId('معرّف نهاية النطاق يجب أن يكون رقمًا صحيحًا موجبًا.'),
+    startAuditLogId: positiveAuditLogId(t('audit.validation.start-positive')),
+    endAuditLogId: positiveAuditLogId(t('audit.validation.end-positive')),
   })
   .superRefine((values, ctx) => {
     if (!values.startAuditLogId || !values.endAuditLogId) return
@@ -20,7 +21,7 @@ export const integrityRangeSchema = z
       ctx.addIssue({
         code: 'custom',
         path: ['endAuditLogId'],
-        message: 'نهاية النطاق لا يمكن أن تسبق بدايته.',
+        message: t('audit.validation.end-before-start'),
       })
     }
   })

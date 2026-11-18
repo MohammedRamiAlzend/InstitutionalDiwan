@@ -18,12 +18,14 @@ import {
 import {
   formatDate,
   formatDateTime,
+  t,
   type TableState,
 } from '@/shared/lib'
 import {
   Badge,
   Button,
   DataTable,
+  Label,
   type DataTableColumn,
   type MenuEntry,
 } from '@/shared/ui'
@@ -61,7 +63,7 @@ export function DepartmentTable({
     () => [
       {
         id: 'name',
-        header: 'القسم',
+        headerKey: 'department.column.name',
         hideable: false,
         sortable: true,
         sortValue: (department) => department.nameAr,
@@ -75,7 +77,7 @@ export function DepartmentTable({
       },
       {
         id: 'type',
-        header: 'النوع',
+        headerKey: 'department.column.type',
         sortable: true,
         sortValue: (department) => typeLabel(department.departmentTypeId),
         cell: (department) => (
@@ -86,7 +88,7 @@ export function DepartmentTable({
       },
       {
         id: 'parent',
-        header: 'القسم الأعلى',
+        headerKey: 'department.column.parent',
         sortable: true,
         sortValue: (department) =>
           (department.parentDepartmentId && resolveName(department.parentDepartmentId)) ?? '',
@@ -102,38 +104,38 @@ export function DepartmentTable({
       },
       {
         id: 'status',
-        header: 'الحالة',
+        headerKey: 'department.column.status',
         sortable: true,
         sortValue: (department) => (department.isActive ? 1 : 0),
         cell: (department) => (
           <Badge variant={department.isActive ? 'success' : 'danger'}>
-            {department.isActive ? 'نشط' : 'موقوف'}
+            {department.isActive ? t('department.status.active') : t('department.status.suspended')}
           </Badge>
         ),
       },
       {
         id: 'canSendExternal',
-        header: 'إرسال خارجي',
+        headerKey: 'department.column.send-external',
         defaultHidden: true,
         cell: (department) => (
           <Badge variant={department.canSendExternal ? 'success' : 'outline'}>
-            {department.canSendExternal ? 'نعم' : 'لا'}
+            {department.canSendExternal ? t('department.yes') : t('department.no')}
           </Badge>
         ),
       },
       {
         id: 'canReceiveExternal',
-        header: 'استقبال خارجي',
+        headerKey: 'department.column.receive-external',
         defaultHidden: true,
         cell: (department) => (
           <Badge variant={department.canReceiveExternal ? 'success' : 'outline'}>
-            {department.canReceiveExternal ? 'نعم' : 'لا'}
+            {department.canReceiveExternal ? t('department.yes') : t('department.no')}
           </Badge>
         ),
       },
       {
         id: 'manager',
-        header: 'مدير القسم',
+        headerKey: 'department.column.manager',
         defaultHidden: true,
         cell: (department) =>
           department.managerEmployeeId ? (
@@ -144,7 +146,7 @@ export function DepartmentTable({
       },
       {
         id: 'notes',
-        header: 'ملاحظات',
+        headerKey: 'department.column.notes',
         defaultHidden: true,
         cell: (department) =>
           department.notes ? (
@@ -160,7 +162,7 @@ export function DepartmentTable({
       },
       {
         id: 'createdAt',
-        header: 'تاريخ الإنشاء',
+        headerKey: 'department.column.created-at',
         defaultHidden: true,
         sortable: true,
         sortValue: (department) => department.createdAt,
@@ -172,7 +174,7 @@ export function DepartmentTable({
       },
       {
         id: 'updatedAt',
-        header: 'آخر تحديث',
+        headerKey: 'department.column.updated-at',
         defaultHidden: true,
         cell: (department) => (
           <span dir="ltr" className="whitespace-nowrap text-xs text-muted">
@@ -187,26 +189,26 @@ export function DepartmentTable({
   const buildRowMenu = (department: DepartmentResponse): MenuEntry[] => [
     {
       id: 'details',
-      label: 'تفاصيل القسم',
+      label: t('department.menu.details'),
       icon: <Eye className="size-4" aria-hidden />,
       onSelect: () => onOpen(department.departmentId),
     },
     { type: 'separator' },
     {
       id: 'add-child',
-      label: 'إضافة قسم فرعي',
+      label: t('department.menu.add-child'),
       icon: <Plus className="size-4" aria-hidden />,
       onSelect: () => onCreateChild(department.departmentId),
     },
     {
       id: 'edit',
-      label: 'تعديل القسم',
+      label: t('department.menu.edit'),
       icon: <Pencil className="size-4" aria-hidden />,
       onSelect: () => onEdit(department.departmentId),
     },
     {
       id: 'toggle-active',
-      label: department.isActive ? 'إيقاف القسم' : 'تفعيل القسم',
+      label: department.isActive ? t('department.menu.suspend') : t('department.menu.activate'),
       icon: department.isActive ? (
         <PowerOff className="size-4" aria-hidden />
       ) : (
@@ -217,29 +219,29 @@ export function DepartmentTable({
     { type: 'separator' },
     {
       id: 'copy-code',
-      label: 'نسخ رمز القسم',
+      label: t('department.menu.copy-code'),
       icon: <Copy className="size-4" aria-hidden />,
-      onSelect: () => void copyDepartmentValue(department.code, 'رمز القسم'),
+      onSelect: () => void copyDepartmentValue(department.code, t('department.copy.code')),
     },
     {
       id: 'copy-id',
-      label: 'نسخ المعرّف',
+      label: t('department.menu.copy-id'),
       icon: <Hash className="size-4" aria-hidden />,
-      onSelect: () => void copyDepartmentValue(department.departmentId, 'المعرّف'),
+      onSelect: () => void copyDepartmentValue(department.departmentId, t('department.copy.id')),
     },
   ]
 
   const headerMenu: MenuEntry[] = [
     {
       id: 'create',
-      label: 'قسم جديد',
+      label: t('department.create'),
       icon: <Plus className="size-4" aria-hidden />,
       onSelect: onCreate,
     },
     { type: 'separator' },
     {
       id: 'refresh',
-      label: 'تحديث البيانات',
+      label: t('table.refresh'),
       icon: <RefreshCw className="size-4" aria-hidden />,
       onSelect: () => void query.refetch(),
     },
@@ -249,7 +251,7 @@ export function DepartmentTable({
     <DataTable
       tableId="departments"
       mode="client"
-      caption="أقسام التنظيم"
+      caption={t('department.table.caption')}
       columns={FEATURES.externalOrganizations ? columns : columns.filter((column) => !EXTERNAL_COLUMN_IDS.has(column.id))}
       rows={query.data}
       rowKey={(department) => department.departmentId}
@@ -265,7 +267,7 @@ export function DepartmentTable({
       onPageSizeChange={table.setPageSize}
       search={table.search}
       onSearchChange={table.setSearch}
-      searchPlaceholder="ابحث باسم القسم أو رمزه…"
+      searchPlaceholder={t('department.search-placeholder')}
       sortKey={table.sortKey}
       sortDirection={table.sortDirection}
       onSortChange={table.setSort}
@@ -276,11 +278,11 @@ export function DepartmentTable({
       rowSearchText={(department) =>
         `${department.nameAr} ${department.nameEn ?? ''} ${department.code}`
       }
-      emptyTitle={table.search ? 'لا توجد نتائج مطابقة.' : 'لا توجد أقسام بعد.'}
+      emptyTitle={table.search ? t('department.empty.search-title') : t('department.empty.title')}
       emptyDescription={
         table.search
-          ? 'جرّب تعديل عبارة البحث أو امسحها لعرض كل الأقسام.'
-          : 'لم تُسجَّل أقسام تنظيمية في الدليل بعد.'
+          ? t('department.empty.search-description')
+          : t('department.empty.description')
       }
       emptyAction={
         table.search ? (
@@ -290,7 +292,7 @@ export function DepartmentTable({
             size="sm"
             onClick={() => table.setSearch('')}
           >
-            مسح البحث
+            <Label k="department.empty.clear-search" />
           </Button>
         ) : undefined
       }

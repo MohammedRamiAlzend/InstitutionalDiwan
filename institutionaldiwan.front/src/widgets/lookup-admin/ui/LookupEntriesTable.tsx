@@ -9,13 +9,14 @@ import {
 } from '@/features/lookup-manage'
 import { toArabicErrorMessage } from '@/shared/api'
 import { lookupCatalogMeta } from '@/shared/config'
-import { formatDate, useTableState } from '@/shared/lib'
+import { formatDate, resolveLabel, t, useLabelsStore, useTableState } from '@/shared/lib'
 import {
   Badge,
   Button,
   ConfirmDialog,
   DataTable,
   GuideChip,
+  Label,
   Select,
   type DataTableColumn,
   type MenuEntry,
@@ -25,15 +26,16 @@ interface LookupEntriesTableProps {
   lookup: string
 }
 
-const STATUS_OPTIONS = [
-  { value: 'all', label: 'كل القيم' },
-  { value: 'active', label: 'النشطة فقط' },
-  { value: 'inactive', label: 'الموقوفة فقط' },
-]
-
 /** Entries of one reference catalog (client-mode grid) with add, relabel and status actions. */
 export function LookupEntriesTable({ lookup }: LookupEntriesTableProps) {
   const meta = lookupCatalogMeta(lookup)
+  const overrides = useLabelsStore((state) => state.overrides)
+  const caption = meta.labelKey ? resolveLabel(meta.labelKey, overrides) : lookup
+  const statusOptions = [
+    { value: 'all', label: resolveLabel('lookup.filter.all', overrides) },
+    { value: 'active', label: resolveLabel('lookup.filter.active', overrides) },
+    { value: 'inactive', label: resolveLabel('lookup.filter.inactive', overrides) },
+  ]
   const table = useTableState({
     defaultSortKey: 'id',
     defaultSortDirection: 'asc',
@@ -76,16 +78,16 @@ export function LookupEntriesTable({ lookup }: LookupEntriesTableProps) {
   const copyId = async (entry: LookupEntryResponse) => {
     try {
       await navigator.clipboard.writeText(String(entry.id))
-      toast.success('تم نسخ المعرّف.')
+      toast.success(t('lookup.toast.copied'))
     } catch {
-      toast.error('تعذّر النسخ إلى الحافظة.')
+      toast.error(t('lookup.toast.copy-failed'))
     }
   }
 
   const handleToggleDefault = async (entry: LookupEntryResponse) => {
     try {
       await defaultMutation.mutateAsync({ lookup, id: entry.id, isDefault: !entry.isDefault })
-      toast.success(entry.isDefault ? 'تمت إزالة القيمة الافتراضية.' : 'تم تعيين القيمة الافتراضية.')
+      toast.success(entry.isDefault ? t('lookup.toast.default-removed') : t('lookup.toast.default-set'))
     } catch (error) {
       toast.error(toArabicErrorMessage(error))
     }
@@ -99,7 +101,7 @@ export function LookupEntriesTable({ lookup }: LookupEntriesTableProps) {
         id: statusEntry.id,
         active: !statusEntry.isActive,
       })
-      toast.success(statusEntry.isActive ? 'تم إيقاف القيمة.' : 'تم تفعيل القيمة.')
+      toast.success(statusEntry.isActive ? t('lookup.toast.suspended') : t('lookup.toast.activated'))
       setStatusEntryId(null)
     } catch (error) {
       toast.error(toArabicErrorMessage(error))
@@ -111,7 +113,7 @@ export function LookupEntriesTable({ lookup }: LookupEntriesTableProps) {
     () => [
       {
         id: 'id',
-        header: 'المعرّف',
+        headerKey: 'lookup.column.id',
         hideable: false,
         sortable: true,
         sortValue: (entry) => entry.id,
@@ -123,21 +125,21 @@ export function LookupEntriesTable({ lookup }: LookupEntriesTableProps) {
       },
       {
         id: 'descAr',
-        header: 'التسمية العربية',
+        headerKey: 'lookup.column.desc-ar',
         hideable: false,
         sortable: true,
         sortValue: (entry) => entry.descAr,
         cell: (entry) => (
           <span className="flex items-center gap-2 text-sm text-foreground">
             {entry.descAr}
-            {systemIds.has(entry.id) && <Badge variant="outline">نظامية</Badge>}
-            {entry.isDefault && <Badge variant="accent">افتراضية</Badge>}
+            {systemIds.has(entry.id) && <Badge variant="outline"><Label k="lookup.badge.system" /></Badge>}
+            {entry.isDefault && <Badge variant="accent"><Label k="lookup.badge.default" /></Badge>}
           </span>
         ),
       },
       {
         id: 'desc',
-        header: 'التسمية الإنجليزية',
+        headerKey: 'lookup.column.desc',
         sortable: true,
         sortValue: (entry) => entry.desc,
         cell: (entry) => (
@@ -148,18 +150,18 @@ export function LookupEntriesTable({ lookup }: LookupEntriesTableProps) {
       },
       {
         id: 'status',
-        header: 'الحالة',
+        headerKey: 'lookup.column.status',
         sortable: true,
         sortValue: (entry) => (entry.isActive ? 1 : 0),
         cell: (entry) => (
           <Badge variant={entry.isActive ? 'success' : 'danger'}>
-            {entry.isActive ? 'نشطة' : 'موقوفة'}
+            {entry.isActive ? t('lookup.status.active') : t('lookup.status.inactive')}
           </Badge>
         ),
       },
       {
         id: 'createdAt',
-        header: 'تاريخ الإنشاء',
+        headerKey: 'lookup.column.created-at',
         defaultHidden: true,
         sortable: true,
         sortValue: (entry) => entry.createdAt,
@@ -176,13 +178,13 @@ export function LookupEntriesTable({ lookup }: LookupEntriesTableProps) {
   const buildRowMenu = (entry: LookupEntryResponse): MenuEntry[] => [
     {
       id: 'edit',
-      label: 'تعديل التسمية',
+      label: t('lookup.menu.edit'),
       icon: <Pencil className="size-4" aria-hidden />,
       onSelect: () => openEdit(entry),
     },
     {
       id: 'toggle-default',
-      label: entry.isDefault ? 'إزالة الافتراضية' : 'تعيين كقيمة افتراضية',
+      label: entry.isDefault ? t('lookup.menu.remove-default') : t('lookup.menu.set-default'),
       icon: entry.isDefault ? (
         <StarOff className="size-4" aria-hidden />
       ) : (
@@ -193,7 +195,7 @@ export function LookupEntriesTable({ lookup }: LookupEntriesTableProps) {
     },
     {
       id: 'toggle-active',
-      label: entry.isActive ? 'إيقاف القيمة' : 'تفعيل القيمة',
+      label: entry.isActive ? t('lookup.menu.suspend') : t('lookup.menu.activate'),
       icon: entry.isActive ? (
         <PowerOff className="size-4" aria-hidden />
       ) : (
@@ -205,7 +207,7 @@ export function LookupEntriesTable({ lookup }: LookupEntriesTableProps) {
     { type: 'separator' },
     {
       id: 'copy-id',
-      label: 'نسخ المعرّف',
+      label: t('lookup.menu.copy-id'),
       icon: <Copy className="size-4" aria-hidden />,
       onSelect: () => void copyId(entry),
     },
@@ -213,14 +215,14 @@ export function LookupEntriesTable({ lookup }: LookupEntriesTableProps) {
 
   const createEntry: MenuEntry = {
     id: 'create',
-    label: 'قيمة جديدة',
+    label: t('lookup.create'),
     icon: <Plus className="size-4" aria-hidden />,
     disabled: !meta.canCreate,
     onSelect: openCreate,
   }
   const refreshEntry: MenuEntry = {
     id: 'refresh',
-    label: 'تحديث البيانات',
+    label: t('table.refresh'),
     icon: <RefreshCw className="size-4" aria-hidden />,
     onSelect: () => void entriesQuery.refetch(),
   }
@@ -232,7 +234,7 @@ export function LookupEntriesTable({ lookup }: LookupEntriesTableProps) {
       <DataTable
         tableId="lookup-entries"
         mode="client"
-        caption={meta.labelAr}
+        caption={caption}
         columns={columns}
         rows={entries}
         rowKey={(entry) => String(entry.id)}
@@ -251,7 +253,7 @@ export function LookupEntriesTable({ lookup }: LookupEntriesTableProps) {
         onPageSizeChange={table.setPageSize}
         search={table.search}
         onSearchChange={table.setSearch}
-        searchPlaceholder="ابحث بالمعرّف أو التسمية…"
+        searchPlaceholder={t('lookup.search-placeholder')}
         sortKey={table.sortKey}
         sortDirection={table.sortDirection}
         onSortChange={table.setSort}
@@ -259,15 +261,15 @@ export function LookupEntriesTable({ lookup }: LookupEntriesTableProps) {
           <div className="flex flex-wrap items-center gap-2">
             <GuideChip id="lookups.status" />
             <Select
-              aria-label="تصفية حسب الحالة"
+              aria-label={t('lookup.filter.status-aria')}
               value={status || 'all'}
               onValueChange={(value) => table.setFilter('status', value === 'all' ? null : value)}
-              options={STATUS_OPTIONS}
+              options={statusOptions}
               className="w-44"
             />
             {table.hasActiveFilters && (
               <Button type="button" variant="ghost" size="sm" onClick={table.clearFilters}>
-                مسح المرشحات
+                <Label k="lookup.filter.clear" />
               </Button>
             )}
           </div>
@@ -282,22 +284,22 @@ export function LookupEntriesTable({ lookup }: LookupEntriesTableProps) {
               type="button"
               onClick={openCreate}
               disabled={!meta.canCreate}
-              title={meta.canCreate ? undefined : 'هذا الجدول لا يقبل إضافة قيم من هذه الشاشة.'}
+              title={meta.canCreate ? undefined : t('lookup.toolbar.create-denied')}
             >
               <Plus className="size-4" aria-hidden />
-              قيمة جديدة
+              <Label k="lookup.create" />
             </Button>
             <GuideChip id="lookups.add" />
           </>
         }
-        emptyTitle={hasQuery ? 'لا توجد قيم مطابقة.' : 'لا توجد قيم في هذا الجدول.'}
+        emptyTitle={hasQuery ? t('lookup.empty.search-title') : t('lookup.empty.title')}
         emptyDescription={
-          hasQuery ? 'جرّب تعديل البحث أو المرشحات.' : 'أضف أول قيمة مرجعية لهذا الجدول.'
+          hasQuery ? t('lookup.empty.search-description') : t('lookup.empty.description')
         }
         emptyAction={
           hasQuery ? (
             <Button type="button" variant="outline" onClick={table.clearQuery}>
-              مسح البحث والمرشحات
+              <Label k="lookup.empty.clear" />
             </Button>
           ) : undefined
         }
@@ -319,15 +321,16 @@ export function LookupEntriesTable({ lookup }: LookupEntriesTableProps) {
         onOpenChange={(open) => {
           if (!open) setStatusEntryId(null)
         }}
-        title={statusEntry?.isActive ? 'إيقاف القيمة' : 'تفعيل القيمة'}
+        title={statusEntry?.isActive ? t('lookup.menu.suspend') : t('lookup.menu.activate')}
         description={
           statusEntry
             ? statusEntry.isActive
-              ? `ستُوقف القيمة «${statusEntry.descAr}» ولن تظهر في القوائم المنسدلة. يُرفض الإيقاف إذا كانت سجلات أخرى تشير إليها.${systemIds.has(statusEntry.id) ? ' تنبيه: هذه قيمة نظامية يعتمد عليها سلوك النظام.' : ''}`
-              : `ستعود القيمة «${statusEntry.descAr}» متاحة للاختيار في القوائم المنسدلة.`
+              ? t('lookup.confirm.suspend-description', { name: statusEntry.descAr }) +
+                (systemIds.has(statusEntry.id) ? t('lookup.confirm.suspend-system-note') : '')
+              : t('lookup.confirm.activate-description', { name: statusEntry.descAr })
             : undefined
         }
-        confirmLabel={statusEntry?.isActive ? 'إيقاف القيمة' : 'تفعيل القيمة'}
+        confirmLabel={statusEntry?.isActive ? t('lookup.menu.suspend') : t('lookup.menu.activate')}
         destructive={statusEntry?.isActive}
         loading={statusMutation.isPending}
         onConfirm={() => void handleToggleStatus()}

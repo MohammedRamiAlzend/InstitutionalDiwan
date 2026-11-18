@@ -48,5 +48,6 @@ row exposes a permission-filtered menu mirrored by an overflow trigger.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-18 | Qoder | UI labels Phase 4 (ب2): all static Arabic now resolves through the `external-org.*` catalog — headers via `headerKey`, the active/all filter via `useLabel`, row/header menus, copy toasts, status cells, empty states and the suspend/activate confirms via `t()`, and the toolbar create + empty actions via `<Label>`. Data-driven names/codes stay in code. |
 | 2026-10-29 | agent | Implemented the grid: URL search/paging over the paged API, active/all filter, lookup-labelled type, status badges, permission-filtered row/header/empty menus, and the create/edit/status dialogs; documented the missing server sort parameters. |
 | 2026-10-25 | Cursor | Documented the external-organizations table for the Module 03 admin tab. |

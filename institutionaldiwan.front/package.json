@@ -6,8 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "lint": "eslint . && node scripts/check-guide-ids.mjs",
+    "lint": "eslint . && node scripts/check-guide-ids.mjs && node scripts/check-label-keys.mjs",
     "check:guides": "node scripts/check-guide-ids.mjs",
+    "check:labels": "node scripts/check-label-keys.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

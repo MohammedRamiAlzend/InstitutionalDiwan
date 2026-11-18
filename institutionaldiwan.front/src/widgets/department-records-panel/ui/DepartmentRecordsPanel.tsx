@@ -9,8 +9,8 @@ import {
 } from '@/entities/document-schema'
 import { EditVisitRecordForm } from '@/features/department-record-manage'
 import { toArabicErrorMessage } from '@/shared/api'
-import { formatDate, formatDateTime } from '@/shared/lib'
-import { Badge, Button, Skeleton } from '@/shared/ui'
+import { formatDate, formatDateTime, t } from '@/shared/lib'
+import { Badge, Button, Label, Skeleton } from '@/shared/ui'
 
 interface DepartmentRecordsPanelProps {
   documentId: string
@@ -38,7 +38,7 @@ export function DepartmentRecordsPanel({ documentId }: DepartmentRecordsPanelPro
 
   const records = query.data?.records ?? []
   if (records.length === 0) {
-    return <p className="text-sm text-muted">لا سجلات دواوين متاحة لك على هذه الوثيقة.</p>
+    return <p className="text-sm text-muted">{t('department.records.empty')}</p>
   }
 
   return (
@@ -46,7 +46,7 @@ export function DepartmentRecordsPanel({ documentId }: DepartmentRecordsPanelPro
       {records.map((record) => (
         <section
           key={record.registryNumberId}
-          aria-label={`سجل ${record.departmentNameAr}`}
+          aria-label={t('department.records.section-aria', { name: record.departmentNameAr })}
           className="flex flex-col gap-3 border-t border-border pt-5 first:border-t-0 first:pt-0"
         >
           <header className="flex flex-wrap items-center gap-2">
@@ -100,19 +100,19 @@ function VisitItem({ documentId, visit, editing, onEdit, onDone }: VisitItemProp
     <li className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap items-center gap-2 text-sm">
-          <span className="font-medium text-foreground">زيارة</span>
+          <span className="font-medium text-foreground"><Label k="department.records.visit" /></span>
           <span dir="ltr" className="text-muted">
             {formatDate(visit.registryDate)}
           </span>
           {visit.isLocked ? (
             <Badge variant="outline" title={visit.lockedAt ? formatDateTime(visit.lockedAt) : undefined}>
               <Lock className="size-3" aria-hidden />
-              مقفل
+              <Label k="department.records.locked" />
             </Badge>
           ) : (
             <Badge variant="accent">
               <LockOpen className="size-3" aria-hidden />
-              مفتوح
+              <Label k="department.records.open" />
             </Badge>
           )}
           {hasForm && (
@@ -126,13 +126,13 @@ function VisitItem({ documentId, visit, editing, onEdit, onDone }: VisitItemProp
             {visit.canEdit && (
               <Button type="button" size="sm" variant="outline" onClick={() => onEdit('edit')}>
                 <Pencil className="size-4" aria-hidden />
-                تعديل السجل
+                <Label k="department.records.edit" />
               </Button>
             )}
             {visit.canCorrect && (
               <Button type="button" size="sm" variant="ghost" onClick={() => onEdit('correct')}>
                 <ShieldCheck className="size-4" aria-hidden />
-                تصحيح
+                <Label k="department.records.correct" />
               </Button>
             )}
           </div>
@@ -141,13 +141,13 @@ function VisitItem({ documentId, visit, editing, onEdit, onDone }: VisitItemProp
 
       {visit.correctedAt && (
         <p className="text-xs text-muted">
-          صُحّح في <span dir="ltr">{formatDateTime(visit.correctedAt)}</span>
+          {t('department.records.corrected-at')} <span dir="ltr">{formatDateTime(visit.correctedAt)}</span>
           {visit.correctionReason ? ` — ${visit.correctionReason}` : ''}
         </p>
       )}
 
       {!hasForm ? (
-        <p className="text-xs text-muted">لم يكن للديوان نموذج سجل لهذا النوع عند هذه الزيارة.</p>
+        <p className="text-xs text-muted">{t('department.records.no-form')}</p>
       ) : editing ? (
         <EditVisitRecordForm documentId={documentId} visit={visit} mode={editing} onDone={onDone} />
       ) : (

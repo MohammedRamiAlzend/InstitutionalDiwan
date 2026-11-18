@@ -3,8 +3,8 @@ import { Link, useNavigate } from 'react-router-dom'
 import { ExternalLink, RefreshCw } from 'lucide-react'
 import { usePersons, type PersonListItemResponse } from '@/entities/person'
 import { ROUTES } from '@/shared/config'
-import { formatDateTime, formatNumber, useTableState } from '@/shared/lib'
-import { Button, DataTable, type DataTableColumn, type MenuEntry } from '@/shared/ui'
+import { formatDateTime, formatNumber, t, useTableState } from '@/shared/lib'
+import { Button, DataTable, Label, type DataTableColumn, type MenuEntry } from '@/shared/ui'
 
 /** Everyone named on a document the caller may view; a row leads to that person's file. */
 export function PersonsTable() {
@@ -23,7 +23,7 @@ export function PersonsTable() {
     () => [
       {
         id: 'name',
-        header: 'الاسم',
+        headerKey: 'persons.column.name',
         hideable: false,
         sortable: true,
         sortKey: 'name',
@@ -35,14 +35,14 @@ export function PersonsTable() {
       },
       {
         id: 'documentCount',
-        header: 'عدد الوثائق',
+        headerKey: 'persons.column.document-count',
         sortable: true,
         sortKey: 'documentCount',
         cell: (person) => <span className="text-sm text-foreground">{formatNumber(person.documentCount)}</span>,
       },
       {
         id: 'lastActivity',
-        header: 'آخر تحديث على وثائقه',
+        headerKey: 'persons.column.last-activity',
         sortable: true,
         sortKey: 'lastActivity',
         cell: (person) => (
@@ -58,7 +58,7 @@ export function PersonsTable() {
   const buildRowMenu = (person: PersonListItemResponse): MenuEntry[] => [
     {
       id: 'open',
-      label: 'فتح ملف الشخص',
+      label: t('persons.row.open'),
       icon: <ExternalLink className="size-4" aria-hidden />,
       onSelect: () => navigate(ROUTES.PERSON_DETAIL(person.personId)),
     },
@@ -67,7 +67,7 @@ export function PersonsTable() {
   const headerMenu: MenuEntry[] = [
     {
       id: 'refresh',
-      label: 'تحديث البيانات',
+      label: t('table.refresh'),
       icon: <RefreshCw className="size-4" aria-hidden />,
       onSelect: () => void personsQuery.refetch(),
     },
@@ -76,7 +76,7 @@ export function PersonsTable() {
   return (
     <DataTable
       tableId="persons"
-      caption="الأشخاص المرتبطون بالوثائق"
+      caption={t('persons.caption')}
       columns={columns}
       rows={personsQuery.data?.items}
       rowKey={(person) => person.personId}
@@ -92,7 +92,7 @@ export function PersonsTable() {
       onPageSizeChange={table.setPageSize}
       search={table.search}
       onSearchChange={table.setSearch}
-      searchPlaceholder="ابحث بالاسم…"
+      searchPlaceholder={t('persons.search-placeholder')}
       sortKey={table.sortKey}
       sortDirection={table.sortDirection}
       onSortChange={table.setSort}
@@ -100,16 +100,16 @@ export function PersonsTable() {
       headerMenu={headerMenu}
       emptyMenu={headerMenu}
       rowLabel={(person) => person.displayName}
-      emptyTitle={table.search ? 'لا توجد نتائج مطابقة.' : 'لا يوجد أشخاص بعد.'}
+      emptyTitle={table.search ? t('persons.empty.no-match-title') : t('persons.empty.no-persons-title')}
       emptyDescription={
         table.search
-          ? 'جرّب كتابة جزء آخر من الاسم.'
-          : 'يظهر هنا كل شخص يُضاف إلى وثيقة يمكنك الاطلاع عليها.'
+          ? t('persons.empty.no-match-description')
+          : t('persons.empty.no-persons-description')
       }
       emptyAction={
         table.search ? (
           <Button type="button" variant="outline" onClick={() => table.clearQuery()}>
-            مسح البحث
+            <Label k="persons.empty.clear-search" />
           </Button>
         ) : undefined
       }

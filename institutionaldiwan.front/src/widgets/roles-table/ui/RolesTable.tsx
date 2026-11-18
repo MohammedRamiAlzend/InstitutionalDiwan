@@ -17,13 +17,14 @@ import {
   useSetRoleActiveMutation,
 } from '@/features/role-manage'
 import { toArabicErrorMessage } from '@/shared/api'
-import { formatDate, useTableState } from '@/shared/lib'
+import { formatDate, t, useTableState } from '@/shared/lib'
 import {
   Badge,
   Button,
   ConfirmDialog,
   DataTable,
   GuideChip,
+  Label,
   type DataTableColumn,
   type MenuEntry,
 } from '@/shared/ui'
@@ -61,9 +62,9 @@ export function RolesTable() {
   const copyValue = async (value: string, label: string) => {
     try {
       await navigator.clipboard.writeText(value)
-      toast.success(`تم نسخ ${label}.`)
+      toast.success(t('role.toast.copied', { label }))
     } catch {
-      toast.error('تعذّر النسخ إلى الحافظة.')
+      toast.error(t('role.toast.copy-failed'))
     }
   }
 
@@ -74,7 +75,7 @@ export function RolesTable() {
         roleId: statusRole.roleId,
         active: !statusRole.isActive,
       })
-      toast.success(statusRole.isActive ? 'تم إيقاف الدور.' : 'تم تفعيل الدور.')
+      toast.success(statusRole.isActive ? t('role.toast.suspended') : t('role.toast.activated'))
       setStatusRoleId(null)
     } catch (error) {
       toast.error(toArabicErrorMessage(error))
@@ -85,7 +86,7 @@ export function RolesTable() {
     () => [
       {
         id: 'role',
-        header: 'الدور',
+        headerKey: 'role.column.role',
         hideable: false,
         sortable: true,
         sortValue: (role) => role.nameAr,
@@ -99,7 +100,7 @@ export function RolesTable() {
       },
       {
         id: 'description',
-        header: 'الوصف',
+        headerKey: 'role.column.description',
         cell: (role) => (
           <span
             className="line-clamp-2 max-w-72 text-xs text-muted"
@@ -111,37 +112,37 @@ export function RolesTable() {
       },
       {
         id: 'permissions',
-        header: 'الصلاحيات',
+        headerKey: 'role.column.permissions',
         sortable: true,
         sortValue: (role) => role.permissions.length,
         cell: (role) => (
           <Badge variant={role.permissions.length > 0 ? 'accent' : 'outline'}>
-            {role.permissions.length} صلاحية
+            {t('role.permission-count', { count: role.permissions.length })}
           </Badge>
         ),
       },
       {
         id: 'status',
-        header: 'الحالة',
+        headerKey: 'role.column.status',
         cell: (role) => (
           <Badge variant={role.isActive ? 'success' : 'danger'}>
-            {role.isActive ? 'نشط' : 'موقوف'}
+            {role.isActive ? t('role.status.active') : t('role.status.suspended')}
           </Badge>
         ),
       },
       {
         id: 'kind',
-        header: 'النوع',
+        headerKey: 'role.column.kind',
         cell: (role) =>
           role.isSystemRole ? (
-            <Badge variant="outline">نظام</Badge>
+            <Badge variant="outline"><Label k="role.kind.system" /></Badge>
           ) : (
-            <span className="text-xs text-muted">مخصص</span>
+            <span className="text-xs text-muted"><Label k="role.kind.custom" /></span>
           ),
       },
       {
         id: 'createdAt',
-        header: 'تاريخ الإنشاء',
+        headerKey: 'role.column.created-at',
         defaultHidden: true,
         sortable: true,
         sortValue: (role) => role.createdAt,
@@ -158,20 +159,20 @@ export function RolesTable() {
   const buildRowMenu = (role: RoleResponse): MenuEntry[] => [
     {
       id: 'edit',
-      label: 'تعديل البيانات',
+      label: t('role.menu.edit'),
       icon: <Pencil className="size-4" aria-hidden />,
       onSelect: () => openEdit(role),
     },
     {
       id: 'permissions',
-      label: 'مصفوفة الصلاحيات',
+      label: t('role.menu.permissions'),
       icon: <KeyRound className="size-4" aria-hidden />,
       onSelect: () => setPermissionsRoleId(role.roleId),
     },
     { type: 'separator' },
     {
       id: 'toggle-active',
-      label: role.isActive ? 'إيقاف الدور' : 'تفعيل الدور',
+      label: role.isActive ? t('role.menu.suspend') : t('role.menu.activate'),
       icon: role.isActive ? (
         <ShieldOff className="size-4" aria-hidden />
       ) : (
@@ -184,27 +185,27 @@ export function RolesTable() {
     { type: 'separator' },
     {
       id: 'copy-code',
-      label: 'نسخ رمز الدور',
+      label: t('role.menu.copy-code'),
       icon: <Copy className="size-4" aria-hidden />,
-      onSelect: () => void copyValue(role.code, 'رمز الدور'),
+      onSelect: () => void copyValue(role.code, t('role.copy.code')),
     },
     {
       id: 'copy-id',
-      label: 'نسخ المعرّف',
+      label: t('role.menu.copy-id'),
       icon: <Hash className="size-4" aria-hidden />,
-      onSelect: () => void copyValue(role.roleId, 'المعرّف'),
+      onSelect: () => void copyValue(role.roleId, t('role.copy.id')),
     },
   ]
 
   const createEntry: MenuEntry = {
     id: 'create',
-    label: 'دور جديد',
+    label: t('role.create'),
     icon: <Plus className="size-4" aria-hidden />,
     onSelect: openCreate,
   }
   const refreshEntry: MenuEntry = {
     id: 'refresh',
-    label: 'تحديث البيانات',
+    label: t('table.refresh'),
     icon: <RefreshCw className="size-4" aria-hidden />,
     onSelect: () => void rolesQuery.refetch(),
   }
@@ -214,7 +215,7 @@ export function RolesTable() {
       <DataTable
         tableId="roles-table"
         mode="client"
-        caption="قائمة الأدوار"
+        caption={t('role.caption')}
         columns={columns}
         rows={rolesQuery.data}
         rowKey={(role) => role.roleId}
@@ -235,7 +236,7 @@ export function RolesTable() {
         onPageSizeChange={table.setPageSize}
         search={table.search}
         onSearchChange={table.setSearch}
-        searchPlaceholder="ابحث باسم الدور أو رمزه…"
+        searchPlaceholder={t('role.search-placeholder')}
         sortKey={table.sortKey}
         sortDirection={table.sortDirection}
         onSortChange={table.setSort}
@@ -247,26 +248,26 @@ export function RolesTable() {
           <>
             <Button type="button" onClick={openCreate}>
               <Plus className="size-4" aria-hidden />
-              دور جديد
+              <Label k="role.create" />
             </Button>
             <GuideChip id="roles.create" />
           </>
         }
-        emptyTitle={table.search ? 'لا توجد أدوار مطابقة.' : 'لا توجد أدوار بعد.'}
+        emptyTitle={table.search ? t('role.empty.search-title') : t('role.empty.title')}
         emptyDescription={
           table.search
-            ? 'جرّب تعديل عبارة البحث أو امسحها لعرض كل الأدوار.'
-            : 'أنشئ أول دور مخصص ثم امنحه الصلاحيات المناسبة.'
+            ? t('role.empty.search-description')
+            : t('role.empty.description')
         }
         emptyAction={
           table.search ? (
             <Button type="button" variant="outline" onClick={() => table.setSearch('')}>
-              مسح البحث
+              <Label k="role.empty.clear-search" />
             </Button>
           ) : (
             <Button type="button" onClick={openCreate}>
               <Plus className="size-4" aria-hidden />
-              إنشاء دور
+              <Label k="role.empty.create" />
             </Button>
           )
         }
@@ -296,15 +297,15 @@ export function RolesTable() {
         onOpenChange={(open) => {
           if (!open) setStatusRoleId(null)
         }}
-        title={statusRole?.isActive ? 'إيقاف الدور' : 'تفعيل الدور'}
+        title={statusRole?.isActive ? t('role.confirm.suspend-title') : t('role.confirm.activate-title')}
         description={
           statusRole
             ? statusRole.isActive
-              ? `سيُعلَّم الدور «${statusRole.nameAr}» كموقوف، ولن يظهر ضمن الأدوار الفعّالة للإسناد.`
-              : `سيعود الدور «${statusRole.nameAr}» فعّالًا ومتاحًا للإسناد.`
+              ? t('role.confirm.suspend-description', { name: statusRole.nameAr })
+              : t('role.confirm.activate-description', { name: statusRole.nameAr })
             : undefined
         }
-        confirmLabel={statusRole?.isActive ? 'إيقاف الدور' : 'تفعيل الدور'}
+        confirmLabel={statusRole?.isActive ? t('role.confirm.suspend') : t('role.confirm.activate')}
         destructive={statusRole?.isActive}
         loading={statusMutation.isPending}
         onConfirm={() => void handleToggleStatus()}

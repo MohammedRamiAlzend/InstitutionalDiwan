@@ -5,28 +5,29 @@ import {
   FIELD_OPTION_SOURCE,
   type FieldDataType,
 } from '@/entities/document-schema'
+import { t } from '@/shared/lib'
 
 const KEY_PATTERN = /^[a-z][a-z0-9_]*$/
 
 /** Mirrors `DocumentFieldSettings.Create`: which settings apply depends on the field's data type. */
 const optionSchema = z.object({
-  key: z.string().trim().regex(KEY_PATTERN, 'مفتاح الخيار: أحرف إنجليزية صغيرة وأرقام وشرطة سفلية.'),
-  labelAr: z.string().trim().min(1, 'عنوان الخيار مطلوب.'),
+  key: z.string().trim().regex(KEY_PATTERN, t('schema.validation.option-key-format')),
+  labelAr: z.string().trim().min(1, t('schema.validation.option-label-required')),
 })
 
 const settingsShape = z.object({
   labelAr: z
     .string()
     .trim()
-    .min(1, 'عنوان الحقل مطلوب.')
-    .max(FIELD_LIMITS.maxLabelLength, 'عنوان الحقل لا يتجاوز 200 حرف.'),
+    .min(1, t('schema.validation.label-required'))
+    .max(FIELD_LIMITS.maxLabelLength, t('schema.validation.label-max')),
   isRequired: z.boolean(),
-  displayOrder: z.string().trim().regex(/^\d{1,4}$/, 'ترتيب العرض رقم صحيح موجب.'),
-  regexPattern: z.string().max(FIELD_LIMITS.maxRegexLength, 'النمط لا يتجاوز 500 حرف.'),
+  displayOrder: z.string().trim().regex(/^\d{1,4}$/, t('schema.validation.display-order')),
+  regexPattern: z.string().max(FIELD_LIMITS.maxRegexLength, t('schema.validation.regex-max')),
   regexErrorMessageAr: z
     .string()
     .trim()
-    .max(FIELD_LIMITS.maxRegexMessageLength, 'الرسالة لا تتجاوز 500 حرف.'),
+    .max(FIELD_LIMITS.maxRegexMessageLength, t('schema.validation.regex-message-max')),
   maxLength: z.string().trim(),
   minNumber: z.string().trim(),
   maxNumber: z.string().trim(),
@@ -36,8 +37,8 @@ const settingsShape = z.object({
   isReadOnly: z.boolean(),
   isFilterable: z.boolean(),
   showInTable: z.boolean(),
-  placeholderAr: z.string().trim().max(FIELD_LIMITS.maxPlaceholderLength, 'النص التوضيحي لا يتجاوز 200 حرف.'),
-  helpTextAr: z.string().trim().max(FIELD_LIMITS.maxHelpTextLength, 'نص المساعدة لا يتجاوز 500 حرف.'),
+  placeholderAr: z.string().trim().max(FIELD_LIMITS.maxPlaceholderLength, t('schema.validation.placeholder-max')),
+  helpTextAr: z.string().trim().max(FIELD_LIMITS.maxHelpTextLength, t('schema.validation.help-text-max')),
   minLength: z.string().trim(),
   minDate: z.string(),
   maxDate: z.string(),
@@ -46,7 +47,7 @@ const settingsShape = z.object({
   visibleWhenFieldKey: z.string(),
   visibleWhenValue: z.string(),
   isHalfWidth: z.boolean(),
-  sectionTitleAr: z.string().trim().max(FIELD_LIMITS.maxSectionTitleLength, 'عنوان القسم لا يتجاوز 100 حرف.'),
+  sectionTitleAr: z.string().trim().max(FIELD_LIMITS.maxSectionTitleLength, t('schema.validation.section-title-max')),
   optionSource: z.string(),
   lookupCatalog: z.string(),
 })
@@ -63,18 +64,18 @@ export function settingsSchemaFor(dataType: FieldDataType) {
     const isText = dataType === FIELD_DATA_TYPE.Text || dataType === FIELD_DATA_TYPE.LongText
 
     if (values.regexPattern.trim()) {
-      if (!isText) ctx.addIssue({ code: 'custom', path: ['regexPattern'], message: 'النمط للحقول النصية فقط.' })
+      if (!isText) ctx.addIssue({ code: 'custom', path: ['regexPattern'], message: t('schema.validation.regex-text-only') })
       else {
         try {
           new RegExp(values.regexPattern)
         } catch {
-          ctx.addIssue({ code: 'custom', path: ['regexPattern'], message: 'النمط ليس تعبيرًا نمطيًا صالحًا.' })
+          ctx.addIssue({ code: 'custom', path: ['regexPattern'], message: t('schema.validation.regex-invalid') })
         }
         if (!values.regexErrorMessageAr) {
           ctx.addIssue({
             code: 'custom',
             path: ['regexErrorMessageAr'],
-            message: 'رسالة الخطأ بالعربية مطلوبة عند تحديد نمط.',
+            message: t('schema.validation.regex-message-required'),
           })
         }
       }
@@ -84,9 +85,9 @@ export function settingsSchemaFor(dataType: FieldDataType) {
       const limit =
         dataType === FIELD_DATA_TYPE.Text ? FIELD_LIMITS.maxTextLength : FIELD_LIMITS.maxLongTextLength
       const n = Number(values.maxLength)
-      if (!isText) ctx.addIssue({ code: 'custom', path: ['maxLength'], message: 'الطول الأقصى للحقول النصية فقط.' })
+      if (!isText) ctx.addIssue({ code: 'custom', path: ['maxLength'], message: t('schema.validation.max-length-text-only') })
       else if (!Number.isInteger(n) || n < 1 || n > limit) {
-        ctx.addIssue({ code: 'custom', path: ['maxLength'], message: `الطول الأقصى بين 1 و${limit}.` })
+        ctx.addIssue({ code: 'custom', path: ['maxLength'], message: t('schema.validation.max-length-range', { limit }) })
       }
     }
 
@@ -96,12 +97,12 @@ export function settingsSchemaFor(dataType: FieldDataType) {
         ctx.addIssue({
           code: 'custom',
           path: [name],
-          message: isNumber ? 'أدخل رقمًا صحيحًا.' : 'الحدود للحقول الرقمية فقط.',
+          message: isNumber ? t('schema.validation.number-invalid') : t('schema.validation.bounds-number-only'),
         })
       }
     }
     if (isNumeric(values.minNumber) && isNumeric(values.maxNumber) && Number(values.minNumber) > Number(values.maxNumber)) {
-      ctx.addIssue({ code: 'custom', path: ['minNumber'], message: 'الحد الأدنى لا يتجاوز الحد الأعلى.' })
+      ctx.addIssue({ code: 'custom', path: ['minNumber'], message: t('schema.validation.min-gt-max') })
     }
 
     const isChoice = dataType === FIELD_DATA_TYPE.Select || dataType === FIELD_DATA_TYPE.MultiSelect
@@ -109,24 +110,24 @@ export function settingsSchemaFor(dataType: FieldDataType) {
 
     if (isChoice && !isStatic) {
       if (values.optionSource === String(FIELD_OPTION_SOURCE.Lookup) && !values.lookupCatalog) {
-        ctx.addIssue({ code: 'custom', path: ['lookupCatalog'], message: 'اختر القائمة المرجعية.' })
+        ctx.addIssue({ code: 'custom', path: ['lookupCatalog'], message: t('schema.validation.lookup-required') })
       }
     } else if (isChoice) {
       if (values.options.length === 0) {
-        ctx.addIssue({ code: 'custom', path: ['options'], message: 'أضف خيارًا واحدًا على الأقل.' })
+        ctx.addIssue({ code: 'custom', path: ['options'], message: t('schema.validation.options-min') })
       }
       if (values.options.length > FIELD_LIMITS.maxOptions) {
-        ctx.addIssue({ code: 'custom', path: ['options'], message: 'لا يزيد عدد الخيارات عن 100.' })
+        ctx.addIssue({ code: 'custom', path: ['options'], message: t('schema.validation.options-max') })
       }
       const keys = values.options.map((option) => option.key)
       if (new Set(keys).size !== keys.length) {
-        ctx.addIssue({ code: 'custom', path: ['options'], message: 'مفاتيح الخيارات يجب ألا تتكرر.' })
+        ctx.addIssue({ code: 'custom', path: ['options'], message: t('schema.validation.options-duplicate') })
       }
     }
 
     const hasDefault = values.defaultToday || values.defaultValue.trim() !== ''
     if (values.isReadOnly && isStatic && !hasDefault) {
-      ctx.addIssue({ code: 'custom', path: ['defaultValue'], message: 'الحقل للقراءة فقط يحتاج إلى قيمة افتراضية.' })
+      ctx.addIssue({ code: 'custom', path: ['defaultValue'], message: t('schema.validation.readonly-default') })
     }
 
     if (values.minLength) {
@@ -137,16 +138,16 @@ export function settingsSchemaFor(dataType: FieldDataType) {
           ? FIELD_LIMITS.maxTextLength
           : FIELD_LIMITS.maxLongTextLength
       if (!Number.isInteger(n) || n < 1 || n > limit) {
-        ctx.addIssue({ code: 'custom', path: ['minLength'], message: `الطول الأدنى بين 1 و${limit}.` })
+        ctx.addIssue({ code: 'custom', path: ['minLength'], message: t('schema.validation.min-length-range', { limit }) })
       }
     }
 
     if (!values.minDateToday && !values.maxDateToday && values.minDate && values.maxDate && values.minDate > values.maxDate) {
-      ctx.addIssue({ code: 'custom', path: ['minDate'], message: 'أقدم تاريخ لا يتجاوز أحدث تاريخ.' })
+      ctx.addIssue({ code: 'custom', path: ['minDate'], message: t('schema.validation.date-order') })
     }
 
     if (values.visibleWhenFieldKey && !values.visibleWhenValue) {
-      ctx.addIssue({ code: 'custom', path: ['visibleWhenValue'], message: 'اختر القيمة التي تُظهر الحقل.' })
+      ctx.addIssue({ code: 'custom', path: ['visibleWhenValue'], message: t('schema.validation.condition-value-required') })
     }
   })
 }
@@ -156,9 +157,9 @@ export const newFieldSchema = z.object({
   key: z
     .string()
     .trim()
-    .max(FIELD_LIMITS.maxKeyLength, 'المفتاح لا يتجاوز 50 حرفًا.')
-    .regex(KEY_PATTERN, 'المفتاح يبدأ بحرف إنجليزي صغير ويحوي أحرفًا صغيرة وأرقامًا وشرطة سفلية فقط.'),
-  dataType: z.string().min(1, 'اختر نوع الحقل.'),
+    .max(FIELD_LIMITS.maxKeyLength, t('schema.validation.key-max'))
+    .regex(KEY_PATTERN, t('schema.validation.key-format')),
+  dataType: z.string().min(1, t('schema.validation.field-type-required')),
 })
 
 export type NewFieldFormValues = z.infer<typeof newFieldSchema>

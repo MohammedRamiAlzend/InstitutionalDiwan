@@ -48,6 +48,7 @@ this feature owns write requests and the create/edit form.
 | Final browser/build/test verification | Pending main-agent verification. |
 
 ## 6. Change Log
+- 2026-11-18: UI labels Phase 4 (ب2): `DepartmentFormDialog` and its Zod schema resolve all static Arabic through the `department.*` catalog — dialog title/description, field labels (`labelKey`), placeholders/aria, picker labels, checkbox text, manager note, toasts and cancel/submit/retry buttons via `t()` / `<Label>`. English example placeholders stay literal.
 - 2026-11-09: The external correspondence options are hidden while `FEATURES.externalOrganizations` is off.
 - 2026-11-05: Unsent form input is now kept (per user, per form) after an accidental close or cancel and restored with a toast; it is cleared only after a successful submit (`useDraftForm`).
 - 2026-10-28: Document the implemented Module 01 form and mutations, immutable code/type, edit-only manager picker, parent/cycle safeguards, and central Diwan protection; replace planned filenames with actual contents.

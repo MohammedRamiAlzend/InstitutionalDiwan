@@ -34,13 +34,14 @@ import { findLookupFallback, LOOKUP_SLUGS, useLookupEntries } from '@/entities/l
 import { useSessionStore } from '@/entities/user'
 import { toArabicErrorMessage } from '@/shared/api'
 import { Permissions } from '@/shared/config'
-import { cn, formatNumber, useTableState } from '@/shared/lib'
+import { cn, formatNumber, t, useTableState } from '@/shared/lib'
 import {
   Button,
   Checkbox,
   ConfirmDialog,
   GuideChip,
   GuideRegion,
+  Label,
   MermaidView,
   Skeleton,
   type MenuEntry,
@@ -59,11 +60,11 @@ import { DepartmentTable } from './DepartmentTable'
 import { DepartmentTreeNodeRow } from './DepartmentTreeNodeRow'
 import { DepartmentTypeChart } from './DepartmentTypeChart'
 
-const VIEW_OPTIONS: readonly { value: DepartmentView; label: string; icon: LucideIcon }[] = [
-  { value: 'tree', label: 'شجرة', icon: ListTree },
-  { value: 'mermaid', label: 'مخطط', icon: Workflow },
-  { value: 'chart', label: 'إحصاء', icon: BarChart3 },
-  { value: 'table', label: 'جدول', icon: Table2 },
+const VIEW_OPTIONS: readonly { value: DepartmentView; labelKey: 'department.view.tree' | 'department.view.mermaid' | 'department.view.chart' | 'department.view.table'; icon: LucideIcon }[] = [
+  { value: 'tree', labelKey: 'department.view.tree', icon: ListTree },
+  { value: 'mermaid', labelKey: 'department.view.mermaid', icon: Workflow },
+  { value: 'chart', labelKey: 'department.view.chart', icon: BarChart3 },
+  { value: 'table', labelKey: 'department.view.table', icon: Table2 },
 ]
 
 const EMPTY_IDS: ReadonlySet<string> = new Set()
@@ -174,7 +175,7 @@ export function DepartmentHierarchyTree() {
         departmentId: activeTarget.departmentId,
         active: activeTarget.active,
       })
-      toast.success(activeTarget.active ? 'تم تفعيل القسم.' : 'تم إيقاف القسم.')
+      toast.success(activeTarget.active ? t('department.toast.activated') : t('department.toast.suspended'))
       setActiveTarget(null)
     } catch (error) {
       toast.error(toArabicErrorMessage(error))
@@ -194,27 +195,27 @@ export function DepartmentHierarchyTree() {
       const entries: MenuEntry[] = [
         {
           id: 'details',
-          label: 'تفاصيل القسم',
+          label: t('department.menu.details'),
           icon: <Eye className="size-4" aria-hidden />,
           onSelect: () => setSelectedId(node.departmentId),
         },
         { type: 'separator' },
         {
           id: 'add-child',
-          label: 'إضافة قسم فرعي',
+          label: t('department.menu.add-child'),
           icon: <Plus className="size-4" aria-hidden />,
           onSelect: () =>
             setFormTarget({ mode: 'create', parentDepartmentId: node.departmentId }),
         },
         {
           id: 'edit',
-          label: 'تعديل القسم',
+          label: t('department.menu.edit'),
           icon: <Pencil className="size-4" aria-hidden />,
           onSelect: () => openEditFormById(node.departmentId),
         },
         {
           id: 'toggle-active',
-          label: node.isActive ? 'إيقاف القسم' : 'تفعيل القسم',
+          label: node.isActive ? t('department.menu.suspend') : t('department.menu.activate'),
           icon: node.isActive ? (
             <PowerOff className="size-4" aria-hidden />
           ) : (
@@ -230,15 +231,15 @@ export function DepartmentHierarchyTree() {
         { type: 'separator' },
         {
           id: 'copy-code',
-          label: 'نسخ رمز القسم',
+          label: t('department.menu.copy-code'),
           icon: <Copy className="size-4" aria-hidden />,
-          onSelect: () => void copyDepartmentValue(node.code, 'رمز القسم'),
+          onSelect: () => void copyDepartmentValue(node.code, t('department.copy.code')),
         },
         {
           id: 'copy-id',
-          label: 'نسخ المعرّف',
+          label: t('department.menu.copy-id'),
           icon: <Hash className="size-4" aria-hidden />,
-          onSelect: () => void copyDepartmentValue(node.departmentId, 'المعرّف'),
+          onSelect: () => void copyDepartmentValue(node.departmentId, t('department.copy.id')),
         },
       ]
 
@@ -247,7 +248,7 @@ export function DepartmentHierarchyTree() {
           { type: 'separator' },
           {
             id: 'toggle-branch',
-            label: effectiveCollapsedIds.has(node.departmentId) ? 'توسيع الفرع' : 'طي الفرع',
+            label: effectiveCollapsedIds.has(node.departmentId) ? t('department.menu.expand-branch') : t('department.menu.collapse-branch'),
             icon: <ChevronDown className="size-4" aria-hidden />,
             disabled: searching,
             onSelect: () => toggleCollapsed(node.departmentId),
@@ -268,17 +269,17 @@ export function DepartmentHierarchyTree() {
           onClick={() => setFormTarget({ mode: 'create', parentDepartmentId: null })}
         >
           <Plus className="size-4" aria-hidden />
-          قسم جديد
+          <Label k="department.create" />
         </Button>
         <GuideChip id="departments.create" />
 
         <GuideRegion id="departments.views">
         <div
           role="group"
-          aria-label="طريقة عرض الأقسام"
+          aria-label={t('department.view.aria')}
           className="inline-flex items-center gap-1 rounded-lg border border-border bg-surface p-1"
         >
-          {VIEW_OPTIONS.map(({ value, label, icon: Icon }) => (
+          {VIEW_OPTIONS.map(({ value, labelKey, icon: Icon }) => (
             <Button
               key={value}
               type="button"
@@ -288,7 +289,7 @@ export function DepartmentHierarchyTree() {
               aria-pressed={view === value}
             >
               <Icon className="size-4" aria-hidden />
-              {label}
+              <Label k={labelKey} />
             </Button>
           ))}
         </div>
@@ -298,7 +299,7 @@ export function DepartmentHierarchyTree() {
           <DepartmentSearch
             value={table.search}
             onChange={table.setSearch}
-            placeholder="ابحث باسم القسم أو رمزه…"
+            placeholder={t('department.search-placeholder')}
           />
         )}
         {view !== 'table' && <GuideChip id="departments.search" />}
@@ -308,7 +309,7 @@ export function DepartmentHierarchyTree() {
             <>
               {canViewEmployees && (
                 <>
-                  <Checkbox checked={employeesVisible} onCheckedChange={setEmployeesVisible} label="إظهار فروع الموظفين" />
+                  <Checkbox checked={employeesVisible} onCheckedChange={setEmployeesVisible} label={t('department.employees.toggle')} />
                   <GuideChip id="departments.employees" />
                 </>
               )}
@@ -321,7 +322,7 @@ export function DepartmentHierarchyTree() {
                 disabled={searching}
               >
                 <ChevronsUpDown className="size-4" aria-hidden />
-                توسيع الكل
+                <Label k="department.expand-all" />
               </Button>
               <Button
                 type="button"
@@ -332,7 +333,7 @@ export function DepartmentHierarchyTree() {
                 disabled={searching}
               >
                 <ChevronsDownUp className="size-4" aria-hidden />
-                طي الكل
+                <Label k="department.collapse-all" />
               </Button>
               <GuideChip id="departments.expand" />
             </>
@@ -344,7 +345,7 @@ export function DepartmentHierarchyTree() {
               size="icon"
               className="size-10"
               onClick={() => void treeQuery.refetch()}
-              aria-label="تحديث البيانات"
+              aria-label={t('table.refresh')}
             >
               <RefreshCw
                 className={cn('size-4', treeQuery.isFetching && 'animate-spin')}
@@ -383,7 +384,7 @@ export function DepartmentHierarchyTree() {
 
         {view !== 'table' &&
           (treeQuery.isLoading ? (
-            <div role="status" aria-label="جارٍ تحميل الهيكل التنظيمي" className="flex flex-col gap-2 rounded-xl border border-border bg-surface p-4">
+            <div role="status" aria-label={t('department.loading-aria')} className="flex flex-col gap-2 rounded-xl border border-border bg-surface p-4">
               {Array.from({ length: 6 }, (_, index) => (
                 <Skeleton key={index} className="h-9 w-full" />
               ))}
@@ -400,18 +401,18 @@ export function DepartmentHierarchyTree() {
                 size="sm"
                 onClick={() => void treeQuery.refetch()}
               >
-                إعادة المحاولة
+                <Label k="common.action.retry" />
               </Button>
             </div>
           ) : totalCount === 0 ? (
             <EmptySurface
-              title="لا توجد أقسام بعد."
-              description="لم تُسجَّل أقسام تنظيمية في الدليل بعد."
+              title={t('department.empty.title')}
+              description={t('department.empty.description')}
             />
           ) : matchCount === 0 ? (
             <EmptySurface
-              title="لا توجد نتائج مطابقة."
-              description="جرّب تعديل عبارة البحث أو امسحها لعرض كل الأقسام."
+              title={t('department.empty.search-title')}
+              description={t('department.empty.search-description')}
               action={
                 <Button
                   type="button"
@@ -419,16 +420,16 @@ export function DepartmentHierarchyTree() {
                   size="sm"
                   onClick={() => table.setSearch('')}
                 >
-                  مسح البحث
+                  <Label k="department.empty.clear-search" />
                 </Button>
               }
             />
           ) : view === 'mermaid' ? (
             <div className="flex flex-col gap-2">
               <p className="text-xs text-muted">
-                اضغط على أي قسم في المخطط لعرض تفاصيله والموظفين التابعين له.
+                {t('department.mermaid.hint')}
               </p>
-              <MermaidView source={mermaidDiagram.source} ariaLabel="المخطط التنظيمي للأقسام" onNodeClick={openDiagramNode} className="min-h-40" />
+              <MermaidView source={mermaidDiagram.source} ariaLabel={t('department.mermaid.aria')} onNodeClick={openDiagramNode} className="min-h-40" />
             </div>
           ) : view === 'chart' ? (
             <DepartmentTypeChart nodes={filteredTree} typeLabel={typeLabel} />
@@ -436,18 +437,18 @@ export function DepartmentHierarchyTree() {
             <div className="rounded-xl border border-border bg-surface">
               <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-3 py-2 text-xs text-muted">
                 <span>
-                  إجمالي الأقسام: <span dir="ltr">{formatNumber(totalCount)}</span>
+                  {t('department.tree.total')} <span dir="ltr">{formatNumber(totalCount)}</span>
                 </span>
                 {searching && (
                   <span>
-                    النتائج المطابقة: <span dir="ltr">{formatNumber(matchCount)}</span>
+                    {t('department.tree.matches')} <span dir="ltr">{formatNumber(matchCount)}</span>
                   </span>
                 )}
               </div>
               {showEmployees && (
-                <p className="px-3 pt-2 text-xs text-muted">افتح «الموظفون المباشرون» داخل أي قسم لتحميل موظفيه فقط. بحث الأقسام لا يبحث في الموظفين.</p>
+                <p className="px-3 pt-2 text-xs text-muted">{t('department.tree.employees-note')}</p>
               )}
-              <ul aria-label="الهيكل التنظيمي للأقسام" className="flex flex-col gap-0.5 p-2">
+              <ul aria-label={t('department.tree.aria')} className="flex flex-col gap-0.5 p-2">
                 {filteredTree.map((node) => (
                   <DepartmentTreeNodeRow
                     key={node.departmentId}
@@ -488,13 +489,13 @@ export function DepartmentHierarchyTree() {
         onOpenChange={(open) => {
           if (!open) setActiveTarget(null)
         }}
-        title={activeTarget?.active ? 'تفعيل القسم' : 'إيقاف القسم'}
+        title={activeTarget?.active ? t('department.menu.activate') : t('department.menu.suspend')}
         description={
           activeTarget?.active
-            ? `سيتم إعادة تفعيل «${activeTarget?.nameAr}» وإتاحته في الهيكل التنظيمي.`
-            : `سيتم إيقاف «${activeTarget?.nameAr}». لا يمكن إيقاف قسم لديه أقسام فرعية فعّالة.`
+            ? t('department.activate.description', { name: activeTarget?.nameAr ?? '' })
+            : t('department.suspend.description', { name: activeTarget?.nameAr ?? '' })
         }
-        confirmLabel={activeTarget?.active ? 'تفعيل القسم' : 'إيقاف القسم'}
+        confirmLabel={activeTarget?.active ? t('department.menu.activate') : t('department.menu.suspend')}
         destructive={activeTarget ? !activeTarget.active : false}
         loading={setActiveMutation.isPending}
         onConfirm={() => void confirmActiveChange()}

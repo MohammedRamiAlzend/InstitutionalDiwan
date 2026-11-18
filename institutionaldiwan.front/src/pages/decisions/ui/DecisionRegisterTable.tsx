@@ -19,8 +19,8 @@ import {
   ROUTES,
   USER_SCOPE_TYPE,
 } from '@/shared/config'
-import { decodeJwtPayload, formatDate, useTableState } from '@/shared/lib'
-import { Button, DataTable, GuideRegion, Select, type DataTableColumn, type MenuEntry } from '@/shared/ui'
+import { decodeJwtPayload, formatDate, t, useLabel, useTableState } from '@/shared/lib'
+import { Button, DataTable, GuideRegion, Label, Select, type DataTableColumn, type MenuEntry } from '@/shared/ui'
 
 function isSystemScope(): boolean {
   return decodeJwtPayload(tokenStorage.get())?.scope_type === String(USER_SCOPE_TYPE.System)
@@ -64,7 +64,7 @@ export function DecisionRegisterTable() {
     () => [
       {
         id: 'number',
-        header: 'رقم القرار',
+        headerKey: 'decisions.register.column.number',
         hideable: false,
         sortable: true,
         sortKey: 'decisionNumber',
@@ -76,7 +76,7 @@ export function DecisionRegisterTable() {
       },
       {
         id: 'document',
-        header: 'الوثيقة',
+        headerKey: 'decisions.register.column.document',
         cell: (row) => (
           <span>
             {row.documentTitle}
@@ -90,33 +90,33 @@ export function DecisionRegisterTable() {
       },
       {
         id: 'type',
-        header: 'النوع',
+        headerKey: 'decisions.register.column.type',
         sortable: true,
         sortKey: 'type',
         cell: (row) => row.typeNameAr,
       },
       {
         id: 'date',
-        header: 'التاريخ',
+        headerKey: 'decisions.register.column.date',
         sortable: true,
         sortKey: 'decisionDate',
         cell: (row) => <span dir="ltr">{formatDate(row.decisionDate)}</span>,
       },
       {
         id: 'effect',
-        header: 'الأثر',
+        headerKey: 'decisions.register.column.effect',
         cell: (row) => decisionEffectLabel(row.effectId),
       },
       {
         id: 'status',
-        header: 'الحالة',
+        headerKey: 'decisions.register.column.status',
         sortable: true,
         sortKey: 'status',
         cell: (row) => <DecisionStatusBadge statusId={row.statusId} />,
       },
       {
         id: 'department',
-        header: 'الديوان المُصدر',
+        headerKey: 'decisions.register.column.department',
         cell: (row) => departmentName(row.issuingDepartmentId),
       },
     ],
@@ -127,7 +127,7 @@ export function DecisionRegisterTable() {
     const items: MenuEntry[] = [
       {
         id: 'open',
-        label: 'فتح الوثيقة',
+        label: t('decisions.register.row.open'),
         icon: <ExternalLink className="size-4" aria-hidden />,
         onSelect: () => navigate(`${ROUTES.DOCUMENT_DETAIL(row.documentId)}?tab=decisions`),
       },
@@ -135,7 +135,7 @@ export function DecisionRegisterTable() {
     if (canManage && systemScope && row.statusId !== DECISION_STATUS.Canceled) {
       items.push({
         id: 'cancel',
-        label: 'إلغاء الإدخال',
+        label: t('decisions.register.row.cancel'),
         icon: <Ban className="size-4" aria-hidden />,
         danger: true,
         onSelect: () => setCancelTarget(row),
@@ -144,12 +144,16 @@ export function DecisionRegisterTable() {
     return items
   }
 
+  const allTypesLabel = useLabel('decisions.filter.all-types')
+  const allStatusesLabel = useLabel('decisions.filter.all-statuses')
+  const allDepartmentsLabel = useLabel('decisions.filter.all-departments')
+
   const typeOptions = [
-    { value: '', label: 'كل الأنواع' },
+    { value: '', label: allTypesLabel },
     ...(typesQuery.data ?? []).map((type) => ({ value: type.decisionTypeId, label: type.nameAr })),
   ]
   const statusOptions = [
-    { value: '', label: 'كل الحالات' },
+    { value: '', label: allStatusesLabel },
     ...[
       DECISION_STATUS.Issued,
       DECISION_STATUS.Appealed,
@@ -159,7 +163,7 @@ export function DecisionRegisterTable() {
     ].map((statusId) => ({ value: String(statusId), label: decisionStatusLabel(statusId) })),
   ]
   const departmentOptions = [
-    { value: '', label: 'كل الدواوين' },
+    { value: '', label: allDepartmentsLabel },
     ...(departmentsQuery.data ?? []).map((department) => ({
       value: department.departmentId,
       label: department.nameAr,
@@ -171,7 +175,7 @@ export function DecisionRegisterTable() {
       <DataTable
         tableId="decisions"
         mode="server"
-        caption="سجل القرارات"
+        caption={t('decisions.tab.register')}
         columns={columns}
         rows={registerQuery.data?.items}
         rowKey={(row) => row.decisionId}
@@ -187,49 +191,49 @@ export function DecisionRegisterTable() {
         onPageSizeChange={table.setPageSize}
         search={table.search}
         onSearchChange={table.setSearch}
-        searchPlaceholder="رقم القرار أو اسم الوثيقة أو رقمها"
+        searchPlaceholder={t('decisions.register.search-placeholder')}
         sortKey={table.sortKey}
         sortDirection={table.sortDirection}
         onSortChange={table.setSort}
         rowMenu={rowMenu}
         rowLabel={(row) => row.decisionNumber}
-        emptyTitle="لا قرارات في هذا النطاق"
-        emptyDescription="القرارات على وثائق لا تملك الاطلاع عليها لا تظهر هنا."
+        emptyTitle={t('decisions.register.empty.title')}
+        emptyDescription={t('decisions.register.empty.description')}
         filters={
           <div className="flex flex-wrap items-center gap-2">
             <Select
-              aria-label="نوع القرار"
+              aria-label={t('decisions.register.filter.type-aria')}
               value={table.filters.type || undefined}
               onValueChange={(value) => table.setFilter('type', value || null)}
               options={typeOptions.filter((option) => option.value !== '')}
-              placeholder="كل الأنواع"
+              placeholder={allTypesLabel}
             />
             <Select
-              aria-label="حالة القرار"
+              aria-label={t('decisions.register.filter.status-aria')}
               value={table.filters.status || undefined}
               onValueChange={(value) => table.setFilter('status', value || null)}
               options={statusOptions.filter((option) => option.value !== '')}
-              placeholder="كل الحالات"
+              placeholder={allStatusesLabel}
             />
             <Select
-              aria-label="الديوان المُصدر"
+              aria-label={t('decisions.register.column.department')}
               value={table.filters.department || undefined}
               onValueChange={(value) => table.setFilter('department', value || null)}
               options={departmentOptions.filter((option) => option.value !== '')}
-              placeholder="كل الدواوين"
+              placeholder={allDepartmentsLabel}
             />
             <input
-              aria-label="سنة القرار"
+              aria-label={t('decisions.register.filter.year-aria')}
               inputMode="numeric"
               dir="ltr"
-              placeholder="السنة"
+              placeholder={t('decisions.register.filter.year-placeholder')}
               value={table.filters.year ?? ''}
               onChange={(event) => table.setFilter('year', event.target.value.replace(/\D/g, '').slice(0, 4) || null)}
               className="h-10 w-24 rounded-lg border border-border bg-surface px-3 text-sm"
             />
             {table.hasActiveFilters && (
               <Button type="button" variant="ghost" onClick={table.clearFilters}>
-                مسح المرشحات
+                <Label k="decisions.filter.clear" />
               </Button>
             )}
           </div>

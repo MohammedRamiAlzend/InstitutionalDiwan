@@ -16,7 +16,7 @@ permissions allow the transition, so the slice itself renders no permission bann
 | File | Purpose |
 | --- | --- |
 | `model/types.ts` | `RegisterDraftDocumentRequest`, `AddDocumentParticipantRequest`, `CancelDocumentRequest` matching `InstitutionalDiwan.Server.Contracts.Correspondence`. |
-| `model/schemas.ts` | Zod schemas and Arabic validation for the edit, register, participant, and cancel forms; participant `superRefine` requires exactly the field matching the chosen target kind. |
+| `model/schemas.ts` | Zod schemas with catalog validation (`t()` at module load) for the register, participant, and cancel forms; participant `superRefine` requires exactly the field matching the chosen target kind. |
 | `api/documentMutations.ts` | `useRegisterDraftDocumentMutation`, `useAddDocumentParticipantMutation`, `useCancelDocumentMutation`; all invalidate `documentKeys.detail(documentId)` and the registry lists after writes. |
 | `ui/RegisterDraftDialog.tsx` | Optional numbering year (blank = document year, then current year); success toast quotes the allocated `officialNumberText` and surfaces `Numbering.RegistryNotFound`/`Numbering.OfficialNumberTaken`. |
 | `ui/AddParticipantDialog.tsx` | Role lookup, three target kinds (external organization, internal department, person), primary flag, notes; external organizations come from a debounced search over `GET /api/external-organizations`, departments from `identity-options`. |
@@ -48,6 +48,7 @@ permissions allow the transition, so the slice itself renders no permission bann
 - 2026-11-05: Unsent form input is now kept (per user, per form) after an accidental close or cancel and restored with a toast; it is cleared only after a successful submit (`useDraftForm`).
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-18 | Qoder | UI labels Phase 4 (ب4): register/participant/cancel dialogs and Zod schemas resolve chrome via the label catalog (`docdetails.*`, reusing `documents.create.*`/`common.action.*`) — titles/descriptions/toasts/placeholders/arias via `t()`, visible headings/buttons via `<Label>`, field labels via `FormField labelKey`, target-kind cards via `<Label>`; `RegisterDraftDialog` destination options resolve «بدون إرسال الآن» through `resolveLabel` + overrides. Lookup names, codes and Latin examples stay data. |
 | 2026-11-09 | Claude | `AddParticipantDialog` hides the participant type choice while only departments are enabled (`FEATURES.personParticipants` is off). |
 | 2026-11-09 | Claude | `AddParticipantDialog` hides the external organization choice while `FEATURES.externalOrganizations` is off. |
 | 2026-11-09 | Claude | Removed `EditDraftDialog`: a draft had only its title and summary to edit. |

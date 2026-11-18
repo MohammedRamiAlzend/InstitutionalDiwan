@@ -1,6 +1,6 @@
 import { driver, type Config, type DriveStep, type Driver } from 'driver.js'
 import type { GuideEntry } from '@/shared/config'
-import { formatNumber } from '@/shared/lib'
+import { formatNumber, t } from '@/shared/lib'
 
 /**
  * Driver.js adapter for the tutorial mode. A guide entry is anchored to whichever element
@@ -51,9 +51,9 @@ function baseConfig(): Config {
     overlayColor: overlayColor(),
     overlayOpacity: 0.55,
     popoverClass: 'diwan-tour',
-    nextBtnText: 'التالي',
-    prevBtnText: 'السابق',
-    doneBtnText: 'إغلاق',
+    nextBtnText: t('guide.tour.next'),
+    prevBtnText: t('guide.tour.prev'),
+    doneBtnText: t('common.action.close'),
     onDestroyed: () => {
       active = undefined
     },
@@ -82,7 +82,7 @@ export function showGuideTour(intro: GuideEntry, entries: readonly GuideEntry[])
   active = driver({
     ...baseConfig(),
     showProgress: true,
-    progressText: '{{current}} من {{total}}',
+    progressText: t('guide.tour.progress'),
     steps,
     onPopoverRender: (popover) => {
       // Arabic-Indic digits, like the rest of the interface.

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type MouseEve
 import { Check, RotateCcw, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { toArabicErrorMessage } from '@/shared/api'
-import { cn } from '@/shared/lib'
+import { cn, t } from '@/shared/lib'
 import type { LabelEditorProps } from '@/shared/ui'
 import { useSetUiLabelMutation, useResetUiLabelMutation } from '../api/uiLabelMutations'
 import { uiLabelValueSchema, UI_LABEL_MAX_LENGTH } from '../model/schemas'
@@ -47,7 +47,7 @@ export function LabelEditor({
     setError(null)
     try {
       await setLabel.mutateAsync({ key: labelKey, value: parsed.data })
-      toast.success('تم حفظ التسمية.')
+      toast.success(t('label-editor.toast-saved'))
       onClose()
     } catch (err) {
       setError(toArabicErrorMessage(err))
@@ -58,7 +58,7 @@ export function LabelEditor({
     setError(null)
     try {
       await resetLabel.mutateAsync(labelKey)
-      toast.success('تمت استعادة التسمية الافتراضية.')
+      toast.success(t('label-editor.toast-reset'))
       onClose()
     } catch (err) {
       setError(toArabicErrorMessage(err))
@@ -110,7 +110,7 @@ export function LabelEditor({
     <span
       ref={rootRef}
       role="group"
-      aria-label="تحرير التسمية"
+      aria-label={t('label-editor.group-aria')}
       className="inline-flex w-full min-w-0 flex-col gap-1"
       onClick={onClick}
       onKeyDown={onKeyDown}
@@ -122,7 +122,7 @@ export function LabelEditor({
           value={value}
           disabled={busy}
           maxLength={UI_LABEL_MAX_LENGTH}
-          aria-label="نص التسمية"
+          aria-label={t('label-editor.input-aria')}
           aria-invalid={error ? true : undefined}
           onChange={(event) => {
             setValue(event.target.value)
@@ -137,8 +137,8 @@ export function LabelEditor({
           type="button"
           className={cn(ICON_BUTTON, 'border-accent bg-accent text-accent-contrast hover:bg-accent-hover')}
           disabled={busy}
-          aria-label="حفظ"
-          title="حفظ (Enter)"
+          aria-label={t('common.action.save')}
+          title={t('label-editor.save-title')}
           onClick={() => void save()}
         >
           <Check className="size-4" aria-hidden />
@@ -148,8 +148,8 @@ export function LabelEditor({
             type="button"
             className={ICON_BUTTON}
             disabled={busy}
-            aria-label="استعادة الافتراضي"
-            title="استعادة التسمية الافتراضية"
+            aria-label={t('label-editor.reset-aria')}
+            title={t('label-editor.reset-title')}
             onClick={() => void restore()}
           >
             <RotateCcw className="size-4" aria-hidden />
@@ -159,8 +159,8 @@ export function LabelEditor({
           type="button"
           className={ICON_BUTTON}
           disabled={busy}
-          aria-label="إلغاء"
-          title="إلغاء (Esc)"
+          aria-label={t('common.action.cancel')}
+          title={t('label-editor.cancel-title')}
           onClick={onClose}
         >
           <X className="size-4" aria-hidden />

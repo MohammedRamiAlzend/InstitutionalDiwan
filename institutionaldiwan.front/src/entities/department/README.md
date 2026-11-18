@@ -23,6 +23,7 @@ Models Module 01 `Department` (`DepartmentResponse` and recursive `DepartmentTre
 ## Change Log
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-18 | Qoder | UI labels Phase 4 (ب2): `DepartmentBadge` renders «موقوف» via `<Label k="department.status.suspended">`; `toMermaid` appends the suspended suffix via `t('department.status.suspended')`. Department names/codes stay data-driven. |
 | 2026-11-04 | Claude | Added `DepartmentLabel` («name + short id») for tables and dialogs that previously showed a bare department id. |
 | 2026-10-28 | agent | Module 03 Phase 2: the department picker read is also accepted for `DOCUMENT_VIEW`/`DOCUMENT_CREATE`/`DOCUMENT_EDIT` (server + tests), so read-only registry users can resolve owning-department labels and drive the registry filter. |
 | 2026-10-28 | agent | Added `model/options.ts` (`useDepartmentOptions`) for the permission-scoped `GET /api/identity-options/departments` picker read used by identity and employee forms. |

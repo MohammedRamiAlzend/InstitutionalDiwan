@@ -11,7 +11,8 @@ import {
   type FieldValueMap,
 } from '@/entities/document-schema'
 import { toArabicErrorMessage } from '@/shared/api'
-import { Button } from '@/shared/ui'
+import { t } from '@/shared/lib'
+import { Button, Label } from '@/shared/ui'
 import { useSetDocumentFieldValuesMutation } from '../api/fieldValueMutations'
 
 interface EditFieldValuesFormProps {
@@ -36,7 +37,7 @@ export function EditFieldValuesForm({ documentId, fields, onDone }: EditFieldVal
 
     mutation.mutate(toFieldValueRequests(schemaFields, values), {
       onSuccess: () => {
-        toast.success('حُفظت قيم الحقول.')
+        toast.success(t('schema.panel.toast-saved'))
         onDone()
       },
     })
@@ -74,10 +75,10 @@ export function EditFieldValuesForm({ documentId, fields, onDone }: EditFieldVal
 
       <div className="flex items-center gap-2">
         <Button type="submit" loading={mutation.isPending}>
-          حفظ القيم
+          <Label k="schema.panel.save-values" />
         </Button>
         <Button type="button" variant="outline" onClick={onDone} disabled={mutation.isPending}>
-          تراجع
+          <Label k="schema.action.back" />
         </Button>
       </div>
     </form>

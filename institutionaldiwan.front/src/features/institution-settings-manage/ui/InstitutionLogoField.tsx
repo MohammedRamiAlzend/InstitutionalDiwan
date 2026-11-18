@@ -3,7 +3,8 @@ import { ImagePlus, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { BrandMark, useBranding } from '@/entities/branding'
 import { toArabicErrorMessage } from '@/shared/api'
-import { Button } from '@/shared/ui'
+import { t } from '@/shared/lib'
+import { Button, Label } from '@/shared/ui'
 import {
   useRemoveInstitutionLogoMutation,
   useUploadInstitutionLogoMutation,
@@ -34,17 +35,17 @@ export function InstitutionLogoField() {
     if (!file) return
 
     if (!ACCEPTED_TYPES.includes(file.type)) {
-      setPickError('الملف ليس صورة مقبولة. اختر PNG أو JPEG أو WebP أو SVG.')
+      setPickError(t('institution.logo.invalid-type'))
       return
     }
     if (file.size > MAX_BYTES) {
-      setPickError('حجم الشعار يتجاوز الحد الأقصى (1 ميغابايت).')
+      setPickError(t('institution.logo.too-large'))
       return
     }
 
     try {
       await upload.mutateAsync(file)
-      toast.success('تم تحديث شعار المؤسسة.')
+      toast.success(t('institution.logo.toast-uploaded'))
     } catch {
       // The mutation error is shown below in Arabic.
     }
@@ -55,7 +56,7 @@ export function InstitutionLogoField() {
     upload.reset()
     try {
       await remove.mutateAsync()
-      toast.success('تمت إزالة شعار المؤسسة.')
+      toast.success(t('institution.logo.toast-removed'))
     } catch {
       // The mutation error is shown below in Arabic.
     }
@@ -75,7 +76,7 @@ export function InstitutionLogoField() {
             onClick={() => inputRef.current?.click()}
           >
             <ImagePlus className="size-4" aria-hidden />
-            {hasLogo ? 'استبدال الشعار' : 'رفع شعار'}
+            {hasLogo ? <Label k="institution.logo.replace" /> : <Label k="institution.logo.upload" />}
           </Button>
           {hasLogo && (
             <Button
@@ -87,7 +88,7 @@ export function InstitutionLogoField() {
               onClick={() => void onRemove()}
             >
               <Trash2 className="size-4" aria-hidden />
-              إزالة الشعار
+              <Label k="institution.logo.remove" />
             </Button>
           )}
         </div>
@@ -96,7 +97,7 @@ export function InstitutionLogoField() {
           type="file"
           accept={ACCEPTED_TYPES.join(',')}
           className="hidden"
-          aria-label="ملف شعار المؤسسة"
+          aria-label={t('institution.logo.input-aria')}
           onChange={(event) => {
             const file = event.target.files?.[0]
             event.target.value = ''
@@ -105,8 +106,7 @@ export function InstitutionLogoField() {
         />
       </div>
       <p className="text-xs text-muted">
-        PNG أو JPEG أو WebP أو SVG، حتى 1 ميغابايت. يظهر الشعار في صفحة الدخول وفي القائمة الجانبية وفي
-        أيقونة التبويب، وتُستحسن الصورة المربعة بخلفية شفافة.
+        {t('institution.logo.hint')}
       </p>
       {error && (
         <p role="alert" className="text-xs text-danger">

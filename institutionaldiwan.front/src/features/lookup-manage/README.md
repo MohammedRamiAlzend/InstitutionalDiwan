@@ -36,5 +36,6 @@ administrator-chosen id, relabel it, deactivate and reactivate it. Complements t
 - 2026-11-05: Unsent form input is now kept (per user, per form) after an accidental close or cancel and restored with a toast; it is cleared only after a successful submit (`useDraftForm`).
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-18 | Qoder | UI labels Phase 4 (ب4): the add/relabel entry form resolves titles, fields, buttons and toasts via `t()`/`<Label>`/`FormField labelKey` and its Zod messages via `t()` (`lookup.*`). The catalog entry values (`descAr`) stay data. |
 | 2026-11-05 | Claude | Added `useSetLookupEntryDefaultMutation` (`PATCH .../set-default` and `.../clear-default`). |
 | 2026-11-04 | Claude | Added the Module 01 lookups administration writes (plan `plans/module-01-lookups-frontend.md`). |

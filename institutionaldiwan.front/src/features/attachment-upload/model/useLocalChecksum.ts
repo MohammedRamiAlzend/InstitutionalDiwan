@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from 'react'
-import { ChecksumUnsupportedError, sha256Hex } from '@/shared/lib'
+import { ChecksumUnsupportedError, sha256Hex, t } from '@/shared/lib'
 
 export interface LocalChecksum {
   /** Hex digest of the picked file, or `null` while none is known. */
@@ -50,7 +50,7 @@ export function useLocalChecksum(): LocalChecksum {
         setError(
           cause instanceof ChecksumUnsupportedError
             ? cause.message
-            : 'تعذّر حساب البصمة المحلية لهذا الملف.',
+            : t('attachment.checksum.local-error'),
         )
       }
     } finally {

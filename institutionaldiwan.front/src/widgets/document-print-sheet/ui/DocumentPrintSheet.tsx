@@ -14,7 +14,7 @@ import { useDocumentMovements } from '@/entities/movement'
 import { useDocumentPersons } from '@/entities/person'
 import { UserLabel } from '@/entities/user'
 import { FEATURES } from '@/shared/config'
-import { formatDateTime } from '@/shared/lib'
+import { formatDateTime, t } from '@/shared/lib'
 import { PrintSheet } from '@/shared/ui'
 import {
   PrintDate,
@@ -40,7 +40,7 @@ function TimelineEvent({ entry }: { entry: DocumentTimelineEntryResponse }) {
   if (entry.eventKind === 'STATUS') {
     return (
       <span>
-        تغيير الحالة: {entry.fromStatusId !== null && <><DocumentStatus id={entry.fromStatusId} /> ← </>}
+        {t('print.timeline.status-change')} {entry.fromStatusId !== null && <><DocumentStatus id={entry.fromStatusId} /> ← </>}
         <DocumentStatus id={entry.toStatusId} />
       </span>
     )
@@ -48,7 +48,7 @@ function TimelineEvent({ entry }: { entry: DocumentTimelineEntryResponse }) {
   if (entry.eventKind === 'NUMBER') {
     return <LookupLabel lookup={LOOKUP_SLUGS.DocumentNumberEventTypes} id={entry.numberEventTypeId} />
   }
-  return <span>إضافة مشارك</span>
+  return <span>{t('print.timeline.add-participant')}</span>
 }
 
 /**
@@ -86,32 +86,32 @@ export function DocumentPrintSheet({ details, canViewNumbering, onDone }: Docume
     <PrintSheet fileName={document.title} ready={ready} onDone={onDone}>
       <header className="flex items-end justify-between gap-4 border-b-2 border-accent pb-3">
         <div>
-          <p className="text-xs text-muted">وثيقة</p>
+          <p className="text-xs text-muted">{t('print.document-kicker')}</p>
           <h1 className="text-xl font-bold text-foreground">{document.title}</h1>
         </div>
         <p className="text-[10px] text-muted">
-          تاريخ الاستخراج: <span dir="ltr">{formatDateTime(new Date().toISOString())}</span>
+          {t('print.extracted-at')} <span dir="ltr">{formatDateTime(new Date().toISOString())}</span>
         </p>
       </header>
 
-      <PrintSection title="بيانات الوثيقة">
+      <PrintSection title={t('print.section.document')}>
         <PrintFacts
           facts={[
-            { label: 'نوع الوثيقة', value: <LookupLabel lookup={LOOKUP_SLUGS.DocumentTypes} id={document.documentTypeId} /> },
-            { label: 'الحالة', value: <DocumentStatus id={document.statusId} /> },
-            { label: 'رقم النظام', value: <PrintLatin value={document.officialNumberText} /> },
-            { label: 'تاريخ التسجيل', value: <PrintDate value={document.registrationDate} /> },
-            { label: 'القسم المالك', value: <DepartmentLabel departmentId={document.owningDepartmentId} /> },
-            { label: 'تاريخ الإنشاء', value: <PrintDateTime value={document.createdAt} /> },
-            { label: 'أنشأها', value: <UserLabel userId={document.createdByUserId} /> },
+            { label: t('print.fact.type'), value: <LookupLabel lookup={LOOKUP_SLUGS.DocumentTypes} id={document.documentTypeId} /> },
+            { label: t('print.fact.status'), value: <DocumentStatus id={document.statusId} /> },
+            { label: t('print.fact.number'), value: <PrintLatin value={document.officialNumberText} /> },
+            { label: t('print.fact.registration-date'), value: <PrintDate value={document.registrationDate} /> },
+            { label: t('print.fact.owning-department'), value: <DepartmentLabel departmentId={document.owningDepartmentId} /> },
+            { label: t('print.fact.created-at'), value: <PrintDateTime value={document.createdAt} /> },
+            { label: t('print.fact.created-by'), value: <UserLabel userId={document.createdByUserId} /> },
           ]}
         />
       </PrintSection>
 
       {departmentNumbers.length > 0 && (
-        <PrintSection title="سجلات الأقسام">
+        <PrintSection title={t('print.section.registers')}>
           <PrintTable
-            headers={['القسم', 'رقم السجل', 'السنة', 'تاريخ السجل']}
+            headers={[t('print.header.department'), t('print.header.registry-number'), t('print.header.year'), t('print.header.registry-date')]}
             rows={departmentNumbers.map((line) => [
               <DepartmentLabel departmentId={line.departmentId} />,
               <PrintLatin value={line.registryNumberText} />,
@@ -123,7 +123,7 @@ export function DocumentPrintSheet({ details, canViewNumbering, onDone }: Docume
       )}
 
       {fieldValues.length > 0 && (
-        <PrintSection title="حقول الوثيقة">
+        <PrintSection title={t('print.section.fields')}>
           <PrintFacts
             columns={2}
             facts={fieldValues.map(({ field, value }) => ({
@@ -135,9 +135,9 @@ export function DocumentPrintSheet({ details, canViewNumbering, onDone }: Docume
       )}
 
       {personRows.length > 0 && (
-        <PrintSection title="الأشخاص المرتبطون">
+        <PrintSection title={t('print.section.persons')}>
           <PrintTable
-            headers={['الاسم', 'الصفة', 'تاريخ الإضافة']}
+            headers={[t('print.header.name'), t('print.header.role'), t('print.header.added-at')]}
             rows={personRows.map((person) => [
               person.displayName,
               <LookupLabel lookup={LOOKUP_SLUGS.DocumentPersonRoles} id={person.roleId} />,
@@ -148,9 +148,9 @@ export function DocumentPrintSheet({ details, canViewNumbering, onDone }: Docume
       )}
 
       {FEATURES.participants && participants.length > 0 && (
-        <PrintSection title="المشاركون">
+        <PrintSection title={t('print.section.participants')}>
           <PrintTable
-            headers={['الدور', 'الجهة', 'ملاحظات']}
+            headers={[t('print.header.participant-role'), t('print.header.party'), t('print.header.notes')]}
             rows={participants.map((participant) => [
               <LookupLabel lookup={LOOKUP_SLUGS.ParticipantRoles} id={participant.roleId} />,
               participant.internalDepartmentId ? (
@@ -165,26 +165,26 @@ export function DocumentPrintSheet({ details, canViewNumbering, onDone }: Docume
       )}
 
       {movementRows.length > 0 && (
-        <PrintSection title="حركة الوثيقة">
+        <PrintSection title={t('print.section.movements')}>
           <div className="flex flex-col gap-3">
             {movementRows.map((movement) => (
               <div key={movement.movementId}>
                 <PrintFacts
                   facts={[
-                    { label: 'نوع الحركة', value: <LookupLabel lookup={LOOKUP_SLUGS.MovementTypes} id={movement.movementTypeId} /> },
-                    { label: 'الحالة', value: <LookupLabel lookup={LOOKUP_SLUGS.MovementStatuses} id={movement.statusId} /> },
-                    { label: 'الموعد النهائي', value: <PrintDate value={movement.dueDate} /> },
-                    { label: 'من', value: <DepartmentLabel departmentId={movement.sourceDepartmentId} /> },
-                    { label: 'إلى', value: <DepartmentLabel departmentId={movement.destinationDepartmentId} /> },
-                    { label: 'التعليمات', value: movement.instructions ?? '—' },
-                    { label: 'بدأت', value: <PrintDateTime value={movement.createdAt} /> },
-                    { label: 'أُغلقت', value: <PrintDateTime value={movement.closedAt} /> },
+                    { label: t('print.fact.movement-type'), value: <LookupLabel lookup={LOOKUP_SLUGS.MovementTypes} id={movement.movementTypeId} /> },
+                    { label: t('print.fact.status'), value: <LookupLabel lookup={LOOKUP_SLUGS.MovementStatuses} id={movement.statusId} /> },
+                    { label: t('print.fact.due-date'), value: <PrintDate value={movement.dueDate} /> },
+                    { label: t('print.fact.from'), value: <DepartmentLabel departmentId={movement.sourceDepartmentId} /> },
+                    { label: t('print.fact.to'), value: <DepartmentLabel departmentId={movement.destinationDepartmentId} /> },
+                    { label: t('print.fact.instructions'), value: movement.instructions ?? '—' },
+                    { label: t('print.fact.started'), value: <PrintDateTime value={movement.createdAt} /> },
+                    { label: t('print.fact.closed'), value: <PrintDateTime value={movement.closedAt} /> },
                   ]}
                 />
                 {movement.steps.length > 0 && (
                   <div className="mt-1">
                     <PrintTable
-                      headers={['#', 'من', 'إلى', 'الحالة', 'الإرسال', 'الاستلام', 'الإنجاز', 'رقم السجل', 'تاريخ السجل', 'الملاحظات']}
+                      headers={['#', t('print.header.from'), t('print.header.to'), t('print.header.status'), t('print.header.sent'), t('print.header.received'), t('print.header.completed'), t('print.header.registry-number'), t('print.header.registry-date'), t('print.header.notes')]}
                       rows={movement.steps.map((step) => [
                         <span dir="ltr">{step.stepNo}</span>,
                         <DepartmentLabel departmentId={step.fromDepartmentId} />,
@@ -207,14 +207,14 @@ export function DocumentPrintSheet({ details, canViewNumbering, onDone }: Docume
       )}
 
       {fileRows.length > 0 && (
-        <PrintSection title="المرفقات">
+        <PrintSection title={t('print.section.files')}>
           <PrintTable
-            headers={['الملف', 'النوع', 'الإصدار', 'نسخة المسح الأساسية', 'تاريخ الإضافة']}
+            headers={[t('print.header.file'), t('print.header.type'), t('print.header.version'), t('print.header.primary-scan'), t('print.header.added-at')]}
             rows={fileRows.map((file) => [
-              file.isArchived ? `${file.title} (مؤرشف)` : file.title,
+              file.isArchived ? t('print.file.archived', { title: file.title }) : file.title,
               <LookupLabel lookup={LOOKUP_SLUGS.DocumentFileTypes} id={file.fileTypeId} />,
               <span dir="ltr">{file.currentVersionNumber}</span>,
-              file.isPrimaryScan ? 'نعم' : 'لا',
+              file.isPrimaryScan ? t('print.yes') : t('print.no'),
               <PrintDateTime value={file.createdAt} />,
             ])}
           />
@@ -222,12 +222,12 @@ export function DocumentPrintSheet({ details, canViewNumbering, onDone }: Docume
       )}
 
       {relationRows.length > 0 && (
-        <PrintSection title="الوثائق المرتبطة">
+        <PrintSection title={t('print.section.relations')}>
           <PrintTable
-            headers={['نوع الرابط', 'الاتجاه', 'الوثيقة', 'رقم النظام', 'الحالة', 'ملاحظات']}
+            headers={[t('print.header.relation-type'), t('print.header.direction'), t('print.header.document'), t('print.fact.number'), t('print.header.status'), t('print.header.notes')]}
             rows={relationRows.map((relation) => [
               relation.type.descAr,
-              RELATION_DIRECTION_LABELS[relation.direction],
+              t(RELATION_DIRECTION_LABELS[relation.direction]),
               relation.relatedDocument.title,
               <PrintLatin value={relation.relatedDocument.officialNumberText} />,
               <DocumentStatus id={relation.relatedDocument.statusId} />,
@@ -236,16 +236,16 @@ export function DocumentPrintSheet({ details, canViewNumbering, onDone }: Docume
           />
           {hiddenRelations > 0 && (
             <p className="mt-1 text-[10px] text-muted">
-              توجد <span dir="ltr">{hiddenRelations}</span> روابط إضافية لوثائق لا تملك صلاحية عرضها.
+              {t('print.relations.hidden', { count: hiddenRelations })}
             </p>
           )}
         </PrintSection>
       )}
 
       {statusHistory.length > 0 && (
-        <PrintSection title="سجل الحالة">
+        <PrintSection title={t('print.section.status-history')}>
           <PrintTable
-            headers={['من', 'إلى', 'السبب', 'بواسطة', 'التاريخ']}
+            headers={[t('print.header.from'), t('print.header.to'), t('print.header.reason'), t('print.header.by'), t('print.header.date')]}
             rows={statusHistory.map((entry) => [
               <DocumentStatus id={entry.fromStatusId} />,
               <DocumentStatus id={entry.toStatusId} />,
@@ -258,9 +258,9 @@ export function DocumentPrintSheet({ details, canViewNumbering, onDone }: Docume
       )}
 
       {timelineRows.length > 0 && (
-        <PrintSection title="الخط الزمني">
+        <PrintSection title={t('print.section.timeline')}>
           <PrintTable
-            headers={['الحدث', 'بواسطة', 'التاريخ']}
+            headers={[t('print.header.event'), t('print.header.by'), t('print.header.date')]}
             rows={timelineRows.map((entry) => [
               <TimelineEvent entry={entry} />,
               <UserLabel userId={entry.actorUserId} />,
@@ -271,9 +271,9 @@ export function DocumentPrintSheet({ details, canViewNumbering, onDone }: Docume
       )}
 
       {archiveRows.length > 0 && (
-        <PrintSection title="سجل الأرشفة">
+        <PrintSection title={t('print.section.archive')}>
           <PrintTable
-            headers={['الحدث', 'الموقع', 'السبب', 'بواسطة', 'التاريخ']}
+            headers={[t('print.header.event'), t('print.header.location'), t('print.header.reason'), t('print.header.by'), t('print.header.date')]}
             rows={archiveRows.map((event) => [
               <LookupLabel lookup={LOOKUP_SLUGS.ArchiveEventTypes} id={event.eventTypeId} />,
               <LookupLabel lookup={LOOKUP_SLUGS.ArchiveLocations} id={event.archiveLocationId} />,

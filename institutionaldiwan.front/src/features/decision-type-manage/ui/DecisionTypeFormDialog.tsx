@@ -7,8 +7,8 @@ import { type DecisionTypeResponse } from '@/entities/decision-type'
 import { LOOKUP_SLUGS, useLookupEntries } from '@/entities/lookup'
 import { toArabicErrorMessage } from '@/shared/api'
 import { DECISION_EFFECT, decisionEffectLabel } from '@/shared/config'
-import { useDraftForm } from '@/shared/lib'
-import { Button, Checkbox, Dialog, FormField, Input, Select } from '@/shared/ui'
+import { useDraftForm, t } from '@/shared/lib'
+import { Button, Checkbox, Dialog, FormField, Input, Label, Select } from '@/shared/ui'
 import {
   useCreateDecisionTypeMutation,
   useUpdateDecisionTypeMutation,
@@ -21,12 +21,12 @@ interface DecisionTypeFormDialogProps {
   decisionType: DecisionTypeResponse | null
 }
 
-const EFFECT_OPTIONS = [
+const EFFECT_IDS = [
   DECISION_EFFECT.Refer,
   DECISION_EFFECT.SendToArchive,
   DECISION_EFFECT.Join,
   DECISION_EFFECT.None,
-].map((effectId) => ({ value: String(effectId), label: decisionEffectLabel(effectId) }))
+]
 
 function toValues(decisionType: DecisionTypeResponse | null): DecisionTypeFormValues {
   return {
@@ -49,6 +49,10 @@ export function DecisionTypeFormDialog({
   const departmentsQuery = useDepartmentOptions({ enabled: open })
   const documentTypesQuery = useLookupEntries(LOOKUP_SLUGS.DocumentTypes, { enabled: open })
   const pending = createMutation.isPending || updateMutation.isPending
+  const effectOptions = EFFECT_IDS.map((effectId) => ({
+    value: String(effectId),
+    label: decisionEffectLabel(effectId),
+  }))
 
   const departmentOptions = useMemo(
     () =>
@@ -94,7 +98,7 @@ export function DecisionTypeFormDialog({
     try {
       if (decisionType) await updateMutation.mutateAsync(request)
       else await createMutation.mutateAsync(request)
-      toast.success(decisionType ? 'تم تحديث نوع القرار.' : 'تم إنشاء نوع القرار.')
+      toast.success(decisionType ? t('decisions.type.toast.updated') : t('decisions.type.toast.created'))
       draft.discard()
       onOpenChange(false)
     } catch (error) {
@@ -106,25 +110,25 @@ export function DecisionTypeFormDialog({
     <Dialog
       open={open}
       onOpenChange={onOpenChange}
-      title={decisionType ? 'تعديل نوع القرار' : 'نوع قرار جديد'}
-      description="الإحالة بلا قسم وجهة تُحفظ موقوفة حتى يُسمّى القسم وتُفعَّل. القرارات الصادرة تحتفظ بنسخة الأثر كما كانت عند إصدارها."
+      title={decisionType ? t('decisions.type.title-edit') : t('decisions.type.title-new')}
+      description={t('decisions.type.description')}
       size="lg"
       footer={
         <>
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={pending}>
-            إلغاء
+            <Label k="common.action.cancel" />
           </Button>
           <Button type="submit" form="decision-type-form" disabled={pending}>
-            {pending ? 'جارٍ الحفظ…' : 'حفظ'}
+            {pending ? t('decisions.type.submitting') : <Label k="common.action.save" />}
           </Button>
         </>
       }
     >
       <form id="decision-type-form" className="flex flex-col gap-4" onSubmit={onSubmit} noValidate>
-        <FormField label="الاسم" required error={errors.nameAr?.message} guideId="decisions.type-name">
+        <FormField labelKey="decisions.type.field-name" required error={errors.nameAr?.message} guideId="decisions.type-name">
           <Input {...register('nameAr')} invalid={Boolean(errors.nameAr)} />
         </FormField>
-        <FormField label="الأثر" required error={errors.effectId?.message} guideId="decisions.type-effect">
+        <FormField labelKey="decisions.type.field-effect" required error={errors.effectId?.message} guideId="decisions.type-effect">
           <Controller
             control={control}
             name="effectId"
@@ -135,7 +139,7 @@ export function DecisionTypeFormDialog({
                   field.onChange(value)
                   if (Number(value) !== DECISION_EFFECT.Refer) setValue('destinationDepartmentId', '')
                 }}
-                options={EFFECT_OPTIONS}
+                options={effectOptions}
                 invalid={Boolean(errors.effectId)}
               />
             )}
@@ -143,9 +147,9 @@ export function DecisionTypeFormDialog({
         </FormField>
         {isReferral && (
           <FormField
-            label="قسم الوجهة"
+            labelKey="decisions.type.field-destination"
             error={errors.destinationDepartmentId?.message}
-            hint="مطلوب قبل التفعيل. بدونه يُحفظ النوع موقوفًا."
+            hint={t('decisions.type.destination-hint')}
           >
             <Controller
               control={control}
@@ -155,7 +159,7 @@ export function DecisionTypeFormDialog({
                   value={field.value || undefined}
                   onValueChange={field.onChange}
                   options={departmentOptions}
-                  placeholder="اختر الديوان الوجهة"
+                  placeholder={t('decisions.type.destination-placeholder')}
                   invalid={Boolean(errors.destinationDepartmentId)}
                 />
               )}
@@ -164,19 +168,19 @@ export function DecisionTypeFormDialog({
         )}
         {effectId === DECISION_EFFECT.Join && (
           <p className="text-sm text-muted">
-            إصدار هذا النوع يوحّد الملف مع ملف رئيسي يختاره المُصدر. لا يتغيّر رقم الملف ولا مكانه.
+            <Label k="decisions.type.join-hint" />
           </p>
         )}
-        <FormField label="قابل للاعتراض">
+        <FormField labelKey="decisions.type.field-appealable">
           <Controller
             control={control}
             name="isAppealable"
             render={({ field }) => (
-              <Checkbox checked={field.value} onCheckedChange={field.onChange} label="يمكن الاعتراض على القرار" />
+              <Checkbox checked={field.value} onCheckedChange={field.onChange} label={t('decisions.type.appealable-checkbox')} />
             )}
           />
         </FormField>
-        <FormField label="أنواع الوثائق" required error={errors.documentTypeIds?.message}>
+        <FormField labelKey="decisions.type.field-document-types" required error={errors.documentTypeIds?.message}>
           <div className="flex flex-col gap-2">
             {(documentTypesQuery.data ?? []).map((entry) => (
               <Checkbox

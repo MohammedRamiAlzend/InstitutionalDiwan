@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { t } from '@/shared/lib'
 
 /**
  * Shared by the create and edit dialogs: the code field stays in the form but is
@@ -8,21 +9,21 @@ export const roleFormSchema = z.object({
   code: z
     .string()
     .trim()
-    .min(1, 'رمز الدور مطلوب.')
-    .max(100, 'رمز الدور يتجاوز الحد الأقصى للأحرف.'),
+    .min(1, t('role.validation.code-required'))
+    .max(100, t('role.validation.code-max')),
   nameAr: z
     .string()
     .trim()
-    .min(1, 'الاسم العربي للدور مطلوب.')
-    .max(150, 'الاسم العربي يتجاوز الحد الأقصى للأحرف.'),
+    .min(1, t('role.validation.name-ar-required'))
+    .max(150, t('role.validation.name-ar-max')),
   nameEn: z
     .string()
     .trim()
-    .max(150, 'الاسم الإنجليزي يتجاوز الحد الأقصى للأحرف.'),
+    .max(150, t('role.validation.name-en-max')),
   description: z
     .string()
     .trim()
-    .max(500, 'الوصف يتجاوز الحد الأقصى للأحرف.'),
+    .max(500, t('role.validation.description-max')),
 })
 
 export type RoleFormValues = z.infer<typeof roleFormSchema>

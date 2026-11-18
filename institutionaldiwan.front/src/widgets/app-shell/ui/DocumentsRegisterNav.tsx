@@ -5,6 +5,7 @@ import { Permissions } from '@/shared/config'
 import {
   cn,
   resolveSelectedRegistryId,
+  t,
   useSelectedRegistryId,
   writeSelectedRegistryId,
 } from '@/shared/lib'
@@ -31,7 +32,7 @@ export function DocumentsRegisterNav() {
 
   return (
     <ul
-      aria-label="سجلات قسمك"
+      aria-label={t('shell.register-nav-aria')}
       className="ms-5 mt-0.5 flex flex-col gap-0.5 border-s border-border ps-2"
     >
       {registries.map((registry) => {

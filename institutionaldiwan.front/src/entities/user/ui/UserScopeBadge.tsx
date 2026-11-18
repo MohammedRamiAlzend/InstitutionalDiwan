@@ -1,11 +1,12 @@
 import { Building2, Globe2, Landmark, Network } from 'lucide-react'
-import { cn } from '@/shared/lib'
+import type { LabelKey } from '@/shared/config'
+import { cn, useLabel } from '@/shared/lib'
 
-const scopeMeta: Record<number, { label: string; icon: typeof Globe2 }> = {
-  1: { label: 'الدائرة', icon: Building2 },
-  2: { label: 'الدائرة والفروع', icon: Network },
-  3: { label: 'المؤسسة', icon: Landmark },
-  4: { label: 'النظام', icon: Globe2 },
+const scopeMeta: Record<number, { labelKey: LabelKey; icon: typeof Globe2 }> = {
+  1: { labelKey: 'user.scope.department', icon: Building2 },
+  2: { labelKey: 'user.scope.department-tree', icon: Network },
+  3: { labelKey: 'user.scope.institution', icon: Landmark },
+  4: { labelKey: 'user.scope.system', icon: Globe2 },
 }
 
 interface UserScopeBadgeProps {
@@ -17,6 +18,10 @@ interface UserScopeBadgeProps {
 export function UserScopeBadge({ scopeTypeId, className }: UserScopeBadgeProps) {
   const meta = scopeMeta[scopeTypeId]
   const Icon = meta?.icon
+  const text = useLabel(
+    meta ? meta.labelKey : 'user.scope.fallback',
+    meta ? undefined : { id: scopeTypeId },
+  )
 
   return (
     <span
@@ -28,10 +33,10 @@ export function UserScopeBadge({ scopeTypeId, className }: UserScopeBadgeProps) 
       {meta && Icon ? (
         <>
           <Icon className="size-3.5" aria-hidden />
-          {meta.label}
+          {text}
         </>
       ) : (
-        `نطاق #${scopeTypeId}`
+        text
       )}
     </span>
   )

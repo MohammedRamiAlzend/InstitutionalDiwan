@@ -26,6 +26,6 @@ export { MovementActionDialog } from './ui/MovementActionDialog'
 export {
   DESTRUCTIVE_ACTIONS,
   MOVEMENT_ACTION_ICONS,
-  MOVEMENT_ACTION_LABELS,
+  MOVEMENT_ACTION_LABEL_KEYS,
 } from './model/constants'
 export { MovementActionButtons } from './ui/MovementActionButtons'

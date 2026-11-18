@@ -3,8 +3,8 @@ import { Pencil, Star, Trash2 } from 'lucide-react'
 import { useSavedSearches, type SavedSearchResponse } from '@/entities/archive'
 import { DeleteSavedSearchDialog, SaveSearchDialog } from '@/features/archive-manage'
 import { toArabicErrorMessage } from '@/shared/api'
-import { cn } from '@/shared/lib'
-import { Button, GuideChip } from '@/shared/ui'
+import { cn, t } from '@/shared/lib'
+import { Button, GuideChip, Label } from '@/shared/ui'
 
 interface SavedSearchesBarProps {
   /** Criteria JSON of the grid as it is now; "update" re-captures it under an existing name. */
@@ -31,7 +31,7 @@ export function SavedSearchesBar({
       <p role="alert" className="flex items-center gap-2 text-xs text-danger">
         {toArabicErrorMessage(savedQuery.error)}
         <Button type="button" variant="outline" size="sm" onClick={() => void savedQuery.refetch()}>
-          إعادة التحميل
+          <Label k="archive.reload" />
         </Button>
       </p>
     )
@@ -41,9 +41,11 @@ export function SavedSearchesBar({
   if (savedQuery.isLoading || searches.length === 0) return null
 
   return (
-    <div className="flex flex-wrap items-center gap-2" aria-label="عمليات البحث المحفوظة">
+    <div className="flex flex-wrap items-center gap-2" aria-label={t('archive.saved.aria')}>
       <GuideChip id="archive.saved-searches" />
-      <span className="text-xs text-muted">عمليات بحثي:</span>
+      <span className="text-xs text-muted">
+        <Label k="archive.saved.label" />
+      </span>
       {searches.map((search) => {
         const isActive = search.savedSearchId === activeSearchId
 
@@ -62,15 +64,15 @@ export function SavedSearchesBar({
               className="inline-flex items-center gap-1.5 rounded-full py-1 ps-3 pe-2 text-foreground hover:text-accent"
             >
               {search.isDefault && (
-                <Star className="size-3.5 text-warning" aria-label="البحث الافتراضي" />
+                <Star className="size-3.5 text-warning" aria-label={t('archive.saved.default-aria')} />
               )}
               {search.name}
             </button>
             <button
               type="button"
               onClick={() => setEditing(search)}
-              aria-label={`تعديل البحث «${search.name}»`}
-              title="تعديل الاسم أو استبدال المرشحات بالحالية"
+              aria-label={t('archive.saved.edit-aria', { name: search.name })}
+              title={t('archive.saved.edit-title')}
               className="p-1 text-muted hover:text-foreground"
             >
               <Pencil className="size-3.5" aria-hidden />
@@ -78,7 +80,7 @@ export function SavedSearchesBar({
             <button
               type="button"
               onClick={() => setDeleting(search)}
-              aria-label={`حذف البحث «${search.name}»`}
+              aria-label={t('archive.saved.delete-aria', { name: search.name })}
               className="rounded-full p-1 pe-2 text-muted hover:text-danger"
             >
               <Trash2 className="size-3.5" aria-hidden />

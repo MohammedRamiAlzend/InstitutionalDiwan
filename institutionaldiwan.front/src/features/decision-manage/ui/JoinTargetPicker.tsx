@@ -7,8 +7,8 @@ import {
   useDocuments,
 } from '@/entities/document'
 import { DOCUMENT_STATUS } from '@/shared/config'
-import { cn, useDebouncedValue } from '@/shared/lib'
-import { Input, Skeleton } from '@/shared/ui'
+import { cn, t, useDebouncedValue } from '@/shared/lib'
+import { Input, Label, Skeleton } from '@/shared/ui'
 
 const PAGE_SIZE = 8
 
@@ -48,7 +48,7 @@ export function JoinTargetPicker({
       <div className="flex items-center justify-between gap-3 rounded-lg border border-border bg-surface px-3 py-2">
         <div className="min-w-0">
           <p className="truncate text-sm font-medium">
-            {selected?.title ?? (selectedQuery.isLoading ? 'جارٍ التحميل…' : 'الملف الرئيسي')}
+            {selected?.title ?? (selectedQuery.isLoading ? t('decisions.join.loading') : t('decisions.join.principal-fallback'))}
           </p>
           {selected && <OfficialNumberTag officialNumberText={selected.officialNumberText} />}
         </div>
@@ -57,7 +57,7 @@ export function JoinTargetPicker({
           className="shrink-0 text-sm text-accent hover:underline"
           onClick={() => onChange('')}
         >
-          تغيير
+          <Label k="decisions.join.change" />
         </button>
       </div>
     )
@@ -66,15 +66,15 @@ export function JoinTargetPicker({
   return (
     <div className="flex flex-col gap-2">
       <Input
-        aria-label="بحث عن الملف الرئيسي"
-        placeholder="ابحث باسم الملف أو رقمه"
+        aria-label={t('decisions.join.search-aria')}
+        placeholder={t('decisions.join.search-placeholder')}
         startIcon={<Search className="size-4" aria-hidden />}
         value={term}
         invalid={invalid}
         onChange={(event) => setTerm(event.target.value)}
       />
       <ul
-        aria-label="نتائج البحث عن الملف الرئيسي"
+        aria-label={t('decisions.join.results-aria')}
         className="max-h-56 overflow-y-auto rounded-lg border border-border"
       >
         {query.isLoading && (
@@ -83,7 +83,7 @@ export function JoinTargetPicker({
           </li>
         )}
         {!query.isLoading && candidates.length === 0 && (
-          <li className="p-3 text-sm text-muted">لا توجد ملفات مطابقة.</li>
+          <li className="p-3 text-sm text-muted"><Label k="decisions.join.empty" /></li>
         )}
         {candidates.map((document) => (
           <li key={document.documentId}>

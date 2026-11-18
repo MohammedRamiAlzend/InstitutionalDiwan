@@ -52,7 +52,7 @@ import { Skeleton } from './skeleton'
 
 export interface DataTableColumn<T> {
   id: string
-  header: string
+  header?: string
   /** Catalog key for the header; takes priority over `header` and repaints on rename. */
   headerKey?: LabelKey
   cell: (row: T) => ReactNode
@@ -171,7 +171,7 @@ export function DataTable<T>({
   // chooser, the sort aria-label and the export alike.
   const overrides = useLabelsStore((state) => state.overrides)
   const headerOf = (column: DataTableColumn<T>) =>
-    column.headerKey ? resolveLabel(column.headerKey, overrides) : column.header
+    column.headerKey ? resolveLabel(column.headerKey, overrides) : (column.header ?? '')
 
   const effectiveVisibility = useMemo(() => {
     const map: Record<string, boolean> = {}

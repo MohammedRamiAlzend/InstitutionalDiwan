@@ -8,8 +8,8 @@ import type { EmployeeResponse } from '@/entities/employee'
 import { useSessionStore } from '@/entities/user'
 import { toArabicErrorMessage } from '@/shared/api'
 import { Permissions } from '@/shared/config'
-import { formatShortId, useDraftForm } from '@/shared/lib'
-import { Button, Dialog, FormField, Input, Select } from '@/shared/ui'
+import { formatShortId, t, useDraftForm } from '@/shared/lib'
+import { Button, Dialog, FormField, Input, Label, Select } from '@/shared/ui'
 import { employeeFormSchema, type EmployeeFormValues } from '../model/schemas'
 import {
   useCreateEmployeeMutation,
@@ -48,7 +48,7 @@ export function EmployeeFormDialog({
     if (employee && !options.some((option) => option.value === employee.departmentId)) {
       options.unshift({
         value: employee.departmentId,
-        label: `القسم الحالي (${formatShortId(employee.departmentId)})`,
+        label: t('employee.form.current-department', { id: formatShortId(employee.departmentId) }),
       })
     }
     return options
@@ -90,10 +90,10 @@ export function EmployeeFormDialog({
           employeeId: employee.employeeId,
           request,
         })
-        toast.success('تم تحديث بيانات الموظف.')
+        toast.success(t('employee.form.toast-updated'))
       } else {
         await createMutation.mutateAsync(request)
-        toast.success('تم إنشاء الموظف بنجاح.')
+        toast.success(t('employee.form.toast-created'))
       }
       draft.discard()
       onOpenChange(false)
@@ -108,11 +108,11 @@ export function EmployeeFormDialog({
     <Dialog
       open={open}
       onOpenChange={onOpenChange}
-      title={isEdit ? 'تعديل بيانات الموظف' : 'موظف جديد'}
+      title={isEdit ? t('employee.form.edit-title') : t('employee.create')}
       description={
         isEdit
-          ? 'حدّث بيانات الموظف وقسمه الوظيفي. لا يمكن تغيير معرّف الموظف.'
-          : 'أضف سجل موظف واربطه بقسم. يمكن ربط حساب مستخدم به لاحقًا.'
+          ? t('employee.form.edit-description')
+          : t('employee.form.create-description')
       }
       size="lg"
       footer={
@@ -123,7 +123,7 @@ export function EmployeeFormDialog({
             onClick={() => onOpenChange(false)}
             disabled={pending}
           >
-            إلغاء
+            <Label k="common.action.cancel" />
           </Button>
           <Button
             type="submit"
@@ -131,7 +131,7 @@ export function EmployeeFormDialog({
             loading={pending}
             disabled={noDepartments}
           >
-            {isEdit ? 'حفظ التعديلات' : 'إنشاء الموظف'}
+            {isEdit ? <Label k="employee.form.save" /> : <Label k="employee.form.submit" />}
           </Button>
         </>
       }
@@ -143,7 +143,7 @@ export function EmployeeFormDialog({
         className="grid gap-4 sm:grid-cols-2"
       >
         <FormField
-          label="اسم الموظف الكامل بالعربية"
+          labelKey="employee.form.name-ar"
           required
           error={errors.fullNameAr?.message}
           className="sm:col-span-2"
@@ -151,18 +151,18 @@ export function EmployeeFormDialog({
           <Input
             id="employee-full-name-ar"
             autoComplete="name"
-            placeholder="مثال: أحمد محمد علي"
+            placeholder={t('employee.form.name-ar-placeholder')}
             startIcon={<UserRound className="size-4" aria-hidden />}
             invalid={Boolean(errors.fullNameAr)}
             {...register('fullNameAr')}
           />
         </FormField>
 
-        <FormField label="الرقم الوظيفي" error={errors.employeeNumber?.message}>
+        <FormField labelKey="employee.column.number" error={errors.employeeNumber?.message}>
           <Input
             id="employee-number"
             dir="ltr"
-            placeholder="مثال: EMP-2024-001"
+            placeholder={t('employee.form.number-placeholder')}
             startIcon={<Hash className="size-4" aria-hidden />}
             invalid={Boolean(errors.employeeNumber)}
             {...register('employeeNumber')}
@@ -170,7 +170,7 @@ export function EmployeeFormDialog({
         </FormField>
 
         <FormField
-          label="القسم"
+          labelKey="employee.column.department"
           required
           error={errors.departmentId?.message}
         >
@@ -187,15 +187,15 @@ export function EmployeeFormDialog({
                 }
                 invalid={Boolean(errors.departmentId)}
                 placeholder={
-                  departmentsQuery.isLoading ? 'جارٍ تحميل الأقسام…' : 'اختر القسم…'
+                  departmentsQuery.isLoading ? t('employee.form.department-loading') : t('employee.form.department-placeholder')
                 }
-                aria-label="القسم"
+                aria-label={t('employee.column.department')}
               />
             )}
           />
         </FormField>
 
-        <FormField label="اسم الموظف الكامل بالإنجليزية" error={errors.fullNameEn?.message}>
+        <FormField labelKey="employee.form.name-en" error={errors.fullNameEn?.message}>
           <Input
             id="employee-full-name-en"
             dir="ltr"
@@ -207,17 +207,17 @@ export function EmployeeFormDialog({
           />
         </FormField>
 
-        <FormField label="المسمى الوظيفي" error={errors.jobTitleAr?.message}>
+        <FormField labelKey="employee.column.job-title" error={errors.jobTitleAr?.message}>
           <Input
             id="employee-job-title"
-            placeholder="مثال: مطوّر برمجيات"
+            placeholder={t('employee.form.job-title-placeholder')}
             startIcon={<Briefcase className="size-4" aria-hidden />}
             invalid={Boolean(errors.jobTitleAr)}
             {...register('jobTitleAr')}
           />
         </FormField>
 
-        <FormField label="البريد الإلكتروني" error={errors.email?.message}>
+        <FormField labelKey="employee.column.email" error={errors.email?.message}>
           <Input
             id="employee-email"
             type="email"
@@ -230,7 +230,7 @@ export function EmployeeFormDialog({
           />
         </FormField>
 
-        <FormField label="رقم الهاتف" error={errors.phone?.message}>
+        <FormField labelKey="employee.form.phone" error={errors.phone?.message}>
           <Input
             id="employee-phone"
             type="tel"
@@ -249,8 +249,8 @@ export function EmployeeFormDialog({
             className="sm:col-span-2 rounded-lg bg-warning/10 px-3 py-2 text-xs text-warning"
           >
             {isEdit
-              ? 'لا تملك صلاحية استعراض الأقسام، لذلك لا يمكنك نقل الموظف إلى قسم آخر.'
-              : 'لا تملك صلاحية استعراض الأقسام، لذلك لا يمكنك إنشاء موظف دون اختيار قسم.'}
+              ? t('employee.form.denied-edit')
+              : t('employee.form.denied-create')}
           </p>
         )}
 

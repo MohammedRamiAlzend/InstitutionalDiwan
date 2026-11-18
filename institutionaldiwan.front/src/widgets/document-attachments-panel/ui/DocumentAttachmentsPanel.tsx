@@ -32,26 +32,31 @@ import {
   VerifyChecksumDialog,
 } from '@/features/attachment-upload'
 import { toArabicErrorMessage } from '@/shared/api'
+import type { LabelKey } from '@/shared/config'
 import {
   formatDateTime,
   formatFileSize,
   formatShortId,
+  resolveLabel,
+  t,
+  useLabelsStore,
   useTableState,
 } from '@/shared/lib'
 import {
   Badge,
   Button,
   DataTable,
+  Label,
   Select,
   type DataTableColumn,
   type MenuEntry,
   type SelectOption,
 } from '@/shared/ui'
 
-const STATUS_OPTIONS: SelectOption[] = [
-  { value: 'all', label: 'كل الحالات' },
-  { value: 'active', label: 'نشط' },
-  { value: 'archived', label: 'مؤرشف' },
+const STATUS_OPTION_KEYS: { value: string; key: LabelKey }[] = [
+  { value: 'all', key: 'attachment.filter.status-all' },
+  { value: 'active', key: 'attachment.state.active' },
+  { value: 'archived', key: 'attachment.state.archived' },
 ]
 
 /**
@@ -83,6 +88,7 @@ export function DocumentAttachmentsPanel({
   const table = useTableState({ filterKeys: ['status', 'fileType'] })
   const [uploadOpen, setUploadOpen] = useState(false)
   const [rowAction, setRowAction] = useState<RowAction | null>(null)
+  const overrides = useLabelsStore((state) => state.overrides)
 
   const statusFilter = table.filters.status
   const fileTypeFilter = table.filters.fileType
@@ -105,30 +111,35 @@ export function DocumentAttachmentsPanel({
     [fileTypesQuery.data],
   )
 
+  const statusOptions = useMemo<SelectOption[]>(
+    () => STATUS_OPTION_KEYS.map((option) => ({ value: option.value, label: resolveLabel(option.key, overrides) })),
+    [overrides],
+  )
+
   const fileTypeOptions = useMemo<SelectOption[]>(
     () => [
-      { value: 'all', label: 'كل الأنواع' },
+      { value: 'all', label: resolveLabel('attachment.filter.type-all', overrides) },
       ...(fileTypesQuery.data ?? []).map((entry) => ({
         value: String(entry.id),
         label: entry.descAr,
       })),
     ],
-    [fileTypesQuery.data],
+    [fileTypesQuery.data, overrides],
   )
 
   const copyValue = async (value: string, label: string) => {
     try {
       await navigator.clipboard.writeText(value)
-      toast.success(`تم نسخ ${label}.`)
+      toast.success(t('documents.toast.copied', { label }))
     } catch {
-      toast.error('تعذّر النسخ إلى الحافظة.')
+      toast.error(t('documents.toast.copy-failed'))
     }
   }
 
   const download = async (file: DocumentFileResponse) => {
     try {
       await downloadFileVersion(file, currentVersionOf(file))
-      toast.success(`نُزّل الملف «${file.title}».`)
+      toast.success(t('attachment.toast.downloaded', { title: file.title }))
     } catch (error) {
       // Includes the per-document DOWNLOAD denial, which the client cannot predict.
       toast.error(toArabicErrorMessage(error))
@@ -139,7 +150,7 @@ export function DocumentAttachmentsPanel({
     () => [
       {
         id: 'title',
-        header: 'العنوان',
+        headerKey: 'attachment.column.title',
         hideable: false,
         sortable: true,
         sortValue: (file) => file.title,
@@ -154,7 +165,7 @@ export function DocumentAttachmentsPanel({
       },
       {
         id: 'fileType',
-        header: 'النوع',
+        headerKey: 'attachment.column.type',
         sortable: true,
         sortValue: (file) => fileTypeLabel(file.fileTypeId),
         cell: (file) => (
@@ -167,7 +178,7 @@ export function DocumentAttachmentsPanel({
       },
       {
         id: 'currentVersion',
-        header: 'الإصدار',
+        headerKey: 'attachment.column.version',
         sortable: true,
         sortValue: (file) => file.currentVersionNumber,
         cell: (file) => (
@@ -178,7 +189,7 @@ export function DocumentAttachmentsPanel({
       },
       {
         id: 'size',
-        header: 'الحجم',
+        headerKey: 'attachment.column.size',
         sortable: true,
         sortValue: (file) => currentVersionOf(file)?.fileSizeBytes ?? null,
         cell: (file) => (
@@ -189,7 +200,7 @@ export function DocumentAttachmentsPanel({
       },
       {
         id: 'originalFileName',
-        header: 'الاسم الأصلي',
+        headerKey: 'attachment.column.original-name',
         sortable: true,
         sortValue: (file) => currentVersionOf(file)?.originalFileName ?? null,
         cell: (file) => {
@@ -208,26 +219,26 @@ export function DocumentAttachmentsPanel({
       },
       {
         id: 'primaryScan',
-        header: 'مسح ضوئي أساسي',
+        headerKey: 'attachment.primary-scan',
         sortable: true,
         sortValue: (file) => (file.isPrimaryScan ? 1 : 0),
         cell: (file) =>
           file.isPrimaryScan ? (
-            <Badge variant="accent">مسح ضوئي أساسي</Badge>
+            <Badge variant="accent"><Label k="attachment.primary-scan" /></Badge>
           ) : (
             <span className="text-xs text-muted">—</span>
           ),
       },
       {
         id: 'status',
-        header: 'الحالة',
+        headerKey: 'attachment.column.status',
         sortable: true,
         sortValue: (file) => (file.isArchived ? 1 : 0),
         cell: (file) => <FileArchivedBadge isArchived={file.isArchived} />,
       },
       {
         id: 'checksum',
-        header: 'البصمة',
+        headerKey: 'attachment.column.checksum',
         defaultHidden: true,
         cell: (file) => {
           const checksum = currentVersionOf(file)?.checksumSha256
@@ -241,7 +252,7 @@ export function DocumentAttachmentsPanel({
       },
       {
         id: 'createdAt',
-        header: 'تاريخ الإنشاء',
+        headerKey: 'attachment.column.created-at',
         defaultHidden: true,
         sortable: true,
         sortValue: (file) => file.createdAt,
@@ -253,7 +264,7 @@ export function DocumentAttachmentsPanel({
       },
       {
         id: 'updatedAt',
-        header: 'آخر تحديث',
+        headerKey: 'attachment.column.updated-at',
         defaultHidden: true,
         sortable: true,
         sortValue: (file) => file.updatedAt,
@@ -276,13 +287,13 @@ export function DocumentAttachmentsPanel({
             { type: 'separator' },
             {
               id: 'upload-version',
-              label: `رفع إصدار بعد v${file.currentVersionNumber}`,
+              label: t('attachment.row.upload-version', { version: file.currentVersionNumber }),
               icon: <Upload className="size-4" aria-hidden />,
               onSelect: () => setRowAction({ type: 'upload-version', fileId: file.fileId }),
             },
             {
               id: 'archive',
-              label: 'أرشفة الملف',
+              label: t('attachment.row.archive'),
               icon: <Archive className="size-4" aria-hidden />,
               danger: true,
               onSelect: () => setRowAction({ type: 'archive', fileId: file.fileId }),
@@ -293,20 +304,20 @@ export function DocumentAttachmentsPanel({
     return [
       {
         id: 'download',
-        label: 'تنزيل الإصدار الحالي',
+        label: t('attachment.row.download'),
         icon: <Download className="size-4" aria-hidden />,
         disabled: !version,
         onSelect: () => void download(file),
       },
       {
         id: 'versions',
-        label: 'الإصدارات',
+        label: t('attachment.row.versions'),
         icon: <History className="size-4" aria-hidden />,
         onSelect: () => setRowAction({ type: 'versions', fileId: file.fileId }),
       },
       {
         id: 'verify',
-        label: 'التحقق من البصمة',
+        label: t('attachment.row.verify'),
         icon: <ShieldCheck className="size-4" aria-hidden />,
         disabled: !version,
         onSelect: () => setRowAction({ type: 'verify', fileId: file.fileId }),
@@ -315,30 +326,30 @@ export function DocumentAttachmentsPanel({
       { type: 'separator' },
       {
         id: 'copy-id',
-        label: 'نسخ معرّف الملف',
+        label: t('attachment.row.copy-id'),
         icon: <Hash className="size-4" aria-hidden />,
-        onSelect: () => void copyValue(file.fileId, 'معرّف الملف'),
+        onSelect: () => void copyValue(file.fileId, t('attachment.copy.id-label')),
       },
       {
         id: 'copy-checksum',
-        label: 'نسخ البصمة',
+        label: t('attachment.row.copy-checksum'),
         icon: <Fingerprint className="size-4" aria-hidden />,
         disabled: !version?.checksumSha256,
-        onSelect: () => void copyValue(version?.checksumSha256 ?? '', 'البصمة'),
+        onSelect: () => void copyValue(version?.checksumSha256 ?? '', t('attachment.copy.checksum-label')),
       },
       {
         id: 'copy-name',
-        label: 'نسخ الاسم الأصلي',
+        label: t('attachment.row.copy-name'),
         icon: <Copy className="size-4" aria-hidden />,
         disabled: !version?.originalFileName,
-        onSelect: () => void copyValue(version?.originalFileName ?? '', 'الاسم الأصلي'),
+        onSelect: () => void copyValue(version?.originalFileName ?? '', t('attachment.copy.name-label')),
       },
     ]
   }
 
   const refreshEntry: MenuEntry = {
     id: 'refresh',
-    label: 'تحديث الملفات',
+    label: t('attachment.refresh'),
     icon: <RefreshCw className="size-4" aria-hidden />,
     onSelect: () => void filesQuery.refetch(),
   }
@@ -348,7 +359,7 @@ export function DocumentAttachmentsPanel({
   const uploadButton = canManage ? (
     <Button type="button" size="sm" onClick={() => setUploadOpen(true)}>
       <Upload className="size-4" aria-hidden />
-      رفع ملف
+      <Label k="attachment.action.upload" />
     </Button>
   ) : undefined
 
@@ -364,7 +375,7 @@ export function DocumentAttachmentsPanel({
     <DataTable
       tableId="document-files"
       mode="client"
-      caption="ملفات الوثيقة"
+      caption={t('attachment.caption')}
       columns={columns}
       rows={files}
       rowKey={(file) => file.fileId}
@@ -386,7 +397,7 @@ export function DocumentAttachmentsPanel({
       onPageSizeChange={table.setPageSize}
       search={table.search}
       onSearchChange={table.setSearch}
-      searchPlaceholder="ابحث بعنوان الملف أو اسمه الأصلي…"
+      searchPlaceholder={t('attachment.search-placeholder')}
       sortKey={table.sortKey}
       sortDirection={table.sortDirection}
       onSortChange={table.setSort}
@@ -394,14 +405,14 @@ export function DocumentAttachmentsPanel({
       filters={
         <div className="flex flex-wrap items-center gap-2">
           <Select
-            aria-label="تصفية حسب حالة الملف"
+            aria-label={t('attachment.filter.status-aria')}
             value={table.filters.status || 'all'}
             onValueChange={(value) => table.setFilter('status', value === 'all' ? null : value)}
-            options={STATUS_OPTIONS}
+            options={statusOptions}
             className="w-40"
           />
           <Select
-            aria-label="تصفية حسب نوع الملف"
+            aria-label={t('attachment.filter.type-aria')}
             value={table.filters.fileType || 'all'}
             onValueChange={(value) =>
               table.setFilter('fileType', value === 'all' ? null : value)
@@ -411,7 +422,7 @@ export function DocumentAttachmentsPanel({
           />
           {hasQuery && (
             <Button type="button" variant="ghost" size="sm" onClick={table.clearQuery}>
-              مسح البحث والمرشحات
+              <Label k="attachment.filter.clear" />
             </Button>
           )}
         </div>
@@ -420,11 +431,11 @@ export function DocumentAttachmentsPanel({
       headerMenu={[refreshEntry]}
       emptyMenu={[refreshEntry]}
       emptyAction={files.length === 0 ? uploadButton : undefined}
-      emptyTitle={hasQuery ? 'لا توجد ملفات مطابقة.' : 'لا ملفات مرفقة بعد.'}
+      emptyTitle={hasQuery ? t('attachment.empty.matching-title') : t('attachment.empty.title')}
       emptyDescription={
         hasQuery
-          ? 'جرّب تعديل البحث أو المرشحات لعرض ملفات أخرى.'
-          : 'تظهر هنا ملفات الوثيقة كلها، بما فيها المؤرشفة، مع الإصدار الحالي والحجم والحالة.'
+          ? t('attachment.empty.matching-description')
+          : t('attachment.empty.description')
       }
     />
   )

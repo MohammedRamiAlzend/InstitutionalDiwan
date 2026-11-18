@@ -1,4 +1,4 @@
-import { formatDate } from '@/shared/lib'
+import { formatDate, t } from '@/shared/lib'
 import {
   FIELD_DATA_TYPE,
   FIELD_LIMITS,
@@ -138,7 +138,7 @@ export function formatFieldValue(field: SchemaFieldResponse, value: string | nul
   const labelOf = (key: string) => field.options.find((option) => option.key === key)?.labelAr ?? key
   switch (field.dataType) {
     case FIELD_DATA_TYPE.Boolean:
-      return value === 'true' ? 'نعم' : 'لا'
+      return value === 'true' ? t('schema.value.yes') : t('schema.value.no')
     case FIELD_DATA_TYPE.Select:
       return labelOf(value)
     case FIELD_DATA_TYPE.MultiSelect:
@@ -169,7 +169,7 @@ export function validateFieldValues(
 
     if (!raw) {
       // A boolean field always carries a value once touched; blank means "not answered".
-      if (field.isRequired) errors[field.key] = 'هذا الحقل مطلوب.'
+      if (field.isRequired) errors[field.key] = t('schema.validation.required')
       continue
     }
 
@@ -177,13 +177,13 @@ export function validateFieldValues(
       case FIELD_DATA_TYPE.Text:
       case FIELD_DATA_TYPE.LongText: {
         if (field.maxLength !== null && raw.length > field.maxLength) {
-          errors[field.key] = `الحد الأقصى ${field.maxLength} حرفًا.`
+          errors[field.key] = t('schema.validation.max-length', { max: field.maxLength })
         } else if (field.behavior.minLength !== null && raw.length < field.behavior.minLength) {
-          errors[field.key] = `الحد الأدنى ${field.behavior.minLength} أحرف.`
+          errors[field.key] = t('schema.validation.min-length', { min: field.behavior.minLength })
         } else if (field.regexPattern) {
           try {
             if (!new RegExp(field.regexPattern).test(raw)) {
-              errors[field.key] = field.regexErrorMessageAr ?? 'القيمة لا تطابق النمط المطلوب.'
+              errors[field.key] = field.regexErrorMessageAr ?? t('schema.validation.pattern-mismatch')
             }
           } catch {
             // An unparsable pattern is the server's call (its regex dialect differs); skip locally.
@@ -193,41 +193,41 @@ export function validateFieldValues(
       }
       case FIELD_DATA_TYPE.Number: {
         const n = Number(raw)
-        if (!Number.isFinite(n)) errors[field.key] = 'أدخل رقمًا صحيحًا.'
+        if (!Number.isFinite(n)) errors[field.key] = t('schema.validation.number-invalid')
         else if (field.minNumber !== null && n < field.minNumber) {
-          errors[field.key] = `القيمة لا تقل عن ${field.minNumber}.`
+          errors[field.key] = t('schema.validation.number-min', { min: field.minNumber })
         } else if (field.maxNumber !== null && n > field.maxNumber) {
-          errors[field.key] = `القيمة لا تزيد عن ${field.maxNumber}.`
+          errors[field.key] = t('schema.validation.number-max', { max: field.maxNumber })
         }
         break
       }
       case FIELD_DATA_TYPE.Date:
-        if (Number.isNaN(Date.parse(raw))) errors[field.key] = 'أدخل تاريخًا صحيحًا.'
+        if (Number.isNaN(Date.parse(raw))) errors[field.key] = t('schema.validation.date-invalid')
         else {
           // ISO dates order correctly as text.
           const day = raw.slice(0, 10)
           const { minDate, maxDate } = field.behavior
           if (minDate && day < resolveToken(minDate).slice(0, 10)) {
-            errors[field.key] = `التاريخ لا يسبق ${formatDate(resolveToken(minDate))}.`
+            errors[field.key] = t('schema.validation.date-min', { date: formatDate(resolveToken(minDate)) })
           } else if (maxDate && day > resolveToken(maxDate).slice(0, 10)) {
-            errors[field.key] = `التاريخ لا يتجاوز ${formatDate(resolveToken(maxDate))}.`
+            errors[field.key] = t('schema.validation.date-max', { date: formatDate(resolveToken(maxDate)) })
           }
         }
         break
       case FIELD_DATA_TYPE.Boolean:
-        if (raw !== 'true' && raw !== 'false') errors[field.key] = 'اختر نعم أو لا.'
+        if (raw !== 'true' && raw !== 'false') errors[field.key] = t('schema.validation.boolean-required')
         break
       case FIELD_DATA_TYPE.Select:
         if (!field.options.some((option) => option.key === raw)) {
-          errors[field.key] = 'اختر أحد الخيارات.'
+          errors[field.key] = t('schema.validation.select-required')
         }
         break
       case FIELD_DATA_TYPE.MultiSelect: {
         const keys = splitChoices(raw)
         if (keys.length > FIELD_LIMITS.maxSelections) {
-          errors[field.key] = `لا تزيد الخيارات عن ${FIELD_LIMITS.maxSelections}.`
+          errors[field.key] = t('schema.validation.multi-max', { max: FIELD_LIMITS.maxSelections })
         } else if (keys.some((key) => !field.options.some((option) => option.key === key))) {
-          errors[field.key] = 'أحد الخيارات لم يعد متاحًا.'
+          errors[field.key] = t('schema.validation.multi-unavailable')
         }
         break
       }

@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
-import { Checkbox, Input, Select, Textarea } from '@/shared/ui'
+import { resolveLabel, t, useLabelsStore } from '@/shared/lib'
+import { Checkbox, Input, Label, Select, Textarea } from '@/shared/ui'
 import { splitChoices } from '../model/values'
 import { FIELD_DATA_TYPE, type SchemaFieldResponse } from '../model/types'
 
@@ -10,11 +11,6 @@ interface FieldValueControlProps {
   invalid?: boolean
   onChange: (value: string) => void
 }
-
-const YES_NO = [
-  { value: 'true', label: 'نعم' },
-  { value: 'false', label: 'لا' },
-]
 
 /** Long lists (a source such as the departments) get a search box. */
 const SEARCH_THRESHOLD = 8
@@ -40,8 +36,8 @@ function MultiSelectControl({ field, value, disabled, onChange }: FieldValueCont
     <div className="flex flex-col gap-2 rounded-lg border border-border p-2">
       {options.length > SEARCH_THRESHOLD && (
         <Input
-          aria-label={`البحث في خيارات ${field.labelAr}`}
-          placeholder="ابحث في الخيارات…"
+          aria-label={t('schema.field.search-options-aria', { label: field.labelAr })}
+          placeholder={t('schema.field.search-options-placeholder')}
           value={search}
           disabled={disabled}
           onChange={(event) => setSearch(event.target.value)}
@@ -57,7 +53,11 @@ function MultiSelectControl({ field, value, disabled, onChange }: FieldValueCont
             onCheckedChange={(checked) => toggle(option.key, checked)}
           />
         ))}
-        {shown.length === 0 && <p className="text-xs text-muted">لا توجد خيارات.</p>}
+        {shown.length === 0 && (
+          <p className="text-xs text-muted">
+            <Label k="schema.field.no-options" />
+          </p>
+        )}
       </div>
     </div>
   )
@@ -67,6 +67,11 @@ function MultiSelectControl({ field, value, disabled, onChange }: FieldValueCont
 export function FieldValueControl(props: FieldValueControlProps) {
   const { field, value, disabled = false, invalid = false, onChange } = props
   const placeholder = field.behavior.placeholderAr ?? undefined
+  const overrides = useLabelsStore((state) => state.overrides)
+  const yesNo = [
+    { value: 'true', label: resolveLabel('schema.value.yes', overrides) },
+    { value: 'false', label: resolveLabel('schema.value.no', overrides) },
+  ]
 
   switch (field.dataType) {
     case FIELD_DATA_TYPE.LongText:
@@ -111,8 +116,8 @@ export function FieldValueControl(props: FieldValueControlProps) {
           value={value || undefined}
           disabled={disabled}
           invalid={invalid}
-          placeholder={placeholder ?? 'غير محدد'}
-          options={YES_NO}
+          placeholder={placeholder ?? t('schema.field.boolean-placeholder')}
+          options={yesNo}
           onValueChange={onChange}
         />
       )
@@ -123,7 +128,7 @@ export function FieldValueControl(props: FieldValueControlProps) {
           value={value || undefined}
           disabled={disabled}
           invalid={invalid}
-          placeholder={placeholder ?? 'اختر…'}
+          placeholder={placeholder ?? t('schema.field.select-placeholder')}
           options={field.options
             .filter((option) => option.isActive !== false || option.key === value)
             .map((option) => ({ value: option.key, label: option.labelAr }))}

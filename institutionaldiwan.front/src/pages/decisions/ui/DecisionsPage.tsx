@@ -3,14 +3,14 @@ import { Scale, Shapes } from 'lucide-react'
 import { useSessionStore } from '@/entities/user'
 import { RequirePermission } from '@/features/auth'
 import { Permissions } from '@/shared/config'
-import { cn } from '@/shared/lib'
-import { GuideProvider, GuideRegion, PageHeader } from '@/shared/ui'
+import { cn, t } from '@/shared/lib'
+import { GuideProvider, GuideRegion, Label, PageHeader } from '@/shared/ui'
 import { DecisionRegisterTable } from './DecisionRegisterTable'
 import { DecisionTypesTable } from './DecisionTypesTable'
 
 const TABS = [
-  { key: 'register', label: 'سجل القرارات', icon: Scale },
-  { key: 'types', label: 'أنواع القرارات', icon: Shapes },
+  { key: 'register', labelKey: 'decisions.tab.register', icon: Scale },
+  { key: 'types', labelKey: 'decisions.tab.types', icon: Shapes },
 ] as const
 
 type TabKey = (typeof TABS)[number]['key']
@@ -49,7 +49,7 @@ function DecisionsView() {
 
       {canManageTypes && (
         <GuideRegion id="decisions.tabs">
-          <div role="tablist" aria-label="أقسام صفحة القرارات" className="flex flex-wrap items-center gap-2">
+          <div role="tablist" aria-label={t('decisions.tabs-aria')} className="flex flex-wrap items-center gap-2">
             {TABS.map((tab) => {
               const Icon = tab.icon
               const isActive = activeTab === tab.key
@@ -68,7 +68,7 @@ function DecisionsView() {
                   )}
                 >
                   <Icon className="size-4" aria-hidden />
-                  {tab.label}
+                  <Label k={tab.labelKey} />
                 </button>
               )
             })}

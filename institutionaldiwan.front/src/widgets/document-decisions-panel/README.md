@@ -18,11 +18,13 @@ The «القرار» tab: the decision in force, its appeals, its history, decis
 | Item | State |
 | --- | --- |
 | In-force card, history, next action, issue, attach, cancel, appeal, outcome, join | ✅ Principal-file rows have no write menu. The person hint is a suggestion. |
+| UI labels | ✅ Phase 4 (decisions ب): the panel renders from `decisions.panel.*` and `decisions.next.*` — section/card titles, buttons, join/candidate text and the from-principal cell via `<Label>`, column headers via `headerKey`, row menus/caption/search/empty states via `t()`. `NEXT_ACTION_LABEL` became `NEXT_ACTION_LABEL_KEYS` (`Record<string, LabelKey>`). Effect/status/appeal labels inherit the shared `decisionLabels.ts` resolvers. Data-driven text (document titles, decision-type/department names, summaries) stays out. |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-18 | Qoder | UI labels Phase 4 (decisions ب): the panel renders from `decisions.panel.*`/`decisions.next.*`; `NEXT_ACTION_LABEL` became `NEXT_ACTION_LABEL_KEYS`. No Arabic literals remain. |
 | 2026-11-11 | Claude | After a join, the panel names the principal file, lists its decisions as read-only, and can offer «نقل إلى ديوان الملف الرئيسي». A shared person on another visible file is only a hint. |
 | 2026-11-11 | Claude | The panel lists appeals and offers «تسجيل اعتراض» and «تسجيل النتيجة», including on an archived document. |
 | 2026-11-11 | Claude | Added the document decisions panel. |

@@ -17,7 +17,7 @@ export {
   useRelationEvents,
   useRelationGraph,
 } from './model/queries'
-export { RELATION_DIRECTION_LABELS, relationPhrase } from './model/direction'
+export { RELATION_DIRECTION_LABELS, relationPhrase, relationPhraseKey } from './model/direction'
 export { relationGraphToMermaid, relationGraphToTree } from './model/graph'
 export type { RelationMermaidDiagram, RelationTreeNode } from './model/graph'
 export { RelationTypeBadge } from './ui/RelationTypeBadge'

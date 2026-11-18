@@ -1,11 +1,12 @@
 import { useMemo } from 'react'
 import { useUserOptions } from '@/entities/user'
-import { useDebouncedValue } from '@/shared/lib'
+import { useDebouncedValue, useLabel } from '@/shared/lib'
 import type { SelectOption } from '@/shared/ui'
 
 /** Minimal user picker options; `none` is the Radix-safe stand-in for "no assignee". */
 export function useAssigneeOptions(search: string, enabled: boolean) {
   const debouncedSearch = useDebouncedValue(search)
+  const noneLabel = useLabel('movements.assignee.none')
 
   const query = useUserOptions(
     {
@@ -18,12 +19,12 @@ export function useAssigneeOptions(search: string, enabled: boolean) {
 
   const options = useMemo<SelectOption[]>(
     () => [
-      { value: 'none', label: 'بدون إسناد' },
+      { value: 'none', label: noneLabel },
       ...(query.data?.items ?? [])
         .filter((user) => user.isActive)
         .map((user) => ({ value: user.userId, label: user.username })),
     ],
-    [query.data],
+    [query.data, noneLabel],
   )
 
   return {

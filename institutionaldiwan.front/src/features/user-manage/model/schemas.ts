@@ -1,14 +1,15 @@
 import { z } from 'zod'
+import { t } from '@/shared/lib'
 
 const userFields = {
   username: z
     .string()
     .trim()
-    .min(3, 'اسم المستخدم يجب أن يكون 3 أحرف على الأقل.')
-    .max(100, 'اسم المستخدم يتجاوز الحد الأقصى للأحرف.'),
-  primaryDepartmentId: z.string().min(1, 'اختر القسم الأساسي.'),
+    .min(3, t('user.validation.username-min'))
+    .max(100, t('user.validation.username-max')),
+  primaryDepartmentId: z.string().min(1, t('user.validation.department-required')),
   employeeId: z.string(),
-  scopeTypeId: z.string().min(1, 'اختر نطاق المستخدم.'),
+  scopeTypeId: z.string().min(1, t('user.validation.scope-required')),
   mustChangePassword: z.boolean(),
 }
 
@@ -17,8 +18,8 @@ export const createUserFormSchema = z.object({
   ...userFields,
   password: z
     .string()
-    .min(8, 'كلمة المرور يجب أن تكون 8 أحرف على الأقل.')
-    .max(200, 'كلمة المرور تتجاوز الحد الأقصى للأحرف.'),
+    .min(8, t('user.validation.password-min'))
+    .max(200, t('user.validation.password-max')),
 })
 
 /** `PUT /api/users/{id}` — the username and password are immutable here. */
@@ -34,24 +35,24 @@ export const resetUserPasswordSchema = z
   .object({
     newPassword: z
       .string()
-      .min(1, 'كلمة المرور المؤقتة مطلوبة.')
-      .min(8, 'كلمة المرور المؤقتة قصيرة جدًا، الحد الأدنى 8 أحرف.')
-      .max(200, 'كلمة المرور المؤقتة تتجاوز الحد الأقصى للأحرف.'),
-    confirmPassword: z.string().min(1, 'تأكيد كلمة المرور مطلوب.'),
+      .min(1, t('user.validation.temp-required'))
+      .min(8, t('user.validation.temp-min'))
+      .max(200, t('user.validation.temp-max')),
+    confirmPassword: z.string().min(1, t('user.validation.confirm-required')),
   })
   .refine((values) => values.newPassword === values.confirmPassword, {
     path: ['confirmPassword'],
-    message: 'كلمتا المرور غير متطابقتين.',
+    message: t('user.validation.password-mismatch'),
   })
 
 export type ResetUserPasswordFormValues = z.infer<typeof resetUserPasswordSchema>
 
 export const departmentAssignmentSchema = z
   .object({
-    departmentId: z.string().min(1, 'اختر القسم.'),
-    assignmentTypeId: z.string().min(1, 'اختر نوع الإسناد.'),
+    departmentId: z.string().min(1, t('user.validation.assign-department-required')),
+    assignmentTypeId: z.string().min(1, t('user.validation.assign-type-required')),
     includeSubtree: z.boolean(),
-    startDate: z.string().min(1, 'تاريخ البدء مطلوب.'),
+    startDate: z.string().min(1, t('user.validation.start-required')),
     endDate: z.string(),
   })
   .superRefine((values, ctx) => {
@@ -59,7 +60,7 @@ export const departmentAssignmentSchema = z
       ctx.addIssue({
         code: 'custom',
         path: ['endDate'],
-        message: 'تاريخ الانتهاء لا يمكن أن يسبق تاريخ البدء.',
+        message: t('user.validation.end-before-start'),
       })
     }
   })

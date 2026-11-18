@@ -1,3 +1,4 @@
+import type { LabelKey } from '@/shared/config'
 import {
   SYSTEM_ERROR_KIND,
   SYSTEM_ERROR_SOURCE,
@@ -7,21 +8,21 @@ import {
   type SystemErrorStatus,
 } from './types'
 
-export const SYSTEM_ERROR_STATUS_LABELS: Record<SystemErrorStatus, string> = {
-  [SYSTEM_ERROR_STATUS.New]: 'جديد',
-  [SYSTEM_ERROR_STATUS.InProgress]: 'قيد المعالجة',
-  [SYSTEM_ERROR_STATUS.Resolved]: 'محلول',
+export const SYSTEM_ERROR_STATUS_LABEL_KEYS: Record<SystemErrorStatus, LabelKey> = {
+  [SYSTEM_ERROR_STATUS.New]: 'system-error.status.new',
+  [SYSTEM_ERROR_STATUS.InProgress]: 'system-error.status.in-progress',
+  [SYSTEM_ERROR_STATUS.Resolved]: 'system-error.status.resolved',
 }
 
-export const SYSTEM_ERROR_SOURCE_LABELS: Record<SystemErrorSource, string> = {
-  [SYSTEM_ERROR_SOURCE.Server]: 'الخادم',
-  [SYSTEM_ERROR_SOURCE.Client]: 'الواجهة',
+export const SYSTEM_ERROR_SOURCE_LABEL_KEYS: Record<SystemErrorSource, LabelKey> = {
+  [SYSTEM_ERROR_SOURCE.Server]: 'system-error.source.server',
+  [SYSTEM_ERROR_SOURCE.Client]: 'system-error.source.client',
 }
 
-export const SYSTEM_ERROR_KIND_LABELS: Record<SystemErrorKind, string> = {
-  [SYSTEM_ERROR_KIND.ServerException]: 'استثناء في الخادم',
-  [SYSTEM_ERROR_KIND.ServerRejection]: 'طلب مرفوض',
-  [SYSTEM_ERROR_KIND.ClientRender]: 'انهيار صفحة',
-  [SYSTEM_ERROR_KIND.ClientScript]: 'خطأ برمجي في المتصفح',
-  [SYSTEM_ERROR_KIND.ClientNetwork]: 'فشل الاتصال',
+export const SYSTEM_ERROR_KIND_LABEL_KEYS: Record<SystemErrorKind, LabelKey> = {
+  [SYSTEM_ERROR_KIND.ServerException]: 'system-error.kind.server-exception',
+  [SYSTEM_ERROR_KIND.ServerRejection]: 'system-error.kind.server-rejection',
+  [SYSTEM_ERROR_KIND.ClientRender]: 'system-error.kind.client-render',
+  [SYSTEM_ERROR_KIND.ClientScript]: 'system-error.kind.client-script',
+  [SYSTEM_ERROR_KIND.ClientNetwork]: 'system-error.kind.client-network',
 }

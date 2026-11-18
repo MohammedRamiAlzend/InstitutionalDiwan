@@ -1,4 +1,5 @@
 import { Paperclip } from 'lucide-react'
+import { Label } from '@/shared/ui'
 import { DocumentAttachmentsPanel } from '@/widgets/document-attachments-panel'
 
 interface DocumentFilesTabProps {
@@ -17,12 +18,10 @@ export function DocumentFilesTab({ documentId, canManage }: DocumentFilesTabProp
       <div className="flex flex-col gap-1">
         <h2 className="flex items-center gap-2 text-base font-semibold text-foreground">
           <Paperclip className="size-4 text-accent" aria-hidden />
-          ملفات الوثيقة
+          <Label k="docdetails.files-title" />
         </h2>
         <p className="max-w-2xl text-xs text-muted">
-          كل ملف مرفق بهذه الوثيقة مع إصداره الحالي وحجمه واسمه الأصلي وبصمته. من هذه القائمة تُنزَّل
-          الإصدارات وتُرفع وتُؤرشف الملفات وتُتحقق بصمتها. الأرشفة توقف الإصدارات الجديدة ولا تُخفي
-          الملف، لذلك تظهر الحالات كلها هنا.
+          <Label k="docdetails.files-hint" />
         </p>
       </div>
 

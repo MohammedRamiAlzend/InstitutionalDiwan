@@ -6,8 +6,8 @@ import { LookupLabel, LOOKUP_SLUGS } from '@/entities/lookup'
 import { useSessionStore } from '@/entities/user'
 import { toArabicErrorMessage } from '@/shared/api'
 import { FEATURES, Permissions } from '@/shared/config'
-import { formatDate, formatDateTime } from '@/shared/lib'
-import { Badge, Button, Dialog, Skeleton } from '@/shared/ui'
+import { formatDate, formatDateTime, t } from '@/shared/lib'
+import { Badge, Button, Dialog, Label, Skeleton } from '@/shared/ui'
 import { copyDepartmentValue } from '../model/clipboard'
 import { DepartmentEmployeesSection } from './DepartmentEmployeesSection'
 
@@ -44,8 +44,8 @@ export function DepartmentDetailDialog({
     <Dialog
       open={departmentId !== null}
       onOpenChange={onOpenChange}
-      title={department?.nameAr ?? 'تفاصيل القسم'}
-      description="بيانات القسم التنظيمي والموظفون التابعون له."
+      title={department?.nameAr ?? t('department.detail.title')}
+      description={t('department.detail.description')}
       size="lg"
       footer={
         department ? (
@@ -56,32 +56,32 @@ export function DepartmentDetailDialog({
                 onClick={() => onEdit(department.departmentId)}
               >
                 <Pencil className="size-4" aria-hidden />
-                تعديل القسم
+                <Label k="department.menu.edit" />
               </Button>
             )}
             <Button
               type="button"
               variant="outline"
-              onClick={() => void copyDepartmentValue(department.departmentId, 'المعرّف')}
+              onClick={() => void copyDepartmentValue(department.departmentId, t('department.copy.id'))}
             >
               <Hash className="size-4" aria-hidden />
-              نسخ المعرّف
+              <Label k="department.menu.copy-id" />
             </Button>
             <Button
               type="button"
               variant="outline"
-              onClick={() => void copyDepartmentValue(department.code, 'رمز القسم')}
+              onClick={() => void copyDepartmentValue(department.code, t('department.copy.code'))}
             >
               <Copy className="size-4" aria-hidden />
-              نسخ الرمز
+              <Label k="department.detail.copy-code" />
             </Button>
             <Button type="button" onClick={() => onOpenChange(false)}>
-              إغلاق
+              <Label k="common.action.close" />
             </Button>
           </>
         ) : (
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-            إغلاق
+            <Label k="common.action.close" />
           </Button>
         )
       }
@@ -104,22 +104,22 @@ export function DepartmentDetailDialog({
             size="sm"
             onClick={() => void query.refetch()}
           >
-            إعادة المحاولة
+            <Label k="common.action.retry" />
           </Button>
         </div>
       ) : department ? (
         <>
           <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <DetailItem label="رمز القسم">
+            <DetailItem label={t('department.field.code')}>
               <span dir="ltr" className="font-mono text-xs">
                 {department.code}
               </span>
             </DetailItem>
-            <DetailItem label="نوع القسم">
+            <DetailItem label={t('department.field.type')}>
               <LookupLabel lookup={LOOKUP_SLUGS.DepartmentTypes} id={department.departmentTypeId} />
             </DetailItem>
-            <DetailItem label="الاسم بالعربية">{department.nameAr}</DetailItem>
-            <DetailItem label="الاسم بالإنجليزية">
+            <DetailItem label={t('department.field.name-ar')}>{department.nameAr}</DetailItem>
+            <DetailItem label={t('department.field.name-en')}>
               {department.nameEn ? (
                 <span dir="ltr" className="block truncate">
                   {department.nameEn}
@@ -128,7 +128,7 @@ export function DepartmentDetailDialog({
                 <span className="text-muted">—</span>
               )}
             </DetailItem>
-            <DetailItem label="القسم الأعلى">
+            <DetailItem label={t('department.field.parent')}>
               {department.parentDepartmentId ? (
                 parentName ? (
                   parentName
@@ -136,10 +136,10 @@ export function DepartmentDetailDialog({
                   <DepartmentLabel departmentId={department.parentDepartmentId} />
                 )
               ) : (
-                <span className="text-muted">لا يتبع قسمًا أعلى</span>
+                <span className="text-muted">{t('department.detail.no-parent')}</span>
               )}
             </DetailItem>
-            <DetailItem label="مدير القسم">
+            <DetailItem label={t('department.field.manager')}>
               {department.managerEmployeeId ? (
                 managerName ? (
                   <span className="flex flex-col">
@@ -152,37 +152,37 @@ export function DepartmentDetailDialog({
                   <EmployeeLabel employeeId={department.managerEmployeeId} />
                 )
               ) : (
-                <span className="text-muted">غير محدد</span>
+                <span className="text-muted">{t('department.detail.no-manager')}</span>
               )}
             </DetailItem>
-            <DetailItem label="الحالة">
+            <DetailItem label={t('department.field.status')}>
               <Badge variant={department.isActive ? 'success' : 'danger'}>
-                {department.isActive ? 'نشط' : 'موقوف'}
+                {department.isActive ? t('department.status.active') : t('department.status.suspended')}
               </Badge>
             </DetailItem>
             {FEATURES.externalOrganizations && (
-            <DetailItem label="المراسلات الخارجية">
+            <DetailItem label={t('department.field.external')}>
               <span className="flex flex-wrap gap-1.5">
                 <Badge variant={department.canSendExternal ? 'success' : 'outline'}>
-                  {department.canSendExternal ? 'إرسال مسموح' : 'إرسال محظور'}
+                  {department.canSendExternal ? t('department.detail.send-allowed') : t('department.detail.send-blocked')}
                 </Badge>
                 <Badge variant={department.canReceiveExternal ? 'success' : 'outline'}>
-                  {department.canReceiveExternal ? 'استقبال مسموح' : 'استقبال محظور'}
+                  {department.canReceiveExternal ? t('department.detail.receive-allowed') : t('department.detail.receive-blocked')}
                 </Badge>
               </span>
             </DetailItem>
             )}
-            <DetailItem label="تاريخ الإنشاء">
+            <DetailItem label={t('department.field.created-at')}>
               <span dir="ltr">{formatDate(department.createdAt)}</span>
             </DetailItem>
-            <DetailItem label="آخر تحديث">
+            <DetailItem label={t('department.field.updated-at')}>
               <span dir="ltr">{formatDateTime(department.updatedAt)}</span>
             </DetailItem>
-            <DetailItem label="ملاحظات" className="sm:col-span-2">
+            <DetailItem label={t('department.field.notes')} className="sm:col-span-2">
               {department.notes ? (
                 <span className="whitespace-pre-wrap">{department.notes}</span>
               ) : (
-                <span className="text-muted">لا توجد ملاحظات.</span>
+                <span className="text-muted">{t('department.detail.no-notes')}</span>
               )}
             </DetailItem>
           </dl>

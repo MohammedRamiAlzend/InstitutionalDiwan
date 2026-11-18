@@ -25,6 +25,7 @@ import {
   readFormDraft,
   readSelectedRegistryId,
   resolveSelectedRegistryId,
+  t,
   useFormDraftAutosave,
 } from '@/shared/lib'
 import {
@@ -33,6 +34,7 @@ import {
   Dialog,
   FormField,
   Input,
+  Label,
   Select,
 } from '@/shared/ui'
 import {
@@ -237,7 +239,7 @@ export function CreateDocumentDialog({ open, onOpenChange }: CreateDocumentDialo
 
   const onSubmit = handleSubmit(async (values) => {
     if (values.mode === 'register' && registries.options.length > 1 && !values.registryId) {
-      setError('registryId', { message: 'اختر السجل الذي سُجّل فيه الرقم.' })
+      setError('registryId', { message: t('documents.create.error.registry-required') })
       return
     }
 
@@ -278,9 +280,9 @@ export function CreateDocumentDialog({ open, onOpenChange }: CreateDocumentDialo
       toast.success(
         values.mode === 'register'
           ? values.destinationDepartmentId
-            ? 'تم تسجيل الوثيقة وإرسالها إلى القسم المحدد.'
-            : 'تم تسجيل الوثيقة وكتابة سطر السجل.'
-          : 'تم حفظ الوثيقة كمسودة.',
+            ? t('documents.create.toast.registered-sent')
+            : t('documents.create.toast.registered')
+          : t('documents.create.toast.draft-saved'),
       )
 
       setSaveDraft(false)
@@ -298,14 +300,14 @@ export function CreateDocumentDialog({ open, onOpenChange }: CreateDocumentDialo
   })
 
   const SubmitIcon = mode === 'register' ? FilePlus2 : Save
-  const optionalBadge = <Badge variant="outline">اختياري</Badge>
+  const optionalBadge = <Badge variant="outline"><Label k="documents.create.optional" /></Badge>
 
   return (
     <Dialog
       open={open}
       onOpenChange={onOpenChange}
-      title="وثيقة جديدة"
-      description={`${FEATURES.drafts ? 'اختر طريقة الحفظ ثم عبّئ البيانات.' : 'عبّئ البيانات لتسجيل الوثيقة.'} تُنسب الوثيقة إلى قسمك الأساسي تلقائيًا.`}
+      title={t('documents.action.new')}
+      description={`${FEATURES.drafts ? t('documents.create.description-drafts') : t('documents.create.description-register')} ${t('documents.create.description-suffix')}`}
       size="lg"
       footer={
         <>
@@ -315,11 +317,11 @@ export function CreateDocumentDialog({ open, onOpenChange }: CreateDocumentDialo
             onClick={() => onOpenChange(false)}
             disabled={pending}
           >
-            إلغاء
+            <Label k="common.action.cancel" />
           </Button>
           <Button type="submit" form="document-create-form" loading={pending}>
             <SubmitIcon className="size-4" aria-hidden />
-            {mode === 'register' ? 'تسجيل الوثيقة' : 'حفظ كمسودة'}
+            {mode === 'register' ? <Label k="documents.create.submit-register" /> : <Label k="documents.create.submit-draft" />}
           </Button>
         </>
       }
@@ -335,27 +337,27 @@ export function CreateDocumentDialog({ open, onOpenChange }: CreateDocumentDialo
             role="status"
             className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-accent/10 px-3 py-2 text-sm text-foreground"
           >
-            <span>استُعيدت بياناتك غير المرسلة من المرة السابقة. تُحفظ تلقائيًا حتى تُرسل الوثيقة.</span>
+            <span><Label k="documents.create.restored-notice" /></span>
             <Button type="button" variant="ghost" size="sm" onClick={discardRestoredDraft} disabled={pending}>
-              مسح وبدء من جديد
+              <Label k="documents.create.discard-draft" />
             </Button>
           </div>
         )}
 
         {FEATURES.drafts && (
-        <div role="radiogroup" aria-label="طريقة إنشاء الوثيقة" className="grid gap-3 sm:grid-cols-2">
+        <div role="radiogroup" aria-label={t('documents.create.mode-aria')} className="grid gap-3 sm:grid-cols-2">
           <ChoiceCard
             icon={Save}
-            title="حفظ كمسودة"
-            hint="بدون رقم؛ تُسجَّل لاحقًا من سجل الوثائق."
+            titleKey="documents.create.submit-draft"
+            hintKey="documents.create.draft-hint"
             selected={mode === 'draft'}
             onSelect={() => changeMode('draft')}
             disabled={pending}
           />
           <ChoiceCard
             icon={FilePlus2}
-            title="تسجيل فوري في السجل"
-            hint="برقم نظام تلقائي، مع رقمك وتاريخك في سجل القسم."
+            titleKey="documents.create.register-title"
+            hintKey="documents.create.register-hint"
             selected={mode === 'register'}
             onSelect={() => changeMode('register')}
             disabled={pending}
@@ -364,10 +366,10 @@ export function CreateDocumentDialog({ open, onOpenChange }: CreateDocumentDialo
         )}
 
         {mode === 'register' && (
-          <FormSection icon={BookOpen} title="سجل القسم" hint="الرقم والتاريخ كما كُتبا في دفتر قسمك.">
+          <FormSection icon={BookOpen} titleKey="documents.create.section-registry" hintKey="documents.create.section-registry-hint">
             {canViewNumbering && (
               <FormField
-                label="السجل"
+                labelKey="documents.create.field-registry"
                 required={registries.options.length > 1}
                 error={errors.registryId?.message}
                 className="sm:col-span-2"
@@ -388,7 +390,7 @@ export function CreateDocumentDialog({ open, onOpenChange }: CreateDocumentDialo
               </FormField>
             )}
   
-            <FormField label="رقم السجل" required error={errors.registryNumberText?.message}>
+            <FormField labelKey="documents.filter.register-number" required error={errors.registryNumberText?.message}>
               <Input
                 id="document-registry-number"
                 dir="ltr"
@@ -399,7 +401,7 @@ export function CreateDocumentDialog({ open, onOpenChange }: CreateDocumentDialo
               />
             </FormField>
   
-            <FormField label="تاريخ السجل" required error={errors.registryDate?.message}>
+            <FormField labelKey="documents.create.field-registry-date" required error={errors.registryDate?.message}>
               <Input
                 id="document-registry-date"
                 type="date"
@@ -411,9 +413,9 @@ export function CreateDocumentDialog({ open, onOpenChange }: CreateDocumentDialo
           </FormSection>
         )}
 
-        <FormSection icon={FileText} title="بيانات الوثيقة">
+        <FormSection icon={FileText} titleKey="documents.create.section-data">
           <FormField
-            label="نوع الوثيقة"
+            labelKey="documents.create.field-type"
             required
             error={errors.documentTypeId?.message}
             className="sm:col-span-2"
@@ -427,7 +429,7 @@ export function CreateDocumentDialog({ open, onOpenChange }: CreateDocumentDialo
                   onValueChange={(value) => {
                     field.onChange(value)
                     if (Object.values(fieldValues).some((entry) => entry.trim())) {
-                      toast.info('أُفرغت الحقول الإضافية لأن نوع الوثيقة تغيّر.')
+                      toast.info(t('documents.create.toast.fields-cleared'))
                     }
                     setFieldValues({})
                     setFieldErrors({})
@@ -435,8 +437,8 @@ export function CreateDocumentDialog({ open, onOpenChange }: CreateDocumentDialo
                   options={typeOptions}
                   disabled={pending || typesQuery.isLoading}
                   invalid={Boolean(errors.documentTypeId)}
-                  placeholder="اختر النوع…"
-                  aria-label="نوع الوثيقة"
+                  placeholder={t('documents.create.type-placeholder')}
+                  aria-label={t('documents.create.field-type')}
                 />
               )}
             />
@@ -463,15 +465,12 @@ export function CreateDocumentDialog({ open, onOpenChange }: CreateDocumentDialo
 
         <FormSection
           icon={Users}
-          title="الأشخاص المرتبطون"
-          hint={
-            defaultPersonRole
-              ? `يُسجَّل كل اسم بصفة «${defaultPersonRole}»، ويمكن تغييرها من صفحة الوثيقة.`
-              : 'يمكن إضافة أكثر من شخص.'
-          }
+          titleKey="documents.create.section-persons"
+          hintKey={defaultPersonRole ? 'documents.create.persons-hint-role' : 'documents.create.persons-hint'}
+          hintParams={defaultPersonRole ? { role: defaultPersonRole } : undefined}
           aside={optionalBadge}
         >
-          <FormField label="الأسماء" error={errors.persons?.message} className="sm:col-span-2">
+          <FormField labelKey="documents.create.field-names" error={errors.persons?.message} className="sm:col-span-2">
             <Controller
               control={control}
               name="persons"
@@ -492,11 +491,11 @@ export function CreateDocumentDialog({ open, onOpenChange }: CreateDocumentDialo
           <>
             <FormSection
               icon={Send}
-              title="إرسال الوثيقة"
-              hint="اتركه فارغًا لفتح الحركة لاحقًا."
+              titleKey="documents.create.section-send"
+              hintKey="documents.create.section-send-hint"
               aside={optionalBadge}
             >
-              <FormField label="القسم المستلم" className="sm:col-span-2">
+              <FormField labelKey="documents.create.field-destination" className="sm:col-span-2">
                 <Controller
                   control={control}
                   name="destinationDepartmentId"
@@ -504,10 +503,10 @@ export function CreateDocumentDialog({ open, onOpenChange }: CreateDocumentDialo
                     <Select
                       value={field.value || undefined}
                       onValueChange={(value) => field.onChange(value === NO_DESTINATION ? '' : value)}
-                      options={[{ value: NO_DESTINATION, label: 'بدون إرسال الآن' }, ...destinationOptions]}
+                      options={[{ value: NO_DESTINATION, label: t('documents.create.no-destination') }, ...destinationOptions]}
                       disabled={pending || destinationQuery.isLoading}
-                      placeholder={destinationQuery.isLoading ? 'جارٍ التحميل…' : 'بدون إرسال الآن'}
-                      aria-label="القسم المستلم للحركة"
+                      placeholder={destinationQuery.isLoading ? t('documents.create.loading') : t('documents.create.no-destination')}
+                      aria-label={t('documents.create.destination-aria')}
                     />
                   )}
                 />
@@ -515,7 +514,7 @@ export function CreateDocumentDialog({ open, onOpenChange }: CreateDocumentDialo
 
               {destinationDepartmentId && (
                 <>
-                  <FormField label="نوع الحركة" required error={errors.movementTypeId?.message}>
+                  <FormField labelKey="documents.create.field-movement-type" required error={errors.movementTypeId?.message}>
                     <Controller
                       control={control}
                       name="movementTypeId"
@@ -526,14 +525,14 @@ export function CreateDocumentDialog({ open, onOpenChange }: CreateDocumentDialo
                           options={movementTypeOptions}
                           disabled={pending || movementTypesQuery.isLoading}
                           invalid={Boolean(errors.movementTypeId)}
-                          placeholder="اختر النوع…"
-                          aria-label="نوع الحركة"
+                          placeholder={t('documents.create.type-placeholder')}
+                          aria-label={t('documents.create.field-movement-type')}
                         />
                       )}
                     />
                   </FormField>
 
-                  <FormField label="تعليمات" error={errors.movementInstructions?.message}>
+                  <FormField labelKey="documents.create.field-instructions" error={errors.movementInstructions?.message}>
                     <Input
                       id="document-movement-instructions"
                       invalid={Boolean(errors.movementInstructions)}

@@ -12,8 +12,8 @@ import {
 import { LOOKUP_SLUGS, LookupLabel } from '@/entities/lookup'
 import { toArabicErrorMessage } from '@/shared/api'
 import { fileTypeLimits } from '@/shared/config'
-import { formatFileSize } from '@/shared/lib'
-import { Button, Dialog, FormField, Input, Textarea } from '@/shared/ui'
+import { formatFileSize, t } from '@/shared/lib'
+import { Button, Dialog, FormField, Input, Label, Textarea } from '@/shared/ui'
 import { useUploadVersionMutation } from '../api/attachmentMutations'
 import { buildUploadVersionSchema, type UploadVersionFormValues } from '../model/upload.schema'
 import { useLocalChecksum } from '../model/useLocalChecksum'
@@ -99,15 +99,15 @@ export function UploadVersionDialog({
 
       if (checksumState === false) {
         toast.warning(
-          `رُفع الإصدار ${updated.currentVersionNumber} من «${file.title}»، لكن بصمته المخزنة لا تطابق البصمة المحلية.`
+          t('attachment.upload-version.toast-mismatch', { version: updated.currentVersionNumber, title: file.title })
         )
       } else if (checksumState === true) {
         toast.success(
-          `رُفع الإصدار ${updated.currentVersionNumber} من «${file.title}» وبصمته مطابقة للنسخة المخزنة.`
+          t('attachment.upload-version.toast-match', { version: updated.currentVersionNumber, title: file.title })
         )
       } else {
         toast.success(
-          `رُفع الإصدار ${updated.currentVersionNumber} من «${file.title}» (${formatFileSize(values.file.size)}).`
+          t('attachment.upload-version.toast-done', { version: updated.currentVersionNumber, title: file.title, size: formatFileSize(values.file.size) })
         )
       }
     } catch {
@@ -124,22 +124,22 @@ export function UploadVersionDialog({
       onOpenChange={(nextOpen) => {
         if (!nextOpen) closeDialog()
       }}
-      title="رفع إصدار جديد"
-      description={`يضيف إصدارًا إلى «${file.title}». الإصدار الحالي ${file.currentVersionNumber} يليه ${nextVersionNumber}؛ النوع والعنوان لا يتغيران.`}
+      title={t('attachment.upload-version.title')}
+      description={t('attachment.upload-version.description', { title: file.title, current: file.currentVersionNumber, next: nextVersionNumber })}
       size="md"
       footer={
         outcome ? (
           <Button type="button" onClick={closeDialog}>
-            إغلاق
+            <Label k="common.action.close" />
           </Button>
         ) : (
           <>
             <Button type="button" variant="outline" onClick={closeDialog} disabled={isBusy}>
-              إلغاء
+              <Label k="common.action.cancel" />
             </Button>
             <Button type="submit" form="attachment-version-form" loading={uploadMutation.isPending}>
               <Upload className="size-4" aria-hidden />
-              رفع الإصدار {nextVersionNumber}
+              <Label k="attachment.upload-version.submit" params={{ version: nextVersionNumber }} />
             </Button>
           </>
         )
@@ -149,20 +149,19 @@ export function UploadVersionDialog({
         <div className="flex flex-col gap-2 rounded-lg border border-border bg-surface-muted/30 p-3">
           <FileArchivedBadge isArchived />
           <p className="text-sm text-foreground">
-            هذا الملف مؤرشف، فلا يقبل إصدارات جديدة (Attachments.FileArchived). إصداراته الحالية تبقى
-            قابلة للقراءة والتنزيل.
+            <Label k="attachment.upload-version.archived-note" />
           </p>
         </div>
       ) : outcome ? (
         <div className="flex flex-col gap-3 rounded-lg border border-border bg-surface-muted/30 p-3">
           <p className="text-sm font-medium text-foreground">
-            رُفع الإصدار {outcome.versionNumber} من «{file.title}».
+            <Label k="attachment.upload-version.outcome" params={{ version: outcome.versionNumber, title: file.title }} />
           </p>
           <div className="flex flex-wrap items-center gap-2">
             <ChecksumBadge isMatch={outcome.checksumState} />
             {outcome.checksumState === null && (
               <span className="text-xs text-muted">
-                لم تُحسب بصمة محلية لهذا الملف، فلم تُقارن بالنسخة المخزنة.
+                <Label k="attachment.upload.no-local" />
               </span>
             )}
           </div>
@@ -175,7 +174,7 @@ export function UploadVersionDialog({
           className="flex flex-col gap-4"
         >
           <p className="flex items-center gap-1.5 text-xs text-muted">
-            <span>نوع الملف:</span>
+            <span><Label k="attachment.upload.type-prefix" /></span>
             <LookupLabel lookup={LOOKUP_SLUGS.DocumentFileTypes} id={file.fileTypeId} />
           </p>
 
@@ -183,17 +182,17 @@ export function UploadVersionDialog({
             <p className="flex items-start gap-1.5 text-xs text-muted">
               <ShieldCheck className="mt-0.5 size-3.5 shrink-0" aria-hidden />
               <span>
-                الحد الأقصى للحجم {formatFileSize(limits.maxBytes)}؛ الامتدادات المسموحة:{' '}
+                <Label k="attachment.upload.limits-prefix" params={{ size: formatFileSize(limits.maxBytes) }} />{' '}
                 <span dir="ltr">{limits.allowedExtensions.join('، ')}</span>.
               </span>
             </p>
           ) : (
             <p className="text-xs text-muted">
-              لا حدود معلومة محليًا لنوع هذا الملف؛ يتحقق منه الخادم عند الرفع.
+              <Label k="attachment.upload-version.no-limits" />
             </p>
           )}
 
-          <FormField label="الملف" required error={errors.file?.message}>
+          <FormField labelKey="attachment.upload.field-file" required error={errors.file?.message}>
             <Controller
               control={control}
               name="file"
@@ -215,11 +214,11 @@ export function UploadVersionDialog({
 
           {selectedFile && <FilePickSummary file={selectedFile} checksum={checksum} />}
 
-          <FormField label="ملاحظات التغيير" error={errors.changeNotes?.message}>
+          <FormField labelKey="attachment.upload.field-notes" error={errors.changeNotes?.message}>
             <Textarea
               id="attachment-version-notes"
               rows={2}
-              placeholder="مثال: إعادة مسح بدقة أعلى…"
+              placeholder={t('attachment.upload-version.notes-placeholder')}
               invalid={Boolean(errors.changeNotes)}
               {...register('changeNotes')}
             />
@@ -232,7 +231,7 @@ export function UploadVersionDialog({
                 aria-valuenow={progress ?? 0}
                 aria-valuemin={0}
                 aria-valuemax={100}
-                aria-label="تقدّم رفع الإصدار"
+                aria-label={t('attachment.upload-version.progress-aria')}
                 className="h-2 w-full overflow-hidden rounded-full bg-surface-muted"
               >
                 <div
@@ -242,10 +241,10 @@ export function UploadVersionDialog({
               </div>
               <p className="text-xs text-muted">
                 {progress === null
-                  ? 'جارٍ تجهيز الطلب…'
+                  ? t('attachment.upload.preparing')
                   : progress < 100
-                    ? `جارٍ رفع الملف… ${progress}%`
-                    : 'رُفعته، وجارٍ التحقق منه وحفظه…'}
+                    ? t('attachment.upload.uploading', { progress })
+                    : t('attachment.upload.verifying')}
               </p>
             </div>
           )}

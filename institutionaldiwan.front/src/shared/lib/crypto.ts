@@ -1,7 +1,9 @@
+import { t } from './labels'
+
 /** Raised when the context offers no WebCrypto, so no checksum can be computed at all. */
 export class ChecksumUnsupportedError extends Error {
   constructor() {
-    super('تعذّر حساب البصمة في هذا السياق؛ يلزم اتصال آمن (HTTPS) أو localhost.')
+    super(t('common.checksum.unsupported'))
     this.name = 'ChecksumUnsupportedError'
   }
 }

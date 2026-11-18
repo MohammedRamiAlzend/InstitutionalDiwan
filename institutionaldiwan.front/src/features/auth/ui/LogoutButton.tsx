@@ -1,5 +1,5 @@
 import { LogOut } from 'lucide-react'
-import { Button, type ButtonProps } from '@/shared/ui'
+import { Button, Label, type ButtonProps } from '@/shared/ui'
 import { useLogout } from '../model/use-logout'
 
 type LogoutButtonProps = Omit<ButtonProps, 'onClick'>
@@ -11,7 +11,7 @@ export function LogoutButton({ children, ...props }: LogoutButtonProps) {
   return (
     <Button type="button" variant="outline" onClick={logout} {...props}>
       <LogOut className="size-4 rtl:-scale-x-100" aria-hidden />
-      {children ?? 'تسجيل الخروج'}
+      {children ?? <Label k="auth.logout" />}
     </Button>
   )
 }

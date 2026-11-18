@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { Controller, useWatch } from 'react-hook-form'
-import { useDraftForm } from '@/shared/lib'
+import { resolveLabel, t, useDraftForm, useLabelsStore } from '@/shared/lib'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Hash } from 'lucide-react'
 import { toast } from 'sonner'
@@ -11,7 +11,7 @@ import { DepartmentRegistrySelect, useDepartmentRegistryOptions } from '@/entiti
 import { useSessionStore } from '@/entities/user'
 import { toArabicErrorMessage } from '@/shared/api'
 import { Permissions } from '@/shared/config'
-import { Button, Dialog, FormField, Input, Select } from '@/shared/ui'
+import { Button, Dialog, FormField, Input, Label, Select } from '@/shared/ui'
 import { useRegisterDraftDocumentMutation } from '../api/documentMutations'
 import {
   registerDraftSchema,
@@ -40,6 +40,7 @@ export function RegisterDraftDialog({
   const mutation = useRegisterDraftDocumentMutation(document.documentId)
   const departmentsQuery = useDepartmentOptions({ enabled: open })
   const movementTypesQuery = useLookupEntries(LOOKUP_SLUGS.MovementTypes)
+  const overrides = useLabelsStore((state) => state.overrides)
 
   const {
     register,
@@ -78,7 +79,7 @@ export function RegisterDraftDialog({
 
   const destinationOptions = useMemo(
     () => [
-      { value: NO_DESTINATION, label: 'بدون إرسال الآن' },
+      { value: NO_DESTINATION, label: resolveLabel('documents.create.no-destination', overrides) },
       ...(departmentsQuery.data ?? [])
         .filter((department) => department.isActive)
         .map((department) => ({
@@ -86,7 +87,7 @@ export function RegisterDraftDialog({
           label: `${department.nameAr} · ${department.code}`,
         })),
     ],
-    [departmentsQuery.data],
+    [departmentsQuery.data, overrides],
   )
   const movementTypeOptions = useMemo(
     () =>
@@ -99,7 +100,7 @@ export function RegisterDraftDialog({
 
   const onSubmit = handleSubmit(async (values) => {
     if (registries.options.length > 1 && !values.registryId) {
-      setError('registryId', { message: 'اختر السجل الذي سُجّل فيه الرقم.' })
+      setError('registryId', { message: t('documents.create.error.registry-required') })
       return
     }
 
@@ -118,8 +119,8 @@ export function RegisterDraftDialog({
       })
       toast.success(
         values.destinationDepartmentId
-          ? 'تم تسجيل الوثيقة وإرسالها إلى القسم المحدد.'
-          : 'تم تسجيل الوثيقة وكتابة سطر السجل.',
+          ? t('documents.create.toast.registered-sent')
+          : t('documents.create.toast.registered'),
       )
       draft.discard()
       onOpenChange(false)
@@ -132,8 +133,8 @@ export function RegisterDraftDialog({
     <Dialog
       open={open}
       onOpenChange={onOpenChange}
-      title="تسجيل المسودة"
-      description="يصدر النظام رقم الوثيقة تلقائيًا. اكتب رقم السجل وتاريخه في دفتر قسمك، ويمكنك إرسال الوثيقة مباشرة."
+      title={t('docdetails.register-title')}
+      description={t('docdetails.register-description')}
       size="sm"
       footer={
         <>
@@ -143,10 +144,10 @@ export function RegisterDraftDialog({
             onClick={() => onOpenChange(false)}
             disabled={mutation.isPending}
           >
-            إلغاء
+            <Label k="common.action.cancel" />
           </Button>
           <Button type="submit" form="document-register-form" loading={mutation.isPending}>
-            تسجيل الوثيقة
+            <Label k="documents.create.submit-register" />
           </Button>
         </>
       }
@@ -154,7 +155,7 @@ export function RegisterDraftDialog({
       <form id="document-register-form" onSubmit={onSubmit} noValidate className="grid gap-4">
         {canViewNumbering && (
           <FormField
-            label="السجل"
+            labelKey="documents.create.field-registry"
             required={registries.options.length > 1}
             error={errors.registryId?.message}
           >
@@ -175,7 +176,7 @@ export function RegisterDraftDialog({
         )}
 
         <FormField
-          label="رقم السجل (في دفتر قسمك)"
+          labelKey="docdetails.register-field-number"
           required
           error={errors.registryNumberText?.message}
         >
@@ -188,7 +189,7 @@ export function RegisterDraftDialog({
           />
         </FormField>
 
-        <FormField label="تاريخ السجل" required error={errors.registryDate?.message}>
+        <FormField labelKey="documents.create.field-registry-date" required error={errors.registryDate?.message}>
           <Input
             type="date"
             dir="ltr"
@@ -197,7 +198,7 @@ export function RegisterDraftDialog({
           />
         </FormField>
 
-        <FormField label="القسم المستلم (فارغ = تُفتح الحركة لاحقًا)">
+        <FormField labelKey="docdetails.register-field-destination">
           <Controller
             control={control}
             name="destinationDepartmentId"
@@ -207,8 +208,8 @@ export function RegisterDraftDialog({
                 onValueChange={(value) => field.onChange(value === NO_DESTINATION ? '' : value)}
                 options={destinationOptions}
                 disabled={mutation.isPending || departmentsQuery.isLoading}
-                placeholder={departmentsQuery.isLoading ? 'جارٍ التحميل…' : 'بدون إرسال الآن'}
-                aria-label="القسم المستلم للحركة"
+                placeholder={departmentsQuery.isLoading ? t('documents.create.loading') : t('documents.create.no-destination')}
+                aria-label={t('documents.create.destination-aria')}
               />
             )}
           />
@@ -216,7 +217,7 @@ export function RegisterDraftDialog({
 
         {destinationDepartmentId && (
           <>
-            <FormField label="نوع الحركة" required error={errors.movementTypeId?.message}>
+            <FormField labelKey="documents.create.field-movement-type" required error={errors.movementTypeId?.message}>
               <Controller
                 control={control}
                 name="movementTypeId"
@@ -227,15 +228,15 @@ export function RegisterDraftDialog({
                     options={movementTypeOptions}
                     disabled={mutation.isPending || movementTypesQuery.isLoading}
                     invalid={Boolean(errors.movementTypeId)}
-                    placeholder="اختر النوع…"
-                    aria-label="نوع الحركة"
+                    placeholder={t('documents.create.type-placeholder')}
+                    aria-label={t('documents.create.field-movement-type')}
                   />
                 )}
               />
             </FormField>
 
             <FormField
-              label="تعليمات (اختياري)"
+              labelKey="docdetails.register-field-instructions"
               error={errors.movementInstructions?.message}
             >
               <Input

@@ -39,4 +39,5 @@ the name and uploading the logo belong to `features/institution-settings-manage`
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-18 | Qoder | UI labels Phase 4 (ب5-متبقٍ): `BrandingEffects` sets the tab title from `t('common.tab-title', { name })`; the stored brand name stays data. |
 | 2026-11-11 | Claude | Added the entity: branding query, versioned logo address, `BrandMark`, `BrandName` and `BrandingEffects`. |

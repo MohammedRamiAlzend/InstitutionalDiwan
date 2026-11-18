@@ -28,5 +28,6 @@ Renders the signed-in password-change screen. It is intentionally outside `widge
 
 ## 6. Change Log
 
+- 2026-11-18: UI labels Phase 4 (ب5): the heading, intro, forced-reset notice, back link and form text render from `auth.change-password.*` via `<Label>`/`t()`.
 - 2026-11-12: The header shows the stored institution name and logo (`entities/branding`) instead of fixed text.
 - 2026-10-28: Implemented the page and documented the slice.

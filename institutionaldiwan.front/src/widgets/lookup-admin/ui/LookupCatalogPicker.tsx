@@ -8,8 +8,8 @@ import {
   isLookupCatalogEnabled,
   lookupCatalogMeta,
 } from '@/shared/config'
-import { cn } from '@/shared/lib'
-import { Button, GuideRegion, Input, Skeleton } from '@/shared/ui'
+import { cn, resolveLabel, t, useLabelsStore } from '@/shared/lib'
+import { Button, GuideRegion, Input, Label, Skeleton } from '@/shared/ui'
 
 interface LookupCatalogPickerProps {
   selected: string | null
@@ -20,31 +20,36 @@ interface LookupCatalogPickerProps {
 export function LookupCatalogPicker({ selected, onSelect }: LookupCatalogPickerProps) {
   const catalogsQuery = useLookupCatalogs()
   const [filter, setFilter] = useState('')
+  const overrides = useLabelsStore((state) => state.overrides)
 
   const groups = useMemo(() => {
     const needle = filter.trim().toLocaleLowerCase('ar')
+    const order = LOOKUP_GROUP_ORDER.map((key) => resolveLabel(key, overrides))
+    const otherLabel = resolveLabel(LOOKUP_GROUP_OTHER, overrides)
     const byGroup = new Map<string, { slug: string; labelAr: string }[]>()
     for (const slug of (catalogsQuery.data ?? []).filter(isLookupCatalogEnabled)) {
-      const { labelAr, group } = lookupCatalogMeta(slug)
+      const { labelKey, groupKey } = lookupCatalogMeta(slug)
+      const labelAr = labelKey ? resolveLabel(labelKey, overrides) : slug
+      const group = resolveLabel(groupKey, overrides)
       if (needle && !`${labelAr} ${slug}`.toLocaleLowerCase('ar').includes(needle)) continue
       byGroup.set(group, [...(byGroup.get(group) ?? []), { slug, labelAr }])
     }
     const rank = (group: string) => {
-      const index = LOOKUP_GROUP_ORDER.indexOf(group)
-      return index === -1 ? LOOKUP_GROUP_ORDER.indexOf(LOOKUP_GROUP_OTHER) : index
+      const index = order.indexOf(group)
+      return index === -1 ? order.indexOf(otherLabel) : index
     }
     return [...byGroup.entries()].sort(([a], [b]) => rank(a) - rank(b))
-  }, [catalogsQuery.data, filter])
+  }, [catalogsQuery.data, filter, overrides])
 
   return (
     <GuideRegion id="lookups.catalog">
       <nav
-        aria-label="الجداول المرجعية"
+        aria-label={t('lookup.picker.aria')}
         className="flex flex-col gap-3 rounded-xl border border-border bg-surface p-3"
       >
         <Input
-          aria-label="بحث في الجداول المرجعية"
-          placeholder="ابحث عن جدول…"
+          aria-label={t('lookup.picker.search-aria')}
+          placeholder={t('lookup.picker.search-placeholder')}
           startIcon={<Search className="size-4" aria-hidden />}
           value={filter}
           onChange={(event) => setFilter(event.target.value)}
@@ -62,13 +67,13 @@ export function LookupCatalogPicker({ selected, onSelect }: LookupCatalogPickerP
           <div role="alert" className="flex flex-col gap-2 text-sm text-danger">
             {toArabicErrorMessage(catalogsQuery.error)}
             <Button type="button" variant="outline" size="sm" onClick={() => void catalogsQuery.refetch()}>
-              إعادة المحاولة
+              <Label k="common.action.retry" />
             </Button>
           </div>
         )}
 
         {catalogsQuery.isSuccess && groups.length === 0 && (
-          <p className="text-sm text-muted">لا توجد جداول مطابقة.</p>
+          <p className="text-sm text-muted"><Label k="lookup.picker.empty" /></p>
         )}
 
         <div className="flex max-h-[60vh] flex-col gap-3 overflow-y-auto">

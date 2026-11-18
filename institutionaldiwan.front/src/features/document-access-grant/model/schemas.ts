@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { t } from '@/shared/lib'
 
 /** Local `yyyy-MM-dd` for the date input; avoids locale-dependent formatting. */
 function todayIsoDate(): string {
@@ -11,9 +12,9 @@ function todayIsoDate(): string {
 /** The expiry is optional; the server rejects any value that is not in the future. */
 export const grantAccessSchema = z
   .object({
-    userId: z.string().min(1, 'اختر المستخدم.'),
-    accessLevelId: z.string().min(1, 'اختر مستوى الوصول.'),
-    reason: z.string().trim().max(500, 'السبب يتجاوز الحد الأقصى للأحرف.'),
+    userId: z.string().min(1, t('docdetails.validation.user-required')),
+    accessLevelId: z.string().min(1, t('docdetails.validation.level-required')),
+    reason: z.string().trim().max(500, t('docdetails.validation.reason-max')),
     expiresAt: z.string(),
   })
   .superRefine((values, ctx) => {
@@ -23,7 +24,7 @@ export const grantAccessSchema = z
       ctx.addIssue({
         code: 'custom',
         path: ['expiresAt'],
-        message: 'تاريخ الانتهاء غير صالح.',
+        message: t('docdetails.validation.expiry-invalid'),
       })
       return
     }
@@ -32,7 +33,7 @@ export const grantAccessSchema = z
       ctx.addIssue({
         code: 'custom',
         path: ['expiresAt'],
-        message: 'تاريخ الانتهاء يجب أن يكون بعد اليوم.',
+        message: t('docdetails.validation.expiry-future'),
       })
     }
   })

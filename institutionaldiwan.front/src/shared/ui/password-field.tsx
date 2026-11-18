@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { UseFormRegisterReturn } from 'react-hook-form'
 import { Eye, EyeOff } from 'lucide-react'
+import { t } from '@/shared/lib'
 import { FormField } from './form-field'
 import { Input } from './input'
 
@@ -37,7 +38,7 @@ export function PasswordField({
             type="button"
             onClick={() => setVisible((value) => !value)}
             className="cursor-pointer p-1 hover:text-foreground"
-            aria-label={visible ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور'}
+            aria-label={visible ? t('common.password.hide') : t('common.password.show')}
           >
             {visible ? (
               <EyeOff className="size-4" aria-hidden />

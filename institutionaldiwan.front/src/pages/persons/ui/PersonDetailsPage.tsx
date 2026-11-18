@@ -4,14 +4,14 @@ import { usePerson } from '@/entities/person'
 import { RequirePermission } from '@/features/auth'
 import { toArabicErrorMessage } from '@/shared/api'
 import { Permissions, ROUTES } from '@/shared/config'
-import { cn } from '@/shared/lib'
-import { GuideProvider, GuideRegion, PageHeader, Skeleton } from '@/shared/ui'
+import { cn, t } from '@/shared/lib'
+import { GuideProvider, GuideRegion, Label, PageHeader, Skeleton } from '@/shared/ui'
 import { PersonDocumentsTable } from '@/widgets/person-documents-table'
 import { PersonTimeline } from '@/widgets/person-timeline'
 
 const TABS = [
-  { key: 'documents', label: 'الوثائق' },
-  { key: 'timeline', label: 'السجل الزمني' },
+  { key: 'documents', labelKey: 'persons.details.tab.documents' },
+  { key: 'timeline', labelKey: 'persons.details.tab.timeline' },
 ] as const
 
 /** `/persons/:personId` — a person's documents and everything that happened to them. */
@@ -47,7 +47,7 @@ function PersonDetailsView() {
       <div className="flex flex-col items-center gap-3 rounded-xl border border-border bg-surface px-6 py-12 text-center">
         <p className="text-sm font-medium text-danger">{toArabicErrorMessage(personQuery.error)}</p>
         <Link to={ROUTES.PERSONS} className="text-sm text-accent hover:underline">
-          العودة إلى الأشخاص
+          <Label k="persons.details.back" />
         </Link>
       </div>
     )
@@ -60,12 +60,12 @@ function PersonDetailsView() {
         className="inline-flex w-fit items-center gap-1 text-sm text-muted transition-colors hover:text-foreground"
       >
         <ArrowRight className="size-4" aria-hidden />
-        العودة إلى الأشخاص
+        <Label k="persons.details.back" />
       </Link>
 
       <PageHeader title={personQuery.data.displayName} pageGuide="person-details" />
 
-      <nav aria-label="تبويبات ملف الشخص" className="flex items-center gap-1 border-b border-border pb-1">
+      <nav aria-label={t('persons.details.tabs-aria')} className="flex items-center gap-1 border-b border-border pb-1">
         {TABS.map((tab) => (
           <button
             key={tab.key}
@@ -79,7 +79,7 @@ function PersonDetailsView() {
                 : 'text-muted hover:bg-surface-muted hover:text-foreground',
             )}
           >
-            {tab.label}
+            <Label k={tab.labelKey} />
           </button>
         ))}
       </nav>

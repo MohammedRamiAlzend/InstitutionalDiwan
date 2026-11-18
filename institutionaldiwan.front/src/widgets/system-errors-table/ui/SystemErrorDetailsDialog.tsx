@@ -1,12 +1,12 @@
 import type { ReactNode } from 'react'
 import {
-  SYSTEM_ERROR_KIND_LABELS,
-  SYSTEM_ERROR_SOURCE_LABELS,
+  SYSTEM_ERROR_KIND_LABEL_KEYS,
+  SYSTEM_ERROR_SOURCE_LABEL_KEYS,
   useSystemError,
 } from '@/entities/system-error'
 import { UpdateSystemErrorForm } from '@/features/system-error-manage'
 import { toArabicErrorMessage } from '@/shared/api'
-import { formatDateTime } from '@/shared/lib'
+import { formatDateTime, t } from '@/shared/lib'
 import { Dialog, Skeleton } from '@/shared/ui'
 
 interface SystemErrorDetailsDialogProps {
@@ -38,7 +38,7 @@ export function SystemErrorDetailsDialog({ systemErrorId, onClose }: SystemError
       onOpenChange={(next) => {
         if (!next) onClose()
       }}
-      title="تفاصيل الخطأ"
+      title={t('system-error.details.title')}
       size="lg"
     >
       {query.isLoading && <Skeleton className="h-64 w-full" />}
@@ -57,32 +57,32 @@ export function SystemErrorDetailsDialog({ systemErrorId, onClose }: SystemError
           </p>
 
           <dl className="grid gap-3 sm:grid-cols-2">
-            <Fact label="المصدر">{SYSTEM_ERROR_SOURCE_LABELS[error.summary.source]}</Fact>
-            <Fact label="النوع">{SYSTEM_ERROR_KIND_LABELS[error.summary.kind]}</Fact>
-            <Fact label="المسار">
+            <Fact label={t('system-error.column.source')}>{t(SYSTEM_ERROR_SOURCE_LABEL_KEYS[error.summary.source])}</Fact>
+            <Fact label={t('system-error.column.kind')}>{t(SYSTEM_ERROR_KIND_LABEL_KEYS[error.summary.kind])}</Fact>
+            <Fact label={t('system-error.column.path')}>
               <Latin>
                 {error.summary.httpMethod} {error.summary.path}
               </Latin>
             </Fact>
-            <Fact label="رمز HTTP">
+            <Fact label={t('system-error.details.http-code')}>
               <Latin>{error.summary.statusCode}</Latin>
             </Fact>
-            <Fact label="عدد المرات">
+            <Fact label={t('system-error.details.occurrence-count')}>
               <Latin>{error.summary.occurrenceCount}</Latin>
             </Fact>
-            <Fact label="آخر مستخدم">
+            <Fact label={t('system-error.column.last-username')}>
               <Latin>{error.summary.lastUsername}</Latin>
             </Fact>
-            <Fact label="أول ظهور">
+            <Fact label={t('system-error.column.first-seen')}>
               <Latin>{formatDateTime(error.summary.firstSeenAt)}</Latin>
             </Fact>
-            <Fact label="آخر ظهور">
+            <Fact label={t('system-error.column.last-seen')}>
               <Latin>{formatDateTime(error.summary.lastSeenAt)}</Latin>
             </Fact>
-            <Fact label="معرّف التتبع">
+            <Fact label={t('system-error.details.trace-id')}>
               <Latin>{error.traceId}</Latin>
             </Fact>
-            <Fact label="المتصفح">
+            <Fact label={t('system-error.details.browser')}>
               <Latin>{error.userAgent}</Latin>
             </Fact>
           </dl>

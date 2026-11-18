@@ -1,4 +1,5 @@
 import { MOVEMENT_STATUS, MOVEMENT_STEP_STATUS } from '@/shared/config'
+import { t } from '@/shared/lib'
 import type { MovementAction, MovementResponse, MovementStepResponse } from './types'
 
 export function isMovementTerminal(statusId: number): boolean {
@@ -97,11 +98,11 @@ export function translateMovementNote(note: string | null): string | null {
 
   const routed = /^Rejected step routed to the Central Diwan:\s*(.+)$/.exec(note)
   if (routed) {
-    return `أُعيد توجيه الوثيقة إلى الديوان المركزي بعد الرفض: ${routed[1]}`
+    return t('movements.note.routed-to-central', { detail: routed[1] })
   }
 
   const rejected = /^Rejected:\s*(.+)$/.exec(note)
-  if (rejected) return `مرفوض: ${rejected[1]}`
+  if (rejected) return t('movements.note.rejected', { detail: rejected[1] })
 
   return note
 }

@@ -50,6 +50,7 @@ affected `detail(id)`.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-18 | Qoder | UI labels Phase 4 (ب4): `describeRegistryScope` resolves via `t()` (`numbering.scope.*`); `RegistryScopeCard` reset-policy/scope chips via key maps + `resolveLabel` and static text via `<Label>`; `DepartmentRegistrySelect` placeholders/aria via `t()`. Registry/department/type names stay data. |
 | 2026-11-17 | agent | Added `useDepartmentRegistries` (active registers as full rows) for the sidebar's register sub-items; `useDepartmentRegistryOptions` now maps over it. |
 | 2026-11-11 | Claude | `DepartmentRegisterEntriesParams` gained `fieldFilters`, sent as repeated keys. |
 | 2026-11-11 | Claude | Added `departmentRegisterEntries` (`GET .../register/entries`) with `useDepartmentRegisterEntries` and its keys. |

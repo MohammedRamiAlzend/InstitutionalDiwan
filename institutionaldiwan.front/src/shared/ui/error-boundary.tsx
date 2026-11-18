@@ -4,6 +4,7 @@ import { CLIENT_ERROR_KIND, reportClientError } from '@/shared/api'
 import { ROUTES } from '@/shared/config'
 import { cn } from '@/shared/lib'
 import { Button } from './button'
+import { Label } from './label'
 
 interface ErrorBoundaryProps {
   children: ReactNode
@@ -63,20 +64,19 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       >
         <AlertTriangle className="size-10 text-danger" aria-hidden />
         <div className="flex flex-col gap-1">
-          <h1 className="text-lg font-semibold text-foreground">تعذّر عرض هذه الصفحة</h1>
+          <h1 className="text-lg font-semibold text-foreground"><Label k="common.error-boundary.title" /></h1>
           <p className="max-w-md text-sm text-muted">
-            حدث خطأ غير متوقع أثناء عرضها. البيانات المحفوظة لم تتأثر، أما ما لم يُحفظ في هذه الصفحة
-            فقد يلزم إدخاله مجددًا.
+            <Label k="common.error-boundary.body" />
           </p>
         </div>
         <div className="flex flex-wrap items-center justify-center gap-2">
           <Button type="button" onClick={() => window.location.reload()}>
             <RefreshCw className="size-4" aria-hidden />
-            إعادة تحميل الصفحة
+            <Label k="common.error-boundary.reload" />
           </Button>
           <Button type="button" variant="outline" onClick={() => window.location.assign(ROUTES.DASHBOARD)}>
             <Home className="size-4" aria-hidden />
-            الذهاب إلى لوحة التحكم
+            <Label k="common.error-boundary.dashboard" />
           </Button>
         </div>
         {import.meta.env.DEV && (

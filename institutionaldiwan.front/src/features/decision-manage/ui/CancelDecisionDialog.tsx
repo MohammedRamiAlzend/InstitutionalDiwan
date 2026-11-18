@@ -1,8 +1,8 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
 import { toArabicErrorMessage } from '@/shared/api'
-import { useDraftForm } from '@/shared/lib'
-import { Button, Dialog, FormField, Textarea } from '@/shared/ui'
+import { useDraftForm, t } from '@/shared/lib'
+import { Button, Dialog, FormField, Label, Textarea } from '@/shared/ui'
 import { useCancelDecisionMutation } from '../api/decisionMutations'
 import { cancelDecisionSchema, type CancelDecisionFormValues } from '../model/schemas'
 
@@ -36,7 +36,7 @@ export function CancelDecisionDialog({
   const onSubmit = handleSubmit(async (values) => {
     try {
       await mutation.mutateAsync({ decisionId, reason: values.reason.trim() })
-      toast.success('أُلغي إدخال القرار.')
+      toast.success(t('decisions.cancel.toast'))
       draft.discard()
       onOpenChange(false)
     } catch (error) {
@@ -48,22 +48,22 @@ export function CancelDecisionDialog({
     <Dialog
       open={open}
       onOpenChange={onOpenChange}
-      title="إلغاء إدخال القرار"
-      description={`يلغي القرار ${decisionNumber} لأنه أُدخل خطأ. هذا الإجراء لمدير النظام، ولا يُنشئ حركة إعادة.`}
+      title={t('decisions.cancel.title')}
+      description={t('decisions.cancel.description', { number: decisionNumber })}
       size="md"
       footer={
         <>
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={mutation.isPending}>
-            تراجع
+            <Label k="decisions.cancel.dismiss" />
           </Button>
           <Button type="submit" form="cancel-decision-form" variant="destructive" disabled={mutation.isPending}>
-            {mutation.isPending ? 'جارٍ الإلغاء…' : 'إلغاء الإدخال'}
+            {mutation.isPending ? t('decisions.cancel.submitting') : <Label k="decisions.cancel.submit" />}
           </Button>
         </>
       }
     >
       <form id="cancel-decision-form" className="flex flex-col gap-4" onSubmit={onSubmit} noValidate>
-        <FormField label="السبب" required error={errors.reason?.message} guideId="decisions.cancel-reason">
+        <FormField labelKey="decisions.cancel.field-reason" required error={errors.reason?.message} guideId="decisions.cancel-reason">
           <Textarea {...register('reason')} invalid={Boolean(errors.reason)} />
         </FormField>
       </form>

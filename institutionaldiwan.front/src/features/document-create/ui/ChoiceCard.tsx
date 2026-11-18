@@ -1,17 +1,19 @@
 import { Check, type LucideIcon } from 'lucide-react'
+import type { LabelKey } from '@/shared/config'
 import { cn } from '@/shared/lib'
+import { Label } from '@/shared/ui'
 
 interface ChoiceCardProps {
   icon: LucideIcon
-  title: string
-  hint: string
+  titleKey: LabelKey
+  hintKey: LabelKey
   selected: boolean
   onSelect: () => void
   disabled?: boolean
 }
 
 /** A radio option drawn as a card; place inside an element with `role="radiogroup"`. */
-export function ChoiceCard({ icon: Icon, title, hint, selected, onSelect, disabled = false }: ChoiceCardProps) {
+export function ChoiceCard({ icon: Icon, titleKey, hintKey, selected, onSelect, disabled = false }: ChoiceCardProps) {
   return (
     <button
       type="button"
@@ -36,8 +38,8 @@ export function ChoiceCard({ icon: Icon, title, hint, selected, onSelect, disabl
       </span>
 
       <span className="flex min-w-0 flex-col gap-0.5">
-        <span className="text-sm font-semibold text-foreground">{title}</span>
-        <span className="text-xs leading-5 text-muted">{hint}</span>
+        <span className="text-sm font-semibold text-foreground"><Label k={titleKey} /></span>
+        <span className="text-xs leading-5 text-muted"><Label k={hintKey} /></span>
       </span>
 
       <span

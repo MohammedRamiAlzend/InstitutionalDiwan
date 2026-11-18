@@ -3,18 +3,19 @@ import { ListTree, Table2, Workflow, type LucideIcon } from 'lucide-react'
 import { EyeOff } from 'lucide-react'
 import { useDocumentRelations, DEFAULT_GRAPH_DEPTH, MAX_GRAPH_DEPTH, MIN_GRAPH_DEPTH } from '@/entities/document-relation'
 import { CreateRelationDialog, RemoveRelationDialog } from '@/features/document-relation-manage'
-import { useTableState } from '@/shared/lib'
-import { Button, GuideChip, GuideRegion } from '@/shared/ui'
+import type { LabelKey } from '@/shared/config'
+import { t, useTableState } from '@/shared/lib'
+import { Button, GuideChip, GuideRegion, Label } from '@/shared/ui'
 import { RelationEventsSection } from './RelationEventsSection'
 import { RelationsGraphView } from './RelationsGraphView'
 import { RelationsGrid } from './RelationsGrid'
 
 type RelationsView = 'table' | 'graph' | 'tree'
 
-const VIEW_OPTIONS: readonly { value: RelationsView; label: string; icon: LucideIcon }[] = [
-  { value: 'table', label: 'جدول', icon: Table2 },
-  { value: 'graph', label: 'مخطط', icon: Workflow },
-  { value: 'tree', label: 'شجرة', icon: ListTree },
+const VIEW_OPTIONS: readonly { value: RelationsView; labelKey: LabelKey; icon: LucideIcon }[] = [
+  { value: 'table', labelKey: 'relation.panel.view.table', icon: Table2 },
+  { value: 'graph', labelKey: 'relation.panel.view.graph', icon: Workflow },
+  { value: 'tree', labelKey: 'relation.panel.view.tree', icon: ListTree },
 ]
 
 function isView(value: string | undefined): value is RelationsView {
@@ -60,8 +61,8 @@ export function DocumentRelationsPanel({
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center gap-2">
-        <div role="group" aria-label="طريقة عرض الروابط" className="flex items-center gap-1">
-          {VIEW_OPTIONS.map(({ value, label, icon: Icon }) => (
+        <div role="group" aria-label={t('relation.panel.view-aria')} className="flex items-center gap-1">
+          {VIEW_OPTIONS.map(({ value, labelKey, icon: Icon }) => (
             <Button
               key={value}
               type="button"
@@ -71,7 +72,7 @@ export function DocumentRelationsPanel({
               onClick={() => table.setFilter('view', value === 'table' ? null : value)}
             >
               <Icon className="size-4" aria-hidden />
-              {label}
+              <Label k={labelKey} />
             </Button>
           ))}
         </div>
@@ -86,8 +87,8 @@ export function DocumentRelationsPanel({
           >
             <EyeOff className="size-4 shrink-0" aria-hidden />
             {hidden === 1
-              ? 'يوجد رابط واحد إلى وثيقة لا تملك صلاحية الاطلاع عليها.'
-              : `يوجد ${hidden} روابط إلى وثائق لا تملك صلاحية الاطلاع عليها.`}
+              ? t('relation.panel.hidden-one')
+              : t('relation.panel.hidden-many', { count: hidden })}
           </p>
         </GuideRegion>
       )}
@@ -127,7 +128,7 @@ export function DocumentRelationsPanel({
       <section aria-labelledby="relation-events-title" className="flex flex-col gap-3">
         <div className="flex items-center gap-2">
           <h2 id="relation-events-title" className="text-base font-semibold">
-            سجل الروابط
+            <Label k="relation.panel.events-title" />
           </h2>
           <GuideChip id="document-details.relations-events" />
         </div>

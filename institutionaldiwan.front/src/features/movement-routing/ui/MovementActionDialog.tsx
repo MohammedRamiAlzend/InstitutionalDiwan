@@ -5,10 +5,12 @@ import { toast } from 'sonner'
 import { useDepartmentOptions } from '@/entities/department'
 import type { MovementAction } from '@/entities/movement'
 import { toArabicErrorMessage } from '@/shared/api'
+import { t } from '@/shared/lib'
 import {
   Button,
   Dialog,
   FormField,
+  Label,
   Select,
   Textarea,
 } from '@/shared/ui'
@@ -29,7 +31,7 @@ import {
   type MovementReasonFormValues,
   type RedirectMovementFormValues,
 } from '../model/schemas'
-import { MOVEMENT_ACTION_LABELS } from '../model/constants'
+import { MOVEMENT_ACTION_LABEL_KEYS } from '../model/constants'
 import { ReceiveMovementDialog } from './ReceiveMovementDialog'
 
 interface MovementActionDialogProps {
@@ -180,7 +182,7 @@ function NotesFormDialog({
             onClick={() => onOpenChange(false)}
             disabled={isPending}
           >
-            إلغاء
+            <Label k="common.action.cancel" />
           </Button>
           <Button type="submit" form="movement-notes-form" loading={isPending}>
             {submitLabel}
@@ -267,7 +269,7 @@ function ReasonFormDialog({
             onClick={() => onOpenChange(false)}
             disabled={isPending}
           >
-            إلغاء
+            <Label k="common.action.cancel" />
           </Button>
           <Button
             type="submit"
@@ -281,10 +283,10 @@ function ReasonFormDialog({
       }
     >
       <form id="movement-reason-form" onSubmit={submit} noValidate>
-        <FormField label="السبب" required error={errors.reason?.message}>
+        <FormField labelKey="movements.field.reason" required error={errors.reason?.message}>
           <Textarea
             rows={3}
-            placeholder="اكتب سببًا واضحًا يظهر في سجل الحركة…"
+            placeholder={t('movements.reason-placeholder')}
             invalid={Boolean(errors.reason)}
             {...register('reason')}
           />
@@ -310,16 +312,16 @@ function SendActionDialog({ movementId, open, onOpenChange }: ActionDialogBasePr
     <NotesFormDialog
       open={open}
       onOpenChange={onOpenChange}
-      title={MOVEMENT_ACTION_LABELS.send}
-      description="سيُعلَّم القسم الوجهة بأن الوثيقة في طريقه؛ تبقى الوثيقة قيد التداول حتى الإغلاق."
-      notesLabel="ملاحظات الإرسال (اختياري)"
-      placeholder="ملاحظة اختيارية تُرفق بالإرسال…"
-      submitLabel="إرسال الحركة"
+      title={t(MOVEMENT_ACTION_LABEL_KEYS.send)}
+      description={t('movements.send.description')}
+      notesLabel={t('movements.send.notes-label')}
+      placeholder={t('movements.send.notes-placeholder')}
+      submitLabel={t('movements.send.submit')}
       isPending={mutation.isPending}
       error={mutation.error}
       onSubmit={async (notes) => {
         await mutation.mutateAsync({ movementId, notes })
-        toast.success('تم إرسال الحركة إلى القسم الوجهة.')
+        toast.success(t('movements.send.toast'))
         onOpenChange(false)
       }}
     />
@@ -337,16 +339,16 @@ function CompleteActionDialog({
     <NotesFormDialog
       open={open}
       onOpenChange={onOpenChange}
-      title={MOVEMENT_ACTION_LABELS.complete}
-      description="تُغلق الخطوة الحالية كمكتملة، وتبقى الحركة مفتوحة حتى تُغلق."
-      notesLabel="ملاحظات النتيجة (اختياري)"
-      placeholder="نتيجة المعالجة في هذا القسم…"
-      submitLabel="إكمال الخطوة"
+      title={t(MOVEMENT_ACTION_LABEL_KEYS.complete)}
+      description={t('movements.complete.description')}
+      notesLabel={t('movements.complete.notes-label')}
+      placeholder={t('movements.complete.notes-placeholder')}
+      submitLabel={t('movements.complete.submit')}
       isPending={mutation.isPending}
       error={mutation.error}
       onSubmit={async (notes) => {
         await mutation.mutateAsync({ movementId, notes })
-        toast.success('اكتملت الخطوة الحالية للحركة.')
+        toast.success(t('movements.complete.toast'))
         onOpenChange(false)
       }}
     />
@@ -360,16 +362,16 @@ function CloseActionDialog({ movementId, open, onOpenChange }: ActionDialogBaseP
     <NotesFormDialog
       open={open}
       onOpenChange={onOpenChange}
-      title={MOVEMENT_ACTION_LABELS.close}
-      description="يُغلق سجل الحركة وتعود الوثيقة إلى حالة مستقرة قابلة للتوجيه من جديد أو للأرشفة."
-      notesLabel="ملاحظات الإغلاق (اختياري)"
-      placeholder="ملاحظة ختامية عن الحركة…"
-      submitLabel="إغلاق الحركة"
+      title={t(MOVEMENT_ACTION_LABEL_KEYS.close)}
+      description={t('movements.close.description')}
+      notesLabel={t('movements.close.notes-label')}
+      placeholder={t('movements.close.notes-placeholder')}
+      submitLabel={t('movements.close.submit')}
       isPending={mutation.isPending}
       error={mutation.error}
       onSubmit={async (notes) => {
         await mutation.mutateAsync({ movementId, notes })
-        toast.success('أُغلقت الحركة وأُطلقت الوثيقة.')
+        toast.success(t('movements.close.toast'))
         onOpenChange(false)
       }}
     />
@@ -383,14 +385,14 @@ function RejectActionDialog({ movementId, open, onOpenChange }: ActionDialogBase
     <ReasonFormDialog
       open={open}
       onOpenChange={onOpenChange}
-      title={MOVEMENT_ACTION_LABELS.reject}
-      description="الرفض يتطلب سببًا. إذا لم يكن قسمك هو الديوان المركزي فستُعاد الوثيقة إليه في خطوة جديدة."
-      submitLabel="رفض الحركة"
+      title={t(MOVEMENT_ACTION_LABEL_KEYS.reject)}
+      description={t('movements.reject.description')}
+      submitLabel={t('movements.reject.submit')}
       isPending={mutation.isPending}
       error={mutation.error}
       onSubmit={async (reason) => {
         await mutation.mutateAsync({ movementId, reason })
-        toast.success('تم رفض الحركة.')
+        toast.success(t('movements.reject.toast'))
         onOpenChange(false)
       }}
     />
@@ -404,14 +406,14 @@ function ReturnActionDialog({ movementId, open, onOpenChange }: ActionDialogBase
     <ReasonFormDialog
       open={open}
       onOpenChange={onOpenChange}
-      title={MOVEMENT_ACTION_LABELS.return}
-      description="إرجاع الوثيقة إلى القسم المُرسل يتطلب سببًا، وتُعرض الحالة «مُعاد»."
-      submitLabel="إرجاع الوثيقة"
+      title={t(MOVEMENT_ACTION_LABEL_KEYS.return)}
+      description={t('movements.return.description')}
+      submitLabel={t('movements.return.submit')}
       isPending={mutation.isPending}
       error={mutation.error}
       onSubmit={async (reason) => {
         await mutation.mutateAsync({ movementId, reason })
-        toast.success('أُعيدت الوثيقة إلى القسم المُرسل.')
+        toast.success(t('movements.return.toast'))
         onOpenChange(false)
       }}
     />
@@ -425,15 +427,15 @@ function CancelActionDialog({ movementId, open, onOpenChange }: ActionDialogBase
     <ReasonFormDialog
       open={open}
       onOpenChange={onOpenChange}
-      title={MOVEMENT_ACTION_LABELS.cancel}
-      description="إلغاء الحركة نهائي ولا يمكن التراجع عنه، ويتطلب سببًا يظهر في سجل الحركة."
-      submitLabel="إلغاء الحركة"
+      title={t(MOVEMENT_ACTION_LABEL_KEYS.cancel)}
+      description={t('movements.cancel.description')}
+      submitLabel={t('movements.action.cancel')}
       destructive
       isPending={mutation.isPending}
       error={mutation.error}
       onSubmit={async (reason) => {
         await mutation.mutateAsync({ movementId, reason })
-        toast.success('أُلغيت الحركة.')
+        toast.success(t('movements.cancel.toast'))
         onOpenChange(false)
       }}
     />
@@ -479,7 +481,7 @@ function RedirectActionDialog({
         newDestinationDepartmentId: values.newDestinationDepartmentId,
         instructions: values.instructions.trim() || null,
       })
-      toast.success('أُعيد توجيه الحركة إلى القسم الجديد.')
+      toast.success(t('movements.redirect.toast'))
       onOpenChange(false)
     } catch {
       // The mutation error is rendered in the form-level banner below.
@@ -490,8 +492,8 @@ function RedirectActionDialog({
     <Dialog
       open={open}
       onOpenChange={onOpenChange}
-      title={MOVEMENT_ACTION_LABELS.redirect}
-      description="تُضاف خطوة جديدة وتُرسل مباشرة إلى القسم الجديد دون إغلاق الحركة."
+      title={t(MOVEMENT_ACTION_LABEL_KEYS.redirect)}
+      description={t('movements.redirect.description')}
       size="lg"
       footer={
         <>
@@ -501,14 +503,14 @@ function RedirectActionDialog({
             onClick={() => onOpenChange(false)}
             disabled={mutation.isPending}
           >
-            إلغاء
+            <Label k="common.action.cancel" />
           </Button>
           <Button
             type="submit"
             form="redirect-movement-form"
             loading={mutation.isPending}
           >
-            إعادة التوجيه
+            <Label k="movements.redirect.submit" />
           </Button>
         </>
       }
@@ -520,12 +522,11 @@ function RedirectActionDialog({
         className="grid gap-4 sm:grid-cols-2"
       >
         <p className="rounded-lg border border-border bg-surface-muted px-3 py-2 text-xs text-muted sm:col-span-2">
-          يجب أن يكون الديوان المركزي على أحد طرفي التوجيه الجديد؛ لا تنتقل الوثيقة مباشرة بين قسمين
-          عاديين.
+          <Label k="movements.redirect.central-hint" />
         </p>
 
         <FormField
-          label="القسم الوجهة الجديد"
+          labelKey="movements.redirect.field-destination"
           required
           error={errors.newDestinationDepartmentId?.message}
           className="sm:col-span-2"
@@ -541,22 +542,22 @@ function RedirectActionDialog({
                 disabled={mutation.isPending || departmentsQuery.isLoading}
                 invalid={Boolean(errors.newDestinationDepartmentId)}
                 placeholder={
-                  departmentsQuery.isLoading ? 'جارٍ التحميل…' : 'اختر القسم…'
+                  departmentsQuery.isLoading ? t('movements.loading') : t('movements.destination-placeholder')
                 }
-                aria-label="القسم الوجهة الجديد"
+                aria-label={t('movements.redirect.field-destination')}
               />
             )}
           />
         </FormField>
 
         <FormField
-          label="تعليمات"
+          labelKey="movements.field.instructions"
           error={errors.instructions?.message}
           className="sm:col-span-2"
         >
           <Textarea
             rows={2}
-            placeholder="إرشادات اختيارية للقسم الجديد…"
+            placeholder={t('movements.redirect.instructions-placeholder')}
             invalid={Boolean(errors.instructions)}
             {...register('instructions')}
           />

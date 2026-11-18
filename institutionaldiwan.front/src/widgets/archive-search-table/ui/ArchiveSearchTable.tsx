@@ -28,12 +28,13 @@ import {
 import { SaveSearchDialog } from '@/features/archive-manage'
 import { toArabicErrorMessage } from '@/shared/api'
 import { ROUTES } from '@/shared/config'
-import { formatDate, formatDateTime, useTableState } from '@/shared/lib'
+import { formatDate, formatDateTime, t, useLabel, useTableState } from '@/shared/lib'
 import {
   Button,
   DataTable,
   GuideChip,
   Input,
+  Label,
   Select,
   type DataTableColumn,
   type MenuEntry,
@@ -108,29 +109,32 @@ export function ArchiveSearchTable() {
   )
 
   const allOption = (label: string) => ({ value: 'all', label })
+  const allTypesLabel = useLabel('archive.filter.all-types')
+  const allLocationsLabel = useLabel('archive.filter.all-locations')
+  const allDepartmentsLabel = useLabel('archive.filter.all-departments')
   const typeOptions = useMemo(
     () => [
-      allOption('كل الأنواع'),
+      allOption(allTypesLabel),
       ...(typesQuery.data ?? []).map((entry) => ({ value: String(entry.id), label: entry.descAr })),
     ],
-    [typesQuery.data],
+    [typesQuery.data, allTypesLabel],
   )
   const locationOptions = useMemo(
     () => [
-      allOption('كل المواقع'),
+      allOption(allLocationsLabel),
       ...(locationsQuery.data ?? []).map((entry) => ({ value: String(entry.id), label: entry.descAr })),
     ],
-    [locationsQuery.data],
+    [locationsQuery.data, allLocationsLabel],
   )
   const departmentOptions = useMemo(
     () => [
-      allOption('كل الأقسام'),
+      allOption(allDepartmentsLabel),
       ...(departmentsQuery.data ?? []).map((department) => ({
         value: department.departmentId,
         label: department.nameAr,
       })),
     ],
-    [departmentsQuery.data],
+    [departmentsQuery.data, allDepartmentsLabel],
   )
 
   // The grid's criteria are exactly its URL params, so saving and restoring is a copy in/out.
@@ -163,9 +167,9 @@ export function ArchiveSearchTable() {
   const copyValue = async (value: string, label: string) => {
     try {
       await navigator.clipboard.writeText(value)
-      toast.success(`تم نسخ ${label}.`)
+      toast.success(t('archive.toast.copied', { label }))
     } catch {
-      toast.error('تعذّر النسخ إلى الحافظة.')
+      toast.error(t('archive.toast.copy-failed'))
     }
   }
 
@@ -173,7 +177,7 @@ export function ArchiveSearchTable() {
     () => [
       {
         id: 'title',
-        header: 'الوثيقة',
+        headerKey: 'archive.column.title',
         sortable: true,
         sortKey: 'title',
         hideable: false,
@@ -194,14 +198,14 @@ export function ArchiveSearchTable() {
       },
       {
         id: 'officialNumber',
-        header: 'رقم النظام',
+        headerKey: 'archive.column.official-number',
         sortable: true,
         sortKey: 'officialNumber',
         cell: ({ document }) => <OfficialNumberTag officialNumberText={document.officialNumberText} />,
       },
       {
         id: 'location',
-        header: 'موقع الأرشفة',
+        headerKey: 'archive.column.location',
         cell: ({ archiveLocationId }) =>
           archiveLocationId === null ? (
             <span className="text-xs text-muted">—</span>
@@ -211,7 +215,7 @@ export function ArchiveSearchTable() {
       },
       {
         id: 'archivedAt',
-        header: 'تاريخ الأرشفة',
+        headerKey: 'archive.column.archived-at',
         sortable: true,
         sortKey: 'archivedAt',
         cell: ({ archivedAt }) => (
@@ -222,14 +226,14 @@ export function ArchiveSearchTable() {
       },
       {
         id: 'documentType',
-        header: 'النوع',
+        headerKey: 'archive.column.type',
         cell: ({ document }) => (
           <LookupLabel lookup={LOOKUP_SLUGS.DocumentTypes} id={document.documentTypeId} />
         ),
       },
       {
         id: 'department',
-        header: 'القسم المالك',
+        headerKey: 'archive.column.department',
         cell: ({ document }) => {
           const department = departmentById.get(document.owningDepartmentId)
           return department ? (
@@ -245,7 +249,7 @@ export function ArchiveSearchTable() {
       },
       {
         id: 'registrationDate',
-        header: 'تاريخ التسجيل',
+        headerKey: 'archive.column.registration-date',
         defaultHidden: true,
         cell: ({ document }) => (
           <span dir="ltr" className="whitespace-nowrap text-xs text-muted">
@@ -255,7 +259,7 @@ export function ArchiveSearchTable() {
       },
       {
         id: 'archivedBy',
-        header: 'أرشفها',
+        headerKey: 'archive.column.archived-by',
         defaultHidden: true,
         cell: ({ archivedByUserId }) => <UserLabel userId={archivedByUserId} />,
       },
@@ -266,42 +270,42 @@ export function ArchiveSearchTable() {
   const buildRowMenu = ({ document }: ArchivedDocumentResponse): MenuEntry[] => [
     {
       id: 'open',
-      label: 'فتح التفاصيل',
+      label: t('archive.row.open'),
       icon: <Eye className="size-4" aria-hidden />,
       disabled: isDocumentRestricted(document.title),
       onSelect: () => navigate(ROUTES.DOCUMENT_DETAIL(document.documentId)),
     },
     {
       id: 'history',
-      label: 'سجل الأرشفة',
+      label: t('archive.row.history'),
       icon: <History className="size-4" aria-hidden />,
       disabled: isDocumentRestricted(document.title),
       onSelect: () => navigate(`${ROUTES.DOCUMENT_DETAIL(document.documentId)}?tab=archive`),
     },
     {
       id: 'copy-number',
-      label: 'نسخ رقم النظام',
+      label: t('archive.row.copy-number'),
       icon: <Hash className="size-4" aria-hidden />,
       disabled: !document.officialNumberText,
-      onSelect: () => void copyValue(document.officialNumberText ?? '', 'رقم النظام'),
+      onSelect: () => void copyValue(document.officialNumberText ?? '', t('archive.copy.official-number')),
     },
     {
       id: 'copy-id',
-      label: 'نسخ معرّف الوثيقة',
+      label: t('archive.row.copy-id'),
       icon: <Copy className="size-4" aria-hidden />,
-      onSelect: () => void copyValue(document.documentId, 'معرّف الوثيقة'),
+      onSelect: () => void copyValue(document.documentId, t('archive.copy.document-id')),
     },
   ]
 
   const refreshEntry: MenuEntry = {
     id: 'refresh',
-    label: 'تحديث البيانات',
+    label: t('table.refresh'),
     icon: <RefreshCw className="size-4" aria-hidden />,
     onSelect: () => void archiveQuery.refetch(),
   }
   const saveEntry: MenuEntry = {
     id: 'save-search',
-    label: 'حفظ البحث الحالي',
+    label: t('archive.menu.save-search'),
     icon: <BookmarkPlus className="size-4" aria-hidden />,
     disabled: !hasCriteria,
     onSelect: () => setSaveOpen(true),
@@ -320,7 +324,7 @@ export function ArchiveSearchTable() {
 
       <DataTable
         tableId="archive-documents"
-        caption="الوثائق المؤرشفة"
+        caption={t('archive.caption')}
         columns={columns}
         rows={archiveQuery.data?.items}
         rowKey={({ document }) => document.documentId}
@@ -339,12 +343,12 @@ export function ArchiveSearchTable() {
         sortKey={table.sortKey}
         sortDirection={table.sortDirection}
         onSortChange={table.setSort}
-        searchPlaceholder="ابحث باسم الوثيقة أو رقم النظام…"
+        searchPlaceholder={t('archive.search-placeholder')}
         filters={
           <div className="flex flex-wrap items-center gap-2">
             <GuideChip id="archive.filters" />
             <Select
-              aria-label="تصفية حسب موقع الأرشفة"
+              aria-label={t('archive.filter.location-aria')}
               value={table.filters.archiveLocationId || 'all'}
               onValueChange={(value) =>
                 table.setFilter('archiveLocationId', value === 'all' ? null : value)
@@ -353,7 +357,7 @@ export function ArchiveSearchTable() {
               className="w-40"
             />
             <Select
-              aria-label="تصفية حسب النوع"
+              aria-label={t('archive.filter.type-aria')}
               value={table.filters.documentTypeId || 'all'}
               onValueChange={(value) => table.setFilter('documentTypeId', value === 'all' ? null : value)}
               options={typeOptions}
@@ -366,7 +370,7 @@ export function ArchiveSearchTable() {
               onChange={(raw) => table.setRepeated(FIELD_FILTER_PARAM, raw)}
             />
             <Select
-              aria-label="تصفية حسب القسم المالك"
+              aria-label={t('archive.filter.department-aria')}
               value={table.filters.owningDepartmentId || 'all'}
               onValueChange={(value) =>
                 table.setFilter('owningDepartmentId', value === 'all' ? null : value)
@@ -376,11 +380,11 @@ export function ArchiveSearchTable() {
               className="w-52"
             />
             <label className="flex items-center gap-1.5 text-xs text-muted">
-              أُرشفت من
+              <Label k="archive.filter.from-label" />
               <Input
                 type="date"
                 dir="ltr"
-                aria-label="تاريخ الأرشفة من"
+                aria-label={t('archive.filter.from-aria')}
                 value={table.filters.archivedFrom ?? ''}
                 max={table.filters.archivedTo || undefined}
                 onChange={(event) => table.setFilter('archivedFrom', event.target.value || null)}
@@ -388,11 +392,11 @@ export function ArchiveSearchTable() {
               />
             </label>
             <label className="flex items-center gap-1.5 text-xs text-muted">
-              إلى
+              <Label k="archive.filter.to-label" />
               <Input
                 type="date"
                 dir="ltr"
-                aria-label="تاريخ الأرشفة إلى"
+                aria-label={t('archive.filter.to-aria')}
                 value={table.filters.archivedTo ?? ''}
                 min={table.filters.archivedFrom || undefined}
                 onChange={(event) => table.setFilter('archivedTo', event.target.value || null)}
@@ -408,13 +412,13 @@ export function ArchiveSearchTable() {
                   size="sm"
                   onClick={() => void departmentsQuery.refetch()}
                 >
-                  إعادة التحميل
+                  <Label k="archive.reload" />
                 </Button>
               </span>
             )}
             {table.hasActiveFilters && (
               <Button type="button" variant="ghost" size="sm" onClick={table.clearFilters}>
-                مسح المرشحات
+                <Label k="archive.filter.clear" />
               </Button>
             )}
           </div>
@@ -427,21 +431,21 @@ export function ArchiveSearchTable() {
           <>
             <Button type="button" variant="outline" disabled={!hasCriteria} onClick={() => setSaveOpen(true)}>
               <BookmarkPlus className="size-4" aria-hidden />
-              حفظ البحث
+              <Label k="archive.toolbar.save-search" />
             </Button>
             <GuideChip id="archive.save-search" />
           </>
         }
-        emptyTitle={hasQuery ? 'لا توجد وثائق مؤرشفة مطابقة.' : 'لا توجد وثائق مؤرشفة بعد.'}
+        emptyTitle={hasQuery ? t('archive.empty.no-match-title') : t('archive.empty.no-documents-title')}
         emptyDescription={
           hasQuery
-            ? 'جرّب تعديل البحث أو المرشحات لعرض وثائق أخرى.'
-            : 'تظهر هنا الوثائق التي أُرشفت وتملك صلاحية الاطلاع عليها.'
+            ? t('archive.empty.no-match-description')
+            : t('archive.empty.no-documents-description')
         }
         emptyAction={
           hasQuery ? (
             <Button type="button" variant="outline" onClick={table.clearQuery}>
-              مسح البحث والمرشحات
+              <Label k="archive.empty.clear" />
             </Button>
           ) : undefined
         }

@@ -23,10 +23,12 @@ The «الحقول» tab of a document: values against the schema version the do
 | Item | State |
 | --- | --- |
 | Panel | ✅ Implemented |
+| UI labels migration (ب4) | ✅ Pinned-version label, edit button and no-fields text resolve from the `schema.*` catalog (2026-11-18) |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-18 | Qoder | UI labels Phase 4 (ب4): `DocumentFieldsPanel` no-fields text, pinned-version label and edit-values button via `<Label>` (`schema.panel.*`). `field.labelAr` and the caller-supplied `lockedReason` stay data. |
 | 2026-11-08 | Claude | Uses `formatFieldValue` and hides fields whose condition does not hold. |
 | 2026-11-03 | Claude | Implemented per plan `plans/document-dynamic-fields-frontend.md`. |

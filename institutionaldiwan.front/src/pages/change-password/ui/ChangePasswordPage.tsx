@@ -4,7 +4,7 @@ import { ROUTES } from '@/shared/config'
 import { BrandMark, BrandName } from '@/entities/branding'
 import { useSessionStore } from '@/entities/user'
 import { ChangePasswordForm } from '@/features/auth'
-import { ThemeToggle } from '@/shared/ui'
+import { Label, ThemeToggle } from '@/shared/ui'
 
 /** `/change-password` — signed-in password change, forced after a reset login. */
 export function ChangePasswordPage() {
@@ -20,7 +20,7 @@ export function ChangePasswordPage() {
             <p className="font-heading text-lg font-bold text-foreground">
               <BrandName />
             </p>
-            <p className="text-xs text-muted">الحساب والأمان</p>
+            <p className="text-xs text-muted"><Label k="auth.change-password.account" /></p>
           </div>
         </div>
         <ThemeToggle />
@@ -33,11 +33,10 @@ export function ChangePasswordPage() {
           </span>
 
           <h1 className="font-heading text-2xl font-bold text-foreground">
-            تغيير كلمة المرور
+            <Label k="auth.change-password.heading" />
           </h1>
           <p className="mt-2 text-sm text-muted">
-            أدخل كلمة المرور الحالية، ثم اختر كلمة مرور جديدة لا تقل عن ثمانية
-            أحرف وتختلف عن الحالية.
+            <Label k="auth.change-password.intro" />
           </p>
 
           {mustChangePassword && (
@@ -46,7 +45,7 @@ export function ChangePasswordPage() {
               className="mt-4 flex items-start gap-2 rounded-lg bg-warning/10 px-3 py-2 text-sm text-warning"
             >
               <ShieldAlert className="mt-0.5 size-4 shrink-0" aria-hidden />
-              يجب تغيير كلمة المرور قبل متابعة استخدام النظام.
+              <Label k="auth.change-password.forced" />
             </p>
           )}
 
@@ -62,7 +61,7 @@ export function ChangePasswordPage() {
                 to={ROUTES.DASHBOARD}
                 className="font-medium text-accent hover:underline"
               >
-                العودة إلى لوحة التحكم
+                <Label k="auth.change-password.back" />
               </Link>
             </p>
           )}

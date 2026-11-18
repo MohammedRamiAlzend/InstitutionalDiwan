@@ -69,7 +69,8 @@ The status list is then narrowed to the caller's side of the current step:
 | Either | close |
 
 `translateMovementNote` rewrites the API's English system notes (`Rejected: …`,
-`Rejected step routed to the Central Diwan: …`) into Arabic before rendering.
+`Rejected step routed to the Central Diwan: …`) into Arabic before rendering, resolving the templates
+through `t('movements.note.*')` so they are renamable like any other label.
 
 ## Implementation status
 
@@ -83,6 +84,7 @@ The status list is then narrowed to the caller's side of the current step:
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-18 | Qoder | UI labels Phase 4 (movements unit): `translateMovementNote` resolves its two Arabic templates through `t('movements.note.routed-to-central' / '.rejected')` with a `{detail}` param instead of inline literals. |
 | 2026-11-10 | Claude | The receipt reports `replacedNumberId` and `replacedNumberText` when the department wrote the document under a new number. |
 | 2026-11-08 | Claude | Steps carry the register number and visit date; the receipt reports `registryVisitId` and `isReturnVisit`. |
 | 2026-11-03 | Claude | `getMovementActions` now takes the caller's custody of the current step, built by the new `getMovementCustody`, and mirrors the API's sender and receiver checks. |

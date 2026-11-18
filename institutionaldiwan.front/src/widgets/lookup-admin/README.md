@@ -30,6 +30,7 @@ selected catalog with add, relabel and activate/deactivate actions.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-18 | Qoder | UI labels Phase 4 (ب4): `LookupCatalogPicker`/`LookupEntriesTable` resolve the static catalog/group display names via `lookupCatalogMeta` `labelKey`/`groupKey` + `resolveLabel` (null `labelKey` falls back to the slug), and grid chrome via `headerKey`/`t()`/`<Label>` (`lookup.*`). Entry `descAr` values stay data. |
 | 2026-11-09 | Claude | The `organization-types` catalog is hidden while `FEATURES.externalOrganizations` is off. |
 | 2026-11-05 | Claude | Entries grid shows an "افتراضية" badge and a context-menu action to set or clear the catalog default. |
 | 2026-11-04 | Claude | Added the Module 01 lookups administration widgets. |

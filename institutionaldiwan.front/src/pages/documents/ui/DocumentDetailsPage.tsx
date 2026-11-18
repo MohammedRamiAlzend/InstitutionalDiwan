@@ -23,14 +23,15 @@ import {
   RegisterDraftDialog,
 } from '@/features/document-manage'
 import { toArabicErrorMessage } from '@/shared/api'
-import { FEATURES, Permissions, ROUTES } from '@/shared/config'
-import { cn } from '@/shared/lib'
+import { FEATURES, Permissions, ROUTES, type LabelKey } from '@/shared/config'
+import { cn, t } from '@/shared/lib'
 import {
   Badge,
   Button,
   GuideChip,
   GuideProvider,
   GuideRegion,
+  Label,
   PageHeader,
   Skeleton,
 } from '@/shared/ui'
@@ -44,14 +45,14 @@ import { DocumentParticipantsTab } from './DocumentParticipantsTab'
 import { DocumentPersonsTab } from './DocumentPersonsTab'
 
 const TABS = [
-  { key: 'details', label: 'التفاصيل', available: true },
-  { key: 'movements', label: 'الحركات', available: true },
-  { key: 'persons', label: 'الأشخاص المرتبطون', available: true },
-  { key: 'participants', label: 'المشاركون', available: true },
-  { key: 'decisions', label: 'القرار', available: true },
-  { key: 'relations', label: 'الروابط', available: true },
-  { key: 'files', label: 'الملفات', available: true },
-] as const
+  { key: 'details', labelKey: 'docdetails.tab.details', available: true },
+  { key: 'movements', labelKey: 'docdetails.tab.movements', available: true },
+  { key: 'persons', labelKey: 'docdetails.tab.persons', available: true },
+  { key: 'participants', labelKey: 'docdetails.tab.participants', available: true },
+  { key: 'decisions', labelKey: 'docdetails.tab.decisions', available: true },
+  { key: 'relations', labelKey: 'docdetails.tab.relations', available: true },
+  { key: 'files', labelKey: 'docdetails.tab.files', available: true },
+] as const satisfies ReadonlyArray<{ key: string; labelKey: LabelKey; available: boolean }>
 
 type TabKey = (typeof TABS)[number]['key']
 type AvailableTabKey =
@@ -170,14 +171,14 @@ function DocumentDetailsView() {
         </p>
         <div className="flex flex-wrap items-center gap-2">
           <Button type="button" variant="outline" onClick={() => void detailsQuery.refetch()}>
-            إعادة المحاولة
+            <Label k="common.action.retry" />
           </Button>
           <Button
             type="button"
             variant="ghost"
             onClick={() => navigate(ROUTES.DOCUMENTS)}
           >
-            العودة إلى سجل الوثائق
+            <Label k="docdetails.back-to-register" />
           </Button>
         </div>
       </div>
@@ -220,7 +221,7 @@ function DocumentDetailsView() {
         className="inline-flex w-fit items-center gap-1 text-sm text-muted transition-colors hover:text-foreground"
       >
         <ArrowRight className="size-4" aria-hidden />
-        العودة إلى سجل الوثائق
+        <Label k="docdetails.back-to-register" />
       </Link>
 
       <PageHeader
@@ -237,7 +238,7 @@ function DocumentDetailsView() {
             {isDraft && canCreate && (
               <Button type="button" onClick={() => setRegisterOpen(true)}>
                 <Hash className="size-4" aria-hidden />
-                تسجيل برقم
+                <Label k="docdetails.action.register" />
               </Button>
             )}
             {isDraft && canCreate && <GuideChip id="document-details.register" />}
@@ -248,7 +249,7 @@ function DocumentDetailsView() {
               onClick={() => setPrintOpen(true)}
             >
               <FileDown className="size-4" aria-hidden />
-              {printOpen ? 'جارٍ التجهيز…' : 'تصدير PDF'}
+              {printOpen ? <Label k="docdetails.action.export-pdf-preparing" /> : <Label k="docdetails.action.export-pdf" />}
             </Button>
             <GuideChip id="document-details.export-pdf" />
             {FEATURES.participants && canManageParticipants && (
@@ -258,7 +259,7 @@ function DocumentDetailsView() {
                 onClick={() => setParticipantOpen(true)}
               >
                 <UserPlus className="size-4" aria-hidden />
-                إضافة مشارك
+                <Label k="docdetails.action.add-participant" />
               </Button>
             )}
             {FEATURES.participants && canManageParticipants && <GuideChip id="document-details.add-participant" />}
@@ -270,21 +271,21 @@ function DocumentDetailsView() {
                 onClick={() => setCancelOpen(true)}
               >
                 <Ban className="size-4" aria-hidden />
-                إلغاء الوثيقة
+                <Label k="docdetails.action.cancel" />
               </Button>
             )}
             {canCancel && <GuideChip id="document-details.cancel" />}
             {canArchiveNow && (
               <Button type="button" variant="outline" onClick={() => setArchiveOpen(true)}>
                 <Archive className="size-4" aria-hidden />
-                أرشفة
+                <Label k="docdetails.action.archive" />
               </Button>
             )}
             {canArchiveNow && <GuideChip id="document-details.archive" />}
             {canUnarchive && (
               <Button type="button" variant="outline" onClick={() => setUnarchiveOpen(true)}>
                 <ArchiveRestore className="size-4" aria-hidden />
-                إلغاء الأرشفة
+                <Label k="docdetails.action.unarchive" />
               </Button>
             )}
             {canUnarchive && <GuideChip id="document-details.unarchive" />}
@@ -294,7 +295,7 @@ function DocumentDetailsView() {
 
       <GuideRegion id="document-details.tabs">
       <nav
-        aria-label="تبويبات الوثيقة"
+        aria-label={t('docdetails.tabs-aria')}
         className="flex flex-wrap items-center gap-1 border-b border-border pb-1"
       >
         {TABS.filter(
@@ -319,10 +320,10 @@ function DocumentDetailsView() {
                 !tab.available && 'cursor-not-allowed opacity-60 hover:bg-transparent',
               )}
             >
-              {tab.label}
+              <Label k={tab.labelKey} />
               {!tab.available && (
                 <Badge variant="outline" className="text-[10px]">
-                  قريبًا
+                  <Label k="common.coming-soon" />
                 </Badge>
               )}
             </button>
@@ -367,8 +368,8 @@ function DocumentDetailsView() {
             frozenReason={
               canEdit && (isCanceled || isArchived)
                 ? isArchived
-                  ? 'الوثيقة مؤرشفة؛ ألغِ أرشفتها لتعديل الأشخاص.'
-                  : 'الوثيقة ملغاة؛ لا يمكن تعديل الأشخاص.'
+                  ? t('docdetails.frozen.persons-archived')
+                  : t('docdetails.frozen.persons-cancelled')
                 : undefined
             }
           />
@@ -402,8 +403,8 @@ function DocumentDetailsView() {
             frozenReason={
               canEdit && (isCanceled || isArchived)
                 ? isArchived
-                  ? 'الوثيقة مؤرشفة؛ ألغِ أرشفتها لإضافة الروابط أو إزالتها.'
-                  : 'الوثيقة ملغاة؛ لا يمكن تعديل روابطها.'
+                  ? t('docdetails.frozen.relations-archived')
+                  : t('docdetails.frozen.relations-cancelled')
                 : undefined
             }
           />

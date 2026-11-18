@@ -1,7 +1,7 @@
 import * as DialogPrimitive from '@radix-ui/react-dialog'
 import { X } from 'lucide-react'
 import type { ReactNode } from 'react'
-import { cn } from '@/shared/lib'
+import { cn, t } from '@/shared/lib'
 
 export type DialogSize = 'sm' | 'md' | 'lg'
 
@@ -40,7 +40,7 @@ export function Dialog({
   children,
   footer,
   size = 'md',
-  closeLabel = 'إغلاق',
+  closeLabel = t('common.action.close'),
   className,
 }: DialogProps) {
   return (

@@ -2,21 +2,21 @@ import { useSearchParams } from 'react-router-dom'
 import { List, ShieldCheck } from 'lucide-react'
 import { RequirePermission } from '@/features/auth'
 import { Permissions } from '@/shared/config'
-import { cn } from '@/shared/lib'
-import { GuideProvider, GuideRegion, PageHeader } from '@/shared/ui'
+import { cn, t } from '@/shared/lib'
+import { GuideProvider, GuideRegion, Label, PageHeader } from '@/shared/ui'
 import { AuditIntegrityTable, AuditLogTable } from '@/widgets/audit-log-table'
 
 const PANELS = [
   {
     key: 'logs',
-    label: 'السجل',
-    hint: 'ابحث في سلسلة الأحداث وافرزها حسب الوحدة أو الإجراء',
+    labelKey: 'audit.tab.logs',
+    hintKey: 'audit.tab.logs-hint',
     icon: List,
   },
   {
     key: 'integrity',
-    label: 'تقارير السلامة',
-    hint: 'نتائج فحص تكامل السلسلة المحفوظة',
+    labelKey: 'audit.tab.integrity',
+    hintKey: 'audit.tab.integrity-hint',
     icon: ShieldCheck,
   },
 ] as const
@@ -59,7 +59,7 @@ function AuditView() {
       />
 
       <GuideRegion id="audit.tabs">
-      <div role="tablist" aria-label="أقسام سجل التدقيق" className="flex flex-wrap items-center gap-2">
+      <div role="tablist" aria-label={t('audit.page.tabs-aria')} className="flex flex-wrap items-center gap-2">
         {PANELS.map((panel) => {
           const Icon = panel.icon
           const isActive = activePanel === panel.key
@@ -85,9 +85,9 @@ function AuditView() {
                 )}
               >
                 <Icon className="size-4" aria-hidden />
-                {panel.label}
+                <Label k={panel.labelKey} />
               </span>
-              <span className="text-xs text-muted">{panel.hint}</span>
+              <span className="text-xs text-muted"><Label k={panel.hintKey} /></span>
             </button>
           )
         })}

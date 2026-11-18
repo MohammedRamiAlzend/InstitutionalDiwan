@@ -24,10 +24,12 @@ Saves the dynamic field values of a draft document. The shared inputs and valida
 | Item | State |
 | --- | --- |
 | Edit values form | ✅ Implemented; amount edit verified in-browser |
+| UI labels migration (ب4) | ✅ Save/back buttons and the success toast resolve from the `schema.*` catalog (2026-11-18) |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-18 | Qoder | UI labels Phase 4 (ب4): `EditFieldValuesForm` save/back buttons via `<Label>` (`schema.panel.save-values` / `schema.action.back`) and the success toast via `t()`. |
 | 2026-11-08 | Claude | Read-only fields show their fixed value and are not sent. |
 | 2026-11-03 | Claude | Implemented per plan `plans/document-dynamic-fields-frontend.md`. |

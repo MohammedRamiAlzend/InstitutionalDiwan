@@ -1,6 +1,7 @@
 import { toast } from 'sonner'
 import type { DocumentFileResponse } from '@/entities/document-file'
 import { toArabicErrorMessage } from '@/shared/api'
+import { t } from '@/shared/lib'
 import { ConfirmDialog } from '@/shared/ui'
 import { useArchiveFileMutation } from '../api/attachmentMutations'
 
@@ -21,7 +22,7 @@ export function ArchiveFileDialog({ file, open, onOpenChange }: ArchiveFileDialo
   const confirm = async () => {
     try {
       await archiveMutation.mutateAsync(file.fileId)
-      toast.success(`أُرشف الملف «${file.title}»؛ لا تُقبل إصدارات جديدة له.`)
+      toast.success(t('attachment.archive.toast', { title: file.title }))
       onOpenChange(false)
     } catch (error) {
       // Stays open so the reason is readable: an archived file is already archived, and a document
@@ -37,10 +38,10 @@ export function ArchiveFileDialog({ file, open, onOpenChange }: ArchiveFileDialo
         if (!nextOpen && archiveMutation.isPending) return
         onOpenChange(nextOpen)
       }}
-      title="أرشفة الملف"
-      description={`أرشفة «${file.title}» تمنع رفع إصدارات جديدة له. إصداراته الحالية تبقى قابلة للقراءة والتنزيل ولا يُحذف منها شيء، ولا يمكن التراجع عن الأرشفة من هذه الواجهة.`}
-      confirmLabel="أرشف الملف"
-      cancelLabel="إلغاء"
+      title={t('attachment.row.archive')}
+      description={t('attachment.archive.description', { title: file.title })}
+      confirmLabel={t('attachment.archive.confirm')}
+      cancelLabel={t('common.action.cancel')}
       onConfirm={() => void confirm()}
       loading={archiveMutation.isPending}
       destructive

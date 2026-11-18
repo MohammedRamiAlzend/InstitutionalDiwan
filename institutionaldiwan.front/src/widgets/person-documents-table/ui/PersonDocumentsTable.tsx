@@ -7,8 +7,8 @@ import { LOOKUP_SLUGS, LookupLabel, useLookupEntries } from '@/entities/lookup'
 import { usePersonDocuments, type PersonDocumentResponse } from '@/entities/person'
 import { UserLabel } from '@/entities/user'
 import { ROUTES } from '@/shared/config'
-import { formatDateTime, useTableState } from '@/shared/lib'
-import { Button, DataTable, Select, type DataTableColumn, type MenuEntry } from '@/shared/ui'
+import { formatDateTime, t, useLabel, useTableState } from '@/shared/lib'
+import { Button, DataTable, Label, Select, type DataTableColumn, type MenuEntry } from '@/shared/ui'
 
 const ALL = '__all__'
 
@@ -36,7 +36,7 @@ function LastAction({ row }: { row: PersonDocumentResponse }) {
       {row.lastActionKind === 'MOVEMENT' ? (
         <LookupLabel lookup={LOOKUP_SLUGS.MovementEventTypes} id={row.lastMovementEventTypeId} />
       ) : (
-        <span className="text-sm text-foreground">تغيير الحالة</span>
+        <span className="text-sm text-foreground">{t('persons.status-change')}</span>
       )}
       <span className="flex flex-wrap items-center gap-1 text-xs text-muted">
         <span dir="ltr">{formatDateTime(row.lastActionAt)}</span>
@@ -69,7 +69,7 @@ export function PersonDocumentsTable({ personId }: PersonDocumentsTableProps) {
     () => [
       {
         id: 'title',
-        header: 'الوثيقة',
+        headerKey: 'persons.documents.column.title',
         hideable: false,
         sortable: true,
         sortKey: 'title',
@@ -81,41 +81,41 @@ export function PersonDocumentsTable({ personId }: PersonDocumentsTableProps) {
       },
       {
         id: 'type',
-        header: 'النوع',
+        headerKey: 'persons.documents.column.type',
         defaultHidden: true,
         cell: (row) => <LookupLabel lookup={LOOKUP_SLUGS.DocumentTypes} id={row.documentTypeId} className="text-xs" />,
       },
       {
         id: 'number',
-        header: 'الرقم',
+        headerKey: 'persons.documents.column.number',
         defaultHidden: true,
         cell: (row) => <OfficialNumberTag officialNumberText={row.officialNumberText} />,
       },
       {
         id: 'role',
-        header: 'صفته',
+        headerKey: 'persons.documents.column.role',
         cell: (row) => <LookupLabel lookup={LOOKUP_SLUGS.DocumentPersonRoles} id={row.roleId} />,
       },
       {
         id: 'status',
-        header: 'الحالة',
+        headerKey: 'persons.documents.column.status',
         sortable: true,
         sortKey: 'status',
         cell: (row) => <DocumentStatusBadge statusId={row.statusId} />,
       },
       {
         id: 'location',
-        header: 'موجودة الآن في',
+        headerKey: 'persons.documents.column.location',
         cell: (row) => <CurrentLocation row={row} />,
       },
       {
         id: 'lastAction',
-        header: 'آخر إجراء',
+        headerKey: 'persons.documents.column.last-action',
         cell: (row) => <LastAction row={row} />,
       },
       {
         id: 'linkedAt',
-        header: 'تاريخ الربط',
+        headerKey: 'persons.documents.column.linked-at',
         defaultHidden: true,
         sortable: true,
         sortKey: 'linkedAt',
@@ -132,7 +132,7 @@ export function PersonDocumentsTable({ personId }: PersonDocumentsTableProps) {
   const buildRowMenu = (row: PersonDocumentResponse): MenuEntry[] => [
     {
       id: 'open',
-      label: 'فتح الوثيقة',
+      label: t('persons.documents.row.open'),
       icon: <ExternalLink className="size-4" aria-hidden />,
       onSelect: () => navigate(ROUTES.DOCUMENT_DETAIL(row.documentId)),
     },
@@ -141,12 +141,14 @@ export function PersonDocumentsTable({ personId }: PersonDocumentsTableProps) {
   const headerMenu: MenuEntry[] = [
     {
       id: 'refresh',
-      label: 'تحديث البيانات',
+      label: t('table.refresh'),
       icon: <RefreshCw className="size-4" aria-hidden />,
       onSelect: () => void documentsQuery.refetch(),
     },
   ]
 
+  const allRolesLabel = useLabel('persons.documents.filter.all-roles')
+  const allStatusesLabel = useLabel('persons.documents.filter.all-statuses')
   const toOptions = (entries: typeof rolesQuery.data, allLabel: string) => [
     { value: ALL, label: allLabel },
     ...(entries ?? []).map((entry) => ({ value: String(entry.id), label: entry.descAr })),
@@ -157,7 +159,7 @@ export function PersonDocumentsTable({ personId }: PersonDocumentsTableProps) {
   return (
     <DataTable
       tableId="person-documents"
-      caption="وثائق الشخص"
+      caption={t('persons.documents.caption')}
       columns={columns}
       rows={documentsQuery.data?.items}
       rowKey={(row) => row.documentPersonId}
@@ -173,23 +175,23 @@ export function PersonDocumentsTable({ personId }: PersonDocumentsTableProps) {
       onPageSizeChange={table.setPageSize}
       search={table.search}
       onSearchChange={table.setSearch}
-      searchPlaceholder="ابحث باسم الوثيقة أو الرقم…"
+      searchPlaceholder={t('persons.documents.search-placeholder')}
       sortKey={table.sortKey}
       sortDirection={table.sortDirection}
       onSortChange={table.setSort}
       filters={
         <>
           <Select
-            aria-label="تصفية حسب الصفة"
+            aria-label={t('persons.documents.filter.role-aria')}
             value={table.filters.role ?? ALL}
             onValueChange={(value) => table.setFilter('role', value === ALL ? null : value)}
-            options={toOptions(rolesQuery.data, 'كل الصفات')}
+            options={toOptions(rolesQuery.data, allRolesLabel)}
           />
           <Select
-            aria-label="تصفية حسب الحالة"
+            aria-label={t('persons.documents.filter.status-aria')}
             value={table.filters.status ?? ALL}
             onValueChange={(value) => table.setFilter('status', value === ALL ? null : value)}
-            options={toOptions(statusesQuery.data, 'كل الحالات')}
+            options={toOptions(statusesQuery.data, allStatusesLabel)}
           />
         </>
       }
@@ -197,12 +199,12 @@ export function PersonDocumentsTable({ personId }: PersonDocumentsTableProps) {
       headerMenu={headerMenu}
       emptyMenu={headerMenu}
       rowLabel={(row) => row.title}
-      emptyTitle="لا توجد وثائق مطابقة."
-      emptyDescription={hasQuery ? 'جرّب تعديل البحث أو المرشحات.' : undefined}
+      emptyTitle={t('persons.documents.empty.title')}
+      emptyDescription={hasQuery ? t('persons.documents.empty.description') : undefined}
       emptyAction={
         hasQuery ? (
           <Button type="button" variant="outline" onClick={() => table.clearQuery()}>
-            مسح البحث والمرشحات
+            <Label k="persons.documents.empty.clear" />
           </Button>
         ) : undefined
       }

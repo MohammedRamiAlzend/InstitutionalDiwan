@@ -26,11 +26,15 @@ import {
   DOCUMENT_NUMBER_EVENT_TYPE,
   DOCUMENT_NUMBER_STATUS,
   DOCUMENT_STATUS,
+  type LabelKey,
 } from '@/shared/config'
 import {
   formatDate,
   formatDateTime,
   formatShortId,
+  resolveLabel,
+  t,
+  useLabelsStore,
   useTableState,
 } from '@/shared/lib'
 import {
@@ -38,33 +42,34 @@ import {
   Button,
   CollapsibleSection,
   DataTable,
+  Label,
   Skeleton,
   type DataTableColumn,
   type MenuEntry,
 } from '@/shared/ui'
 import { UserLabel } from '@/entities/user'
 
-const numberEventLabels: Record<number, string> = {
-  [DOCUMENT_NUMBER_EVENT_TYPE.Issued]: 'صدر',
-  [DOCUMENT_NUMBER_EVENT_TYPE.Cancelled]: 'أُلغي',
-  [DOCUMENT_NUMBER_EVENT_TYPE.Replaced]: 'استُبدل',
-  [DOCUMENT_NUMBER_EVENT_TYPE.RegisteredInDepartment]: 'سُجّل في الدائرة',
-  [DOCUMENT_NUMBER_EVENT_TYPE.ReRegisteredInDepartment]: 'أُعيد تسجيله في الدائرة',
+const NUMBER_EVENT_KEYS: Record<number, LabelKey> = {
+  [DOCUMENT_NUMBER_EVENT_TYPE.Issued]: 'docdetails.number-event.issued',
+  [DOCUMENT_NUMBER_EVENT_TYPE.Cancelled]: 'docdetails.number-event.cancelled',
+  [DOCUMENT_NUMBER_EVENT_TYPE.Replaced]: 'docdetails.number-event.replaced',
+  [DOCUMENT_NUMBER_EVENT_TYPE.RegisteredInDepartment]: 'docdetails.number-event.registered-dept',
+  [DOCUMENT_NUMBER_EVENT_TYPE.ReRegisteredInDepartment]: 'docdetails.number-event.re-registered-dept',
 }
 
-const numberStatusLabels: Record<number, string> = {
-  [DOCUMENT_NUMBER_STATUS.Active]: 'نشط',
-  [DOCUMENT_NUMBER_STATUS.Cancelled]: 'ملغى',
-  [DOCUMENT_NUMBER_STATUS.Replaced]: 'مُستبدل',
+const NUMBER_STATUS_KEYS: Record<number, LabelKey> = {
+  [DOCUMENT_NUMBER_STATUS.Active]: 'documents.number-status.active',
+  [DOCUMENT_NUMBER_STATUS.Cancelled]: 'documents.number-status.cancelled',
+  [DOCUMENT_NUMBER_STATUS.Replaced]: 'documents.number-status.replaced',
 }
 
 /** The API stamps replacement numbers with an English `Replaces …` note; keep it Arabic here. */
 function formatNumberNote(note: string): string {
   const replaced = /^Replaces\s+(.+)$/.exec(note)
-  if (replaced) return `يستبدل الرقم ${replaced[1]}`
+  if (replaced) return t('docdetails.number-note.replaces', { number: replaced[1] })
 
   const renumbered = /^Replaced by department number\s+(.+)$/.exec(note)
-  return renumbered ? `سُجّلت الوثيقة برقم جديد: ${renumbered[1]}` : note
+  return renumbered ? t('docdetails.number-note.renumbered', { number: renumbered[1] }) : note
 }
 
 function latestNumberNote(number: DocumentNumberResponse): string | null {
@@ -93,6 +98,7 @@ export function DocumentNumbersSection({
 }: DocumentNumbersSectionProps) {
   const historyQuery = useDocumentNumberHistory(documentId)
   const entriesQuery = useDocumentRegistryNumbers(documentId)
+  const overrides = useLabelsStore((state) => state.overrides)
   const table = useTableState({
     defaultSortKey: 'issuedAt',
     defaultSortDirection: 'desc',
@@ -106,6 +112,11 @@ export function DocumentNumbersSection({
   const history = historyQuery.data ?? []
   const entries = entriesQuery.data
   const isDraft = documentStatusId === DOCUMENT_STATUS.Draft
+
+  const eventLabel = (id: number) =>
+    resolveLabel(NUMBER_EVENT_KEYS[id] ?? 'docdetails.number-event.unknown', overrides, { id })
+  const statusLabel = (id: number) =>
+    resolveLabel(NUMBER_STATUS_KEYS[id] ?? 'documents.number-status.unknown', overrides, { id })
 
   const historyById = useMemo(
     () =>
@@ -127,7 +138,7 @@ export function DocumentNumbersSection({
   const columns = useMemo<DataTableColumn<DocumentNumberResponse>[]>(() => {
     const scopeLabel = (number: DocumentNumberResponse) =>
       number.scopeId === 1
-        ? 'الديوان المركزي'
+        ? resolveLabel('docdetails.scope.central', overrides)
         : number.departmentId
           ? departmentNames.get(number.departmentId) ?? formatShortId(number.departmentId)
           : '—'
@@ -135,7 +146,7 @@ export function DocumentNumbersSection({
     return [
       {
         id: 'number',
-        header: 'الرقم',
+        headerKey: 'docdetails.column.number',
         hideable: false,
         sortable: true,
         sortValue: (number) => number.officialNumberText,
@@ -147,7 +158,7 @@ export function DocumentNumbersSection({
       },
       {
         id: 'scope',
-        header: 'النطاق',
+        headerKey: 'docdetails.column.scope',
         sortable: true,
         sortValue: scopeLabel,
         cell: (number) => (
@@ -156,7 +167,7 @@ export function DocumentNumbersSection({
       },
       {
         id: 'year',
-        header: 'السنة',
+        headerKey: 'docdetails.column.year',
         sortable: true,
         sortValue: (number) => number.numberingYear,
         cell: (number) => (
@@ -167,12 +178,12 @@ export function DocumentNumbersSection({
       },
       {
         id: 'status',
-        header: 'الحالة',
+        headerKey: 'docdetails.column.status',
         cell: (number) => <NumberStatusBadge statusId={number.statusId} />,
       },
       {
         id: 'issuedAt',
-        header: 'تاريخ الإصدار',
+        headerKey: 'docdetails.column.issued-at',
         sortable: true,
         sortValue: (number) => number.issuedAt,
         cell: (number) => (
@@ -183,7 +194,7 @@ export function DocumentNumbersSection({
       },
       {
         id: 'notes',
-        header: 'ملاحظات',
+        headerKey: 'docdetails.column.notes',
         sortable: true,
         sortValue: (number) => number.cancellationReason ?? latestNumberNote(number),
         cell: (number) => (
@@ -193,29 +204,29 @@ export function DocumentNumbersSection({
         ),
       },
     ]
-  }, [departmentNames])
+  }, [departmentNames, overrides])
 
   const copyValue = async (value: string, label: string) => {
     try {
       await navigator.clipboard.writeText(value)
-      toast.success(`تم نسخ ${label}.`)
+      toast.success(t('documents.toast.copied', { label }))
     } catch {
-      toast.error('تعذّر النسخ إلى الحافظة.')
+      toast.error(t('documents.toast.copy-failed'))
     }
   }
 
   const buildRowMenu = (number: DocumentNumberResponse): MenuEntry[] => [
     {
       id: 'copy-number',
-      label: 'نسخ الرقم',
+      label: t('docdetails.row.copy-number'),
       icon: <Copy className="size-4" aria-hidden />,
-      onSelect: () => void copyValue(number.officialNumberText, 'الرقم'),
+      onSelect: () => void copyValue(number.officialNumberText, t('docdetails.copy.number-label')),
     },
     {
       id: 'copy-id',
-      label: 'نسخ المعرّف',
+      label: t('docdetails.row.copy-id'),
       icon: <Hash className="size-4" aria-hidden />,
-      onSelect: () => void copyValue(number.documentNumberId, 'المعرّف'),
+      onSelect: () => void copyValue(number.documentNumberId, t('docdetails.copy.id-label')),
     },
   ]
 
@@ -228,9 +239,9 @@ export function DocumentNumbersSection({
 
   return (
     <CollapsibleSection
-      title="الأرقام"
+      title={t('docdetails.section.numbers')}
       icon={<Hash className="size-4" aria-hidden />}
-      hint="الرقم المركزي، أرقام سجلات الدوائر، وسجل الأرقام الكامل."
+      hint={t('docdetails.numbers-hint')}
       open={open}
       onOpenChange={onOpenChange}
     >
@@ -238,16 +249,16 @@ export function DocumentNumbersSection({
       <section className="flex flex-col gap-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="flex flex-col gap-1">
-            <h3 className="text-sm font-semibold text-foreground">الرقم المركزي</h3>
+            <h3 className="text-sm font-semibold text-foreground"><Label k="docdetails.central-title" /></h3>
             <p className="max-w-2xl text-xs text-muted">
-              رقم الديوان الرسمي للوثيقة، ويبقى ثابتًا عند تسجيل أرقام الدوائر في سجلاتها.
+              <Label k="docdetails.central-hint" />
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             {canManage && isDraft && (
               <Button type="button" size="sm" onClick={() => setIssueOpen(true)}>
                 <Hash className="size-4" aria-hidden />
-                إصدار رقم
+                <Label k="docdetails.action.issue-number" />
               </Button>
             )}
             {canManage && hasCentralNumber && (
@@ -258,7 +269,7 @@ export function DocumentNumbersSection({
                 onClick={() => setDepartmentOpen(true)}
               >
                 <Building2 className="size-4" aria-hidden />
-                تسجيل رقم الدائرة
+                <Label k="docdetails.action.register-dept-number" />
               </Button>
             )}
             <Button
@@ -266,7 +277,7 @@ export function DocumentNumbersSection({
               size="icon"
               variant="outline"
               onClick={refetch}
-              aria-label="تحديث الأرقام"
+              aria-label={t('docdetails.refresh-numbers-aria')}
               className="size-9"
             >
               <RefreshCw
@@ -289,14 +300,14 @@ export function DocumentNumbersSection({
           >
             <span>{toArabicErrorMessage(error)}</span>
             <Button type="button" variant="outline" size="sm" onClick={refetch}>
-              إعادة المحاولة
+              <Label k="common.action.retry" />
             </Button>
           </div>
         ) : !hasCentralNumber ? (
           <p className="rounded-lg border border-dashed border-border px-4 py-6 text-center text-sm text-muted">
             {isDraft
-              ? 'الوثيقة مسودة بلا رقم رسمي. أصدر رقمًا ليُسجَّل في الديوان وترتبط به أرقام الدوائر.'
-              : 'لا يوجد رقم مركزي لهذه الوثيقة.'}
+              ? <Label k="docdetails.numbers.empty-draft" />
+              : <Label k="docdetails.numbers.empty-none" />}
           </p>
         ) : (
           <div className="flex flex-col gap-4">
@@ -310,12 +321,12 @@ export function DocumentNumbersSection({
               <NumberStatusBadge statusId={central?.statusId ?? 1} />
               {entries?.centralRegistrationDate && (
                 <span className="text-xs text-muted">
-                  مسجّل في: <span dir="ltr">{formatDate(entries.centralRegistrationDate)}</span>
+                  <Label k="docdetails.registered-at" /> <span dir="ltr">{formatDate(entries.centralRegistrationDate)}</span>
                 </span>
               )}
               {central && (
                 <span className="text-xs text-muted">
-                  أصدره: <UserLabel userId={central.issuedByUserId} /> ·{' '}
+                  <Label k="docdetails.issued-by" /> <UserLabel userId={central.issuedByUserId} /> ·{' '}
                   <span dir="ltr">{formatDateTime(central.issuedAt)}</span>
                 </span>
               )}
@@ -329,7 +340,7 @@ export function DocumentNumbersSection({
                     onClick={() => setReplaceNumber(central)}
                   >
                     <Replace className="size-4" aria-hidden />
-                    استبدال
+                    <Label k="docdetails.action.replace" />
                   </Button>
                   <Button
                     type="button"
@@ -339,7 +350,7 @@ export function DocumentNumbersSection({
                     onClick={() => setCancelNumber(central)}
                   >
                     <Ban className="size-4" aria-hidden />
-                    إلغاء
+                    <Label k="common.action.cancel" />
                   </Button>
                 </div>
               )}
@@ -347,13 +358,13 @@ export function DocumentNumbersSection({
 
             {central?.cancellationReason && (
               <p className="rounded-lg bg-danger/10 px-3 py-2 text-xs text-danger">
-                سبب الإلغاء: {central.cancellationReason}
+                <Label k="docdetails.cancel-reason" /> {central.cancellationReason}
               </p>
             )}
 
             {central?.replacedByNumberId && (
               <p className="rounded-lg bg-surface-muted px-3 py-2 text-xs text-foreground">
-                استُبدل بالرقم:{' '}
+                <Label k="docdetails.replaced-by" />{' '}
                 <span dir="ltr" className="font-mono">
                   {historyById.get(central.replacedByNumberId)?.officialNumberText ??
                     formatShortId(central.replacedByNumberId)}
@@ -369,18 +380,18 @@ export function DocumentNumbersSection({
                     className="flex flex-wrap items-center gap-2 py-1 text-xs"
                   >
                     <Badge variant="outline">
-                      {numberEventLabels[event.eventTypeId] ?? `حدث #${event.eventTypeId}`}
+                      {eventLabel(event.eventTypeId)}
                     </Badge>
                     <span dir="ltr" className="text-muted">
                       {formatDateTime(event.occurredAt)}
                     </span>
                     {event.effectiveDate && (
                       <span className="text-muted">
-                        بتاريخ <span dir="ltr">{formatDate(event.effectiveDate)}</span>
+                        <Label k="docdetails.on-date" /> <span dir="ltr">{formatDate(event.effectiveDate)}</span>
                       </span>
                     )}
                     <span className="text-muted">
-                      بواسطة <UserLabel userId={event.actorUserId} />
+                      <Label k="docdetails.by" /> <UserLabel userId={event.actorUserId} />
                     </span>
                     {event.notes && (
                       <span className="text-foreground">{formatNumberNote(event.notes)}</span>
@@ -396,10 +407,9 @@ export function DocumentNumbersSection({
       <section className="flex flex-col gap-4 border-t border-border pt-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="flex flex-col gap-1">
-            <h3 className="text-sm font-semibold text-foreground">أرقام سجلات الدوائر</h3>
+            <h3 className="text-sm font-semibold text-foreground"><Label k="docdetails.dept-numbers-title" /></h3>
             <p className="max-w-2xl text-xs text-muted">
-              الأرقام التي كتبتها الدوائر في سجلاتها الخاصة للوثيقة، مع كل تاريخ تسجيل أو إعادة
-              تسجيل. إذا سجّلت الدائرة الوثيقة برقم جديد يبقى رقمها السابق هنا مستبدَلًا ومرتبطًا به.
+              <Label k="docdetails.dept-numbers-hint" />
             </p>
           </div>
           {canManage && hasCentralNumber && (
@@ -410,7 +420,7 @@ export function DocumentNumbersSection({
               onClick={() => setDepartmentOpen(true)}
             >
               <Building2 className="size-4" aria-hidden />
-              تسجيل رقم
+              <Label k="docdetails.action.register-number" />
             </Button>
           )}
         </div>
@@ -419,7 +429,7 @@ export function DocumentNumbersSection({
           <Skeleton className="h-20 w-full" />
         ) : error ? null : (entries?.departmentNumbers.length ?? 0) === 0 ? (
           <p className="rounded-lg border border-dashed border-border px-4 py-6 text-center text-sm text-muted">
-            لم تسجّل أي دائرة رقمًا خاصًا بها لهذه الوثيقة بعد.
+            <Label k="docdetails.dept-numbers.empty" />
           </p>
         ) : (
           <ul className="flex flex-col gap-4">
@@ -436,11 +446,11 @@ export function DocumentNumbersSection({
                   <NumberStatusBadge statusId={line.statusId} />
                   {line.registryDate && (
                     <span className="text-xs text-muted">
-                      بتاريخ <span dir="ltr">{formatDate(line.registryDate)}</span>
+                      <Label k="docdetails.on-date" /> <span dir="ltr">{formatDate(line.registryDate)}</span>
                     </span>
                   )}
                   <span className="text-xs text-muted">
-                    {line.visits.length} زيارة
+                    {t('docdetails.visit-count', { count: line.visits.length })}
                   </span>
                 </div>
 
@@ -448,7 +458,7 @@ export function DocumentNumbersSection({
                   <p className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-lg bg-surface-muted px-3 py-2 text-xs text-foreground">
                     {line.replacesNumberText && (
                       <span>
-                        يحلّ محلّ الرقم السابق:{' '}
+                        <Label k="docdetails.replaces-previous" />{' '}
                         <span dir="ltr" className="font-mono font-semibold">
                           {line.replacesNumberText}
                         </span>
@@ -456,7 +466,7 @@ export function DocumentNumbersSection({
                     )}
                     {line.replacedByNumberText && (
                       <span>
-                        استُبدل بالرقم:{' '}
+                        <Label k="docdetails.replaced-by" />{' '}
                         <span dir="ltr" className="font-mono font-semibold">
                           {line.replacedByNumberText}
                         </span>
@@ -467,7 +477,7 @@ export function DocumentNumbersSection({
 
                 {line.visits.length > 0 && (
                   <div className="flex flex-wrap items-center gap-1.5 text-xs">
-                    <span className="text-muted">تواريخ الوصول:</span>
+                    <span className="text-muted"><Label k="docdetails.visit-dates" /></span>
                     {line.visits.map((visit) => (
                       <Badge key={visit.visitId} variant="outline">
                         <span dir="ltr">{formatDate(visit.registryDate)}</span>
@@ -484,13 +494,13 @@ export function DocumentNumbersSection({
                         className="flex flex-wrap items-center gap-2 text-xs"
                       >
                         <Badge variant="outline">
-                          {numberEventLabels[event.eventTypeId] ?? `حدث #${event.eventTypeId}`}
+                          {eventLabel(event.eventTypeId)}
                         </Badge>
                         <span dir="ltr" className="text-muted">
                           {formatDateTime(event.occurredAt)}
                         </span>
                         <span className="text-muted">
-                          بواسطة <UserLabel userId={event.actorUserId} />
+                          <Label k="docdetails.by" /> <UserLabel userId={event.actorUserId} />
                         </span>
                         {event.notes && (
                           <span className="text-foreground">{formatNumberNote(event.notes)}</span>
@@ -507,16 +517,16 @@ export function DocumentNumbersSection({
 
       <section className="flex flex-col gap-4 border-t border-border pt-5">
         <div className="flex flex-col gap-1">
-          <h3 className="text-sm font-semibold text-foreground">سجل الأرقام</h3>
+          <h3 className="text-sm font-semibold text-foreground"><Label k="docdetails.number-log-title" /></h3>
           <p className="max-w-2xl text-xs text-muted">
-            كل رقم صدر للوثيقة، بما فيه الأرقام الملغاة والمستبدلة؛ لا يُحذف أي سجل.
+            <Label k="docdetails.number-log-hint" />
           </p>
         </div>
 
         <DataTable
           tableId="document-numbers"
           mode="client"
-          caption="سجل الأرقام الرسمية"
+          caption={t('docdetails.number-log-caption')}
           columns={columns}
           rows={history}
           rowKey={(number) => number.documentNumberId}
@@ -525,10 +535,10 @@ export function DocumentNumbersSection({
             [
               number.officialNumberText,
               number.scopeId === 1
-                ? 'الديوان المركزي'
+                ? resolveLabel('docdetails.scope.central', overrides)
                 : departmentNameOf(number.departmentId),
               String(number.numberingYear),
-              numberStatusLabels[number.statusId],
+              statusLabel(number.statusId),
               number.cancellationReason,
               latestNumberNote(number),
             ]
@@ -548,16 +558,16 @@ export function DocumentNumbersSection({
           onPageSizeChange={table.setPageSize}
           search={table.search}
           onSearchChange={table.setSearch}
-          searchPlaceholder="ابحث بالرقم أو النطاق أو السنة…"
+          searchPlaceholder={t('docdetails.number-log-search')}
           sortKey={table.sortKey}
           sortDirection={table.sortDirection}
           onSortChange={table.setSort}
           rowMenu={buildRowMenu}
-          emptyTitle="لم يصدر أي رقم رسمي لهذه الوثيقة بعد."
+          emptyTitle={t('docdetails.number-log.empty-title')}
           emptyDescription={
             isDraft
-              ? 'أصدر رقمًا من بطاقة الرقم المركزي ليظهر في هذا السجل.'
-              : 'تظهر هنا كل الأرقام الرسمية الصادرة لهذه الوثيقة.'
+              ? t('docdetails.number-log.empty-draft')
+              : t('docdetails.number-log.empty-none')
           }
         />
       </section>

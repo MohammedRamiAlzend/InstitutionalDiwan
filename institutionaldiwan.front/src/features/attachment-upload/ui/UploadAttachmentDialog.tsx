@@ -11,8 +11,8 @@ import {
 import { LOOKUP_SLUGS, useLookupEntries } from '@/entities/lookup'
 import { toArabicErrorMessage } from '@/shared/api'
 import { DOCUMENT_FILE_TYPE, fileTypeLimits } from '@/shared/config'
-import { formatFileSize } from '@/shared/lib'
-import { Button, Checkbox, Dialog, FormField, Input, Select, Textarea } from '@/shared/ui'
+import { formatFileSize, t } from '@/shared/lib'
+import { Button, Checkbox, Dialog, FormField, Input, Label, Select, Textarea } from '@/shared/ui'
 import { useUploadInitialMutation } from '../api/attachmentMutations'
 import {
   uploadAttachmentSchema,
@@ -150,12 +150,12 @@ export function UploadAttachmentDialog({
 
       if (result.checksumState === false) {
         toast.warning(
-          `رُفع الملف «${result.title}»، لكن بصمته المخزنة لا تطابق البصمة المحلية؛ تحقق من الملف.`
+          t('attachment.upload.toast-mismatch', { title: result.title })
         )
       } else if (result.checksumState === true) {
-        toast.success(`رُفع الملف «${result.title}» وبصمته مطابقة للنسخة المخزنة.`)
+        toast.success(t('attachment.upload.toast-match', { title: result.title }))
       } else {
-        toast.success(`رُفع الملف «${result.title}» (${formatFileSize(values.file.size)}).`)
+        toast.success(t('attachment.upload.toast-done', { title: result.title, size: formatFileSize(values.file.size) }))
       }
     } catch {
       // The interceptor already normalized the failure; it is rendered in the form banner below.
@@ -176,8 +176,8 @@ export function UploadAttachmentDialog({
       onOpenChange={(nextOpen) => {
         if (!nextOpen) closeDialog()
       }}
-      title="رفع ملف للوثيقة"
-      description="يُنشئ الرفع ملفًا جديدًا بإصدار أول في طلب واحد: يرفض الخادم الامتداد أو الحجم غير المسموحين قبل حفظ أي شيء."
+      title={t('attachment.upload.title')}
+      description={t('attachment.upload.description')}
       size="md"
       footer={
         outcome ? (
@@ -187,20 +187,20 @@ export function UploadAttachmentDialog({
               variant="outline"
               onClick={() => startOver(selectedTypeId)}
             >
-              رفع ملف آخر
+              <Label k="attachment.upload.another" />
             </Button>
             <Button type="button" onClick={closeDialog}>
-              إغلاق
+              <Label k="common.action.close" />
             </Button>
           </>
         ) : (
           <>
             <Button type="button" variant="outline" onClick={closeDialog} disabled={isBusy}>
-              إلغاء
+              <Label k="common.action.cancel" />
             </Button>
             <Button type="submit" form="attachment-upload-form" loading={uploadMutation.isPending}>
               <Upload className="size-4" aria-hidden />
-              رفع الملف
+              <Label k="attachment.upload.submit" />
             </Button>
           </>
         )
@@ -209,23 +209,23 @@ export function UploadAttachmentDialog({
       {outcome ? (
         <div className="flex flex-col gap-3 rounded-lg border border-border bg-surface-muted/30 p-3">
           <p className="text-sm font-medium text-foreground">
-            رُفع الملف «{outcome.title}» كإصدار {outcome.versionNumber}.
+            <Label k="attachment.upload.outcome" params={{ title: outcome.title, version: outcome.versionNumber }} />
           </p>
           <div className="flex flex-wrap items-center gap-2">
             <ChecksumBadge isMatch={outcome.checksumState} />
             {outcome.checksumState === null && (
               <span className="text-xs text-muted">
-                لم تُحسب بصمة محلية لهذا الملف، فلم تُقارن بالنسخة المخزنة.
+                <Label k="attachment.upload.no-local" />
               </span>
             )}
           </div>
           <p className="text-xs text-muted">
-            تظهر النسخة الجديدة في قائمة الملفات بعد تحديثها تلقائيًا.
+            <Label k="attachment.upload.auto-refresh" />
           </p>
         </div>
       ) : (
         <form id="attachment-upload-form" onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
-          <FormField label="نوع الملف" required error={errors.fileTypeId?.message}>
+          <FormField labelKey="attachment.upload.field-type" required error={errors.fileTypeId?.message}>
             <Controller
               control={control}
               name="fileTypeId"
@@ -243,8 +243,8 @@ export function UploadAttachmentDialog({
                   options={typeOptions}
                   disabled={isBusy || fileTypesQuery.isLoading}
                   invalid={Boolean(errors.fileTypeId)}
-                  placeholder={fileTypesQuery.isLoading ? 'جارٍ التحميل…' : 'اختر النوع…'}
-                  aria-label="نوع الملف"
+                  placeholder={fileTypesQuery.isLoading ? t('documents.create.loading') : t('documents.create.type-placeholder')}
+                  aria-label={t('attachment.upload.field-type')}
                 />
               )}
             />
@@ -254,19 +254,19 @@ export function UploadAttachmentDialog({
             <p className="flex items-start gap-1.5 text-xs text-muted">
               <ShieldCheck className="mt-0.5 size-3.5 shrink-0" aria-hidden />
               <span>
-                الحد الأقصى للحجم {formatFileSize(limits.maxBytes)}؛ الامتدادات المسموحة{' '}
+                <Label k="attachment.upload.limits-prefix" params={{ size: formatFileSize(limits.maxBytes) }} />{' '}
                 {limits.allowedExtensions.join('، ')}.
               </span>
             </p>
           ) : (
             selectedTypeId && (
               <p className="text-xs text-muted">
-                لا حدود معلومة محليًا لهذا النوع؛ يتحقق منه الخادم عند الرفع.
+                <Label k="attachment.upload.no-limits" />
               </p>
             )
           )}
 
-          <FormField label="الملف" required error={errors.file?.message}>
+          <FormField labelKey="attachment.upload.field-file" required error={errors.file?.message}>
             <Controller
               control={control}
               name="file"
@@ -290,10 +290,10 @@ export function UploadAttachmentDialog({
             <FilePickSummary file={selectedFile} checksum={checksum} />
           )}
 
-          <FormField label="عنوان الملف" required error={errors.title?.message}>
+          <FormField labelKey="attachment.upload.field-title" required error={errors.title?.message}>
             <Input
               id="attachment-title"
-              placeholder="مثال: النسخة الممسوحة ضوئيًا"
+              placeholder={t('attachment.upload.title-placeholder')}
               invalid={Boolean(errors.title)}
               {...register('title')}
             />
@@ -306,22 +306,22 @@ export function UploadAttachmentDialog({
               <Checkbox
                 checked={field.value}
                 onCheckedChange={field.onChange}
-                label="مسح ضوئي أساسي"
+                label={t('attachment.primary-scan')}
                 description={
                   isPrimaryScan
-                    ? 'يُعرَّف هذا الملف كمسح الوثيقة الأساسي؛ يمكن أن تظل ملفات أخرى مسوحًا غير أساسية.'
-                    : 'لن يُعلَّم هذا الملف كمسح الوثيقة الأساسي.'
+                    ? t('attachment.upload.primary-on')
+                    : t('attachment.upload.primary-off')
                 }
                 disabled={isBusy}
               />
             )}
           />
 
-          <FormField label="ملاحظات التغيير" error={errors.changeNotes?.message}>
+          <FormField labelKey="attachment.upload.field-notes" error={errors.changeNotes?.message}>
             <Textarea
               id="attachment-change-notes"
               rows={2}
-              placeholder="ملاحظات اختيارية على الإصدار الأول…"
+              placeholder={t('attachment.upload.notes-placeholder')}
               invalid={Boolean(errors.changeNotes)}
               {...register('changeNotes')}
             />
@@ -334,7 +334,7 @@ export function UploadAttachmentDialog({
                 aria-valuenow={progress ?? 0}
                 aria-valuemin={0}
                 aria-valuemax={100}
-                aria-label="تقدّم رفع الملف"
+                aria-label={t('attachment.upload.progress-aria')}
                 className="h-2 w-full overflow-hidden rounded-full bg-surface-muted"
               >
                 <div
@@ -344,10 +344,10 @@ export function UploadAttachmentDialog({
               </div>
               <p className="text-xs text-muted">
                 {progress === null
-                  ? 'جارٍ تجهيز الطلب…'
+                  ? t('attachment.upload.preparing')
                   : progress < 100
-                    ? `جارٍ رفع الملف… ${progress}%`
-                    : 'رُفعته، وجارٍ التحقق منه وحفظه…'}
+                    ? t('attachment.upload.uploading', { progress })
+                    : t('attachment.upload.verifying')}
               </p>
             </div>
           )}

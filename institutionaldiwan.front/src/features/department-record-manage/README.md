@@ -35,4 +35,5 @@ creation form and the receive dialog.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-18 | Qoder | UI labels Phase 4 (ب2): `EditVisitRecordForm` resolves its reason field (`labelKey`), placeholder, problem text, toasts and submit/dismiss buttons through the `department.records.*` catalog (`t()` / `<Label>`). |
 | 2026-11-10 | Claude | Created the slice: edit and correction mutations and the record form. |

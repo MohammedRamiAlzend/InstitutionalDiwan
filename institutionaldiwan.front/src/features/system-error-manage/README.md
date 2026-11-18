@@ -26,4 +26,5 @@ Write side of the developer's error log: work status and notes, and the manual p
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-18 | Qoder | UI labels Phase 4 (ب4): the status/notes form and manual-purge confirmation resolve titles, fields, buttons and toasts via `t()`/`<Label>`/`FormField labelKey` and Zod messages via `t()` (`system-error.*`). Captured error titles/messages/stack traces stay data. |
 | 2026-11-08 | Claude | Added for the developer's error log. |

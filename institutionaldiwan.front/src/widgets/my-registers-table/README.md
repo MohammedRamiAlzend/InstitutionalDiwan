@@ -44,11 +44,13 @@ from the shared `DataTable` (client mode).
 | --- | --- |
 | Grid, filters, search, sort, paging, column chooser, export | ✅ Implemented |
 | Server-side paging | ❌ Not needed yet: the book is read whole, as in the register book |
+| UI labels | ✅ Phase 4 (my-registers): the grid renders from `my-registers.*` — caption/search/aria/placeholders/row menus/copy toasts/empty states via `t()`, column headers via `headerKey`, the status filter options, the «موقوف» register suffix and «بلا بيانات نموذج» via `useLabel`, the version label composed through `t()`, the linked-number prefix and clear buttons via `<Label>`. The refresh menu reuses `table.refresh`. Data-driven text (register/document/type names, dynamic `field.labelAr` columns) stays out; `FieldFilterBar` belongs to the document-schema area. |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-18 | Qoder | UI labels Phase 4 (my-registers): the grid renders from the `my-registers.*` catalog; the module-level `STATUS_OPTIONS` became in-render `useLabel` options. No Arabic literals remain. |
 | 2026-11-11 | Claude | Added field-value filters on the chosen form version; «مسح المرشحات» now clears in one URL write (it only cleared the last parameter before). |
 | 2026-11-11 | Claude | Moved to server mode and added the form type/version selects with field columns. |
 | 2026-11-11 | Claude | Added the widget behind `/my-registers`. |

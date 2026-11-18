@@ -18,11 +18,12 @@ import {
 } from '@/features/notification-manage'
 import { useNotificationConnection } from '@/features/notification-live'
 import { toArabicErrorMessage } from '@/shared/api'
-import { cn, formatDateTime, formatNumber, safeRelativeUrl, useTableState } from '@/shared/lib'
+import { cn, formatDateTime, formatNumber, resolveLabel, safeRelativeUrl, t, useLabelsStore, useTableState } from '@/shared/lib'
 import {
   Button,
   DataTable,
   GuideChip,
+  Label,
   Select,
   type DataTableColumn,
   type MenuEntry,
@@ -61,6 +62,7 @@ export function NotificationInbox() {
   const connection = useNotificationConnection()
   const unreadQuery = useUnreadCount({ connected: connection === 'connected' })
   const typesQuery = useLookupEntries(LOOKUP_SLUGS.NotificationTypes)
+  const overrides = useLabelsStore((state) => state.overrides)
 
   const markRead = useMarkReadMutation()
   const dismiss = useDismissMutation()
@@ -75,7 +77,7 @@ export function NotificationInbox() {
 
   const typeOptions = useMemo(
     () => [
-      { value: 'all', label: 'كل الأنواع' },
+      { value: 'all', label: resolveLabel('notification.inbox.filter.type-all', overrides) },
       ...(typesQuery.data ?? []).map((entry) => {
         const count = unreadByType.get(entry.id) ?? 0
         return {
@@ -84,11 +86,14 @@ export function NotificationInbox() {
         }
       }),
     ],
-    [typesQuery.data, unreadByType],
+    [typesQuery.data, unreadByType, overrides],
   )
   const readOptions = [
-    { value: 'all', label: 'كل الإشعارات' },
-    { value: '1', label: `غير المقروءة فقط (${formatNumber(totalUnread)})` },
+    { value: 'all', label: resolveLabel('notification.inbox.filter.read-all', overrides) },
+    {
+      value: '1',
+      label: resolveLabel('notification.inbox.filter.unread-only', overrides, { count: formatNumber(totalUnread) }),
+    },
   ]
 
   const target = (notification: NotificationResponse) => ({
@@ -108,9 +113,9 @@ export function NotificationInbox() {
     if (!to) return
     try {
       await navigator.clipboard.writeText(`${window.location.origin}${to}`)
-      toast.success('تم نسخ الرابط.')
+      toast.success(t('documents.toast.copied', { label: t('notification.inbox.copy.link-label') }))
     } catch {
-      toast.error('تعذّر النسخ إلى الحافظة.')
+      toast.error(t('documents.toast.copy-failed'))
     }
   }
 
@@ -118,7 +123,7 @@ export function NotificationInbox() {
     () => [
       {
         id: 'title',
-        header: 'الإشعار',
+        headerKey: 'notification.inbox.column.title',
         hideable: false,
         cell: (notification) => (
           <button
@@ -131,7 +136,7 @@ export function NotificationInbox() {
                 'mt-1.5 size-2 shrink-0 rounded-full',
                 notification.isRead ? 'bg-transparent' : 'bg-accent',
               )}
-              aria-label={notification.isRead ? undefined : 'غير مقروء'}
+              aria-label={notification.isRead ? undefined : t('notification.unread')}
             />
             <span className="flex min-w-0 flex-col gap-0.5">
               <span
@@ -149,7 +154,7 @@ export function NotificationInbox() {
       },
       {
         id: 'type',
-        header: 'النوع',
+        headerKey: 'notification.inbox.column.type',
         sortable: true,
         sortKey: 'type',
         cell: ({ typeId }) => (
@@ -161,7 +166,7 @@ export function NotificationInbox() {
       },
       {
         id: 'priority',
-        header: 'الأولوية',
+        headerKey: 'notification.inbox.column.priority',
         sortable: true,
         sortKey: 'priority',
         cell: ({ priorityId }) =>
@@ -173,18 +178,18 @@ export function NotificationInbox() {
       },
       {
         id: 'state',
-        header: 'الحالة',
+        headerKey: 'notification.inbox.column.state',
         sortable: true,
         sortKey: 'isRead',
         cell: ({ isRead }) => (
           <span className={cn('text-xs', isRead ? 'text-muted' : 'font-medium text-accent')}>
-            {isRead ? 'مقروء' : 'غير مقروء'}
+            {isRead ? t('notification.read') : t('notification.unread')}
           </span>
         ),
       },
       {
         id: 'createdAt',
-        header: 'وقت الوصول',
+        headerKey: 'notification.inbox.column.delivered-at',
         sortable: true,
         sortKey: 'deliveredAt',
         cell: ({ createdAt }) => (
@@ -195,7 +200,7 @@ export function NotificationInbox() {
       },
       {
         id: 'readAt',
-        header: 'وقت القراءة',
+        headerKey: 'notification.inbox.column.read-at',
         defaultHidden: true,
         cell: ({ readAt }) => (
           <span dir="ltr" className="whitespace-nowrap text-xs text-muted">
@@ -212,27 +217,27 @@ export function NotificationInbox() {
   const buildRowMenu = (notification: NotificationResponse): MenuEntry[] => [
     {
       id: 'open',
-      label: safeRelativeUrl(notification.actionUrl) ? 'فتح الوثيقة' : 'تعليم كمقروء وفتح',
+      label: safeRelativeUrl(notification.actionUrl) ? t('notification.inbox.row.open') : t('notification.inbox.row.open-read'),
       icon: <ExternalLink className="size-4" aria-hidden />,
       disabled: !safeRelativeUrl(notification.actionUrl),
       onSelect: () => open(notification),
     },
     {
       id: 'read',
-      label: 'تعليم كمقروء',
+      label: t('notification.mark-read'),
       icon: <Check className="size-4" aria-hidden />,
       disabled: notification.isRead,
       onSelect: () => markRead.mutate(target(notification), { onError: fail }),
     },
     {
       id: 'dismiss',
-      label: 'إخفاء الإشعار',
+      label: t('notification.dismiss'),
       icon: <EyeOff className="size-4" aria-hidden />,
       onSelect: () => dismiss.mutate(target(notification), { onError: fail }),
     },
     {
       id: 'copy',
-      label: 'نسخ الرابط',
+      label: t('notification.inbox.row.copy'),
       icon: <Copy className="size-4" aria-hidden />,
       disabled: !safeRelativeUrl(notification.actionUrl),
       onSelect: () => void copyLink(notification),
@@ -241,14 +246,14 @@ export function NotificationInbox() {
 
   const readAllEntry: MenuEntry = {
     id: 'read-all',
-    label: 'قراءة الكل',
+    label: t('notification.read-all'),
     icon: <CheckCheck className="size-4" aria-hidden />,
     disabled: totalUnread === 0,
     onSelect: () => markAllRead.mutate(undefined, { onError: fail }),
   }
   const refreshEntry: MenuEntry = {
     id: 'refresh',
-    label: 'تحديث البيانات',
+    label: t('table.refresh'),
     icon: <RefreshCw className="size-4" aria-hidden />,
     onSelect: () => void listQuery.refetch(),
   }
@@ -259,7 +264,7 @@ export function NotificationInbox() {
   return (
     <DataTable
       tableId="notifications"
-      caption="الإشعارات"
+      caption={t('notification.title')}
       columns={columns}
       rows={listQuery.data?.items}
       rowKey={(notification) => notification.recipientId}
@@ -278,19 +283,19 @@ export function NotificationInbox() {
       sortKey={table.sortKey}
       sortDirection={table.sortDirection}
       onSortChange={table.setSort}
-      searchPlaceholder="ابحث في عنوان الإشعار أو نصه…"
+      searchPlaceholder={t('notification.inbox.search-placeholder')}
       filters={
         <div className="flex flex-wrap items-center gap-2">
           <GuideChip id="notifications.filters" />
           <Select
-            aria-label="تصفية حسب حالة القراءة"
+            aria-label={t('notification.inbox.filter.read-aria')}
             value={table.filters.unread || 'all'}
             onValueChange={(value) => table.setFilter('unread', value === 'all' ? null : value)}
             options={readOptions}
             className="w-52"
           />
           <Select
-            aria-label="تصفية حسب نوع الإشعار"
+            aria-label={t('notification.inbox.filter.type-aria')}
             value={table.filters.type || 'all'}
             onValueChange={(value) => table.setFilter('type', value === 'all' ? null : value)}
             options={typeOptions}
@@ -298,7 +303,7 @@ export function NotificationInbox() {
           />
           {table.hasActiveFilters && (
             <Button type="button" variant="ghost" size="sm" onClick={table.clearFilters}>
-              مسح المرشحات
+              <Label k="notification.inbox.clear-filters" />
             </Button>
           )}
         </div>
@@ -316,21 +321,21 @@ export function NotificationInbox() {
             onClick={() => markAllRead.mutate(undefined, { onError: fail })}
           >
             <CheckCheck className="size-4" aria-hidden />
-            قراءة الكل
+            <Label k="notification.read-all" />
           </Button>
           <GuideChip id="notifications.read-all" />
         </>
       }
-      emptyTitle={hasQuery ? 'لا توجد إشعارات مطابقة.' : 'لا توجد إشعارات.'}
-      emptyDescription={
+      emptyTitle={t(hasQuery ? 'notification.inbox.empty.matching-title' : 'notification.inbox.empty.title')}
+      emptyDescription={t(
         hasQuery
-          ? 'جرّب تعديل البحث أو المرشحات.'
-          : 'تصلك هنا تنبيهات الوثائق والإحالات الموجّهة إليك أو إلى قسمك.'
-      }
+          ? 'notification.inbox.empty.matching-description'
+          : 'notification.inbox.empty.description',
+      )}
       emptyAction={
         hasQuery ? (
           <Button type="button" variant="outline" onClick={table.clearQuery}>
-            مسح البحث والمرشحات
+            <Label k="notification.inbox.clear-query" />
           </Button>
         ) : undefined
       }

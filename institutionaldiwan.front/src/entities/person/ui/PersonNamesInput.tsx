@@ -1,7 +1,7 @@
 import { useId, useState, type KeyboardEvent } from 'react'
 import { UserPlus, UserRound, X } from 'lucide-react'
-import { cn, formatDate, useDebouncedValue } from '@/shared/lib'
-import { Badge, Input } from '@/shared/ui'
+import { cn, formatDate, t, useDebouncedValue } from '@/shared/lib'
+import { Badge, Input, Label } from '@/shared/ui'
 import { normalizePersonName } from '../model/normalizeName'
 import { usePersonSuggestions } from '../model/queries'
 import type { PersonNameEntry, PersonSuggestionResponse } from '../model/types'
@@ -16,9 +16,9 @@ interface PersonNamesInputProps {
 }
 
 function suggestionDetails(suggestion: PersonSuggestionResponse): string {
-  const parts = [`أُضيف ${formatDate(suggestion.createdAt)}`]
-  if (suggestion.birthYear !== null) parts.unshift(`مواليد ${suggestion.birthYear}`)
-  if (suggestion.nationalNumberLast4 !== null) parts.unshift(`رقم وطني ينتهي بـ ${suggestion.nationalNumberLast4}`)
+  const parts = [t('persons.names.suggestion-added', { date: formatDate(suggestion.createdAt) })]
+  if (suggestion.birthYear !== null) parts.unshift(t('persons.names.suggestion-birth-year', { year: suggestion.birthYear }))
+  if (suggestion.nationalNumberLast4 !== null) parts.unshift(t('persons.names.suggestion-national', { last4: suggestion.nationalNumberLast4 }))
   return parts.join(' · ')
 }
 
@@ -32,7 +32,7 @@ export function PersonNamesInput({
   onChange,
   disabled = false,
   invalid = false,
-  placeholder = 'اكتب الاسم الكامل ثم اضغط Enter…',
+  placeholder = t('persons.names.placeholder'),
   id,
 }: PersonNamesInputProps) {
   const listId = useId()
@@ -141,7 +141,7 @@ export function PersonNamesInput({
           <ul
             id={listId}
             role="listbox"
-            aria-label="الأشخاص المطابقون"
+            aria-label={t('persons.names.list-aria')}
             className="absolute inset-x-0 top-full z-20 mt-1 flex max-h-64 flex-col gap-0.5 overflow-y-auto rounded-lg border border-border bg-surface p-1 shadow-lg"
           >
             {suggestions.map((suggestion, index) => (
@@ -171,7 +171,7 @@ export function PersonNamesInput({
                 className={optionClass(activeIndex === newOptionIndex)}
               >
                 <UserPlus className="size-4 shrink-0 text-accent" aria-hidden />
-                <span className="truncate">إضافة «{typedName}» كشخص جديد</span>
+                <span className="truncate">{t('persons.names.new-option', { name: typedName })}</span>
               </button>
             </li>
           </ul>
@@ -180,25 +180,29 @@ export function PersonNamesInput({
 
       {duplicateName && (
         <p role="alert" className="text-xs text-danger">
-          الاسم «{duplicateName}» مضاف مسبقًا إلى القائمة.
+          {t('persons.names.duplicate', { name: duplicateName })}
         </p>
       )}
 
       {/* Room is held while typing: leaving the field adds a chip, and if that moved the form the
           click on its save button, already under way, would land on nothing. */}
       {(value.length > 0 || typedName.length > 0) && (
-        <ul className="flex min-h-8 flex-wrap gap-2" aria-label="الأشخاص المضافون">
+        <ul className="flex min-h-8 flex-wrap gap-2" aria-label={t('persons.names.chips-aria')}>
           {value.map((entry, index) => (
             <li
               key={entry.personId ?? `new-${entry.fullName}`}
               className="flex items-center gap-1.5 rounded-full border border-border bg-surface-muted/40 py-1 pe-1 ps-3 text-sm text-foreground"
             >
               <span>{entry.fullName}</span>
-              {entry.personId === null && <Badge variant="outline">جديد</Badge>}
+              {entry.personId === null && (
+                <Badge variant="outline">
+                  <Label k="persons.names.new-badge" />
+                </Badge>
+              )}
               <button
                 type="button"
                 disabled={disabled}
-                aria-label={`إزالة ${entry.fullName}`}
+                aria-label={t('persons.names.remove-aria', { name: entry.fullName })}
                 onClick={() => onChange(value.filter((_, position) => position !== index))}
                 className="flex size-6 items-center justify-center rounded-full text-muted transition-colors hover:bg-surface-muted hover:text-foreground"
               >

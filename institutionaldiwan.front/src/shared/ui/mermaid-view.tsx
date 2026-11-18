@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent, type MouseEvent } from 'react'
-import { cn, useTheme } from '@/shared/lib'
+import { cn, t, useTheme } from '@/shared/lib'
 import { Skeleton } from './skeleton'
+import { Label } from './label'
 
 type MermaidApi = (typeof import('mermaid'))['default']
 
@@ -208,16 +209,16 @@ export function MermaidView({
   return (
     <div className={cn('rounded-xl border border-border bg-surface p-4', className)}>
       {isEmpty ? (
-        <p className="py-10 text-center text-sm text-muted">لا يوجد مخطط لعرضه.</p>
+        <p className="py-10 text-center text-sm text-muted"><Label k="common.mermaid.empty" /></p>
       ) : isTooLong ? (
         <MermaidError
-          message={`حجم المصدر يتجاوز الحد المسموح (${MAX_SOURCE_LENGTH.toLocaleString('en-US')} حرفًا).`}
+          message={t('common.mermaid.too-long', { limit: MAX_SOURCE_LENGTH.toLocaleString('en-US') })}
         />
       ) : (
         <div className="flex flex-col gap-3">
           {isRendering && (
             <div role="status" className="flex flex-col gap-2">
-              <span className="text-xs text-muted">جارٍ عرض المخطط…</span>
+              <span className="text-xs text-muted"><Label k="common.mermaid.rendering" /></span>
               <Skeleton className="h-28 w-full" />
             </div>
           )}
@@ -248,7 +249,7 @@ function MermaidError({ message }: { message?: string }) {
       role="alert"
       className="flex flex-col gap-2 rounded-lg border border-danger/40 bg-danger/10 p-3"
     >
-      <p className="text-sm font-medium text-danger">تعذّر عرض المخطط بصيغة Mermaid.</p>
+      <p className="text-sm font-medium text-danger"><Label k="common.mermaid.failed" /></p>
       {message && (
         <pre
           dir="ltr"
@@ -257,7 +258,7 @@ function MermaidError({ message }: { message?: string }) {
           {message}
         </pre>
       )}
-      <p className="text-xs text-muted">تحقّق من صياغة المصدر ثم أعد المحاولة.</p>
+      <p className="text-xs text-muted"><Label k="common.mermaid.failed-hint" /></p>
     </div>
   )
 }

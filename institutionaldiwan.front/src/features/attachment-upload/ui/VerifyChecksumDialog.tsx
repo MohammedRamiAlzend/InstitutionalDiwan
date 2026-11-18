@@ -7,8 +7,8 @@ import {
   type DocumentFileResponse,
 } from '@/entities/document-file'
 import { toArabicErrorMessage } from '@/shared/api'
-import { formatShortId } from '@/shared/lib'
-import { Button, Dialog, Input } from '@/shared/ui'
+import { formatShortId, t } from '@/shared/lib'
+import { Button, Dialog, Input, Label } from '@/shared/ui'
 import { useLocalChecksum } from '../model/useLocalChecksum'
 
 interface VerifyChecksumDialogProps {
@@ -34,7 +34,7 @@ function ComparisonLine({ label, isMatch }: { label: string; isMatch: boolean | 
     <p className="flex flex-wrap items-center gap-2 text-xs">
       <span className="text-muted">{label}</span>
       {isMatch === null ? (
-        <span className="text-muted">غير متاحة — لم تُحسب بصمة محلية.</span>
+        <span className="text-muted"><Label k="attachment.verify.unavailable" /></span>
       ) : (
         <ChecksumBadge isMatch={isMatch} />
       )}
@@ -74,8 +74,8 @@ export function VerifyChecksumDialog({
     <Dialog
       open={open}
       onOpenChange={onOpenChange}
-      title="التحقق من بصمة الملف"
-      description={`يعيد الخادم حساب SHA-256 للإصدار ${result?.versionNumber ?? version?.versionNumber ?? 'الحالي'} من «${file.title}» ويقارنه بالبصمة المسجّلة وقت الرفع.`}
+      title={t('attachment.verify.title')}
+      description={t('attachment.verify.description', { version: result?.versionNumber ?? version?.versionNumber ?? t('attachment.versions.current'), title: file.title })}
       size="md"
       footer={
         <>
@@ -86,10 +86,10 @@ export function VerifyChecksumDialog({
             loading={verifyQuery.isFetching}
           >
             <RefreshCw className="size-4" aria-hidden />
-            إعادة التحقق
+            <Label k="attachment.verify.reverify" />
           </Button>
           <Button type="button" onClick={() => onOpenChange(false)}>
-            إغلاق
+            <Label k="common.action.close" />
           </Button>
         </>
       }
@@ -98,7 +98,7 @@ export function VerifyChecksumDialog({
         {verifyQuery.isPending ? (
           <p className="flex items-center gap-2 text-sm text-muted">
             <Loader2 className="size-4 animate-spin" aria-hidden />
-            جارٍ إعادة حساب البصمة من القرص…
+            <Label k="attachment.verify.pending" />
           </p>
         ) : verifyQuery.error ? (
           <p role="alert" className="text-sm text-danger">
@@ -106,13 +106,13 @@ export function VerifyChecksumDialog({
           </p>
         ) : result ? (
           <>
-            <DigestLine label="البصمة المسجّلة" value={recorded} hint="حُسبت وقت الرفع" />
-            <DigestLine label="المحسوبة من القرص" value={computed} hint="أعاد الخادم حسابها الآن" />
+            <DigestLine label={t('attachment.verify.recorded')} value={recorded} hint={t('attachment.verify.recorded-hint')} />
+            <DigestLine label={t('attachment.verify.computed')} value={computed} hint={t('attachment.verify.computed-hint')} />
             {local && (
               <DigestLine
-                label="البصمة المحلية"
+                label={t('attachment.verify.local')}
                 value={local}
-                hint={`حُسبت من «${pickedName ?? 'الملف المختار'}» على جهازك`}
+                hint={t('attachment.verify.local-hint', { name: pickedName ?? t('attachment.verify.picked-fallback') })}
               />
             )}
           </>
@@ -121,12 +121,12 @@ export function VerifyChecksumDialog({
 
       {result && (
         <div className="flex flex-col gap-1.5 rounded-lg border border-border bg-surface p-3">
-          <ComparisonLine label="المسجّلة مقابل المحسوبة من القرص" isMatch={result.isMatch} />
-          <ComparisonLine label="المسجّلة مقابل المحلية" isMatch={matchesLocal(recorded)} />
-          <ComparisonLine label="المحسوبة من القرص مقابل المحلية" isMatch={matchesLocal(computed)} />
+          <ComparisonLine label={t('attachment.verify.compare-recorded-computed')} isMatch={result.isMatch} />
+          <ComparisonLine label={t('attachment.verify.compare-recorded-local')} isMatch={matchesLocal(recorded)} />
+          <ComparisonLine label={t('attachment.verify.compare-computed-local')} isMatch={matchesLocal(computed)} />
           {!local && (
             <p className="text-xs text-muted">
-              اختر نسخة الملف من جهازك لإضافة مقارنة محلية.
+              <Label k="attachment.verify.pick-hint" />
             </p>
           )}
         </div>
@@ -145,7 +145,7 @@ export function VerifyChecksumDialog({
           {checksum.isHashing && (
             <p className="flex items-center gap-1.5 text-xs text-muted">
               <Loader2 className="size-3.5 animate-spin" aria-hidden />
-              جارٍ حساب البصمة المحلية…
+              <Label k="attachment.verify.local-hashing" />
             </p>
           )}
           {checksum.error && <p className="text-xs text-danger">{checksum.error}</p>}
@@ -153,7 +153,7 @@ export function VerifyChecksumDialog({
       )}
 
       <p className="text-xs text-muted">
-        التحقق يقرأ النسخة المخزنة فقط؛ لا يُعدّل الملف ولا يحذفه، والملف المؤرشف يبقى قابلًا للتحقق.
+        <Label k="attachment.verify.footnote" />
       </p>
     </Dialog>
   )

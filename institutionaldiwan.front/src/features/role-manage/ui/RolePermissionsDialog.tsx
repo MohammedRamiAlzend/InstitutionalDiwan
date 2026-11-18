@@ -8,7 +8,8 @@ import {
 } from '@/entities/role'
 import { toArabicErrorMessage } from '@/shared/api'
 import type { PermissionCode } from '@/shared/config'
-import { Badge, Button, Checkbox, Dialog, Skeleton } from '@/shared/ui'
+import { t } from '@/shared/lib'
+import { Badge, Button, Checkbox, Dialog, Label, Skeleton } from '@/shared/ui'
 import { useUpdateRolePermissionsMutation } from '../api/roleMutations'
 
 interface RolePermissionsDialogProps {
@@ -74,7 +75,7 @@ export function RolePermissionsDialog({
     setActionError(null)
     try {
       await mutation.mutateAsync({ roleId: role.roleId, grant, revoke })
-      toast.success('تم تحديث صلاحيات الدور.')
+      toast.success(t('role.permissions.toast-updated'))
     } catch (error) {
       setActionError(toArabicErrorMessage(error))
     }
@@ -84,8 +85,8 @@ export function RolePermissionsDialog({
     <Dialog
       open={open}
       onOpenChange={onOpenChange}
-      title={`صلاحيات «${role.nameAr}»`}
-      description="حدد الصلاحيات الممنوحة لهذا الدور. تُحفظ التغييرات دفعة واحدة."
+      title={t('role.permissions.title', { name: role.nameAr })}
+      description={t('role.permissions.description')}
       size="lg"
       footer={
         <>
@@ -98,7 +99,7 @@ export function RolePermissionsDialog({
               setActionError(null)
             }}
           >
-            إعادة التعيين
+            <Label k="role.permissions.reset" />
           </Button>
           <Button
             type="button"
@@ -106,7 +107,7 @@ export function RolePermissionsDialog({
             onClick={() => onOpenChange(false)}
             disabled={mutation.isPending}
           >
-            إغلاق
+            <Label k="common.action.close" />
           </Button>
           <Button
             type="button"
@@ -114,7 +115,7 @@ export function RolePermissionsDialog({
             disabled={!dirty}
             onClick={handleSave}
           >
-            حفظ التغييرات
+            <Label k="role.permissions.save" />
           </Button>
         </>
       }
@@ -123,8 +124,8 @@ export function RolePermissionsDialog({
         <Badge variant="accent" className="gap-1" dir="ltr">
           {role.code}
         </Badge>
-        <span>{draft.size} صلاحية محددة</span>
-        {role.isSystemRole && <Badge variant="outline">دور معرّف من النظام</Badge>}
+        <span>{t('role.permissions.selected-count', { count: draft.size })}</span>
+        {role.isSystemRole && <Badge variant="outline"><Label k="role.permissions.system-badge" /></Badge>}
       </div>
 
       {catalogQuery.isLoading ? (
@@ -142,7 +143,7 @@ export function RolePermissionsDialog({
             size="sm"
             onClick={() => void catalogQuery.refetch()}
           >
-            إعادة المحاولة
+            <Label k="common.action.retry" />
           </Button>
         </div>
       ) : (

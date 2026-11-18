@@ -8,8 +8,8 @@ import { EmployeePicker } from '@/entities/employee'
 import { LOOKUP_SLUGS, useLookupEntries } from '@/entities/lookup'
 import { type UserResponse } from '@/entities/user'
 import { toArabicErrorMessage } from '@/shared/api'
-import { formatShortId, useDraftForm } from '@/shared/lib'
-import { Button, Checkbox, Dialog, FormField, Input, Select } from '@/shared/ui'
+import { formatShortId, t, useDraftForm } from '@/shared/lib'
+import { Button, Checkbox, Dialog, FormField, Input, Label, Select } from '@/shared/ui'
 import {
   createUserFormSchema,
   updateUserFormSchema,
@@ -45,7 +45,7 @@ export function UserFormDialog({ open, onOpenChange, user }: UserFormDialogProps
     if (user && !options.some((option) => option.value === user.primaryDepartmentId)) {
       options.unshift({
         value: user.primaryDepartmentId,
-        label: `القسم الحالي (${formatShortId(user.primaryDepartmentId)})`,
+        label: t('user.form.current-department', { id: formatShortId(user.primaryDepartmentId) }),
       })
     }
     return options
@@ -93,7 +93,7 @@ export function UserFormDialog({ open, onOpenChange, user }: UserFormDialogProps
             mustChangePassword: values.mustChangePassword,
           },
         })
-        toast.success('تم تحديث بيانات المستخدم.')
+        toast.success(t('user.form.toast-updated'))
       } else {
         await createMutation.mutateAsync({
           username: values.username,
@@ -103,7 +103,7 @@ export function UserFormDialog({ open, onOpenChange, user }: UserFormDialogProps
           scopeTypeId: Number(values.scopeTypeId),
           mustChangePassword: values.mustChangePassword,
         })
-        toast.success('تم إنشاء المستخدم بنجاح.')
+        toast.success(t('user.form.toast-created'))
       }
       draft.discard()
       onOpenChange(false)
@@ -118,11 +118,11 @@ export function UserFormDialog({ open, onOpenChange, user }: UserFormDialogProps
     <Dialog
       open={open}
       onOpenChange={onOpenChange}
-      title={isEdit ? 'تعديل بيانات المستخدم' : 'مستخدم جديد'}
+      title={isEdit ? t('user.form.edit-title') : t('user.create')}
       description={
         isEdit
-          ? 'حدّث القسم الأساسي وربط الموظف ونطاق الوصول. لا يمكن تغيير اسم المستخدم.'
-          : 'أنشئ حسابًا جديدًا. تُمنح الأدوار لاحقًا من قائمة إدارة الأدوار.'
+          ? t('user.form.edit-description')
+          : t('user.form.create-description')
       }
       size="lg"
       footer={
@@ -133,7 +133,7 @@ export function UserFormDialog({ open, onOpenChange, user }: UserFormDialogProps
             onClick={() => onOpenChange(false)}
             disabled={pending}
           >
-            إلغاء
+            <Label k="common.action.cancel" />
           </Button>
           <Button
             type="submit"
@@ -141,7 +141,7 @@ export function UserFormDialog({ open, onOpenChange, user }: UserFormDialogProps
             loading={pending}
             disabled={noDepartments}
           >
-            {isEdit ? 'حفظ التعديلات' : 'إنشاء المستخدم'}
+            {isEdit ? <Label k="user.form.save" /> : <Label k="user.form.submit" />}
           </Button>
         </>
       }
@@ -153,7 +153,7 @@ export function UserFormDialog({ open, onOpenChange, user }: UserFormDialogProps
         className="grid gap-4 sm:grid-cols-2"
       >
         <FormField
-          label="اسم المستخدم"
+          labelKey="user.column.username"
           required
           error={errors.username?.message}
           guideId="users.form-username"
@@ -162,7 +162,7 @@ export function UserFormDialog({ open, onOpenChange, user }: UserFormDialogProps
           <Input
             id="user-username"
             autoComplete="username"
-            placeholder="مثال: ahmed.khalil"
+            placeholder={t('user.form.username-placeholder')}
             dir="ltr"
             disabled={isEdit}
             startIcon={<User className="size-4" aria-hidden />}
@@ -173,7 +173,7 @@ export function UserFormDialog({ open, onOpenChange, user }: UserFormDialogProps
 
         {!isEdit && (
           <FormField
-            label="كلمة المرور المؤقتة"
+            labelKey="user.form.password"
             required
             error={errors.password?.message}
             guideId="users.form-password"
@@ -183,7 +183,7 @@ export function UserFormDialog({ open, onOpenChange, user }: UserFormDialogProps
               id="user-password"
               type="password"
               autoComplete="new-password"
-              placeholder="8 أحرف على الأقل"
+              placeholder={t('user.form.password-placeholder')}
               dir="ltr"
               startIcon={<Lock className="size-4" aria-hidden />}
               invalid={Boolean(errors.password)}
@@ -193,7 +193,7 @@ export function UserFormDialog({ open, onOpenChange, user }: UserFormDialogProps
         )}
 
         <FormField
-          label="القسم الأساسي"
+          labelKey="user.column.department"
           required
           error={errors.primaryDepartmentId?.message}
         >
@@ -208,15 +208,15 @@ export function UserFormDialog({ open, onOpenChange, user }: UserFormDialogProps
                 disabled={pending || departmentsQuery.isLoading}
                 invalid={Boolean(errors.primaryDepartmentId)}
                 placeholder={
-                  departmentsQuery.isLoading ? 'جارٍ تحميل الأقسام…' : 'اختر القسم…'
+                  departmentsQuery.isLoading ? t('user.form.department-loading') : t('user.form.department-placeholder')
                 }
-                aria-label="القسم الأساسي"
+                aria-label={t('user.column.department')}
               />
             )}
           />
         </FormField>
 
-        <FormField label="الموظف المرتبط" error={errors.employeeId?.message}>
+        <FormField labelKey="user.column.employee" error={errors.employeeId?.message}>
           <Controller
             control={control}
             name="employeeId"
@@ -226,15 +226,15 @@ export function UserFormDialog({ open, onOpenChange, user }: UserFormDialogProps
                 onValueChange={(id) => field.onChange(id ?? NO_EMPLOYEE)}
                 disabled={pending}
                 invalid={Boolean(errors.employeeId)}
-                label="الموظف المرتبط"
-                noneLabel="بدون ربط بموظف"
+                label={t('user.column.employee')}
+                noneLabel={t('user.form.employee-none')}
               />
             )}
           />
         </FormField>
 
         <FormField
-          label="نطاق المستخدم"
+          labelKey="user.form.scope"
           required
           error={errors.scopeTypeId?.message}
           guideId="users.form-scope"
@@ -249,8 +249,8 @@ export function UserFormDialog({ open, onOpenChange, user }: UserFormDialogProps
                 options={scopeOptions}
                 disabled={pending}
                 invalid={Boolean(errors.scopeTypeId)}
-                placeholder="اختر النطاق…"
-                aria-label="نطاق المستخدم"
+                placeholder={t('user.form.scope-placeholder')}
+                aria-label={t('user.form.scope')}
               />
             )}
           />
@@ -264,7 +264,7 @@ export function UserFormDialog({ open, onOpenChange, user }: UserFormDialogProps
               <Checkbox
                 checked={field.value}
                 onCheckedChange={field.onChange}
-                label="إلزام المستخدم بتغيير كلمة المرور عند أول تسجيل دخول"
+                label={t('user.form.must-change-label')}
               />
             )}
           />

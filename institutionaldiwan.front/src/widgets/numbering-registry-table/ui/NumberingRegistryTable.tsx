@@ -24,38 +24,26 @@ import {
   useSetNumberingRegistryActiveMutation,
 } from '@/features/numbering-manage'
 import { toArabicErrorMessage } from '@/shared/api'
-import { Permissions, NUMBERING_RESET_POLICY } from '@/shared/config'
-import { formatDate, formatNumber, useTableState } from '@/shared/lib'
+import { Permissions, NUMBERING_RESET_POLICY, type LabelKey } from '@/shared/config'
+import { formatDate, formatNumber, resolveLabel, t, useLabelsStore, useTableState } from '@/shared/lib'
 import {
   Badge,
   Button,
   ConfirmDialog,
   DataTable,
   GuideChip,
+  Label,
   Select,
   type DataTableColumn,
   type MenuEntry,
 } from '@/shared/ui'
 import { RegistryDetailsDialog } from './RegistryDetailsDialog'
 
-const resetPolicyLabels: Record<number, string> = {
-  [NUMBERING_RESET_POLICY.Yearly]: 'سنوي',
-  [NUMBERING_RESET_POLICY.Monthly]: 'شهري',
-  [NUMBERING_RESET_POLICY.Never]: 'لا يتصفّر',
+const resetPolicyKeys: Record<number, LabelKey> = {
+  [NUMBERING_RESET_POLICY.Yearly]: 'numbering.reset-policy.yearly',
+  [NUMBERING_RESET_POLICY.Monthly]: 'numbering.reset-policy.monthly',
+  [NUMBERING_RESET_POLICY.Never]: 'numbering.reset-policy.never',
 }
-
-const statusFilterOptions = [
-  { value: 'all', label: 'كل الحالات' },
-  { value: 'active', label: 'نشط' },
-  { value: 'inactive', label: 'موقوف' },
-]
-
-const scopeFilterOptions = [
-  { value: 'all', label: 'كل النطاقات' },
-  { value: 'global', label: 'شامل (بلا قيود)' },
-  { value: 'department', label: 'مقيّد بدائرة' },
-  { value: 'documentType', label: 'مقيّد بنوع وثيقة' },
-]
 
 /** `/numbering` grid: registry scope, template, counters, and status actions. */
 export function NumberingRegistryTable() {
@@ -64,6 +52,7 @@ export function NumberingRegistryTable() {
     defaultSortDirection: 'asc',
     filterKeys: ['status', 'resetPolicyId', 'scope'],
   })
+  const overrides = useLabelsStore((state) => state.overrides)
   const registriesQuery = useNumberingRegistries()
   const registries = useMemo(() => registriesQuery.data ?? [], [registriesQuery.data])
 
@@ -74,6 +63,25 @@ export function NumberingRegistryTable() {
   const documentTypesQuery = useLookupEntries(LOOKUP_SLUGS.DocumentTypes)
   const directionsQuery = useLookupEntries(LOOKUP_SLUGS.DocumentDirections)
   const resetPoliciesQuery = useLookupEntries(LOOKUP_SLUGS.NumberingResetPolicies)
+
+  const statusFilterOptions = useMemo(
+    () => [
+      { value: 'all', label: resolveLabel('numbering.filter.status-all', overrides) },
+      { value: 'active', label: resolveLabel('numbering.status.active', overrides) },
+      { value: 'inactive', label: resolveLabel('numbering.status.inactive', overrides) },
+    ],
+    [overrides],
+  )
+
+  const scopeFilterOptions = useMemo(
+    () => [
+      { value: 'all', label: resolveLabel('numbering.filter.scope-all', overrides) },
+      { value: 'global', label: resolveLabel('numbering.filter.scope-global', overrides) },
+      { value: 'department', label: resolveLabel('numbering.filter.scope-department', overrides) },
+      { value: 'documentType', label: resolveLabel('numbering.filter.scope-document-type', overrides) },
+    ],
+    [overrides],
+  )
 
   const departmentNames = useMemo(
     () =>
@@ -102,13 +110,13 @@ export function NumberingRegistryTable() {
 
   const resetPolicyOptions = useMemo(
     () => [
-      { value: 'all', label: 'كل سياسات التصفير' },
+      { value: 'all', label: resolveLabel('numbering.filter.reset-policy-all', overrides) },
       ...(resetPoliciesQuery.data ?? []).map((entry) => ({
         value: String(entry.id),
         label: entry.descAr,
       })),
     ],
-    [resetPoliciesQuery.data],
+    [resetPoliciesQuery.data, overrides],
   )
 
   const filteredRegistries = useMemo(
@@ -169,9 +177,9 @@ export function NumberingRegistryTable() {
   const copyValue = async (value: string, label: string) => {
     try {
       await navigator.clipboard.writeText(value)
-      toast.success(`تم نسخ ${label}.`)
+      toast.success(t('numbering.toast.copied', { label }))
     } catch {
-      toast.error('تعذّر النسخ إلى الحافظة.')
+      toast.error(t('numbering.toast.copy-failed'))
     }
   }
 
@@ -183,7 +191,7 @@ export function NumberingRegistryTable() {
         active: !statusRegistry.isActive,
       })
       toast.success(
-        statusRegistry.isActive ? 'تم إيقاف سجل الترقيم.' : 'تم تفعيل سجل الترقيم.',
+        statusRegistry.isActive ? t('numbering.toast.suspended') : t('numbering.toast.activated'),
       )
       setStatusRegistryId(null)
     } catch (error) {
@@ -195,7 +203,7 @@ export function NumberingRegistryTable() {
     () => [
       {
         id: 'registry',
-        header: 'السجل',
+        headerKey: 'numbering.column.registry',
         hideable: false,
         sortable: true,
         sortValue: (registry) => registry.code,
@@ -210,7 +218,7 @@ export function NumberingRegistryTable() {
       },
       {
         id: 'scope',
-        header: 'النطاق',
+        headerKey: 'numbering.column.scope',
         cell: (registry) => {
           const chips = [
             registry.departmentId
@@ -223,7 +231,7 @@ export function NumberingRegistryTable() {
           ].filter((label): label is string => Boolean(label))
 
           return chips.length === 0 ? (
-            <Badge variant="outline">شامل</Badge>
+            <Badge variant="outline">{t('numbering.scope.global-badge')}</Badge>
           ) : (
             <div className="flex max-w-72 flex-wrap gap-1">
               {chips.map((label) => (
@@ -237,23 +245,23 @@ export function NumberingRegistryTable() {
       },
       {
         id: 'specificity',
-        header: 'أبعاد النطاق',
+        headerKey: 'numbering.column.specificity',
         sortable: true,
         sortValue: (registry) => registryScopeRank(registry),
         cell: (registry) => {
           const rank = registryScopeRank(registry)
           return rank === 0 ? (
-            <Badge variant="outline">شامل</Badge>
+            <Badge variant="outline">{t('numbering.scope.global-badge')}</Badge>
           ) : (
             <span className="whitespace-nowrap text-xs text-muted">
-              {formatNumber(rank)} من 3
+              {t('numbering.column.specificity-value', { rank: formatNumber(rank) })}
             </span>
           )
         },
       },
       {
         id: 'format',
-        header: 'قالب الرقم',
+        headerKey: 'numbering.column.format',
         cell: (registry) => (
           <code dir="ltr" className="whitespace-nowrap text-xs text-muted">
             {registry.formatPattern}
@@ -262,23 +270,25 @@ export function NumberingRegistryTable() {
       },
       {
         id: 'resetPolicy',
-        header: 'التصفير',
+        headerKey: 'numbering.column.reset-policy',
         cell: (registry) => (
           <span className="text-xs text-foreground">
-            {resetPolicyLabels[registry.resetPolicyId] ?? `#${registry.resetPolicyId}`}
+            {resetPolicyKeys[registry.resetPolicyId]
+              ? t(resetPolicyKeys[registry.resetPolicyId])
+              : `#${registry.resetPolicyId}`}
           </span>
         ),
       },
       {
         id: 'counters',
-        header: 'العدادات',
+        headerKey: 'numbering.column.counters',
         sortable: true,
         sortValue: (registry) => registry.counters.length,
         cell: (registry) => {
           const latest = registry.counters[0]
 
           if (!latest) {
-            return <span className="text-xs text-muted">لم يُصدر رقم</span>
+            return <span className="text-xs text-muted">{t('numbering.column.no-counters')}</span>
           }
 
           return (
@@ -287,23 +297,25 @@ export function NumberingRegistryTable() {
                 <span dir="ltr">{latest.numberingYear}</span> ·{' '}
                 <span dir="ltr">{formatNumber(latest.lastValue)}</span>
               </span>
-              <span className="text-muted">{registry.counters.length} سنوات</span>
+              <span className="text-muted">
+                {t('numbering.column.counters-years', { count: registry.counters.length })}
+              </span>
             </div>
           )
         },
       },
       {
         id: 'status',
-        header: 'الحالة',
+        headerKey: 'numbering.column.status',
         cell: (registry) => (
           <Badge variant={registry.isActive ? 'success' : 'danger'}>
-            {registry.isActive ? 'نشط' : 'موقوف'}
+            {registry.isActive ? t('numbering.status.active') : t('numbering.status.inactive')}
           </Badge>
         ),
       },
       {
         id: 'createdAt',
-        header: 'تاريخ الإنشاء',
+        headerKey: 'numbering.column.created-at',
         defaultHidden: true,
         sortable: true,
         sortValue: (registry) => registry.createdAt,
@@ -322,7 +334,7 @@ export function NumberingRegistryTable() {
     const entries: MenuEntry[] = [
       {
         id: 'details',
-        label: 'عرض التفاصيل',
+        label: t('numbering.menu.details'),
         icon: <Eye className="size-4" aria-hidden />,
         onSelect: () => setDetailsRegistryId(registry.registryId),
       },
@@ -332,13 +344,13 @@ export function NumberingRegistryTable() {
       entries.push(
         {
           id: 'edit',
-          label: 'تعديل السجل',
+          label: t('numbering.menu.edit'),
           icon: <Pencil className="size-4" aria-hidden />,
           onSelect: () => openEdit(registry),
         },
         {
           id: 'toggle-active',
-          label: registry.isActive ? 'إيقاف السجل' : 'تفعيل السجل',
+          label: registry.isActive ? t('numbering.menu.suspend') : t('numbering.menu.activate'),
           icon: registry.isActive ? (
             <ShieldOff className="size-4" aria-hidden />
           ) : (
@@ -354,15 +366,15 @@ export function NumberingRegistryTable() {
       { type: 'separator' },
       {
         id: 'copy-code',
-        label: 'نسخ رمز السجل',
+        label: t('numbering.menu.copy-code'),
         icon: <Copy className="size-4" aria-hidden />,
-        onSelect: () => void copyValue(registry.code, 'رمز السجل'),
+        onSelect: () => void copyValue(registry.code, t('numbering.copy.code')),
       },
       {
         id: 'copy-id',
-        label: 'نسخ المعرّف',
+        label: t('numbering.menu.copy-id'),
         icon: <Hash className="size-4" aria-hidden />,
-        onSelect: () => void copyValue(registry.registryId, 'المعرّف'),
+        onSelect: () => void copyValue(registry.registryId, t('numbering.copy.id')),
       },
     )
 
@@ -371,13 +383,13 @@ export function NumberingRegistryTable() {
 
   const refreshEntry: MenuEntry = {
     id: 'refresh',
-    label: 'تحديث البيانات',
+    label: t('table.refresh'),
     icon: <RefreshCw className="size-4" aria-hidden />,
     onSelect: () => void registriesQuery.refetch(),
   }
   const createEntry: MenuEntry = {
     id: 'create',
-    label: 'سجل ترقيم جديد',
+    label: t('numbering.create'),
     icon: <Plus className="size-4" aria-hidden />,
     onSelect: openCreate,
   }
@@ -394,20 +406,22 @@ export function NumberingRegistryTable() {
           role="status"
           className="flex flex-col gap-1 rounded-lg border border-warning/40 bg-warning/10 px-3 py-2 text-xs text-warning"
         >
-          <p className="font-semibold">تنبيه: نطاق مزدوج بين سجلات نشطة</p>
+          <p className="font-semibold"><Label k="numbering.duplicate.title" /></p>
           {duplicateGroups.map((group) => (
             <p key={group.key}>
-              {group.registries.map((member) => member.code).join('، ')} — نطاق متطابق تمامًا
+              {t('numbering.duplicate.item', {
+                codes: group.registries.map((member) => member.code).join('، '),
+              })}
             </p>
           ))}
-          <p>عند تطابق أكثر من سجل نشط قد يختار الخادم أحدها فقط؛ خصّص نطاق أحدها أو أوقفه.</p>
+          <p><Label k="numbering.duplicate.hint" /></p>
         </div>
       )}
 
       <DataTable
         tableId="numbering-registries"
         mode="client"
-        caption="سجلات الترقيم"
+        caption={t('numbering.caption')}
         columns={columns}
         rows={filteredRegistries}
         rowKey={(registry) => registry.registryId}
@@ -438,7 +452,7 @@ export function NumberingRegistryTable() {
         onPageSizeChange={table.setPageSize}
         search={table.search}
         onSearchChange={table.setSearch}
-        searchPlaceholder="ابحث بالرمز أو الاسم أو النطاق…"
+        searchPlaceholder={t('numbering.search-placeholder')}
         sortKey={table.sortKey}
         sortDirection={table.sortDirection}
         onSortChange={table.setSort}
@@ -451,7 +465,7 @@ export function NumberingRegistryTable() {
             <>
               <Button type="button" onClick={openCreate}>
                 <Plus className="size-4" aria-hidden />
-                سجل جديد
+                <Label k="numbering.toolbar.create" />
               </Button>
               <GuideChip id="numbering.create" />
             </>
@@ -461,7 +475,7 @@ export function NumberingRegistryTable() {
           <div className="flex flex-wrap items-center gap-2">
             <GuideChip id="numbering.filters" />
             <Select
-              aria-label="تصفية حسب الحالة"
+              aria-label={t('numbering.filter.status-aria')}
               value={table.filters.status || 'all'}
               onValueChange={(value) =>
                 table.setFilter('status', value === 'all' ? null : value)
@@ -470,7 +484,7 @@ export function NumberingRegistryTable() {
               className="w-40"
             />
             <Select
-              aria-label="تصفية حسب سياسة التصفير"
+              aria-label={t('numbering.filter.reset-policy-aria')}
               value={table.filters.resetPolicyId || 'all'}
               onValueChange={(value) =>
                 table.setFilter('resetPolicyId', value === 'all' ? null : value)
@@ -479,7 +493,7 @@ export function NumberingRegistryTable() {
               className="w-44"
             />
             <Select
-              aria-label="تصفية حسب النطاق"
+              aria-label={t('numbering.filter.scope-aria')}
               value={table.filters.scope || 'all'}
               onValueChange={(value) =>
                 table.setFilter('scope', value === 'all' ? null : value)
@@ -489,20 +503,20 @@ export function NumberingRegistryTable() {
             />
             {table.hasActiveFilters && (
               <Button type="button" variant="ghost" size="sm" onClick={table.clearFilters}>
-                مسح المرشحات
+                <Label k="numbering.filter.clear" />
               </Button>
             )}
           </div>
         }
         emptyTitle={
-          hasQuery ? 'لا توجد سجلات مطابقة.' : 'لا توجد سجلات ترقيم بعد.'
+          hasQuery ? t('numbering.empty.search-title') : t('numbering.empty.title')
         }
         emptyDescription={
           hasQuery
-            ? 'جرّب تعديل البحث أو المرشحات لعرض سجلات أخرى.'
+            ? t('numbering.empty.search-description')
             : canManage
-              ? 'أنشئ سجلًا للترقيم ثم اربطه بدائرة أو نوع، أو اتركه سجلًا شاملًا.'
-              : 'تُدار سجلات الترقيم من قبل حاملي صلاحية إدارة الترقيم.'
+              ? t('numbering.empty.description')
+              : t('numbering.empty.description-readonly')
         }
         emptyAction={
           hasQuery ? (
@@ -511,12 +525,12 @@ export function NumberingRegistryTable() {
               variant="outline"
               onClick={table.clearQuery}
             >
-              مسح البحث والمرشحات
+              <Label k="numbering.empty.clear" />
             </Button>
           ) : canManage ? (
             <Button type="button" onClick={openCreate}>
               <Plus className="size-4" aria-hidden />
-              إنشاء سجل
+              <Label k="numbering.empty.create" />
             </Button>
           ) : undefined
         }
@@ -562,15 +576,15 @@ export function NumberingRegistryTable() {
         onOpenChange={(open) => {
           if (!open) setStatusRegistryId(null)
         }}
-        title={statusRegistry?.isActive ? 'إيقاف سجل الترقيم' : 'تفعيل سجل الترقيم'}
+        title={statusRegistry?.isActive ? t('numbering.confirm.suspend-title') : t('numbering.confirm.activate-title')}
         description={
           statusRegistry
             ? statusRegistry.isActive
-              ? `سيُعلَّم السجل «${statusRegistry.code}» كموقوف، ولن يُختار لإصدار أرقام جديدة. تبقى الأرقام الصادرة سابقًا كما هي.`
-              : `سيعود السجل «${statusRegistry.code}» نشطًا ومتاحًا لإصدار الأرقام.`
+              ? t('numbering.confirm.suspend-description', { code: statusRegistry.code })
+              : t('numbering.confirm.activate-description', { code: statusRegistry.code })
             : undefined
         }
-        confirmLabel={statusRegistry?.isActive ? 'إيقاف السجل' : 'تفعيل السجل'}
+        confirmLabel={statusRegistry?.isActive ? t('numbering.menu.suspend') : t('numbering.menu.activate')}
         destructive={statusRegistry?.isActive}
         loading={statusMutation.isPending}
         onConfirm={() => void handleToggleStatus()}

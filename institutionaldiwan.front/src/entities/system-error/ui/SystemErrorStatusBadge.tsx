@@ -1,5 +1,6 @@
+import { useLabel } from '@/shared/lib'
 import { Badge, type BadgeVariant } from '@/shared/ui'
-import { SYSTEM_ERROR_STATUS_LABELS } from '../model/labels'
+import { SYSTEM_ERROR_STATUS_LABEL_KEYS } from '../model/labels'
 import { SYSTEM_ERROR_STATUS, type SystemErrorStatus } from '../model/types'
 
 const VARIANTS: Record<SystemErrorStatus, BadgeVariant> = {
@@ -9,5 +10,6 @@ const VARIANTS: Record<SystemErrorStatus, BadgeVariant> = {
 }
 
 export function SystemErrorStatusBadge({ status }: { status: SystemErrorStatus }) {
-  return <Badge variant={VARIANTS[status]}>{SYSTEM_ERROR_STATUS_LABELS[status]}</Badge>
+  const label = useLabel(SYSTEM_ERROR_STATUS_LABEL_KEYS[status])
+  return <Badge variant={VARIANTS[status]}>{label}</Badge>
 }

@@ -3,25 +3,28 @@ import { ClipboardList, History, ShieldCheck } from 'lucide-react'
 import { BrandMark, BrandName } from '@/entities/branding'
 import { ROUTES } from '@/shared/config'
 import { LoginForm, type LoginResponse } from '@/features/auth'
-import { ThemeToggle } from '@/shared/ui'
+import { Label, ThemeToggle } from '@/shared/ui'
 
 const features = [
   {
+    id: 'registry',
     icon: ClipboardList,
-    title: 'سجل وثائق موحد',
-    text: 'تسجيل الوارد والصادر وربط المراسلات بدوائرها وموظفيها.',
+    titleKey: 'auth.login.feature.registry-title',
+    textKey: 'auth.login.feature.registry-text',
   },
   {
+    id: 'permissions',
     icon: ShieldCheck,
-    title: 'صلاحيات دقيقة',
-    text: 'أدوار وبطاقات وصول واضحة لكل إجراء داخل الديوان.',
+    titleKey: 'auth.login.feature.permissions-title',
+    textKey: 'auth.login.feature.permissions-text',
   },
   {
+    id: 'audit',
     icon: History,
-    title: 'تتبع كامل للإجراءات',
-    text: 'سجل تدقيق يوثّق كل عملية ويحفظ أثرها للمراجعة.',
+    titleKey: 'auth.login.feature.audit-title',
+    textKey: 'auth.login.feature.audit-text',
   },
-]
+] as const
 
 export function LoginPage() {
   const navigate = useNavigate()
@@ -47,7 +50,7 @@ export function LoginPage() {
             <p className="font-heading text-lg font-bold text-foreground">
               <BrandName />
             </p>
-            <p className="text-xs text-muted">بوابة الدخول المؤسسية</p>
+            <p className="text-xs text-muted"><Label k="auth.login.portal" /></p>
           </div>
         </div>
         <ThemeToggle />
@@ -59,18 +62,17 @@ export function LoginPage() {
           <section className="flex flex-col justify-center rounded-2xl border border-border bg-surface p-8 shadow-sm sm:p-10">
             <div className="mb-8 flex flex-col gap-2">
               <h1 className="font-heading text-2xl font-bold text-foreground">
-                تسجيل الدخول
+                <Label k="auth.login.submit" />
               </h1>
               <p className="text-sm text-muted">
-                أدخل بيانات حسابك المؤسسي للمتابعة إلى الديوان المؤسسي.
+                <Label k="auth.login.intro" />
               </p>
             </div>
 
             <LoginForm onSuccess={handleSuccess} />
 
             <p className="mt-8 border-t border-border pt-4 text-center text-xs leading-relaxed text-muted">
-              الدخول مخصص للمستخدمين المصرح لهم، وتُسجَّل إجراءاتك في سجل
-              التدقيق باسم حسابك.
+              <Label k="auth.login.audit-note" />
             </p>
           </section>
 
@@ -92,33 +94,32 @@ export function LoginPage() {
             <div className="relative flex flex-col gap-10">
               <div className="flex flex-col gap-3">
                 <p className="text-sm font-medium opacity-80">
-                  الجمهورية العربية السورية
+                  <Label k="auth.login.country" />
                 </p>
                 <h2 className="font-heading text-3xl font-bold">
                   <BrandName />
                 </h2>
                 <p className="text-base opacity-90">
-                  منصة موحّدة لإدارة الوثائق والمراسلات الرسمية
+                  <Label k="auth.login.tagline" />
                 </p>
               </div>
 
               <ul className="flex flex-col gap-6">
-                {features.map(({ icon: Icon, title, text }) => (
-                  <li key={title} className="flex items-start gap-4">
+                {features.map(({ id, icon: Icon, titleKey, textKey }) => (
+                  <li key={id} className="flex items-start gap-4">
                     <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-accent-contrast/15">
                       <Icon className="size-5" aria-hidden />
                     </span>
                     <div>
-                      <p className="font-semibold">{title}</p>
-                      <p className="text-sm opacity-80">{text}</p>
+                      <p className="font-semibold"><Label k={titleKey} /></p>
+                      <p className="text-sm opacity-80"><Label k={textKey} /></p>
                     </div>
                   </li>
                 ))}
               </ul>
 
               <p className="border-t border-accent-contrast/20 pt-4 text-xs opacity-70">
-                الوصول إلى النظام مخصص للمستخدمين المصرح لهم، وتُسجَّل جميع
-                الإجراءات في سجل التدقيق.
+                <Label k="auth.login.panel-note" />
               </p>
             </div>
           </aside>

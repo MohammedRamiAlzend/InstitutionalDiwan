@@ -1,10 +1,10 @@
-import { useDraftForm } from '@/shared/lib'
+import { t, useDraftForm } from '@/shared/lib'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Hash, Languages } from 'lucide-react'
 import { toast } from 'sonner'
 import type { LookupEntryResponse } from '@/entities/lookup'
 import { toArabicErrorMessage } from '@/shared/api'
-import { Button, Dialog, FormField, Input } from '@/shared/ui'
+import { Button, Dialog, FormField, Input, Label } from '@/shared/ui'
 import {
   useCreateLookupEntryMutation,
   useRelabelLookupEntryMutation,
@@ -57,13 +57,13 @@ export function LookupEntryFormDialog({
           id: entry.id,
           request: { desc: values.desc, descAr: values.descAr },
         })
-        toast.success('تم تحديث التسمية.')
+        toast.success(t('lookup.form.toast-updated'))
       } else {
         await createMutation.mutateAsync({
           lookup,
           request: { id: Number(values.id), desc: values.desc, descAr: values.descAr },
         })
-        toast.success('تمت إضافة القيمة.')
+        toast.success(t('lookup.form.toast-created'))
       }
       draft.discard()
       onOpenChange(false)
@@ -76,25 +76,25 @@ export function LookupEntryFormDialog({
     <Dialog
       open={open}
       onOpenChange={onOpenChange}
-      title={isEdit ? 'تعديل القيمة المرجعية' : 'قيمة مرجعية جديدة'}
+      title={isEdit ? t('lookup.form.edit-title') : t('lookup.form.create-title')}
       description={
         isEdit
-          ? 'حدّث التسميتين العربية والإنجليزية. لا يمكن تغيير المعرّف.'
-          : 'اختر معرّفًا موجبًا غير مستخدم في هذا الجدول، وأدخل التسميتين.'
+          ? t('lookup.form.edit-description')
+          : t('lookup.form.create-description')
       }
       footer={
         <>
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={pending}>
-            إلغاء
+            <Label k="common.action.cancel" />
           </Button>
           <Button type="submit" form="lookup-entry-form" loading={pending}>
-            {isEdit ? 'حفظ التعديلات' : 'إضافة القيمة'}
+            <Label k={isEdit ? 'lookup.form.save-edit' : 'lookup.form.add'} />
           </Button>
         </>
       }
     >
       <form id="lookup-entry-form" onSubmit={onSubmit} noValidate className="grid gap-4">
-        <FormField label="المعرّف" required error={errors.id?.message}>
+        <FormField labelKey="lookup.column.id" required error={errors.id?.message}>
           <Input
             id="lookup-entry-id"
             dir="ltr"
@@ -105,7 +105,7 @@ export function LookupEntryFormDialog({
             {...register('id')}
           />
         </FormField>
-        <FormField label="التسمية بالعربية" required error={errors.descAr?.message}>
+        <FormField labelKey="lookup.form.desc-ar" required error={errors.descAr?.message}>
           <Input
             id="lookup-entry-desc-ar"
             startIcon={<Languages className="size-4" aria-hidden />}
@@ -113,7 +113,7 @@ export function LookupEntryFormDialog({
             {...register('descAr')}
           />
         </FormField>
-        <FormField label="التسمية بالإنجليزية" required error={errors.desc?.message}>
+        <FormField labelKey="lookup.form.desc" required error={errors.desc?.message}>
           <Input
             id="lookup-entry-desc"
             dir="ltr"

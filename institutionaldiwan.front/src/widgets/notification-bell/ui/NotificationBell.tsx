@@ -16,8 +16,8 @@ import {
 } from '@/features/notification-manage'
 import { toArabicErrorMessage } from '@/shared/api'
 import { ROUTES } from '@/shared/config'
-import { cn, formatNumber, safeRelativeUrl } from '@/shared/lib'
-import { Button, Skeleton } from '@/shared/ui'
+import { cn, formatNumber, safeRelativeUrl, t } from '@/shared/lib'
+import { Button, Label, Skeleton } from '@/shared/ui'
 
 const PANEL_SIZE = 8
 
@@ -70,10 +70,10 @@ export function NotificationBell() {
 
   const connectionLabel =
     connection === 'connected'
-      ? 'التحديث الفوري يعمل'
+      ? t('notification.bell.connected')
       : connection === 'idle'
         ? ''
-        : 'غير متصل بالتحديث الفوري — يُحدَّث العدّاد كل دقيقة'
+        : t('notification.bell.disconnected')
 
   return (
     <div ref={rootRef} className="relative">
@@ -82,10 +82,10 @@ export function NotificationBell() {
         variant="ghost"
         size="icon"
         className="relative"
-        aria-label={unread > 0 ? `الإشعارات، ${unread} غير مقروءة` : 'الإشعارات'}
+        aria-label={unread > 0 ? t('notification.bell.aria-unread', { count: unread }) : t('notification.title')}
         aria-expanded={open}
         aria-controls={panelId}
-        title="الإشعارات"
+        title={t('notification.title')}
         onClick={() => setOpen((previous) => !previous)}
       >
         {unread > 0 ? (
@@ -107,13 +107,13 @@ export function NotificationBell() {
         <div
           id={panelId}
           role="dialog"
-          aria-label="آخر الإشعارات"
+          aria-label={t('notification.bell.panel-aria')}
           className="absolute end-0 top-full z-40 mt-2 w-[min(26rem,calc(100vw-2rem))] rounded-xl border border-border bg-background shadow-xl animate-content-in"
         >
             <div className="flex items-center justify-between gap-2 border-b border-border px-3 py-2">
               <div className="flex flex-col">
                 <span className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
-                  الإشعارات
+                  <Label k="notification.title" />
                 </span>
                 {connectionLabel && (
                   <span
@@ -141,7 +141,7 @@ export function NotificationBell() {
                 onClick={() => markAllRead.mutate(undefined, { onError: fail })}
               >
                 <CheckCheck className="size-4" aria-hidden />
-                قراءة الكل
+                <Label k="notification.read-all" />
               </Button>
             </div>
 
@@ -156,11 +156,11 @@ export function NotificationBell() {
               <div className="flex flex-col items-center gap-2 p-6 text-center">
                 <p className="text-sm text-danger">{toArabicErrorMessage(listQuery.error)}</p>
                 <Button type="button" variant="outline" size="sm" onClick={() => void listQuery.refetch()}>
-                  إعادة المحاولة
+                  <Label k="common.action.retry" />
                 </Button>
               </div>
             ) : items.length === 0 ? (
-              <p className="p-6 text-center text-sm text-muted">لا توجد إشعارات حتى الآن.</p>
+              <p className="p-6 text-center text-sm text-muted"><Label k="notification.bell.empty" /></p>
             ) : (
               <ul className="flex flex-col gap-0.5">
                 {items.map((notification) => (
@@ -176,8 +176,8 @@ export function NotificationBell() {
                               variant="ghost"
                               size="icon"
                               className="size-7"
-                              aria-label="تعليم كمقروء"
-                              title="تعليم كمقروء"
+                              aria-label={t('notification.mark-read')}
+                              title={t('notification.mark-read')}
                               onClick={() =>
                                 markRead.mutate(
                                   {
@@ -197,8 +197,8 @@ export function NotificationBell() {
                             variant="ghost"
                             size="icon"
                             className="size-7"
-                            aria-label="إخفاء الإشعار"
-                            title="إخفاء الإشعار"
+                            aria-label={t('notification.dismiss')}
+                            title={t('notification.dismiss')}
                             onClick={() =>
                               dismiss.mutate(
                                 {
@@ -227,7 +227,7 @@ export function NotificationBell() {
               onClick={() => setOpen(false)}
               className="block rounded-lg px-3 py-2 text-center text-sm font-medium text-accent hover:bg-surface-muted"
             >
-              عرض كل الإشعارات
+              <Label k="notification.bell.view-all" />
             </Link>
           </div>
         </div>

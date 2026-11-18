@@ -26,4 +26,5 @@ The persons routes, behind `PERSON_VIEW`.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-18 | Qoder | UI labels Phase 4 (persons): `PersonDetailsPage` tabs render via `<Label>` (`persons.details.tab.*`), the tablist aria and back links resolve through `t()`/`<Label>` (`persons.details.*`). The list page header already resolved from `page.persons.*` in Phase 3; the person-details title stays dynamic. |
 | 2026-11-09 | Claude | Created the slice. |

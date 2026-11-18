@@ -10,16 +10,17 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import type { MovementAction } from '@/entities/movement'
+import type { LabelKey } from '@/shared/config'
 
-export const MOVEMENT_ACTION_LABELS: Record<MovementAction, string> = {
-  send: 'إرسال',
-  receive: 'استلام',
-  complete: 'إكمال',
-  reject: 'رفض',
-  return: 'إرجاع',
-  redirect: 'إعادة توجيه',
-  close: 'إغلاق',
-  cancel: 'إلغاء الحركة',
+export const MOVEMENT_ACTION_LABEL_KEYS: Record<MovementAction, LabelKey> = {
+  send: 'movements.action.send',
+  receive: 'movements.action.receive',
+  complete: 'movements.action.complete',
+  reject: 'movements.action.reject',
+  return: 'movements.action.return',
+  redirect: 'movements.action.redirect',
+  close: 'movements.action.close',
+  cancel: 'movements.action.cancel',
 }
 
 export const MOVEMENT_ACTION_ICONS: Record<MovementAction, LucideIcon> = {

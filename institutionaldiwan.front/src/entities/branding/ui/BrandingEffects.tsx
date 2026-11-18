@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { t } from '@/shared/lib'
 import { brandingLogoUrl } from '../lib/brand'
 import { useBranding } from '../model/queries'
 import { useBrandName } from '../model/useBrandName'
@@ -11,7 +12,7 @@ export function BrandingEffects() {
   const logoUpdatedAt = useBranding().data?.logoUpdatedAt
 
   useEffect(() => {
-    document.title = `${name} — بوابة الدخول المؤسسية`
+    document.title = t('common.tab-title', { name })
   }, [name])
 
   useEffect(() => {

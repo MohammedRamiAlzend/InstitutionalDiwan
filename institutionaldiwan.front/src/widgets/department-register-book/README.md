@@ -46,6 +46,7 @@ context menus, and loading/empty/error states.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-18 | Qoder | UI labels Phase 4 (ب2): all static Arabic now resolves through the `department.register.*` catalog — headers via `headerKey`, the suspended-department suffix via `useLabel`, columns/menus/copy toasts/filters/empty states via `t()`, and the clear-search + empty actions via `<Label>`. Register/document/department names stay in code. |
 | 2026-11-10 | Claude | New "الرقم المرتبط" column (also searchable) links a renumbered document's old and new lines. |
 | 2026-11-03 | Claude | Added the restricted label for lines whose document the caller cannot view. |
 | 2026-10-30 | agent | Module 04 Phase 5: verified the inactive-department path with a permanent fixture (`VER-04-P5`, kept deactivated) that retains its historical `VER-2026-001` line; no code change. |

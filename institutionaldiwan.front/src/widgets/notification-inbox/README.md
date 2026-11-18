@@ -30,4 +30,5 @@ filter shows the unread count of each type from `unread-count.byType`.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-18 | Qoder | UI labels Phase 4 (ب5): the inbox columns (`headerKey`), filters, row/header menus, caption, search, copy toasts and empty states render from `notification.inbox.*` via `<Label>`/`t()`/`resolveLabel`. |
 | 2026-11-04 | Claude | Added the Module 10 inbox grid. |

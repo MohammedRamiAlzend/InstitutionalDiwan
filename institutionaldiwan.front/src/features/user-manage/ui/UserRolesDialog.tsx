@@ -5,7 +5,8 @@ import { RoleBadge, useRoleOptions } from '@/entities/role'
 import { useSessionStore, useUserById, type UserResponse } from '@/entities/user'
 import { toArabicErrorMessage } from '@/shared/api'
 import { Permissions } from '@/shared/config'
-import { Button, Dialog, Select } from '@/shared/ui'
+import { t } from '@/shared/lib'
+import { Button, Dialog, Label, Select } from '@/shared/ui'
 import {
   useAssignUserRoleMutation,
   useRevokeUserRoleMutation,
@@ -71,7 +72,7 @@ export function UserRolesDialog({ open, onOpenChange, user }: UserRolesDialogPro
     try {
       await assignMutation.mutateAsync({ userId: user.userId, roleId: effectiveSelection })
       setSelectedRoleId('')
-      toast.success('تم إسناد الدور إلى المستخدم.')
+      toast.success(t('user.roles.toast-assigned'))
     } catch (error) {
       setActionError(toArabicErrorMessage(error))
     }
@@ -81,7 +82,7 @@ export function UserRolesDialog({ open, onOpenChange, user }: UserRolesDialogPro
     setActionError(null)
     try {
       await revokeMutation.mutateAsync({ userId: user.userId, roleId })
-      toast.success('تم سحب الدور من المستخدم.')
+      toast.success(t('user.roles.toast-revoked'))
     } catch (error) {
       setActionError(toArabicErrorMessage(error))
     }
@@ -91,31 +92,31 @@ export function UserRolesDialog({ open, onOpenChange, user }: UserRolesDialogPro
     <Dialog
       open={open}
       onOpenChange={onOpenChange}
-      title="أدوار المستخدم"
-      description={`إدارة الأدوار المسندة إلى «${user.username}».`}
+      title={t('user.roles.title')}
+      description={t('user.roles.description', { name: user.username })}
       size="md"
       footer={
         <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-          إغلاق
+          <Label k="common.action.close" />
         </Button>
       }
     >
       <section className="flex flex-col gap-2">
         <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground">
           <ShieldCheck className="size-4 text-accent" aria-hidden />
-          الأدوار الحالية
+          <Label k="user.roles.current" />
         </h3>
 
         {userQuery.isError ? (
           <div role="alert" className="text-sm text-danger">
             {toArabicErrorMessage(userQuery.error)}
-            <Button type="button" variant="outline" onClick={() => void userQuery.refetch()}>إعادة المحاولة</Button>
+            <Button type="button" variant="outline" onClick={() => void userQuery.refetch()}><Label k="common.action.retry" /></Button>
           </div>
         ) : userQuery.isLoading ? (
-          <p role="status" className="text-sm text-muted">جارٍ تحميل أدوار المستخدم…</p>
+          <p role="status" className="text-sm text-muted">{t('user.roles.loading')}</p>
         ) : assignedRoles.length === 0 ? (
           <p className="rounded-lg bg-surface-muted px-3 py-2 text-sm text-muted">
-            لا توجد أدوار مسندة إلى هذا المستخدم.
+            {t('user.roles.empty')}
           </p>
         ) : (
           <ul className="flex flex-col gap-2">
@@ -148,7 +149,7 @@ export function UserRolesDialog({ open, onOpenChange, user }: UserRolesDialogPro
                     onClick={() => handleRevoke(role.roleId)}
                   >
                     <Trash2 className="size-4" aria-hidden />
-                    سحب
+                    <Label k="user.roles.revoke" />
                   </Button>
                 )}
               </li>
@@ -158,11 +159,11 @@ export function UserRolesDialog({ open, onOpenChange, user }: UserRolesDialogPro
       </section>
 
       <section className="flex flex-col gap-2 border-t border-border pt-4">
-        <h3 className="text-sm font-semibold text-foreground">إسناد دور جديد</h3>
+        <h3 className="text-sm font-semibold text-foreground"><Label k="user.roles.assign-title" /></h3>
 
         {!canManageRoles ? (
           <p role="status" className="rounded-lg bg-warning/10 px-3 py-2 text-xs text-warning">
-            تحتاج صلاحية إدارة المستخدمين لإسناد الأدوار وسحبها.
+            {t('user.roles.denied')}
           </p>
         ) : rolesQuery.isError ? (
           <div className="flex flex-col gap-2 rounded-lg bg-danger/10 px-3 py-2 text-xs text-danger">
@@ -173,14 +174,14 @@ export function UserRolesDialog({ open, onOpenChange, user }: UserRolesDialogPro
               size="sm"
               onClick={() => void rolesQuery.refetch()}
             >
-              إعادة المحاولة
+              <Label k="common.action.retry" />
             </Button>
           </div>
         ) : availableRoles.length === 0 ? (
           <p className="rounded-lg bg-surface-muted px-3 py-2 text-sm text-muted">
             {rolesQuery.isLoading
-              ? 'جارٍ تحميل الأدوار…'
-              : 'لا توجد أدوار فعّالة متاحة للإسناد.'}
+              ? t('user.roles.available-loading')
+              : t('user.roles.available-empty')}
           </p>
         ) : (
           <div className="flex flex-wrap items-center gap-2">
@@ -188,8 +189,8 @@ export function UserRolesDialog({ open, onOpenChange, user }: UserRolesDialogPro
               value={effectiveSelection || undefined}
               onValueChange={setSelectedRoleId}
               options={availableRoles}
-              placeholder="اختر دورًا…"
-              aria-label="الدور المراد إسناده"
+              placeholder={t('user.roles.placeholder')}
+              aria-label={t('user.roles.select-aria')}
               className="min-w-48 flex-1"
             />
             <Button
@@ -199,7 +200,7 @@ export function UserRolesDialog({ open, onOpenChange, user }: UserRolesDialogPro
               onClick={handleAssign}
             >
               <Plus className="size-4" aria-hidden />
-              إسناد
+              <Label k="user.roles.assign" />
             </Button>
           </div>
         )}

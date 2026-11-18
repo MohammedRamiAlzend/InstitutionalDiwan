@@ -1,10 +1,10 @@
-import { useDraftForm } from '@/shared/lib'
+import { t, useDraftForm } from '@/shared/lib'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Hash } from 'lucide-react'
 import { toast } from 'sonner'
 import type { RoleResponse } from '@/entities/role'
 import { toArabicErrorMessage } from '@/shared/api'
-import { Button, Dialog, FormField, Input, Textarea } from '@/shared/ui'
+import { Button, Dialog, FormField, Input, Label, Textarea } from '@/shared/ui'
 import { roleFormSchema, type RoleFormValues } from '../model/schemas'
 import { useCreateRoleMutation, useUpdateRoleMutation } from '../api/roleMutations'
 
@@ -48,7 +48,7 @@ export function RoleFormDialog({ open, onOpenChange, role }: RoleFormDialogProps
           roleId: role.roleId,
           request: { nameAr: values.nameAr, nameEn, description },
         })
-        toast.success('تم تحديث بيانات الدور.')
+        toast.success(t('role.form.toast-updated'))
       } else {
         await createMutation.mutateAsync({
           code: values.code,
@@ -56,7 +56,7 @@ export function RoleFormDialog({ open, onOpenChange, role }: RoleFormDialogProps
           nameEn,
           description,
         })
-        toast.success('تم إنشاء الدور بنجاح.')
+        toast.success(t('role.form.toast-created'))
       }
       draft.discard()
       onOpenChange(false)
@@ -69,11 +69,11 @@ export function RoleFormDialog({ open, onOpenChange, role }: RoleFormDialogProps
     <Dialog
       open={open}
       onOpenChange={onOpenChange}
-      title={isEdit ? 'تعديل بيانات الدور' : 'دور جديد'}
+      title={isEdit ? t('role.form.edit-title') : t('role.create')}
       description={
         isEdit
-          ? 'حدّث الاسم والوصف. لا يمكن تغيير رمز الدور بعد إنشائه.'
-          : 'أنشئ دورًا مخصصًا ثم امنحه الصلاحيات من مصفوفة الصلاحيات.'
+          ? t('role.form.edit-description')
+          : t('role.form.create-description')
       }
       size="md"
       footer={
@@ -84,19 +84,19 @@ export function RoleFormDialog({ open, onOpenChange, role }: RoleFormDialogProps
             onClick={() => onOpenChange(false)}
             disabled={pending}
           >
-            إلغاء
+            <Label k="common.action.cancel" />
           </Button>
           <Button type="submit" form="role-form" loading={pending}>
-            {isEdit ? 'حفظ التعديلات' : 'إنشاء الدور'}
+            {isEdit ? <Label k="role.form.save" /> : <Label k="role.form.submit" />}
           </Button>
         </>
       }
     >
       <form id="role-form" onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
-        <FormField label="رمز الدور" required error={errors.code?.message}>
+        <FormField labelKey="role.form.code" required error={errors.code?.message}>
           <Input
             id="role-code"
-            placeholder="مثال: FINANCE_EDITOR"
+            placeholder={t('role.form.code-placeholder')}
             dir="ltr"
             disabled={isEdit}
             startIcon={<Hash className="size-4" aria-hidden />}
@@ -105,16 +105,16 @@ export function RoleFormDialog({ open, onOpenChange, role }: RoleFormDialogProps
           />
         </FormField>
 
-        <FormField label="الاسم العربي" required error={errors.nameAr?.message}>
+        <FormField labelKey="role.form.name-ar" required error={errors.nameAr?.message}>
           <Input
             id="role-name-ar"
-            placeholder="مثال: محرر مالي"
+            placeholder={t('role.form.name-ar-placeholder')}
             invalid={Boolean(errors.nameAr)}
             {...register('nameAr')}
           />
         </FormField>
 
-        <FormField label="الاسم الإنجليزي" error={errors.nameEn?.message}>
+        <FormField labelKey="role.form.name-en" error={errors.nameEn?.message}>
           <Input
             id="role-name-en"
             placeholder="Finance Editor"
@@ -124,11 +124,11 @@ export function RoleFormDialog({ open, onOpenChange, role }: RoleFormDialogProps
           />
         </FormField>
 
-        <FormField label="الوصف" error={errors.description?.message}>
+        <FormField labelKey="role.form.description" error={errors.description?.message}>
           <Textarea
             id="role-description"
             rows={3}
-            placeholder="استخدام الدور ونطاقه…"
+            placeholder={t('role.form.description-placeholder')}
             invalid={Boolean(errors.description)}
             {...register('description')}
           />
@@ -136,7 +136,7 @@ export function RoleFormDialog({ open, onOpenChange, role }: RoleFormDialogProps
 
         {isEdit && role.isSystemRole && (
           <p role="status" className="rounded-lg bg-warning/10 px-3 py-2 text-xs text-warning">
-            هذا دور معرّف من النظام؛ لا يمكن إيقافه أو حذفه، لكن يمكن تعديل اسمه ووصفه وصلاحياته.
+            {t('role.form.system-note')}
           </p>
         )}
 

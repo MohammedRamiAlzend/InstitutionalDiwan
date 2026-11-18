@@ -16,6 +16,7 @@ Because the shell owns navigation, theme, density, and logout, this page contain
 - ✅ Content-only landing mounted as the first `AppShell` child (Phase 1)
 - ❌ KPI cards, quick document creation, and the recent-activity data grid pending
 ## 6. Change Log
+- 2026-11-18: UI labels Phase 4 (ب5): the welcome line, stat cards and «ما التالي؟» section render from `dashboard.*` via `<Label>`; the stats array carries `labelKey`.
 - 2026-11-17: UI labels Phase 3 (`plans/ui-labels-edit-mode.md`): the page header title/description render from the catalog (`page.dashboard.title` / `.description`) via `PageHeader` `titleKey`/`descriptionKey`; the «النسخة الأولية» badge is unchanged.
 - 2026-11-12: The welcome line shows the stored institution name (`entities/branding`) instead of fixed text.
 - 2026-10-27: Moved header/theme/logout chrome into `widgets/app-shell` (Phase 1) and rewrote the page as shell-owned content; role codes render as LTR islands.

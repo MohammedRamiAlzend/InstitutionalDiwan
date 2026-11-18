@@ -1,6 +1,7 @@
 import { toast } from 'sonner'
 import { toArabicErrorMessage } from '@/shared/api'
-import { Button, Dialog } from '@/shared/ui'
+import { t } from '@/shared/lib'
+import { Button, Dialog, Label } from '@/shared/ui'
 import { useRevokeDocumentAccessMutation } from '../api/accessGrantMutations'
 
 interface RevokeAccessGrantDialogProps {
@@ -28,7 +29,7 @@ export function RevokeAccessGrantDialog({
   const onConfirm = async () => {
     try {
       await mutation.mutateAsync(grantId)
-      toast.success('تم إلغاء تصريح الوصول.')
+      toast.success(t('docdetails.grant.toast-revoked'))
       onOpenChange(false)
     } catch {
       // The mutation error is rendered below.
@@ -39,8 +40,8 @@ export function RevokeAccessGrantDialog({
     <Dialog
       open={open}
       onOpenChange={onOpenChange}
-      title="إلغاء تصريح الوصول"
-      description={`سيُلغى تصريح «${granteeLabel}» ويبقى سجلًّا مع تاريخ الإلغاء واسم من ألغاه. لا يمكن التراجع عن الإلغاء.`}
+      title={t('docdetails.grant.revoke-title')}
+      description={t('docdetails.grant.revoke-description', { name: granteeLabel })}
       size="sm"
       footer={
         <>
@@ -50,7 +51,7 @@ export function RevokeAccessGrantDialog({
             onClick={() => onOpenChange(false)}
             disabled={mutation.isPending}
           >
-            تراجع
+            <Label k="docdetails.action.back" />
           </Button>
           <Button
             type="button"
@@ -58,7 +59,7 @@ export function RevokeAccessGrantDialog({
             onClick={() => void onConfirm()}
             loading={mutation.isPending}
           >
-            تأكيد الإلغاء
+            <Label k="docdetails.action.confirm-cancel" />
           </Button>
         </>
       }

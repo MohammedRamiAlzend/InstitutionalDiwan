@@ -24,8 +24,8 @@ import {
 } from '@/features/movement-routing'
 import { toArabicErrorMessage } from '@/shared/api'
 import { MOVEMENT_STEP_STATUS } from '@/shared/config'
-import { formatDate, formatDateTime, formatShortId } from '@/shared/lib'
-import { Button, Skeleton } from '@/shared/ui'
+import { formatDate, formatDateTime, formatShortId, t } from '@/shared/lib'
+import { Button, Label, Skeleton } from '@/shared/ui'
 
 interface DocumentMovementsTabProps {
   documentId: string
@@ -65,19 +65,17 @@ export function DocumentMovementsTab({
         <div className="flex flex-col gap-1">
           <h2 className="flex items-center gap-2 text-base font-semibold text-foreground">
             <Route className="size-4 text-accent" aria-hidden />
-            حركات الوثيقة
+            <Label k="docdetails.movements-title" />
           </h2>
           <p className="max-w-2xl text-xs text-muted">
-            كل حركة تفتح مسارًا بين قسمين يمر عبر الديوان المركزي. ما دامت الحركة موجَّهة إلى قسمك
-            يظهر زران فقط: استلامها أو إعادة توجيهها، وبعد مغادرتها قسمك تختفي الأزرار حتى تعود
-            إليك. الاستلام يتطلب تسجيل القسم لرقمه أولًا.
+            <Label k="docdetails.movements-hint" />
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {canOpenMovement && (
             <Button type="button" size="sm" onClick={() => setOpenMovementOpen(true)}>
               <GitBranch className="size-4" aria-hidden />
-              فتح حركة
+              <Label k="docdetails.action.open-movement" />
             </Button>
           )}
           <Button
@@ -86,7 +84,7 @@ export function DocumentMovementsTab({
             variant="outline"
             className="size-9"
             onClick={() => void movementsQuery.refetch()}
-            aria-label="تحديث الحركات"
+            aria-label={t('docdetails.refresh-movements-aria')}
           >
             <RefreshCw
               className={movementsQuery.isFetching ? 'size-4 animate-spin' : 'size-4'}
@@ -98,13 +96,13 @@ export function DocumentMovementsTab({
 
       {!isRegistered && movementsQuery.isSuccess && movements.length === 0 && (
         <p className="rounded-lg border border-dashed border-border px-4 py-3 text-xs text-muted">
-          لا تُفتح الحركات إلا للوثائق المسجَّلة. سجّل الوثيقة برقم رسمي أولًا.
+          <Label k="docdetails.movements.not-registered" />
         </p>
       )}
 
       {isRegistered && movementsQuery.isSuccess && hasActiveMovement(movements) && (
         <p className="rounded-lg border border-accent/40 bg-accent/10 px-4 py-3 text-xs text-foreground">
-          توجد حركة مفتوحة على هذه الوثيقة. تُغلق الحركة أو تُلغى قبل فتح حركة جديدة.
+          <Label k="docdetails.movements.has-active" />
         </p>
       )}
 
@@ -125,14 +123,14 @@ export function DocumentMovementsTab({
             size="sm"
             onClick={() => void movementsQuery.refetch()}
           >
-            إعادة المحاولة
+            <Label k="common.action.retry" />
           </Button>
         </div>
       ) : movements.length === 0 ? (
         <p className="rounded-lg border border-dashed border-border px-4 py-8 text-center text-sm text-muted">
           {isRegistered
-            ? 'لا توجد حركات لهذه الوثيقة بعد. افتح حركة لتوجيهها إلى قسم آخر عبر الديوان المركزي.'
-            : 'ستظهر حركات الوثيقة هنا بعد تسجيلها وفتح أول حركة.'}
+            ? <Label k="docdetails.movements.empty-registered" />
+            : <Label k="docdetails.movements.empty-none" />}
         </p>
       ) : (
         movements.map((movement) => (
@@ -205,21 +203,21 @@ function MovementCard({
           <MovementStatusBadge statusId={movement.statusId} />
           {!terminal && (
             <span className="text-xs text-muted">
-              الخطوة الحالية <span dir="ltr">{movement.currentStepNo}</span>
+              <Label k="docdetails.current-step" /> <span dir="ltr">{movement.currentStepNo}</span>
             </span>
           )}
           {movement.dueDate && (
             <span className="text-xs text-muted">
-              الاستحقاق: <span dir="ltr">{formatDate(movement.dueDate)}</span>
+              <Label k="docdetails.due-date" /> <span dir="ltr">{formatDate(movement.dueDate)}</span>
             </span>
           )}
         </div>
         <span className="text-xs text-muted">
-          أُنشئت <span dir="ltr">{formatDateTime(movement.createdAt)}</span>
+          <Label k="docdetails.created-at-label" /> <span dir="ltr">{formatDateTime(movement.createdAt)}</span>
           {movement.closedAt && (
             <>
               {' · '}
-              أُغلقت <span dir="ltr">{formatDateTime(movement.closedAt)}</span>
+              <Label k="docdetails.closed-at-label" /> <span dir="ltr">{formatDateTime(movement.closedAt)}</span>
             </>
           )}
         </span>
@@ -228,18 +226,18 @@ function MovementCard({
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted">
         <span className="inline-flex items-center gap-1.5">
           <Building2 className="size-3.5" aria-hidden />
-          المصدر: <span className="text-foreground">{departmentNameOf(movement.sourceDepartmentId)}</span>
+          <Label k="docdetails.source" /> <span className="text-foreground">{departmentNameOf(movement.sourceDepartmentId)}</span>
         </span>
         <span className="text-muted">
-          الوجهة: <span className="text-foreground">{departmentNameOf(movement.destinationDepartmentId)}</span>
+          <Label k="docdetails.destination" /> <span className="text-foreground">{departmentNameOf(movement.destinationDepartmentId)}</span>
         </span>
         {movement.assignedToUserId && (
           <span>
-            المكلَّف: <UserLabel userId={movement.assignedToUserId} />
+            <Label k="docdetails.assigned-to" /> <UserLabel userId={movement.assignedToUserId} />
           </span>
         )}
         <span>
-          أنشأها: <UserLabel userId={movement.createdByUserId} />
+          <Label k="docdetails.created-by-label" /> <UserLabel userId={movement.createdByUserId} />
         </span>
       </div>
 
@@ -254,7 +252,7 @@ function MovementCard({
       )}
 
       <div className="flex flex-col gap-3">
-        <h3 className="text-sm font-semibold text-foreground">مسارات الحركة</h3>
+        <h3 className="text-sm font-semibold text-foreground"><Label k="docdetails.steps-title" /></h3>
         <ol className="flex flex-col">
           {movement.steps.map((movementStep, index) => (
             <StepTimelineItem
@@ -270,7 +268,7 @@ function MovementCard({
 
       {movement.events.length > 0 && (
         <div className="flex flex-col gap-2">
-          <h3 className="text-sm font-semibold text-foreground">سجل الأحداث</h3>
+          <h3 className="text-sm font-semibold text-foreground"><Label k="docdetails.events-title" /></h3>
           <ul className="flex flex-col gap-1.5">
             {movement.events.map((event) => (
               <li
@@ -284,14 +282,14 @@ function MovementCard({
                 />
                 {event.stepNo !== null && (
                   <span className="text-muted">
-                    خطوة <span dir="ltr">{event.stepNo}</span>
+                    <Label k="docdetails.step-no" /> <span dir="ltr">{event.stepNo}</span>
                   </span>
                 )}
                 <span className="text-muted" dir="ltr">
                   {formatDateTime(event.occurredAt)}
                 </span>
                 <span className="text-muted">
-                  بواسطة <UserLabel userId={event.actorUserId} />
+                  <Label k="docdetails.by" /> <UserLabel userId={event.actorUserId} />
                 </span>
                 {translateMovementNote(event.notes) && (
                   <span className="text-foreground">{translateMovementNote(event.notes)}</span>
@@ -316,15 +314,15 @@ interface StepTimelineItemProps {
 function stepEndLabel(stepStatusId: number): string {
   switch (stepStatusId) {
     case MOVEMENT_STEP_STATUS.Completed:
-      return 'اكتملت'
+      return t('docdetails.step-end.completed')
     case MOVEMENT_STEP_STATUS.Rejected:
-      return 'رُفضت'
+      return t('docdetails.step-end.rejected')
     case MOVEMENT_STEP_STATUS.Returned:
-      return 'أُعيدت'
+      return t('docdetails.step-end.returned')
     case MOVEMENT_STEP_STATUS.Redirected:
-      return 'أُعيد توجيهها'
+      return t('docdetails.step-end.redirected')
     default:
-      return 'أُنهيت'
+      return t('docdetails.step-end.ended')
   }
 }
 
@@ -355,18 +353,18 @@ function StepTimelineItem({
           <span className="text-xs text-muted">
             {departmentNameOf(step.fromDepartmentId)} ← {departmentNameOf(step.toDepartmentId)}
           </span>
-          {isCurrent && <span className="text-[10px] text-accent">الخطوة الحالية</span>}
+          {isCurrent && <span className="text-[10px] text-accent"><Label k="docdetails.current-step" /></span>}
         </div>
 
         <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted">
           {step.sentAt && (
             <span>
-              أُرسلت <span dir="ltr">{formatDateTime(step.sentAt)}</span>
+              <Label k="docdetails.sent-at" /> <span dir="ltr">{formatDateTime(step.sentAt)}</span>
             </span>
           )}
           {step.receivedAt && (
             <span>
-              استُلمت <span dir="ltr">{formatDateTime(step.receivedAt)}</span>
+              <Label k="docdetails.received-at" /> <span dir="ltr">{formatDateTime(step.receivedAt)}</span>
             </span>
           )}
           {step.completedAt && (
@@ -377,24 +375,24 @@ function StepTimelineItem({
           )}
           {step.registryNumberId && (
             <span>
-              رقم الدائرة:{' '}
+              <Label k="docdetails.dept-number" />{' '}
               <span dir="ltr">{step.registryNumberText ?? formatShortId(step.registryNumberId)}</span>
               {step.registryDate && (
                 <>
                   {' '}
-                  بتاريخ <span dir="ltr">{formatDate(step.registryDate)}</span>
+                  <Label k="docdetails.on-date" /> <span dir="ltr">{formatDate(step.registryDate)}</span>
                 </>
               )}
             </span>
           )}
           {step.dueDate && (
             <span>
-              الاستحقاق <span dir="ltr">{formatDate(step.dueDate)}</span>
+              <Label k="docdetails.due" /> <span dir="ltr">{formatDate(step.dueDate)}</span>
             </span>
           )}
           {step.assignedToUserId && (
             <span>
-              المكلَّف <UserLabel userId={step.assignedToUserId} />
+              <Label k="docdetails.assignee" /> <UserLabel userId={step.assignedToUserId} />
             </span>
           )}
         </div>

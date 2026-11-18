@@ -21,7 +21,7 @@ import { LOOKUP_SLUGS, useLookupEntries } from '@/entities/lookup'
 import { useSessionStore } from '@/entities/user'
 import { toArabicErrorMessage } from '@/shared/api'
 import { DEPARTMENT_TYPE, Permissions } from '@/shared/config'
-import { formatDateTime } from '@/shared/lib'
+import { formatDateTime, t } from '@/shared/lib'
 import {
   Button,
   Checkbox,
@@ -29,6 +29,7 @@ import {
   GuideChip,
   GuideRegion,
   Input,
+  Label,
   Select,
   Skeleton,
   Textarea,
@@ -81,7 +82,7 @@ export function InstitutionSettingsForm() {
       >
         <span>{toArabicErrorMessage(query.error)}</span>
         <Button type="button" variant="outline" size="sm" onClick={() => void query.refetch()}>
-          إعادة المحاولة
+          <Label k="common.action.retry" />
         </Button>
       </div>
     )
@@ -146,14 +147,14 @@ function InstitutionSettingsFormContent({ setting }: { setting: InstitutionSetti
     )
 
     return [
-      { value: NONE, label: 'بلا ديوان حفظ (الأرشفة عند الديوان المنشئ)' },
+      { value: NONE, label: t('institution.archive.none') },
       ...departments
         .filter((department) => department.departmentId !== selectedCentralDiwanId)
         .map((department) => ({
           value: department.departmentId,
           label: department.isActive
             ? `${department.nameAr} (${department.code})`
-            : `${department.nameAr} (${department.code}) (موقوف)`,
+            : `${department.nameAr} (${department.code}) (${t('institution.status.suspended')})`,
           disabled:
             !department.isActive && department.departmentId !== setting.archiveDiwanDepartmentId,
         })),
@@ -180,7 +181,7 @@ function InstitutionSettingsFormContent({ setting }: { setting: InstitutionSetti
     if (changed && !values.centralDiwanTransferReason.trim()) {
       setError('centralDiwanTransferReason', {
         type: 'manual',
-        message: 'سبب نقل الديوان المركزي مطلوب عند تغيير القسم المحدد.',
+        message: t('institution.transfer.required'),
       })
       return
     }
@@ -205,7 +206,7 @@ function InstitutionSettingsFormContent({ setting }: { setting: InstitutionSetti
           : null,
       })
       reset(toFormValues(updated))
-      toast.success('تم حفظ إعدادات المؤسسة.')
+      toast.success(t('institution.toast.saved'))
     } catch {
       // The mutation error is rendered below in Arabic.
     }
@@ -216,28 +217,28 @@ function InstitutionSettingsFormContent({ setting }: { setting: InstitutionSetti
       <GuideRegion id="institution-settings.identity">
       <Section
         icon={Building2}
-        title="بيانات المؤسسة"
-        description="الاسم الرسمي والشعار اللذان يظهران في الواجهة، والمنطقة الزمنية الافتراضية المستخدمة في الوثائق."
+        title={t('institution.identity.title')}
+        description={t('institution.identity.description')}
       >
         <div className="grid gap-4 sm:grid-cols-2">
           <FormField
-            label="اسم المؤسسة بالعربية"
+            labelKey="institution.name-ar"
             htmlFor="institution-name-ar"
             required
             error={errors.institutionNameAr?.message}
-            hint="يظهر في صفحة الدخول وفي القائمة الجانبية وفي عنوان تبويب المتصفح."
+            hint={t('institution.name-ar-hint')}
             className="sm:col-span-2"
           >
             <Input
               id="institution-name-ar"
-              placeholder="مثال: الديوان المركزي"
+              placeholder={t('institution.name-ar-placeholder')}
               invalid={Boolean(errors.institutionNameAr)}
               {...register('institutionNameAr')}
             />
           </FormField>
 
           <FormField
-            label="اسم المؤسسة بالإنجليزية"
+            labelKey="institution.name-en"
             htmlFor="institution-name-en"
             error={errors.institutionNameEn?.message}
           >
@@ -250,12 +251,12 @@ function InstitutionSettingsFormContent({ setting }: { setting: InstitutionSetti
             />
           </FormField>
 
-          <FormField label="شعار المؤسسة" className="sm:col-span-2">
+          <FormField labelKey="institution.logo" className="sm:col-span-2">
             <InstitutionLogoField />
           </FormField>
 
           <FormField
-            label="المنطقة الزمنية الافتراضية"
+            labelKey="institution.timezone"
             htmlFor="institution-timezone"
             required
             error={errors.defaultTimezone?.message}
@@ -276,12 +277,12 @@ function InstitutionSettingsFormContent({ setting }: { setting: InstitutionSetti
       <GuideRegion id="institution-settings.central">
       <Section
         icon={Landmark}
-        title="الديوان المركزي"
-        description="قسم رئيسي (بلا قسم أعلى) من نوع الديوان المركزي. تغييره يتطلب تسجيل سبب النقل. يمكنك أيضًا قصر إنشاء الوثائق عليه."
+        title={t('institution.central.title')}
+        description={t('institution.central.description')}
       >
         <div className="grid gap-4 sm:grid-cols-2">
           <FormField
-            label="قسم الديوان المركزي"
+            labelKey="institution.central.field"
             required
             error={errors.centralDiwanDepartmentId?.message}
             className="sm:col-span-2"
@@ -297,9 +298,9 @@ function InstitutionSettingsFormContent({ setting }: { setting: InstitutionSetti
                   disabled={pending || departmentsQuery.isLoading}
                   invalid={Boolean(errors.centralDiwanDepartmentId)}
                   placeholder={
-                    departmentsQuery.isLoading ? 'جارٍ تحميل الأقسام…' : 'اختر الديوان المركزي…'
+                    departmentsQuery.isLoading ? t('institution.central.loading') : t('institution.central.placeholder')
                   }
-                  aria-label="قسم الديوان المركزي"
+                  aria-label={t('institution.central.field')}
                 />
               )}
             />
@@ -307,7 +308,7 @@ function InstitutionSettingsFormContent({ setting }: { setting: InstitutionSetti
 
           {centralDiwanChanged && (
             <FormField
-              label="سبب نقل الديوان المركزي"
+              labelKey="institution.transfer.field"
               htmlFor="institution-transfer-reason"
               required
               error={errors.centralDiwanTransferReason?.message}
@@ -315,7 +316,7 @@ function InstitutionSettingsFormContent({ setting }: { setting: InstitutionSetti
             >
               <Textarea
                 id="institution-transfer-reason"
-                placeholder="اذكر سبب تغيير قسم الديوان المركزي…"
+                placeholder={t('institution.transfer.placeholder')}
                 invalid={Boolean(errors.centralDiwanTransferReason)}
                 {...register('centralDiwanTransferReason')}
               />
@@ -331,8 +332,8 @@ function InstitutionSettingsFormContent({ setting }: { setting: InstitutionSetti
                   checked={field.value}
                   onCheckedChange={(checked) => field.onChange(checked === true)}
                   disabled={pending}
-                  label="السماح للدواوين الأخرى بإنشاء وثائق"
-                  description="عند إيقافه ينشئ الديوان المركزي وحده الوثائق، وتصل الدواوين الأخرى بالإحالة."
+                  label={t('institution.other-create.label')}
+                  description={t('institution.other-create.description')}
                 />
               )}
             />
@@ -350,10 +351,10 @@ function InstitutionSettingsFormContent({ setting }: { setting: InstitutionSetti
       <GuideRegion id="institution-settings.archive">
       <Section
         icon={Archive}
-        title="ديوان الحفظ"
-        description="القسم الذي تنتهي إليه الوثائق المحفوظة. أي ديوان يرسل الوثيقة للحفظ إلى الديوان الذي أنشأها، وهو يرسلها إلى ديوان الحفظ، وهناك تُؤرشف."
+        title={t('institution.archive.title')}
+        description={t('institution.archive.description')}
       >
-        <FormField label="قسم ديوان الحفظ" error={errors.archiveDiwanDepartmentId?.message}>
+        <FormField labelKey="institution.archive.field" error={errors.archiveDiwanDepartmentId?.message}>
           <Controller
             control={control}
             name="archiveDiwanDepartmentId"
@@ -364,14 +365,13 @@ function InstitutionSettingsFormContent({ setting }: { setting: InstitutionSetti
                 options={archiveDiwanOptions}
                 disabled={pending || departmentsQuery.isLoading}
                 invalid={Boolean(errors.archiveDiwanDepartmentId)}
-                aria-label="قسم ديوان الحفظ"
+                aria-label={t('institution.archive.field')}
               />
             )}
           />
         </FormField>
         <p className="mt-2 text-xs text-muted">
-          بدون ديوان حفظ تبقى الأرشفة عند الديوان الذي أنشأ الوثيقة كما هي. الوثائق المؤرشفة قبل
-          تعيينه تبقى عند منشئها.
+          {t('institution.archive.note')}
         </p>
       </Section>
       </GuideRegion>
@@ -379,8 +379,8 @@ function InstitutionSettingsFormContent({ setting }: { setting: InstitutionSetti
       <GuideRegion id="institution-settings.numbering">
       <Section
         icon={Hash}
-        title="الترقيم"
-        description="النمط الافتراضي لأرقام الوثائق الصادرة وسياسة تصفير التسلسل."
+        title={t('institution.numbering.title')}
+        description={t('institution.numbering.description')}
       >
         {(modeQuery.isError || resetPolicyQuery.isError) && (
           <div role="alert" className="mb-3 flex items-center justify-between gap-2 text-sm text-danger">
@@ -389,12 +389,12 @@ function InstitutionSettingsFormContent({ setting }: { setting: InstitutionSetti
               void modeQuery.refetch()
               void resetPolicyQuery.refetch()
             }}>
-              إعادة المحاولة
+              <Label k="common.action.retry" />
             </Button>
           </div>
         )}
         <div className="grid gap-4 sm:grid-cols-2">
-          <FormField label="نمط الترقيم" required error={errors.numberingModeId?.message}>
+          <FormField labelKey="institution.numbering.mode" required error={errors.numberingModeId?.message}>
             <Controller
               control={control}
               name="numberingModeId"
@@ -405,15 +405,15 @@ function InstitutionSettingsFormContent({ setting }: { setting: InstitutionSetti
                   options={modeOptions}
                   disabled={pending || modeQuery.isLoading}
                   invalid={Boolean(errors.numberingModeId)}
-                  placeholder={modeQuery.isLoading ? 'جارٍ التحميل…' : 'اختر النمط…'}
-                  aria-label="نمط الترقيم"
+                  placeholder={modeQuery.isLoading ? t('institution.numbering.loading') : t('institution.numbering.mode-placeholder')}
+                  aria-label={t('institution.numbering.mode')}
                 />
               )}
             />
           </FormField>
 
           <FormField
-            label="سياسة التصفير"
+            labelKey="institution.numbering.reset"
             required
             error={errors.numberingResetPolicyId?.message}
           >
@@ -427,8 +427,8 @@ function InstitutionSettingsFormContent({ setting }: { setting: InstitutionSetti
                   options={resetPolicyOptions}
                   disabled={pending || resetPolicyQuery.isLoading}
                   invalid={Boolean(errors.numberingResetPolicyId)}
-                  placeholder={resetPolicyQuery.isLoading ? 'جارٍ التحميل…' : 'اختر السياسة…'}
-                  aria-label="سياسة تصفير الترقيم"
+                  placeholder={resetPolicyQuery.isLoading ? t('institution.numbering.loading') : t('institution.numbering.reset-placeholder')}
+                  aria-label={t('institution.numbering.reset-aria')}
                 />
               )}
             />
@@ -440,12 +440,12 @@ function InstitutionSettingsFormContent({ setting }: { setting: InstitutionSetti
       <GuideRegion id="institution-settings.responsible">
       <Section
         icon={UserRound}
-        title="الجهة المسؤولة"
-        description="الموظف المسؤول عن متابعة إعدادات المؤسسة والترقيم."
+        title={t('institution.responsible.title')}
+        description={t('institution.responsible.description')}
       >
         <div className="grid gap-4 sm:grid-cols-2">
           <FormField
-            label="الموظف المسؤول"
+            labelKey="institution.responsible.field"
             error={errors.responsibleEmployeeId?.message}
             className="sm:col-span-2"
           >
@@ -458,14 +458,14 @@ function InstitutionSettingsFormContent({ setting }: { setting: InstitutionSetti
                   onValueChange={(id) => field.onChange(id ?? NONE)}
                   disabled={pending || !canPickEmployees}
                   invalid={Boolean(errors.responsibleEmployeeId)}
-                  label="الموظف المسؤول"
-                  noneLabel="بدون موظف مسؤول"
+                  label={t('institution.responsible.field')}
+                  noneLabel={t('institution.responsible.none')}
                 />
               )}
             />
             {!canPickEmployees && (
               <p role="status" className="mt-1.5 text-xs text-warning">
-                لا تملك صلاحية إدارة الموظفين، لذلك لا يمكنك تغيير الموظف المسؤول.
+                {t('institution.responsible.denied')}
               </p>
             )}
           </FormField>
@@ -484,10 +484,10 @@ function InstitutionSettingsFormContent({ setting }: { setting: InstitutionSetti
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <span className="text-xs text-muted">
-          آخر تحديث: <span dir="ltr">{formatDateTime(setting.updatedAt)}</span>
+          {t('institution.updated-at')} <span dir="ltr">{formatDateTime(setting.updatedAt)}</span>
         </span>
         <Button type="submit" loading={pending}>
-          حفظ الإعدادات
+          <Label k="institution.save" />
         </Button>
         <GuideChip id="institution-settings.save" />
       </div>

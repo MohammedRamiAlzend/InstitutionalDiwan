@@ -1,26 +1,26 @@
 import { useSearchParams } from 'react-router-dom'
 import { BookOpen, ScrollText } from 'lucide-react'
 import { RequirePermission } from '@/features/auth'
-import { Permissions } from '@/shared/config'
-import { cn } from '@/shared/lib'
-import { GuideProvider, GuideRegion, PageHeader } from '@/shared/ui'
+import { Permissions, type LabelKey } from '@/shared/config'
+import { cn, t } from '@/shared/lib'
+import { GuideProvider, GuideRegion, Label, PageHeader } from '@/shared/ui'
 import { DepartmentRegisterBook } from '@/widgets/department-register-book'
 import { NumberingRegistryTable } from '@/widgets/numbering-registry-table'
 
 const TABS = [
   {
     key: 'registries',
-    label: 'سجلات الترقيم',
-    hint: 'نطاقات الأرقام وقالبها وعداداتها',
+    labelKey: 'numbering.tabs.registries',
+    hintKey: 'numbering.tabs.registries-hint',
     icon: ScrollText,
   },
   {
     key: 'register',
-    label: 'سجل الدوائر',
-    hint: 'الأرقام التي كتبتها الدوائر في سجلاتها',
+    labelKey: 'numbering.tabs.register',
+    hintKey: 'numbering.tabs.register-hint',
     icon: BookOpen,
   },
-] as const
+] as const satisfies readonly { key: string; labelKey: LabelKey; hintKey: LabelKey; icon: typeof ScrollText }[]
 
 type TabKey = (typeof TABS)[number]['key']
 
@@ -59,7 +59,7 @@ function NumberingView() {
       <GuideRegion id="numbering.tabs">
       <div
         role="tablist"
-        aria-label="أقسام صفحة الترقيم"
+        aria-label={t('numbering.tabs.aria')}
         className="flex flex-wrap items-center gap-2"
       >
         {TABS.map((tab) => {
@@ -87,9 +87,9 @@ function NumberingView() {
                 )}
               >
                 <Icon className="size-4" aria-hidden />
-                {tab.label}
+                <Label k={tab.labelKey} />
               </span>
-              <span className="text-xs text-muted">{tab.hint}</span>
+              <span className="text-xs text-muted"><Label k={tab.hintKey} /></span>
             </button>
           )
         })}

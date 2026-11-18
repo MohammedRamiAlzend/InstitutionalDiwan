@@ -29,6 +29,7 @@ Models Module 02 `User` (`MeResponse`, `UserResponse`, `UserOption`) and owns th
 ## Change Log
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-18 | Qoder | UI labels Phase 4 (ب5-متبقٍ): `UserScopeBadge` maps each `ScopeTypeId` to a catalog key (`user.scope.*`) and resolves it reactively with `useLabel`, including the `نطاق #{id}` fallback. |
 | 2026-11-11 | Claude |  |
 | 2026-11-04 | Claude | Added `UserLabel` and the batching `loadUserLabel` loader (`userKeys.label`) so «executed by» style columns show the username with the short id. |
 | 2026-11-04 | Claude | `MeResponse.primaryDepartmentId` and the `useMyPrimaryDepartmentId` hook (returns `{ departmentId, isLoading }`; shares the scope query key with `useCoversDepartment`). |

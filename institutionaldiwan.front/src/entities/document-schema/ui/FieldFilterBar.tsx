@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react'
 import { SlidersHorizontal, X } from 'lucide-react'
 import { toArabicErrorMessage } from '@/shared/api'
-import { cn, formatDate } from '@/shared/lib'
-import { Badge, Button, Input, Select } from '@/shared/ui'
+import { cn, formatDate, resolveLabel, t, useLabelsStore } from '@/shared/lib'
+import { Badge, Button, Input, Label, Select } from '@/shared/ui'
 import {
   FIELD_FILTER_OPERATOR,
   MAX_FIELD_FILTERS,
@@ -49,7 +49,7 @@ function quickOperator(field: SchemaFieldResponse): FieldFilterOperator {
 
 function displayValue(field: SchemaFieldResponse | undefined, filter: FieldFilterValue): string {
   if (!field) return filter.value
-  if (field.dataType === FIELD_DATA_TYPE.Boolean) return filter.value === 'true' ? 'نعم' : 'لا'
+  if (field.dataType === FIELD_DATA_TYPE.Boolean) return filter.value === 'true' ? t('schema.value.yes') : t('schema.value.no')
   if (field.dataType === FIELD_DATA_TYPE.Select || field.dataType === FIELD_DATA_TYPE.MultiSelect)
     return field.options.find((option) => option.key === filter.value)?.labelAr ?? filter.value
   if (field.dataType === FIELD_DATA_TYPE.Date) return formatDate(filter.value)
@@ -66,22 +66,23 @@ interface QuickFilterProps {
 /** A filter for one field on the bar: a list for choices, otherwise an input applied on Enter or blur. */
 function QuickFilter({ field, value, disabled, onCommit }: QuickFilterProps) {
   const [invalid, setInvalid] = useState(false)
+  const overrides = useLabelsStore((state) => state.overrides)
 
   if (isChoiceType(field)) {
     const options =
       field.dataType === FIELD_DATA_TYPE.Boolean
         ? [
-            { value: 'true', label: 'نعم' },
-            { value: 'false', label: 'لا' },
+            { value: 'true', label: resolveLabel('schema.value.yes', overrides) },
+            { value: 'false', label: resolveLabel('schema.value.no', overrides) },
           ]
         : field.options.map((option) => ({ value: option.key, label: option.labelAr }))
     return (
       <Select
-        aria-label={`تصفية حسب ${field.labelAr}`}
+        aria-label={t('schema.filter-bar.field-aria', { label: field.labelAr })}
         value={value || ALL}
         disabled={disabled}
         onValueChange={(next) => onCommit(next === ALL ? '' : next)}
-        options={[{ value: ALL, label: `${field.labelAr}: الكل` }, ...options]}
+        options={[{ value: ALL, label: t('schema.filter-bar.all-option', { label: field.labelAr }) }, ...options]}
         className="w-44"
       />
     )
@@ -101,7 +102,7 @@ function QuickFilter({ field, value, disabled, onCommit }: QuickFilterProps) {
     <Input
       // Remounts when the URL changes the value, so back/forward and "clear" show through.
       key={value}
-      aria-label={`تصفية حسب ${field.labelAr}`}
+      aria-label={t('schema.filter-bar.field-aria', { label: field.labelAr })}
       title={field.labelAr}
       placeholder={isDate ? undefined : field.labelAr}
       type={isDate ? 'date' : 'text'}
@@ -170,13 +171,13 @@ export function FieldFilterBar({ documentTypeId, fields: explicitFields, raw, on
 
   const hint =
     documentTypeId === undefined && explicitFields === undefined
-      ? 'اختر نوع وثيقة أولًا.'
+      ? t('schema.filter-bar.hint-select-type')
       : schemaQuery.isLoading
-        ? 'جارٍ تحميل حقول النوع…'
+        ? t('schema.filter-bar.hint-loading')
         : dialogFields.length === 0
           ? explicitFields !== undefined
-            ? 'لا حقول قابلة للتصفية في هذا النموذج.'
-            : 'لا حقول قابلة للتصفية لهذا النوع.'
+            ? t('schema.filter-bar.hint-no-fields-form')
+            : t('schema.filter-bar.hint-no-fields-type')
           : undefined
 
   return (
@@ -190,7 +191,8 @@ export function FieldFilterBar({ documentTypeId, fields: explicitFields, raw, on
         onClick={() => setOpen(true)}
       >
         <SlidersHorizontal className="size-4" aria-hidden />
-        تصفية بالحقول{filters.length > 0 ? ` (${filters.length})` : ''}
+        <Label k="schema.filter-bar.button" />
+        {filters.length > 0 ? ` (${filters.length})` : ''}
       </Button>
 
       {filterable.map((field) => {
@@ -217,7 +219,7 @@ export function FieldFilterBar({ documentTypeId, fields: explicitFields, raw, on
             </span>
             <button
               type="button"
-              aria-label="إزالة المرشح"
+              aria-label={t('schema.filter-bar.remove-aria')}
               className="cursor-pointer"
               onClick={() => onChange(raw.filter((item) => item !== encodeFieldFilter(filter)))}
             >

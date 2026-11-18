@@ -17,23 +17,19 @@ import {
   RunIntegrityCheckDialog,
 } from '@/features/audit-manage'
 import { Permissions } from '@/shared/config'
-import { formatDateTime, formatNumber, formatShortId, useTableState } from '@/shared/lib'
+import { formatDateTime, formatNumber, formatShortId, resolveLabel, t, useLabelsStore, useTableState } from '@/shared/lib'
 import {
   Badge,
   Button,
   DataTable,
   GuideChip,
   Input,
+  Label,
   Select,
   type DataTableColumn,
   type MenuEntry,
 } from '@/shared/ui'
 import { DepartmentLabel } from '@/entities/department'
-
-const MODULE_OPTIONS = [
-  { value: 'all', label: 'كل الوحدات' },
-  ...AUDIT_MODULES.map((module) => ({ value: module.code, label: module.label })),
-]
 
 function optionalId(value: string | undefined): number | undefined {
   if (!value) return undefined
@@ -81,18 +77,24 @@ export function AuditLogTable() {
 
   const hasPermission = useSessionStore((state) => state.hasPermission)
   const canManage = hasPermission(Permissions.AuditManage)
+  const overrides = useLabelsStore((state) => state.overrides)
+
+  const moduleOptions = [
+    { value: 'all', label: resolveLabel('audit.filter.module-all', overrides) },
+    ...AUDIT_MODULES.map((module) => ({ value: module.code, label: resolveLabel(module.labelKey, overrides) })),
+  ]
 
   const actionTypesQuery = useLookupEntries(LOOKUP_SLUGS.AuditActionTypes)
 
   const actionOptions = useMemo(
     () => [
-      { value: 'all', label: 'كل الإجراءات' },
+      { value: 'all', label: resolveLabel('audit.filter.action-all', overrides) },
       ...(actionTypesQuery.data ?? []).map((entry) => ({
         value: String(entry.id),
         label: entry.descAr,
       })),
     ],
-    [actionTypesQuery.data],
+    [actionTypesQuery.data, overrides],
   )
 
   const [checkpointTarget, setCheckpointTarget] = useState<number | null>(null)
@@ -102,9 +104,9 @@ export function AuditLogTable() {
   const copyValue = async (value: string, label: string) => {
     try {
       await navigator.clipboard.writeText(value)
-      toast.success(`تم نسخ ${label}.`)
+      toast.success(t('audit.toast.copied', { label }))
     } catch {
-      toast.error('تعذّر النسخ إلى الحافظة.')
+      toast.error(t('audit.toast.copy-failed'))
     }
   }
 
@@ -112,7 +114,7 @@ export function AuditLogTable() {
     () => [
       {
         id: 'auditLogId',
-        header: 'المعرّف',
+        headerKey: 'audit.column.id',
         hideable: false,
         width: '5.5rem',
         cell: (log) => (
@@ -123,7 +125,7 @@ export function AuditLogTable() {
       },
       {
         id: 'occurredAtUtc',
-        header: 'وقت الحدوث',
+        headerKey: 'audit.column.occurred-at',
         sortable: true,
         sortKey: 'occurredAt',
         hideable: false,
@@ -135,21 +137,21 @@ export function AuditLogTable() {
       },
       {
         id: 'moduleName',
-        header: 'الوحدة',
+        headerKey: 'audit.column.module',
         sortable: true,
         sortKey: 'module',
         cell: (log) => <Badge variant="outline">{auditModuleLabel(log.moduleName)}</Badge>,
       },
       {
         id: 'actionTypeId',
-        header: 'الإجراء',
+        headerKey: 'audit.column.action',
         sortable: true,
         sortKey: 'action',
         cell: (log) => <LookupLabel lookup={LOOKUP_SLUGS.AuditActionTypes} id={log.actionTypeId} />,
       },
       {
         id: 'entityTypeId',
-        header: 'نوع الكيان',
+        headerKey: 'audit.column.entity-type',
         sortable: true,
         sortKey: 'entity',
         cell: (log) => (
@@ -158,7 +160,7 @@ export function AuditLogTable() {
       },
       {
         id: 'entityId',
-        header: 'معرّف الكيان',
+        headerKey: 'audit.column.entity-id',
         cell: (log) => (
           <span dir="ltr" title={log.entityId} className="font-mono text-xs text-muted">
             {compactId(log.entityId)}
@@ -167,30 +169,30 @@ export function AuditLogTable() {
       },
       {
         id: 'eventHash',
-        header: 'تجزئة الحدث',
-        cell: (log) => <HashChainPill hash={log.eventHash} label="تجزئة الحدث" />,
+        headerKey: 'audit.column.event-hash',
+        cell: (log) => <HashChainPill hash={log.eventHash} label={t('audit.column.event-hash')} />,
       },
       {
         id: 'previousHash',
-        header: 'تجزئة السجل السابق',
+        headerKey: 'audit.column.previous-hash',
         defaultHidden: true,
-        cell: (log) => <HashChainPill hash={log.previousHash} label="تجزئة السجل السابق" />,
+        cell: (log) => <HashChainPill hash={log.previousHash} label={t('audit.column.previous-hash')} />,
       },
       {
         id: 'actorUserId',
-        header: 'المستخدم المنفّذ',
+        headerKey: 'audit.column.actor',
         defaultHidden: true,
         cell: (log) => <UserLabel userId={log.actorUserId} />,
       },
       {
         id: 'actorDepartmentId',
-        header: 'قسم المنفّذ',
+        headerKey: 'audit.column.actor-department',
         defaultHidden: true,
         cell: (log) => <DepartmentLabel departmentId={log.actorDepartmentId} />,
       },
       {
         id: 'relatedDocumentId',
-        header: 'الوثيقة المرتبطة',
+        headerKey: 'audit.column.related-document',
         defaultHidden: true,
         cell: (log) => (
           <span
@@ -204,7 +206,7 @@ export function AuditLogTable() {
       },
       {
         id: 'ipAddress',
-        header: 'عنوان IP',
+        headerKey: 'audit.column.ip',
         defaultHidden: true,
         cell: (log) => (
           <span dir="ltr" className="font-mono text-xs text-muted">
@@ -214,7 +216,7 @@ export function AuditLogTable() {
       },
       {
         id: 'correlationId',
-        header: 'معرّف الارتباط',
+        headerKey: 'audit.column.correlation-id',
         defaultHidden: true,
         cell: (log) => (
           <span dir="ltr" className="font-mono text-xs text-muted">
@@ -230,22 +232,22 @@ export function AuditLogTable() {
     const entries: MenuEntry[] = [
       {
         id: 'copy-event-hash',
-        label: 'نسخ تجزئة الحدث',
+        label: t('audit.menu.copy-event-hash'),
         icon: <Hash className="size-4" aria-hidden />,
-        onSelect: () => void copyValue(log.eventHash, 'تجزئة الحدث'),
+        onSelect: () => void copyValue(log.eventHash, t('audit.column.event-hash')),
       },
       {
         id: 'copy-audit-id',
-        label: 'نسخ معرّف السجل',
+        label: t('audit.menu.copy-audit-id'),
         icon: <Copy className="size-4" aria-hidden />,
-        onSelect: () => void copyValue(String(log.auditLogId), 'معرّف السجل'),
+        onSelect: () => void copyValue(String(log.auditLogId), t('audit.copy.audit-id')),
       },
       {
         id: 'copy-entity-id',
-        label: 'نسخ معرّف الكيان',
+        label: t('audit.menu.copy-entity-id'),
         icon: <Copy className="size-4" aria-hidden />,
         disabled: !log.entityId,
-        onSelect: () => void copyValue(log.entityId, 'معرّف الكيان'),
+        onSelect: () => void copyValue(log.entityId, t('audit.column.entity-id')),
       },
     ]
 
@@ -256,13 +258,13 @@ export function AuditLogTable() {
       { type: 'separator' },
       {
         id: 'checkpoint-to-row',
-        label: 'نقطة تحقق حتى هذا السجل',
+        label: t('audit.menu.checkpoint-to-row'),
         icon: <Stamp className="size-4" aria-hidden />,
         onSelect: () => setCheckpointTarget(log.auditLogId),
       },
       {
         id: 'verify-from-row',
-        label: 'فحص السلامة من هذا السجل',
+        label: t('audit.menu.verify-from-row'),
         icon: <ShieldCheck className="size-4" aria-hidden />,
         onSelect: () => setIntegrityStart(log.auditLogId),
       },
@@ -271,7 +273,7 @@ export function AuditLogTable() {
 
   const refreshEntry: MenuEntry = {
     id: 'refresh',
-    label: 'تحديث البيانات',
+    label: t('table.refresh'),
     icon: <RefreshCw className="size-4" aria-hidden />,
     onSelect: () => void auditQuery.refetch(),
   }
@@ -280,7 +282,7 @@ export function AuditLogTable() {
     ? [
         {
           id: 'run-integrity',
-          label: 'فحص سلامة السلسلة',
+          label: t('audit.menu.run-integrity'),
           icon: <ShieldCheck className="size-4" aria-hidden />,
           onSelect: () => setIntegrityOpen(true),
         },
@@ -297,7 +299,7 @@ export function AuditLogTable() {
     <>
       <DataTable
         tableId="audit-logs"
-        caption="سجل التدقيق"
+        caption={t('audit.caption')}
         columns={columns}
         rows={auditQuery.data?.items}
         rowKey={(log) => String(log.auditLogId)}
@@ -316,21 +318,21 @@ export function AuditLogTable() {
         sortKey={table.sortKey}
         sortDirection={table.sortDirection}
         onSortChange={table.setSort}
-        searchPlaceholder="ابحث بالوحدة أو معرّف الكيان أو الارتباط أو IP…"
+        searchPlaceholder={t('audit.search-placeholder')}
         filters={
           <div className="flex flex-wrap items-center gap-2">
             <GuideChip id="audit.filters" />
             <Select
-              aria-label="تصفية حسب الوحدة"
+              aria-label={t('audit.filter.module-aria')}
               value={table.filters.moduleName || 'all'}
               onValueChange={(value) =>
                 table.setFilter('moduleName', value === 'all' ? null : value)
               }
-              options={MODULE_OPTIONS}
+              options={moduleOptions}
               className="w-44"
             />
             <Select
-              aria-label="تصفية حسب الإجراء"
+              aria-label={t('audit.filter.action-aria')}
               value={actionTypeId ? String(actionTypeId) : 'all'}
               onValueChange={(value) =>
                 table.setFilter('actionTypeId', value === 'all' ? null : value)
@@ -340,10 +342,10 @@ export function AuditLogTable() {
               className="w-40"
             />
             <label className="flex items-center gap-1.5 text-xs text-muted">
-              من تاريخ
+              <Label k="audit.filter.from" />
               <Input
                 type="date"
-                aria-label="من تاريخ"
+                aria-label={t('audit.filter.from')}
                 dir="ltr"
                 value={table.filters.fromUtc ?? ''}
                 onChange={(event) => table.setFilter('fromUtc', event.target.value || null)}
@@ -351,10 +353,10 @@ export function AuditLogTable() {
               />
             </label>
             <label className="flex items-center gap-1.5 text-xs text-muted">
-              إلى تاريخ
+              <Label k="audit.filter.to" />
               <Input
                 type="date"
-                aria-label="إلى تاريخ"
+                aria-label={t('audit.filter.to')}
                 dir="ltr"
                 value={table.filters.toUtc ?? ''}
                 onChange={(event) => table.setFilter('toUtc', event.target.value || null)}
@@ -363,7 +365,7 @@ export function AuditLogTable() {
             </label>
             {table.hasActiveFilters && (
               <Button type="button" variant="ghost" size="sm" onClick={table.clearFilters}>
-                مسح المرشحات
+                <Label k="audit.filter.clear" />
               </Button>
             )}
           </div>
@@ -371,7 +373,7 @@ export function AuditLogTable() {
         rowMenu={buildRowMenu}
         headerMenu={headerMenu}
         emptyMenu={headerMenu}
-        rowLabel={(log) => `السجل #${log.auditLogId}`}
+        rowLabel={(log) => t('audit.row-label', { id: log.auditLogId })}
         toolbar={
           canManage ? (
             <div className="flex flex-wrap items-center gap-2">
@@ -379,22 +381,22 @@ export function AuditLogTable() {
               <GuideChip id="audit.checkpoint" />
               <Button type="button" variant="outline" onClick={() => setIntegrityOpen(true)}>
                 <ShieldCheck className="size-4" aria-hidden />
-                فحص السلامة
+                <Label k="audit.toolbar.check" />
               </Button>
               <GuideChip id="audit.check" />
             </div>
           ) : undefined
         }
-        emptyTitle={hasQuery ? 'لا توجد سجلات مطابقة.' : 'لا توجد سجلات تدقيق بعد.'}
+        emptyTitle={hasQuery ? t('audit.empty.search-title') : t('audit.empty.title')}
         emptyDescription={
           hasQuery
-            ? 'جرّب تعديل البحث أو المرشحات أو نطاق التاريخ.'
-            : 'ستظهر السجلات هنا بمجرد تنفيذ أول إجراء في النظام.'
+            ? t('audit.empty.search-description')
+            : t('audit.empty.description')
         }
         emptyAction={
           hasQuery ? (
             <Button type="button" variant="outline" onClick={table.clearQuery}>
-              مسح البحث والمرشحات
+              <Label k="audit.empty.clear" />
             </Button>
           ) : undefined
         }

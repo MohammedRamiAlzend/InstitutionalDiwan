@@ -31,4 +31,5 @@ the live connection is up. Mounted through `AppShell`'s `headerSlot` by `app/rou
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-18 | Qoder | UI labels Phase 4 (ب5): the badge aria, connection status, panel heading, read-all/retry/empty/view-all and row-action arias render from `notification.*` via `<Label>`/`t()`. |
 | 2026-11-04 | Claude | Added the Module 10 notification bell. |

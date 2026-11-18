@@ -1,10 +1,10 @@
 import { Controller } from 'react-hook-form'
-import { useDraftForm } from '@/shared/lib'
+import { t, useDraftForm } from '@/shared/lib'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
 import type { SavedSearchResponse } from '@/entities/archive'
 import { toArabicErrorMessage } from '@/shared/api'
-import { Button, Checkbox, Dialog, FormField, Input } from '@/shared/ui'
+import { Button, Checkbox, Dialog, FormField, Input, Label } from '@/shared/ui'
 import {
   useCreateSavedSearchMutation,
   useUpdateSavedSearchMutation,
@@ -49,7 +49,7 @@ export function SaveSearchDialog({
         criteriaJson,
         isDefault: values.isDefault,
       })
-      toast.success(existing ? 'حُدّث البحث المحفوظ.' : 'حُفظ البحث.')
+      toast.success(existing ? t('archive.save.toast-updated') : t('archive.save.toast-created'))
       draft.discard()
       onOpenChange(false)
     } catch {
@@ -64,8 +64,8 @@ export function SaveSearchDialog({
         if (!nextOpen && mutation.isPending) return
         onOpenChange(nextOpen)
       }}
-      title={existing ? 'تعديل البحث المحفوظ' : 'حفظ البحث الحالي'}
-      description="يُحفظ البحث والمرشحات الحالية باسم تختاره، ولا يراه غيرك."
+      title={existing ? t('archive.save.title-edit') : t('archive.save.title-new')}
+      description={t('archive.save.description')}
       size="sm"
       footer={
         <>
@@ -75,19 +75,19 @@ export function SaveSearchDialog({
             onClick={() => onOpenChange(false)}
             disabled={mutation.isPending}
           >
-            تراجع
+            <Label k="archive.dismiss" />
           </Button>
           <Button type="submit" form="save-search-form" loading={mutation.isPending}>
-            حفظ
+            <Label k="common.action.save" />
           </Button>
         </>
       }
     >
       <form id="save-search-form" onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
-        <FormField label="اسم البحث" required error={errors.name?.message}>
+        <FormField labelKey="archive.save.field-name" required error={errors.name?.message}>
           <Input
             autoFocus
-            placeholder="مثال: كتب الشؤون المالية 2026"
+            placeholder={t('archive.save.name-placeholder')}
             invalid={Boolean(errors.name)}
             {...register('name')}
           />
@@ -100,8 +100,8 @@ export function SaveSearchDialog({
             <Checkbox
               checked={field.value}
               onCheckedChange={field.onChange}
-              label="اجعله البحث الافتراضي"
-              description="يُطبَّق تلقائيًا عند فتح صفحة الأرشيف دون مرشحات."
+              label={t('archive.save.default-checkbox')}
+              description={t('archive.save.default-description')}
             />
           )}
         />

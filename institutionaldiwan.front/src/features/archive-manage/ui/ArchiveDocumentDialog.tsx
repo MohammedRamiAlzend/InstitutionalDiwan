@@ -1,11 +1,11 @@
 import { useMemo } from 'react'
 import { Controller } from 'react-hook-form'
-import { useDraftForm } from '@/shared/lib'
+import { t, useDraftForm } from '@/shared/lib'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
 import { LOOKUP_SLUGS, useLookupEntries, usePreselectLookupDefault } from '@/entities/lookup'
 import { toArabicErrorMessage } from '@/shared/api'
-import { Button, Dialog, FormField, Select, Textarea } from '@/shared/ui'
+import { Button, Dialog, FormField, Label, Select, Textarea } from '@/shared/ui'
 import { useArchiveDocumentMutation } from '../api/archiveMutations'
 import { archiveDocumentSchema, type ArchiveDocumentFormValues } from '../model/schemas'
 
@@ -52,7 +52,7 @@ export function ArchiveDocumentDialog({
         archiveLocationId: Number(values.archiveLocationId),
         reason: values.reason.trim() || undefined,
       })
-      toast.success('تمت أرشفة الوثيقة.')
+      toast.success(t('archive.archive.toast'))
       draft.discard()
       onOpenChange(false)
     } catch {
@@ -67,8 +67,8 @@ export function ArchiveDocumentDialog({
         if (!nextOpen && mutation.isPending) return
         onOpenChange(nextOpen)
       }}
-      title="أرشفة الوثيقة"
-      description={`ستُؤرشف «${documentTitle}» ولن تقبل إضافة أشخاص أو مرفقات أو أرقام حتى تُلغى أرشفتها. القراءة والتنزيل يبقيان متاحين.`}
+      title={t('archive.archive.title')}
+      description={t('archive.archive.description', { title: documentTitle })}
       size="sm"
       footer={
         <>
@@ -78,17 +78,17 @@ export function ArchiveDocumentDialog({
             onClick={() => onOpenChange(false)}
             disabled={mutation.isPending}
           >
-            تراجع
+            <Label k="archive.dismiss" />
           </Button>
           <Button type="submit" form="archive-document-form" loading={mutation.isPending}>
-            أرشفة
+            <Label k="archive.archive.submit" />
           </Button>
         </>
       }
     >
       <form id="archive-document-form" onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
         <FormField
-          label="موقع الأرشفة"
+          labelKey="archive.archive.field-location"
           required
           error={errors.archiveLocationId?.message}
           guideId="archive.location"
@@ -98,21 +98,21 @@ export function ArchiveDocumentDialog({
             name="archiveLocationId"
             render={({ field }) => (
               <Select
-                aria-label="موقع الأرشفة"
+                aria-label={t('archive.archive.location-aria')}
                 value={field.value}
                 onValueChange={field.onChange}
                 options={locationOptions}
-                placeholder="اختر موقع الأرشفة"
+                placeholder={t('archive.archive.location-placeholder')}
                 invalid={Boolean(errors.archiveLocationId)}
               />
             )}
           />
         </FormField>
 
-        <FormField label="السبب" error={errors.reason?.message}>
+        <FormField labelKey="archive.archive.field-reason" error={errors.reason?.message}>
           <Textarea
             rows={3}
-            placeholder="اختياري، مثال: انتهت معالجة المعاملة."
+            placeholder={t('archive.archive.reason-placeholder')}
             invalid={Boolean(errors.reason)}
             {...register('reason')}
           />

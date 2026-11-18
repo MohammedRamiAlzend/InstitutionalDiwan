@@ -218,6 +218,7 @@ Full endpoint tables: [`knowledge.md`](knowledge.md).
 | `package.json` | Scripts + installed Module 01 dependency stack. |
 | `package-lock.json` | Locked dependency tree. |
 | `eslint.config.js` | Flat ESLint config. |
+| `scripts/` | Node consistency gates run by `npm run lint`: `check-guide-ids.mjs` (tutorial catalog ↔ JSX) and `check-label-keys.mjs` (editable-labels catalog — duplicate keys, unknown keys in label calls, malformed `{token}` placeholders, orphan warnings). |
 | `index.html` | Arabic RTL document root (`lang="ar" dir="rtl"`), Arabic fonts, and the pre-paint theme boot script. |
 | `tsconfig.json` / `tsconfig.app.json` / `tsconfig.node.json` | TypeScript project references (`@/*` → `./src/*`). |
 | `.gitignore` | Node/Vite ignores plus `.env` / `.env.*` (keeping `.env.example` tracked). |
@@ -248,6 +249,7 @@ Full endpoint tables: [`knowledge.md`](knowledge.md).
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-18 | Qoder | UI labels edit mode (plan `plans/ui-labels-edit-mode.md`, Phases 1–5): the whole SPA renders its static text from the frozen `shared/config/labels` catalog (~3006 keys) resolved via `t`/`useLabel`/`<Label>`, with superadmin-only inline renaming (`features/ui-label-manage`) persisted through `/api/ui-labels` (the server stores overrides only). Phase 5 added `scripts/check-label-keys.mjs` to `npm run lint` (duplicates / unknown keys / placeholder tokens / orphan warnings) and removed the unused `common.action.delete` default. `npm run lint` + `npm run build` pass; the browser round needs a manual login. |
 | 2026-11-11 | Claude | Appeals (plan `plans/case-decisions.md`, slice C): «تسجيل اعتراض» and «تسجيل النتيجة» on the document «القرار» tab, Arabic messages for the new appeal errors, and guide entries for the dialogs. Build and lint pass. In the browser, an appeal on «الظن» was recorded and accepted. |
 | 2026-11-11 | Claude | Archive diwan (plan `plans/case-decisions.md`, slice A): the «ديوان الحفظ» section in `/institution-settings`, a movement type select with the «للحفظ» hint in the redirect and open-movement dialogs, archive and unarchive offered to the archive diwan on `/documents/:id`, and the Arabic messages for the new errors. Build and lint pass; the settings field was saved and cleared against the live API, the rest was not exercised in the browser. |
 | 2026-11-04 | Claude | Module 10 notifications front end (plan `plans/module-10-notifications-frontend.md`): `/notifications`, the header bell and a SignalR connection (lazy-loaded), backed by two additive backend changes (`search`/`sortBy` on the inbox, `byType` on the unread count). `npm run build` and `npm run lint` pass; exercised against the live API (push, reconnect, read/dismiss). |

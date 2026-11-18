@@ -2,9 +2,9 @@ import { useMemo, useState } from 'react'
 import { Copy, Eye, FileSpreadsheet, RefreshCw, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import {
-  SYSTEM_ERROR_KIND_LABELS,
-  SYSTEM_ERROR_SOURCE_LABELS,
-  SYSTEM_ERROR_STATUS_LABELS,
+  SYSTEM_ERROR_KIND_LABEL_KEYS,
+  SYSTEM_ERROR_SOURCE_LABEL_KEYS,
+  SYSTEM_ERROR_STATUS_LABEL_KEYS,
   SystemErrorStatusBadge,
   systemErrorApi,
   useSystemErrors,
@@ -14,12 +14,14 @@ import {
 } from '@/entities/system-error'
 import { PurgeSystemErrorsDialog } from '@/features/system-error-manage'
 import { toArabicErrorMessage } from '@/shared/api'
-import { formatDateTime, formatNumber, parseContentDisposition, saveBlobAsFile, useTableState } from '@/shared/lib'
+import type { LabelKey } from '@/shared/config'
+import { formatDateTime, formatNumber, parseContentDisposition, resolveLabel, saveBlobAsFile, t, useLabelsStore, useTableState } from '@/shared/lib'
 import {
   Button,
   DataTable,
   GuideChip,
   Input,
+  Label,
   Select,
   type DataTableColumn,
   type MenuEntry,
@@ -33,13 +35,9 @@ function resolveSortKey(raw: string | null): SystemErrorSortKey {
   return SORT_KEYS.find((key) => key === raw) ?? 'lastSeenAt'
 }
 
-function optionsOf(labels: Record<number, string>, allLabel: string) {
+function optionsOf(labels: Record<string, string>, allLabel: string) {
   return [{ value: ALL, label: allLabel }, ...Object.entries(labels).map(([value, label]) => ({ value, label }))]
 }
-
-const STATUS_OPTIONS = optionsOf(SYSTEM_ERROR_STATUS_LABELS, 'كل الحالات')
-const SOURCE_OPTIONS = optionsOf(SYSTEM_ERROR_SOURCE_LABELS, 'كل المصادر')
-const KIND_OPTIONS = optionsOf(SYSTEM_ERROR_KIND_LABELS, 'كل الأنواع')
 
 function optionalNumber(value: string | undefined): number | undefined {
   return value ? Number(value) : undefined
@@ -59,6 +57,17 @@ export function SystemErrorsTable() {
     defaultSortDirection: 'desc',
     filterKeys: ['status', 'source', 'kind', 'from', 'to'],
   })
+  const overrides = useLabelsStore((state) => state.overrides)
+  const resolveKeys = <T extends string>(keys: Record<T, LabelKey>) =>
+    Object.fromEntries(
+      (Object.entries(keys) as [string, LabelKey][]).map(([value, key]) => [
+        value,
+        resolveLabel(key, overrides),
+      ]),
+    )
+  const statusOptions = optionsOf(resolveKeys(SYSTEM_ERROR_STATUS_LABEL_KEYS), resolveLabel('system-error.filter.status-all', overrides))
+  const sourceOptions = optionsOf(resolveKeys(SYSTEM_ERROR_SOURCE_LABEL_KEYS), resolveLabel('system-error.filter.source-all', overrides))
+  const kindOptions = optionsOf(resolveKeys(SYSTEM_ERROR_KIND_LABEL_KEYS), resolveLabel('system-error.filter.kind-all', overrides))
 
   const filters: SystemErrorFilters = {
     search: table.search || undefined,
@@ -91,9 +100,9 @@ export function SystemErrorsTable() {
   const copyDetails = async (error: SystemErrorSummaryResponse) => {
     try {
       await navigator.clipboard.writeText(`${error.title}\n${error.message}`)
-      toast.success('نُسخ الخطأ.')
+      toast.success(t('system-error.toast.copied'))
     } catch {
-      toast.error('تعذّر النسخ إلى الحافظة.')
+      toast.error(t('system-error.toast.copy-failed'))
     }
   }
 
@@ -101,7 +110,7 @@ export function SystemErrorsTable() {
     () => [
       {
         id: 'title',
-        header: 'الخطأ',
+        headerKey: 'system-error.column.title',
         sortable: true,
         sortKey: 'title',
         hideable: false,
@@ -122,16 +131,16 @@ export function SystemErrorsTable() {
       },
       {
         id: 'status',
-        header: 'الحالة',
+        headerKey: 'system-error.column.status',
         sortable: true,
         sortKey: 'status',
         cell: (error) => <SystemErrorStatusBadge status={error.status} />,
       },
-      { id: 'source', header: 'المصدر', cell: (error) => SYSTEM_ERROR_SOURCE_LABELS[error.source] },
-      { id: 'kind', header: 'النوع', cell: (error) => SYSTEM_ERROR_KIND_LABELS[error.kind] },
+      { id: 'source', headerKey: 'system-error.column.source', cell: (error) => t(SYSTEM_ERROR_SOURCE_LABEL_KEYS[error.source]) },
+      { id: 'kind', headerKey: 'system-error.column.kind', cell: (error) => t(SYSTEM_ERROR_KIND_LABEL_KEYS[error.kind]) },
       {
         id: 'path',
-        header: 'المسار',
+        headerKey: 'system-error.column.path',
         cell: (error) => (
           <span dir="ltr" className="whitespace-nowrap text-xs text-muted">
             {error.httpMethod} {error.path ?? '—'}
@@ -140,7 +149,7 @@ export function SystemErrorsTable() {
       },
       {
         id: 'occurrenceCount',
-        header: 'المرات',
+        headerKey: 'system-error.column.occurrence-count',
         sortable: true,
         sortKey: 'occurrenceCount',
         cell: (error) => (
@@ -151,7 +160,7 @@ export function SystemErrorsTable() {
       },
       {
         id: 'lastSeenAt',
-        header: 'آخر ظهور',
+        headerKey: 'system-error.column.last-seen',
         sortable: true,
         sortKey: 'lastSeenAt',
         cell: (error) => (
@@ -162,7 +171,7 @@ export function SystemErrorsTable() {
       },
       {
         id: 'firstSeenAt',
-        header: 'أول ظهور',
+        headerKey: 'system-error.column.first-seen',
         sortable: true,
         sortKey: 'firstSeenAt',
         defaultHidden: true,
@@ -174,7 +183,7 @@ export function SystemErrorsTable() {
       },
       {
         id: 'lastUsername',
-        header: 'آخر مستخدم',
+        headerKey: 'system-error.column.last-username',
         defaultHidden: true,
         cell: (error) => (
           <span dir="ltr" className="text-xs text-muted">
@@ -183,19 +192,19 @@ export function SystemErrorsTable() {
         ),
       },
     ],
-    [],
+    [setSelectedId],
   )
 
   const buildRowMenu = (error: SystemErrorSummaryResponse): MenuEntry[] => [
     {
       id: 'open',
-      label: 'فتح التفاصيل',
+      label: t('system-error.menu.open'),
       icon: <Eye className="size-4" aria-hidden />,
       onSelect: () => setSelectedId(error.systemErrorId),
     },
     {
       id: 'copy',
-      label: 'نسخ الخطأ',
+      label: t('system-error.menu.copy'),
       icon: <Copy className="size-4" aria-hidden />,
       onSelect: () => void copyDetails(error),
     },
@@ -204,20 +213,20 @@ export function SystemErrorsTable() {
   const headerMenu: MenuEntry[] = [
     {
       id: 'export',
-      label: 'تصدير إلى Excel',
+      label: t('system-error.menu.export'),
       icon: <FileSpreadsheet className="size-4" aria-hidden />,
       disabled: exporting,
       onSelect: () => void exportToExcel(),
     },
     {
       id: 'purge',
-      label: 'حذف الأخطاء القديمة',
+      label: t('system-error.menu.purge'),
       icon: <Trash2 className="size-4" aria-hidden />,
       onSelect: () => setPurgeOpen(true),
     },
     {
       id: 'refresh',
-      label: 'تحديث البيانات',
+      label: t('table.refresh'),
       icon: <RefreshCw className="size-4" aria-hidden />,
       onSelect: () => void errorsQuery.refetch(),
     },
@@ -239,7 +248,7 @@ export function SystemErrorsTable() {
     <>
       <DataTable
         tableId="system-errors"
-        caption="الأخطاء البرمجية"
+        caption={t('system-error.caption')}
         columns={columns}
         rows={errorsQuery.data?.items}
         rowKey={(error) => error.systemErrorId}
@@ -258,19 +267,19 @@ export function SystemErrorsTable() {
         sortKey={table.sortKey}
         sortDirection={table.sortDirection}
         onSortChange={table.setSort}
-        searchPlaceholder="ابحث بالعنوان أو الرسالة أو المسار…"
+        searchPlaceholder={t('system-error.search-placeholder')}
         filters={
           <div className="flex flex-wrap items-center gap-2">
             <GuideChip id="system-errors.filters" />
-            {selectFilter('status', 'تصفية حسب الحالة', STATUS_OPTIONS)}
-            {selectFilter('source', 'تصفية حسب المصدر', SOURCE_OPTIONS)}
-            {selectFilter('kind', 'تصفية حسب النوع', KIND_OPTIONS)}
+            {selectFilter('status', t('system-error.filter.status-aria'), statusOptions)}
+            {selectFilter('source', t('system-error.filter.source-aria'), sourceOptions)}
+            {selectFilter('kind', t('system-error.filter.kind-aria'), kindOptions)}
             <label className="flex items-center gap-1.5 text-xs text-muted">
-              ظهر من
+              <Label k="system-error.filter.from" />
               <Input
                 type="date"
                 dir="ltr"
-                aria-label="آخر ظهور من"
+                aria-label={t('system-error.filter.from-aria')}
                 value={table.filters.from ?? ''}
                 max={table.filters.to || undefined}
                 onChange={(event) => table.setFilter('from', event.target.value || null)}
@@ -278,11 +287,11 @@ export function SystemErrorsTable() {
               />
             </label>
             <label className="flex items-center gap-1.5 text-xs text-muted">
-              إلى
+              <Label k="system-error.filter.to" />
               <Input
                 type="date"
                 dir="ltr"
-                aria-label="آخر ظهور إلى"
+                aria-label={t('system-error.filter.to-aria')}
                 value={table.filters.to ?? ''}
                 min={table.filters.from || undefined}
                 onChange={(event) => table.setFilter('to', event.target.value || null)}
@@ -291,7 +300,7 @@ export function SystemErrorsTable() {
             </label>
             {table.hasActiveFilters && (
               <Button type="button" variant="ghost" size="sm" onClick={table.clearFilters}>
-                مسح المرشحات
+                <Label k="system-error.filter.clear" />
               </Button>
             )}
           </div>
@@ -304,24 +313,24 @@ export function SystemErrorsTable() {
           <>
             <Button type="button" variant="outline" loading={exporting} onClick={() => void exportToExcel()}>
               <FileSpreadsheet className="size-4" aria-hidden />
-              تصدير إلى Excel
+              <Label k="system-error.menu.export" />
             </Button>
             <GuideChip id="system-errors.export" />
             <Button type="button" variant="outline" onClick={() => setPurgeOpen(true)}>
               <Trash2 className="size-4" aria-hidden />
-              حذف الأخطاء القديمة
+              <Label k="system-error.menu.purge" />
             </Button>
             <GuideChip id="system-errors.purge" />
           </>
         }
-        emptyTitle={hasQuery ? 'لا توجد أخطاء مطابقة.' : 'لا توجد أخطاء مسجلة.'}
+        emptyTitle={hasQuery ? t('system-error.empty.search-title') : t('system-error.empty.title')}
         emptyDescription={
-          hasQuery ? 'جرّب تعديل البحث أو المرشحات.' : 'ستظهر هنا الأخطاء التي تقع في الخادم أو في المتصفح.'
+          hasQuery ? t('system-error.empty.search-description') : t('system-error.empty.description')
         }
         emptyAction={
           hasQuery ? (
             <Button type="button" variant="outline" onClick={table.clearQuery}>
-              مسح البحث والمرشحات
+              <Label k="system-error.empty.clear" />
             </Button>
           ) : undefined
         }

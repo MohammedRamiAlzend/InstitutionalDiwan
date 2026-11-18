@@ -26,11 +26,13 @@ Issues a decision, attaches its copy, cancels a mistaken entry, records an appea
 | --- | --- |
 | Issue, attach, cancel, unification | ✅ The principal file is required only when the effect is join. |
 | Appeal and outcome dialogs | ✅ On the document decision tab. |
+| UI labels | ✅ Phase 4 (decisions ب): all six dialogs + `JoinTargetPicker` render from `decisions.issue/cancel/appeal/outcome/attach/join.*` — titles/descriptions/toasts/placeholders/aria via `t()`, fields via `FormField labelKey`, buttons via `<Label>` (cancel reuses `common.action.cancel`), Zod messages via `t()` at module load. The outcome options reuse `decisions.appeal-outcome.*` via `useLabel`. Data-driven text (document titles, department/file names) stays out. |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-18 | Qoder | UI labels Phase 4 (decisions ب): the six dialogs and `JoinTargetPicker` render from the `decisions.*` catalog (`t()` titles/descriptions/toasts/placeholders/aria/Zod, `FormField labelKey`, `<Label>` buttons); outcome options reuse `decisions.appeal-outcome.*` via `useLabel`. No Arabic literals remain. |
 | 2026-11-11 | Claude | Unification is offered. The dialog names the principal file and says the number and place do not change. Issue and cancel refresh the relation queries. |
 | 2026-11-11 | Claude | Added the appeal dialog and the outcome dialog. Both invalidate `documentDecisionKeys`. |
 | 2026-11-11 | Claude | Added issuing, attaching and canceling a decision. |

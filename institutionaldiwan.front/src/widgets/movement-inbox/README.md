@@ -47,6 +47,7 @@ overflow trigger.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-18 | Qoder | UI labels Phase 4 (movements unit): column headers use `headerKey` (`movements.column.*`), the «الكل» filter options use `useLabel`, buttons/empty actions/step/route/overdue cells use `<Label>`, and menus/toasts/aria/caption/search/empty states use `t()`; row action labels resolve `MOVEMENT_ACTION_LABEL_KEYS` through `t()`. |
 | 2026-11-04 | Claude | User, department and employee references now render as «name + short id» (`UserLabel` / `DepartmentLabel` / `EmployeeLabel`) instead of a bare id. |
 | 2026-11-03 | Claude | Filtered row actions by the caller's side of the current step and added the restricted label for rows the caller cannot view. |
 | 2026-10-29 | Cursor | Implemented the queue table; documented the primary-department only scope and the manual client-side filtering. |

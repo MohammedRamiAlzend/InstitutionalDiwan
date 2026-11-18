@@ -1,20 +1,12 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { toArabicErrorMessage } from '@/shared/api'
-import { formatNumber } from '@/shared/lib'
-import { Button, ConfirmDialog, Dialog, FormField, Input, Select } from '@/shared/ui'
+import { formatNumber, resolveLabel, t, useLabelsStore } from '@/shared/lib'
+import { Button, ConfirmDialog, Dialog, FormField, Input, Label, Select } from '@/shared/ui'
 import { usePurgeSystemErrorsMutation } from '../api/systemErrorMutations'
 import { purgeSystemErrorsSchema } from '../model/schemas'
 
 const CUSTOM = 'custom'
-
-const PERIOD_OPTIONS = [
-  { value: '30', label: 'أقدم من 30 يومًا' },
-  { value: '60', label: 'أقدم من 60 يومًا' },
-  { value: '90', label: 'أقدم من 90 يومًا' },
-  { value: '180', label: 'أقدم من 180 يومًا' },
-  { value: CUSTOM, label: 'مدة أحددها' },
-]
 
 interface PurgeSystemErrorsDialogProps {
   open: boolean
@@ -24,10 +16,19 @@ interface PurgeSystemErrorsDialogProps {
 /** Manual cleanup: the developer picks the age, then confirms a deletion that cannot be undone. */
 export function PurgeSystemErrorsDialog({ open, onOpenChange }: PurgeSystemErrorsDialogProps) {
   const mutation = usePurgeSystemErrorsMutation()
+  const overrides = useLabelsStore((state) => state.overrides)
   const [period, setPeriod] = useState('90')
   const [customDays, setCustomDays] = useState('')
   const [error, setError] = useState<string>()
   const [confirmDays, setConfirmDays] = useState<number | null>(null)
+
+  const periodOptions = [
+    { value: '30', label: resolveLabel('system-error.purge.period-30', overrides) },
+    { value: '60', label: resolveLabel('system-error.purge.period-60', overrides) },
+    { value: '90', label: resolveLabel('system-error.purge.period-90', overrides) },
+    { value: '180', label: resolveLabel('system-error.purge.period-180', overrides) },
+    { value: CUSTOM, label: resolveLabel('system-error.purge.period-custom', overrides) },
+  ]
 
   const review = () => {
     const parsed = purgeSystemErrorsSchema.safeParse({ days: period === CUSTOM ? customDays : period })
@@ -43,7 +44,7 @@ export function PurgeSystemErrorsDialog({ open, onOpenChange }: PurgeSystemError
     if (confirmDays === null) return
     mutation.mutate(confirmDays, {
       onSuccess: (deleted) => {
-        toast.success(`حُذف ${formatNumber(deleted)} خطأ.`)
+        toast.success(t('system-error.purge.toast-deleted', { count: formatNumber(deleted) }))
         setConfirmDays(null)
         onOpenChange(false)
       },
@@ -56,25 +57,25 @@ export function PurgeSystemErrorsDialog({ open, onOpenChange }: PurgeSystemError
       <Dialog
         open={open}
         onOpenChange={onOpenChange}
-        title="حذف الأخطاء القديمة"
-        description="تُحذف الأخطاء التي لم تظهر منذ المدة المختارة، مهما كانت حالتها."
+        title={t('system-error.menu.purge')}
+        description={t('system-error.purge.description')}
         footer={
           <>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              تراجع
+              <Label k="system-error.purge.back" />
             </Button>
             <Button type="button" variant="destructive" onClick={review}>
-              متابعة
+              <Label k="system-error.purge.continue" />
             </Button>
           </>
         }
       >
         <div className="flex flex-col gap-4">
-          <FormField label="المدة" required>
-            <Select aria-label="مدة الحذف" value={period} onValueChange={setPeriod} options={PERIOD_OPTIONS} />
+          <FormField labelKey="system-error.purge.period" required>
+            <Select aria-label={t('system-error.purge.period-aria')} value={period} onValueChange={setPeriod} options={periodOptions} />
           </FormField>
           {period === CUSTOM && (
-            <FormField label="عدد الأيام" required error={error}>
+            <FormField labelKey="system-error.purge.days" required error={error}>
               <Input
                 dir="ltr"
                 inputMode="numeric"
@@ -97,9 +98,9 @@ export function PurgeSystemErrorsDialog({ open, onOpenChange }: PurgeSystemError
         onOpenChange={(next) => {
           if (!next) setConfirmDays(null)
         }}
-        title="تأكيد الحذف النهائي"
-        description={`ستُحذف نهائيًا كل الأخطاء التي لم تظهر منذ ${confirmDays ?? 0} يومًا، ولا يمكن التراجع عن ذلك.`}
-        confirmLabel="حذف نهائي"
+        title={t('system-error.purge.confirm-title')}
+        description={t('system-error.purge.confirm-description', { days: confirmDays ?? 0 })}
+        confirmLabel={t('system-error.purge.confirm')}
         destructive
         loading={mutation.isPending}
         onConfirm={purge}

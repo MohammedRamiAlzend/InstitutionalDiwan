@@ -1,37 +1,38 @@
 import { z } from 'zod'
+import { t } from '@/shared/lib'
 
 /** Matches the employee EF limits and the server's FluentValidation rules. */
 export const employeeFormSchema = z.object({
   fullNameAr: z
     .string()
     .trim()
-    .min(1, 'اسم الموظف الكامل بالعربية مطلوب.')
-    .max(200, 'اسم الموظف بالعربية يتجاوز الحد الأقصى للأحرف.'),
-  departmentId: z.string().min(1, 'اختر قسم الموظف.'),
+    .min(1, t('employee.validation.name-ar-required'))
+    .max(200, t('employee.validation.name-ar-max')),
+  departmentId: z.string().min(1, t('employee.validation.department-required')),
   employeeNumber: z
     .string()
     .trim()
-    .max(50, 'الرقم الوظيفي يتجاوز الحد الأقصى للأحرف.'),
+    .max(50, t('employee.validation.number-max')),
   fullNameEn: z
     .string()
     .trim()
-    .max(200, 'اسم الموظف بالإنجليزية يتجاوز الحد الأقصى للأحرف.'),
+    .max(200, t('employee.validation.name-en-max')),
   jobTitleAr: z
     .string()
     .trim()
-    .max(150, 'المسمى الوظيفي يتجاوز الحد الأقصى للأحرف.'),
+    .max(150, t('employee.validation.job-title-max')),
   email: z
     .string()
     .trim()
-    .max(150, 'البريد الإلكتروني يتجاوز الحد الأقصى للأحرف.')
+    .max(150, t('employee.validation.email-max'))
     .refine(
       (value) => value === '' || z.email().safeParse(value).success,
-      'صيغة البريد الإلكتروني غير صحيحة.',
+      t('employee.validation.email-format'),
     ),
   phone: z
     .string()
     .trim()
-    .max(50, 'رقم الهاتف يتجاوز الحد الأقصى للأحرف.'),
+    .max(50, t('employee.validation.phone-max')),
 })
 
 export type EmployeeFormValues = z.infer<typeof employeeFormSchema>

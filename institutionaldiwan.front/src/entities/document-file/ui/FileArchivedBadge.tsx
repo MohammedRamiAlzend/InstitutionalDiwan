@@ -1,3 +1,5 @@
+import type { LabelKey } from '@/shared/config'
+import { useLabel } from '@/shared/lib'
 import { Badge, type BadgeVariant } from '@/shared/ui'
 
 interface FileArchivedBadgeProps {
@@ -5,9 +7,9 @@ interface FileArchivedBadgeProps {
   className?: string
 }
 
-const meta: Record<'active' | 'archived', { label: string; variant: BadgeVariant }> = {
-  active: { label: 'نشط', variant: 'success' },
-  archived: { label: 'مؤرشف', variant: 'neutral' },
+const meta: Record<'active' | 'archived', { key: LabelKey; variant: BadgeVariant }> = {
+  active: { key: 'attachment.state.active', variant: 'success' },
+  archived: { key: 'attachment.state.archived', variant: 'neutral' },
 }
 
 /**
@@ -15,7 +17,8 @@ const meta: Record<'active' | 'archived', { label: string; variant: BadgeVariant
  * downloads, so both states stay visible rather than filtering the row out.
  */
 export function FileArchivedBadge({ isArchived, className }: FileArchivedBadgeProps) {
-  const { label, variant } = meta[isArchived ? 'archived' : 'active']
+  const { key, variant } = meta[isArchived ? 'archived' : 'active']
+  const label = useLabel(key)
 
   return (
     <Badge variant={variant} className={className}>

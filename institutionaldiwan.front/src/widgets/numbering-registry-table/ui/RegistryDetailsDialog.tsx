@@ -1,7 +1,7 @@
 import type { NumberingRegistryResponse } from '@/entities/numbering-registry'
 import { RegistryScopeCard, renderNumberPattern } from '@/entities/numbering-registry'
-import { formatNumber } from '@/shared/lib'
-import { Badge, Button, Dialog } from '@/shared/ui'
+import { formatNumber, t } from '@/shared/lib'
+import { Badge, Button, Dialog, Label } from '@/shared/ui'
 
 interface RegistryDetailsDialogProps {
   registry: NumberingRegistryResponse
@@ -38,12 +38,12 @@ export function RegistryDetailsDialog({
     <Dialog
       open={open}
       onOpenChange={onOpenChange}
-      title={`سجل ${registry.code}`}
+      title={t('numbering.details.title', { code: registry.code })}
       description={registry.nameAr}
       size="lg"
       footer={
         <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-          إغلاق
+          <Label k="common.action.close" />
         </Button>
       }
     >
@@ -53,14 +53,14 @@ export function RegistryDetailsDialog({
             role="status"
             className="flex flex-col gap-1 rounded-lg border border-warning/40 bg-warning/10 px-3 py-2 text-xs text-warning"
           >
-            <p className="font-semibold">نطاق مزدوج مع سجلات نشطة أخرى</p>
-            <p>السجلات: {duplicateCodes.join('، ')}</p>
-            <p>قد يختار الخادم أحدها فقط عند إصدار رقم؛ خصّص نطاق أحدها أو أوقفه.</p>
+            <p className="font-semibold"><Label k="numbering.details.duplicate-title" /></p>
+            <p>{t('numbering.details.duplicate-list', { codes: duplicateCodes.join('، ') })}</p>
+            <p><Label k="numbering.details.duplicate-hint" /></p>
           </div>
         )}
 
         <section className="flex flex-col gap-2 rounded-xl border border-border bg-surface-muted/40 p-4">
-          <h3 className="text-xs font-semibold text-muted">الرقم التالي المتوقع</h3>
+          <h3 className="text-xs font-semibold text-muted"><Label k="numbering.details.next-title" /></h3>
           <div className="flex flex-wrap items-center gap-2">
             <code
               dir="ltr"
@@ -69,14 +69,14 @@ export function RegistryDetailsDialog({
               {nextNumber}
             </code>
             <Badge variant="outline">
-              السنة <span dir="ltr">{currentYear}</span>
+              <Label k="numbering.details.year" /> <span dir="ltr">{currentYear}</span>
             </Badge>
             <Badge variant="outline">
-              التسلسل <span dir="ltr">{formatNumber(nextSequence)}</span>
+              <Label k="numbering.details.sequence" /> <span dir="ltr">{formatNumber(nextSequence)}</span>
             </Badge>
           </div>
           <p className="text-xs text-muted">
-            تقدير بحسب عداد السنة الحالية؛ يتغير إذا أُصدر رقم آخر من السجل قبله.
+            <Label k="numbering.details.next-hint" />
           </p>
         </section>
 
@@ -88,9 +88,7 @@ export function RegistryDetailsDialog({
         />
 
         <p className="rounded-lg bg-surface-muted px-3 py-2 text-xs text-muted">
-          تُعامل الحقول الفارغة في النطاق كبديل عام (سجل بلا دائرة ينطبق على كل الدوائر). عند
-          تطابق أكثر من سجل نشط مع نطاق الوثيقة فقد يكون الاختيار غير متوقع، لذلك أبقِ نطاقًا نشطًا
-          واحدًا لكل توليفة.
+          <Label k="numbering.details.scope-hint" />
         </p>
       </div>
     </Dialog>

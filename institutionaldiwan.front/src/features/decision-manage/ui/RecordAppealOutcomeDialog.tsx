@@ -3,8 +3,8 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
 import { toArabicErrorMessage } from '@/shared/api'
 import { APPEAL_OUTCOME } from '@/shared/config'
-import { useDraftForm } from '@/shared/lib'
-import { Button, Dialog, FormField, Input, Select } from '@/shared/ui'
+import { useDraftForm, t, useLabel } from '@/shared/lib'
+import { Button, Dialog, FormField, Input, Label, Select } from '@/shared/ui'
 import { useRecordAppealOutcomeMutation } from '../api/decisionMutations'
 import { recordAppealOutcomeSchema, type RecordAppealOutcomeFormValues } from '../model/schemas'
 
@@ -25,9 +25,9 @@ function todayInput(): string {
 }
 
 const OUTCOME_OPTIONS = [
-  { value: String(APPEAL_OUTCOME.Accepted), label: 'مقبول' },
-  { value: String(APPEAL_OUTCOME.Rejected), label: 'مردود' },
-]
+  { value: String(APPEAL_OUTCOME.Accepted), labelKey: 'decisions.appeal-outcome.accepted' },
+  { value: String(APPEAL_OUTCOME.Rejected), labelKey: 'decisions.appeal-outcome.rejected' },
+] as const
 
 /** Records the ruling. Accepted revokes the decision; rejected makes it final. */
 export function RecordAppealOutcomeDialog({
@@ -39,6 +39,12 @@ export function RecordAppealOutcomeDialog({
   onOpenChange,
 }: RecordAppealOutcomeDialogProps) {
   const mutation = useRecordAppealOutcomeMutation(documentId)
+  const acceptedLabel = useLabel('decisions.appeal-outcome.accepted')
+  const rejectedLabel = useLabel('decisions.appeal-outcome.rejected')
+  const outcomeOptions = OUTCOME_OPTIONS.map((option) => ({
+    value: option.value,
+    label: option.labelKey === 'decisions.appeal-outcome.accepted' ? acceptedLabel : rejectedLabel,
+  }))
   const {
     register,
     control,
@@ -62,7 +68,7 @@ export function RecordAppealOutcomeDialog({
         outcomeId,
         outcomeDate: values.outcomeDate,
       })
-      toast.success(outcomeId === APPEAL_OUTCOME.Accepted ? 'قُبل الاعتراض وفُسخ القرار.' : 'رُدّ الاعتراض وصار القرار نهائيًا.')
+      toast.success(outcomeId === APPEAL_OUTCOME.Accepted ? t('decisions.outcome.toast.accepted') : t('decisions.outcome.toast.rejected'))
       draft.discard()
       onOpenChange(false)
     } catch (error) {
@@ -74,27 +80,27 @@ export function RecordAppealOutcomeDialog({
     <Dialog
       open={open}
       onOpenChange={onOpenChange}
-      title="نتيجة الاعتراض"
-      description="القبول يفسخ القرار فيصبح إصدار قرار جديد ممكنًا. الرد يجعل القرار نهائيًا."
+      title={t('decisions.outcome.title')}
+      description={t('decisions.outcome.description')}
       size="md"
       footer={
         <>
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={mutation.isPending}>
-            إلغاء
+            <Label k="common.action.cancel" />
           </Button>
           <Button type="submit" form="appeal-outcome-form" disabled={mutation.isPending}>
-            {mutation.isPending ? 'جارٍ التسجيل…' : 'تسجيل النتيجة'}
+            {mutation.isPending ? t('decisions.outcome.submitting') : <Label k="decisions.outcome.submit" />}
           </Button>
         </>
       }
     >
       <form id="appeal-outcome-form" className="flex flex-col gap-4" onSubmit={onSubmit} noValidate>
         <p className="text-sm text-muted">
-          القرار <span dir="ltr" className="font-mono">{decisionNumber}</span>
+          <Label k="decisions.decision-prefix" /> <span dir="ltr" className="font-mono">{decisionNumber}</span>
         </p>
         <FormField
           guideId="document-details.appeal-outcome"
-          label="النتيجة"
+          labelKey="decisions.outcome.field-outcome"
           required
           error={errors.outcomeId?.message}
         >
@@ -105,14 +111,14 @@ export function RecordAppealOutcomeDialog({
               <Select
                 value={field.value || undefined}
                 onValueChange={field.onChange}
-                options={OUTCOME_OPTIONS}
-                placeholder="اختر النتيجة"
+                options={outcomeOptions}
+                placeholder={t('decisions.outcome.outcome-placeholder')}
                 invalid={Boolean(errors.outcomeId)}
               />
             )}
           />
         </FormField>
-        <FormField label="تاريخ النتيجة" required error={errors.outcomeDate?.message}>
+        <FormField labelKey="decisions.outcome.field-date" required error={errors.outcomeDate?.message}>
           <Input {...register('outcomeDate')} type="date" dir="ltr" invalid={Boolean(errors.outcomeDate)} />
         </FormField>
       </form>

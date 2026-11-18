@@ -68,6 +68,7 @@ Used by documents, users, employees, external organizations, audit logs, and int
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-18 | Qoder | UI labels Phase 4 (ب5-متبقٍ): `problemDetails.ts` network/unknown fallback messages resolve through `t()` (`common.api.network` / `common.api.unknown`); safe because `shared/lib` does not import `shared/api`. |
 | 2026-11-17 | Qoder | UI labels Phase 3 (`plans/ui-labels-edit-mode.md`): `errorMessages.ts` no longer holds Arabic text — `CODE_MESSAGES` maps each backend code to a catalog key (`error.<code>`, ~358 entries in `labels/errors.ts`) and `toArabicErrorMessage` resolves it through `t()`; status/generic/network fallbacks use `common.error.*`. Error messages are now renamable like any label. |
 | 2026-11-17 | Qoder | UI labels, Phase 2 (`plans/ui-labels-edit-mode.md`): added the Arabic `UiLabel.*` catalog (`KeyInvalid`, `ValueEmpty`, `ValueTooLong`) for the inline label editor's server failures. |
 | 2026-11-11 | Claude |  |

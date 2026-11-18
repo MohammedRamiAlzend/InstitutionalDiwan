@@ -55,6 +55,7 @@ read and cache keys remain in `entities/institution-setting`.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-18 | Qoder | UI labels Phase 4 (ب2): the settings form, logo field and Zod schema resolve all static Arabic through the `institution.*` catalog — section titles/descriptions, field labels (`labelKey`), hints/placeholders/aria, checkbox text, transfer rule, toasts and buttons via `t()` / `<Label>`. The `Asia/Damascus` and English example placeholders stay literal. |
 | 2026-11-12 | Claude | The logo is uploaded as an image (`InstitutionLogoField`) instead of typed as a path; saving the settings also refreshes the branding read. |
 | 2026-11-11 | Claude |  |
 | 2026-11-11 | Claude | Added the «ديوان الحفظ» section: an optional department select (any active department except the Central Diwan) sent as `archiveDiwanDepartmentId`, `null` when cleared. |

@@ -27,4 +27,5 @@ Read side of the developer's error log.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-18 | Qoder | UI labels Phase 4 (ب4): `model/labels.ts` status/source/kind maps now hold `system-error.*` catalog keys (`*_LABEL_KEYS`) resolved via `t()`/`useLabel` instead of Arabic strings. Captured error data unchanged. |
 | 2026-11-08 | Claude | Added for the developer's error log. |

@@ -13,27 +13,32 @@ import {
 } from '@/features/external-organization-manage'
 import { toArabicErrorMessage } from '@/shared/api'
 import { Permissions } from '@/shared/config'
-import { formatDateTime, useTableState } from '@/shared/lib'
+import { formatDateTime, t, useLabel, useTableState } from '@/shared/lib'
 import {
   Badge,
   Button,
   ConfirmDialog,
   DataTable,
   GuideChip,
+  Label,
   Select,
   type DataTableColumn,
   type MenuEntry,
 } from '@/shared/ui'
 
-const INCLUDE_INACTIVE_OPTIONS = [
-  { value: 'active', label: 'الفعّالة فقط' },
-  { value: 'all', label: 'الفعّالة والموقوفة' },
-]
-
 /** External correspondents administration grid (server search + paging). */
 export function ExternalOrganizationsTable() {
   const table = useTableState({ filterKeys: ['include'] })
   const includeInactive = table.filters.include === 'all'
+  const activeLabel = useLabel('external-org.filter.active')
+  const allLabel = useLabel('external-org.filter.all')
+  const includeOptions = useMemo(
+    () => [
+      { value: 'active', label: activeLabel },
+      { value: 'all', label: allLabel },
+    ],
+    [activeLabel, allLabel],
+  )
 
   const organizationsQuery = useExternalOrganizations({
     page: table.page,
@@ -66,9 +71,9 @@ export function ExternalOrganizationsTable() {
   const copyValue = async (value: string, label: string) => {
     try {
       await navigator.clipboard.writeText(value)
-      toast.success(`تم نسخ ${label}.`)
+      toast.success(t('external-org.toast.copied', { label }))
     } catch {
-      toast.error('تعذّر النسخ إلى الحافظة.')
+      toast.error(t('external-org.toast.copy-failed'))
     }
   }
 
@@ -81,8 +86,8 @@ export function ExternalOrganizationsTable() {
       })
       toast.success(
         statusOrganization.isActive
-          ? 'تم إيقاف الجهة الخارجية.'
-          : 'تم تفعيل الجهة الخارجية.',
+          ? t('external-org.toast.suspended')
+          : t('external-org.toast.activated'),
       )
       setStatusOrganization(null)
     } catch (error) {
@@ -94,7 +99,7 @@ export function ExternalOrganizationsTable() {
     () => [
       {
         id: 'code',
-        header: 'الرمز',
+        headerKey: 'external-org.column.code',
         hideable: false,
         cell: (organization) => (
           <span dir="ltr" className="font-mono text-xs text-foreground">
@@ -104,7 +109,7 @@ export function ExternalOrganizationsTable() {
       },
       {
         id: 'organization',
-        header: 'الجهة',
+        headerKey: 'external-org.column.organization',
         hideable: false,
         cell: (organization) => (
           <div className="flex flex-col gap-0.5">
@@ -121,7 +126,7 @@ export function ExternalOrganizationsTable() {
       },
       {
         id: 'type',
-        header: 'النوع',
+        headerKey: 'external-org.column.type',
         cell: (organization) => (
           <LookupLabel
             lookup={LOOKUP_SLUGS.OrganizationTypes}
@@ -132,7 +137,7 @@ export function ExternalOrganizationsTable() {
       },
       {
         id: 'contact',
-        header: 'بيانات الاتصال',
+        headerKey: 'external-org.column.contact',
         defaultHidden: true,
         cell: (organization) =>
           organization.contactInfo ? (
@@ -149,16 +154,16 @@ export function ExternalOrganizationsTable() {
       },
       {
         id: 'status',
-        header: 'الحالة',
+        headerKey: 'external-org.column.status',
         cell: (organization) => (
           <Badge variant={organization.isActive ? 'success' : 'danger'}>
-            {organization.isActive ? 'نشط' : 'موقوف'}
+            {organization.isActive ? t('external-org.status.active') : t('external-org.status.suspended')}
           </Badge>
         ),
       },
       {
         id: 'updatedAt',
-        header: 'آخر تحديث',
+        headerKey: 'external-org.column.updated-at',
         defaultHidden: true,
         cell: (organization) => (
           <span dir="ltr" className="whitespace-nowrap text-xs text-muted">
@@ -170,7 +175,7 @@ export function ExternalOrganizationsTable() {
       },
       {
         id: 'createdAt',
-        header: 'تاريخ الإنشاء',
+        headerKey: 'external-org.column.created-at',
         defaultHidden: true,
         cell: (organization) => (
           <span dir="ltr" className="whitespace-nowrap text-xs text-muted">
@@ -189,14 +194,14 @@ export function ExternalOrganizationsTable() {
       menu.push(
         {
           id: 'edit',
-          label: 'تعديل البيانات',
+          label: t('external-org.menu.edit'),
           icon: <Pencil className="size-4" aria-hidden />,
           onSelect: () => openEdit(organization),
         },
         { type: 'separator' },
         {
           id: 'toggle-active',
-          label: organization.isActive ? 'إيقاف الجهة' : 'تفعيل الجهة',
+          label: organization.isActive ? t('external-org.menu.suspend') : t('external-org.menu.activate'),
           icon: organization.isActive ? (
             <UserX className="size-4" aria-hidden />
           ) : (
@@ -212,15 +217,15 @@ export function ExternalOrganizationsTable() {
     menu.push(
       {
         id: 'copy-code',
-        label: 'نسخ الرمز',
+        label: t('external-org.menu.copy-code'),
         icon: <Copy className="size-4" aria-hidden />,
-        onSelect: () => void copyValue(organization.code, 'الرمز'),
+        onSelect: () => void copyValue(organization.code, t('external-org.copy.code')),
       },
       {
         id: 'copy-id',
-        label: 'نسخ المعرّف',
+        label: t('external-org.menu.copy-id'),
         icon: <Hash className="size-4" aria-hidden />,
-        onSelect: () => void copyValue(organization.externalOrganizationId, 'المعرّف'),
+        onSelect: () => void copyValue(organization.externalOrganizationId, t('external-org.copy.id')),
       },
     )
 
@@ -232,7 +237,7 @@ export function ExternalOrganizationsTable() {
       ? [
           {
             id: 'create',
-            label: 'جهة خارجية جديدة',
+            label: t('external-org.create'),
             icon: <Plus className="size-4" aria-hidden />,
             onSelect: openCreate,
           } satisfies MenuEntry,
@@ -241,7 +246,7 @@ export function ExternalOrganizationsTable() {
       : []),
     {
       id: 'refresh',
-      label: 'تحديث البيانات',
+      label: t('table.refresh'),
       icon: <RefreshCw className="size-4" aria-hidden />,
       onSelect: () => void organizationsQuery.refetch(),
     },
@@ -251,7 +256,7 @@ export function ExternalOrganizationsTable() {
     <>
       <DataTable
         tableId="external-organizations-table"
-        caption="قائمة الجهات الخارجية"
+        caption={t('external-org.caption')}
         columns={columns}
         rows={organizationsQuery.data?.items}
         rowKey={(organization) => organization.externalOrganizationId}
@@ -269,15 +274,15 @@ export function ExternalOrganizationsTable() {
         onSearchChange={table.setSearch}
         filters={
           <Select
-            aria-label="تصفية حسب الحالة"
+            aria-label={t('external-org.filter.aria')}
             value={table.filters.include === 'all' ? 'all' : 'active'}
             onValueChange={(value) =>
               table.setFilter('include', value === 'all' ? 'all' : null)
             }
-            options={INCLUDE_INACTIVE_OPTIONS}
+            options={includeOptions}
           />
         }
-        searchPlaceholder="ابحث برمز الجهة أو اسمها…"
+        searchPlaceholder={t('external-org.search-placeholder')}
         rowMenu={buildRowMenu}
         headerMenu={headerMenu}
         emptyMenu={headerMenu}
@@ -287,7 +292,7 @@ export function ExternalOrganizationsTable() {
             <>
               <Button type="button" onClick={openCreate}>
                 <Plus className="size-4" aria-hidden />
-                جهة خارجية جديدة
+                <Label k="external-org.create" />
               </Button>
               <GuideChip id="documents.org-create" />
             </>
@@ -295,13 +300,13 @@ export function ExternalOrganizationsTable() {
         }
         emptyTitle={
           table.search || includeInactive
-            ? 'لا توجد نتائج مطابقة.'
-            : 'لا توجد جهات خارجية بعد.'
+            ? t('external-org.empty.search-title')
+            : t('external-org.empty.title')
         }
         emptyDescription={
           table.search || includeInactive
-            ? 'جرّب تعديل عبارة البحث أو المرشح لعرض سجلات أخرى.'
-            : 'ابدأ بإضافة أول جهة خارجية لتظهر في اختيار جهات المشاركين.'
+            ? t('external-org.empty.search-description')
+            : t('external-org.empty.description')
         }
         emptyAction={
           table.search || includeInactive ? (
@@ -310,12 +315,12 @@ export function ExternalOrganizationsTable() {
               variant="outline"
               onClick={() => table.clearQuery()}
             >
-              مسح البحث والمرشحات
+              <Label k="external-org.empty.clear" />
             </Button>
           ) : canEdit ? (
             <Button type="button" onClick={openCreate}>
               <Plus className="size-4" aria-hidden />
-              إضافة جهة
+              <Label k="external-org.empty.add" />
             </Button>
           ) : undefined
         }
@@ -335,15 +340,15 @@ export function ExternalOrganizationsTable() {
         onOpenChange={(open) => {
           if (!open) setStatusOrganization(null)
         }}
-        title={statusOrganization?.isActive ? 'إيقاف الجهة الخارجية' : 'تفعيل الجهة الخارجية'}
+        title={statusOrganization?.isActive ? t('external-org.confirm.suspend-title') : t('external-org.confirm.activate-title')}
         description={
           statusOrganization
             ? statusOrganization.isActive
-              ? `ستُعلَّم الجهة «${statusOrganization.nameAr}» كموقوفة، ولن تظهر بعدها في اختيار جهات المشاركين.`
-              : `ستعود الجهة «${statusOrganization.nameAr}» فعّالة ومتاحة للاختيار في المشاركين.`
+              ? t('external-org.confirm.suspend-description', { name: statusOrganization.nameAr })
+              : t('external-org.confirm.activate-description', { name: statusOrganization.nameAr })
             : undefined
         }
-        confirmLabel={statusOrganization?.isActive ? 'إيقاف الجهة' : 'تفعيل الجهة'}
+        confirmLabel={statusOrganization?.isActive ? t('external-org.menu.suspend') : t('external-org.menu.activate')}
         destructive={statusOrganization?.isActive}
         loading={statusMutation.isPending}
         onConfirm={() => void handleToggleStatus()}

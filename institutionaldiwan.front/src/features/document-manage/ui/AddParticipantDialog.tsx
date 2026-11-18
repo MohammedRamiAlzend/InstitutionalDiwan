@@ -7,14 +7,15 @@ import { useDepartmentOptions } from '@/entities/department'
 import { useExternalOrganizations } from '@/entities/external-organization'
 import { LOOKUP_SLUGS, useLookupEntries, usePreselectLookupDefault } from '@/entities/lookup'
 import { toArabicErrorMessage } from '@/shared/api'
-import { FEATURES } from '@/shared/config'
-import { cn, useDebouncedValue, useDraftForm } from '@/shared/lib'
+import { FEATURES, type LabelKey } from '@/shared/config'
+import { cn, t, useDebouncedValue, useDraftForm } from '@/shared/lib'
 import {
   Button,
   Checkbox,
   Dialog,
   FormField,
   Input,
+  Label,
   Select,
   Textarea,
 } from '@/shared/ui'
@@ -33,26 +34,26 @@ interface AddParticipantDialogProps {
 
 const TARGET_OPTIONS: ReadonlyArray<{
   key: ParticipantTargetKey
-  label: string
-  hint: string
+  labelKey: LabelKey
+  hintKey: LabelKey
   icon: typeof Building2
 }> = [
   {
     key: 'external',
-    label: 'جهة خارجية',
-    hint: 'وزارة أو شركة أو منظمة مسجّلة مسبقًا.',
+    labelKey: 'docdetails.target.external',
+    hintKey: 'docdetails.target.external-hint',
     icon: Building2,
   },
   {
     key: 'department',
-    label: 'قسم داخلي',
-    hint: 'دائرة أو قسم داخل المؤسسة.',
+    labelKey: 'docdetails.target.department',
+    hintKey: 'docdetails.target.department-hint',
     icon: Landmark,
   },
   {
     key: 'person',
-    label: 'شخص',
-    hint: 'اسم شخص غير مرتبط بقسم أو جهة.',
+    labelKey: 'docdetails.target.person',
+    hintKey: 'docdetails.target.person-hint',
     icon: UserRound,
   },
 ]
@@ -165,7 +166,7 @@ export function AddParticipantDialog({
         notes: values.notes.trim() || null,
         ...target,
       })
-      toast.success('تمت إضافة المشارك إلى الوثيقة.')
+      toast.success(t('docdetails.participant.toast-added'))
       draft.discard()
       onOpenChange(false)
     } catch {
@@ -185,13 +186,13 @@ export function AddParticipantDialog({
     <Dialog
       open={open}
       onOpenChange={onOpenChange}
-      title="إضافة مشارك"
+      title={t('docdetails.action.add-participant')}
       description={
         FEATURES.externalOrganizations
-          ? 'اختر دور المشارك ونوعه. تُحدَّد الجهة المشاركة بمُعرّف مسجَّل؛ تسمح الوثيقة بجهة خارجية واحدة فقط.'
+          ? t('docdetails.participant.description-full')
           : VISIBLE_TARGET_OPTIONS.length > 1
-            ? 'اختر دور المشارك ونوعه.'
-            : 'اختر القسم المشارك ودوره في الوثيقة.'
+            ? t('docdetails.participant.description-multi')
+            : t('docdetails.participant.description-dept')
       }
       size="lg"
       footer={
@@ -202,10 +203,10 @@ export function AddParticipantDialog({
             onClick={() => onOpenChange(false)}
             disabled={mutation.isPending}
           >
-            إلغاء
+            <Label k="common.action.cancel" />
           </Button>
           <Button type="submit" form="document-participant-form" loading={mutation.isPending}>
-            إضافة المشارك
+            <Label k="docdetails.participant.submit" />
           </Button>
         </>
       }
@@ -217,7 +218,7 @@ export function AddParticipantDialog({
         className="grid gap-4 sm:grid-cols-2"
       >
         <FormField
-          label="دور المشارك"
+          labelKey="docdetails.participant.field-role"
           required
           error={errors.roleId?.message}
           className="sm:col-span-2"
@@ -232,8 +233,8 @@ export function AddParticipantDialog({
                 options={roleOptions}
                 disabled={mutation.isPending || rolesQuery.isLoading}
                 invalid={Boolean(errors.roleId)}
-                placeholder="اختر الدور…"
-                aria-label="دور المشارك"
+                placeholder={t('docdetails.participant.role-placeholder')}
+                aria-label={t('docdetails.participant.field-role')}
               />
             )}
           />
@@ -242,11 +243,11 @@ export function AddParticipantDialog({
         {VISIBLE_TARGET_OPTIONS.length > 1 && (
         <div className="flex flex-col gap-1.5 sm:col-span-2">
           <span className="text-sm font-medium text-foreground">
-            نوع المشارك <span className="text-danger">*</span>
+            <Label k="docdetails.participant.field-target-type" /> <span className="text-danger">*</span>
           </span>
           <div
             role="radiogroup"
-            aria-label="نوع المشارك"
+            aria-label={t('docdetails.participant.field-target-type')}
             className={cn('grid gap-2', VISIBLE_TARGET_OPTIONS.length === 3 ? 'sm:grid-cols-3' : 'sm:grid-cols-2')}
           >
             {VISIBLE_TARGET_OPTIONS.map((option) => {
@@ -270,9 +271,9 @@ export function AddParticipantDialog({
                 >
                   <span className="flex items-center gap-1.5 text-sm font-medium text-foreground">
                     <Icon className="size-4" aria-hidden />
-                    {option.label}
+                    <Label k={option.labelKey} />
                   </span>
-                  <span className="text-xs text-muted">{option.hint}</span>
+                  <span className="text-xs text-muted"><Label k={option.hintKey} /></span>
                 </button>
               )
             })}
@@ -283,13 +284,13 @@ export function AddParticipantDialog({
         {targetType === 'external' && (
           <>
             <FormField
-              label="البحث في الجهات الخارجية"
+              labelKey="docdetails.participant.field-org-search"
               className="sm:col-span-2"
               htmlFor="participant-organization-search"
             >
               <Input
                 id="participant-organization-search"
-                placeholder="ابحث بالاسم أو الرمز…"
+                placeholder={t('docdetails.participant.org-search-placeholder')}
                 startIcon={<Search className="size-4" aria-hidden />}
                 value={organizationSearch}
                 onChange={(event) => setOrganizationSearch(event.target.value)}
@@ -298,7 +299,7 @@ export function AddParticipantDialog({
             </FormField>
 
             <FormField
-              label="الجهة الخارجية"
+              labelKey="docdetails.participant.field-org"
               required
               error={errors.externalOrganizationId?.message}
               className="sm:col-span-2"
@@ -314,9 +315,9 @@ export function AddParticipantDialog({
                     disabled={mutation.isPending || organizationsQuery.isLoading}
                     invalid={Boolean(errors.externalOrganizationId)}
                     placeholder={
-                      organizationsQuery.isLoading ? 'جارٍ التحميل…' : 'اختر الجهة…'
+                      organizationsQuery.isLoading ? t('documents.create.loading') : t('docdetails.participant.org-placeholder')
                     }
-                    aria-label="الجهة الخارجية"
+                    aria-label={t('docdetails.participant.field-org')}
                   />
                 )}
               />
@@ -324,8 +325,7 @@ export function AddParticipantDialog({
 
             {organizationsQuery.isSuccess && organizationOptions.length === 0 && (
               <p className="sm:col-span-2 text-xs text-muted">
-                لا توجد جهات خارجية مطابقة. تُدار الجهات الخارجية من شاشة مستقلة، ويمكن
-                إضافة مشاركين من الأقسام أو الأشخاص في الوقت الحالي.
+                {t('docdetails.participant.org-empty')}
               </p>
             )}
           </>
@@ -333,7 +333,7 @@ export function AddParticipantDialog({
 
         {targetType === 'department' && (
           <FormField
-            label="القسم المشارك"
+            labelKey="docdetails.participant.field-dept"
             required
             error={errors.internalDepartmentId?.message}
             className="sm:col-span-2"
@@ -349,9 +349,9 @@ export function AddParticipantDialog({
                   disabled={mutation.isPending || departmentsQuery.isLoading}
                   invalid={Boolean(errors.internalDepartmentId)}
                   placeholder={
-                    departmentsQuery.isLoading ? 'جارٍ التحميل…' : 'اختر القسم…'
+                    departmentsQuery.isLoading ? t('documents.create.loading') : t('docdetails.participant.dept-placeholder')
                   }
-                  aria-label="القسم المشارك"
+                  aria-label={t('docdetails.participant.field-dept')}
                 />
               )}
             />
@@ -360,27 +360,27 @@ export function AddParticipantDialog({
 
         {targetType === 'person' && (
           <FormField
-            label="اسم الشخص"
+            labelKey="docdetails.participant.field-person"
             required
             error={errors.personName?.message}
             className="sm:col-span-2"
           >
             <Input
               invalid={Boolean(errors.personName)}
-              placeholder="مثال: أحمد محمد علي"
+              placeholder={t('docdetails.participant.person-placeholder')}
               {...register('personName')}
             />
           </FormField>
         )}
 
         <FormField
-          label="ملاحظات"
+          labelKey="docdetails.participant.field-notes"
           error={errors.notes?.message}
           className="sm:col-span-2"
         >
           <Textarea
             rows={2}
-            placeholder="ملاحظة اختيارية عن المشارك…"
+            placeholder={t('docdetails.participant.notes-placeholder')}
             invalid={Boolean(errors.notes)}
             {...register('notes')}
           />
@@ -393,8 +393,8 @@ export function AddParticipantDialog({
             <Checkbox
               checked={field.value}
               onCheckedChange={field.onChange}
-              label="مشارك أساسي"
-              description="يُبرز هذا المشارك كطرف رئيسي في الوثيقة."
+              label={t('docdetails.participant.primary-label')}
+              description={t('docdetails.participant.primary-description')}
               disabled={mutation.isPending}
               className="sm:col-span-2"
             />

@@ -83,6 +83,7 @@ Public barrel for the request/form types, the eight mutation hooks, and the four
 - ✅ Authorization alignment: the roles/access dialogs and the users grid gate on `USER_MANAGE` (the server policy) instead of the unrelated `ROLE_MANAGE`/`DEPARTMENT_MANAGE`, and reads go through the minimal `identity-options` catalog.
 
 ## 6. Change Log
+- 2026-11-18: UI labels Phase 4 (ب3): the four dialogs (form, roles, access, reset-password) and the Zod schemas resolve all static Arabic through the `user.*` catalog — dialog titles/descriptions, field labels (`labelKey`), placeholders/aria, assignment status/type badges, toasts and buttons via `t()`/`<Label>`. The `ahmed.khalil` example placeholder stays literal; user/department/role names stay data-driven.
 - 2026-11-05: Unsent form input is now kept (per user, per form) after an accidental close or cancel and restored with a toast; it is cleared only after a successful submit (`useDraftForm`).
 - 2026-11-04: User, department and employee references now render as «name + short id» (`UserLabel` / `DepartmentLabel` / `EmployeeLabel`) instead of a bare id.
 

@@ -1,6 +1,6 @@
 import * as SelectPrimitive from '@radix-ui/react-select'
 import { Check, ChevronDown } from 'lucide-react'
-import { cn } from '@/shared/lib'
+import { cn, t } from '@/shared/lib'
 import { documentDirection } from './menu'
 
 export interface SelectOption {
@@ -26,7 +26,7 @@ export function Select({
   value,
   onValueChange,
   options,
-  placeholder = 'اختر…',
+  placeholder = t('common.select-placeholder'),
   disabled,
   invalid,
   className,

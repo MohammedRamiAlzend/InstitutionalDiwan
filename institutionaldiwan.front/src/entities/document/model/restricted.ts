@@ -1,4 +1,4 @@
-export const RESTRICTED_DOCUMENT_LABEL = 'وثيقة مقيّدة'
+import { t } from '@/shared/lib'
 
 /** Queues and registers keep rows the caller cannot view, with the document's title blanked. */
 export function isDocumentRestricted(documentTitle: string): boolean {
@@ -7,5 +7,5 @@ export function isDocumentRestricted(documentTitle: string): boolean {
 
 /** The text a row is searched and announced by: its title, or the restricted label. */
 export function documentRowLabel(documentTitle: string): string {
-  return isDocumentRestricted(documentTitle) ? RESTRICTED_DOCUMENT_LABEL : documentTitle
+  return isDocumentRestricted(documentTitle) ? t('documents.restricted.label') : documentTitle
 }

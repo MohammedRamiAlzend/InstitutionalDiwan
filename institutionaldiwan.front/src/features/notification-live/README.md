@@ -35,4 +35,5 @@ login chunk.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-18 | Qoder | UI labels Phase 4 (ب5): the hub toast «فتح» action label resolves from `notification.hub.open` via `t()`. |
 | 2026-11-04 | Claude | Added the Module 10 live connection. |

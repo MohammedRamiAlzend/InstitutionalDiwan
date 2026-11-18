@@ -19,6 +19,7 @@ Composes all application-level React context providers (`ThemeProvider`, `QueryP
 ## Change Log
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-18 | Qoder | UI labels Phase 4 (ب5-متبقٍ): `LabelsBootGate` boot-screen text and failure warning resolve through `t()` (`common.boot.loading` / `common.boot.failed`). |
 | 2026-11-17 | Qoder | UI labels, Phase 2 (`plans/ui-labels-edit-mode.md`): `AppProviders` mounts `UiLabelEditProvider` (from `features/ui-label-manage`) inside `LabelsBootGate` so every `<Label>` can open the in-place editor; `LabelsBootGate` forces `diwan.labelEdit` off for non-`superadmin` sessions so edit mode never leaks to a normal user. |
 | 2026-11-17 | Qoder | UI labels, Phase 1 (`plans/ui-labels-edit-mode.md`): added `LabelsBootGate` (cache-first reveal + branded first-load screen + background revalidation of `GET /api/ui-labels`, defaults + warning on failure) and mounted it inside `AuthSessionLoader` in `AppProviders` so the labels fetch runs in parallel with `/api/auth/me`. |
 | 2026-11-12 | Claude | `AppProviders` mounts `BrandingEffects` so the browser tab shows the institution name and logo. |

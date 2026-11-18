@@ -47,6 +47,7 @@ row/header menus for details, edit, activate/deactivate, and copy. Mounted by `p
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-18 | Qoder | UI labels Phase 4 (ب4): `NumberingRegistryTable` headers via `headerKey`, status/scope/reset-policy filter options via key maps + `resolveLabel` (overrides subscription), cells/menus/caption/search/empty/aria/toasts via `t()`/`<Label>`; `RegistryDetailsDialog` via `t()`/`<Label>`. Registry/department/type names and issued numbers stay data. |
 | 2026-11-05 | Claude | Removed the «مقيّد باتجاه» scope filter option; a legacy direction on a registry is still shown read-only in its scope text. |
 | 2026-10-29 | agent | Module 04 Phase 2: added status/reset-policy/scope filters, the scope-specificity column, the duplicate active-scope banner, the details-dialog next-number preview and duplicate warning, and a neutral scope-precedence explanation; verified in-browser. |
 | 2026-10-29 | agent | Module 03 Phase 5: implemented the registry grid and details dialog with permission-filtered create/edit/activate actions and copy entries; verified in-browser. |

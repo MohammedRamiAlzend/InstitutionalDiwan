@@ -24,6 +24,7 @@ Implements user login, signed-in password change, session bootstrapping (`/api/a
 - ❌ The register form remains out of scope for the Identity admin module.
 ## 6. Change Log
 - 2026-10-28: Login and logout now cancel in-flight queries and clear the whole query cache (instead of only user keys), so a different account never sees the previous session's cached data. Documented the server-side forced-password-change gate.
+- 2026-11-18: UI labels Phase 4 (ب5, `plans/ui-labels-edit-mode.md`): the login/change-password forms, their Zod messages, the forbidden state and the logout button render from `auth.*` via `<Label>`/`FormField labelKey`/`t()`.
 - 2026-10-28: Both password forms now use the shared `shared/ui` `PasswordField` (visibility toggle was duplicated in `LoginForm` and `ChangePasswordForm`); added the password reset flow that forces `ChangePasswordForm` on the next sign-in.
 - 2026-10-28: Implemented the signed-in password change (Zod schema, mutation, form) and made `LoginForm` hand the session payload to the page so reset logins route to `/change-password`.
 - 2026-10-27: Extracted `use-logout.ts` so the shell and `LogoutButton` share one session teardown; exported `useLogout` from the slice barrel.

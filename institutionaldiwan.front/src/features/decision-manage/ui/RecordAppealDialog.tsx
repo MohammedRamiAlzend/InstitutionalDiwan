@@ -4,8 +4,8 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
 import { useDepartmentOptions } from '@/entities/department'
 import { toArabicErrorMessage } from '@/shared/api'
-import { useDraftForm } from '@/shared/lib'
-import { Button, Dialog, FormField, Input, Select, Textarea } from '@/shared/ui'
+import { useDraftForm, t, useLabel } from '@/shared/lib'
+import { Button, Dialog, FormField, Input, Label, Select, Textarea } from '@/shared/ui'
 import { useRecordAppealMutation } from '../api/decisionMutations'
 import { recordAppealSchema, type RecordAppealFormValues } from '../model/schemas'
 
@@ -36,16 +36,17 @@ export function RecordAppealDialog({
 }: RecordAppealDialogProps) {
   const mutation = useRecordAppealMutation(documentId)
   const departmentsQuery = useDepartmentOptions({ enabled: open })
+  const owningDepartmentLabel = useLabel('decisions.appeal.owning-department')
   const departmentOptions = useMemo(() => {
     const options = (departmentsQuery.data ?? []).map((department) => ({
       value: department.departmentId,
       label: department.nameAr,
     }))
     if (owningDepartmentId && !options.some((option) => option.value === owningDepartmentId)) {
-      options.unshift({ value: owningDepartmentId, label: 'الديوان المنشئ' })
+      options.unshift({ value: owningDepartmentId, label: owningDepartmentLabel })
     }
     return options
-  }, [departmentsQuery.data, owningDepartmentId])
+  }, [departmentsQuery.data, owningDepartmentId, owningDepartmentLabel])
 
   const {
     register,
@@ -75,7 +76,7 @@ export function RecordAppealDialog({
         referenceNumber: values.referenceNumber.trim() || null,
         notes: values.notes.trim() || null,
       })
-      toast.success('سُجّل الاعتراض.')
+      toast.success(t('decisions.appeal.toast'))
       draft.discard()
       onOpenChange(false)
     } catch (error) {
@@ -87,37 +88,37 @@ export function RecordAppealDialog({
     <Dialog
       open={open}
       onOpenChange={onOpenChange}
-      title="تسجيل اعتراض"
-      description="يسجّل الاعتراض على القرار الصادر. لا مهلة، ولا يمنع نقل الوثيقة."
+      title={t('decisions.appeal.title')}
+      description={t('decisions.appeal.description')}
       size="lg"
       footer={
         <>
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={mutation.isPending}>
-            إلغاء
+            <Label k="common.action.cancel" />
           </Button>
           <Button type="submit" form="record-appeal-form" disabled={mutation.isPending}>
-            {mutation.isPending ? 'جارٍ التسجيل…' : 'تسجيل الاعتراض'}
+            {mutation.isPending ? t('decisions.appeal.submitting') : <Label k="decisions.appeal.submit" />}
           </Button>
         </>
       }
     >
       <form id="record-appeal-form" className="flex flex-col gap-4" onSubmit={onSubmit} noValidate>
         <p className="text-sm text-muted">
-          القرار <span dir="ltr" className="font-mono">{decisionNumber}</span>
+          <Label k="decisions.decision-prefix" /> <span dir="ltr" className="font-mono">{decisionNumber}</span>
         </p>
         <FormField
           guideId="document-details.record-appeal"
-          label="تاريخ الاعتراض"
+          labelKey="decisions.appeal.field-date"
           required
           error={errors.appealDate?.message}
         >
           <Input {...register('appealDate')} type="date" dir="ltr" invalid={Boolean(errors.appealDate)} />
         </FormField>
         <FormField
-          label="القسم المعترض"
+          labelKey="decisions.appeal.field-department"
           required
           error={errors.appellantDepartmentId?.message}
-          hint="الافتراضي هو الديوان الذي أنشأ الوثيقة."
+          hint={t('decisions.appeal.department-hint')}
         >
           <Controller
             control={control}
@@ -127,7 +128,7 @@ export function RecordAppealDialog({
                 value={field.value || undefined}
                 onValueChange={field.onChange}
                 options={departmentOptions}
-                placeholder="اختر القسم"
+                placeholder={t('decisions.appeal.department-placeholder')}
                 invalid={Boolean(errors.appellantDepartmentId)}
               />
             )}
@@ -135,12 +136,12 @@ export function RecordAppealDialog({
         </FormField>
         <FormField
           guideId="document-details.appeal-reference"
-          label="الرقم المرجعي"
+          labelKey="decisions.appeal.field-reference"
           error={errors.referenceNumber?.message}
         >
           <Input {...register('referenceNumber')} dir="ltr" invalid={Boolean(errors.referenceNumber)} />
         </FormField>
-        <FormField label="ملاحظات" error={errors.notes?.message}>
+        <FormField labelKey="decisions.appeal.field-notes" error={errors.notes?.message}>
           <Textarea {...register('notes')} invalid={Boolean(errors.notes)} />
         </FormField>
       </form>

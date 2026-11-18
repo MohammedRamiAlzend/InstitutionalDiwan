@@ -13,24 +13,17 @@ import {
 } from '@/entities/document-relation'
 import { LOOKUP_SLUGS, findLookupFallback, useLookupEntries } from '@/entities/lookup'
 import { ROUTES } from '@/shared/config'
-import { formatDateTime, type TableState } from '@/shared/lib'
+import { formatDateTime, resolveLabel, t, useLabelsStore, type TableState } from '@/shared/lib'
 import {
   Button,
   DataTable,
   GuideChip,
+  Label,
   Select,
   type DataTableColumn,
   type MenuEntry,
   type SelectOption,
 } from '@/shared/ui'
-
-const DIRECTION_OPTIONS: SelectOption[] = [
-  { value: 'all', label: 'كل الاتجاهات' },
-  ...(Object.keys(RELATION_DIRECTION_LABELS) as RelationDirection[]).map((direction) => ({
-    value: direction,
-    label: RELATION_DIRECTION_LABELS[direction],
-  })),
-]
 
 interface RelationsGridProps {
   relations: DocumentRelationResponse[] | undefined
@@ -59,6 +52,7 @@ export function RelationsGrid({
 }: RelationsGridProps) {
   const navigate = useNavigate()
   const typesQuery = useLookupEntries(LOOKUP_SLUGS.DocumentRelationTypes)
+  const overrides = useLabelsStore((state) => state.overrides)
 
   const typeFilter = table.filters.type
   const directionFilter = table.filters.direction
@@ -80,16 +74,27 @@ export function RelationsGrid({
 
   const typeOptions = useMemo<SelectOption[]>(
     () => [
-      { value: 'all', label: 'كل الأنواع' },
+      { value: 'all', label: resolveLabel('relation.grid.filter.type-all', overrides) },
       ...(typesQuery.data ?? []).map((entry) => ({ value: String(entry.id), label: entry.descAr })),
     ],
-    [typesQuery.data],
+    [typesQuery.data, overrides],
+  )
+
+  const directionOptions = useMemo<SelectOption[]>(
+    () => [
+      { value: 'all', label: resolveLabel('relation.grid.filter.direction-all', overrides) },
+      ...(Object.keys(RELATION_DIRECTION_LABELS) as RelationDirection[]).map((direction) => ({
+        value: direction,
+        label: resolveLabel(RELATION_DIRECTION_LABELS[direction], overrides),
+      })),
+    ],
+    [overrides],
   )
 
   const columns: DataTableColumn<DocumentRelationResponse>[] = [
     {
       id: 'relation',
-      header: 'الرابط',
+      headerKey: 'relation.grid.column.relation',
       hideable: false,
       sortable: true,
       sortValue: (relation) => relationPhrase(relation.type.relationTypeId, relation.direction),
@@ -102,14 +107,14 @@ export function RelationsGrid({
     },
     {
       id: 'type',
-      header: 'النوع',
+      headerKey: 'relation.grid.column.type',
       sortable: true,
       sortValue: (relation) => typeLabel(relation.type.relationTypeId),
       cell: (relation) => <RelationTypeBadge relationTypeId={relation.type.relationTypeId} />,
     },
     {
       id: 'document',
-      header: 'الوثيقة المقابلة',
+      headerKey: 'relation.grid.column.document',
       hideable: false,
       sortable: true,
       sortValue: (relation) => relation.relatedDocument.title,
@@ -124,14 +129,14 @@ export function RelationsGrid({
     },
     {
       id: 'status',
-      header: 'حالتها',
+      headerKey: 'relation.grid.column.status',
       sortable: true,
       sortValue: (relation) => relation.relatedDocument.statusId,
       cell: (relation) => <DocumentStatusBadge statusId={relation.relatedDocument.statusId} />,
     },
     {
       id: 'notes',
-      header: 'ملاحظات',
+      headerKey: 'relation.grid.column.notes',
       cell: (relation) =>
         relation.notes ? (
           <span className="block max-w-56 truncate text-xs text-muted" title={relation.notes}>
@@ -143,7 +148,7 @@ export function RelationsGrid({
     },
     {
       id: 'createdAt',
-      header: 'تاريخ الإضافة',
+      headerKey: 'relation.grid.column.created-at',
       sortable: true,
       sortValue: (relation) => relation.createdAt,
       cell: (relation) => (
@@ -157,9 +162,9 @@ export function RelationsGrid({
   const copyNumber = async (value: string) => {
     try {
       await navigator.clipboard.writeText(value)
-      toast.success('تم نسخ رقم النظام.')
+      toast.success(t('documents.toast.copied', { label: t('relation.grid.copy.number-label') }))
     } catch {
-      toast.error('تعذّر النسخ إلى الحافظة.')
+      toast.error(t('documents.toast.copy-failed'))
     }
   }
 
@@ -168,13 +173,13 @@ export function RelationsGrid({
     return [
       {
         id: 'open',
-        label: 'فتح الوثيقة المقابلة',
+        label: t('relation.grid.row.open'),
         icon: <ExternalLink className="size-4" aria-hidden />,
         onSelect: () => navigate(ROUTES.DOCUMENT_DETAIL(relation.relatedDocument.documentId)),
       },
       {
         id: 'copy-number',
-        label: 'نسخ رقم النظام',
+        label: t('relation.grid.row.copy-number'),
         icon: <Hash className="size-4" aria-hidden />,
         disabled: !number,
         onSelect: () => void copyNumber(number ?? ''),
@@ -184,7 +189,7 @@ export function RelationsGrid({
             { type: 'separator' },
             {
               id: 'remove',
-              label: 'إزالة الرابط',
+              label: t('relation.grid.row.remove'),
               icon: <Trash2 className="size-4" aria-hidden />,
               danger: true,
               onSelect: () => onRemove(relation),
@@ -196,7 +201,7 @@ export function RelationsGrid({
 
   const refreshEntry: MenuEntry = {
     id: 'refresh',
-    label: 'تحديث الروابط',
+    label: t('relation.grid.refresh'),
     icon: <RefreshCw className="size-4" aria-hidden />,
     onSelect: onRefresh,
   }
@@ -204,7 +209,7 @@ export function RelationsGrid({
   const addButton = canManage ? (
     <Button type="button" size="sm" onClick={onAdd}>
       <Plus className="size-4" aria-hidden />
-      إضافة رابط
+      <Label k="relation.grid.action.add" />
     </Button>
   ) : undefined
 
@@ -214,7 +219,7 @@ export function RelationsGrid({
     <DataTable
       tableId="document-relations"
       mode="client"
-      caption="روابط الوثيقة"
+      caption={t('relation.grid.caption')}
       columns={columns}
       rows={rows}
       rowKey={(relation) => relation.relationId}
@@ -241,7 +246,7 @@ export function RelationsGrid({
       onPageSizeChange={table.setPageSize}
       search={table.search}
       onSearchChange={table.setSearch}
-      searchPlaceholder="ابحث باسم الوثيقة أو رقمها…"
+      searchPlaceholder={t('relation.grid.search-placeholder')}
       sortKey={table.sortKey}
       sortDirection={table.sortDirection}
       onSortChange={table.setSort}
@@ -249,7 +254,7 @@ export function RelationsGrid({
       filters={
         <div className="flex flex-wrap items-center gap-2">
           <Select
-            aria-label="تصفية حسب نوع الرابط"
+            aria-label={t('relation.grid.filter.type-aria')}
             value={typeFilter || 'all'}
             onValueChange={(value) => table.setFilter('type', value === 'all' ? null : value)}
             options={typeOptions}
@@ -257,10 +262,10 @@ export function RelationsGrid({
           />
           <GuideChip id="document-details.relations-types" />
           <Select
-            aria-label="تصفية حسب اتجاه الرابط"
+            aria-label={t('relation.grid.filter.direction-aria')}
             value={directionFilter || 'all'}
             onValueChange={(value) => table.setFilter('direction', value === 'all' ? null : value)}
-            options={DIRECTION_OPTIONS}
+            options={directionOptions}
             className="w-44"
           />
           <GuideChip id="document-details.relations-direction" />
@@ -275,7 +280,7 @@ export function RelationsGrid({
                 table.clearQuery()
               }}
             >
-              مسح البحث والمرشحات
+              <Label k="relation.grid.clear" />
             </Button>
           )}
         </div>
@@ -284,12 +289,12 @@ export function RelationsGrid({
       headerMenu={[refreshEntry]}
       emptyMenu={[refreshEntry]}
       emptyAction={(relations?.length ?? 0) === 0 ? addButton : undefined}
-      emptyTitle={hasQuery ? 'لا توجد روابط مطابقة.' : 'لا روابط لهذه الوثيقة بعد.'}
-      emptyDescription={
+      emptyTitle={t(hasQuery ? 'relation.grid.empty.matching-title' : 'relation.grid.empty.title')}
+      emptyDescription={t(
         hasQuery
-          ? 'جرّب تعديل البحث أو المرشحات لعرض روابط أخرى.'
-          : 'اربطها بردّ أو بوثيقة مرجعية أو بوثيقة تلغيها، فتظهر الروابط هنا وفي الوثيقة المقابلة.'
-      }
+          ? 'relation.grid.empty.matching-description'
+          : 'relation.grid.empty.description',
+      )}
     />
   )
 }

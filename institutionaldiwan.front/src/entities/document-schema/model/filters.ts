@@ -1,3 +1,5 @@
+import type { LabelKey } from '@/shared/config'
+import { t } from '@/shared/lib'
 import { FIELD_DATA_TYPE, type FieldDataType } from './types'
 
 /** Operators of the registry's `fieldFilters=key:operator:value` parameter. */
@@ -39,29 +41,29 @@ export function operatorsFor(dataType: FieldDataType): readonly FieldFilterOpera
   }
 }
 
-const NUMBER_LABELS: Record<FieldFilterOperator, string> = {
-  eq: 'يساوي',
-  contains: 'يحتوي',
-  gt: 'أكبر من',
-  gte: 'أكبر من أو يساوي',
-  lt: 'أصغر من',
-  lte: 'أصغر من أو يساوي',
+const NUMBER_LABEL_KEYS: Record<FieldFilterOperator, LabelKey> = {
+  eq: 'schema.filter-op.eq',
+  contains: 'schema.filter-op.contains',
+  gt: 'schema.filter-op.gt',
+  gte: 'schema.filter-op.gte',
+  lt: 'schema.filter-op.lt',
+  lte: 'schema.filter-op.lte',
 }
 
-const DATE_LABELS: Record<FieldFilterOperator, string> = {
-  ...NUMBER_LABELS,
-  eq: 'في يوم',
-  gt: 'بعد يوم',
-  gte: 'من يوم',
-  lt: 'قبل يوم',
-  lte: 'حتى يوم',
+const DATE_LABEL_KEYS: Record<FieldFilterOperator, LabelKey> = {
+  ...NUMBER_LABEL_KEYS,
+  eq: 'schema.filter-op.date-eq',
+  gt: 'schema.filter-op.date-gt',
+  gte: 'schema.filter-op.date-gte',
+  lt: 'schema.filter-op.date-lt',
+  lte: 'schema.filter-op.date-lte',
 }
 
 export function fieldFilterOperatorLabel(
   operator: FieldFilterOperator,
   dataType: FieldDataType,
 ): string {
-  return (dataType === FIELD_DATA_TYPE.Date ? DATE_LABELS : NUMBER_LABELS)[operator]
+  return t((dataType === FIELD_DATA_TYPE.Date ? DATE_LABEL_KEYS : NUMBER_LABEL_KEYS)[operator])
 }
 
 /** The text sent as one `fieldFilters` value. */
@@ -85,11 +87,11 @@ export function decodeFieldFilter(raw: string): FieldFilterValue | null {
 /** Arabic message when `value` cannot be sent for this data type; null when it is acceptable. */
 export function validateFieldFilterValue(dataType: FieldDataType, value: string): string | null {
   const text = value.trim()
-  if (!text) return 'أدخل قيمة للمرشح.'
-  if (text.length > 500) return 'القيمة تتجاوز 500 حرف.'
+  if (!text) return t('schema.filter-validation.value-required')
+  if (text.length > 500) return t('schema.filter-validation.value-max')
   if (dataType === FIELD_DATA_TYPE.Number && !/^[-+]?\d+(\.\d+)?$/.test(text))
-    return 'أدخل رقمًا صحيحًا، مثل 1250.5.'
+    return t('schema.filter-validation.number-invalid')
   if (dataType === FIELD_DATA_TYPE.Date && Number.isNaN(Date.parse(text)))
-    return 'أدخل تاريخًا صحيحًا.'
+    return t('schema.filter-validation.date-invalid')
   return null
 }

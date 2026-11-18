@@ -4,8 +4,8 @@ import { toast } from 'sonner'
 import { useDocumentFiles } from '@/entities/document-file'
 import { toArabicErrorMessage } from '@/shared/api'
 import { DOCUMENT_FILE_TYPE } from '@/shared/config'
-import { useDraftForm } from '@/shared/lib'
-import { Button, Dialog, FormField, Select } from '@/shared/ui'
+import { useDraftForm, t } from '@/shared/lib'
+import { Button, Dialog, FormField, Label, Select } from '@/shared/ui'
 import { useAttachDecisionFileMutation } from '../api/decisionMutations'
 import { attachDecisionFileSchema, type AttachDecisionFileFormValues } from '../model/schemas'
 
@@ -42,7 +42,7 @@ export function AttachDecisionFileDialog({
   const onSubmit = handleSubmit(async (values) => {
     try {
       await mutation.mutateAsync({ decisionId, documentFileId: values.documentFileId })
-      toast.success('رُبطت نسخة القرار.')
+      toast.success(t('decisions.attach.toast'))
       draft.discard()
       onOpenChange(false)
     } catch (error) {
@@ -54,22 +54,22 @@ export function AttachDecisionFileDialog({
     <Dialog
       open={open}
       onOpenChange={onOpenChange}
-      title="ربط نسخة القرار"
-      description="يُربط ملف من نوع قرار موجود على الوثيقة نفسها وغير مؤرشف."
+      title={t('decisions.attach.title')}
+      description={t('decisions.attach.description')}
       size="md"
       footer={
         <>
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={mutation.isPending}>
-            إلغاء
+            <Label k="common.action.cancel" />
           </Button>
           <Button type="submit" form="attach-decision-form" disabled={mutation.isPending || options.length === 0}>
-            {mutation.isPending ? 'جارٍ الربط…' : 'ربط'}
+            {mutation.isPending ? t('decisions.attach.submitting') : <Label k="decisions.attach.submit" />}
           </Button>
         </>
       }
     >
       <form id="attach-decision-form" className="flex flex-col gap-4" onSubmit={onSubmit} noValidate>
-        <FormField label="الملف" required error={errors.documentFileId?.message}>
+        <FormField labelKey="decisions.attach.field-file" required error={errors.documentFileId?.message}>
           <Controller
             control={control}
             name="documentFileId"
@@ -78,7 +78,7 @@ export function AttachDecisionFileDialog({
                 value={field.value || undefined}
                 onValueChange={field.onChange}
                 options={options}
-                placeholder={options.length === 0 ? 'لا توجد نسخة قرار على الوثيقة' : 'اختر الملف'}
+                placeholder={options.length === 0 ? t('decisions.attach.empty-placeholder') : t('decisions.attach.file-placeholder')}
                 disabled={options.length === 0}
                 invalid={Boolean(errors.documentFileId)}
               />

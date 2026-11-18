@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
-import { Select } from '@/shared/ui'
+import { t } from '@/shared/lib'
+import { Label, Select } from '@/shared/ui'
 import type { DepartmentRegistryOptions } from '../model/departmentRegistries'
 
 interface DepartmentRegistrySelectProps {
@@ -42,13 +43,17 @@ export function DepartmentRegistrySelect({
         disabled={disabled || isLoading || options.length <= 1}
         invalid={invalid}
         placeholder={
-          isLoading ? 'جارٍ التحميل…' : options.length === 0 ? 'لا يوجد سجل نشط' : 'اختر السجل…'
+          isLoading
+            ? t('numbering.loading')
+            : options.length === 0
+              ? t('numbering.select.empty')
+              : t('numbering.select.placeholder')
         }
-        aria-label="السجل"
+        aria-label={t('numbering.select.aria')}
       />
       {isEmpty && !hideEmptyHint && (
         <p className="text-xs text-danger">
-          لا يوجد لدائرتك سجل ترقيم نشط؛ يضيفه المسؤول من صفحة «الترقيم».
+          <Label k="numbering.select.empty-hint" />
         </p>
       )}
     </>

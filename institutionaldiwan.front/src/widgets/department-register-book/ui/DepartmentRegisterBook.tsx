@@ -14,12 +14,13 @@ import {
   type DepartmentRegisterLineResponse,
 } from '@/entities/numbering-registry'
 import { ROUTES } from '@/shared/config'
-import { formatDate, formatNumber, useTableState } from '@/shared/lib'
+import { formatDate, formatNumber, t, useLabel, useTableState } from '@/shared/lib'
 import {
   Badge,
   Button,
   DataTable,
   Input,
+  Label,
   Select,
   type DataTableColumn,
   type MenuEntry,
@@ -41,22 +42,23 @@ export function DepartmentRegisterBook() {
   const departmentsQuery = useDepartmentOptions()
   const registerQuery = useDepartmentRegister(departmentId || null, numberingYear)
   const lines = useMemo(() => registerQuery.data ?? [], [registerQuery.data])
+  const suspendedLabel = useLabel('department.status.suspended')
 
   const departmentOptions = useMemo(
     () =>
       (departmentsQuery.data ?? []).map((department) => ({
         value: department.departmentId,
-        label: `${department.code} — ${department.nameAr}${department.isActive ? '' : ' (موقوف)'}`,
+        label: `${department.code} — ${department.nameAr}${department.isActive ? '' : ` (${suspendedLabel})`}`,
       })),
-    [departmentsQuery.data],
+    [departmentsQuery.data, suspendedLabel],
   )
 
   const copyValue = async (value: string, label: string) => {
     try {
       await navigator.clipboard.writeText(value)
-      toast.success(`تم نسخ ${label}.`)
+      toast.success(t('department.toast.copied', { label }))
     } catch {
-      toast.error('تعذّر النسخ إلى الحافظة.')
+      toast.error(t('department.toast.copy-failed'))
     }
   }
 
@@ -67,7 +69,7 @@ export function DepartmentRegisterBook() {
     () => [
       {
         id: 'document',
-        header: 'الوثيقة',
+        headerKey: 'department.register.column.document',
         hideable: false,
         sortable: true,
         sortValue: (line) => line.documentTitle,
@@ -86,7 +88,7 @@ export function DepartmentRegisterBook() {
       },
       {
         id: 'centralNumber',
-        header: 'رقم الديوان',
+        headerKey: 'department.register.column.central-number',
         sortable: true,
         sortValue: (line) => line.centralNumberText,
         cell: (line) => (
@@ -97,7 +99,7 @@ export function DepartmentRegisterBook() {
       },
       {
         id: 'registryNumber',
-        header: 'رقم الدائرة',
+        headerKey: 'department.register.column.registry-number',
         sortable: true,
         sortValue: (line) => line.registryNumberText,
         cell: (line) => (
@@ -108,7 +110,7 @@ export function DepartmentRegisterBook() {
       },
       {
         id: 'linkedNumber',
-        header: 'الرقم المرتبط',
+        headerKey: 'department.register.column.linked-number',
         sortable: true,
         sortValue: (line) => line.replacedByNumberText ?? line.replacesNumberText,
         cell: (line) => {
@@ -116,7 +118,7 @@ export function DepartmentRegisterBook() {
           if (!linked) return <span className="text-xs text-muted">—</span>
           return (
             <span className="inline-flex items-center gap-1.5 whitespace-nowrap text-xs text-muted">
-              {line.replacedByNumberText ? 'استُبدل بـ' : 'بدل'}
+              {line.replacedByNumberText ? t('department.register.replaced-by') : t('department.register.replaces')}
               <code dir="ltr" className="text-foreground">
                 {linked}
               </code>
@@ -126,7 +128,7 @@ export function DepartmentRegisterBook() {
       },
       {
         id: 'numberingYear',
-        header: 'السنة',
+        headerKey: 'department.register.column.year',
         sortable: true,
         sortValue: (line) => line.numberingYear,
         cell: (line) => (
@@ -137,7 +139,7 @@ export function DepartmentRegisterBook() {
       },
       {
         id: 'registryDate',
-        header: 'تاريخ التسجيل',
+        headerKey: 'department.register.column.registry-date',
         sortable: true,
         sortValue: (line) => line.registryDate,
         cell: (line) => (
@@ -148,12 +150,12 @@ export function DepartmentRegisterBook() {
       },
       {
         id: 'status',
-        header: 'الحالة',
+        headerKey: 'department.register.column.status',
         cell: (line) => <NumberStatusBadge statusId={line.statusId} />,
       },
       {
         id: 'registrationCount',
-        header: 'مرات التسجيل',
+        headerKey: 'department.register.column.registration-count',
         sortable: true,
         sortValue: (line) => line.registrationCount,
         cell: (line) => (
@@ -170,7 +172,7 @@ export function DepartmentRegisterBook() {
       : ([
           {
             id: 'open-document',
-            label: 'فتح الوثيقة',
+            label: t('department.register.menu.open'),
             icon: <ArrowUpRight className="size-4" aria-hidden />,
             onSelect: () => openDocument(line),
           },
@@ -178,43 +180,43 @@ export function DepartmentRegisterBook() {
         ] as MenuEntry[])),
     {
       id: 'copy-central-number',
-      label: 'نسخ رقم الديوان',
+      label: t('department.register.menu.copy-central'),
       icon: <Copy className="size-4" aria-hidden />,
       disabled: !line.centralNumberText,
       onSelect: () =>
         line.centralNumberText &&
-        void copyValue(line.centralNumberText, 'رقم الديوان'),
+        void copyValue(line.centralNumberText, t('department.register.copy.central')),
     },
     {
       id: 'copy-registry-number',
-      label: 'نسخ رقم الدائرة',
+      label: t('department.register.menu.copy-registry'),
       icon: <Copy className="size-4" aria-hidden />,
-      onSelect: () => void copyValue(line.registryNumberText, 'رقم الدائرة'),
+      onSelect: () => void copyValue(line.registryNumberText, t('department.register.copy.registry')),
     },
     {
       id: 'copy-document-id',
-      label: 'نسخ معرّف الوثيقة',
+      label: t('department.register.menu.copy-document-id'),
       icon: <Hash className="size-4" aria-hidden />,
-      onSelect: () => void copyValue(line.documentId, 'معرّف الوثيقة'),
+      onSelect: () => void copyValue(line.documentId, t('department.register.copy.document-id')),
     },
   ]
 
   const headerMenu: MenuEntry[] = [
     {
       id: 'refresh',
-      label: 'تحديث البيانات',
+      label: t('table.refresh'),
       icon: <RefreshCw className="size-4" aria-hidden />,
       onSelect: () => void registerQuery.refetch(),
     },
   ]
 
-  const yearScopeLabel = yearText ? ` في سنة ${yearText}` : ''
+  const yearScopeLabel = yearText ? t('department.register.empty.year-scope', { year: yearText }) : ''
 
   return (
     <DataTable
       tableId="department-register"
       mode="client"
-      caption="سجل أرقام الدوائر"
+      caption={t('department.register.caption')}
       columns={columns}
       rows={lines}
       rowKey={(line) => line.documentNumberId}
@@ -244,7 +246,7 @@ export function DepartmentRegisterBook() {
       onPageSizeChange={table.setPageSize}
       search={table.search}
       onSearchChange={table.setSearch}
-      searchPlaceholder="ابحث بالوثيقة أو رقم الديوان أو رقم الدائرة…"
+      searchPlaceholder={t('department.register.search-placeholder')}
       sortKey={table.sortKey}
       sortDirection={table.sortDirection}
       onSortChange={table.setSort}
@@ -254,18 +256,18 @@ export function DepartmentRegisterBook() {
       filters={
         <div className="flex flex-wrap items-end gap-2">
           <Select
-            aria-label="تصفية حسب الدائرة"
+            aria-label={t('department.register.filter.department-aria')}
             value={departmentId || undefined}
             onValueChange={(value) => table.setFilter('departmentId', value)}
             options={departmentOptions}
             disabled={departmentsQuery.isLoading}
             placeholder={
-              departmentsQuery.isLoading ? 'جارٍ التحميل…' : 'اختر الدائرة…'
+              departmentsQuery.isLoading ? t('department.register.filter.loading') : t('department.register.filter.department-placeholder')
             }
             className="w-64"
           />
           <Input
-            aria-label="تصفية حسب سنة الترقيم"
+            aria-label={t('department.register.filter.year-aria')}
             type="number"
             inputMode="numeric"
             dir="ltr"
@@ -273,34 +275,34 @@ export function DepartmentRegisterBook() {
             max={2200}
             value={yearText}
             onChange={(event) => table.setFilter('year', event.target.value)}
-            placeholder="كل السنوات"
+            placeholder={t('department.register.filter.year-placeholder')}
             className="w-32"
           />
           {table.hasActiveFilters && (
             <Button type="button" variant="ghost" size="sm" onClick={table.clearFilters}>
-              مسح المرشحات
+              <Label k="department.register.filter.clear" />
             </Button>
           )}
         </div>
       }
       emptyTitle={
         !departmentId
-          ? 'اختر دائرة لعرض سجلها'
+          ? t('department.register.empty.choose-title')
           : table.search
-            ? 'لا توجد نتائج مطابقة.'
-            : 'لا توجد أرقام مسجّلة لهذه الدائرة.'
+            ? t('department.empty.search-title')
+            : t('department.register.empty.title')
       }
       emptyDescription={
         !departmentId
-          ? 'يعرض السجل الأرقام التي كتبتها الدائرة في سجلها الخاص مقابل رقم الديوان المركزي.'
+          ? t('department.register.empty.choose-description')
           : table.search
-            ? 'جرّب تعديل البحث أو السنة، أو امسح البحث لعرض كل الأرقام.'
-            : `لم تُسجَّل أرقام من هذه الدائرة${yearScopeLabel} بعد.`
+            ? t('department.register.empty.search-description')
+            : t('department.register.empty.description', { yearScope: yearScopeLabel })
       }
       emptyAction={
         !departmentId ? undefined : table.search ? (
           <Button type="button" variant="outline" onClick={() => table.setSearch('')}>
-            مسح البحث
+            <Label k="department.empty.clear-search" />
           </Button>
         ) : undefined
       }

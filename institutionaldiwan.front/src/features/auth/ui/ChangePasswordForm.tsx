@@ -3,7 +3,8 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { KeyRound } from 'lucide-react'
 import { toast } from 'sonner'
 import { toArabicErrorMessage } from '@/shared/api'
-import { Button, PasswordField } from '@/shared/ui'
+import { t } from '@/shared/lib'
+import { Button, Label, PasswordField } from '@/shared/ui'
 import {
   changePasswordSchema,
   type ChangePasswordFormValues,
@@ -36,7 +37,7 @@ export function ChangePasswordForm({ onSuccess }: ChangePasswordFormProps) {
       oldPassword: values.currentPassword,
       newPassword: values.newPassword,
     })
-    toast.success('تم تغيير كلمة المرور بنجاح.')
+    toast.success(t('auth.change-password.toast'))
     onSuccess?.()
   })
 
@@ -44,7 +45,7 @@ export function ChangePasswordForm({ onSuccess }: ChangePasswordFormProps) {
     <form onSubmit={onSubmit} className="flex flex-col gap-5" noValidate>
       <PasswordField
         id="current-password"
-        label="كلمة المرور الحالية"
+        label={t('auth.change-password.current')}
         autoComplete="current-password"
         error={errors.currentPassword?.message}
         registration={register('currentPassword')}
@@ -52,7 +53,7 @@ export function ChangePasswordForm({ onSuccess }: ChangePasswordFormProps) {
 
       <PasswordField
         id="new-password"
-        label="كلمة المرور الجديدة"
+        label={t('auth.change-password.new')}
         autoComplete="new-password"
         error={errors.newPassword?.message}
         registration={register('newPassword')}
@@ -60,7 +61,7 @@ export function ChangePasswordForm({ onSuccess }: ChangePasswordFormProps) {
 
       <PasswordField
         id="confirm-password"
-        label="تأكيد كلمة المرور الجديدة"
+        label={t('auth.change-password.confirm')}
         autoComplete="new-password"
         error={errors.confirmPassword?.message}
         registration={register('confirmPassword')}
@@ -76,7 +77,7 @@ export function ChangePasswordForm({ onSuccess }: ChangePasswordFormProps) {
       )}
 
       <Button type="submit" size="lg" loading={changePasswordMutation.isPending}>
-        حفظ كلمة المرور الجديدة
+        <Label k="auth.change-password.submit" />
         <KeyRound className="size-4" aria-hidden />
       </Button>
     </form>

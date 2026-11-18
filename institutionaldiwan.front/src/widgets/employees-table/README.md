@@ -47,6 +47,7 @@ debounced server search, paging, a column chooser, and row/header/empty context 
   wired through the grid toolbar and `GET /api/employees?sortBy=…&sortDescending=…&departmentId=…`.
 
 ## 6. Change Log
+- 2026-11-18: UI labels Phase 4 (ب3): all static Arabic resolves through the `employee.*` catalog — headers via `headerKey`, the «كل الأقسام» filter option via `useLabel`, status cells/menus/copy toasts/caption/search/empty states via `t()`, toolbar create + empty actions + reload-departments via `<Label>`, and the suspend/activate confirm via `t()`. Employee/department names stay data-driven.
 - 2026-11-04: User, department and employee references now render as «name + short id» (`UserLabel` / `DepartmentLabel` / `EmployeeLabel`) instead of a bare id.
 
 - 2026-10-28: Added server sorting and a department filter, and switched department labels to the

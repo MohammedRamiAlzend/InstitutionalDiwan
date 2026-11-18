@@ -1,5 +1,6 @@
 import { Loader2, Paperclip } from 'lucide-react'
 import { formatFileSize, formatShortId } from '@/shared/lib'
+import { Label } from '@/shared/ui'
 import type { LocalChecksum } from '../model/useLocalChecksum'
 
 interface FilePickSummaryProps {
@@ -24,13 +25,13 @@ export function FilePickSummary({ file, checksum }: FilePickSummaryProps) {
       {checksum.isHashing ? (
         <p className="flex items-center gap-1.5 text-xs text-muted">
           <Loader2 className="size-3.5 animate-spin" aria-hidden />
-          جارٍ حساب البصمة…
+          <Label k="attachment.pick.hashing" />
         </p>
       ) : checksum.error ? (
         <p className="text-xs text-danger">{checksum.error}</p>
       ) : checksum.digest ? (
         <p className="text-xs text-muted">
-          البصمة المحلية:{' '}
+          <Label k="attachment.pick.local-label" />{' '}
           <code dir="ltr" className="text-foreground" title={checksum.digest}>
             {formatShortId(checksum.digest)}
           </code>

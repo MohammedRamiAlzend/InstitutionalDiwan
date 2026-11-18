@@ -6,8 +6,8 @@ import { toast } from 'sonner'
 import { LOOKUP_SLUGS, useLookupEntries, usePreselectLookupDefault } from '@/entities/lookup'
 import { useUserOptions } from '@/entities/user'
 import { toArabicErrorMessage } from '@/shared/api'
-import { useDebouncedValue, useDraftForm } from '@/shared/lib'
-import { Button, Dialog, FormField, Input, Select, Textarea } from '@/shared/ui'
+import { t, useDebouncedValue, useDraftForm } from '@/shared/lib'
+import { Button, Dialog, FormField, Input, Label, Select, Textarea } from '@/shared/ui'
 import { useGrantDocumentAccessMutation } from '../api/accessGrantMutations'
 import { grantAccessSchema, type GrantAccessFormValues } from '../model/schemas'
 
@@ -85,7 +85,7 @@ export function AddAccessGrantDialog({
         reason: values.reason.trim() || null,
         expiresAt: values.expiresAt || null,
       })
-      toast.success('تم منح الوصول إلى الوثيقة.')
+      toast.success(t('docdetails.grant.toast-added'))
       draft.discard()
       onOpenChange(false)
     } catch {
@@ -97,8 +97,8 @@ export function AddAccessGrantDialog({
     <Dialog
       open={open}
       onOpenChange={onOpenChange}
-      title="منح وصول إلى الوثيقة"
-      description="اختر المستخدم ومستوى الوصول. يمكنك تحديد تاريخ انتهاء اختياري، ويُسجَّل اسمك كمانح للتصريح."
+      title={t('docdetails.grant.title')}
+      description={t('docdetails.grant.description')}
       size="lg"
       footer={
         <>
@@ -108,10 +108,10 @@ export function AddAccessGrantDialog({
             onClick={() => onOpenChange(false)}
             disabled={mutation.isPending}
           >
-            إلغاء
+            <Label k="common.action.cancel" />
           </Button>
           <Button type="submit" form="document-grant-form" loading={mutation.isPending}>
-            منح الوصول
+            <Label k="docdetails.grant.submit" />
           </Button>
         </>
       }
@@ -123,13 +123,13 @@ export function AddAccessGrantDialog({
         className="grid gap-4 sm:grid-cols-2"
       >
         <FormField
-          label="البحث في المستخدمين"
+          labelKey="docdetails.grant.field-user-search"
           className="sm:col-span-2"
           htmlFor="grant-user-search"
         >
           <Input
             id="grant-user-search"
-            placeholder="ابحث باسم المستخدم…"
+            placeholder={t('docdetails.grant.user-search-placeholder')}
             startIcon={<Search className="size-4" aria-hidden />}
             value={userSearch}
             onChange={(event) => setUserSearch(event.target.value)}
@@ -138,7 +138,7 @@ export function AddAccessGrantDialog({
         </FormField>
 
         <FormField
-          label="المستخدم"
+          labelKey="docdetails.grant.field-user"
           required
           error={errors.userId?.message}
           className="sm:col-span-2"
@@ -159,21 +159,21 @@ export function AddAccessGrantDialog({
                 disabled={mutation.isPending || usersQuery.isLoading}
                 invalid={Boolean(errors.userId)}
                 placeholder={
-                  usersQuery.isLoading ? 'جارٍ التحميل…' : 'اختر المستخدم…'
+                  usersQuery.isLoading ? t('documents.create.loading') : t('docdetails.grant.user-placeholder')
                 }
-                aria-label="المستخدم"
+                aria-label={t('docdetails.grant.field-user')}
               />
             )}
           />
           {usersQuery.isSuccess && userOptions.length === 0 && (
             <p className="text-xs text-muted">
-              لا يوجد مستخدمون مطابقون. تُدار حسابات المستخدمين من شاشة «المستخدمون».
+              {t('docdetails.grant.user-empty')}
             </p>
           )}
         </FormField>
 
         <FormField
-          label="مستوى الوصول"
+          labelKey="docdetails.grant.field-level"
           required
           error={errors.accessLevelId?.message}
         >
@@ -187,15 +187,15 @@ export function AddAccessGrantDialog({
                 options={levelOptions}
                 disabled={mutation.isPending || levelsQuery.isLoading}
                 invalid={Boolean(errors.accessLevelId)}
-                placeholder="اختر المستوى…"
-                aria-label="مستوى الوصول"
+                placeholder={t('docdetails.grant.level-placeholder')}
+                aria-label={t('docdetails.grant.field-level')}
               />
             )}
           />
         </FormField>
 
         <FormField
-          label="تاريخ الانتهاء (اختياري)"
+          labelKey="docdetails.grant.field-expires"
           error={errors.expiresAt?.message}
           htmlFor="grant-expires-at"
         >
@@ -209,13 +209,13 @@ export function AddAccessGrantDialog({
         </FormField>
 
         <FormField
-          label="السبب"
+          labelKey="docdetails.grant.field-reason"
           error={errors.reason?.message}
           className="sm:col-span-2"
         >
           <Textarea
             rows={2}
-            placeholder="مثال: مراجعة قانونية للعقد المرفق."
+            placeholder={t('docdetails.grant.reason-placeholder')}
             invalid={Boolean(errors.reason)}
             {...register('reason')}
           />

@@ -39,6 +39,7 @@ deactivating them, and granting/revoking permissions from the catalog. The dialo
 
 ## 6. Change Log
 
+- 2026-11-18: UI labels Phase 4 (ب3): `RoleFormDialog`, `RolePermissionsDialog` and the Zod schema resolve all static Arabic through the `role.*` catalog — dialog titles/descriptions, field labels (`labelKey`), placeholders, the system-role note/badge, selected-count, toasts and buttons via `t()`/`<Label>`. Permission `nameAr`/module labels and the `FINANCE_EDITOR`/`Finance Editor` examples stay data-driven/literal.
 - 2026-11-05: Unsent form input is now kept (per user, per form) after an accidental close or cancel and restored with a toast; it is cleared only after a successful submit (`useDraftForm`).
 - 2026-10-28: Dropped the permission matrix's own `max-h`/scroll wrapper so the dialog primitive's single body scroll area owns scrolling (fixed dialog height, pinned title and footer, no nested scrollbars).
 - 2026-10-28: Implemented Phase 4 — role request types, Zod schema, four mutations, the create/edit dialog, and the grouped permission-matrix dialog; rewrote this README to match the code.

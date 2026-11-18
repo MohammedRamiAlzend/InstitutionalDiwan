@@ -1,3 +1,4 @@
+import { t } from '@/shared/lib'
 import type { DepartmentTreeNodeResponse } from './types'
 
 const MAX_LABEL_LENGTH = 80
@@ -40,7 +41,7 @@ export function departmentTreeToMermaid(
   const visit = (node: DepartmentTreeNodeResponse, parentId: string | null): void => {
     sequence += 1
     const id = `d${sequence}`
-    const inactive = node.isActive ? '' : ' (موقوف)'
+    const inactive = node.isActive ? '' : ` (${t('department.status.suspended')})`
     lines.push(`  ${id}["${toLabel(`${node.nameAr} · ${node.code}`)}${inactive}"]`)
     departmentIdByNodeId.set(id, node.departmentId)
     if (parentId) lines.push(`  ${parentId} --> ${id}`)

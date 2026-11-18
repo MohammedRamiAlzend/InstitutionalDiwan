@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { Controller } from 'react-hook-form'
-import { useDraftForm } from '@/shared/lib'
+import { t, useDraftForm } from '@/shared/lib'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
 import { useDepartmentOptions } from '@/entities/department'
@@ -8,7 +8,7 @@ import { findDepartmentEntry, useDocumentRegistryNumbers } from '@/entities/docu
 import { DepartmentRegistrySelect, useDepartmentRegistryOptions } from '@/entities/numbering-registry'
 import { useMyPrimaryDepartmentId } from '@/entities/user'
 import { toArabicErrorMessage } from '@/shared/api'
-import { Button, Dialog, FormField, Input, Textarea } from '@/shared/ui'
+import { Button, Dialog, FormField, Input, Label, Textarea } from '@/shared/ui'
 import { useRecordDepartmentRegistrationMutation } from '../api/numberMutations'
 import {
   departmentRegistrationSchema,
@@ -107,7 +107,7 @@ export function DepartmentRegistrationDialog({
 
   const onSubmit = handleSubmit(async (values) => {
     if (!lockedNumber && registryOptions.length > 1 && !values.registryId) {
-      setError('registryId', { message: 'اختر السجل الذي سُجّل فيه الرقم.' })
+      setError('registryId', { message: t('numbering.registration.error.registry-required') })
       return
     }
 
@@ -119,7 +119,7 @@ export function DepartmentRegistrationDialog({
         registryDate: values.registryDate,
         notes: values.notes.trim() || null,
       })
-      toast.success('تم تسجيل رقم الدائرة في سجلها.')
+      toast.success(t('numbering.registration.toast.saved'))
       draft.discard()
       onOpenChange(false)
     } catch {
@@ -131,8 +131,8 @@ export function DepartmentRegistrationDialog({
     <Dialog
       open={open}
       onOpenChange={onOpenChange}
-      title="تسجيل رقم الدائرة"
-      description="يُسجَّل الرقم الذي كتبته دائرتك في سجلها الخاص مع تاريخه، ولا يتغيّر رقم الديوان المركزي. لا يمكن التسجيل إلا باسم دائرتك. للوثيقة رقم واحد في السنة، وكل وصول جديد يضيف تاريخًا فقط."
+      title={t('numbering.registration.title')}
+      description={t('numbering.registration.description')}
       size="lg"
       footer={
         <>
@@ -142,7 +142,7 @@ export function DepartmentRegistrationDialog({
             onClick={() => onOpenChange(false)}
             disabled={mutation.isPending}
           >
-            إلغاء
+            <Label k="common.action.cancel" />
           </Button>
           <Button
             type="submit"
@@ -150,7 +150,7 @@ export function DepartmentRegistrationDialog({
             loading={mutation.isPending}
             disabled={loading || missingOwnDepartment || registryOptions.length === 0}
           >
-            تسجيل الرقم
+            <Label k="numbering.registration.submit" />
           </Button>
         </>
       }
@@ -161,22 +161,22 @@ export function DepartmentRegistrationDialog({
         noValidate
         className="grid gap-4 sm:grid-cols-2"
       >
-        <FormField label="الدائرة" error={errors.departmentId?.message}>
+        <FormField labelKey="numbering.registration.department" error={errors.departmentId?.message}>
           <Input
             value={
               loading
-                ? 'جارٍ التحميل…'
+                ? t('numbering.loading')
                 : ownDepartment
                   ? `${ownDepartment.code} — ${ownDepartment.nameAr}`
                   : ''
             }
             readOnly
-            aria-label="الدائرة"
+            aria-label={t('numbering.registration.department')}
           />
         </FormField>
 
         <FormField
-          label="السجل"
+          labelKey="numbering.registration.registry"
           required={registryOptions.length > 1}
           error={errors.registryId?.message}
         >
@@ -197,7 +197,7 @@ export function DepartmentRegistrationDialog({
         </FormField>
 
         <FormField
-          label="رقم سجل الدائرة"
+          labelKey="numbering.registration.number"
           required
           error={errors.registryNumberText?.message}
           htmlFor="department-registry-number"
@@ -214,13 +214,13 @@ export function DepartmentRegistrationDialog({
           />
           {lockedNumber && (
             <p className="text-xs text-muted">
-              لدائرتك رقم لهذه الوثيقة في هذه السنة؛ سيُضاف تاريخ جديد فقط.
+              <Label k="numbering.registration.locked-hint" />
             </p>
           )}
         </FormField>
 
         <FormField
-          label="تاريخ التسجيل"
+          labelKey="numbering.registration.date"
           required
           error={errors.registryDate?.message}
           htmlFor="department-registry-date"
@@ -235,10 +235,10 @@ export function DepartmentRegistrationDialog({
           />
         </FormField>
 
-        <FormField label="ملاحظات" error={errors.notes?.message} className="sm:col-span-2">
+        <FormField labelKey="numbering.registration.notes" error={errors.notes?.message} className="sm:col-span-2">
           <Textarea
             rows={2}
-            placeholder="مثال: سُلّم إلى قسم المتابعة."
+            placeholder={t('numbering.registration.notes-placeholder')}
             invalid={Boolean(errors.notes)}
             {...register('notes')}
           />
@@ -249,7 +249,7 @@ export function DepartmentRegistrationDialog({
             role="alert"
             className="sm:col-span-2 rounded-lg bg-danger/10 px-3 py-2 text-sm text-danger"
           >
-            تعذّر تحديد دائرتك. أعد تحميل الصفحة أو سجّل الدخول من جديد، وتأكد أن الخادم محدَّث.
+            <Label k="numbering.registration.missing-department" />
           </p>
         )}
 

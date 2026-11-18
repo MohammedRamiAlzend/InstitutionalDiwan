@@ -4,7 +4,7 @@ import { RelationTypeBadge } from '@/entities/document-relation'
 import { LOOKUP_SLUGS, LookupLabel } from '@/entities/lookup'
 import { toArabicErrorMessage } from '@/shared/api'
 import { formatDateTime, formatShortId } from '@/shared/lib'
-import { Button, Skeleton } from '@/shared/ui'
+import { Button, Label, Skeleton } from '@/shared/ui'
 import { UserLabel } from '@/entities/user'
 
 const PAGE_SIZE = 10
@@ -42,7 +42,7 @@ export function RelationEventsSection({ documentId }: { documentId: string }) {
           {toArabicErrorMessage(eventsQuery.error)}
         </p>
         <Button type="button" variant="outline" onClick={() => void eventsQuery.refetch()}>
-          إعادة المحاولة
+          <Label k="common.action.retry" />
         </Button>
       </div>
     )
@@ -54,8 +54,12 @@ export function RelationEventsSection({ documentId }: { documentId: string }) {
   if (events.length === 0) {
     return (
       <div className="rounded-xl border border-dashed border-border bg-surface px-6 py-8 text-center">
-        <p className="text-sm font-medium text-foreground">لا سجل للروابط بعد.</p>
-        <p className="mt-1 text-xs text-muted">تظهر هنا عمليات إضافة الروابط وإزالتها عند حدوثها.</p>
+        <p className="text-sm font-medium text-foreground">
+          <Label k="relation.events.empty.title" />
+        </p>
+        <p className="mt-1 text-xs text-muted">
+          <Label k="relation.events.empty.description" />
+        </p>
       </div>
     )
   }
@@ -83,20 +87,20 @@ export function RelationEventsSection({ documentId }: { documentId: string }) {
             </div>
             <dl className="grid gap-x-6 gap-y-1 text-sm sm:grid-cols-2">
               <div className="flex items-baseline gap-1.5">
-                <dt className="text-muted">المصدر ← الهدف:</dt>
+                <dt className="text-muted"><Label k="relation.events.source-target" /></dt>
                 <dd dir="ltr" className="font-mono text-xs">
                   {formatShortId(event.sourceDocumentId)} → {formatShortId(event.targetDocumentId)}
                 </dd>
               </div>
               <div className="flex items-baseline gap-1.5">
-                <dt className="text-muted">المنفّذ:</dt>
+                <dt className="text-muted"><Label k="relation.events.actor" /></dt>
                 <dd className="text-xs">
                   <UserLabel userId={event.actorUserId} />
                 </dd>
               </div>
               {event.reason && (
                 <div className="flex items-baseline gap-1.5 sm:col-span-2">
-                  <dt className="text-muted">السبب:</dt>
+                  <dt className="text-muted"><Label k="relation.events.reason" /></dt>
                   <dd className="whitespace-pre-line">{event.reason}</dd>
                 </div>
               )}
@@ -114,7 +118,7 @@ export function RelationEventsSection({ documentId }: { documentId: string }) {
             disabled={page <= 1}
             onClick={() => setPage(page - 1)}
           >
-            السابق
+            <Label k="relation.events.prev" />
           </Button>
           <span className="text-sm text-muted">
             {page} / {totalPages}
@@ -126,7 +130,7 @@ export function RelationEventsSection({ documentId }: { documentId: string }) {
             disabled={page >= totalPages}
             onClick={() => setPage(page + 1)}
           >
-            التالي
+            <Label k="relation.events.next" />
           </Button>
         </div>
       )}

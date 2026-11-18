@@ -6,8 +6,8 @@ import {
   type DocumentFileVersionResponse,
 } from '@/entities/document-file'
 import { toArabicErrorMessage } from '@/shared/api'
-import { formatDateTime, formatFileSize, formatShortId } from '@/shared/lib'
-import { Badge, Button, Dialog } from '@/shared/ui'
+import { formatDateTime, formatFileSize, formatShortId, t } from '@/shared/lib'
+import { Badge, Button, Dialog, Label } from '@/shared/ui'
 import { UserLabel } from '@/entities/user'
 
 interface DocumentVersionsDialogProps {
@@ -40,7 +40,7 @@ export function DocumentVersionsDialog({
   const downloadVersion = async (version: DocumentFileVersionResponse) => {
     try {
       const fileName = await downloadFileVersion(file, version)
-      toast.success(`نُزّل الإصدار ${version.versionNumber} باسم «${fileName}».`)
+      toast.success(t('attachment.versions.toast-downloaded', { version: version.versionNumber, name: fileName }))
     } catch (error) {
       toast.error(toArabicErrorMessage(error))
     }
@@ -50,18 +50,18 @@ export function DocumentVersionsDialog({
     <Dialog
       open={open}
       onOpenChange={onOpenChange}
-      title={`إصدارات «${file.title}»`}
-      description={`${file.versions.length} إصدارًا، أحدثها أولًا. الإصدارات القديمة تبقى قابلة للتنزيل، والأرشفة تمنع الجديد منها فقط.`}
+      title={t('attachment.versions.title', { title: file.title })}
+      description={t('attachment.versions.description', { count: file.versions.length })}
       size="lg"
       footer={
         <Button type="button" onClick={() => onOpenChange(false)}>
-          إغلاق
+          <Label k="common.action.close" />
         </Button>
       }
     >
       {file.versions.length === 0 ? (
         <p className="rounded-lg border border-border bg-surface-muted/30 px-3 py-2 text-sm text-muted">
-          لا إصدارات مسجّلة لهذا الملف.
+          <Label k="attachment.versions.empty" />
         </p>
       ) : (
         <ul className="flex flex-col gap-3">
@@ -74,9 +74,9 @@ export function DocumentVersionsDialog({
                 <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
                   <span dir="ltr">v{version.versionNumber}</span>
                   {version.isCurrent ? (
-                    <Badge variant="success">الحالي</Badge>
+                    <Badge variant="success"><Label k="attachment.versions.current" /></Badge>
                   ) : (
-                    <Badge variant="outline">مُستبدَل</Badge>
+                    <Badge variant="outline"><Label k="attachment.versions.replaced" /></Badge>
                   )}
                 </p>
                 <Button
@@ -86,25 +86,25 @@ export function DocumentVersionsDialog({
                   onClick={() => void downloadVersion(version)}
                 >
                   <Download className="size-4" aria-hidden />
-                  تنزيل
+                  <Label k="attachment.versions.download" />
                 </Button>
               </div>
 
               <div className="grid gap-2 sm:grid-cols-2">
-                <VersionField label="الاسم الأصلي" value={version.originalFileName} />
-                <VersionField label="الحجم" value={formatFileSize(version.fileSizeBytes)} />
-                <VersionField label="البصمة" value={formatShortId(version.checksumSha256)} />
-                <VersionField label="تاريخ الرفع" value={formatDateTime(version.uploadedAt)} />
+                <VersionField label={t('attachment.column.original-name')} value={version.originalFileName} />
+                <VersionField label={t('attachment.column.size')} value={formatFileSize(version.fileSizeBytes)} />
+                <VersionField label={t('attachment.column.checksum')} value={formatShortId(version.checksumSha256)} />
+                <VersionField label={t('attachment.versions.field-uploaded-at')} value={formatDateTime(version.uploadedAt)} />
                 <p className="flex flex-wrap items-baseline gap-1.5 text-xs">
-                  <span className="text-muted">الرافع:</span>
+                  <span className="text-muted"><Label k="attachment.versions.uploader" /></span>
                   <UserLabel userId={version.uploadedByUserId} />
                 </p>
               </div>
 
               <p className="text-xs text-muted">
-                ملاحظات التغيير:{' '}
+                <Label k="attachment.versions.change-notes" />{' '}
                 <span className="text-foreground">
-                  {version.changeNotes ?? 'لا ملاحظات على هذا الإصدار.'}
+                  {version.changeNotes ?? t('attachment.versions.no-notes')}
                 </span>
               </p>
             </li>

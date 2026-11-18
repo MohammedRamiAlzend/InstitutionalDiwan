@@ -1,5 +1,5 @@
 import { Fragment } from 'react'
-import { cn } from '@/shared/lib'
+import { cn, t } from '@/shared/lib'
 import { FormField } from '@/shared/ui'
 import { visibleFields, type FieldValueErrors, type FieldValueMap } from '../model/values'
 import type { SchemaFieldResponse } from '../model/types'
@@ -35,7 +35,7 @@ export function DynamicFieldInputs({
         const sectionStarts =
           behavior.sectionTitleAr !== null &&
           behavior.sectionTitleAr !== shown[index - 1]?.behavior.sectionTitleAr
-        const hint = behavior.helpTextAr ?? (behavior.isReadOnly ? 'قيمة ثابتة لا تُعدَّل.' : undefined)
+        const hint = behavior.helpTextAr ?? (behavior.isReadOnly ? t('schema.field.readonly-hint') : undefined)
 
         return (
           <Fragment key={field.documentFieldId}>

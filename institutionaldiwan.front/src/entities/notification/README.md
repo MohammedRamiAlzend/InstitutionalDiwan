@@ -38,4 +38,5 @@ in `features/notification-live`.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-18 | Qoder | UI labels Phase 4 (ب5): `NotificationItem` resolves its unread aria from `notification.unread` via `t()`; titles/bodies stay server data. |
 | 2026-11-04 | Claude | Added the Module 10 notification entity (plan `plans/module-10-notifications-frontend.md`). |

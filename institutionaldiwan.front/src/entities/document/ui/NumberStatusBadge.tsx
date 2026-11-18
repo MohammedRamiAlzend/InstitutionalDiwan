@@ -1,10 +1,11 @@
-import { DOCUMENT_NUMBER_STATUS } from '@/shared/config'
+import { DOCUMENT_NUMBER_STATUS, type LabelKey } from '@/shared/config'
+import { useLabel } from '@/shared/lib'
 import { Badge, type BadgeVariant } from '@/shared/ui'
 
-const statusMeta: Record<number, { label: string; variant: BadgeVariant }> = {
-  [DOCUMENT_NUMBER_STATUS.Active]: { label: 'نشط', variant: 'success' },
-  [DOCUMENT_NUMBER_STATUS.Cancelled]: { label: 'ملغى', variant: 'danger' },
-  [DOCUMENT_NUMBER_STATUS.Replaced]: { label: 'مُستبدل', variant: 'warning' },
+const statusMeta: Record<number, { key: LabelKey; variant: BadgeVariant }> = {
+  [DOCUMENT_NUMBER_STATUS.Active]: { key: 'documents.number-status.active', variant: 'success' },
+  [DOCUMENT_NUMBER_STATUS.Cancelled]: { key: 'documents.number-status.cancelled', variant: 'danger' },
+  [DOCUMENT_NUMBER_STATUS.Replaced]: { key: 'documents.number-status.replaced', variant: 'warning' },
 }
 
 interface NumberStatusBadgeProps {
@@ -15,10 +16,11 @@ interface NumberStatusBadgeProps {
 
 export function NumberStatusBadge({ statusId, className }: NumberStatusBadgeProps) {
   const meta = statusMeta[statusId]
+  const label = useLabel(meta?.key ?? 'documents.number-status.unknown', { id: statusId })
 
   return (
     <Badge variant={meta?.variant ?? 'neutral'} className={className}>
-      {meta?.label ?? `حالة #${statusId}`}
+      {label}
     </Badge>
   )
 }

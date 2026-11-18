@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { LOOKUP_SLUGS, LookupLabel } from '@/entities/lookup'
-import { cn, formatDateTime } from '@/shared/lib'
+import { cn, formatDateTime, t } from '@/shared/lib'
 import type { NotificationResponse } from '../model/types'
 import { NotificationPriorityBadge } from './NotificationPriorityBadge'
 import { NotificationTypeIcon } from './NotificationTypeIcon'
@@ -41,7 +41,7 @@ export function NotificationItem({ notification, onOpen, actions, className }: N
         className="flex min-w-0 flex-1 cursor-pointer flex-col items-start gap-0.5 text-start"
       >
         <span className="flex w-full items-center gap-2">
-          {!isRead && <span className="size-2 shrink-0 rounded-full bg-accent" aria-label="غير مقروء" />}
+          {!isRead && <span className="size-2 shrink-0 rounded-full bg-accent" aria-label={t('notification.unread')} />}
           <span className={cn('truncate text-sm', isRead ? 'text-foreground' : 'font-semibold text-foreground')}>
             {notification.titleAr}
           </span>

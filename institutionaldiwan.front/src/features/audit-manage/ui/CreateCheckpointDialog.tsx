@@ -2,8 +2,8 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { Hash } from 'lucide-react'
 import { toast } from 'sonner'
 import { toArabicErrorMessage } from '@/shared/api'
-import { formatNumber, useDraftForm } from '@/shared/lib'
-import { Button, Dialog, FormField, Input } from '@/shared/ui'
+import { formatNumber, t, useDraftForm } from '@/shared/lib'
+import { Button, Dialog, FormField, Input, Label } from '@/shared/ui'
 import { useCreateCheckpointMutation } from '../api/createCheckpoint'
 import { checkpointSchema, type CheckpointFormValues } from '../model/checkpoint.schema'
 
@@ -38,7 +38,10 @@ export function CreateCheckpointDialog({
         toAuditLogId: values.toAuditLogId ? Number(values.toAuditLogId) : null,
       })
       toast.success(
-        `تم إنشاء نقطة تحقق تضم ${formatNumber(checkpoint.recordCount)} سجلًا (حتى السجل #${formatNumber(checkpoint.toAuditLogId)}).`,
+        t('audit.checkpoint.toast-created', {
+          count: formatNumber(checkpoint.recordCount),
+          to: formatNumber(checkpoint.toAuditLogId),
+        }),
       )
       draft.discard()
       onOpenChange(false)
@@ -51,8 +54,8 @@ export function CreateCheckpointDialog({
     <Dialog
       open={open}
       onOpenChange={onOpenChange}
-      title="إنشاء نقطة تحقق"
-      description="تجمع نقطة التحقق كل السجلات الجديدة منذ آخر نقطة في نقطة مرجعية غير قابلة للتعديل. لا يمكن إنشاؤها إن لم تصدر سجلات جديدة."
+      title={t('audit.checkpoint.dialog.title')}
+      description={t('audit.checkpoint.dialog.description')}
       size="sm"
       footer={
         <>
@@ -62,10 +65,10 @@ export function CreateCheckpointDialog({
             onClick={() => onOpenChange(false)}
             disabled={mutation.isPending}
           >
-            تراجع
+            <Label k="audit.checkpoint.back" />
           </Button>
           <Button type="submit" form="create-checkpoint-form" loading={mutation.isPending}>
-            إنشاء نقطة التحقق
+            <Label k="audit.checkpoint.dialog.submit" />
           </Button>
         </>
       }
@@ -77,7 +80,7 @@ export function CreateCheckpointDialog({
         className="flex flex-col gap-4"
       >
         <FormField
-          label="معرّف آخر سجل (اختياري)"
+          labelKey="audit.checkpoint.field.to"
           error={errors.toAuditLogId?.message}
         >
           <Input
@@ -85,7 +88,7 @@ export function CreateCheckpointDialog({
             inputMode="numeric"
             dir="ltr"
             min={1}
-            placeholder="مثال: 120"
+            placeholder={t('audit.checkpoint.field.to-placeholder')}
             startIcon={<Hash className="size-4" aria-hidden />}
             invalid={Boolean(errors.toAuditLogId)}
             {...register('toAuditLogId')}

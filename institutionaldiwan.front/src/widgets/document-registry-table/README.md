@@ -25,8 +25,8 @@ Composes the institutional correspondence registry through `shared/ui/data-table
 
 | File | Purpose |
 | --- | --- |
-| `ui/DocumentRegistryTable.tsx` | Data grid: title link to the details route, summary, official number (`dir="ltr"`), direction and status badges, type/confidentiality/priority lookup labels, owning department, document/registration/creation dates, status/direction/type/department filter bar, open-details/copy row actions, and create/refresh menus. |
-| `ui/RegisterNumberFilter.tsx` | Text filter for a number in any department register; commits to the URL after a pause. |
+| `ui/DocumentRegistryTable.tsx` | Data grid: title link to the details route, official number (`dir="ltr"`), type/status badges, owning department, schema field columns, registration/creation dates, status/type/department/register-number filter bar, open-details/copy row actions, and create/refresh menus. Static headers use `headerKey` (`documents.column.*`); filters, menus, toasts and empty states resolve from `documents.*` / `table.*` labels. |
+| `ui/RegisterNumberFilter.tsx` | Text filter for a number in any department register; commits to the URL after a pause. Placeholder/aria resolve via `t('documents.filter.register-number*')`. |
 | `index.ts` | Public barrel. |
 
 ## 4. Conventions
@@ -40,6 +40,11 @@ Composes the institutional correspondence registry through `shared/ui/data-table
 - Row actions are permission-aware: only `DOCUMENT_CREATE` sees the create entries.
 - Every row opens `/documents/:documentId` from the title link or the «فتح التفاصيل» menu entry
   (Phase 3).
+- UI labels (Phase 4): static text comes from the `documents.*` catalog (`shared/config/labels/documents.ts`).
+  Column headers use `headerKey` (repaint on rename via the labels store); the three «الكل» filter
+  options use `useLabel` so they repaint live; buttons/empty actions render `<Label>` (editable in
+  place); menus, toasts, aria and placeholders use `t()`. Schema field column headers stay data-driven
+  (`field.labelAr`).
 
 ## 5. Implementation Status
 
@@ -52,6 +57,7 @@ Composes the institutional correspondence registry through `shared/ui/data-table
 | Browser verification | ✅ Verified in-browser (2026-10-28) against the live API: seeded rows render with Arabic lookup labels and the resolved owning department; search, the status filter via URL, the empty state with «مسح البحث والمرشحات», and title sorting behave as specified; both creations (draft and registered) appear immediately without a reload (7 → 8 rows). |
 
 ## 6. Change Log
+- 2026-11-18: UI labels Phase 4 (documents list unit): migrated all static text to the `documents.*` catalog — column headers via `headerKey`, the «الكل» filter options via `useLabel`, toolbar/empty/filter buttons via `<Label>`, row menus/copy toasts/aria/search placeholder/caption/empty states via `t()`. `RegisterNumberFilter` placeholder/aria now use `t()`.
 - 2026-11-11: The "new document" buttons also require `useCanCreateDocuments`, so a department the institution settings exclude from creating documents never sees them.
 - 2026-11-09: Added `ui/RegisterNumberFilter.tsx`: filter by a number in any department register, kept in the URL as `registerNumber`.
 - 2026-11-08: Fields marked as columns appear in the grid and sort on the server; `FieldFilterBar` and `FieldFilterDialog` moved to `entities/document-schema`.

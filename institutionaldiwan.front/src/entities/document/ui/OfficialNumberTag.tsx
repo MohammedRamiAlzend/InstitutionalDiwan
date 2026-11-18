@@ -1,4 +1,4 @@
-import { cn } from '@/shared/lib'
+import { cn, useLabel } from '@/shared/lib'
 
 interface OfficialNumberTagProps {
   officialNumberText: string | null | undefined
@@ -13,8 +13,10 @@ export function OfficialNumberTag({
   numberingYear,
   className,
 }: OfficialNumberTagProps) {
+  const noNumberLabel = useLabel('docdetails.number.none')
+
   if (!officialNumberText) {
-    return <span className={cn('text-sm text-muted', className)}>بدون رقم</span>
+    return <span className={cn('text-sm text-muted', className)}>{noNumberLabel}</span>
   }
 
   return (

@@ -54,6 +54,8 @@ context menus (`AUDIT_MANAGE` items hidden otherwise).
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-18 | Qoder | UI labels Phase 4 (ب5): the page panel tabs (`PANELS`) now carry `labelKey`/`hintKey` rendered via `<Label>`, and the tablist aria resolves from `audit.page.tabs-aria`. |
+| 2026-11-18 | Qoder | UI labels Phase 4 (ب4): the audit page tabs and static chrome resolve from the `audit.*` catalog via `<Label>`/`t()`. |
 | 2026-10-25 | Buffy | Documented the shared data-grid contract and context menus for the audit log and integrity reports. |
 | 2026-10-25 | Cursor | Added audit page slice docs for Module 09 (self-audit side effect + integrity 200 semantics). |
 | 2026-10-29 | Cursor | Implemented the page, the panel tabs, the route, and the sidebar entry; corrected the URL state to the shared `sort`/`dir` contract. |

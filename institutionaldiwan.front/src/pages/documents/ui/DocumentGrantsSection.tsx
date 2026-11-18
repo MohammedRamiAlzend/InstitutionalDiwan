@@ -8,9 +8,9 @@ import {
   RevokeAccessGrantDialog,
 } from '@/features/document-access-grant'
 import { toArabicErrorMessage } from '@/shared/api'
-import { Permissions } from '@/shared/config'
-import { formatDate, formatDateTime, formatShortId } from '@/shared/lib'
-import { Badge, Button, CollapsibleSection, Skeleton } from '@/shared/ui'
+import { Permissions, type LabelKey } from '@/shared/config'
+import { formatDate, formatDateTime, formatShortId, t, useLabel } from '@/shared/lib'
+import { Badge, Button, CollapsibleSection, Label, Skeleton } from '@/shared/ui'
 
 interface DocumentGrantsSectionProps {
   documentId: string
@@ -34,11 +34,11 @@ function resolveGrantState(grant: DocumentAccessGrantResponse): GrantState {
 
 const STATE_BADGES: Record<
   GrantState,
-  { label: string; variant: 'success' | 'warning' | 'danger' }
+  { key: LabelKey; variant: 'success' | 'warning' | 'danger' }
 > = {
-  active: { label: 'ساري', variant: 'success' },
-  expired: { label: 'منتهٍ', variant: 'warning' },
-  revoked: { label: 'ملغى', variant: 'danger' },
+  active: { key: 'docdetails.grant-state.active', variant: 'success' },
+  expired: { key: 'docdetails.grant-state.expired', variant: 'warning' },
+  revoked: { key: 'docdetails.grant-state.revoked', variant: 'danger' },
 }
 
 /** Resolves a grant participant id through `/api/users/{id}` when the caller may read users. */
@@ -62,6 +62,7 @@ interface GrantRowProps {
 function GrantRow({ grant, canManage, onRevoke }: GrantRowProps) {
   const state = resolveGrantState(grant)
   const badge = STATE_BADGES[state]
+  const badgeLabel = useLabel(badge.key)
   const grantee = useUserLabel(grant.userId)
   const grantor = useUserLabel(grant.grantedByUserId)
   const revoker = useUserLabel(grant.revokedByUserId ?? '')
@@ -76,10 +77,10 @@ function GrantRow({ grant, canManage, onRevoke }: GrantRowProps) {
               id={grant.accessLevelId}
               className="font-medium"
             />
-            <Badge variant={badge.variant}>{badge.label}</Badge>
+            <Badge variant={badge.variant}>{badgeLabel}</Badge>
           </div>
           <div className="flex flex-wrap items-center gap-1.5 text-sm">
-            <span className="text-muted">المستخدم:</span>
+            <span className="text-muted"><Label k="docdetails.grant.user" /></span>
             {grantee.canReadUsers && grantee.isLoading ? (
               <Skeleton className="h-4 w-20" />
             ) : (
@@ -101,29 +102,29 @@ function GrantRow({ grant, canManage, onRevoke }: GrantRowProps) {
             }
           >
             <ShieldOff className="size-4" aria-hidden />
-            إلغاء التصريح
+            <Label k="docdetails.action.revoke-grant" />
           </Button>
         )}
       </div>
 
       <dl className="grid gap-x-4 gap-y-1 text-xs text-muted sm:grid-cols-2">
         <div className="flex flex-wrap items-center gap-1.5">
-          <dt>تاريخ المنح:</dt>
+          <dt><Label k="docdetails.grant.granted-at" /></dt>
           <dd className="text-foreground">{formatDateTime(grant.grantedAt)}</dd>
         </div>
         <div className="flex flex-wrap items-center gap-1.5">
-          <dt>مانح التصريح:</dt>
+          <dt><Label k="docdetails.grant.grantor" /></dt>
           <dd className="text-foreground">{grantor.label}</dd>
         </div>
         <div className="flex flex-wrap items-center gap-1.5">
-          <dt>تاريخ الانتهاء:</dt>
+          <dt><Label k="docdetails.grant.expires-at" /></dt>
           <dd className="text-foreground">
-            {grant.expiresAt ? formatDate(grant.expiresAt) : 'بلا انتهاء'}
+            {grant.expiresAt ? formatDate(grant.expiresAt) : <Label k="docdetails.grant.no-expiry" />}
           </dd>
         </div>
         {grant.isRevoked && (
           <div className="flex flex-wrap items-center gap-1.5">
-            <dt>أُلغي في:</dt>
+            <dt><Label k="docdetails.grant.revoked-at" /></dt>
             <dd className="text-foreground">
               {grant.revokedAt ? formatDateTime(grant.revokedAt) : '—'}
               {grant.revokedByUserId && ` · ${revoker.label}`}
@@ -154,19 +155,19 @@ export function DocumentGrantsSection({
 
   return (
     <CollapsibleSection
-      title="تصاريح الوصول"
+      title={t('docdetails.grants-title')}
       icon={<ShieldCheck className="size-4" aria-hidden />}
-      hint="تصاريح إضافية تمنح مستخدمًا محددًا مستوى وصول على هذه الوثيقة، مع المانح وتاريخ الانتهاء وسجل الإلغاء."
+      hint={t('docdetails.grants-hint')}
       open={open}
       onOpenChange={onOpenChange}
       actions={
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant="outline">{grants.length}</Badge>
-          <Badge variant="success">{activeCount} ساري</Badge>
+          <Badge variant="success">{t('docdetails.grants.active-count', { count: activeCount })}</Badge>
           {canManage && (
             <Button type="button" size="sm" onClick={() => setGrantOpen(true)}>
               <UserPlus className="size-4" aria-hidden />
-              منح وصول
+              <Label k="docdetails.action.grant-access" />
             </Button>
           )}
         </div>
@@ -188,21 +189,20 @@ export function DocumentGrantsSection({
             variant="outline"
             onClick={() => void grantsQuery.refetch()}
           >
-            إعادة المحاولة
+            <Label k="common.action.retry" />
           </Button>
         </div>
       ) : grants.length === 0 ? (
         <div className="flex flex-col items-center gap-2 rounded-lg border border-dashed border-border px-4 py-10 text-center">
           <ShieldCheck className="size-5 text-muted" aria-hidden />
-          <p className="text-sm font-medium text-foreground">لا توجد تصاريح وصول بعد.</p>
+          <p className="text-sm font-medium text-foreground"><Label k="docdetails.grants.empty-title" /></p>
           <p className="max-w-md text-xs text-muted">
-            التصاريح تمنح مستخدمًا محددًا مستوى وصول إضافيًا على هذه الوثيقة، وتظهر هنا مع
-            المانح وتاريخ الانتهاء وسجل الإلغاء.
+            <Label k="docdetails.grants.empty-description" />
           </p>
           {canManage && (
             <Button type="button" size="sm" variant="outline" onClick={() => setGrantOpen(true)}>
               <UserPlus className="size-4" aria-hidden />
-              منح أول تصريح
+              <Label k="docdetails.action.grant-first" />
             </Button>
           )}
         </div>

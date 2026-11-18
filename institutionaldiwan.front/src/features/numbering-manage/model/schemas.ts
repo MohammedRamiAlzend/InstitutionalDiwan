@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { unknownPatternTokens } from '@/entities/numbering-registry'
+import { t } from '@/shared/lib'
 
 const MIN_NUMBERING_YEAR = 1900
 const MAX_NUMBERING_YEAR = 2200
@@ -20,7 +21,10 @@ const optionalNumberingYear = z.string().superRefine((value, ctx) => {
   if (!/^\d{4}$/.test(value.trim()) || year < MIN_NUMBERING_YEAR || year > MAX_NUMBERING_YEAR) {
     ctx.addIssue({
       code: 'custom',
-      message: `سنة الترقيم يجب أن تكون بين ${MIN_NUMBERING_YEAR} و${MAX_NUMBERING_YEAR}.`,
+      message: t('numbering.validation.year-range', {
+        min: MIN_NUMBERING_YEAR,
+        max: MAX_NUMBERING_YEAR,
+      }),
     })
   }
 })
@@ -30,21 +34,21 @@ export const registryFormSchema = z.object({
   code: z
     .string()
     .trim()
-    .min(1, 'رمز سجل الترقيم مطلوب.')
-    .max(50, 'رمز سجل الترقيم يتجاوز الحد الأقصى للأحرف.')
+    .min(1, t('numbering.validation.code-required'))
+    .max(50, t('numbering.validation.code-max'))
     .regex(
       /^[A-Za-z0-9][A-Za-z0-9_-]*$/,
-      'الرمز يبدأ بحرف أو رقم ويقبل الأحرف والأرقام والشرطة فقط.',
+      t('numbering.validation.code-format'),
     ),
   nameAr: z
     .string()
     .trim()
-    .min(1, 'اسم سجل الترقيم مطلوب.')
-    .max(200, 'اسم سجل الترقيم يتجاوز الحد الأقصى للأحرف.'),
+    .min(1, t('numbering.validation.name-required'))
+    .max(200, t('numbering.validation.name-max')),
   formatPattern: z
     .string()
     .trim()
-    .max(100, 'قالب الرقم يتجاوز الحد الأقصى للأحرف.')
+    .max(100, t('numbering.validation.pattern-max'))
     .superRefine((value, ctx) => {
       if (!value) return
 
@@ -52,7 +56,7 @@ export const registryFormSchema = z.object({
       if (unknown.length > 0) {
         ctx.addIssue({
           code: 'custom',
-          message: `رموز غير معروفة في القالب: ${unknown.join('، ')}. المتاح {YEAR} و{SEQ} أو {SEQ:D6}.`,
+          message: t('numbering.validation.pattern-unknown', { tokens: unknown.join('، ') }),
         })
         return
       }
@@ -60,11 +64,11 @@ export const registryFormSchema = z.object({
       if (!value.toUpperCase().includes('{SEQ')) {
         ctx.addIssue({
           code: 'custom',
-          message: 'يجب أن يتضمن القالب الرمز {SEQ} حتى لا تتكرر الأرقام.',
+          message: t('numbering.validation.pattern-seq-required'),
         })
       }
     }),
-  resetPolicyId: z.string().min(1, 'اختر سياسة التصفير.'),
+  resetPolicyId: z.string().min(1, t('numbering.validation.reset-policy-required')),
   departmentId: z.string(),
   documentTypeId: z.string(),
 })
@@ -81,8 +85,8 @@ export const cancelNumberSchema = z.object({
   reason: z
     .string()
     .trim()
-    .min(1, 'سبب الإلغاء مطلوب.')
-    .max(1000, 'السبب يتجاوز الحد الأقصى للأحرف.'),
+    .min(1, t('numbering.validation.cancel-reason-required'))
+    .max(1000, t('numbering.validation.reason-max')),
 })
 
 export type CancelNumberFormValues = z.infer<typeof cancelNumberSchema>
@@ -91,8 +95,8 @@ export const replaceNumberSchema = z.object({
   reason: z
     .string()
     .trim()
-    .min(1, 'سبب الاستبدال مطلوب.')
-    .max(1000, 'السبب يتجاوز الحد الأقصى للأحرف.'),
+    .min(1, t('numbering.validation.replace-reason-required'))
+    .max(1000, t('numbering.validation.reason-max')),
   numberingYear: optionalNumberingYear,
 })
 
@@ -100,15 +104,15 @@ export type ReplaceNumberFormValues = z.infer<typeof replaceNumberSchema>
 
 export const departmentRegistrationSchema = z
   .object({
-    departmentId: z.string().min(1, 'اختر الدائرة.'),
+    departmentId: z.string().min(1, t('numbering.validation.department-required')),
     registryId: z.string(),
     registryNumberText: z
       .string()
       .trim()
-      .min(1, 'رقم تسجيل الدائرة مطلوب.')
-      .max(100, 'رقم تسجيل الدائرة يتجاوز الحد الأقصى للأحرف.'),
-    registryDate: z.string().min(1, 'تاريخ تسجيل الدائرة مطلوب.'),
-    notes: z.string().trim().max(1000, 'الملاحظات تتجاوز الحد الأقصى للأحرف.'),
+      .min(1, t('numbering.validation.reg-number-required'))
+      .max(100, t('numbering.validation.reg-number-max')),
+    registryDate: z.string().min(1, t('numbering.validation.reg-date-required')),
+    notes: z.string().trim().max(1000, t('numbering.validation.notes-max')),
   })
   .superRefine((values, ctx) => {
     if (!values.registryDate) return
@@ -117,7 +121,7 @@ export const departmentRegistrationSchema = z
       ctx.addIssue({
         code: 'custom',
         path: ['registryDate'],
-        message: 'تاريخ تسجيل الدائرة غير صالح.',
+        message: t('numbering.validation.reg-date-invalid'),
       })
       return
     }
@@ -127,7 +131,10 @@ export const departmentRegistrationSchema = z
       ctx.addIssue({
         code: 'custom',
         path: ['registryDate'],
-        message: `سنة التسجيل يجب أن تكون بين ${MIN_NUMBERING_YEAR} و${MAX_NUMBERING_YEAR}.`,
+        message: t('numbering.validation.reg-year-range', {
+          min: MIN_NUMBERING_YEAR,
+          max: MAX_NUMBERING_YEAR,
+        }),
       })
       return
     }
@@ -136,7 +143,7 @@ export const departmentRegistrationSchema = z
       ctx.addIssue({
         code: 'custom',
         path: ['registryDate'],
-        message: 'تاريخ تسجيل الدائرة لا يمكن أن يكون في المستقبل.',
+        message: t('numbering.validation.reg-date-future'),
       })
     }
   })

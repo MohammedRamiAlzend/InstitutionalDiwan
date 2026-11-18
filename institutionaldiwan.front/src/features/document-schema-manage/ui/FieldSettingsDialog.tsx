@@ -5,7 +5,7 @@ import { Plus, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import {
   FIELD_DATA_TYPE,
-  FIELD_DATA_TYPE_LABELS,
+  FIELD_DATA_TYPE_LABEL_KEYS,
   FIELD_OPTION_SOURCE,
   type DocumentFieldResponse,
   type FieldDataType,
@@ -14,7 +14,8 @@ import {
 } from '@/entities/document-schema'
 import { toArabicErrorMessage } from '@/shared/api'
 import { FEATURES, LOOKUP_CATALOG_META, isLookupCatalogEnabled } from '@/shared/config'
-import { Button, Checkbox, Dialog, FormField, Input, Select, Textarea } from '@/shared/ui'
+import { resolveLabel, t, useLabelsStore } from '@/shared/lib'
+import { Button, Checkbox, Dialog, FormField, Input, Label, Select, Textarea } from '@/shared/ui'
 import {
   useAddVersionFieldMutation,
   useCreateFieldMutation,
@@ -29,27 +30,6 @@ import { defaultSettingsValues, toSettingsRequest } from '../model/toRequest'
 import { FieldBehaviorSection } from './FieldBehaviorSection'
 
 const NEW_FIELD = 'new'
-
-const DATA_TYPE_OPTIONS = Object.values(FIELD_DATA_TYPE).map((value) => ({
-  value: String(value),
-  label: FIELD_DATA_TYPE_LABELS[value],
-}))
-
-const OPTION_SOURCE_OPTIONS = [
-  { value: String(FIELD_OPTION_SOURCE.Static), label: 'قائمة يدوية' },
-  { value: String(FIELD_OPTION_SOURCE.Departments), label: 'الدوائر' },
-  ...(FEATURES.externalOrganizations
-    ? [{ value: String(FIELD_OPTION_SOURCE.ExternalOrganizations), label: 'الجهات الخارجية' }]
-    : []),
-  { value: String(FIELD_OPTION_SOURCE.Lookup), label: 'قائمة مرجعية' },
-]
-
-const LOOKUP_OPTIONS = Object.entries(LOOKUP_CATALOG_META)
-  .filter(([slug]) => isLookupCatalogEnabled(slug))
-  .map(([value, meta]) => ({
-  value,
-  label: meta.labelAr,
-}))
 
 interface FieldSettingsDialogProps {
   /** The draft being edited; the dialog is closed when `null`. */
@@ -70,6 +50,37 @@ export function FieldSettingsDialog({
 }: FieldSettingsDialogProps) {
   const isEdit = field !== undefined
   const versionId = version?.schemaVersionId ?? ''
+  const overrides = useLabelsStore((state) => state.overrides)
+
+  const dataTypeOptions = useMemo(
+    () =>
+      Object.values(FIELD_DATA_TYPE).map((value) => ({
+        value: String(value),
+        label: resolveLabel(FIELD_DATA_TYPE_LABEL_KEYS[value], overrides),
+      })),
+    [overrides],
+  )
+  const optionSourceOptions = useMemo(
+    () => [
+      { value: String(FIELD_OPTION_SOURCE.Static), label: resolveLabel('schema.option-source.static', overrides) },
+      { value: String(FIELD_OPTION_SOURCE.Departments), label: resolveLabel('schema.option-source.departments', overrides) },
+      ...(FEATURES.externalOrganizations
+        ? [{ value: String(FIELD_OPTION_SOURCE.ExternalOrganizations), label: resolveLabel('schema.option-source.external-organizations', overrides) }]
+        : []),
+      { value: String(FIELD_OPTION_SOURCE.Lookup), label: resolveLabel('schema.option-source.lookup', overrides) },
+    ],
+    [overrides],
+  )
+  const lookupOptions = useMemo(
+    () =>
+      Object.entries(LOOKUP_CATALOG_META)
+        .filter(([slug]) => isLookupCatalogEnabled(slug))
+        .map(([value, meta]) => ({
+          value,
+          label: meta.labelKey ? resolveLabel(meta.labelKey, overrides) : value,
+        })),
+    [overrides],
+  )
 
   const createField = useCreateFieldMutation(version?.documentTypeId ?? 0)
   const addField = useAddVersionFieldMutation(versionId)
@@ -130,7 +141,7 @@ export function FieldSettingsDialog({
 
   const onSubmit = handleSubmit(async (values) => {
     if (!version || dataType === undefined) {
-      setIdentityErrors({ dataType: 'اختر نوع الحقل.' })
+      setIdentityErrors({ dataType: t('schema.validation.field-type-required') })
       return
     }
     const settings = toSettingsRequest(values, dataType)
@@ -138,7 +149,7 @@ export function FieldSettingsDialog({
     try {
       if (isEdit) {
         await updateField.mutateAsync({ documentFieldId: field.documentFieldId, settings })
-        toast.success('حُدّثت إعدادات الحقل.')
+        toast.success(t('schema.field-settings.toast-updated'))
         return close()
       }
 
@@ -162,7 +173,7 @@ export function FieldSettingsDialog({
       }
 
       await addField.mutateAsync({ documentFieldId, settings })
-      toast.success('أُضيف الحقل إلى المسودة.')
+      toast.success(t('schema.field-settings.toast-added'))
       close()
     } catch {
       // The mutation error is rendered in the banner below.
@@ -176,7 +187,7 @@ export function FieldSettingsDialog({
     (entry) => entry.documentFieldId !== field?.documentFieldId,
   )
   const sourceOptions = [
-    { value: NEW_FIELD, label: 'حقل جديد' },
+    { value: NEW_FIELD, label: resolveLabel('schema.field-settings.new-field', overrides) },
     ...available.map((entry) => ({ value: entry.documentFieldId, label: entry.key })),
   ]
 
@@ -187,20 +198,20 @@ export function FieldSettingsDialog({
         if (pending) return
         if (!next) close()
       }}
-      title={isEdit ? `تعديل الحقل «${field.labelAr}»` : 'إضافة حقل إلى المسودة'}
+      title={isEdit ? t('schema.field-settings.edit-title', { label: field.labelAr }) : t('schema.field-settings.create-title')}
       description={
         isEdit
-          ? 'يتغير الحقل في هذه المسودة فقط، ولا يتأثر مفتاحه ولا نوعه.'
-          : 'اختر حقلًا معرّفًا للنوع أو أنشئ حقلًا جديدًا. مفتاح الحقل ونوعه لا يتغيران بعد الإنشاء.'
+          ? t('schema.field-settings.edit-description')
+          : t('schema.field-settings.create-description')
       }
       size="lg"
       footer={
         <>
           <Button type="button" variant="outline" onClick={close} disabled={pending}>
-            تراجع
+            <Label k="schema.action.back" />
           </Button>
           <Button type="submit" form="field-settings-form" loading={pending}>
-            {isEdit ? 'حفظ' : 'إضافة'}
+            <Label k={isEdit ? 'common.action.save' : 'schema.field-settings.add'} />
           </Button>
         </>
       }
@@ -208,9 +219,9 @@ export function FieldSettingsDialog({
       <form id="field-settings-form" onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
         {!isEdit && (
           <>
-            <FormField label="الحقل" required>
+            <FormField labelKey="schema.field-settings.field" required>
               <Select
-                aria-label="مصدر الحقل"
+                aria-label={t('schema.field-settings.source-aria')}
                 value={source}
                 onValueChange={setSource}
                 options={sourceOptions}
@@ -218,7 +229,7 @@ export function FieldSettingsDialog({
             </FormField>
             {source === NEW_FIELD && (
               <div className="grid gap-4 sm:grid-cols-2">
-                <FormField label="المفتاح" required error={identityErrors.key}>
+                <FormField labelKey="schema.field-settings.key" required error={identityErrors.key}>
                   <Input
                     dir="ltr"
                     value={newKey}
@@ -227,13 +238,13 @@ export function FieldSettingsDialog({
                     onChange={(event) => setNewKey(event.target.value)}
                   />
                 </FormField>
-                <FormField label="نوع الحقل" required error={identityErrors.dataType}>
+                <FormField labelKey="schema.field-settings.type" required error={identityErrors.dataType}>
                   <Select
-                    aria-label="نوع الحقل"
+                    aria-label={t('schema.field-settings.type')}
                     value={newType}
                     onValueChange={setNewType}
-                    options={DATA_TYPE_OPTIONS}
-                    placeholder="اختر النوع"
+                    options={dataTypeOptions}
+                    placeholder={t('schema.field-settings.type-placeholder')}
                     invalid={Boolean(identityErrors.dataType)}
                   />
                 </FormField>
@@ -243,10 +254,10 @@ export function FieldSettingsDialog({
         )}
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <FormField label="العنوان بالعربية" required error={errors.labelAr?.message}>
+          <FormField labelKey="schema.field-settings.label-ar" required error={errors.labelAr?.message}>
             <Input invalid={Boolean(errors.labelAr)} {...register('labelAr')} />
           </FormField>
-          <FormField label="ترتيب العرض" required error={errors.displayOrder?.message}>
+          <FormField labelKey="schema.field-settings.display-order" required error={errors.displayOrder?.message}>
             <Input
               dir="ltr"
               inputMode="numeric"
@@ -263,24 +274,24 @@ export function FieldSettingsDialog({
             <Checkbox
               checked={control.value}
               onCheckedChange={control.onChange}
-              label="حقل إجباري"
-              description="يمنع تسجيل الوثيقة رسميًا قبل تعبئته."
+              label={t('schema.field-settings.required')}
+              description={t('schema.field-settings.required-description')}
             />
           )}
         />
 
         {isText && (
           <>
-            <FormField label="الحد الأقصى للطول" error={errors.maxLength?.message}>
+            <FormField labelKey="schema.field-settings.max-length" error={errors.maxLength?.message}>
               <Input
                 dir="ltr"
                 inputMode="numeric"
-                placeholder={dataType === FIELD_DATA_TYPE.Text ? '500 كحد أقصى' : '4000 كحد أقصى'}
+                placeholder={dataType === FIELD_DATA_TYPE.Text ? t('schema.field-settings.max-length-placeholder-text') : t('schema.field-settings.max-length-placeholder-long-text')}
                 invalid={Boolean(errors.maxLength)}
                 {...register('maxLength')}
               />
             </FormField>
-            <FormField label="نمط التحقق (Regex)" error={errors.regexPattern?.message}>
+            <FormField labelKey="schema.field-settings.regex-pattern" error={errors.regexPattern?.message}>
               <Input
                 dir="ltr"
                 placeholder="^[0-9]{4}/[0-9]+$"
@@ -290,7 +301,7 @@ export function FieldSettingsDialog({
             </FormField>
             {regexPattern.trim() && (
               <FormField
-                label="رسالة الخطأ عند عدم المطابقة"
+                labelKey="schema.field-settings.regex-message"
                 required
                 error={errors.regexErrorMessageAr?.message}
               >
@@ -306,10 +317,10 @@ export function FieldSettingsDialog({
 
         {dataType === FIELD_DATA_TYPE.Number && (
           <div className="grid gap-4 sm:grid-cols-2">
-            <FormField label="الحد الأدنى" error={errors.minNumber?.message}>
+            <FormField labelKey="schema.field-settings.min-number" error={errors.minNumber?.message}>
               <Input dir="ltr" inputMode="decimal" invalid={Boolean(errors.minNumber)} {...register('minNumber')} />
             </FormField>
-            <FormField label="الحد الأعلى" error={errors.maxNumber?.message}>
+            <FormField labelKey="schema.field-settings.max-number" error={errors.maxNumber?.message}>
               <Input dir="ltr" inputMode="decimal" invalid={Boolean(errors.maxNumber)} {...register('maxNumber')} />
             </FormField>
           </div>
@@ -317,31 +328,31 @@ export function FieldSettingsDialog({
 
         {isChoice && (
           <div className="grid gap-4 sm:grid-cols-2">
-            <FormField label="مصدر الخيارات" required>
+            <FormField labelKey="schema.field-settings.option-source" required>
               <Controller
                 control={control}
                 name="optionSource"
                 render={({ field: control }) => (
                   <Select
-                    aria-label="مصدر الخيارات"
+                    aria-label={t('schema.field-settings.option-source')}
                     value={control.value}
                     onValueChange={control.onChange}
-                    options={OPTION_SOURCE_OPTIONS}
+                    options={optionSourceOptions}
                   />
                 )}
               />
             </FormField>
             {optionSource === String(FIELD_OPTION_SOURCE.Lookup) && (
-              <FormField label="القائمة المرجعية" required error={errors.lookupCatalog?.message}>
+              <FormField labelKey="schema.field-settings.lookup-catalog" required error={errors.lookupCatalog?.message}>
                 <Controller
                   control={control}
                   name="lookupCatalog"
                   render={({ field: control }) => (
                     <Select
-                      aria-label="القائمة المرجعية"
+                      aria-label={t('schema.field-settings.lookup-catalog')}
                       value={control.value || undefined}
                       onValueChange={control.onChange}
-                      options={LOOKUP_OPTIONS}
+                      options={lookupOptions}
                       invalid={Boolean(errors.lookupCatalog)}
                     />
                   )}
@@ -353,7 +364,7 @@ export function FieldSettingsDialog({
 
         {isStaticChoice && (
           <FormField
-            label="الخيارات"
+            labelKey="schema.field-settings.options"
             required
             error={
               typeof errors.options?.message === 'string'
@@ -366,15 +377,15 @@ export function FieldSettingsDialog({
                 <div key={item.id} className="flex items-start gap-2">
                   <Input
                     dir="ltr"
-                    aria-label={`مفتاح الخيار ${index + 1}`}
+                    aria-label={t('schema.field-settings.option-key-aria', { index: index + 1 })}
                     placeholder="key"
                     className="w-40"
                     invalid={Boolean(errors.options?.[index]?.key)}
                     {...register(`options.${index}.key`)}
                   />
                   <Input
-                    aria-label={`عنوان الخيار ${index + 1}`}
-                    placeholder="العنوان بالعربية"
+                    aria-label={t('schema.field-settings.option-label-aria', { index: index + 1 })}
+                    placeholder={t('schema.field-settings.option-label-placeholder')}
                     invalid={Boolean(errors.options?.[index]?.labelAr)}
                     {...register(`options.${index}.labelAr`)}
                   />
@@ -382,7 +393,7 @@ export function FieldSettingsDialog({
                     type="button"
                     variant="ghost"
                     size="sm"
-                    aria-label={`حذف الخيار ${index + 1}`}
+                    aria-label={t('schema.field-settings.option-remove-aria', { index: index + 1 })}
                     onClick={() => options.remove(index)}
                   >
                     <Trash2 className="size-4" aria-hidden />
@@ -397,7 +408,7 @@ export function FieldSettingsDialog({
                 onClick={() => options.append({ key: '', labelAr: '' })}
               >
                 <Plus className="size-4" aria-hidden />
-                إضافة خيار
+                <Label k="schema.field-settings.add-option" />
               </Button>
             </div>
           </FormField>

@@ -31,5 +31,6 @@ or locked state, the form version, the last correction and the record values.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-18 | Qoder | UI labels Phase 4 (ب2): static Arabic resolves through the `department.records.*` catalog — section aria, visit/locked/open/edit/correct actions via `<Label>`, corrected-at/no-form/empty via `t()`. Schema `field.labelAr` and department names stay data-driven. |
 | 2026-11-17 | Qoder | De-nested the per-department cards: the bordered `bg-surface` card became a borderless block with a light top divider between departments, so the panel no longer nests a card inside the «السجلات» section card. |
 | 2026-11-10 | Claude | Created the panel. |

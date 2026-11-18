@@ -29,11 +29,11 @@ not ask for it.
 | File | Purpose |
 | --- | --- |
 | `model/types.ts` | `CreateDocumentRequest` (`POST /api/documents`) and `CreateDraftDocumentRequest` (`POST /api/documents/drafts`), matching the server contracts. |
-| `model/schemas.ts` | `createDocumentSchema` — shared Arabic-validated fields plus a `mode: 'draft' \| 'register'` discriminator; the official number and a 4-digit 1900–2200 numbering year are required only when registering. |
+| `model/schemas.ts` | `createDocumentSchema` — shared fields validated through the labels catalog (`t('documents.create.validation.*')`) plus a `mode: 'draft' \| 'register'` discriminator; the register number and date are required only when registering. |
 | `api/documentMutations.ts` | `useCreateDocumentMutation` and `useCreateDraftDocumentMutation`, invalidating `documentKeys.lists()` on success. |
-| `ui/CreateDocumentDialog.tsx` | Radix dialog arranged in titled sections: a two-card mode selector, the department register (register mode), the document-type select and dynamic fields, people named on the document, and sending (register mode), and field-level `Numbering.OfficialNumberTaken` feedback. |
-| `ui/FormSection.tsx` | One titled group of the form: icon, title, hint, and an end slot for a badge or switch. |
-| `ui/ChoiceCard.tsx` | Radio option drawn as a card, used for the creation mode. |
+| `ui/CreateDocumentDialog.tsx` | Radix dialog arranged in titled sections: a two-card mode selector, the department register (register mode), the document-type select and dynamic fields, people named on the document, and sending (register mode), and field-level `Numbering.RegistryNumberTaken` feedback. All static text resolves from `documents.*` / `common.*` labels (`<Label>`, `labelKey`, `t()`). |
+| `ui/FormSection.tsx` | One titled group of the form: icon, `titleKey`, optional `hintKey` (+ `hintParams`), and an end slot for a badge or switch. Title/hint render through `<Label>` so they are editable in place. |
+| `ui/ChoiceCard.tsx` | Radio option drawn as a card, used for the creation mode; `titleKey`/`hintKey` render through `<Label>`. |
 | `index.ts` | Public barrel for the request/form types, the two mutations, and the dialog. |
 
 ## 4. Required Packages
@@ -62,6 +62,7 @@ not ask for it.
 | Browser verification | ✅ Verified in-browser (2026-10-28) against the live API: draft «مسودة تحقق Phase 2» saved as DRAFT with «بدون رقم»; registering an existing `15/2024` returned `409 Numbering.OfficialNumberTaken` as the Arabic field error «رقم النظام مستخدم مسبقًا في هذه السنة.» with the dialog staying open; registering `999/2026` closed the dialog, showed the toast «تم تسجيل الوثيقة برقم 999/2026.», and the row appeared first in the registry; the numbering-year default rendered `2026` from the browser clock. |
 
 ## 7. Change Log
+- 2026-11-18: UI labels Phase 4 (documents list unit): all static dialog text moved to the `documents.*` catalog — `FormSection`/`ChoiceCard` now take `titleKey`/`hintKey` (rendered via `<Label>`), `FormField`s use `labelKey`, toasts/aria/placeholders/the feature-flag-composed description use `t()`, and Zod messages resolve through `t('documents.create.validation.*')`. The `1447/2026` example placeholder stays a literal.
 - 2026-11-17: The register field preselects the sidebar-chosen register (`shared/lib/selectedRegistry`), falling back to the first active register; restored drafts keep their own choice.
 - 2026-11-09: The department register section moved to the top of the form.
 - 2026-11-09: While `FEATURES.drafts` is off the form hides the mode choice and always registers.

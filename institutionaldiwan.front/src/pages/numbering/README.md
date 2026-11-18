@@ -45,6 +45,8 @@ the server rejects direct writes with 403.
 
 ## 6. Change Log
 
+- 2026-11-18: UI labels Phase 4 (ب4): the tab labels/hints render from the catalog (`numbering.tabs.*`) via `<Label>` and the tablist aria via `t()`; the page header already used `PageHeader` `titleKey`/`descriptionKey`.
+
 - 2026-11-17: UI labels Phase 3 (`plans/ui-labels-edit-mode.md`): the page header title/description render from the catalog (`page.numbering.title` / `.description`) via `PageHeader` `titleKey`/`descriptionKey`.
 
 - 2026-10-30: Module 04 Phase 5 — verified the page in-browser as manager and read-only user: the

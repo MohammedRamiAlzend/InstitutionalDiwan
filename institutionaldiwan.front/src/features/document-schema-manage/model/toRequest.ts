@@ -7,6 +7,7 @@ import {
   type FieldOptionSource,
   type SchemaFieldResponse,
 } from '@/entities/document-schema'
+import { t } from '@/shared/lib'
 import type { FieldSettingsFormValues } from './schemas'
 import type { FieldSettingsRequest } from './types'
 
@@ -120,7 +121,7 @@ export function previewField(dataType: FieldDataType, options: readonly FieldOpt
     documentFieldId: '',
     key: 'default',
     dataType,
-    labelAr: 'القيمة الافتراضية',
+    labelAr: t('schema.behavior.default-value'),
     isRequired: false,
     displayOrder: 0,
     regexPattern: null,

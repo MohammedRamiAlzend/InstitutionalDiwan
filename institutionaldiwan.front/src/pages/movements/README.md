@@ -47,6 +47,7 @@ Route guard: `DOCUMENT_VIEW`. Actions inside use `DOCUMENT_EDIT` and domain move
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-18 | Qoder | UI labels Phase 4 (movements unit): the inbox/outbox tab labels and hints render from the catalog (`movements.tab.*`) via `<Label>`, and the tablist aria-label via `t('movements.tabs-aria')`. |
 | 2026-10-29 | Cursor | Implemented the page and wired it into the router and sidebar; removed the unbuilt `departmentId` parameter from the URL contract. |
 | 2026-10-25 | Buffy | Documented URL-driven filters/paging and the shared table/context-menu contract for the queues. |
 | 2026-10-25 | Cursor | Added movements page slice docs mapped to live Module 05 inbox/outbox APIs. |

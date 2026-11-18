@@ -12,8 +12,8 @@ import {
 } from '@/features/document-person-manage'
 import { toArabicErrorMessage } from '@/shared/api'
 import { Permissions, ROUTES } from '@/shared/config'
-import { formatDateTime, useTableState } from '@/shared/lib'
-import { Button, ConfirmDialog, DataTable, type DataTableColumn, type MenuEntry } from '@/shared/ui'
+import { formatDateTime, t, useTableState } from '@/shared/lib'
+import { Button, ConfirmDialog, DataTable, Label, type DataTableColumn, type MenuEntry } from '@/shared/ui'
 
 interface DocumentPersonsTabProps {
   documentId: string
@@ -37,7 +37,7 @@ export function DocumentPersonsTab({ documentId, canManage, frozenReason }: Docu
     () => [
       {
         id: 'name',
-        header: 'الاسم',
+        headerKey: 'docdetails.persons.column.name',
         hideable: false,
         sortable: true,
         sortValue: (person) => person.displayName,
@@ -52,12 +52,12 @@ export function DocumentPersonsTab({ documentId, canManage, frozenReason }: Docu
       },
       {
         id: 'role',
-        header: 'الصفة',
+        headerKey: 'docdetails.persons.column.role',
         cell: (person) => <LookupLabel lookup={LOOKUP_SLUGS.DocumentPersonRoles} id={person.roleId} />,
       },
       {
         id: 'createdAt',
-        header: 'تاريخ الإضافة',
+        headerKey: 'docdetails.persons.column.created-at',
         sortable: true,
         sortValue: (person) => person.createdAt,
         cell: (person) => (
@@ -75,7 +75,7 @@ export function DocumentPersonsTab({ documentId, canManage, frozenReason }: Docu
       ? [
           {
             id: 'open',
-            label: 'فتح ملف الشخص',
+            label: t('docdetails.persons.row.open'),
             icon: <ExternalLink className="size-4" aria-hidden />,
             onSelect: () => navigate(ROUTES.PERSON_DETAIL(person.personId)),
           } satisfies MenuEntry,
@@ -85,13 +85,13 @@ export function DocumentPersonsTab({ documentId, canManage, frozenReason }: Docu
       ? [
           {
             id: 'role',
-            label: 'تغيير الصفة',
+            label: t('docdetails.persons.row.change-role'),
             icon: <Pencil className="size-4" aria-hidden />,
             onSelect: () => setRoleTarget(person),
           } satisfies MenuEntry,
           {
             id: 'remove',
-            label: 'إزالة من الوثيقة',
+            label: t('docdetails.persons.row.remove'),
             icon: <Trash2 className="size-4" aria-hidden />,
             danger: true,
             onSelect: () => setRemoveTarget(person),
@@ -104,7 +104,7 @@ export function DocumentPersonsTab({ documentId, canManage, frozenReason }: Docu
     if (!removeTarget) return
     try {
       await removeMutation.mutateAsync({ documentId, documentPersonId: removeTarget.documentPersonId })
-      toast.success('تمت إزالة الشخص من الوثيقة.')
+      toast.success(t('docdetails.persons.toast.removed'))
       setRemoveTarget(null)
     } catch (error) {
       toast.error(toArabicErrorMessage(error))
@@ -114,7 +114,7 @@ export function DocumentPersonsTab({ documentId, canManage, frozenReason }: Docu
   const addButton = canManage ? (
     <Button type="button" onClick={() => setAddOpen(true)}>
       <UserPlus className="size-4" aria-hidden />
-      إضافة أشخاص
+      <Label k="docdetails.action.add-persons" />
     </Button>
   ) : undefined
 
@@ -125,7 +125,7 @@ export function DocumentPersonsTab({ documentId, canManage, frozenReason }: Docu
       <DataTable
         tableId="document-persons"
         mode="client"
-        caption="الأشخاص المرتبطون بالوثيقة"
+        caption={t('docdetails.persons.caption')}
         columns={columns}
         rows={personsQuery.data}
         rowKey={(person) => person.documentPersonId}
@@ -141,7 +141,7 @@ export function DocumentPersonsTab({ documentId, canManage, frozenReason }: Docu
         onPageSizeChange={table.setPageSize}
         search={table.search}
         onSearchChange={table.setSearch}
-        searchPlaceholder="ابحث بالاسم…"
+        searchPlaceholder={t('docdetails.persons.search')}
         sortKey={table.sortKey}
         sortDirection={table.sortDirection}
         onSortChange={table.setSort}
@@ -149,8 +149,8 @@ export function DocumentPersonsTab({ documentId, canManage, frozenReason }: Docu
         rowLabel={(person) => person.displayName}
         rowMenu={buildRowMenu}
         toolbar={addButton}
-        emptyTitle="لا يوجد أشخاص مرتبطون بهذه الوثيقة."
-        emptyDescription="أضف المدعى عليهم أو المدعين أو غيرهم لتتمكن من الوصول إلى هذه الوثيقة من اسم الشخص."
+        emptyTitle={t('docdetails.persons.empty-title')}
+        emptyDescription={t('docdetails.persons.empty-description')}
         emptyAction={addButton}
       />
 
@@ -172,11 +172,11 @@ export function DocumentPersonsTab({ documentId, canManage, frozenReason }: Docu
         onOpenChange={(open) => {
           if (!open) setRemoveTarget(null)
         }}
-        title="إزالة الشخص من الوثيقة"
+        title={t('docdetails.persons.remove-title')}
         description={
-          removeTarget ? `سيُزال «${removeTarget.displayName}» من هذه الوثيقة، ويبقى سجله في النظام.` : undefined
+          removeTarget ? t('docdetails.persons.remove-description', { name: removeTarget.displayName }) : undefined
         }
-        confirmLabel="إزالة"
+        confirmLabel={t('docdetails.persons.remove-confirm')}
         destructive
         loading={removeMutation.isPending}
         onConfirm={() => void confirmRemove()}

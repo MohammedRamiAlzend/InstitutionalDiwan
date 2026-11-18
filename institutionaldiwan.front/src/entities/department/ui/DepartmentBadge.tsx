@@ -1,4 +1,4 @@
-import { Badge } from '@/shared/ui'
+import { Badge, Label } from '@/shared/ui'
 import { cn } from '@/shared/lib'
 
 interface DepartmentBadgeProps {
@@ -24,7 +24,7 @@ export function DepartmentBadge({
       >
         {code}
       </span>
-      {!isActive && <Badge variant="danger">موقوف</Badge>}
+      {!isActive && <Badge variant="danger"><Label k="department.status.suspended" /></Badge>}
     </span>
   )
 }

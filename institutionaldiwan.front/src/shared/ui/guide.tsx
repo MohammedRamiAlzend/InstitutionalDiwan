@@ -9,8 +9,9 @@ import {
 } from 'react'
 import { CircleHelp } from 'lucide-react'
 import { getGuideEntry, getPageGuide } from '@/shared/config'
-import { cn, useTutorial } from '@/shared/lib'
+import { cn, t, useTutorial } from '@/shared/lib'
 import { Button } from './button'
+import { Label } from './label'
 import { destroyGuideTour, showGuidePopover, showGuideTour } from './guide-tour'
 
 interface GuideContextValue {
@@ -58,7 +59,7 @@ export function GuideProvider({ pageId, children }: GuideProviderProps) {
       // A region the user cannot see right now has nothing to explain about it.
       return entry && visible.current.has(entry.id) ? [entry] : []
     })
-    showGuideTour({ id: guide.pageId, title: 'عن هذه الصفحة', body: guide.intro }, entries)
+    showGuideTour({ id: guide.pageId, title: t('guide.about-page'), body: guide.intro }, entries)
   }, [guide])
 
   // A tour must not outlive its page, nor the mode being switched off.
@@ -99,8 +100,8 @@ export function GuideChip({ id, className }: GuideChipProps) {
       type="button"
       data-guide-chip={guide.id}
       onClick={() => showGuidePopover(guide)}
-      aria-label={`اشرح: ${guide.title}`}
-      title={`اشرح: ${guide.title}`}
+      aria-label={t('guide.explain', { title: guide.title })}
+      title={t('guide.explain', { title: guide.title })}
       className={cn(
         'inline-flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-full',
         'text-muted transition-colors hover:bg-surface-muted hover:text-foreground',
@@ -161,7 +162,7 @@ export function PageGuideTrigger({ pageId, className }: { pageId: string; classN
       onClick={context.openPageGuide}
     >
       <CircleHelp className="size-4" aria-hidden />
-      شرح هذه الصفحة
+      <Label k="guide.explain-page" />
     </Button>
   )
 }

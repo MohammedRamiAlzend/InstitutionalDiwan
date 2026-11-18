@@ -1,9 +1,9 @@
 import type { MovementAction } from '@/entities/movement'
-import { Button } from '@/shared/ui'
+import { Button, Label } from '@/shared/ui'
 import {
   DESTRUCTIVE_ACTIONS,
   MOVEMENT_ACTION_ICONS,
-  MOVEMENT_ACTION_LABELS,
+  MOVEMENT_ACTION_LABEL_KEYS,
 } from '../model/constants'
 
 interface MovementActionButtonsProps {
@@ -38,7 +38,7 @@ export function MovementActionButtons({
               className={action === 'send' || action === 'redirect' ? 'size-4 rtl:-scale-x-100' : 'size-4'}
               aria-hidden
             />
-            {MOVEMENT_ACTION_LABELS[action]}
+            <Label k={MOVEMENT_ACTION_LABEL_KEYS[action]} />
           </Button>
         )
       })}

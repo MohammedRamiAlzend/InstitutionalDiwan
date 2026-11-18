@@ -1,8 +1,8 @@
 # الخطة — قاموس التسميات القابل للتعديل + وضع التعديل المباشر (UI Labels)
 
-**الحالة:** معتمدة — **المراحل 0 و1 و2 و3 منفَّذة (2026-11-17)**؛ المرحلتان 4–5 بانتظار التنفيذ.
+**الحالة:** معتمدة — **المراحل 0–5 منفَّذة (2026-11-17/18)**؛ كل نص الواجهة الثابت يُحل من الكتالوج (~3006 مفتاح)، وحارس الاتساق `scripts/check-label-keys.mjs` موصول ببوابة lint. **متبقٍ فقط:** جولة المتصفح الشاملة بثلاثة أدوار فاتح/داكن (دخول يدوي من المستخدم). لا commits إلا بطلب.
 **النطاق:** واجهة SPA (`institutionaldiwan.front`) + طرف API جديد صغير في `InstitutionalDiwan.Server` (جدول واحد + 3 endpoints). لا تعديل على نصوص السيرفر المولّدة (إشعارات/تدقيق/أخطاء تحقق) — خارج النطاق عمداً، والتصميم لا يمنع إضافتها لاحقاً.
-**آخر مراجعة:** 2026-11-17.
+**آخر مراجعة:** 2026-11-18.
 **مرجع الأسلوب:** [plans/tutorial-mode-frontend.md](tutorial-mode-frontend.md) — نفس بنية الأقسام والمراحل ومعايير التحقق.
 **قرارات المستخدم المعتمدة (2026-11-17):** الواجهة فقط كبداية · وضع تعديل مباشر Inline · **الكتابة لحساب `superadmin` حصراً** (لا صلاحية قابلة للمنح عبر إدارة الأدوار).
 
@@ -176,12 +176,204 @@
 
 لكل دفعة: إضافة ملف كتالوج المنطقة، استبدال النصوص، تحديث READMEs، جولة متصفح للمنطقة (تعديل 3 تسميات مختلفة على الأقل والتحقق من سريانها + الاستعادة).
 
-### المرحلة 5 — حارس الاتساق + الإغلاق
+#### ب1 — وحدة documents الأولى (شاشة قائمة المراسلات) ✅ منفَّذة (2026-11-18)
 
-1. سكربت فحص (node) يُشغَّل مع البوابات: كل مفتاح مستخدم في JSX/`t()` موجود في الكتالوج، وكل مفتاح في الكتالوج مستخدم (تحذير للمهجور)، ولا placeholders مفقودة.
-2. (اختياري، يُقرَّر عند المراجعة) قاعدة lint تمنع سلاسل عربية حرفية جديدة في JSX خارج الكتالوج.
-3. توثيق نهائي: `knowledge.md` (الـ endpoints الجديدة)، READMEs، ودليل قصير داخل الوضع نفسه.
-4. البوابات الكاملة الأربع + جولة متصفح شاملة بثلاثة أدوار (أدمن/موظف/بلا صلاحية) فاتح/داكن.
+أول وحدة قابلة للمراجعة داخل ب1 (الأكبر)، اقتصرت على شاشة القائمة دون صفحة تفاصيل الوثيقة:
+
+- **الكتالوج:** `shared/config/labels/documents.ts` (`DOCUMENT_LABELS`، نطاق `documents.*`) — تبويبا الصفحة، جدول السجل (رؤوس الأعمدة، المرشحات، قوائم الصف، toasts النسخ، حالات الفراغ)، `RegisterNumberFilter`، وحوار الإنشاء (الأقسام، الحقول، البطاقات، toasts، رسائل Zod). دُمج في `LABEL_DEFAULTS`.
+- **الجدول:** `DataTableColumn.header` صار اختياريًا (`header?: string`) ليُعرَّف العمود بـ `headerKey` وحده؛ `headerOf` يرتد إلى `header ?? ''`. رؤوس الأعمدة الثابتة عبر `headerKey` (تُعاد رسمها عند التعديل عبر المتجر)، وخيارات «الكل» الثلاثة عبر `useLabel` (سريان فوري)، والأزرار/إجراءات الفراغ عبر `<Label>` (قابلة للتحرير مكانه)، والقوائم/toasts/aria/placeholder/caption/hالات الفراغ عبر `t()`. رؤوس أعمدة الحقول الديناميكية بقيت `field.labelAr`.
+- **الصفحة:** تبويبا `registry`/`organizations` عبر `<Label>`، وaria للتبويبات عبر `t()`. وصف الصفحة المركّب من أعلام الميزات بقي في الكود (استثناء المرحلة 3).
+- **حوار الإنشاء:** `FormSection`/`ChoiceCard` صارا يقبلان `titleKey`/`hintKey` (يرسمان عبر `<Label>`)، و`FormField`s عبر `labelKey`، والوصف المركّب من الأعلام يُركَّب من أجزاء `t()`، ورسائل Zod عبر `t('documents.create.validation.*')`. placeholder المثال `1447/2026` بقي حرفيًا.
+- **الوثائق:** READMEs المجلدات الستة (`labels`، `shared/config`، `shared/ui`، `pages/documents`، `widgets/document-registry-table`، `features/document-create`) + `knowledge.md` (قسم UI labels) + هذه الخطة، بنفس الدور.
+- **البوابات:** `npm run lint` ✅ (Guide catalogue OK: 115/20/118) + `npm run build` ✅ (tsc + vite؛ تحذير حجم الحزم الموجود مسبقًا فقط). فحص grep: لا نص عربي حرفي متبقٍ في ملفات الوحدة عدا وصف الصفحة المركّب (استثناء موثّق).
+- **متبقٍ:** جولة المتصفح (دخول يدوي من المستخدم): تعديل 3 تسميات مختلفة على الأقل (رأس عمود، زر، تسمية حقل) والتحقق من سريانها في القائمة والحوار + الاستعادة؛ فاتح/داكن.
+- **لم يُنفَّذ بعد من ب1:** decisions, my-registers, persons, archive (تنتظر موافقة صريحة على الوحدة التالية).
+
+#### ب1 — وحدة movements (منطقة الحركات/التوجيه) ✅ منفَّذة (2026-11-18)
+
+ثاني وحدة قابلة للمراجعة داخل ب1، غطّت منطقة الحركات كاملة (الصفحة + الصندوق + feature التوجيه + قوالب ملاحظات الـ entity):
+
+- **الكتالوج:** `shared/config/labels/movements.ts` (`MOVEMENT_LABELS`، نطاق `movements.*`) — تبويبا الصفحة، صندوق الوارد/الصادر (رؤوس الأعمدة، المرشحات، قوائم الصف، toasts النسخ، خلايا الخطوة/المسار/متأخر، حالات الفراغ)، تسميات الإجراءات (`movements.action.*`)، كل حوارات الإجراءات (فتح/إرسال/استلام/إكمال/إغلاق/رفض/إرجاع/إعادة توجيه/إلغاء — العناوين، الأوصاف، الحقول، التلميحات، toasts، رسائل Zod)، تلميح مسار الحفظ، منتقي المكلَّف، وقوالب ملاحظات الخط الزمني. دُمج في `LABEL_DEFAULTS`.
+- **خريطة الإجراءات:** `MOVEMENT_ACTION_LABELS` (قيم نصية) صارت `MOVEMENT_ACTION_LABEL_KEYS` (`Record<MovementAction, LabelKey>` → `movements.action.*`)؛ تُحلّ عبر `t()` في قائمة صف الصندوق وعناوين الحوارات، وعبر `<Label>` في `MovementActionButtons`. حُدّثت كل المستهلكات (الصندوق، الحوارات، الأزرار، الـ barrel).
+- **الصندوق:** رؤوس الأعمدة عبر `headerKey`، وخيارا «الكل» عبر `useLabel`، وخلايا الخطوة/المسار/متأخر والأزرار/إجراءات الفراغ عبر `<Label>` (مع إبقاء spans الأرقام `dir="ltr"`)، والقوائم/toasts/aria/caption/البحث/حالات الفراغ عبر `t()`.
+- **الحوارات:** العناوين/الأوصاف/التلميحات/toasts عبر `t()`، والحقول عبر `FormField labelKey`، والأزرار عبر `<Label>`؛ رسائل Zod عبر `t('movements.validation.*')`؛ خيار «بدون إسناد» عبر `useLabel`. placeholder المثال `FIN-001/2026` بقي حرفيًا.
+- **الـ entity:** `translateMovementNote` في `entities/movement/model/rules.ts` يحلّ قالبَيه عبر `t('movements.note.routed-to-central' / '.rejected', { detail })`.
+- **الوثائق:** READMEs المجلدات الستة (`labels`، `shared/config`، `pages/movements`، `widgets/movement-inbox`، `features/movement-routing`، `entities/movement`) + `knowledge.md` (قسم UI labels) + هذه الخطة، بنفس الدور.
+- **البوابات:** `npm run lint` ✅ (Guide catalogue OK: 115/20/118) + `npm run build` ✅ (tsc + vite؛ تحذير حجم الحزم الموجود مسبقًا فقط). فحص grep: لا نص عربي حرفي متبقٍ في ملفات الوحدة عدا التعليقات التوثيقية وplaceholder المثال (استثناء موثّق).
+- **متبقٍ:** جولة المتصفح (دخول يدوي من المستخدم): تعديل 3 تسميات مختلفة على الأقل (رأس عمود، زر إجراء، تسمية حقل في حوار) والتحقق من سريانها في الصندوق والحوارات + الاستعادة؛ فاتح/داكن.
+- **لم يُنفَّذ بعد من ب1:** decisions, my-registers, persons, archive (تنتظر موافقة صريحة على الوحدة التالية).
+
+#### ب1 — وحدة decisions (أ): السطح القرائي ✅ منفَّذة (2026-11-18)
+
+ثالث وحدة قابلة للمراجعة داخل ب1. منطقة القرارات كبيرة (لوحة الوثيقة + 7 حوارات + جدولان + خرائط تسميات)، فجُزّئت داخليًا كما تنص الخطة؛ هذه الوحدة تغطي **السطح القرائي فقط** (الصفحة + الجدولان + خرائط التسميات المشتركة + شارة الحالة)، والحوارات ولوحة الوثيقة تكون الوحدة التالية (ب):
+
+- **الكتالوج:** `shared/config/labels/decisions.ts` (`DECISION_LABELS`، نطاق `decisions.*`) — تبويبا الصفحة، خرائط الأثر/الحالة/نتيجة الاعتراض (مع احتياطيات `{id}`)، جدول سجل القرارات (رؤوس الأعمدة، المرشحات، قوائم الصف، حالات الفراغ)، وجدول أنواع القرارات (الرؤوس، خلايا قابل/غير قابل ومفعّل/موقوف، القوائم، toasts، المرشح، حالات الفراغ). دُمج في `LABEL_DEFAULTS`.
+- **خرائط التسميات المشتركة:** `shared/config/decisionLabels.ts` — الخرائط الثلاث صارت `Record<number, LabelKey>` (`decisions.effect.*`/`status.*`/`appeal-outcome.*`) والدوال تحلّ عبر `t()` مع احتياطي `{id}`؛ **التواقيع بلا تغيير** فتبقى كل المستهلكات (الجدولان، `DecisionStatusBadge`، لوحة الوثيقة، حوارا الإصدار/النوع) تعمل وترث إعادة التسمية. `isDecisionInForce` بقي فحص ID صرفًا. الاعتماد config→lib آمن (الدالة `t` مرفوعة ولا تُستدعى وقت تحميل الوحدة).
+- **الصفحة:** `DecisionsPage` التبويبان عبر `<Label>` وaria عبر `t()`.
+- **جدول السجل:** رؤوس الأعمدة عبر `headerKey`، وخيارات «الكل» الثلاثة عبر `useLabel`، وزر مسح المرشحات عبر `<Label>`، والقوائم/aria/caption/البحث/حالات الفراغ عبر `t()`؛ خليتا الأثر/الحالة تحلان عبر `decisionEffectLabel`/`DecisionStatusBadge`.
+- **جدول الأنواع:** الرؤوس عبر `headerKey`، وخلايا قابل/غير قابل ومفعّل/موقوف وزر «نوع جديد» عبر `<Label>`، وخيارات مرشح الحالة وplaceholder عبر `useLabel`، وtoasts/القوائم/aria/caption/البحث/حالات الفراغ عبر `t()`.
+- **شارة الحالة:** `DecisionStatusBadge` بلا تغيير كود (ترث الحل عبر `decisionStatusLabel`)، فالمجلد غير متأثر ولا README له.
+- **الوثائق:** READMEs المجلدات الثلاثة (`labels`، `shared/config`، `pages/decisions`) + `knowledge.md` (قسم UI labels) + هذه الخطة، بنفس الدور.
+- **البوابات:** `npm run lint` ✅ (Guide catalogue OK: 115/20/118) + `npm run build` ✅ (tsc + vite؛ تحذير حجم الحزم الموجود مسبقًا فقط). فحص grep: لا نص عربي حرفي متبقٍ في `pages/decisions/ui`.
+- **متبقٍ:** جولة المتصفح (دخول يدوي من المستخدم): تعديل تسمية رأس عمود + تسمية خلية (مفعّل/موقوف) + تسمية أثر/حالة عبر الخرائط المشتركة والتحقق من سريانها في الجدولين وشارة الحالة + الاستعادة؛ فاتح/داكن.
+- **لم يُنفَّذ بعد من منطقة decisions:** الحوارات (`features/decision-manage` الستة + `features/decision-type-manage`) ولوحة الوثيقة (`widgets/document-decisions-panel`) — الوحدة (ب) التالية. ومن ب1 أيضًا: my-registers, persons, archive (تنتظر موافقة صريحة).
+
+#### ب1 — وحدة decisions (ب): الحوارات + لوحة الوثيقة ✅ منفَّذة (2026-11-18)
+
+رابع وحدة قابلة للمراجعة داخل ب1، تُكمل منطقة القرارات (الحوارات + لوحة الوثيقة). بأمر المستخدم «كمل لتخلص للاخر» تُنفَّذ الدفعات المتبقية تباعًا دون توقف بعد كل وحدة:
+
+- **الكتالوج:** وُسّع `shared/config/labels/decisions.ts` بمفاتيح `decisions.issue/cancel/appeal/outcome/attach/join/type.*` (العناوين، الأوصاف، الحقول، التلميحات، toasts، رسائل Zod) و`decisions.next.*` و`decisions.panel.*` (البطاقة النافذة، نص التوحيد/الاقتراح، الأزرار، رؤوس الأعمدة، حالات الفراغ) و`decisions.decision-prefix`. منطقة القرارات صارت مُفهرسة بالكامل.
+- **الحوارات الستة + منتقي الملف الرئيسي:** العناوين/الأوصاف/toasts/placeholder/aria عبر `t()`، والحقول عبر `FormField labelKey`، والأزرار عبر `<Label>` (إلغاء/حفظ يعيدان استخدام `common.action.*`)؛ رسائل Zod عبر `t()` وقت التحميل. خيارات نتيجة الاعتراض تعيد استخدام `decisions.appeal-outcome.*` عبر `useLabel`. خيار «الديوان المنشئ» عبر `useLabel`.
+- **حوار نوع القرار:** الخيارات انتقلت إلى داخل المكوّن (`EFFECT_IDS` + `decisionEffectLabel`) لتُحلّ عبر `t()` عند كل رسم؛ تسمية checkbox عبر `t()`.
+- **لوحة الوثيقة:** `NEXT_ACTION_LABEL` صار `NEXT_ACTION_LABEL_KEYS` (`Record<string, LabelKey>` → `decisions.next.*`)؛ عناوين البطاقات/الأزرار/نص التوحيد/الاقتراح/خلية «من الملف الرئيسي» عبر `<Label>`، والرؤوس عبر `headerKey`، والقوائم/caption/البحث/الفراغ عبر `t()`. الأثر/الحالة/الاعتراض ترث المحلّلات المشتركة.
+- **الوثائق:** READMEs (`features/decision-manage`، `features/decision-type-manage`، `widgets/document-decisions-panel`، `labels`) + `knowledge.md` + هذه الخطة، بنفس الدور.
+- **البوابات:** `npm run lint` ✅ (115/20/118) + `npm run build` ✅. فحص grep: لا نص عربي حرفي متبقٍ في الميزات واللوحة.
+- **متبقٍ:** جولة المتصفح (دخول يدوي من المستخدم): تعديل تسمية زر حوار + تسمية حقل + تسمية عنوان بطاقة والتحقق من السريان + الاستعادة؛ فاتح/داكن.
+- **لم يُنفَّذ بعد من ب1:** persons, archive.
+
+#### ب1 — وحدة my-registers (سجلاتي) ✅ منفَّذة (2026-11-18)
+
+خامس وحدة داخل ب1، تغطي متصفّح سجلات القسم (`/my-registers`). الصفحة نفسها كانت مرحّلة في المرحلة 3 (`page.my-registers.*` عبر `PageHeader`)، فالترحيل هنا للـ widget:
+
+- **الكتالوج:** أُضيف `shared/config/labels/my-registers.ts` (`MY_REGISTERS_LABELS`, ~48 مفتاحًا `my-registers.*`) — caption/البحث، خيارات مرشّح الحالة، منتقيات السجل/النموذج/الإصدار (لاحقة «موقوف»، «بلا بيانات نموذج»، تسمية الإصدار المركّبة، fallback «نوع {id}»)، الأعمدة، بادئات الرقم المرتبط، قوائم الصف، toasts النسخ، aria/placeholder للمرشحات، وحالات الفراغ المتدرّجة. دُمج في `LABEL_DEFAULTS`.
+- **الـ widget:** `STATUS_OPTIONS` على مستوى الوحدة صار خيارات `useLabel` داخل المكوّن؛ لاحقة «موقوف» و«بلا بيانات نموذج» عبر `useLabel`؛ تسمية الإصدار تُركّب عبر `t()`؛ رؤوس الأعمدة عبر `headerKey`؛ خلية الرقم المرتبط وأزرار المسح عبر `<Label>`؛ caption/البحث/aria/placeholder/القوائم/toasts/الفراغ عبر `t()`؛ قائمة التحديث تعيد استخدام `table.refresh`. أعمدة حقول النموذج الديناميكية تبقى `field.labelAr`؛ `FieldFilterBar` تابع لمنطقة document-schema (ب4).
+- **الوثائق:** READMEs (`widgets/my-registers-table`، `pages/my-registers`، `labels`، `shared/config`) + `knowledge.md` + هذه الخطة، بنفس الدور.
+- **البوابات:** `npm run lint` ✅ (115/20/118) + `npm run build` ✅. فحص grep: لا نص عربي حرفي متبقٍ في الـ widget.
+- **متبقٍ:** جولة المتصفح (دخول يدوي من المستخدم): تعديل تسمية عمود + خيار مرشّح + حالة فراغ والتحقق من السريان + الاستعادة؛ فاتح/داكن.
+- **لم يُنفَّذ بعد من ب1:** archive.
+
+#### ب1 — وحدة persons (الأشخاص) ✅ منفَّذة (2026-11-18)
+
+سادس وحدة داخل ب1، تغطي منطقة الأشخاص كاملة (القائمة + ملف الشخص بتبويبيه + حوارا الوثيقة + حقل الأسماء المشترك):
+
+- **الكتالوج:** أُضيف `shared/config/labels/persons.ts` (`PERSONS_LABELS`, `persons.*`) — قائمة الأشخاص (caption/البحث/الأعمدة/قائمة الصف/الفراغ)، تبويبا ملف الشخص وروابط العودة، جدول وثائق الشخص (الأعمدة/المرشحات/الفراغ)، السجل الزمني (روابط الأحداث من/إلى/في/رُبط…/بواسطة، الفراغ، الترقيم)، حوارا إضافة الأشخاص وتغيير الصفة (العناوين/الأوصاف/الحقول/toasts/Zod، حقل الصفة المشترك `persons.field-role`/`persons.role-*`)، وحقل `PersonNamesInput` (placeholder/تفاصيل الاقتراح/خيار الجديد/تنبيه التكرار/aria الشرائح/شارة «جديد»/aria الإزالة). دُمج في `LABEL_DEFAULTS`.
+- **السطوح:** `PersonsTable`/`PersonDocumentsTable`/`PersonTimeline` عبر `t()`/`headerKey`/`useLabel`/`<Label>`؛ «تغيير الحالة» مشترك `persons.status-change`؛ «إعادة المحاولة»/«تحديث البيانات» يعيدان استخدام `common.action.retry`/`table.refresh`. `PersonDetailsPage` التبويبان عبر `<Label>` وTABS صار `labelKey`. الحواران عبر `FormField labelKey` + `<Label>` (إلغاء/حفظ `common.action.*`) وZod عبر `t()`. `PersonNamesInput` (entity) عبر `t()`/`<Label>`؛ `normalizeName.ts` يبقى (regex وظيفي لا تسمية).
+- **الوثائق:** READMEs (`widgets/persons-table`، `widgets/person-documents-table`، `widgets/person-timeline`، `pages/persons`، `features/document-person-manage`، `entities/person`، `labels`، `shared/config`) + `knowledge.md` + هذه الخطة، بنفس الدور.
+- **البوابات:** `npm run lint` ✅ (115/20/118) + `npm run build` ✅. فحص grep: لا نص عربي حرفي متبقٍ في أسطح المنطقة (عدا regex التطبيع).
+- **متبقٍ:** جولة المتصفح (دخول يدوي من المستخدم): تعديل تسمية تبويب + عمود + شارة «جديد» والتحقق من السريان + الاستعادة؛ فاتح/داكن.
+- **لم يُنفَّذ بعد من ب1:** archive.
+
+#### ب1 — وحدة archive (الأرشيف) ✅ منفَّذة (2026-11-18) — ب1 اكتمل
+
+سابع وآخر وحدة داخل ب1، تغطي منطقة الأرشيف (الشبكة + شريط عمليات البحث المحفوظة + الحوارات الأربعة). بهذا **اكتمل ب1 (المراسلات)**: documents, movements, decisions, my-registers, persons, archive.
+
+- **الكتالوج:** أُضيف `shared/config/labels/archive.ts` (`ARCHIVE_LABELS`, `archive.*`) — شبكة الوثائق المؤرشفة (caption/البحث/الأعمدة/قوائم الصف/toasts النسخ/المرشحات/الفراغ)، شريط عمليات البحث المحفوظة (aria الشرائح/التعديل/الحذف)، وحوارات الأرشفة/إلغاء الأرشفة/حفظ البحث/حذف البحث (العناوين/الأوصاف/الحقول/toasts/Zod). مشترك `archive.dismiss` («تراجع») و`archive.reload` («إعادة التحميل»)؛ الحفظ يعيد استخدام `common.action.save`. دُمج في `LABEL_DEFAULTS`.
+- **السطوح:** `ArchiveSearchTable`/`SavedSearchesBar` عبر `t()`/`headerKey`/`useLabel`/`<Label>`؛ خيارات «كل الأنواع/المواقع/الأقسام» عبر `useLabel`. الحوارات الأربعة عبر `FormField labelKey` + `<Label>` + `t()` (ConfirmDialog حذف البحث عبر confirmLabel/cancelLabel). Zod عبر `t()`. `entities/archive` (criteria/badge) منطق/بيانات بلا تغيير؛ `FieldFilterBar` تابع لـ document-schema (ب4).
+- **الوثائق:** READMEs (`widgets/archive-search-table`، `features/archive-manage`، `pages/archive`، `labels`، `shared/config`) + `knowledge.md` + هذه الخطة، بنفس الدور.
+- **البوابات:** `npm run lint` ✅ (115/20/118) + `npm run build` ✅. فحص grep: لا نص عربي حرفي متبقٍ في أسطح المنطقة.
+- **متبقٍ:** جولة المتصفح (دخول يدوي من المستخدم): تعديل تسمية عمود + عنوان حوار + شريحة بحث محفوظ والتحقق من السريان + الاستعادة؛ فاتح/داكن.
+- **التالي:** ب2 (التنظيم: departments + institution-settings).
+
+#### ب2 — التنظيم (departments + institution-settings + external-organizations) ✅ منفَّذة (2026-11-18) — ب2 اكتمل
+
+أول وحدة داخل ب2، تغطي منطقة التنظيم كاملة: شجرة/جدول/مخطط/إحصاء الأقسام + حوارات التفاصيل والموظفين، دفتر سجل القسم، لوحة السجلات + نموذج تعديل الزيارة، إعدادات المؤسسة + حقل الشعار، والجهات الخارجية (الجدول + النموذج). بأمر «كمل لتخلص للاخر» تُنفَّذ الدفعات تباعًا دون توقف بعد كل وحدة.
+
+- **الكتالوج:** أُضيفت ثلاثة ملفات — `departments.ts` (`DEPARTMENTS_LABELS`, `department.*` ~180 مفتاحًا)، `institution-settings.ts` (`INSTITUTION_SETTINGS_LABELS`, `institution.*` ~60)، `external-organizations.ts` (`EXTERNAL_ORGANIZATIONS_LABELS`, `external-org.*` ~55)؛ دُمجت في `LABEL_DEFAULTS`.
+- **السطوح:** الأعمدة عبر `headerKey`؛ خيارات المرشحات/الحالة الثابتة عبر `useLabel` (مع إضافة القيمة إلى deps الـ memo)؛ النصوص الظاهرة القابلة للنقر عبر `<Label>`؛ تسميات الحقول عبر `FormField labelKey`؛ القوائم/toasts/aria/placeholders/الفراغ/رسائل Zod عبر `t()`. `toMermaid` لاحقة «موقوف» عبر `t()`؛ `DepartmentBadge` عبر `<Label>`. الأسماء/الرموز/`descAr`/`field.labelAr` تبقى بيانات؛ أمثلة `Asia/Damascus`/`MOI-01`/الإنجليزية تبقى حرفية؛ regex التطبيع/الهاتف منطق بلا تغيير.
+- **الوثائق:** READMEs (`widgets/department-hierarchy-tree`، `department-register-book`، `department-records-panel`، `external-organizations-table`؛ `features/department-manage`، `department-record-manage`، `institution-settings-manage`، `external-organization-manage`؛ `entities/department`؛ `labels`؛ `shared/config`) + هذه الخطة، بنفس الدور. لا تغيير endpoints/صلاحيات (واجهة فقط).
+- **البوابات:** `npm run lint` ✅ (115/20/118) + `npm run build` ✅ (تحذير حجم الحزم الموجود مسبقًا فقط). فحص grep `[؀-ۿ]`: لا نص عربي حرفي متبقٍ في أسطح المنطقة عدا التعليقات التوثيقية وREADMEs.
+- **متبقٍ:** جولة المتصفح (دخول يدوي من المستخدم): تعديل تسمية عمود قسم + عنوان قسم إعدادات + شارة «موقوف» والتحقق من السريان + الاستعادة؛ فاتح/داكن.
+- **التالي:** ب3 (إدارة الوصول: users + roles + employees).
+
+#### ب3 — إدارة الوصول (users + roles + employees) ✅ منفَّذة (2026-11-18) — ب3 اكتمل
+
+تغطي منطقة إدارة الوصول كاملة: شبكات المستخدمين/الأدوار/الموظفين + كل حوارات الكتابة (نموذج المستخدم/الأدوار/الوصول/إعادة كلمة المرور، نموذج الدور/الصلاحيات، نموذج الموظف) + مخططات Zod الثلاثة.
+
+- **الكتالوج:** أُضيف `access.ts` (`ACCESS_LABELS`, `user.*` / `role.*` / `employee.*` ~230 مفتاحًا)؛ دُمج في `LABEL_DEFAULTS`.
+- **السطوح:** الأعمدة عبر `headerKey`؛ شارات الحالة/«أنت»/«مطلوب»/النظام/المخصص/عدد الصلاحيات عبر `t()`/`<Label>`؛ خيار «كل الأقسام» الثابت عبر `useLabel`؛ القوائم/نسخ/toasts/aria/placeholders/الفراغ/رسائل Zod عبر `t()`؛ أزرار الأدوات/الفراغ/الحوارات عبر `<Label>`؛ تسميات الحقول عبر `FormField labelKey`؛ حوارات التأكيد عبر `t({name})`. الأسماء/الرموز/`permission.nameAr`/تسميات الوحدات تبقى بيانات؛ أمثلة `ahmed.khalil`/`FINANCE_EDITOR`/الإنجليزية تبقى حرفية؛ `z.email().safeParse` منطق بلا تغيير.
+- **الوثائق:** READMEs (`widgets/users-table`، `roles-table`، `employees-table`؛ `features/user-manage`، `role-manage`، `employee-manage`؛ `labels`؛ `shared/config`) + هذه الخطة، بنفس الدور. لا تغيير endpoints/صلاحيات (واجهة فقط).
+- **البوابات:** `npm run lint` ✅ (115/20/118) + `npm run build` ✅ (تحذير حجم الحزم الموجود مسبقًا فقط). فحص grep `[؀-ۿ]`: لا نص عربي حرفي متبقٍ في ملفات `.ts/.tsx` المنطقة.
+- **متبقٍ:** جولة المتصفح (دخول يدوي من المستخدم): تعديل تسمية عمود مستخدم/دور/موظف + عنوان حوار والتحقق من السريان + الاستعادة؛ فاتح/داكن.
+- **التالي:** ب4 (الرقابة والتدقيق: numbering + document-schemas + lookups + audit + system-errors).
+
+#### ب4 — الرقابة والتدقيق (numbering + document-schemas + lookups + audit + system-errors) ✅ منفَّذة (2026-11-18) — ب4 اكتمل
+
+تغطي مناطق الرقابة الخمس: الترقيم (module 04)، مخططات الحقول الديناميكية (module 03)، القوائم المرجعية، التدقيق وسلامة السجل (module 09)، وأخطاء النظام (module 09).
+
+- **الكتالوج:** أُضيفت `numbering.ts` (`NUMBERING_LABELS`, `numbering.*` ~166 مفتاحًا)، `document-schemas.ts` (`DOCUMENT_SCHEMAS_LABELS`, `schema.*` ~180)، `lookups.ts` (`LOOKUPS_LABELS`, `lookup.*`)، `audit.ts` (`AUDIT_LABELS`, `audit.*`)، `system-errors.ts` (`SYSTEM_ERRORS_LABELS`, `system-error.*`)؛ دُمجت في `LABEL_DEFAULTS`. ووُسّع `documents.ts` بمفاتيح الوثيقة المقيّدة (`documents.restricted.*`) وشارات حالة الرقم (`documents.number-status.*`).
+- **الترقيم:** شبكة السجلات عبر `headerKey` + خيارات الحالة/النطاق/سياسة التصفير عبر خرائط مفاتيح + `resolveLabel`؛ بطاقة النطاق والحوار القرائي والحوارات الأربعة (إصدار/استبدال/إلغاء/تسجيل دائرة) ونموذج السجل عبر `t()`/`<Label>`/`FormField labelKey`؛ رسائل Zod عبر `t()`؛ رموز النمط `{YEAR}`/`{SEQ}`/`{SEQ:D6}` تبقى حرفية (لا تُعامل كـ placeholders).
+- **المخططات:** `entities/document-schema` (شارات النوع/الحالة عبر `useLabel`، تنسيق القيم والتحقق والمرشحات عبر `t()`، عناصر الإدخال وشريط/حوار التصفية عبر `t()`/`resolveLabel`/`<Label>`)؛ `features/document-schema-manage` (نموذج الإعدادات والسلوك — نُقلت خيارات النوع/المصدر/القوائم المرجعية إلى داخل المكوّن مع اشتراك overrides وحل `lookupCatalogMeta.labelKey`، حوارات التأكيد، Zod)؛ محرر المخطط ولوحة حقول الوثيقة ونموذج تعديل القيم. `field.labelAr`/`option.labelAr`/نصوص الأقسام والمساعدة والـ placeholder ورسائل Regex تبقى بيانات؛ أمثلة `contract_number`/`key`/`^[0-9]{4}` تبقى حرفية.
+- **القوائم المرجعية:** أسماء العرض الثابتة للكتالوجات/المجموعات عبر `lookupCatalogMeta` (`labelKey`/`groupKey`) + `resolveLabel` (مع سقوط إلى الـ slug عند `labelKey` null)؛ شبكة الإدخالات ونموذج الإضافة/إعادة التسمية عبر `headerKey`/`t()`/`<Label>`/Zod. قيم الإدخالات `descAr`/`LOOKUP_FALLBACKS` تبقى بيانات.
+- **التدقيق:** شبكتا سجل التدقيق وتقارير السلامة عبر `headerKey` + خريطة `AUDIT_MODULES` (`audit.module.*`) + `resolveLabel`؛ حوارات نقطة التحقق/السلامة وZod عبر `t()`/`<Label>`؛ `descAr` لأنواع الإجراءات/الكيانات والأسماء والـ hashes تبقى بيانات.
+- **أخطاء النظام:** خريطة التعداد في `entities/system-error/model/labels.ts` صارت مفاتيح (`*_LABEL_KEYS`) تُحل عبر `t()`/`useLabel`؛ الشبكة والحوار ونموذج الحالة/الملاحظات والحذف اليدوي عبر `headerKey`/`t()`/`<Label>`/Zod. عناوين/رسائل/آثار الأخطاء الملتقطة تبقى بيانات.
+- **إصلاحات بوابات:** `SystemErrorsTable` — ضبط اعتماد `useMemo` للأعمدة (`setSelectedId`) وتصنيف `Object.entries` في `resolveKeys` ليجتاز React Compiler و`tsc`.
+- **الوثائق:** READMEs (`labels`، `shared/config`، `entities/document-schema`، `features/document-schema-manage`، `features/document-field-values`، `widgets/document-schema-editor`، `widgets/document-fields-panel`، `widgets/system-errors-table`، `entities/numbering-registry`، `features/numbering-manage`، `widgets/numbering-registry-table`، `pages/numbering`، `entities/document`، `features/audit-manage`، `widgets/audit-log-table`، `pages/audit`، `features/lookup-manage`، `widgets/lookup-admin`، `pages/lookups`، `features/system-error-manage`، `entities/system-error`) + هذه الخطة، بنفس الدور. لا تغيير endpoints/صلاحيات (واجهة فقط).
+- **البوابات:** `npm run lint` ✅ (115/20/118) + `npm run build` ✅ (تحذير حجم الحزم الموجود مسبقًا فقط). فحص grep `[؀-ۿ]`: لا نص عربي حرفي متبقٍ في ملفات المنطقة عدا التعليقات التوثيقية وفاصلة العطف العربية «، ».
+- **متبقٍ ضمن المرحلة 4:** جولة المتصفح (دخول يدوي من المستخدم) لكل المناطق فقط. (تفاصيل الوثيقة #17 ✅ والمرفقات #18 ✅ والعلاقات #19 ✅ وب5 #15 ✅ والوحدات المتفرقة #20 ✅ منفَّذة أدناه.)
+- **التالي:** المرحلة 5 (#16).
+
+#### ب4-متبقٍ — تفاصيل الوثيقة + حوارات document-manage/access-grant (#17) ✅ منفَّذة (2026-11-18)
+
+تغطي صفحة `/documents/:documentId` كاملة: التبويبات الستة، الشريط الجانبي للمعلومات، أقسام الأرقام/التصاريح/الحقول/السجلات، الخط الزمني الموحّد، تبويبا الحركات والمشاركين/الأشخاص، وحوارات التسجيل/الإلغاء/إضافة مشارك/منح وصول/إلغاء تصريح.
+
+- **الكتالوج:** أُضيفت `document-details.ts` (`DOCUMENT_DETAILS_LABELS`, `docdetails.*` ~180 مفتاحًا) ودُمجت في `LABEL_DEFAULTS`؛ ووُسّع `documents.ts` بمفاتيح وصف الصفحة المركّبة (`documents.page-description*`). إعادة استخدام `documents.create.*`/`documents.number-status.*`/`common.action.*` حيث تنطبق.
+- **الكيانات:** `DocumentStatusBadge` (خمس حالات + سقوط `#id` عبر `useLabel`)، `OfficialNumberTag` («بدون رقم» عبر `useLabel`). الأرقام/العناوين تبقى بيانات.
+- **الحوارات + Zod:** `features/document-manage` (register/participant/cancel) و`features/document-access-grant` (grant/revoke) عبر `t()`/`<Label>`/`FormField labelKey`؛ بطاقات نوع المشارك عبر `<Label>`؛ خيارات وجهة التسجيل عبر `resolveLabel` + اشتراك overrides؛ رسائل Zod عبر `t()` عند تحميل الوحدة. أسماء المستخدمين/الأقسام/الجهات/الأدوار والرموز والأمثلة اللاتينية تبقى بيانات.
+- **الصفحة:** `DocumentDetailsPage` (تبويبات `labelKey` + `as const satisfies`، أزرار الرأس، شارة «قريبًا»، أسباب التجميد)، `DocumentDetailsTab` (صفوف المعلومات `labelKey`، عناوين/تلميحات الأقسام عبر `t()` لأن `CollapsibleSection` title/hint نصوص)، `DocumentNumbersSection` (إعادة كتابة كاملة: خرائط الحالة/الحدث `LabelKey`، أعمدة `headerKey`، حل النطاق/الحالة عبر `resolveLabel` + overrides، قوائم الصف/toasts النسخ عبر `t()`)، `DocumentMovementsTab` (تسميات نهاية الخطوة عبر `t()`، بطاقات/سلسلة الخطوات/سجل الأحداث عبر `<Label>`)، `DocumentTimeline` (أحداث الأرقام/الأرشفة/الحالة/المشاركين عبر `<Label>`/`resolveLabel`)، `DocumentGrantsSection` (شارات الحالة `LabelKey` + `useLabel`، العدّاد عبر `t()`)، `DocumentPersonsTab`/`DocumentParticipantsTab`/`DocumentFilesTab`/`DocumentsPage` (وصف الصفحة المركّب عبر `t()`). `ParticipantTarget` بيانات فقط (بلا ترحيل).
+- **الوثائق:** READMEs (`entities/document`، `features/document-manage`، `features/document-access-grant`، `pages/documents`، `labels`، `shared/config`) + هذه الخطة، بنفس الدور. لا تغيير endpoints/صلاحيات (واجهة فقط).
+- **البوابات:** `npm run lint` ✅ (115/20/118) + `npm run build` ✅ (تحذير حجم الحزم الموجود مسبقًا فقط). فحص grep `[؀-ۿ]`: لا نص عربي حرفي متبقٍ في ملفات الوحدة عدا التعليقات التوثيقية وصفوف Change Log في READMEs.
+- **التالي:** المرفقات (#18)، ثم العلاقات (#19)، ثم ب5 (#15/#20)، ثم المرحلة 5 (#16).
+
+#### ب4-متبقٍ — المرفقات (attachments panel + upload + document-file) (#18) ✅ منفَّذة (2026-11-18)
+
+تغطي منطقة المرفقات (module 06): شبكة ملفات الوثيقة، الحوارات الخمسة (رفع ملف/رفع إصدار/أرشفة/تحقق من البصمة/الإصدارات)، ملخص الملف المختار، مساعد البصمة المحلية، وشارتا حالة الملف/البصمة.
+
+- **الكتالوج:** أُضيفت `attachments.ts` (`ATTACHMENTS_LABELS`, `attachment.*`) ودُمجت في `LABEL_DEFAULTS`. إعادة استخدام `common.action.*`/`documents.create.*`/`documents.toast.*` حيث تنطبق.
+- **الكيانات:** `FileArchivedBadge` (`attachment.state.*`) و`ChecksumBadge` (`attachment.checksum.*`) عبر خرائط `LabelKey` + `useLabel`.
+- **الشبكة:** رؤوس الأعمدة عبر `headerKey`؛ خيارات مرشح الحالة/النوع عبر `resolveLabel` + اشتراك overrides؛ قوائم الصف/الرأس وtoasts النسخ/التنزيل عبر `t()`؛ caption/البحث/aria/الفراغ عبر `t()`؛ أزرار الرفع/المسح وشارة المسح الأساسي عبر `<Label>`. عناوين/أسماء الملفات و`descAr` للنوع تبقى بيانات.
+- **الحوارات + المساعد + Zod:** العناوين/الأوصاف/الـ toasts/الـ placeholders/aria/نصوص التقدم عبر `t()`؛ النصوص الظاهرة والشارات والأزرار عبر `<Label>`؛ تسميات الحقول عبر `FormField labelKey`؛ خانة المسح الأساسي عبر `t()`؛ حدود الحجم/الامتدادات عبر `<Label params>` مع إبقاء قائمة الامتدادات `dir="ltr"` وفاصلة العطف «، ». رسائل Zod تُبقي لاحقة كود `Attachments.*` عبر `withCode(t(...))`. أسماء الملفات/الأصول/البصمات/الرافع تبقى بيانات.
+- **الوثائق:** READMEs (`widgets/document-attachments-panel`، `features/attachment-upload`، `entities/document-file`، `labels`، `shared/config`) + هذه الخطة، بنفس الدور. لا تغيير endpoints/صلاحيات (واجهة فقط).
+- **البوابات:** `npm run lint` ✅ (115/20/118) + `npm run build` ✅ (تحذير حجم الحزم الموجود مسبقًا فقط). فحص grep `[؀-ۿ]`: لا نص عربي حرفي متبقٍ عدا التعليقات التوثيقية وفاصلة العطف «، » في ضم الامتدادات.
+- **التالي:** العلاقات (#19)، ثم ب5 (#15/#20)، ثم المرحلة 5 (#16).
+
+#### ب4-متبقٍ — العلاقات (relations panel + manage + entity) (#19) ✅ منفَّذة (2026-11-18)
+
+تغطي منطقة العلاقات (module 08): شبكة روابط الوثيقة، مبدّل العرض (جدول/مخطط/شجرة) وإشعار الروابط المحجوبة، مخطط Mermaid/الشجرة مع خيار العمق، سجل الروابط الدائم، وحوارا إضافة/إزالة رابط مع منتقي الوثيقة.
+
+- **الكتالوج:** أُضيفت `relations.ts` (`RELATIONS_LABELS`, `relation.*`) ودُمجت في `LABEL_DEFAULTS`. إعادة استخدام `common.action.retry`/`documents.toast.*` حيث تنطبق.
+- **الكيان:** `direction.ts` صار خرائط `LabelKey` (`PHRASE_KEYS`/`FALLBACK_KEYS`) مع `relationPhraseKey(id, direction)` و`relationPhrase` يُحل عبر `t()` للمستهلكين غير التفاعليين (الفرز/الطباعة)؛ `RELATION_DIRECTION_LABELS` خريطة `LabelKey`. `RelationDirectionLabel` يُحل تفاعليًا عبر `useLabel`. أُصدّر `relationPhraseKey` من الـ barrel.
+- **الشبكة:** رؤوس الأعمدة عبر `headerKey`؛ خيارات مرشح النوع/الاتجاه عبر `resolveLabel` + اشتراك overrides؛ قوائم الصف/الرأس وtoasts النسخ عبر `t()`؛ caption/البحث/aria/الفراغ عبر `t()`؛ زرا الإضافة/المسح عبر `<Label>`. `relationPhrase` يبقى في `sortValue`. عناوين/أرقام الوثائق و`descAr` للنوع تبقى بيانات.
+- **اللوحة/المخطط/السجل:** مبدّل العرض (`labelKey` + `<Label>`)، إشعار الروابط المحجوبة (`t()` مع `{count}`)، عنوان السجل عبر `<Label>`؛ خيارات العمق عبر `resolveLabel` + overrides، إشعار الاقتطاع/الفراغ/«مؤرشفة» وaria عبر `t()`/`<Label>`؛ سجل الأحداث (الفراغ/المصدر←الهدف/المنفّذ/السبب/السابق/التالي) عبر `<Label>`. `node.title`/`event.reason`/أسماء المنفّذين تبقى بيانات.
+- **الحوارات + المنتقي + Zod:** العناوين/الأوصاف/الـ toasts/الـ placeholders/aria عبر `t()`؛ الأزرار الظاهرة عبر `<Label>`؛ تسميات الحقول عبر `FormField labelKey`؛ منتقي الوثيقة (تغيير/بحث/نتائج/فراغ) عبر `t()`/`<Label>`. رسائل Zod عبر `t()` عند تحميل الوحدة. عناوين الوثائق وأسماء الأنواع تبقى بيانات.
+- **الطباعة:** `DocumentPrintSheet` خلية اتجاه الرابط تُحل عبر `t(RELATION_DIRECTION_LABELS[direction])` (بقية نص القالب يُرحّل في ب5).
+- **الوثائق:** READMEs (`entities/document-relation`، `features/document-relation-manage`، `widgets/document-relations-panel`، `widgets/document-print-sheet`، `labels`، `shared/config`) + هذه الخطة، بنفس الدور. لا تغيير endpoints/صلاحيات (واجهة فقط).
+- **البوابات:** `npm run lint` ✅ (115/20/118) + `npm run build` ✅ (تحذير حجم الحزم الموجود مسبقًا فقط). فحص grep `[؀-ۿ]`: لا نص عربي حرفي متبقٍ في ملفات الوحدة عدا التعليقات التوثيقية وصفوف READMEs.
+- **التالي:** ب5 (#15/#20)، ثم المرحلة 5 (#16).
+
+#### ب5 — dashboard/notifications/auth/print + متبقي التدقيق (#15) ✅ منفَّذة (2026-11-18)
+
+تغطي شاشة الدخول وتغيير كلمة المرور وحالة المنع، لوحة التحكم، منطقة الإشعارات (الجرس + الصندوق + اتصال SignalR)، ورقة طباعة الوثيقة كاملة، وتبويبات صفحة التدقيق.
+
+- **الكتالوج:** أُضيفت `auth.ts` (`AUTH_LABELS`, `auth.*`)، `dashboard.ts` (`DASHBOARD_LABELS`, `dashboard.*`)، `notifications.ts` (`NOTIFICATIONS_LABELS`, `notification.*`)، `print.ts` (`PRINT_LABELS`, `print.*`)، ووُسّعت `audit.ts` بمفاتيح التبويبات (`audit.tab.*`/`audit.page.*`)؛ دُمجت كلها في `LABEL_DEFAULTS`. إعادة استخدام `common.action.retry`/`table.refresh`/`documents.toast.*` حيث تنطبق.
+- **المصادقة:** نماذج الدخول/تغيير كلمة المرور ورسائل Zod عبر `t()`؛ تسميات الحقول عبر `FormField labelKey`؛ الأزرار/العناوين/البطاقات الظاهرة عبر `<Label>`؛ حالة المنع وزر الخروج عبر `<Label>`. `PasswordField`/`Select`/aria/placeholders عبر `t()`.
+- **لوحة التحكم:** مصفوفة الإحصاءات تحمل `labelKey`؛ الترحيب/البطاقات/قسم «ما التالي؟» عبر `<Label>`؛ اسم المؤسسة يبقى `<BrandName>` بيانات.
+- **الإشعارات:** الجرس (الشارة/حالة الاتصال/العنوان/قراءة الكل/الفراغ/عرض الكل/aria الصفوف) عبر `<Label>`/`t()`؛ الصندوق (رؤوس الأعمدة `headerKey`، المرشحات عبر `resolveLabel` + overrides، قوائم الصف/الرأس، caption/البحث/النسخ/الفراغ) عبر `<Label>`/`t()`؛ toast الـ hub («فتح») وaria غير المقروء عبر `t()`. عناوين/نصوص الإشعارات تبقى بيانات الخادم.
+- **الطباعة:** كل القالب — عناوين الأقسام، تسميات الحقائق، رؤوس الجداول، markers (مؤرشف/نعم/لا)، وإشعار الروابط المحجوبة — يُحل عبر `t()` من `print.*`. أسماء القوائم/الأرقام الرسمية/تسميات الحقول/الأسباب تبقى بيانات.
+- **التدقيق:** تبويبات الصفحة (`PANELS`) تحمل `labelKey`/`hintKey` عبر `<Label>`، وaria قائمة التبويبات عبر `t('audit.page.tabs-aria')`.
+- **الوثائق:** READMEs (`features/auth`، `pages/login`، `pages/change-password`، `pages/dashboard`، `entities/notification`، `features/notification-live`، `widgets/notification-bell`، `widgets/notification-inbox`، `widgets/document-print-sheet`، `pages/audit`، `labels`، `shared/config`) + هذه الخطة، بنفس الدور. لا تغيير endpoints/صلاحيات (واجهة فقط).
+- **البوابات:** `npm run lint` ✅ (115/20/118) + `npm run build` ✅ (تحذير حجم الحزم الموجود مسبقًا فقط). فحص grep `[؀-ۿ]`: لا نص عربي حرفي متبقٍ في ملفات ب5 عدا التعليقات التوثيقية وفاصلة الجمع العربية «، ».
+- **التالي:** الوحدات المتفرقة (#20)، ثم المرحلة 5 (#16).
+
+#### ب5-متبقٍ — مشتركات/كيانات متفرقة (ui badges, shell, guides, misc) (#20) ✅ منفَّذة (2026-11-18)
+
+تُكمل ما تبقى من نصوص الواجهة الثابتة خارج المناطق: بدائيات `shared/ui` المتبقية، أدوات `shared/lib`، رسائل `shared/api`، بوابة الإقلاع، تنقّل السجلات، شارات الكيانات ومنتقي الموظف وخريطة الوحدات، عنوان التبويب، ومحرّر التسميات نفسه.
+
+- **الكتالوج:** وُسّعت `common.ts` (select/password/theme/label-edit/tab-title/boot/draft/size/checksum/api/mermaid/error-boundary + `shell.register-nav-aria`)؛ أُضيفت `guides.ts` (`GUIDE_LABELS` — كروم الشرح فقط، لا محتوى الدروس) و`label-editor.ts` (`LABEL_EDITOR_LABELS`)؛ ووُسّعت `access.ts` (`user.scope.*`، `role.badge.*`/`role.module.*`، `employee.picker.*`)؛ دُمجت كلها في `LABEL_DEFAULTS`. إعادة استخدام `common.action.save`/`cancel`/`close`/`retry`.
+- **shared/ui:** `theme-toggle`/`select`/`password-field`/`dialog`/`label` عبر `t()`؛ `mermaid-view`/`guide`/`error-boundary` عبر `<Label>`/`t()`؛ `guide-tour` (driver.js next/prev/done/progress) عبر `t()` مع إبقاء `{{current}}`/`{{total}}` حرفية.
+- **shared/lib + api + app:** `format.ts`/`crypto.ts`/`formDraft.ts` تستورد `t` نسبيًا من `./labels` (لا دورة عبر الـ barrel)؛ `problemDetails.ts` عبر `t()` (آمن: `shared/lib` لا يستورد `shared/api`)؛ `LabelsBootGate` عبر `t()`.
+- **الكيانات:** `UserScopeBadge` خريطة `labelKey` + `useLabel` غير مشروط (مع fallback `نطاق #{id}`)؛ `EmployeePicker` عبر `t()`/`<Label>`؛ `RoleBadge` aria عبر `t()`؛ `moduleLabels.ts` خريطة `LabelKey` + `t()` (المستهلك الوحيد هو الدالة)؛ `BrandingEffects` عنوان التبويب عبر `t('common.tab-title', { name })` والاسم يبقى بيانات.
+- **المحرّر:** `LabelEditor` (toastات + كل aria/title) و`schemas.ts` (رسائل Zod الأربع) عبر `t()` من `label-editor.*`.
+- **الاستثناءات:** التعليقات التوثيقية، فاصلة العطف «، », محتوى الدروس في `shared/config/guides/*`، `DEFAULT_BRAND_NAME`، وأسماء الكيانات/البيانات. لا تغيير endpoints/صلاحيات (واجهة فقط).
+- **الوثائق:** READMEs (`shared/ui`، `shared/lib`، `shared/api`، `app/providers`، `widgets/app-shell`، `entities/user`، `entities/employee`، `entities/role`، `entities/branding`، `features/ui-label-manage`، `labels`، `shared/config`) + هذه الخطة، بنفس الدور.
+- **البوابات:** `npm run lint` ✅ (115/20/118) + `npm run build` ✅ (تحذير حجم الحزم الموجود مسبقًا فقط). فحص grep `[؀-ۿ]`: لا نص عربي حرفي متبقٍ في ملفات الوحدة عدا التعليقات التوثيقية وفاصلة العطف «، ».
+- **التالي:** المرحلة 5 (#16) — حارس الاتساق + الإغلاق.
+
+### المرحلة 5 — حارس الاتساق + الإغلاق ✅ منفَّذة (2026-11-18)
+
+1. ✅ سكربت الفحص `scripts/check-label-keys.mjs` (node) موصول بـ `npm run lint` (+ `npm run check:labels`): يقرأ كل `labels/*.ts` (مفتاح/افتراضي)، ويفشل عند تكرار مفتاح، أو مفتاح غير معروف في استدعاءات التسمية الصريحة (`t`/`useLabel`/`resolveLabel`، `<Label k>`، `labelKey`/`headerKey`/`hintKey`)، أو placeholder مشوّه — مع قائمة بيضاء للرموز الحرفية `{YEAR}`/`{SEQ}`/`{SEQ:D6}` وdriver.js `{{current}}`/`{{total}}` — ويحذّر للمفاتيح المهجورة (غير المستخدمة في المصدر). وجود المفاتيح المكتوبة يفرضه أيضًا `tsc -b`. النتيجة: ~3006 مفتاح، 0 تكرار/0 مجهول/0 مشوّه/0 مهجور؛ أُزيل `common.action.delete` غير المستخدم.
+2. ⏭️ (اختياري) قاعدة lint ضد السلاسل العربية الحرفية الجديدة: **مُرجأة** — السكربت + فحص grep `[؀-ۿ]` لكل دفعة يغطيان الغرض دون إيجابيات كاذبة على النص البياناتي.
+3. ✅ التوثيق النهائي: `knowledge.md` (فقرة اكتمال المرحلة 4 + فقرة المرحلة 5 + سطر بوابة lint)، `README.md` الجذر (صف `scripts/` + سطر Change Log موحّد للمراحل 1–5)، وREADMEs كل مجلد تغيّر. الدليل القصير داخل الوضع = الشريط اللاصق الموجود («وضع تعديل التسميات مفعّل — انقر أي نص لتعديله…») وهو بيانات كروم مرحّلة. لا تغيير endpoints/صلاحيات في المرحلة 5.
+4. ✅ البوابات الأمامية: `npm run lint` (eslint + guide 115/20/118 + label 3006/0) + `npm run build` (tsc + vite؛ تحذير حجم الحزم الموجود مسبقًا فقط). بوابتا الخلفية (`dotnet build`/`test`) أُنجِزتا في المرحلة 0 ولم تتغير الخلفية منذ ذلك (المراحل 1–5 واجهة فقط). ⏳ **متبقٍ:** جولة المتصفح الشاملة بثلاثة أدوار (أدمن/موظف/بلا صلاحية) فاتح/داكن — تتطلب دخولًا يدويًا من المستخدم (لا أسرار في السكربتات).
 
 ---
 

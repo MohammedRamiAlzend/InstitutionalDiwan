@@ -35,6 +35,7 @@ Contains pure, framework-independent helper functions for class merging, `Asia/D
 ## Change Log
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-18 | Qoder | UI labels Phase 4 (ب5-متبقٍ): `format.ts` (byte-size units), `crypto.ts` (unsupported-checksum message) and `formDraft.ts` (restored-draft toast + discard action) resolve their Arabic text through `t()` imported relatively from `./labels` to avoid a barrel self-cycle. |
 | 2026-11-17 | Qoder | UI labels, Phase 2 (`plans/ui-labels-edit-mode.md`): added `labelEdit.ts` — `getLabelEditMode`/`applyLabelEditMode`/`setLabelEditMode`/`useLabelEdit` over `diwan.labelEdit` and `html[data-label-edit]` (mirroring `tutorial.ts`, only `on` stored), exported through the barrel and resolved early in `index.html`. |
 | 2026-11-17 | Qoder | UI labels, Phase 1 (`plans/ui-labels-edit-mode.md`): added `labels.ts` — the cache-seeded zustand labels store (`overrides`/`version`/`ready`, `applySnapshot`/`markReady`), `t`, `useLabel`, and pure `resolveLabel` with `{name}` interpolation, exported through the barrel. |
 | 2026-11-17 | agent | Added `selectedRegistry.ts`: the sidebar register choice (`diwan.documents.selectedRegistry.v1`) with a live hook and a stored-if-valid-else-first resolver, consumed by `DocumentsRegisterNav` and the create-document dialog. |

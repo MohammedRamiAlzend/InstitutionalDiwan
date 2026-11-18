@@ -1,6 +1,6 @@
 import { useState, type KeyboardEvent, type MouseEvent } from 'react'
 import { LABEL_DEFAULTS, type LabelKey } from '@/shared/config'
-import { cn, useLabel, useLabelEdit, useLabelsStore, type LabelParams } from '@/shared/lib'
+import { cn, t, useLabel, useLabelEdit, useLabelsStore, type LabelParams } from '@/shared/lib'
 import { useLabelEditorRenderer, type LabelEditorProps } from './label-edit-context'
 
 interface LabelProps {
@@ -47,7 +47,7 @@ export function Label({ k, params, className }: LabelProps) {
       className={cn(className, editable && 'diwan-label-editable')}
       role={editable ? 'button' : undefined}
       tabIndex={editable ? 0 : undefined}
-      title={editable ? 'انقر لتعديل التسمية' : undefined}
+      title={editable ? t('common.label-edit-tooltip') : undefined}
       onClick={editable ? openEditor : undefined}
       onKeyDown={
         editable

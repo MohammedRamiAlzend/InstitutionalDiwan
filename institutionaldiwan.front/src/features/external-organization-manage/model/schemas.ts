@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { t } from '@/shared/lib'
 
 /** Mirrors `ExternalOrganizationContact` on the server: e-mail or phone, or blank. */
 const PHONE_PATTERN = /^\+?[0-9][0-9\s\-()]{5,19}$/
@@ -14,23 +15,23 @@ export const externalOrganizationFormSchema = z.object({
   code: z
     .string()
     .trim()
-    .min(1, 'رمز الجهة الخارجية مطلوب.')
-    .max(50, 'رمز الجهة الخارجية يتجاوز الحد الأقصى للأحرف.'),
+    .min(1, t('external-org.validation.code-required'))
+    .max(50, t('external-org.validation.code-max')),
   nameAr: z
     .string()
     .trim()
-    .min(1, 'اسم الجهة بالعربية مطلوب.')
-    .max(200, 'اسم الجهة بالعربية يتجاوز الحد الأقصى للأحرف.'),
-  organizationTypeId: z.string().min(1, 'اختر نوع الجهة.'),
+    .min(1, t('external-org.validation.name-ar-required'))
+    .max(200, t('external-org.validation.name-ar-max')),
+  organizationTypeId: z.string().min(1, t('external-org.validation.type-required')),
   nameEn: z
     .string()
     .trim()
-    .max(200, 'اسم الجهة بالإنجليزية يتجاوز الحد الأقصى للأحرف.'),
+    .max(200, t('external-org.validation.name-en-max')),
   contactInfo: z
     .string()
     .trim()
-    .max(254, 'بيانات الاتصال تتجاوز الحد الأقصى للأحرف.')
-    .refine(isContactInfo, 'بيانات الاتصال يجب أن تكون بريدًا إلكترونيًا أو رقم هاتف.'),
+    .max(254, t('external-org.validation.contact-max'))
+    .refine(isContactInfo, t('external-org.validation.contact-format')),
 })
 
 export type ExternalOrganizationFormValues = z.infer<

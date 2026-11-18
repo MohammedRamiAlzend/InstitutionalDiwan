@@ -34,7 +34,7 @@ export {
   validateFieldFilterValue,
 } from './model/filters'
 export type { FieldFilterOperator, FieldFilterValue } from './model/filters'
-export { FIELD_DATA_TYPE_LABELS, SCHEMA_STATUS_LABELS } from './model/labels'
+export { FIELD_DATA_TYPE_LABEL_KEYS, SCHEMA_STATUS_LABEL_KEYS } from './model/labels'
 export {
   schemaKeys,
   useDepartmentRecords,

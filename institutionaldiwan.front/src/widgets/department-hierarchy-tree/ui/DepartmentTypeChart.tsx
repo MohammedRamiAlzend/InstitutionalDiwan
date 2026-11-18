@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import type { DepartmentTreeNodeResponse } from '@/entities/department'
-import { formatNumber } from '@/shared/lib'
+import { formatNumber, t } from '@/shared/lib'
+import { Label } from '@/shared/ui'
 
 /** A textual distribution with decorative bars, using only the already-loaded visible tree. */
 export function DepartmentTypeChart({ nodes, typeLabel }: {
@@ -21,11 +22,11 @@ export function DepartmentTypeChart({ nodes, typeLabel }: {
   const total = groups.reduce((sum, [, count]) => sum + count, 0)
 
   return (
-    <figure aria-label="توزيع الأقسام حسب النوع" className="rounded-xl border border-border bg-surface p-4">
+    <figure aria-label={t('department.chart.aria')} className="rounded-xl border border-border bg-surface p-4">
       <figcaption className="mb-4 flex flex-col gap-1">
-        <h3 className="text-sm font-medium text-foreground">توزيع الأقسام حسب النوع</h3>
+        <h3 className="text-sm font-medium text-foreground"><Label k="department.chart.title" /></h3>
         <p className="text-xs text-muted">
-          الأقسام المعروضة: <span dir="ltr">{formatNumber(total)}</span>. عند البحث، يشمل التوزيع الأقسام المطابقة وأسلافها الظاهرة في الشجرة، وليس الموظفين.
+          {t('department.chart.shown')} <span dir="ltr">{formatNumber(total)}</span>. {t('department.chart.note')}
         </p>
       </figcaption>
       <ul className="flex flex-col gap-4">
@@ -35,7 +36,7 @@ export function DepartmentTypeChart({ nodes, typeLabel }: {
             <li key={typeId} className="flex flex-col gap-1.5">
               <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-foreground">
                 <span>{typeLabel(typeId)}</span>
-                <span><span dir="ltr">{formatNumber(count)}</span> قسم · <span dir="ltr">{formatNumber(Math.round(percent))}%</span></span>
+                <span><span dir="ltr">{formatNumber(count)}</span> <Label k="department.chart.unit" /> · <span dir="ltr">{formatNumber(Math.round(percent))}%</span></span>
               </div>
               <div aria-hidden className="h-3 overflow-hidden rounded-full bg-surface-muted">
                 <div className="h-full rounded-full bg-accent" style={{ width: `${percent}%` }} />

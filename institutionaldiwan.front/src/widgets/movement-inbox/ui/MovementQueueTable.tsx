@@ -31,15 +31,16 @@ import { useCoversDepartment, useSessionStore, UserLabel } from '@/entities/user
 import {
   DESTRUCTIVE_ACTIONS,
   MOVEMENT_ACTION_ICONS,
-  MOVEMENT_ACTION_LABELS,
+  MOVEMENT_ACTION_LABEL_KEYS,
   MovementActionDialog,
 } from '@/features/movement-routing'
 import { Permissions, ROUTES } from '@/shared/config'
-import { formatDate, formatDateTime, useTableState } from '@/shared/lib'
+import { formatDate, formatDateTime, t, useLabel, useTableState } from '@/shared/lib'
 import {
   Button,
   DataTable,
   GuideChip,
+  Label,
   Select,
   type DataTableColumn,
   type MenuEntry,
@@ -91,26 +92,29 @@ export function MovementQueueTable({ kind }: MovementQueueTableProps) {
     [departmentsQuery.data],
   )
 
+  const allStatusesLabel = useLabel('movements.filter.all-statuses')
+  const allTypesLabel = useLabel('movements.filter.all-types')
+
   const statusOptions = useMemo(
     () => [
-      { value: 'all', label: 'كل الحالات' },
+      { value: 'all', label: allStatusesLabel },
       ...(statusesQuery.data ?? []).map((entry) => ({
         value: String(entry.id),
         label: entry.descAr,
       })),
     ],
-    [statusesQuery.data],
+    [statusesQuery.data, allStatusesLabel],
   )
 
   const typeOptions = useMemo(
     () => [
-      { value: 'all', label: 'كل الأنواع' },
+      { value: 'all', label: allTypesLabel },
       ...(typesQuery.data ?? []).map((entry) => ({
         value: String(entry.id),
         label: entry.descAr,
       })),
     ],
-    [typesQuery.data],
+    [typesQuery.data, allTypesLabel],
   )
 
   const rows = useMemo(
@@ -131,7 +135,7 @@ export function MovementQueueTable({ kind }: MovementQueueTableProps) {
     () => [
       {
         id: 'document',
-        header: 'الوثيقة',
+        headerKey: 'movements.column.document',
         sortable: true,
         sortKey: 'documentTitle',
         sortValue: (item) => item.documentTitle,
@@ -155,12 +159,12 @@ export function MovementQueueTable({ kind }: MovementQueueTableProps) {
       },
       {
         id: 'type',
-        header: 'نوع الحركة',
+        headerKey: 'movements.column.type',
         cell: (item) => <MovementTypeBadge movementTypeId={item.movementTypeId} />,
       },
       {
         id: 'status',
-        header: 'حالة الحركة',
+        headerKey: 'movements.column.status',
         sortable: true,
         sortKey: 'status',
         sortValue: (item) => item.movementStatusId,
@@ -168,14 +172,14 @@ export function MovementQueueTable({ kind }: MovementQueueTableProps) {
       },
       {
         id: 'step',
-        header: 'الخطوة',
+        headerKey: 'movements.column.step',
         sortable: true,
         sortKey: 'stepNo',
         sortValue: (item) => item.stepNo,
         cell: (item) => (
           <div className="flex flex-col gap-1">
             <span className="text-xs text-muted">
-              الخطوة <span dir="ltr">{item.stepNo}</span>
+              <Label k="movements.step.prefix" /> <span dir="ltr">{item.stepNo}</span>
             </span>
             <MovementStepStatusBadge stepStatusId={item.stepStatusId} />
           </div>
@@ -183,11 +187,11 @@ export function MovementQueueTable({ kind }: MovementQueueTableProps) {
       },
       {
         id: 'route',
-        header: 'المسار',
+        headerKey: 'movements.column.route',
         cell: (item) => (
           <div className="flex min-w-44 flex-col gap-0.5 text-xs">
             <span className="text-muted">
-              من:{' '}
+              <Label k="movements.route.from" />{' '}
               <span className="text-foreground">
                 {departmentNames.get(item.fromDepartmentId) ?? (
                   <DepartmentLabel departmentId={item.fromDepartmentId} />
@@ -195,7 +199,7 @@ export function MovementQueueTable({ kind }: MovementQueueTableProps) {
               </span>
             </span>
             <span className="text-muted">
-              إلى:{' '}
+              <Label k="movements.route.to" />{' '}
               <span className="text-foreground">
                 {departmentNames.get(item.toDepartmentId) ?? (
                   <DepartmentLabel departmentId={item.toDepartmentId} />
@@ -207,7 +211,7 @@ export function MovementQueueTable({ kind }: MovementQueueTableProps) {
       },
       {
         id: 'dueDate',
-        header: 'تاريخ الاستحقاق',
+        headerKey: 'movements.column.due-date',
         sortable: true,
         sortKey: 'dueDate',
         sortValue: (item) => item.dueDate,
@@ -226,14 +230,14 @@ export function MovementQueueTable({ kind }: MovementQueueTableProps) {
               }
             >
               {item.dueDate ? formatDate(item.dueDate) : '—'}
-              {overdue && <span className="ms-1 text-[10px]">متأخر</span>}
+              {overdue && <span className="ms-1 text-[10px]"><Label k="movements.overdue" /></span>}
             </span>
           )
         },
       },
       {
         id: 'sentAt',
-        header: 'تاريخ الإرسال',
+        headerKey: 'movements.column.sent-at',
         sortable: true,
         sortKey: 'sentAt',
         sortValue: (item) => item.sentAt ?? item.createdAt,
@@ -245,13 +249,13 @@ export function MovementQueueTable({ kind }: MovementQueueTableProps) {
       },
       {
         id: 'assignee',
-        header: 'المكلَّف',
+        headerKey: 'movements.column.assignee',
         defaultHidden: true,
         cell: (item) => <UserLabel userId={item.assignedToUserId} />,
       },
       {
         id: 'instructions',
-        header: 'التعليمات',
+        headerKey: 'movements.column.instructions',
         defaultHidden: true,
         cell: (item) => (
           <span className="line-clamp-2 min-w-40 text-xs text-muted">
@@ -261,7 +265,7 @@ export function MovementQueueTable({ kind }: MovementQueueTableProps) {
       },
       {
         id: 'createdAt',
-        header: 'تاريخ الإنشاء',
+        headerKey: 'movements.column.created-at',
         defaultHidden: true,
         cell: (item) => (
           <span dir="ltr" className="whitespace-nowrap text-xs text-muted">
@@ -276,9 +280,9 @@ export function MovementQueueTable({ kind }: MovementQueueTableProps) {
   const copyValue = async (value: string, label: string) => {
     try {
       await navigator.clipboard.writeText(value)
-      toast.success(`تم نسخ ${label}.`)
+      toast.success(t('movements.toast.copied', { label }))
     } catch {
-      toast.error('تعذّر النسخ إلى الحافظة.')
+      toast.error(t('movements.toast.copy-failed'))
     }
   }
 
@@ -301,7 +305,7 @@ export function MovementQueueTable({ kind }: MovementQueueTableProps) {
       const Icon = MOVEMENT_ACTION_ICONS[action]
       return {
         id: `action-${action}`,
-        label: MOVEMENT_ACTION_LABELS[action],
+        label: t(MOVEMENT_ACTION_LABEL_KEYS[action]),
         icon: <Icon className="size-4" aria-hidden />,
         danger: DESTRUCTIVE_ACTIONS.includes(action),
         onSelect: () => setPendingAction({ action, movementId: item.movementId }),
@@ -314,23 +318,23 @@ export function MovementQueueTable({ kind }: MovementQueueTableProps) {
         : [
             {
               id: 'open-document',
-              label: 'فتح الوثيقة',
+              label: t('movements.row.open'),
               icon: <Eye className="size-4" aria-hidden />,
               onSelect: () => navigate(ROUTES.DOCUMENT_DETAIL(item.documentId)),
             },
           ]),
       {
         id: 'copy-number',
-        label: 'نسخ رقم النظام',
+        label: t('movements.row.copy-number'),
         icon: <Hash className="size-4" aria-hidden />,
         disabled: !item.officialNumberText,
-        onSelect: () => void copyValue(item.officialNumberText ?? '', 'رقم النظام'),
+        onSelect: () => void copyValue(item.officialNumberText ?? '', t('movements.copy.number-label')),
       },
       {
         id: 'copy-id',
-        label: 'نسخ معرّف الحركة',
+        label: t('movements.row.copy-id'),
         icon: <Copy className="size-4" aria-hidden />,
-        onSelect: () => void copyValue(item.movementId, 'معرّف الحركة'),
+        onSelect: () => void copyValue(item.movementId, t('movements.copy.id-label')),
       },
       ...(actionEntries.length > 0
         ? [{ type: 'separator' } as MenuEntry, ...actionEntries]
@@ -340,7 +344,7 @@ export function MovementQueueTable({ kind }: MovementQueueTableProps) {
 
   const refreshEntry: MenuEntry = {
     id: 'refresh',
-    label: 'تحديث الصندوق',
+    label: t('movements.action.refresh'),
     icon: <RefreshCw className="size-4" aria-hidden />,
     onSelect: () => void queueQuery.refetch(),
   }
@@ -352,7 +356,7 @@ export function MovementQueueTable({ kind }: MovementQueueTableProps) {
     <>
       <DataTable
         tableId={isInbox ? 'movements-inbox' : 'movements-outbox'}
-        caption={isInbox ? 'صندوق وارد القسم' : 'صندوق صادر القسم'}
+        caption={isInbox ? t('movements.caption.inbox') : t('movements.caption.outbox')}
         mode="client"
         columns={columns}
         rows={rows}
@@ -372,7 +376,7 @@ export function MovementQueueTable({ kind }: MovementQueueTableProps) {
         sortKey={table.sortKey}
         sortDirection={table.sortDirection}
         onSortChange={table.setSort}
-        searchPlaceholder="ابحث باسم الوثيقة أو رقمها أو التعليمات…"
+        searchPlaceholder={t('movements.search-placeholder')}
         rowSearchText={(item) =>
           [documentRowLabel(item.documentTitle), item.officialNumberText, item.instructions]
             .filter(Boolean)
@@ -382,7 +386,7 @@ export function MovementQueueTable({ kind }: MovementQueueTableProps) {
           <div className="flex flex-wrap items-center gap-2">
             <GuideChip id="movements.filters" />
             <Select
-              aria-label="تصفية حسب حالة الحركة"
+              aria-label={t('movements.filter.status-aria')}
               value={table.filters.statusId || 'all'}
               onValueChange={(value) =>
                 table.setFilter('statusId', value === 'all' ? null : value)
@@ -391,7 +395,7 @@ export function MovementQueueTable({ kind }: MovementQueueTableProps) {
               className="w-44"
             />
             <Select
-              aria-label="تصفية حسب نوع الحركة"
+              aria-label={t('movements.filter.type-aria')}
               value={table.filters.movementTypeId || 'all'}
               onValueChange={(value) =>
                 table.setFilter('movementTypeId', value === 'all' ? null : value)
@@ -401,7 +405,7 @@ export function MovementQueueTable({ kind }: MovementQueueTableProps) {
             />
             {table.hasActiveFilters && (
               <Button type="button" variant="ghost" size="sm" onClick={table.clearFilters}>
-                مسح المرشحات
+                <Label k="movements.filter.clear" />
               </Button>
             )}
           </div>
@@ -410,18 +414,18 @@ export function MovementQueueTable({ kind }: MovementQueueTableProps) {
         headerMenu={[refreshEntry]}
         emptyMenu={[refreshEntry]}
         rowLabel={(item) => documentRowLabel(item.documentTitle)}
-        emptyTitle={hasQuery ? 'لا توجد حركات مطابقة.' : 'الصندوق فارغ.'}
+        emptyTitle={hasQuery ? t('movements.empty.no-match-title') : t('movements.empty.none-title')}
         emptyDescription={
           hasQuery
-            ? 'جرّب تعديل البحث أو المرشحات لعرض حركات أخرى.'
+            ? t('movements.empty.no-match-description')
             : isInbox
-              ? 'ستظهر هنا الحركات الموجهة إلى قسمك المبدئي فور إرسالها.'
-              : 'ستظهر هنا الحركات التي أرسلها قسمك المبدئي ولم تُغلق بعد.'
+              ? t('movements.empty.inbox-description')
+              : t('movements.empty.outbox-description')
         }
         emptyAction={
           hasQuery ? (
             <Button type="button" variant="outline" onClick={table.clearQuery}>
-              مسح البحث والمرشحات
+              <Label k="movements.empty.clear-query" />
             </Button>
           ) : undefined
         }

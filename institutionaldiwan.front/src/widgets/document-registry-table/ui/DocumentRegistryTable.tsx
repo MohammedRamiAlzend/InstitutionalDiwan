@@ -22,11 +22,12 @@ import { CreateDocumentDialog } from '@/features/document-create'
 import { RegisterNumberFilter } from './RegisterNumberFilter'
 import { toArabicErrorMessage } from '@/shared/api'
 import { FEATURES, Permissions, ROUTES } from '@/shared/config'
-import { formatDate, formatDateTime, useTableState } from '@/shared/lib'
+import { formatDate, formatDateTime, t, useLabel, useTableState } from '@/shared/lib'
 import {
   Button,
   DataTable,
   GuideChip,
+  Label,
   Select,
   type DataTableColumn,
   type MenuEntry,
@@ -110,37 +111,41 @@ export function DocumentRegistryTable() {
     [departmentsQuery.data],
   )
 
+  const allStatusesLabel = useLabel('documents.filter.all-statuses')
+  const allTypesLabel = useLabel('documents.filter.all-types')
+  const allDepartmentsLabel = useLabel('documents.filter.all-departments')
+
   const statusOptions = useMemo(
     () => [
-      { value: 'all', label: 'كل الحالات' },
+      { value: 'all', label: allStatusesLabel },
       ...(statusQuery.data ?? []).map((entry) => ({
         value: String(entry.id),
         label: entry.descAr,
       })),
     ],
-    [statusQuery.data],
+    [statusQuery.data, allStatusesLabel],
   )
 
   const typeOptions = useMemo(
     () => [
-      { value: 'all', label: 'كل الأنواع' },
+      { value: 'all', label: allTypesLabel },
       ...(typesQuery.data ?? []).map((entry) => ({
         value: String(entry.id),
         label: entry.descAr,
       })),
     ],
-    [typesQuery.data],
+    [typesQuery.data, allTypesLabel],
   )
 
   const departmentOptions = useMemo(
     () => [
-      { value: 'all', label: 'كل الأقسام' },
+      { value: 'all', label: allDepartmentsLabel },
       ...(departmentsQuery.data ?? []).map((department) => ({
         value: department.departmentId,
         label: department.nameAr,
       })),
     ],
-    [departmentsQuery.data],
+    [departmentsQuery.data, allDepartmentsLabel],
   )
 
   const [createOpen, setCreateOpen] = useState(false)
@@ -148,9 +153,9 @@ export function DocumentRegistryTable() {
   const copyValue = async (value: string, label: string) => {
     try {
       await navigator.clipboard.writeText(value)
-      toast.success(`تم نسخ ${label}.`)
+      toast.success(t('documents.toast.copied', { label }))
     } catch {
-      toast.error('تعذّر النسخ إلى الحافظة.')
+      toast.error(t('documents.toast.copy-failed'))
     }
   }
 
@@ -165,7 +170,7 @@ export function DocumentRegistryTable() {
     () => [
       {
         id: 'title',
-        header: 'الوثيقة',
+        headerKey: 'documents.column.title',
         sortable: true,
         sortKey: 'title',
         hideable: false,
@@ -182,7 +187,7 @@ export function DocumentRegistryTable() {
       },
       {
         id: 'officialNumber',
-        header: 'رقم النظام',
+        headerKey: 'documents.column.official-number',
         sortable: true,
         sortKey: 'officialNumber',
         cell: (document) => (
@@ -191,19 +196,19 @@ export function DocumentRegistryTable() {
       },
       {
         id: 'documentType',
-        header: 'النوع',
+        headerKey: 'documents.column.type',
         cell: (document) => (
           <LookupLabel lookup={LOOKUP_SLUGS.DocumentTypes} id={document.documentTypeId} />
         ),
       },
       {
         id: 'status',
-        header: 'الحالة',
+        headerKey: 'documents.column.status',
         cell: (document) => <DocumentStatusBadge statusId={document.statusId} />,
       },
       {
         id: 'department',
-        header: 'القسم المالك',
+        headerKey: 'documents.column.department',
         cell: (document) => {
           const department = departmentById.get(document.owningDepartmentId)
           return department ? (
@@ -220,7 +225,7 @@ export function DocumentRegistryTable() {
       ...fieldColumns,
       {
         id: 'registrationDate',
-        header: 'تاريخ التسجيل',
+        headerKey: 'documents.column.registration-date',
         sortable: true,
         sortKey: 'registrationDate',
         cell: (document) => (
@@ -231,7 +236,7 @@ export function DocumentRegistryTable() {
       },
       {
         id: 'createdAt',
-        header: 'تاريخ الإنشاء',
+        headerKey: 'documents.column.created-at',
         sortable: true,
         sortKey: 'createdAt',
         defaultHidden: true,
@@ -248,36 +253,36 @@ export function DocumentRegistryTable() {
   const buildRowMenu = (document: DocumentResponse): MenuEntry[] => [
     {
       id: 'open',
-      label: 'فتح التفاصيل',
+      label: t('documents.row.open'),
       icon: <Eye className="size-4" aria-hidden />,
       onSelect: () => navigate(ROUTES.DOCUMENT_DETAIL(document.documentId)),
     },
     {
       id: 'copy-number',
-      label: 'نسخ رقم النظام',
+      label: t('documents.row.copy-number'),
       icon: <Hash className="size-4" aria-hidden />,
       disabled: !document.officialNumberText,
       onSelect: () =>
-        void copyValue(document.officialNumberText ?? '', 'رقم النظام'),
+        void copyValue(document.officialNumberText ?? '', t('documents.column.official-number')),
     },
     {
       id: 'copy-id',
-      label: 'نسخ معرّف الوثيقة',
+      label: t('documents.row.copy-id'),
       icon: <Copy className="size-4" aria-hidden />,
-      onSelect: () => void copyValue(document.documentId, 'معرّف الوثيقة'),
+      onSelect: () => void copyValue(document.documentId, t('documents.copy.id-label')),
     },
   ]
 
   const refreshEntry: MenuEntry = {
     id: 'refresh',
-    label: 'تحديث البيانات',
+    label: t('table.refresh'),
     icon: <RefreshCw className="size-4" aria-hidden />,
     onSelect: () => void documentsQuery.refetch(),
   }
 
   const createEntry: MenuEntry = {
     id: 'create',
-    label: 'وثيقة جديدة',
+    label: t('documents.action.new'),
     icon: <Plus className="size-4" aria-hidden />,
     onSelect: () => setCreateOpen(true),
   }
@@ -290,7 +295,7 @@ export function DocumentRegistryTable() {
     <>
       <DataTable
         tableId="documents"
-        caption="سجل الوثائق"
+        caption={t('documents.registry-title')}
         columns={columns}
         rows={documentsQuery.data?.items}
         rowKey={(document) => document.documentId}
@@ -309,12 +314,12 @@ export function DocumentRegistryTable() {
         sortKey={table.sortKey}
         sortDirection={table.sortDirection}
         onSortChange={table.setSort}
-        searchPlaceholder="ابحث باسم الوثيقة أو رقم النظام…"
+        searchPlaceholder={t('documents.search-placeholder')}
         filters={
           <div className="flex flex-wrap items-center gap-2">
             <GuideChip id="documents.filters" />
             <Select
-              aria-label="تصفية حسب الحالة"
+              aria-label={t('documents.filter.status-aria')}
               value={table.filters.statusId || 'all'}
               onValueChange={(value) =>
                 table.setFilter('statusId', value === 'all' ? null : value)
@@ -323,7 +328,7 @@ export function DocumentRegistryTable() {
               className="w-40"
             />
             <Select
-              aria-label="تصفية حسب النوع"
+              aria-label={t('documents.filter.type-aria')}
               value={table.filters.documentTypeId || 'all'}
               onValueChange={(value) =>
                 table.setFilter('documentTypeId', value === 'all' ? null : value)
@@ -342,7 +347,7 @@ export function DocumentRegistryTable() {
               onChange={(raw) => table.setRepeated(FIELD_FILTER_PARAM, raw)}
             />
             <Select
-              aria-label="تصفية حسب القسم المالك"
+              aria-label={t('documents.filter.department-aria')}
               value={table.filters.owningDepartmentId || 'all'}
               onValueChange={(value) =>
                 table.setFilter('owningDepartmentId', value === 'all' ? null : value)
@@ -360,13 +365,13 @@ export function DocumentRegistryTable() {
                   size="sm"
                   onClick={() => void departmentsQuery.refetch()}
                 >
-                  إعادة التحميل
+                  <Label k="documents.action.reload" />
                 </Button>
               </span>
             )}
             {table.hasActiveFilters && (
               <Button type="button" variant="ghost" size="sm" onClick={table.clearFilters}>
-                مسح المرشحات
+                <Label k="documents.filter.clear" />
               </Button>
             )}
           </div>
@@ -380,31 +385,31 @@ export function DocumentRegistryTable() {
             <>
               <Button type="button" onClick={() => setCreateOpen(true)}>
                 <Plus className="size-4" aria-hidden />
-                وثيقة جديدة
+                <Label k="documents.action.new" />
               </Button>
               <GuideChip id="documents.create" />
             </>
           ) : undefined
         }
-        emptyTitle={hasQuery ? 'لا توجد وثائق مطابقة.' : 'لا توجد وثائق بعد.'}
+        emptyTitle={hasQuery ? t('documents.empty.no-match-title') : t('documents.empty.none-title')}
         emptyDescription={
           hasQuery
-            ? 'جرّب تعديل البحث أو المرشحات لعرض وثائق أخرى.'
+            ? t('documents.empty.no-match-description')
             : canCreate
               ? FEATURES.drafts
-                ? 'ابدأ بحفظ أول وثيقة كمسودة أو تسجيلها برقم نظام.'
-                : 'ابدأ بتسجيل أول وثيقة.'
-              : 'ستظهر الوثائق هنا بمجرد تسجيلها في أقسام المؤسسة.'
+                ? t('documents.empty.start-drafts')
+                : t('documents.empty.start')
+              : t('documents.empty.readonly')
         }
         emptyAction={
           hasQuery ? (
             <Button type="button" variant="outline" onClick={table.clearQuery}>
-              مسح البحث والمرشحات
+              <Label k="documents.empty.clear-query" />
             </Button>
           ) : canCreate ? (
             <Button type="button" onClick={() => setCreateOpen(true)}>
               <Plus className="size-4" aria-hidden />
-              إنشاء وثيقة
+              <Label k="documents.action.create" />
             </Button>
           ) : undefined
         }

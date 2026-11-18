@@ -8,7 +8,7 @@ import {
 } from '@/entities/document-schema'
 import { EditFieldValuesForm } from '@/features/document-field-values'
 import { toArabicErrorMessage } from '@/shared/api'
-import { Badge, Button, Skeleton } from '@/shared/ui'
+import { Badge, Button, Label, Skeleton } from '@/shared/ui'
 
 interface DocumentFieldsPanelProps {
   documentId: string
@@ -34,7 +34,7 @@ export function DocumentFieldsPanel({ documentId, canEdit, lockedReason }: Docum
 
   const data = query.data
   if (!data || data.schemaVersionId === null) {
-    return <p className="text-sm text-muted">لا حقول إضافية لهذه الوثيقة.</p>
+    return <p className="text-sm text-muted"><Label k="schema.panel.no-fields" /></p>
   }
 
   // A field hidden by its condition has nothing to say on this document.
@@ -48,7 +48,7 @@ export function DocumentFieldsPanel({ documentId, canEdit, lockedReason }: Docum
     <section className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2 text-sm text-muted">
-          <span>النسخة المثبّتة للوثيقة</span>
+          <span><Label k="schema.panel.pinned-version" /></span>
           <Badge variant="outline">
             <span dir="ltr">v{data.versionNumber}</span>
           </Badge>
@@ -56,7 +56,7 @@ export function DocumentFieldsPanel({ documentId, canEdit, lockedReason }: Docum
         {canEdit && !editing && (
           <Button type="button" size="sm" variant="outline" onClick={() => setEditing(true)}>
             <Pencil className="size-4" aria-hidden />
-            تعديل القيم
+            <Label k="schema.panel.edit-values" />
           </Button>
         )}
       </div>

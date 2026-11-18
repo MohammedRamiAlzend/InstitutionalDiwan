@@ -1,9 +1,9 @@
-import { useDraftForm } from '@/shared/lib'
+import { t, useDraftForm } from '@/shared/lib'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
 import type { DocumentNumberResponse } from '@/entities/document'
 import { toArabicErrorMessage } from '@/shared/api'
-import { Button, Dialog, FormField, Textarea } from '@/shared/ui'
+import { Button, Dialog, FormField, Label, Textarea } from '@/shared/ui'
 import { useCancelOfficialNumberMutation } from '../api/numberMutations'
 import { cancelNumberSchema, type CancelNumberFormValues } from '../model/schemas'
 
@@ -39,7 +39,7 @@ export function CancelNumberDialog({
         documentNumberId: number.documentNumberId,
         reason: values.reason.trim(),
       })
-      toast.success('تم إلغاء رقم النظام.')
+      toast.success(t('numbering.cancel.toast'))
       draft.discard()
       onOpenChange(false)
     } catch {
@@ -51,8 +51,8 @@ export function CancelNumberDialog({
     <Dialog
       open={open}
       onOpenChange={onOpenChange}
-      title="إلغاء رقم النظام"
-      description={`سيُعلَّم الرقم «${number.officialNumberText}» ملغى مع سبب الإلغاء واسم المنفّذ، ويبقى في سجل الأرقام.`}
+      title={t('numbering.cancel.title')}
+      description={t('numbering.cancel.description', { number: number.officialNumberText })}
       size="sm"
       footer={
         <>
@@ -62,7 +62,7 @@ export function CancelNumberDialog({
             onClick={() => onOpenChange(false)}
             disabled={mutation.isPending}
           >
-            تراجع
+            <Label k="numbering.action.back" />
           </Button>
           <Button
             type="submit"
@@ -70,16 +70,16 @@ export function CancelNumberDialog({
             variant="destructive"
             loading={mutation.isPending}
           >
-            تأكيد الإلغاء
+            <Label k="numbering.cancel.submit" />
           </Button>
         </>
       }
     >
       <form id="cancel-number-form" onSubmit={onSubmit} noValidate>
-        <FormField label="سبب الإلغاء" required error={errors.reason?.message}>
+        <FormField labelKey="numbering.cancel.reason" required error={errors.reason?.message}>
           <Textarea
             rows={3}
-            placeholder="مثال: قيد مكرر؛ استُبدل بنسخة مصححة."
+            placeholder={t('numbering.cancel.reason-placeholder')}
             invalid={Boolean(errors.reason)}
             {...register('reason')}
           />

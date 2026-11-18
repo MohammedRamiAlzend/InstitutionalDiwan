@@ -1,13 +1,13 @@
 import { Hash } from 'lucide-react'
-import { NUMBERING_RESET_POLICY } from '@/shared/config'
-import { cn, formatNumber } from '@/shared/lib'
-import { Badge } from '@/shared/ui'
+import { NUMBERING_RESET_POLICY, type LabelKey } from '@/shared/config'
+import { cn, formatNumber, resolveLabel, useLabelsStore } from '@/shared/lib'
+import { Badge, Label } from '@/shared/ui'
 import type { NumberingRegistryResponse } from '../model/types'
 
-const resetPolicyLabels: Record<number, string> = {
-  [NUMBERING_RESET_POLICY.Yearly]: 'سنوي',
-  [NUMBERING_RESET_POLICY.Monthly]: 'شهري',
-  [NUMBERING_RESET_POLICY.Never]: 'لا يتصفّر',
+const resetPolicyKeys: Record<number, LabelKey> = {
+  [NUMBERING_RESET_POLICY.Yearly]: 'numbering.reset-policy.yearly',
+  [NUMBERING_RESET_POLICY.Monthly]: 'numbering.reset-policy.monthly',
+  [NUMBERING_RESET_POLICY.Never]: 'numbering.reset-policy.never',
 }
 
 interface RegistryScopeCardProps {
@@ -27,11 +27,20 @@ export function RegistryScopeCard({
   directionLabel,
   className,
 }: RegistryScopeCardProps) {
+  const overrides = useLabelsStore((state) => state.overrides)
   const scopeChips = [
-    departmentName ? { key: 'department', label: `الدائرة: ${departmentName}` } : null,
-    documentTypeLabel ? { key: 'type', label: `النوع: ${documentTypeLabel}` } : null,
-    directionLabel ? { key: 'direction', label: `الاتجاه: ${directionLabel}` } : null,
+    departmentName
+      ? { key: 'department', label: resolveLabel('numbering.scope.department', overrides, { name: departmentName }) }
+      : null,
+    documentTypeLabel
+      ? { key: 'type', label: resolveLabel('numbering.scope.type', overrides, { label: documentTypeLabel }) }
+      : null,
+    directionLabel
+      ? { key: 'direction', label: resolveLabel('numbering.scope.direction', overrides, { label: directionLabel }) }
+      : null,
   ].filter((chip): chip is { key: string; label: string } => chip !== null)
+
+  const resetPolicyKey = resetPolicyKeys[registry.resetPolicyId]
 
   return (
     <section
@@ -53,7 +62,7 @@ export function RegistryScopeCard({
           </div>
           <div className="flex flex-wrap items-center gap-1.5">
             {scopeChips.length === 0 ? (
-              <Badge variant="outline">سجل شامل</Badge>
+              <Badge variant="outline"><Label k="numbering.card.global-badge" /></Badge>
             ) : (
               scopeChips.map((chip) => (
                 <Badge key={chip.key} variant="outline">
@@ -64,13 +73,15 @@ export function RegistryScopeCard({
           </div>
         </div>
         <Badge variant={registry.isActive ? 'success' : 'danger'}>
-          {registry.isActive ? 'نشط' : 'موقوف'}
+          {registry.isActive
+            ? resolveLabel('numbering.status.active', overrides)
+            : resolveLabel('numbering.status.inactive', overrides)}
         </Badge>
       </div>
 
       <dl className="grid gap-3 text-sm sm:grid-cols-2">
         <div className="flex flex-col gap-1">
-          <dt className="text-xs text-muted">قالب الرقم</dt>
+          <dt className="text-xs text-muted"><Label k="numbering.card.format" /></dt>
           <dd>
             <code dir="ltr" className="text-xs text-foreground">
               {registry.formatPattern}
@@ -78,9 +89,9 @@ export function RegistryScopeCard({
           </dd>
         </div>
         <div className="flex flex-col gap-1">
-          <dt className="text-xs text-muted">سياسة التصفير</dt>
+          <dt className="text-xs text-muted"><Label k="numbering.card.reset-policy" /></dt>
           <dd className="text-foreground">
-            {resetPolicyLabels[registry.resetPolicyId] ?? `#${registry.resetPolicyId}`}
+            {resetPolicyKey ? resolveLabel(resetPolicyKey, overrides) : `#${registry.resetPolicyId}`}
           </dd>
         </div>
       </dl>
@@ -88,10 +99,10 @@ export function RegistryScopeCard({
       <div className="flex flex-col gap-2">
         <h3 className="flex items-center gap-1.5 text-xs font-semibold text-muted">
           <Hash className="size-3.5" aria-hidden />
-          العدادات
+          <Label k="numbering.card.counters" />
         </h3>
         {registry.counters.length === 0 ? (
-          <p className="text-xs text-muted">لم يُصدر أي رقم من هذا السجل بعد.</p>
+          <p className="text-xs text-muted"><Label k="numbering.card.no-counters" /></p>
         ) : (
           <ul className="flex flex-wrap gap-2">
             {registry.counters.map((counter) => (

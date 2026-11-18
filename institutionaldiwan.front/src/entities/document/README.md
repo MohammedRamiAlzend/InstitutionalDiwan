@@ -24,9 +24,9 @@ paging/search/sort/filter params and keeps the previous page visible while the n
 | `model/queries.ts` | `documentKeys` factory plus `useDocuments`, `useDocumentById`, `useDocumentDetails`, `useDocumentTimeline`, `useDocumentAccessGrants`, `useDocumentNumberHistory`, and `useDocumentRegistryNumbers`. |
 | `model/registryEntries.ts` | `findDepartmentEntry` picks a department's register line for a document in a given year. |
 | `api/documentApi.ts` | Typed `GET` calls through `httpClient` from `@/shared/api`; blank search and department filters are dropped. |
-| `ui/DocumentStatusBadge.tsx` | Arabic badges for `Draft`, `Registered`, `InMovement`, `Archived`, `Canceled` with a `#id` fallback. |
+| `ui/DocumentStatusBadge.tsx` | Badges for `Draft`, `Registered`, `InMovement`, `Archived`, `Canceled` with a `#id` fallback; labels resolve via `useLabel` (`docdetails.status.*`). |
 | `ui/DocumentDirectionBadge.tsx` | Arabic badges for `Internal`, `Incoming`, `Outgoing` with direction icons. |
-| `ui/OfficialNumberTag.tsx` | Renders `officialNumberText` (and an optional numbering year) in `dir="ltr"` monospace, or «بدون رقم». |
+| `ui/OfficialNumberTag.tsx` | Renders `officialNumberText` (and an optional numbering year) in `dir="ltr"` monospace, or the «بدون رقم» catalog label (`docdetails.number.none`). |
 | `ui/NumberStatusBadge.tsx` | Arabic badges for number states: نشط / ملغى / مُستبدل, keyed by `DOCUMENT_NUMBER_STATUS` from `@/shared/config`, with an id fallback. |
 | `ui/RestrictedDocumentLabel.tsx` | Stands in for the title («وثيقة مقيّدة» with a lock icon) on a queue or register row whose document the caller cannot view. |
 | `model/restricted.ts` | `isDocumentRestricted` (the API blanks the title on those rows) and `documentRowLabel`, the text such a row is searched and announced by. |
@@ -53,7 +53,7 @@ paging/search/sort/filter params and keeps the previous page visible while the n
 | Item | State |
 | --- | --- |
 | `model/`, `api/`, `ui/`, `index.ts` | ✅ Implemented |
-| `DocumentStatusBadge` labels | Hard-coded Arabic matching the seeded `document-status-types` catalog; no lookup round-trip. |
+| `DocumentStatusBadge` labels | Catalog-driven (`docdetails.status.*` via `useLabel`, `#id` fallback); no lookup round-trip. |
 | Number reads | ✅ Implemented (Phase 5): history + registry entries, `NumberStatusBadge`, Arabic event labels in the page |
 | Number badges | ✅ Keyed by `DOCUMENT_NUMBER_STATUS` (Module 04 Phase 4); no local numeric literals remain. |
 | Restricted rows | ✅ Label and helpers implemented; used by the movement queues and the department register. |
@@ -62,6 +62,8 @@ paging/search/sort/filter params and keeps the previous page visible while the n
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-18 | Qoder | UI labels Phase 4 (ب4): `DocumentStatusBadge` resolves its five states + `#id` fallback via `useLabel` (`docdetails.status.*`); `OfficialNumberTag` resolves «بدون رقم» via `useLabel` (`docdetails.number.none`). Numbers/titles stay data. |
+| 2026-11-18 | Qoder | UI labels Phase 4 (ب4): `documentRowLabel`/`RestrictedDocumentLabel` resolve the restricted-document label/tooltip via `t()`/`useLabel` (`documents.restricted.*`); `NumberStatusBadge` resolves active/cancelled/replaced/`{id}` fallback via `useLabel` (`documents.number-status.*`). Document titles/numbers stay data. |
 | 2026-11-11 | Claude | `DocumentDetailResponse` carries `archiveDiwanDepartmentId` and `isHeldByArchiveDiwan`. |
 | 2026-11-10 | Claude | `DepartmentRegistryNumberResponse` carries the renumbering link (`replacedByNumber*`, `replacesNumber*`); `findDepartmentEntry` returns the line in use, skipping replaced ones. |
 | 2026-11-09 | Claude | `DocumentListParams` gained `registerNumber`. |

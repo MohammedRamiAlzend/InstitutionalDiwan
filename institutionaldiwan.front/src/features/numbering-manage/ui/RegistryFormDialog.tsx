@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { Controller, useWatch } from 'react-hook-form'
-import { useDraftForm } from '@/shared/lib'
+import { resolveLabel, t, useDraftForm, useLabelsStore } from '@/shared/lib'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
 import { useDepartmentOptions } from '@/entities/department'
@@ -12,7 +12,7 @@ import {
   type NumberingRegistryResponse,
 } from '@/entities/numbering-registry'
 import { toArabicErrorMessage } from '@/shared/api'
-import { Button, Dialog, FormField, Input, Select } from '@/shared/ui'
+import { Button, Dialog, FormField, Input, Label, Select } from '@/shared/ui'
 import {
   useCreateNumberingRegistryMutation,
   useUpdateNumberingRegistryMutation,
@@ -38,6 +38,7 @@ export function RegistryFormDialog({
   const createMutation = useCreateNumberingRegistryMutation()
   const updateMutation = useUpdateNumberingRegistryMutation(registry?.registryId ?? '')
   const mutation = isEdit ? updateMutation : createMutation
+  const overrides = useLabelsStore((state) => state.overrides)
 
   const departmentsQuery = useDepartmentOptions({ enabled: open })
   const documentTypesQuery = useLookupEntries(LOOKUP_SLUGS.DocumentTypes)
@@ -63,7 +64,7 @@ export function RegistryFormDialog({
 
   const departmentOptions = useMemo(
     () => [
-      { value: NONE, label: 'كل الدوائر (سجل شامل)' },
+      { value: NONE, label: resolveLabel('numbering.form.all-departments', overrides) },
       ...(departmentsQuery.data ?? [])
         // An inactive department stays visible only when the registry already targets it:
         // otherwise the select would render blank and hide the registry's real scope.
@@ -73,22 +74,22 @@ export function RegistryFormDialog({
         )
         .map((department) => ({
           value: department.departmentId,
-          label: `${department.code} — ${department.nameAr}${department.isActive ? '' : ' (موقوف)'}`,
+          label: `${department.code} — ${department.nameAr}${department.isActive ? '' : resolveLabel('numbering.form.department-inactive-suffix', overrides)}`,
           disabled: !department.isActive,
         })),
     ],
-    [departmentsQuery.data, registry?.departmentId],
+    [departmentsQuery.data, registry?.departmentId, overrides],
   )
 
   const documentTypeOptions = useMemo(
     () => [
-      { value: NONE, label: 'كل الأنواع' },
+      { value: NONE, label: resolveLabel('numbering.form.all-types', overrides) },
       ...(documentTypesQuery.data ?? []).map((entry) => ({
         value: String(entry.id),
         label: entry.descAr,
       })),
     ],
-    [documentTypesQuery.data],
+    [documentTypesQuery.data, overrides],
   )
 
   const resetPolicyOptions = useMemo(
@@ -126,13 +127,13 @@ export function RegistryFormDialog({
     try {
       if (isEdit) {
         await updateMutation.mutateAsync(scope)
-        toast.success('تم تحديث سجل الترقيم.')
+        toast.success(t('numbering.toast.updated'))
       } else {
         await createMutation.mutateAsync({
           code: values.code.trim().toUpperCase(),
           ...scope,
         })
-        toast.success('تم إنشاء سجل الترقيم.')
+        toast.success(t('numbering.toast.created'))
       }
       draft.discard()
       onOpenChange(false)
@@ -145,11 +146,11 @@ export function RegistryFormDialog({
     <Dialog
       open={open}
       onOpenChange={onOpenChange}
-      title={isEdit ? 'تعديل سجل الترقيم' : 'سجل ترقيم جديد'}
+      title={isEdit ? t('numbering.form.edit-title') : t('numbering.form.create-title')}
       description={
         isEdit
-          ? 'يمكنك تغيير النطاق وسياسة التصفير. يُقفل القالب بعد إصدار أول رقم من السجل.'
-          : 'يحدد السجل نطاق الأرقام (دائرة/نوع) وقالب صياغتها. الرمز لا يتغير بعد الإنشاء.'
+          ? t('numbering.form.edit-description')
+          : t('numbering.form.create-description')
       }
       size="lg"
       footer={
@@ -160,14 +161,14 @@ export function RegistryFormDialog({
             onClick={() => onOpenChange(false)}
             disabled={mutation.isPending}
           >
-            إلغاء
+            <Label k="common.action.cancel" />
           </Button>
           <Button
             type="submit"
             form="numbering-registry-form"
             loading={mutation.isPending}
           >
-            {isEdit ? 'حفظ التعديلات' : 'إنشاء السجل'}
+            <Label k={isEdit ? 'numbering.form.save-edit' : 'numbering.form.create'} />
           </Button>
         </>
       }
@@ -178,7 +179,7 @@ export function RegistryFormDialog({
         noValidate
         className="grid gap-4 sm:grid-cols-2"
       >
-        <FormField label="الرمز" required error={errors.code?.message} htmlFor="registry-code">
+        <FormField labelKey="numbering.form.code" required error={errors.code?.message} htmlFor="registry-code">
           <Input
             id="registry-code"
             dir="ltr"
@@ -189,14 +190,14 @@ export function RegistryFormDialog({
             {...register('code')}
           />
           {isEdit && (
-            <p className="text-xs text-muted">رمز السجل ثابت ولا يمكن تعديله.</p>
+            <p className="text-xs text-muted"><Label k="numbering.form.code-locked" /></p>
           )}
         </FormField>
 
-        <FormField label="الاسم" required error={errors.nameAr?.message} htmlFor="registry-name">
+        <FormField labelKey="numbering.form.name" required error={errors.nameAr?.message} htmlFor="registry-name">
           <Input
             id="registry-name"
-            placeholder="سجل الإدارة المالية"
+            placeholder={t('numbering.form.name-placeholder')}
             disabled={mutation.isPending}
             invalid={Boolean(errors.nameAr)}
             {...register('nameAr')}
@@ -204,7 +205,7 @@ export function RegistryFormDialog({
         </FormField>
 
         <FormField
-          label="الدائرة"
+          labelKey="numbering.form.department"
           error={errors.departmentId?.message}
           className="sm:col-span-2"
         >
@@ -217,14 +218,14 @@ export function RegistryFormDialog({
                 onValueChange={field.onChange}
                 options={departmentOptions}
                 disabled={mutation.isPending || departmentsQuery.isLoading}
-                placeholder="كل الدوائر (سجل شامل)"
-                aria-label="الدائرة"
+                placeholder={t('numbering.form.all-departments')}
+                aria-label={t('numbering.form.department')}
               />
             )}
           />
         </FormField>
 
-        <FormField label="نوع الوثيقة">
+        <FormField labelKey="numbering.form.document-type">
           <Controller
             control={control}
             name="documentTypeId"
@@ -234,7 +235,7 @@ export function RegistryFormDialog({
                 onValueChange={field.onChange}
                 options={documentTypeOptions}
                 disabled={mutation.isPending || documentTypesQuery.isLoading}
-                aria-label="نوع الوثيقة"
+                aria-label={t('numbering.form.document-type')}
               />
             )}
           />
@@ -242,7 +243,7 @@ export function RegistryFormDialog({
 
 
         <FormField
-          label="سياسة التصفير"
+          labelKey="numbering.form.reset-policy"
           required
           error={errors.resetPolicyId?.message}
         >
@@ -256,14 +257,14 @@ export function RegistryFormDialog({
                 options={resetPolicyOptions}
                 disabled={mutation.isPending || resetPoliciesQuery.isLoading}
                 invalid={Boolean(errors.resetPolicyId)}
-                aria-label="سياسة التصفير"
+                aria-label={t('numbering.form.reset-policy')}
               />
             )}
           />
         </FormField>
 
         <FormField
-          label="قالب الرقم"
+          labelKey="numbering.form.pattern"
           error={errors.formatPattern?.message}
           htmlFor="registry-pattern"
         >
@@ -277,12 +278,14 @@ export function RegistryFormDialog({
             {...register('formatPattern')}
           />
           <p className="text-xs text-muted">
-            {templateLocked
-              ? 'لا يمكن تعديل القالب بعد إصدار أرقام من السجل.'
-              : `اتركه فارغًا لاستخدام ${DEFAULT_NUMBER_PATTERN}، ويجب أن يتضمن {SEQ}.`}
+            {templateLocked ? (
+              <Label k="numbering.form.pattern-locked-hint" />
+            ) : (
+              t('numbering.form.pattern-hint', { pattern: DEFAULT_NUMBER_PATTERN })
+            )}
           </p>
           <p className="flex flex-wrap items-center gap-1.5 text-xs text-muted">
-            معاينة الرقم القادم:
+            <Label k="numbering.form.preview-label" />
             <code
               dir="ltr"
               className="rounded bg-surface-muted px-1.5 py-0.5 font-mono text-foreground"
@@ -290,7 +293,8 @@ export function RegistryFormDialog({
               {previewNumber}
             </code>
             <span>
-              (السنة <span dir="ltr">{previewYear}</span>، التسلسل{' '}
+              (<Label k="numbering.form.preview-year" /> <span dir="ltr">{previewYear}</span>،{' '}
+              <Label k="numbering.form.preview-sequence" />{' '}
               <span dir="ltr">{previewSequence}</span>)
             </span>
           </p>

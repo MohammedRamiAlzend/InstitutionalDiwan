@@ -25,4 +25,6 @@ Lays out a whole document on one printable A4 template and hands it to `PrintShe
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-18 | Qoder | UI labels Phase 4 (ب5): the whole template — section titles, fact labels, table headers, the archived/yes-no markers and the hidden-relations notice — resolves from `print.*` via `t()`. Lookup names, official numbers, field labels and reasons stay data. |
+| 2026-11-18 | Qoder | UI-labels edit mode (relations unit): the relation direction cell now resolves `RELATION_DIRECTION_LABELS` (a `LabelKey` map) through `t()`. The rest of the template's text is migrated in the ب5 print batch. |
 | 2026-11-09 | Claude | Added the document PDF template. |

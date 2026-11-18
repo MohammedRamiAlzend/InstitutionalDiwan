@@ -17,9 +17,10 @@ import { DepartmentRegistrySelect, useDepartmentRegistryOptions } from '@/entiti
 import { useSessionStore } from '@/entities/user'
 import { ApiError, toArabicErrorMessage } from '@/shared/api'
 import { Permissions } from '@/shared/config'
-import { Button, Checkbox, Dialog, FormField, Input, Textarea } from '@/shared/ui'
+import { t } from '@/shared/lib'
+import { Button, Checkbox, Dialog, FormField, Input, Label, Textarea } from '@/shared/ui'
 import { useReceiveMovementMutation } from '../api/movementMutations'
-import { MOVEMENT_ACTION_LABELS } from '../model/constants'
+import { MOVEMENT_ACTION_LABEL_KEYS } from '../model/constants'
 import { receiveMovementSchema, type ReceiveMovementFormValues } from '../model/schemas'
 
 function todayIsoDate(): string {
@@ -110,15 +111,15 @@ export function ReceiveMovementDialog({
   const submit = handleSubmit(async (values) => {
     const typedNumber = values.registryNumberText.trim()
     if (!reusedLine && registries.options.length > 1 && !values.registryId) {
-      setError('registryId', { message: 'اختر السجل الذي سُجّل فيه الرقم.' })
+      setError('registryId', { message: t('movements.receive.error.registry-required') })
       return
     }
     if (linesKnown && !reusedLine && !typedNumber) {
-      setError('registryNumberText', { message: 'أدخل رقم سجل الدائرة لهذه السنة.' })
+      setError('registryNumberText', { message: t('movements.receive.error.number-required') })
       return
     }
     if (existingLine && issueNewNumber && typedNumber === existingLine.registryNumberText) {
-      setError('registryNumberText', { message: 'الرقم الجديد يطابق الرقم الحالي.' })
+      setError('registryNumberText', { message: t('movements.receive.error.number-same') })
       return
     }
 
@@ -141,10 +142,13 @@ export function ReceiveMovementDialog({
       })
       toast.success(
         receipt.replacedNumberText
-          ? `تم الاستلام برقم الدائرة الجديد ${receipt.registryNumberText} بدل الرقم ${receipt.replacedNumberText}.`
+          ? t('movements.receive.toast.replaced', {
+              number: receipt.registryNumberText,
+              replaced: receipt.replacedNumberText,
+            })
           : receipt.isReturnVisit
-          ? `تم الاستلام بنفس رقم الدائرة ${receipt.registryNumberText} وبتاريخ جديد.`
-          : `تم استلام الوثيقة برقم الدائرة ${receipt.registryNumberText}.`,
+          ? t('movements.receive.toast.return', { number: receipt.registryNumberText })
+          : t('movements.receive.toast.normal', { number: receipt.registryNumberText }),
       )
       onOpenChange(false)
     } catch (error) {
@@ -170,8 +174,8 @@ export function ReceiveMovementDialog({
     <Dialog
       open={open}
       onOpenChange={onOpenChange}
-      title={MOVEMENT_ACTION_LABELS.receive}
-      description="يُكتب الاستلام في سجل الدائرة الوجهة: يبقى رقم الوثيقة نفسه بتاريخ جديد في كل مرة تصل فيها، إلا إذا سُجّلت برقم جديد."
+      title={t(MOVEMENT_ACTION_LABEL_KEYS.receive)}
+      description={t('movements.receive.description')}
       size="sm"
       footer={
         <>
@@ -181,7 +185,7 @@ export function ReceiveMovementDialog({
             onClick={() => onOpenChange(false)}
             disabled={mutation.isPending}
           >
-            إلغاء
+            <Label k="common.action.cancel" />
           </Button>
           <Button
             type="submit"
@@ -189,7 +193,7 @@ export function ReceiveMovementDialog({
             loading={mutation.isPending}
             disabled={loading}
           >
-            استلام الوثيقة
+            <Label k="movements.receive.submit" />
           </Button>
         </>
       }
@@ -202,7 +206,7 @@ export function ReceiveMovementDialog({
       >
         {reusedLine ? (
           existingRegistryLabel && (
-            <FormField key="registry-locked" label="السجل" htmlFor="movement-receive-registry-locked">
+            <FormField key="registry-locked" labelKey="movements.receive.field-registry" htmlFor="movement-receive-registry-locked">
               <Input id="movement-receive-registry-locked" value={existingRegistryLabel} readOnly />
             </FormField>
           )
@@ -210,7 +214,7 @@ export function ReceiveMovementDialog({
           canViewNumbering && (
             <FormField
               key="registry-choice"
-              label="السجل"
+              labelKey="movements.receive.field-registry"
               required={registries.options.length > 1}
               error={errors.registryId?.message}
             >
@@ -232,7 +236,7 @@ export function ReceiveMovementDialog({
         )}
 
         {reusedLine ? (
-          <FormField key="locked" label="رقم سجل الدائرة" htmlFor="movement-receive-number-locked">
+          <FormField key="locked" labelKey="movements.receive.field-number" htmlFor="movement-receive-number-locked">
             <Input
               id="movement-receive-number-locked"
               dir="ltr"
@@ -240,12 +244,12 @@ export function ReceiveMovementDialog({
               value={reusedLine.registryNumberText}
               readOnly
             />
-            <p className="text-xs text-muted">زيارة متكررة، الرقم نفسه بتاريخ جديد.</p>
+            <p className="text-xs text-muted"><Label k="movements.receive.revisit-hint" /></p>
           </FormField>
         ) : (
           <FormField
             key="typed"
-            label={existingLine ? 'رقم سجل الدائرة الجديد' : 'رقم سجل الدائرة'}
+            labelKey={existingLine ? 'movements.receive.field-number-new' : 'movements.receive.field-number'}
             required={linesKnown}
             error={errors.registryNumberText?.message}
             htmlFor="movement-receive-number"
@@ -261,16 +265,16 @@ export function ReceiveMovementDialog({
             />
             {!linesKnown && !loading && (
               <p className="text-xs text-muted">
-                اتركه فارغًا إذا كان لدائرتك رقم لهذه الوثيقة في هذه السنة.
+                <Label k="movements.receive.number-optional-hint" />
               </p>
             )}
             {existingLine && (
               <p className="text-xs text-muted">
-                يحلّ محلّ الرقم{' '}
+                <Label k="movements.receive.replaces-prefix" />{' '}
                 <span dir="ltr" className="font-mono text-foreground">
                   {existingLine.registryNumberText}
                 </span>{' '}
-                الذي يبقى في السجل مستبدَلًا ومرتبطًا بالرقم الجديد.
+                <Label k="movements.receive.replaces-suffix" />
               </p>
             )}
           </FormField>
@@ -284,13 +288,13 @@ export function ReceiveMovementDialog({
               clearErrors(['registryId', 'registryNumberText'])
             }}
             disabled={mutation.isPending}
-            label="تسجيل الوثيقة برقم جديد"
-            description="للدائرة رقم سابق لهذه الوثيقة في هذه السنة؛ الرقم الجديد يصبح المعتمد ويبقى مرتبطًا بالسابق."
+            label={t('movements.receive.new-number-label')}
+            description={t('movements.receive.new-number-description')}
           />
         )}
 
         <FormField
-          label="تاريخ التسجيل"
+          labelKey="movements.receive.field-date"
           required
           error={errors.registryDate?.message}
           htmlFor="movement-receive-date"
@@ -307,13 +311,15 @@ export function ReceiveMovementDialog({
 
         {recordFields.length > 0 && (
           <section
-            aria-label="سجل الديوان"
+            aria-label={t('movements.receive.record-section-aria')}
             className="flex flex-col gap-4 border-t border-border pt-4"
           >
             <div>
-              <h3 className="text-sm font-semibold text-foreground">سجل الديوان</h3>
+              <h3 className="text-sm font-semibold text-foreground">
+                <Label k="movements.receive.record-title" />
+              </h3>
               <p className="text-xs text-muted">
-                الحقول الإلزامية تُملأ الآن، والباقي يُكمَّل لاحقًا ما دامت الوثيقة لدى الديوان.
+                <Label k="movements.receive.record-hint" />
               </p>
             </div>
             <DynamicFieldInputs
@@ -332,10 +338,10 @@ export function ReceiveMovementDialog({
           </section>
         )}
 
-        <FormField label="ملاحظات الاستلام (اختياري)" error={errors.notes?.message}>
+        <FormField labelKey="movements.receive.notes-label" error={errors.notes?.message}>
           <Textarea
             rows={3}
-            placeholder="ملاحظة اختيارية تُرفق بالاستلام…"
+            placeholder={t('movements.receive.notes-placeholder')}
             invalid={Boolean(errors.notes)}
             {...register('notes')}
           />

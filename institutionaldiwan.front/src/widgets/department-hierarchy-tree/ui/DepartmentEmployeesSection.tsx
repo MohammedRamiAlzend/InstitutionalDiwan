@@ -5,8 +5,8 @@ import { useEmployees, type EmployeeResponse } from '@/entities/employee'
 import { useSessionStore } from '@/entities/user'
 import { toArabicErrorMessage } from '@/shared/api'
 import { Permissions } from '@/shared/config'
-import { cn, formatNumber } from '@/shared/lib'
-import { Badge, Button, Checkbox, ContextMenu, DropdownMenu, Skeleton, dispatchContextMenu, isContextMenuShortcut, type MenuEntry } from '@/shared/ui'
+import { cn, formatNumber, t } from '@/shared/lib'
+import { Badge, Button, Checkbox, ContextMenu, DropdownMenu, Label, Skeleton, dispatchContextMenu, isContextMenuShortcut, type MenuEntry } from '@/shared/ui'
 import { copyDepartmentValue } from '../model/clipboard'
 import { DepartmentEmployeeDetailDialog } from './DepartmentEmployeeDetailDialog'
 import { DepartmentSearch } from './DepartmentSearch'
@@ -34,9 +34,9 @@ export function DepartmentEmployeesSection({ departmentId, variant = 'roster' }:
         {variant === 'tree' ? (
           <Button type="button" variant="ghost" size="sm" aria-expanded={expanded} aria-controls={regionId} onClick={() => setExpanded(!expanded)}>
             <ChevronDown className={cn('size-4', !expanded && '-rotate-90 rtl:rotate-90')} aria-hidden />
-            الموظفون المباشرون
+            <Label k="department.employees.direct" />
           </Button>
-        ) : <h3 className="text-sm font-medium text-foreground">الموظفون</h3>}
+        ) : <h3 className="text-sm font-medium text-foreground"><Label k="department.employees.title" /></h3>}
       </header>
       <div id={regionId} hidden={!open}>
         {open && <EmployeeRoster key={`${variant}:${departmentId}`} departmentId={departmentId} variant={variant} />}
@@ -77,57 +77,57 @@ function EmployeeRoster({ departmentId, variant }: Required<DepartmentEmployeesS
   }, [data, page, setPage, totalPages])
 
   const employeeMenu = (employee: EmployeeResponse): MenuEntry[] => [
-    { id: 'details', label: 'تفاصيل الموظف', icon: <Eye className="size-4" aria-hidden />, onSelect: () => setSelectedId(employee.employeeId) },
+    { id: 'details', label: t('department.employees.menu.details'), icon: <Eye className="size-4" aria-hidden />, onSelect: () => setSelectedId(employee.employeeId) },
     { type: 'separator' },
-    { id: 'copy-name', label: 'نسخ اسم الموظف', icon: <Copy className="size-4" aria-hidden />, onSelect: () => void copyDepartmentValue(employee.fullNameAr, 'اسم الموظف') },
-    { id: 'copy-number', label: 'نسخ الرقم الوظيفي', icon: <Copy className="size-4" aria-hidden />, disabled: !employee.employeeNumber, onSelect: () => void copyDepartmentValue(employee.employeeNumber ?? '', 'الرقم الوظيفي') },
-    { id: 'copy-id', label: 'نسخ المعرّف', icon: <Hash className="size-4" aria-hidden />, onSelect: () => void copyDepartmentValue(employee.employeeId, 'المعرّف') },
+    { id: 'copy-name', label: t('department.employees.menu.copy-name'), icon: <Copy className="size-4" aria-hidden />, onSelect: () => void copyDepartmentValue(employee.fullNameAr, t('department.copy.employee-name')) },
+    { id: 'copy-number', label: t('department.employees.menu.copy-number'), icon: <Copy className="size-4" aria-hidden />, disabled: !employee.employeeNumber, onSelect: () => void copyDepartmentValue(employee.employeeNumber ?? '', t('department.copy.employee-number')) },
+    { id: 'copy-id', label: t('department.menu.copy-id'), icon: <Hash className="size-4" aria-hidden />, onSelect: () => void copyDepartmentValue(employee.employeeId, t('department.copy.id')) },
   ]
 
   return (
     <div className="border-t border-border" aria-busy={query.isFetching}>
       <div className="flex flex-wrap items-center gap-2 p-3">
-        <DepartmentSearch value={search} onChange={setSearch} placeholder="ابحث باسم الموظف أو رقمه الوظيفي…" />
+        <DepartmentSearch value={search} onChange={setSearch} placeholder={t('department.employees.search-placeholder')} />
         {variant === 'roster' && (
-          <Checkbox checked={includeSubDepartments} onCheckedChange={(checked) => update('descendants', checked ? null : 'false', true)} label="تضمين الأقسام الفرعية" />
+          <Checkbox checked={includeSubDepartments} onCheckedChange={(checked) => update('descendants', checked ? null : 'false', true)} label={t('department.employees.include-sub')} />
         )}
-        <Button type="button" variant="ghost" size="icon" className="ms-auto shrink-0" aria-label="تحديث الموظفين" disabled={query.isFetching} onClick={() => void query.refetch()}>
+        <Button type="button" variant="ghost" size="icon" className="ms-auto shrink-0" aria-label={t('department.employees.refresh-aria')} disabled={query.isFetching} onClick={() => void query.refetch()}>
           <RefreshCw className={cn('size-4', query.isFetching && 'animate-spin')} aria-hidden />
         </Button>
       </div>
       {busy ? (
-        <div role="status" aria-label="جارٍ تحميل الموظفين" className="flex flex-col gap-2 p-3">
+        <div role="status" aria-label={t('department.employees.loading-aria')} className="flex flex-col gap-2 p-3">
           {Array.from({ length: 3 }, (_, index) => <Skeleton key={index} className="h-10 w-full" />)}
         </div>
       ) : query.error ? (
         <div role="alert" className="m-3 flex flex-wrap items-center gap-3 rounded-lg border border-danger/40 bg-danger/10 p-3 text-sm text-danger">
           <span>{toArabicErrorMessage(query.error)}</span>
-          <Button type="button" variant="outline" size="sm" onClick={() => void query.refetch()}>إعادة المحاولة</Button>
-          {page > 1 && <Button type="button" variant="outline" size="sm" onClick={() => setPage(1)}>الصفحة الأولى</Button>}
+          <Button type="button" variant="outline" size="sm" onClick={() => void query.refetch()}><Label k="common.action.retry" /></Button>
+          {page > 1 && <Button type="button" variant="outline" size="sm" onClick={() => setPage(1)}><Label k="department.employees.first-page" /></Button>}
         </div>
       ) : !data?.items.length ? (
         <div className="flex flex-col items-center gap-2 px-3 py-6 text-center">
-          <p className="text-sm text-foreground">{search ? 'لا توجد نتائج مطابقة.' : 'لا يوجد موظفون مسجّلون هنا.'}</p>
-          <p className="text-xs text-muted">{search ? 'جرّب تعديل عبارة البحث أو مسحها.' : includeSubDepartments ? 'لم يُسجَّل أي موظف في هذا القسم أو الأقسام التابعة له.' : 'لا يوجد موظفون في هذا القسم مباشرةً.'}</p>
-          {search && <Button type="button" variant="outline" size="sm" onClick={() => setSearch('')}>مسح بحث الموظفين</Button>}
+          <p className="text-sm text-foreground">{search ? t('department.empty.search-title') : t('department.employees.empty.title')}</p>
+          <p className="text-xs text-muted">{search ? t('department.employees.empty.search-description') : includeSubDepartments ? t('department.employees.empty.sub-description') : t('department.employees.empty.description')}</p>
+          {search && <Button type="button" variant="outline" size="sm" onClick={() => setSearch('')}><Label k="department.employees.empty.clear" /></Button>}
         </div>
       ) : (
-        <ul aria-label="موظفو القسم" className="divide-y divide-border">
+        <ul aria-label={t('department.employees.list-aria')} className="divide-y divide-border">
           {data.items.map((employee) => (
             <EmployeeRow key={employee.employeeId} employee={employee} entries={employeeMenu(employee)} onOpen={() => setSelectedId(employee.employeeId)} />
           ))}
         </ul>
       )}
       {data && (
-        <nav aria-label="صفحات موظفي القسم" className="flex flex-wrap items-center justify-between gap-2 border-t border-border px-3 py-2 text-xs text-muted">
+        <nav aria-label={t('department.employees.pages-aria')} className="flex flex-wrap items-center justify-between gap-2 border-t border-border px-3 py-2 text-xs text-muted">
           <span role="status">
-            الإجمالي: <span dir="ltr">{formatNumber(data.totalCount)}</span> · الصفحة <span dir="ltr">{formatNumber(page)}</span> من <span dir="ltr">{formatNumber(totalPages)}</span>
+            {t('department.employees.total')} <span dir="ltr">{formatNumber(data.totalCount)}</span> · {t('table.page-word')} <span dir="ltr">{formatNumber(page)}</span> {t('table.of')} <span dir="ltr">{formatNumber(totalPages)}</span>
           </span>
           <div className="flex items-center gap-2">
-            <Button type="button" variant="outline" size="icon" className="size-8" disabled={page <= 1 || query.isFetching} onClick={() => setPage(page - 1)} aria-label="الصفحة السابقة للموظفين">
+            <Button type="button" variant="outline" size="icon" className="size-8" disabled={page <= 1 || query.isFetching} onClick={() => setPage(page - 1)} aria-label={t('department.employees.prev-aria')}>
               <ChevronLeft className="size-4 rtl:rotate-180" aria-hidden />
             </Button>
-            <Button type="button" variant="outline" size="icon" className="size-8" disabled={page >= totalPages || query.isFetching} onClick={() => setPage(page + 1)} aria-label="الصفحة التالية للموظفين">
+            <Button type="button" variant="outline" size="icon" className="size-8" disabled={page >= totalPages || query.isFetching} onClick={() => setPage(page + 1)} aria-label={t('department.employees.next-aria')}>
               <ChevronRight className="size-4 rtl:rotate-180" aria-hidden />
             </Button>
           </div>
@@ -146,18 +146,18 @@ function EmployeeRow({ employee, entries, onOpen }: { employee: EmployeeResponse
           if (!isContextMenuShortcut(event)) return
           event.preventDefault()
           dispatchContextMenu(event.currentTarget)
-        }} aria-label={`تفاصيل الموظف ${employee.fullNameAr}`} className="flex min-w-0 flex-1 cursor-pointer flex-wrap items-center gap-2 rounded-md p-1 text-start hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-accent">
+        }} aria-label={t('department.employees.row.details-aria', { name: employee.fullNameAr })} className="flex min-w-0 flex-1 cursor-pointer flex-wrap items-center gap-2 rounded-md p-1 text-start hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-accent">
           <UserRound className="size-4 shrink-0 text-muted" aria-hidden />
           <span className="min-w-0 flex-1">
             <span className="block truncate text-sm font-medium text-foreground">{employee.fullNameAr}</span>
-            <span className="block truncate text-xs text-muted">{employee.jobTitleAr ?? 'بدون مسمى وظيفي'}</span>
+            <span className="block truncate text-xs text-muted">{employee.jobTitleAr ?? t('department.employees.no-job-title')}</span>
           </span>
           {employee.employeeNumber && <span dir="ltr" className="font-mono text-xs text-muted">{employee.employeeNumber}</span>}
-          <Badge variant={employee.isActive ? 'success' : 'danger'}>{employee.isActive ? 'نشط' : 'موقوف'}</Badge>
+          <Badge variant={employee.isActive ? 'success' : 'danger'}>{employee.isActive ? t('department.status.active') : t('department.status.suspended')}</Badge>
         </button>
       </ContextMenu>
       <DropdownMenu entries={entries} label={employee.fullNameAr} trigger={
-        <Button type="button" variant="ghost" size="icon" className="size-8 shrink-0" aria-label={`إجراءات الموظف ${employee.fullNameAr}`}>
+        <Button type="button" variant="ghost" size="icon" className="size-8 shrink-0" aria-label={t('department.employees.row.actions-aria', { name: employee.fullNameAr })}>
           <MoreHorizontal className="size-4" aria-hidden />
         </Button>
       } />

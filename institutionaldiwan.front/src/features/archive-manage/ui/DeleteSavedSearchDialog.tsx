@@ -1,6 +1,7 @@
 import { toast } from 'sonner'
 import type { SavedSearchResponse } from '@/entities/archive'
 import { toArabicErrorMessage } from '@/shared/api'
+import { t } from '@/shared/lib'
 import { ConfirmDialog } from '@/shared/ui'
 import { useDeleteSavedSearchMutation } from '../api/archiveMutations'
 
@@ -21,7 +22,7 @@ export function DeleteSavedSearchDialog({
   const confirm = async () => {
     try {
       await mutation.mutateAsync(search.savedSearchId)
-      toast.success(`حُذف البحث «${search.name}».`)
+      toast.success(t('archive.delete.toast', { name: search.name }))
       onOpenChange(false)
     } catch (error) {
       toast.error(toArabicErrorMessage(error))
@@ -35,10 +36,10 @@ export function DeleteSavedSearchDialog({
         if (!nextOpen && mutation.isPending) return
         onOpenChange(nextOpen)
       }}
-      title="حذف البحث المحفوظ"
-      description={`سيُحذف البحث «${search.name}» نهائيًا. لا يتأثر بذلك أي وثيقة مؤرشفة.`}
-      confirmLabel="احذف البحث"
-      cancelLabel="تراجع"
+      title={t('archive.delete.title')}
+      description={t('archive.delete.description', { name: search.name })}
+      confirmLabel={t('archive.delete.confirm')}
+      cancelLabel={t('archive.dismiss')}
       onConfirm={() => void confirm()}
       loading={mutation.isPending}
       destructive

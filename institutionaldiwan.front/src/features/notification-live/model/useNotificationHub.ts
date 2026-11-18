@@ -6,7 +6,7 @@ import { notificationKeys, type NotificationHubPayload } from '@/entities/notifi
 import { useSessionStore } from '@/entities/user'
 import { tokenStorage } from '@/shared/api'
 import { ENV, NOTIFICATION_PRIORITY } from '@/shared/config'
-import { safeRelativeUrl } from '@/shared/lib'
+import { safeRelativeUrl, t } from '@/shared/lib'
 import { useConnectionStore } from './connectionStore'
 
 const HUB_PATH = `${ENV.HUB_BASE_URL}/notifications`
@@ -70,7 +70,7 @@ export function useNotificationHub({ onOpen }: HubOptions): void {
         description: payload.bodyAr,
         duration: payload.priorityId === NOTIFICATION_PRIORITY.Urgent ? Infinity : 6000,
         action: canOpen
-          ? { label: 'فتح', onClick: () => onOpenRef.current(payload) }
+          ? { label: t('notification.hub.open'), onClick: () => onOpenRef.current(payload) }
           : undefined,
       })
     }

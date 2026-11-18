@@ -5,7 +5,8 @@ import { toast } from 'sonner'
 import { LOOKUP_SLUGS, useLookupEntries } from '@/entities/lookup'
 import type { DocumentPersonResponse } from '@/entities/person'
 import { toArabicErrorMessage } from '@/shared/api'
-import { Button, Dialog, FormField, Select } from '@/shared/ui'
+import { t } from '@/shared/lib'
+import { Button, Dialog, FormField, Label, Select } from '@/shared/ui'
 import { useChangeDocumentPersonRoleMutation } from '../api/documentPersonMutations'
 import {
   changeDocumentPersonRoleSchema,
@@ -50,7 +51,7 @@ export function ChangeDocumentPersonRoleDialog({
         documentPersonId: person.documentPersonId,
         roleId: Number(values.roleId),
       })
-      toast.success('تم تغيير الصفة.')
+      toast.success(t('persons.change-role.toast'))
       onOpenChange(false)
     } catch (error) {
       toast.error(toArabicErrorMessage(error))
@@ -61,21 +62,21 @@ export function ChangeDocumentPersonRoleDialog({
     <Dialog
       open={open}
       onOpenChange={onOpenChange}
-      title="تغيير الصفة"
-      description={`صفة «${person.displayName}» في هذه الوثيقة.`}
+      title={t('persons.change-role.title')}
+      description={t('persons.change-role.description', { name: person.displayName })}
       footer={
         <>
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={changeMutation.isPending}>
-            إلغاء
+            <Label k="common.action.cancel" />
           </Button>
           <Button type="submit" form="document-person-role-form" loading={changeMutation.isPending}>
-            حفظ
+            <Label k="common.action.save" />
           </Button>
         </>
       }
     >
       <form id="document-person-role-form" onSubmit={onSubmit} noValidate>
-        <FormField label="الصفة" required error={errors.roleId?.message}>
+        <FormField labelKey="persons.field-role" required error={errors.roleId?.message}>
           <Controller
             control={control}
             name="roleId"
@@ -86,8 +87,8 @@ export function ChangeDocumentPersonRoleDialog({
                 options={roleOptions}
                 disabled={changeMutation.isPending || rolesQuery.isLoading}
                 invalid={Boolean(errors.roleId)}
-                placeholder="اختر الصفة…"
-                aria-label="الصفة"
+                placeholder={t('persons.role-placeholder')}
+                aria-label={t('persons.role-aria')}
               />
             )}
           />

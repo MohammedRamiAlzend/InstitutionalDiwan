@@ -1,11 +1,12 @@
 import { toast } from 'sonner'
+import { t } from '@/shared/lib'
 
 /** Copies a department code or id and reports the result in Arabic. */
 export async function copyDepartmentValue(value: string, label: string): Promise<void> {
   try {
     await navigator.clipboard.writeText(value)
-    toast.success(`تم نسخ ${label}.`)
+    toast.success(t('department.toast.copied', { label }))
   } catch {
-    toast.error('تعذّر النسخ إلى الحافظة.')
+    toast.error(t('department.toast.copy-failed'))
   }
 }

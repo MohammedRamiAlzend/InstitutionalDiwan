@@ -1,7 +1,8 @@
-import { KeyRound, ShieldCheck, Sparkles } from 'lucide-react'
+import { KeyRound, ShieldCheck, Sparkles, type LucideIcon } from 'lucide-react'
 import { BrandName } from '@/entities/branding'
 import { useSessionStore } from '@/entities/user'
-import { Badge, GuideProvider, GuideRegion, PageHeader } from '@/shared/ui'
+import type { LabelKey } from '@/shared/config'
+import { Badge, GuideProvider, GuideRegion, Label, PageHeader } from '@/shared/ui'
 
 /**
  * Authenticated landing content; the app shell owns navigation and chrome.
@@ -18,16 +19,16 @@ export function DashboardPage() {
 function DashboardContent() {
   const user = useSessionStore((state) => state.user)
 
-  const stats = [
+  const stats: { id: string; labelKey: LabelKey; value: string | number; icon: LucideIcon; ltr?: boolean }[] = [
     {
       id: 'permissions',
-      label: 'الصلاحيات الفعّالة',
+      labelKey: 'dashboard.stats.permissions',
       value: user?.permissions.length ?? 0,
       icon: KeyRound,
     },
     {
       id: 'roles',
-      label: 'الأدوار',
+      labelKey: 'dashboard.stats.roles',
       value: user?.roles.join('، ') || '—',
       icon: ShieldCheck,
       ltr: true,
@@ -39,28 +40,27 @@ function DashboardContent() {
       <PageHeader
         titleKey="page.dashboard.title"
         descriptionKey="page.dashboard.description"
-        badge={<Badge variant="outline">النسخة الأولية</Badge>}
+        badge={<Badge variant="outline"><Label k="dashboard.badge" /></Badge>}
         pageGuide="dashboard"
       />
 
       <GuideRegion id="dashboard.welcome">
       <section className="rounded-2xl border border-border bg-surface p-6 sm:p-8">
         <p className="text-sm text-muted">
-          مرحبًا بك في <BrandName />
+          <Label k="dashboard.welcome" /> <BrandName />
         </p>
         <h2 className="mt-1 font-heading text-2xl font-bold text-foreground">
           {user?.username ?? '—'}
         </h2>
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">
-          تم تسجيل دخولك بنجاح. تُفعّل وحدات المراسلات والتنظيم والرقابة تدريجيًا،
-          وستظهر روابطها في القائمة الجانبية عند إتاحتها لحسابك.
+          <Label k="dashboard.welcome-body" />
         </p>
       </section>
       </GuideRegion>
 
       <GuideRegion id="dashboard.stats">
       <section className="grid gap-4 sm:grid-cols-2">
-        {stats.map(({ id, label, value, icon: Icon, ltr }) => (
+        {stats.map(({ id, labelKey, value, icon: Icon, ltr }) => (
           <article
             key={id}
             className="flex items-center gap-4 rounded-xl border border-border bg-surface p-5"
@@ -69,7 +69,7 @@ function DashboardContent() {
               <Icon className="size-5" aria-hidden />
             </span>
             <div className="min-w-0">
-              <p className="text-xs text-muted">{label}</p>
+              <p className="text-xs text-muted"><Label k={labelKey} /></p>
               <p
                 className="truncate font-heading text-xl font-bold text-foreground"
                 dir={ltr ? 'ltr' : undefined}
@@ -86,12 +86,10 @@ function DashboardContent() {
       <section className="rounded-xl border border-dashed border-border bg-surface/60 p-6">
         <h2 className="flex items-center gap-2 font-heading text-base font-semibold text-foreground">
           <Sparkles className="size-4 text-accent" aria-hidden />
-          ما التالي؟
+          <Label k="dashboard.next-title" />
         </h2>
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">
-          تُضاف قوائم المستخدمين والأدوار والموظفين ضمن وحدة الهوية، ثم سجل
-          الوثائق والحركات وسجل التدقيق. تظهر العناصر غير الجاهزة في القائمة
-          الجانبية بوسم «قريبًا» بدل فتح صفحات فارغة.
+          <Label k="dashboard.next-body" />
         </p>
       </section>
       </GuideRegion>

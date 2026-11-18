@@ -22,10 +22,12 @@ filters, search, sort and paging live in the URL beside `?tab=relations`.
 | Item | State |
 | --- | --- |
 | Grid, graph/tree, history, hidden notice, dialogs | ✅ Implemented (build and lint pass; accepted as verified by the project owner, 2026-11-03) |
+| Panel/grid/graph/history text editable via the `relation.*` catalog | ✅ Implemented (build and lint pass, 2026-11-18) |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-18 | Qoder | UI-labels edit mode: view switch, hidden-links notice, grid headers/filters/menus/empty states, graph depth options and notices, and history labels moved to the `relation.*` catalog (`headerKey`, `Label`, `resolveLabel`, `t()`). |
 | 2026-11-04 | Claude | User, department and employee references now render as «name + short id» (`UserLabel` / `DepartmentLabel` / `EmployeeLabel`) instead of a bare id. |
 | 2026-11-03 | agent | Implemented the Module 08 relations panel. |

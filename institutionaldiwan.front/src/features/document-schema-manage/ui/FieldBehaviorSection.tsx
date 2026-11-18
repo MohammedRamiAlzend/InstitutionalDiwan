@@ -8,7 +8,9 @@ import {
   type FieldOption,
   type SchemaFieldResponse,
 } from '@/entities/document-schema'
-import { Checkbox, FormField, Input, Select, Textarea } from '@/shared/ui'
+import type { LabelKey } from '@/shared/config'
+import { resolveLabel, t, useLabelsStore } from '@/shared/lib'
+import { Checkbox, FormField, Input, Label, Select, Textarea } from '@/shared/ui'
 import type { FieldSettingsFormValues } from '../model/schemas'
 import { previewField } from '../model/toRequest'
 
@@ -23,11 +25,6 @@ interface FieldBehaviorSectionProps {
 
 const NO_CONDITION = '__none__'
 
-const YES_NO = [
-  { value: 'true', label: 'نعم' },
-  { value: 'false', label: 'لا' },
-]
-
 function isConditionController(field: SchemaFieldResponse): boolean {
   return (
     field.dataType === FIELD_DATA_TYPE.Boolean ||
@@ -36,10 +33,12 @@ function isConditionController(field: SchemaFieldResponse): boolean {
   )
 }
 
-function Group({ title, children }: { title: string; children: ReactNode }) {
+function Group({ titleKey, children }: { titleKey: LabelKey; children: ReactNode }) {
   return (
     <fieldset className="flex flex-col gap-4 rounded-lg border border-border p-3">
-      <legend className="px-1 text-xs font-semibold text-muted">{title}</legend>
+      <legend className="px-1 text-xs font-semibold text-muted">
+        <Label k={titleKey} />
+      </legend>
       {children}
     </fieldset>
   )
@@ -54,25 +53,30 @@ export function FieldBehaviorSection({
   otherFields,
 }: FieldBehaviorSectionProps) {
   const values = useWatch({ control })
+  const overrides = useLabelsStore((state) => state.overrides)
   const isText = dataType === FIELD_DATA_TYPE.Text || dataType === FIELD_DATA_TYPE.LongText
   const isDate = dataType === FIELD_DATA_TYPE.Date
   const isChoice = dataType === FIELD_DATA_TYPE.Select || dataType === FIELD_DATA_TYPE.MultiSelect
   const sourced = isChoice && values.optionSource !== String(FIELD_OPTION_SOURCE.Static)
 
+  const yesNo = [
+    { value: 'true', label: resolveLabel('schema.value.yes', overrides) },
+    { value: 'false', label: resolveLabel('schema.value.no', overrides) },
+  ]
   const controllers = otherFields.filter(isConditionController)
   const controller = controllers.find((field) => field.key === values.visibleWhenFieldKey)
   const controllerValues =
     controller?.dataType === FIELD_DATA_TYPE.Boolean
-      ? YES_NO
+      ? yesNo
       : (controller?.options ?? []).map((option) => ({ value: option.key, label: option.labelAr }))
 
   const draftOptions = (values.options ?? []) as FieldOption[]
 
   return (
     <>
-      <Group title="القيمة والإدخال">
+      <Group titleKey="schema.behavior.group-value">
         {dataType !== undefined && !sourced && (
-          <FormField label="القيمة الافتراضية" error={errors.defaultValue?.message}>
+          <FormField labelKey="schema.behavior.default-value" error={errors.defaultValue?.message}>
             <div className="flex flex-col gap-2">
               {!values.defaultToday && (
                 <Controller
@@ -93,7 +97,7 @@ export function FieldBehaviorSection({
                   control={control}
                   name="defaultToday"
                   render={({ field }) => (
-                    <Checkbox checked={field.value} onCheckedChange={field.onChange} label="تاريخ اليوم عند الإدخال" />
+                    <Checkbox checked={field.value} onCheckedChange={field.onChange} label={t('schema.behavior.default-today')} />
                   )}
                 />
               )}
@@ -109,24 +113,24 @@ export function FieldBehaviorSection({
               <Checkbox
                 checked={field.value}
                 onCheckedChange={field.onChange}
-                label="للقراءة فقط"
-                description="يُعرض بالقيمة الافتراضية ولا يُعدَّل، ويكتبها النظام بنفسه."
+                label={t('schema.behavior.read-only')}
+                description={t('schema.behavior.read-only-description')}
               />
             )}
           />
         )}
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <FormField label="نص توضيحي داخل الحقل" error={errors.placeholderAr?.message}>
+          <FormField labelKey="schema.behavior.placeholder" error={errors.placeholderAr?.message}>
             <Input invalid={Boolean(errors.placeholderAr)} {...register('placeholderAr')} />
           </FormField>
           {isText && (
-            <FormField label="الحد الأدنى للطول" error={errors.minLength?.message}>
+            <FormField labelKey="schema.behavior.min-length" error={errors.minLength?.message}>
               <Input dir="ltr" inputMode="numeric" invalid={Boolean(errors.minLength)} {...register('minLength')} />
             </FormField>
           )}
         </div>
-        <FormField label="نص مساعدة تحت الحقل" error={errors.helpTextAr?.message}>
+        <FormField labelKey="schema.behavior.help-text" error={errors.helpTextAr?.message}>
           <Textarea rows={2} invalid={Boolean(errors.helpTextAr)} {...register('helpTextAr')} />
         </FormField>
 
@@ -134,11 +138,11 @@ export function FieldBehaviorSection({
           <div className="grid gap-4 sm:grid-cols-2">
             {(
               [
-                ['minDate', 'minDateToday', 'أقدم تاريخ مسموح'],
-                ['maxDate', 'maxDateToday', 'أحدث تاريخ مسموح'],
+                ['minDate', 'minDateToday', 'schema.behavior.min-date'],
+                ['maxDate', 'maxDateToday', 'schema.behavior.max-date'],
               ] as const
-            ).map(([name, todayName, label]) => (
-              <FormField key={name} label={label} error={errors[name]?.message}>
+            ).map(([name, todayName, labelKey]) => (
+              <FormField key={name} labelKey={labelKey} error={errors[name]?.message}>
                 <div className="flex flex-col gap-2">
                   {!values[todayName] && (
                     <Input dir="ltr" type="date" invalid={Boolean(errors[name])} {...register(name)} />
@@ -147,7 +151,7 @@ export function FieldBehaviorSection({
                     control={control}
                     name={todayName}
                     render={({ field }) => (
-                      <Checkbox checked={field.value} onCheckedChange={field.onChange} label="تاريخ اليوم" />
+                      <Checkbox checked={field.value} onCheckedChange={field.onChange} label={t('schema.behavior.today')} />
                     )}
                   />
                 </div>
@@ -157,19 +161,19 @@ export function FieldBehaviorSection({
         )}
       </Group>
 
-      <Group title="إظهار الحقل بشرط">
+      <Group titleKey="schema.behavior.group-condition">
         <div className="grid gap-4 sm:grid-cols-2">
-          <FormField label="يظهر عندما يكون الحقل" hint={controllers.length === 0 ? 'أضف حقل نعم/لا أو قائمة اختيار أولًا.' : undefined}>
+          <FormField labelKey="schema.behavior.visible-when-field" hint={controllers.length === 0 ? t('schema.behavior.visible-when-hint') : undefined}>
             <Controller
               control={control}
               name="visibleWhenFieldKey"
               render={({ field }) => (
                 <Select
-                  aria-label="الحقل الذي يعتمد عليه الإظهار"
+                  aria-label={t('schema.behavior.visible-when-field-aria')}
                   value={field.value || NO_CONDITION}
                   onValueChange={(next) => field.onChange(next === NO_CONDITION ? '' : next)}
                   options={[
-                    { value: NO_CONDITION, label: 'يظهر دائمًا' },
+                    { value: NO_CONDITION, label: resolveLabel('schema.behavior.always-visible', overrides) },
                     ...controllers.map((entry) => ({ value: entry.key, label: entry.labelAr })),
                   ]}
                 />
@@ -177,13 +181,13 @@ export function FieldBehaviorSection({
             />
           </FormField>
           {controller && (
-            <FormField label="يساوي" required error={errors.visibleWhenValue?.message}>
+            <FormField labelKey="schema.behavior.equals" required error={errors.visibleWhenValue?.message}>
               <Controller
                 control={control}
                 name="visibleWhenValue"
                 render={({ field }) => (
                   <Select
-                    aria-label="قيمة الشرط"
+                    aria-label={t('schema.behavior.condition-value-aria')}
                     value={field.value || undefined}
                     onValueChange={field.onChange}
                     options={controllerValues}
@@ -196,7 +200,7 @@ export function FieldBehaviorSection({
         </div>
       </Group>
 
-      <Group title="الجداول والتخطيط">
+      <Group titleKey="schema.behavior.group-table">
         <Controller
           control={control}
           name="isFilterable"
@@ -204,8 +208,8 @@ export function FieldBehaviorSection({
             <Checkbox
               checked={field.value}
               onCheckedChange={field.onChange}
-              label="قابل للتصفية"
-              description="يظهر في شريط مرشحات سجل الوثائق والأرشيف."
+              label={t('schema.behavior.filterable')}
+              description={t('schema.behavior.filterable-description')}
             />
           )}
         />
@@ -216,8 +220,8 @@ export function FieldBehaviorSection({
             <Checkbox
               checked={field.value}
               onCheckedChange={field.onChange}
-              label="عمود في سجل الوثائق"
-              description="تظهر قيمته عمودًا عند اختيار نوع الوثيقة."
+              label={t('schema.behavior.show-in-table')}
+              description={t('schema.behavior.show-in-table-description')}
             />
           )}
         />
@@ -225,12 +229,12 @@ export function FieldBehaviorSection({
           control={control}
           name="isHalfWidth"
           render={({ field }) => (
-            <Checkbox checked={field.value} onCheckedChange={field.onChange} label="نصف عرض النموذج" />
+            <Checkbox checked={field.value} onCheckedChange={field.onChange} label={t('schema.behavior.half-width')} />
           )}
         />
         <FormField
-          label="عنوان القسم"
-          hint="يبدأ قسمًا جديدًا عند أول حقل يحمل هذا العنوان."
+          labelKey="schema.behavior.section-title"
+          hint={t('schema.behavior.section-title-hint')}
           error={errors.sectionTitleAr?.message}
         >
           <Input invalid={Boolean(errors.sectionTitleAr)} {...register('sectionTitleAr')} />

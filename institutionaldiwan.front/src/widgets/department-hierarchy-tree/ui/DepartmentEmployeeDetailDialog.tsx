@@ -3,8 +3,8 @@ import { useEmployeeById } from '@/entities/employee'
 import { useSessionStore } from '@/entities/user'
 import { toArabicErrorMessage } from '@/shared/api'
 import { Permissions } from '@/shared/config'
-import { formatDate, formatDateTime } from '@/shared/lib'
-import { Badge, Button, Dialog, Skeleton } from '@/shared/ui'
+import { formatDate, formatDateTime, t } from '@/shared/lib'
+import { Badge, Button, Dialog, Label, Skeleton } from '@/shared/ui'
 
 interface DepartmentEmployeeDetailDialogProps {
   employeeId: string | null
@@ -28,38 +28,38 @@ export function DepartmentEmployeeDetailDialog({
     <Dialog
       open={employeeId !== null}
       onOpenChange={onOpenChange}
-      title={employee?.fullNameAr ?? 'تفاصيل الموظف'}
-      description="بيانات الموظف المسجّلة في الدليل."
-      footer={<Button type="button" onClick={() => onOpenChange(false)}>إغلاق</Button>}
+      title={employee?.fullNameAr ?? t('department.employee-detail.title')}
+      description={t('department.employee-detail.description')}
+      footer={<Button type="button" onClick={() => onOpenChange(false)}><Label k="common.action.close" /></Button>}
     >
       {query.isLoading ? (
-        <div role="status" aria-label="جارٍ تحميل بيانات الموظف" className="flex flex-col gap-3">
+        <div role="status" aria-label={t('department.employee-detail.loading-aria')} className="flex flex-col gap-3">
           {Array.from({ length: 4 }, (_, index) => <Skeleton key={index} className="h-9 w-full" />)}
         </div>
       ) : query.error ? (
         <div role="alert" className="flex flex-wrap items-center gap-3 rounded-lg border border-danger/40 bg-danger/10 p-3 text-sm text-danger">
           <span>{toArabicErrorMessage(query.error)}</span>
           <Button type="button" variant="outline" size="sm" onClick={() => void query.refetch()}>
-            إعادة المحاولة
+            <Label k="common.action.retry" />
           </Button>
         </div>
       ) : employee ? (
         <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <DetailItem label="الاسم بالعربية">{employee.fullNameAr}</DetailItem>
-          <DetailItem label="الاسم بالإنجليزية"><span dir="ltr">{employee.fullNameEn ?? '—'}</span></DetailItem>
-          <DetailItem label="الرقم الوظيفي"><span dir="ltr">{employee.employeeNumber ?? '—'}</span></DetailItem>
-          <DetailItem label="المسمى الوظيفي">{employee.jobTitleAr ?? '—'}</DetailItem>
-          <DetailItem label="الحالة">
-            <Badge variant={employee.isActive ? 'success' : 'danger'}>{employee.isActive ? 'نشط' : 'موقوف'}</Badge>
+          <DetailItem label={t('department.employee-detail.name-ar')}>{employee.fullNameAr}</DetailItem>
+          <DetailItem label={t('department.employee-detail.name-en')}><span dir="ltr">{employee.fullNameEn ?? '—'}</span></DetailItem>
+          <DetailItem label={t('department.employee-detail.number')}><span dir="ltr">{employee.employeeNumber ?? '—'}</span></DetailItem>
+          <DetailItem label={t('department.employee-detail.job-title')}>{employee.jobTitleAr ?? '—'}</DetailItem>
+          <DetailItem label={t('department.employee-detail.status')}>
+            <Badge variant={employee.isActive ? 'success' : 'danger'}>{employee.isActive ? t('department.status.active') : t('department.status.suspended')}</Badge>
           </DetailItem>
-          <DetailItem label="معرّف القسم"><span dir="ltr" className="font-mono text-xs">{employee.departmentId}</span></DetailItem>
-          <DetailItem label="البريد الإلكتروني"><span dir="ltr">{employee.email ?? '—'}</span></DetailItem>
-          <DetailItem label="الهاتف"><span dir="ltr">{employee.phone ?? '—'}</span></DetailItem>
-          <DetailItem label="تاريخ الإنشاء"><span dir="ltr">{formatDate(employee.createdAt)}</span></DetailItem>
-          <DetailItem label="آخر تحديث"><span dir="ltr">{formatDateTime(employee.updatedAt)}</span></DetailItem>
-          <DetailItem label="معرّف الموظف"><span dir="ltr" className="font-mono text-xs">{employee.employeeId}</span></DetailItem>
+          <DetailItem label={t('department.employee-detail.department-id')}><span dir="ltr" className="font-mono text-xs">{employee.departmentId}</span></DetailItem>
+          <DetailItem label={t('department.employee-detail.email')}><span dir="ltr">{employee.email ?? '—'}</span></DetailItem>
+          <DetailItem label={t('department.employee-detail.phone')}><span dir="ltr">{employee.phone ?? '—'}</span></DetailItem>
+          <DetailItem label={t('department.employee-detail.created-at')}><span dir="ltr">{formatDate(employee.createdAt)}</span></DetailItem>
+          <DetailItem label={t('department.employee-detail.updated-at')}><span dir="ltr">{formatDateTime(employee.updatedAt)}</span></DetailItem>
+          <DetailItem label={t('department.employee-detail.employee-id')}><span dir="ltr" className="font-mono text-xs">{employee.employeeId}</span></DetailItem>
         </dl>
-      ) : <p className="text-sm text-muted">لا توجد بيانات للموظف.</p>}
+      ) : <p className="text-sm text-muted">{t('department.employee-detail.empty')}</p>}
     </Dialog>
   )
 }

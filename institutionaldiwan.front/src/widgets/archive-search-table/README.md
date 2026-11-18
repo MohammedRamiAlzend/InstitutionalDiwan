@@ -26,11 +26,13 @@ Module 07 grid on `/archive`.
 | Item | State |
 | --- | --- |
 | `ui/ArchiveSearchTable.tsx`, `ui/SavedSearchesBar.tsx` | ✅ Implemented (build and lint pass; verified against the live API) |
+| UI labels | ✅ Phase 4 (archive): both render from `archive.*` — caption/search/aria/row menus/copy toasts/empty states via `t()`, column headers via `headerKey`, the «كل الأنواع/المواقع/الأقسام» filter options via `useLabel`, the date-range labels, reload/clear/save-search buttons and saved-search chips aria via `<Label>`/`t()`; refresh reuses `table.refresh`, «تراجع»/«إعادة التحميل» share `archive.dismiss`/`archive.reload`. Lookup `descAr`, department/document/saved-search names stay out; `FieldFilterBar` belongs to the document-schema area. |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-18 | Qoder | UI labels Phase 4 (archive): the grid and saved-searches bar render from the `archive.*` catalog. No Arabic literals remain. |
 | 2026-11-08 | Claude | Filters by dynamic fields through the shared `FieldFilterBar`. |
 | 2026-11-05 | Claude | Removed the direction filter and column (suspended); `directionId` is no longer a URL filter key or sent to the archive search. |
 | 2026-11-04 | Claude | User, department and employee references now render as «name + short id» (`UserLabel` / `DepartmentLabel` / `EmployeeLabel`) instead of a bare id. |

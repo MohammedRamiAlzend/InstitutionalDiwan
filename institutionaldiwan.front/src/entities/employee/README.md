@@ -36,6 +36,7 @@ Models Module 02 `Employee` (`EmployeeResponse`) as its own entity slice; writes
 ## Change Log
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-18 | Qoder | UI labels Phase 4 (ب5-متبقٍ): `EmployeePicker` search placeholder/aria, fallback option label, results/page line, retry and prev/next buttons read from the catalog (`employee.picker.*`, `common.action.retry`) via `t()`/`<Label>`. |
 | 2026-11-04 | Claude | Added `EmployeeLabel` («name + short id»). |
 | 2026-10-28 | agent | Added `model/options.ts` for the permission-scoped `identity-options` picker reads, documented list sorting, and recorded picker verification in the department, user, and settings forms. |
 | 2026-10-28 | agent | Document the reusable paged/searchable `EmployeePicker`, selected-value fallback, inactive options, and caller-controlled permission gating for Module 01 forms. |

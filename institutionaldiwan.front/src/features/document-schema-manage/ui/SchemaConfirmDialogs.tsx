@@ -1,6 +1,7 @@
 import { toast } from 'sonner'
 import type { SchemaFieldResponse, SchemaVersionResponse } from '@/entities/document-schema'
 import { toArabicErrorMessage } from '@/shared/api'
+import { t } from '@/shared/lib'
 import { ConfirmDialog } from '@/shared/ui'
 import {
   useDeleteDraftMutation,
@@ -21,19 +22,19 @@ export function PublishVersionDialog({ version, onOpenChange }: VersionDialogPro
     <ConfirmDialog
       open={version !== null}
       onOpenChange={(open) => !mutation.isPending && onOpenChange(open)}
-      title={`نشر النسخة v${version?.versionNumber ?? ''}`}
+      title={t('schema.publish.title', { version: version?.versionNumber ?? '' })}
       description={
         mutation.error
           ? toArabicErrorMessage(mutation.error)
-          : 'ستتجمّد النسخة ولن تُعدَّل، وتتقاعد النسخة المنشورة السابقة. الوثائق القائمة تبقى على نسختها، والوثائق الجديدة تستعمل هذه النسخة.'
+          : t('schema.publish.description')
       }
-      confirmLabel="نشر"
+      confirmLabel={t('schema.publish.confirm')}
       loading={mutation.isPending}
       onConfirm={() => {
         if (!version) return
         mutation.mutate(version.schemaVersionId, {
           onSuccess: () => {
-            toast.success('نُشرت النسخة.')
+            toast.success(t('schema.publish.toast'))
             onOpenChange(false)
           },
         })
@@ -50,20 +51,20 @@ export function DeleteDraftDialog({ version, onOpenChange }: VersionDialogProps)
     <ConfirmDialog
       open={version !== null}
       onOpenChange={(open) => !mutation.isPending && onOpenChange(open)}
-      title="حذف المسودة"
+      title={t('schema.delete.title')}
       description={
         mutation.error
           ? toArabicErrorMessage(mutation.error)
-          : 'ستُحذف المسودة بإعدادات حقولها. تبقى تعريفات الحقول وكل النسخ المنشورة كما هي.'
+          : t('schema.delete.description')
       }
-      confirmLabel="حذف"
+      confirmLabel={t('schema.delete.confirm')}
       destructive
       loading={mutation.isPending}
       onConfirm={() => {
         if (!version) return
         mutation.mutate(version.schemaVersionId, {
           onSuccess: () => {
-            toast.success('حُذفت المسودة.')
+            toast.success(t('schema.delete.toast'))
             onOpenChange(false)
           },
         })
@@ -86,20 +87,20 @@ export function RemoveFieldDialog({ version, field, onOpenChange }: RemoveFieldD
     <ConfirmDialog
       open={version !== null && field !== null}
       onOpenChange={(open) => !mutation.isPending && onOpenChange(open)}
-      title={`إزالة الحقل «${field?.labelAr ?? ''}»`}
+      title={t('schema.remove.title', { label: field?.labelAr ?? '' })}
       description={
         mutation.error
           ? toArabicErrorMessage(mutation.error)
-          : 'يُزال الحقل من هذه المسودة فقط، ولا تتأثر النسخ المنشورة ولا القيم المخزّنة في الوثائق.'
+          : t('schema.remove.description')
       }
-      confirmLabel="إزالة"
+      confirmLabel={t('schema.remove.confirm')}
       destructive
       loading={mutation.isPending}
       onConfirm={() => {
         if (!field) return
         mutation.mutate(field.documentFieldId, {
           onSuccess: () => {
-            toast.success('أُزيل الحقل من المسودة.')
+            toast.success(t('schema.remove.toast'))
             onOpenChange(false)
           },
         })

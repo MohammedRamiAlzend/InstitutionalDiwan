@@ -23,7 +23,7 @@ revoker and timestamp). Listing stays in `entities/document` (`useDocumentAccess
 | File | Purpose |
 | --- | --- |
 | `model/types.ts` | `GrantDocumentAccessRequest` mirroring `InstitutionalDiwan.Server.Contracts.Identity.GrantDocumentAccessRequest`. |
-| `model/schemas.ts` | `grantAccessSchema`: user and level required, reason ≤500 chars, optional `yyyy-MM-dd` expiry that must be after today (the server rejects past or same-day values). |
+| `model/schemas.ts` | `grantAccessSchema`: user and level required, reason ≤500 chars, optional `yyyy-MM-dd` expiry that must be after today (the server rejects past or same-day values); messages resolve via `t()` (`docdetails.validation.*`). |
 | `api/accessGrantMutations.ts` | `useGrantDocumentAccessMutation` (`POST /api/documents/{id}/access-grants`) and `useRevokeDocumentAccessMutation` (`DELETE …/{grantId}`); both invalidate `documentKeys.grants(documentId)`. |
 | `ui/AddAccessGrantDialog.tsx` | Debounced user search over `GET /api/identity-options/users` (inactive accounts filtered out; the chosen label stays selectable), access-level select from `access-levels`, optional expiry date, optional reason. |
 | `ui/RevokeAccessGrantDialog.tsx` | Destructive confirmation naming the grantee; surfaces `Identity.GrantAlreadyRevoked` / `Identity.AccessGrantNotFound` in Arabic. |
@@ -54,6 +54,7 @@ revoker and timestamp). Listing stays in `entities/document` (`useDocumentAccess
 - 2026-11-05: Unsent form input is now kept (per user, per form) after an accidental close or cancel and restored with a toast; it is cleared only after a successful submit (`useDraftForm`).
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-18 | Qoder | UI labels Phase 4 (ب4): add/revoke dialogs and `grantAccessSchema` resolve chrome via the catalog (`docdetails.grant.*`/`.validation.*`, `common.action.*`) — titles/descriptions/toasts/placeholders/arias via `t()`, headings/buttons via `<Label>`, field labels via `FormField labelKey`. User/level lookup names stay data. |
 | 2026-10-28 | agent | Verified Module 03 Phase 4 in-browser against the live API: required-field and past-expiry Arabic validation, a successful grant rendered immediately with level, state, grantee, grantor and expiry, revoke kept the row as a record with timestamp + revoker, and a caller without `ACCESS_GRANT_MANAGE` had no tab and got 403 from the endpoint. |
 | 2026-10-28 | agent | Module 03 Phase 4: implemented the slice — request type, grant schema with future-expiry validation, grant/revoke mutations invalidating `documentKeys.grants`, the add dialog (user picker, level lookup, expiry, reason), and the revoke confirmation. |
 | 2026-10-22 | opencode | Converted this `README.md` from the Word document it was authored in to markdown, so the `README.md`-per-folder rule in `AGENT.md` holds and the content is diffable and agent-editable. |

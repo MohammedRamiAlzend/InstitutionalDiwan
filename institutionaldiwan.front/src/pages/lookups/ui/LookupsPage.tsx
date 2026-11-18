@@ -1,13 +1,14 @@
 import { useSearchParams } from 'react-router-dom'
 import { RequirePermission } from '@/features/auth'
 import { Permissions, lookupCatalogMeta } from '@/shared/config'
-import { GuideChip, GuideProvider, PageHeader } from '@/shared/ui'
+import { GuideChip, GuideProvider, Label, PageHeader } from '@/shared/ui'
 import { LookupCatalogPicker, LookupEntriesTable } from '@/widgets/lookup-admin'
 
 /** `/lookups` — reference-catalog administration; the chosen catalog lives in `?catalog=`. */
 export function LookupsPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const catalog = searchParams.get('catalog')
+  const catalogMeta = catalog ? lookupCatalogMeta(catalog) : null
 
   // Switching catalogs resets page, search, sort and filters of the previous one.
   const select = (slug: string) => setSearchParams({ catalog: slug })
@@ -24,17 +25,17 @@ export function LookupsPage() {
           <div className="grid gap-6 lg:grid-cols-[18rem_1fr]">
             <LookupCatalogPicker selected={catalog} onSelect={select} />
             <div className="min-w-0">
-              {catalog ? (
+              {catalog && catalogMeta ? (
                 <>
                   <h2 className="mb-3 flex items-center gap-2 text-base font-semibold text-foreground">
-                    {lookupCatalogMeta(catalog).labelAr}
+                    {catalogMeta.labelKey ? <Label k={catalogMeta.labelKey} /> : catalog}
                     <GuideChip id="lookups.grid" />
                   </h2>
                   <LookupEntriesTable key={catalog} lookup={catalog} />
                 </>
               ) : (
                 <p className="rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted">
-                  اختر جدولًا مرجعيًا من القائمة لعرض قيمه وإدارتها.
+                  <Label k="lookup.page.select-prompt" />
                 </p>
               )}
             </div>

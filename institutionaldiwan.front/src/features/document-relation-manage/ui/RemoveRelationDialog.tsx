@@ -1,8 +1,8 @@
-import { useDraftForm } from '@/shared/lib'
+import { t, useDraftForm } from '@/shared/lib'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
 import { toArabicErrorMessage } from '@/shared/api'
-import { Button, Dialog, FormField, Textarea } from '@/shared/ui'
+import { Button, Dialog, FormField, Label, Textarea } from '@/shared/ui'
 import { useRemoveRelationMutation } from '../api/relationMutations'
 import { removeRelationSchema, type RemoveRelationFormValues } from '../model/schemas'
 
@@ -40,7 +40,7 @@ export function RemoveRelationDialog({
     if (!relation) return
     try {
       await mutation.mutateAsync({ relationId: relation.relationId, reason: values.reason.trim() })
-      toast.success('أُزيل الرابط.')
+      toast.success(t('relation.remove.toast'))
       draft.discard()
       close()
     } catch {
@@ -56,13 +56,13 @@ export function RemoveRelationDialog({
         if (nextOpen) onOpenChange(true)
         else close()
       }}
-      title="إزالة الرابط"
-      description={`سيُزال الرابط مع «${relation?.relatedTitle ?? ''}». يبقى أثره في سجل الروابط مع السبب.`}
+      title={t('relation.grid.row.remove')}
+      description={t('relation.remove.description', { title: relation?.relatedTitle ?? '' })}
       size="sm"
       footer={
         <>
           <Button type="button" variant="outline" onClick={close} disabled={mutation.isPending}>
-            تراجع
+            <Label k="relation.action.back" />
           </Button>
           <Button
             type="submit"
@@ -70,16 +70,16 @@ export function RemoveRelationDialog({
             variant="destructive"
             loading={mutation.isPending}
           >
-            إزالة
+            <Label k="relation.remove.submit" />
           </Button>
         </>
       }
     >
       <form id="remove-relation-form" onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
-        <FormField label="السبب" required error={errors.reason?.message}>
+        <FormField labelKey="relation.remove.field-reason" required error={errors.reason?.message}>
           <Textarea
             rows={3}
-            placeholder="مثال: رُبطت الوثيقة بالخطأ."
+            placeholder={t('relation.remove.reason-placeholder')}
             invalid={Boolean(errors.reason)}
             {...register('reason')}
           />

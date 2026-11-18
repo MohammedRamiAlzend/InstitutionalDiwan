@@ -5,12 +5,13 @@ import {
   type DepartmentTreeNodeResponse,
 } from '@/entities/department'
 import { DEPARTMENT_TYPE } from '@/shared/config'
-import { cn, formatNumber } from '@/shared/lib'
+import { cn, formatNumber, t } from '@/shared/lib'
 import {
   Badge,
   Button,
   ContextMenu,
   DropdownMenu,
+  Label,
   dispatchContextMenu,
   isContextMenuShortcut,
   type MenuEntry,
@@ -58,7 +59,7 @@ export function DepartmentTreeNodeRow({
           className="size-7 shrink-0"
           onClick={() => onToggle(node.departmentId)}
           disabled={!hasBranch || collapseDisabled}
-          aria-label={hasBranch ? `${collapsed ? 'توسيع' : 'طي'} فرع ${node.nameAr}` : 'لا فروع'}
+          aria-label={hasBranch ? t('department.node.branch-toggle-aria', { action: collapsed ? t('department.node.expand') : t('department.node.collapse'), name: node.nameAr }) : t('department.node.no-branch')}
           aria-expanded={hasBranch ? !collapsed : undefined}
           aria-controls={hasBranch && !collapsed ? branchId : undefined}
         >
@@ -79,22 +80,22 @@ export function DepartmentTreeNodeRow({
               event.preventDefault()
               dispatchContextMenu(event.currentTarget)
             }}
-            aria-label={`تفاصيل ${node.nameAr}`}
+            aria-label={t('department.node.details-aria', { name: node.nameAr })}
             className="flex min-w-0 flex-1 cursor-pointer items-center gap-2 rounded-md px-1.5 py-1.5 text-start focus-visible:outline-2 focus-visible:outline-accent"
           >
             <Icon className="size-4 shrink-0 text-muted" aria-hidden />
             <DepartmentBadge nameAr={node.nameAr} code={node.code} isActive={node.isActive} />
             <span className="hidden shrink-0 text-xs text-muted sm:inline">{typeLabel(node.departmentTypeId)}</span>
-            {isCentralDiwan && <Badge variant="accent" className="hidden shrink-0 sm:inline-flex">الديوان المركزي</Badge>}
+            {isCentralDiwan && <Badge variant="accent" className="hidden shrink-0 sm:inline-flex"><Label k="department.node.central" /></Badge>}
             {hasChildren && (
-              <span className="shrink-0 rounded-full bg-surface-muted px-2 py-0.5 text-[11px] leading-none text-muted" title="عدد الأقسام الفرعية المباشرة">
+              <span className="shrink-0 rounded-full bg-surface-muted px-2 py-0.5 text-[11px] leading-none text-muted" title={t('department.node.children-title')}>
                 {formatNumber(node.children.length)}
               </span>
             )}
           </button>
         </ContextMenu>
         <DropdownMenu entries={entries} label={node.nameAr} trigger={
-          <Button type="button" variant="ghost" size="icon" className="size-8 shrink-0" aria-label={`إجراءات القسم ${node.nameAr}`}>
+          <Button type="button" variant="ghost" size="icon" className="size-8 shrink-0" aria-label={t('department.node.actions-aria', { name: node.nameAr })}>
             <MoreHorizontal className="size-4" aria-hidden />
           </Button>
         } />

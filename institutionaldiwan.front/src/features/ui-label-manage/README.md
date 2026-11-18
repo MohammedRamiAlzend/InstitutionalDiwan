@@ -46,4 +46,5 @@ else gets `403`. Reads stay in `entities/ui-label`.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-18 | Qoder | UI labels Phase 4 (ب5-متبقٍ): `LabelEditor` toasts and all aria/title strings resolve through `t()` (`label-editor.*`, reusing `common.action.save`/`cancel`); `schemas.ts` Zod messages use `label-editor.validation.*`. |
 | 2026-11-17 | Qoder | Created the slice for UI labels Phase 2 (`plans/ui-labels-edit-mode.md`): upsert/reset mutations, `uiLabelValueSchema`, `LabelEditor`, and `UiLabelEditProvider` over the shared `LabelEditContext` bridge. |

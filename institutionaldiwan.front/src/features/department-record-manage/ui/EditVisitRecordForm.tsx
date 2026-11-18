@@ -11,7 +11,8 @@ import {
   type FieldValueMap,
 } from '@/entities/document-schema'
 import { toArabicErrorMessage } from '@/shared/api'
-import { Button, FormField, Textarea } from '@/shared/ui'
+import { t } from '@/shared/lib'
+import { Button, FormField, Label, Textarea } from '@/shared/ui'
 import { useCorrectVisitRecordMutation, useSetVisitRecordMutation } from '../api/recordMutations'
 
 /** Matches `DocumentRegistryVisit.MaxCorrectionReasonLength` on the server. */
@@ -50,16 +51,16 @@ export function EditVisitRecordForm({ documentId, visit, mode, onDone }: EditVis
       mode !== 'correct'
         ? undefined
         : !trimmedReason
-          ? 'سبب التصحيح مطلوب.'
+          ? t('department.records.reason-required')
           : trimmedReason.length > MAX_REASON_LENGTH
-            ? 'سبب التصحيح يتجاوز 1000 حرف.'
+            ? t('department.records.reason-max')
             : undefined
     setReasonError(reasonProblem)
     if (Object.keys(found).length > 0 || reasonProblem) return
 
     const requests = toFieldValueRequests(schemaFields, values)
     const onSuccess = () => {
-      toast.success(mode === 'edit' ? 'حُفظ سجل الديوان.' : 'صُحّح السجل المقفل.')
+      toast.success(mode === 'edit' ? t('department.records.toast-saved') : t('department.records.toast-corrected'))
       onDone()
     }
     if (mode === 'edit') {
@@ -95,7 +96,7 @@ export function EditVisitRecordForm({ documentId, visit, mode, onDone }: EditVis
 
       {mode === 'correct' && (
         <FormField
-          label="سبب التصحيح"
+          labelKey="department.records.reason-label"
           required
           error={reasonError}
           htmlFor={`record-correct-reason-${visit.visitId}`}
@@ -104,7 +105,7 @@ export function EditVisitRecordForm({ documentId, visit, mode, onDone }: EditVis
             id={`record-correct-reason-${visit.visitId}`}
             rows={2}
             maxLength={MAX_REASON_LENGTH}
-            placeholder="لماذا يُصحَّح سجل أُقفل بخروج الوثيقة؟"
+            placeholder={t('department.records.reason-placeholder')}
             invalid={Boolean(reasonError)}
             value={reason}
             onChange={(event) => setReason(event.target.value)}
@@ -120,10 +121,10 @@ export function EditVisitRecordForm({ documentId, visit, mode, onDone }: EditVis
 
       <div className="flex items-center gap-2">
         <Button type="submit" loading={mutation.isPending}>
-          {mode === 'edit' ? 'حفظ السجل' : 'حفظ التصحيح'}
+          {mode === 'edit' ? <Label k="department.records.save" /> : <Label k="department.records.save-correction" />}
         </Button>
         <Button type="button" variant="outline" onClick={onDone} disabled={mutation.isPending}>
-          تراجع
+          <Label k="department.records.dismiss" />
         </Button>
       </div>
     </form>

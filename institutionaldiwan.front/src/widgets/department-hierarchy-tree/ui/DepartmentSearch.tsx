@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Search, X } from 'lucide-react'
 import { Input } from '@/shared/ui'
+import { t } from '@/shared/lib'
 
 interface DepartmentSearchProps {
   /** URL search value owned by `useTableState`. */
@@ -45,7 +46,7 @@ export function DepartmentSearch({ value, onChange, placeholder }: DepartmentSea
               onChange('')
             }}
             className="cursor-pointer p-1 hover:text-foreground"
-            aria-label="مسح البحث"
+            aria-label={t('department.search.clear-aria')}
           >
             <X className="size-4" aria-hidden />
           </button>

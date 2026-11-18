@@ -1,8 +1,8 @@
 export { systemErrorApi } from './api/systemErrorApi'
 export {
-  SYSTEM_ERROR_KIND_LABELS,
-  SYSTEM_ERROR_SOURCE_LABELS,
-  SYSTEM_ERROR_STATUS_LABELS,
+  SYSTEM_ERROR_KIND_LABEL_KEYS,
+  SYSTEM_ERROR_SOURCE_LABEL_KEYS,
+  SYSTEM_ERROR_STATUS_LABEL_KEYS,
 } from './model/labels'
 export { systemErrorKeys, useSystemError, useSystemErrors } from './model/queries'
 export {

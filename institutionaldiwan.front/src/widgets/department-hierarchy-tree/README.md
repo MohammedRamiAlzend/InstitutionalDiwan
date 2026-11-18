@@ -52,6 +52,7 @@ Existing create/edit/parent-change and activation actions are composed from `fea
 | Browser interaction, RTL/LTR, and light/dark verification | Pending main-agent browser validation; not claimed by this update. |
 
 ## 6. Change Log
+- 2026-11-18: UI labels Phase 4 (ب2): all static Arabic across the tree/table/mermaid/chart views, the view switcher, search, node/row/header menus, copy toasts, empty states, and the department-detail / employees-section / employee-detail dialogs now resolves through the `department.*` catalog (`headerKey`, `useLabel`, `t()`, `<Label>`). Department/employee names, codes and type `descAr` stay data-driven.
 - 2026-11-09: The external correspondence columns and detail row are hidden while `FEATURES.externalOrganizations` is off.
 - 2026-11-04: User, department and employee references now render as «name + short id» (`UserLabel` / `DepartmentLabel` / `EmployeeLabel`) instead of a bare id.
 - 2026-11-01: The body (table, tree, diagram, chart, and their loading/empty/error states) now sits in a container keyed by the selected view and carrying `animate-page-in`, so switching شجرة / مخطط / إحصاء / جدول eases in the same way a page does. Stopped motion («حركات التنقل: متوقفة» in the shell settings) disables it.

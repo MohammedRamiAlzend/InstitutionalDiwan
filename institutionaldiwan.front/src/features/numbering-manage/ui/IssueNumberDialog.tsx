@@ -1,8 +1,8 @@
-import { useDraftForm } from '@/shared/lib'
+import { t, useDraftForm } from '@/shared/lib'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
 import { toArabicErrorMessage } from '@/shared/api'
-import { Button, Dialog } from '@/shared/ui'
+import { Button, Dialog, Label } from '@/shared/ui'
 import { useIssueOfficialNumberMutation } from '../api/numberMutations'
 import { issueNumberSchema, type IssueNumberFormValues } from '../model/schemas'
 
@@ -32,9 +32,7 @@ export function IssueNumberDialog({
           ? Number(values.numberingYear)
           : null,
       })
-      toast.success(
-        `تم إصدار الرقم ${issued.officialNumberText} وتسجيل الوثيقة.`,
-      )
+      toast.success(t('numbering.issue.toast', { number: issued.officialNumberText }))
       draft.discard()
       onOpenChange(false)
     } catch {
@@ -46,8 +44,8 @@ export function IssueNumberDialog({
     <Dialog
       open={open}
       onOpenChange={onOpenChange}
-      title="إصدار رقم رسمي"
-      description="سيُخصص الرقم التالي من سجل الترقيم المطابق لدائرة الوثيقة ونوعها، وتنتقل الوثيقة من المسودة إلى «مسجل»."
+      title={t('numbering.issue.title')}
+      description={t('numbering.issue.description')}
       size="sm"
       footer={
         <>
@@ -57,10 +55,10 @@ export function IssueNumberDialog({
             onClick={() => onOpenChange(false)}
             disabled={mutation.isPending}
           >
-            إلغاء
+            <Label k="common.action.cancel" />
           </Button>
           <Button type="submit" form="issue-number-form" loading={mutation.isPending}>
-            إصدار الرقم
+            <Label k="numbering.issue.submit" />
           </Button>
         </>
       }

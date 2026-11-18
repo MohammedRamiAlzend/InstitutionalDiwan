@@ -44,6 +44,7 @@ plain-array `GET /api/roles` response, a column chooser, and row/header/empty co
 
 ## 6. Change Log
 
+- 2026-11-18: UI labels Phase 4 (ب3): all static Arabic resolves through the `role.*` catalog — headers via `headerKey`, permission-count/status/kind cells via `t()`/`<Label>`, row menus, copy toasts, caption/search/empty states via `t()`, toolbar create + empty actions via `<Label>`, and the suspend/activate confirm via `t()`. Role names/codes stay data-driven.
 - 2026-10-28: Implemented Phase 4 — the roles grid with permission-filtered actions, system-role
   protection, status confirmation, and the role/permissions dialogs; created this slice README.
 - 2026-10-19: Documented role administration as a planned widget in `src/widgets/README.md`.

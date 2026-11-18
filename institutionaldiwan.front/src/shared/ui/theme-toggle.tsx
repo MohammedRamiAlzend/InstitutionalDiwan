@@ -1,5 +1,5 @@
 import { Moon, Sun } from 'lucide-react'
-import { cn, useThemeChoice } from '@/shared/lib'
+import { cn, t, useThemeChoice } from '@/shared/lib'
 import { Button } from './button'
 
 interface ThemeToggleProps {
@@ -17,8 +17,8 @@ export function ThemeToggle({ className }: ThemeToggleProps) {
       size="icon"
       onClick={toggle}
       className={cn('rounded-full', className)}
-      aria-label={theme === 'dark' ? 'التبديل إلى الوضع الفاتح' : 'التبديل إلى الوضع الداكن'}
-      title={theme === 'dark' ? 'الوضع الفاتح' : 'الوضع الداكن'}
+      aria-label={theme === 'dark' ? t('common.theme.to-light') : t('common.theme.to-dark')}
+      title={theme === 'dark' ? t('common.theme.light') : t('common.theme.dark')}
     >
       {theme === 'dark' ? (
         <Sun className="size-5" aria-hidden />

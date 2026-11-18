@@ -7,8 +7,8 @@ import { useDecisionTypes } from '@/entities/decision-type'
 import { useDocumentFiles } from '@/entities/document-file'
 import { toArabicErrorMessage } from '@/shared/api'
 import { DECISION_EFFECT, DOCUMENT_FILE_TYPE, decisionEffectLabel } from '@/shared/config'
-import { useDraftForm } from '@/shared/lib'
-import { Button, Dialog, FormField, Input, Select, Textarea } from '@/shared/ui'
+import { useDraftForm, t } from '@/shared/lib'
+import { Button, Dialog, FormField, Input, Label, Select, Textarea } from '@/shared/ui'
 import { useIssueDecisionMutation } from '../api/decisionMutations'
 import { issueDecisionSchema, type IssueDecisionFormValues } from '../model/schemas'
 import { JoinTargetPicker } from './JoinTargetPicker'
@@ -84,7 +84,7 @@ export function IssueDecisionDialog({
 
   const onSubmit = handleSubmit(async (values) => {
     if (isJoin && !values.joinTargetDocumentId) {
-      setError('joinTargetDocumentId', { message: 'اختر الملف الرئيسي.' })
+      setError('joinTargetDocumentId', { message: t('decisions.issue.validation.join-target-required') })
       return
     }
     try {
@@ -98,8 +98,8 @@ export function IssueDecisionDialog({
       })
       toast.success(
         isJoin
-          ? 'صدر قرار التوحيد وارتبط الملف بالملف الرئيسي. لم يُغيَّر الرقم ولا المكان.'
-          : 'صدر القرار. الأثر مقترح ولم يُنفَّذ بعد.',
+          ? t('decisions.issue.toast.join')
+          : t('decisions.issue.toast.normal'),
       )
       draft.discard()
       onOpenChange(false)
@@ -112,22 +112,22 @@ export function IssueDecisionDialog({
     <Dialog
       open={open}
       onOpenChange={onOpenChange}
-      title="إصدار قرار"
-      description="يُصدر القرار من الديوان الذي يحمل الوثيقة. القرار غير القابل للاعتراض يولد نهائيًا."
+      title={t('decisions.issue.title')}
+      description={t('decisions.issue.description')}
       size="lg"
       footer={
         <>
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={mutation.isPending}>
-            إلغاء
+            <Label k="common.action.cancel" />
           </Button>
           <Button type="submit" form="issue-decision-form" disabled={mutation.isPending || typeOptions.length === 0}>
-            {mutation.isPending ? 'جارٍ الإصدار…' : 'إصدار'}
+            {mutation.isPending ? t('decisions.issue.submitting') : <Label k="decisions.issue.submit" />}
           </Button>
         </>
       }
     >
       <form id="issue-decision-form" className="flex flex-col gap-4" onSubmit={onSubmit} noValidate>
-        <FormField label="نوع القرار" required error={errors.decisionTypeId?.message}>
+        <FormField labelKey="decisions.issue.field-type" required error={errors.decisionTypeId?.message}>
           <Controller
             control={control}
             name="decisionTypeId"
@@ -136,7 +136,7 @@ export function IssueDecisionDialog({
                 value={field.value || undefined}
                 onValueChange={field.onChange}
                 options={typeOptions}
-                placeholder="اختر النوع"
+                placeholder={t('decisions.issue.type-placeholder')}
                 invalid={Boolean(errors.decisionTypeId)}
               />
             )}
@@ -144,23 +144,24 @@ export function IssueDecisionDialog({
         </FormField>
         {selectedType?.effectId === DECISION_EFFECT.Refer && (
           <p className="text-sm text-muted">
-            الوجهة المقترحة: {destinationName ?? 'قسم الوجهة المعرّف على النوع'}
+            <Label
+              k="decisions.issue.refer-hint"
+              params={{ destination: destinationName ?? t('decisions.issue.refer-destination-fallback') }}
+            />
           </p>
         )}
         {selectedType?.effectId === DECISION_EFFECT.SendToArchive && (
           <p className="text-sm text-muted">
-            بعد الإصدار يُقترح إرسال الوثيقة للحفظ. الأرشفة نفسها تبقى إجراءً منفصلاً.
+            <Label k="decisions.issue.archive-hint" />
           </p>
         )}
         {isJoin && (
           <>
             <p className="text-sm text-muted">
-              يُربط هذا الملف بالملف الرئيسي دون تغيير رقمه أو مكانه. إن كان الملفان عند ديوانين
-              مختلفين، انقل هذا الملف بحركة عادية إلى ديوان الملف الرئيسي بعد الإصدار. لا تُنشأ الحركة
-              تلقائيًا.
+              <Label k="decisions.issue.join-hint" />
             </p>
             <FormField
-              label="الملف الرئيسي"
+              labelKey="decisions.issue.field-join-target"
               required
               error={errors.joinTargetDocumentId?.message}
               guideId="document-details.join-target"
@@ -180,17 +181,17 @@ export function IssueDecisionDialog({
             </FormField>
           </>
         )}
-        <FormField label="رقم القرار" required error={errors.decisionNumber?.message} guideId="document-details.decision-number">
+        <FormField labelKey="decisions.issue.field-number" required error={errors.decisionNumber?.message} guideId="document-details.decision-number">
           <Input {...register('decisionNumber')} dir="ltr" invalid={Boolean(errors.decisionNumber)} />
         </FormField>
-        <FormField label="تاريخ القرار" required error={errors.decisionDate?.message}>
+        <FormField labelKey="decisions.issue.field-date" required error={errors.decisionDate?.message}>
           <Input {...register('decisionDate')} type="date" dir="ltr" invalid={Boolean(errors.decisionDate)} />
         </FormField>
-        <FormField label="الخلاصة" error={errors.summary?.message}>
+        <FormField labelKey="decisions.issue.field-summary" error={errors.summary?.message}>
           <Textarea {...register('summary')} invalid={Boolean(errors.summary)} />
         </FormField>
         {fileOptions.length > 0 && (
-          <FormField label="نسخة القرار" error={errors.documentFileId?.message} hint="اختياري. ملف من نوع قرار على هذه الوثيقة.">
+          <FormField labelKey="decisions.issue.field-file" error={errors.documentFileId?.message} hint={t('decisions.issue.file-hint')}>
             <Controller
               control={control}
               name="documentFileId"
@@ -199,7 +200,7 @@ export function IssueDecisionDialog({
                   value={field.value || undefined}
                   onValueChange={field.onChange}
                   options={fileOptions}
-                  placeholder="بدون ملف"
+                  placeholder={t('decisions.issue.file-placeholder')}
                 />
               )}
             />
