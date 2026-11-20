@@ -62,6 +62,23 @@ public static class DependencyInjection
         services.Configure<NotificationJobsOptions>(configuration.GetSection(NotificationJobsOptions.SectionName));
         services.AddHostedService<OutboxProcessorJob>();
         services.AddHostedService<NotificationRetentionJob>();
+
+        // Module 11 Drive: SeaweedFS object storage and the maintenance job (trash retention,
+        // pending-upload abandonment, idle edit-session expiry). Credentials come from
+        // Drive:Storage configuration (user-secrets), never from code.
+        services.Configure<DriveStorageOptions>(configuration.GetSection(DriveStorageOptions.SectionName));
+        services.AddSingleton<IDriveStorageService, S3DriveStorageService>();
+        services.AddScoped<Application.Abstractions.Drive.IDrivePurgeService, Storage.DrivePurgeService>();
+        services.Configure<DriveJobsOptions>(configuration.GetSection(DriveJobsOptions.SectionName));
+        services.AddHostedService<DriveMaintenanceJob>();
+
+        // Module 11 Drive: OnlyOffice editing — HS256 config/callback tokens and the save-callback
+        // downloader. The JWT secret comes from Drive:OnlyOffice configuration (user-secrets).
+        services.Configure<OnlyOffice.DriveOnlyOfficeOptions>(configuration.GetSection(OnlyOffice.DriveOnlyOfficeOptions.SectionName));
+        services.AddSingleton<Application.Abstractions.Drive.IDriveOnlyOfficeSettings>(
+            provider => provider.GetRequiredService<Microsoft.Extensions.Options.IOptions<OnlyOffice.DriveOnlyOfficeOptions>>().Value);
+        services.AddSingleton<Application.Abstractions.Drive.IDriveOnlyOfficeTokenService, OnlyOffice.OnlyOfficeTokenService>();
+        services.AddSingleton<Application.Abstractions.Drive.IDriveCallbackDownloader, OnlyOffice.DriveCallbackDownloader>();
         services.AddSingleton<Diagnostics.SystemErrorQueue>();
         services.AddSingleton<Application.Features.Diagnostics.SystemErrors.ISystemErrorQueue>(
             provider => provider.GetRequiredService<Diagnostics.SystemErrorQueue>());
@@ -101,6 +118,15 @@ public static class DependencyInjection
         services.AddScoped<INotificationRepository, NotificationRepository>();
         services.AddScoped<InstitutionalDiwan.Application.Abstractions.Notifications.INotificationRecipientDirectory, NotificationRecipientDirectory>();
 
+        // Module 11: Drive repositories.
+        services.AddScoped<IDriveSpaceRepository, DriveSpaceRepository>();
+        services.AddScoped<IDriveItemRepository, DriveItemRepository>();
+        services.AddScoped<IDriveFileVersionRepository, DriveFileVersionRepository>();
+        services.AddScoped<IDrivePermissionRepository, DrivePermissionRepository>();
+        services.AddScoped<IDriveDeletionRequestRepository, DriveDeletionRequestRepository>();
+        services.AddScoped<IDriveEditSessionRepository, DriveEditSessionRepository>();
+        services.AddScoped<IDriveStarRepository, DriveStarRepository>();
+
         // Module 06 physical storage: local file system + magic-byte validation, both consumed by
         // the Attachments handlers through Application abstractions.
         services.AddSingleton<IFileStorageService, LocalFileStorageService>();
@@ -111,6 +137,7 @@ public static class DependencyInjection
         services.AddScoped<IUserContext, UserContext>();
         services.AddScoped<IDepartmentScopeEvaluator, DepartmentScopeEvaluator>();
         services.AddScoped<IDocumentAccessEvaluator, DocumentAccessEvaluator>();
+        services.AddScoped<IDriveAccessEvaluator, DriveAccessEvaluator>();
 
         // Ordered, environment-aware seeders — executed at startup by SeederRunner.
         services.AddScoped<ISeeder, UserScopeTypeSeeder>();

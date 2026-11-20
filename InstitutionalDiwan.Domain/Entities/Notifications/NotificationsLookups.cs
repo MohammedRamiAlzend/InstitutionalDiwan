@@ -20,6 +20,21 @@ public sealed class NotificationType : LookupEntity
     /// <summary>A decision was issued; the document's owning department is told.</summary>
     public const int DecisionIssuedId = 12;
 
+    /// <summary>A Drive deletion request awaits the owner's department head (Module 11).</summary>
+    public const int DriveDeletionRequestedId = 13;
+
+    /// <summary>A Drive deletion request was approved; the requester is told (Module 11).</summary>
+    public const int DriveDeletionApprovedId = 14;
+
+    /// <summary>A Drive deletion request was rejected; the requester is told (Module 11).</summary>
+    public const int DriveDeletionRejectedId = 15;
+
+    /// <summary>A Drive permission was granted; the grantee is told (Module 11).</summary>
+    public const int DrivePermissionGrantedId = 16;
+
+    /// <summary>An OnlyOffice save callback failed; the editor is told (Module 11).</summary>
+    public const int DriveEditSaveFailedId = 17;
+
     public string TitleTemplateAr { get; private set; } = null!;
     public string BodyTemplateAr { get; private set; } = null!;
 

@@ -126,6 +126,8 @@ public sealed class AuditActionMiddleware
         "AuditLogs" => "AUDIT",
         "DocumentArchive" or "SavedSearches" => "ARCHIVING",
         "DocumentRelations" => "RELATIONS",
+        "DriveSpaces" or "DriveItems" or "DriveFiles" or "DriveTrash" or "DriveDeletionRequests"
+            or "DriveSettings" or "DriveOnlyOffice" => "DRIVE",
         _ => controllerName.ToUpperInvariant()
     };
 
@@ -140,15 +142,16 @@ public sealed class AuditActionMiddleware
         if (Contains(actionName, "Approve"))
             return AuditActionType.ApproveId;
 
-        if (StartsWithAny(actionName, "Create", "Add", "Register", "Issue", "Grant", "Upload"))
+        if (StartsWithAny(actionName, "Create", "Add", "Register", "Issue", "Grant", "Upload", "Initiate", "Star", "Request"))
             return AuditActionType.CreateId;
 
-        if (StartsWithAny(actionName, "Delete", "Remove", "Revoke"))
+        if (StartsWithAny(actionName, "Delete", "Remove", "Revoke", "Unstar", "Purge"))
             return AuditActionType.DeleteId;
 
         if (StartsWithAny(
                 actionName,
-                "List", "Get", "Search", "Tree", "Inbox", "Outbox", "Download", "Verify", "Me"))
+                "List", "Get", "Search", "Tree", "Inbox", "Outbox", "Download", "Verify", "Me",
+                "Browse", "Preview", "Breadcrumb", "Effective"))
         {
             return AuditActionType.ViewId;
         }
@@ -157,7 +160,8 @@ public sealed class AuditActionMiddleware
                 actionName,
                 "Update", "Change", "Move", "Assign", "Set", "Activate", "Deactivate", "End",
                 "Send", "Receive", "Complete", "Redirect", "Close", "Return", "Reject", "Cancel",
-                "Archive", "Unarchive", "Relabel", "Record", "Reset"))
+                "Archive", "Unarchive", "Relabel", "Record", "Reset",
+                "Rename", "Restore", "Abandon", "Break", "Touch"))
         {
             return AuditActionType.UpdateId;
         }

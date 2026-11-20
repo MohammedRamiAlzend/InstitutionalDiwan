@@ -464,4 +464,85 @@ public static class DomainErrors
         public static readonly Error DocumentJoined = Error.Conflict("Decisions.DocumentJoined", "This file was joined into another and cannot take a new separating decision.");
         public static readonly Error JoinTargetInvalid = Error.Conflict("Decisions.JoinTargetInvalid", "The principal file cannot be used: it is missing, is this same file, is archived or canceled, is itself joined into another file, cannot be viewed, or the link would create a cycle. A decision that does not unify files cannot name a principal file.");
     }
+
+    public static class Drive
+    {
+        // Spaces
+        public static readonly Error SpaceNotFound = Error.NotFound("Drive.SpaceNotFound", "The file space was not found.");
+        public static readonly Error SpaceNameEmpty = Error.Validation("Drive.SpaceNameEmpty", "A space name is required.");
+        public static readonly Error SpaceNameTooLong = Error.Validation("Drive.SpaceNameTooLong", "A space name cannot exceed 150 characters.");
+        public static readonly Error SpaceTypeInvalid = Error.Validation("Drive.SpaceTypeInvalid", "The space type must be personal or shared.");
+        public static readonly Error PersonalSpaceAlreadyExists = Error.Conflict("Drive.PersonalSpaceAlreadyExists", "This user already has a personal space.");
+        public static readonly Error QuotaInvalid = Error.Validation("Drive.QuotaInvalid", "A quota must be a positive number of bytes.");
+        public static readonly Error QuotaBelowUsage = Error.Conflict("Drive.QuotaBelowUsage", "The quota cannot be set below the space's current usage.");
+        public static readonly Error QuotaExceeded = Error.Conflict("Drive.QuotaExceeded", "The space's storage quota would be exceeded.");
+        public static readonly Error UsageInvalid = Error.Validation("Drive.UsageInvalid", "The usage adjustment must be positive and within the recorded usage.");
+        public static readonly Error SpaceTrashed = Error.Conflict("Drive.SpaceTrashed", "The space is in the trash and cannot be used.");
+        public static readonly Error SpaceAlreadyTrashed = Error.Conflict("Drive.SpaceAlreadyTrashed", "The space is already in the trash.");
+        public static readonly Error SpaceNotTrashed = Error.Conflict("Drive.SpaceNotTrashed", "The space is not in the trash.");
+        public static readonly Error CannotTrashRoot = Error.Forbidden("Drive.CannotTrashRoot", "A personal space is its owner's root and cannot be trashed.");
+
+        // Items
+        public static readonly Error ItemNotFound = Error.NotFound("Drive.ItemNotFound", "The folder or file was not found.");
+        public static readonly Error ItemNameEmpty = Error.Validation("Drive.ItemNameEmpty", "A name is required.");
+        public static readonly Error ItemNameTooLong = Error.Validation("Drive.ItemNameTooLong", "A name cannot exceed 255 characters.");
+        public static readonly Error ItemNameInvalid = Error.Validation("Drive.ItemNameInvalid", "A name cannot contain \\ / : * ? \" < > | or be '.' or '..'.");
+        public static readonly Error NameTaken = Error.Conflict("Drive.NameTaken", "An item with this name already exists in the same folder.");
+        public static readonly Error DepthLimitReached = Error.Validation("Drive.DepthLimitReached", "The folder tree cannot exceed 30 levels.");
+        public static readonly Error CycleDetected = Error.Conflict("Drive.CycleDetected", "A folder cannot be moved into itself or one of its descendants.");
+        public static readonly Error ItemTrashed = Error.Conflict("Drive.ItemTrashed", "The item is in the trash and cannot be modified.");
+        public static readonly Error ItemAlreadyTrashed = Error.Conflict("Drive.ItemAlreadyTrashed", "The item is already in the trash.");
+        public static readonly Error ItemNotTrashed = Error.Conflict("Drive.ItemNotTrashed", "The item is not in the trash.");
+        public static readonly Error NotAFile = Error.Validation("Drive.NotAFile", "This operation applies to files only.");
+        public static readonly Error NotAFolder = Error.Validation("Drive.NotAFolder", "This operation applies to folders only.");
+        public static readonly Error AccessDenied = Error.Forbidden("Drive.AccessDenied", "You do not have the required access to this item.");
+        public static readonly Error DeletionPending = Error.Conflict("Drive.DeletionPending", "A deletion request is already pending on this item.");
+        public static readonly Error InheritanceBroken = Error.Conflict("Drive.InheritanceBroken", "Permission inheritance is broken on this item.");
+
+        // Versions and upload
+        public static readonly Error VersionNotFound = Error.NotFound("Drive.VersionNotFound", "The file version was not found.");
+        public static readonly Error VersionNumberInvalid = Error.Validation("Drive.VersionNumberInvalid", "A version number must be positive.");
+        public static readonly Error ObjectKeyEmpty = Error.Validation("Drive.ObjectKeyEmpty", "A storage object key is required.");
+        public static readonly Error ProviderInvalid = Error.Validation("Drive.ProviderInvalid", "A valid storage provider is required.");
+        public static readonly Error VersionSizeInvalid = Error.Validation("Drive.VersionSizeInvalid", "A file size must be a positive number of bytes.");
+        public static readonly Error ChecksumInvalid = Error.Validation("Drive.ChecksumInvalid", "A SHA-256 checksum must be 64 hexadecimal characters.");
+        public static readonly Error VersionNotPending = Error.Conflict("Drive.VersionNotPending", "Only a pending version can be committed or abandoned.");
+        public static readonly Error VersionConflict = Error.Conflict("Drive.VersionConflict", "The file changed since this edit session was opened; save was rejected.");
+        public static readonly Error FileTooLarge = Error.Validation("Drive.FileTooLarge", "The file exceeds the maximum allowed size.");
+        public static readonly Error ExtensionNotAllowed = Error.Validation("Drive.ExtensionNotAllowed", "This file extension is not allowed.");
+        public static readonly Error SignatureMismatch = Error.Validation("Drive.SignatureMismatch", "The file content does not match its declared type.");
+        public static readonly Error DeclaredSizeMismatch = Error.Conflict("Drive.DeclaredSizeMismatch", "The uploaded size does not match the declared size.");
+        public static readonly Error StorageObjectMissing = Error.Failure("Drive.StorageObjectMissing", "The stored object is missing from the storage provider.");
+        public static readonly Error MaxFileSizeInvalid = Error.Validation("Drive.MaxFileSizeInvalid", "The maximum file size must be positive and within the default quota.");
+        public static readonly Error ExtensionsEmpty = Error.Validation("Drive.ExtensionsEmpty", "The allowed-extensions list cannot be empty.");
+        public static readonly Error StorageNotConfigured = Error.Failure("Drive.StorageNotConfigured", "Drive object storage is not configured; set the SeaweedFS endpoint and credentials.");
+
+        // Permissions
+        public static readonly Error PermissionNotFound = Error.NotFound("Drive.PermissionNotFound", "The permission grant was not found.");
+        public static readonly Error PrincipalTypeInvalid = Error.Validation("Drive.PrincipalTypeInvalid", "The principal type must be user or department.");
+        public static readonly Error PrincipalIdEmpty = Error.Validation("Drive.PrincipalIdEmpty", "A principal is required.");
+        public static readonly Error RoleInvalid = Error.Validation("Drive.RoleInvalid", "The role must be viewer, editor or manager.");
+        public static readonly Error PermissionExists = Error.Conflict("Drive.PermissionExists", "This principal already has a grant on the item.");
+
+        // Deletion requests
+        public static readonly Error RequestNotFound = Error.NotFound("Drive.RequestNotFound", "The deletion request was not found.");
+        public static readonly Error RequestReasonEmpty = Error.Validation("Drive.RequestReasonEmpty", "A reason is required for a deletion request.");
+        public static readonly Error RequestReasonTooLong = Error.Validation("Drive.RequestReasonTooLong", "The reason cannot exceed 500 characters.");
+        public static readonly Error RequestAlreadyReviewed = Error.Conflict("Drive.RequestAlreadyReviewed", "This deletion request was already reviewed.");
+        public static readonly Error OnlyRequesterCanCancel = Error.Forbidden("Drive.OnlyRequesterCanCancel", "Only the requester can cancel a deletion request.");
+        public static readonly Error ReviewNoteTooLong = Error.Validation("Drive.ReviewNoteTooLong", "The review note cannot exceed 500 characters.");
+
+        // Edit sessions
+        public static readonly Error SessionNotFound = Error.NotFound("Drive.SessionNotFound", "The edit session was not found.");
+        public static readonly Error DocumentKeyEmpty = Error.Validation("Drive.DocumentKeyEmpty", "A document key is required.");
+        public static readonly Error DocumentKeyTooLong = Error.Validation("Drive.DocumentKeyTooLong", "The document key cannot exceed 200 characters.");
+        public static readonly Error SessionNotOpen = Error.Conflict("Drive.SessionNotOpen", "The edit session is not open.");
+        public static readonly Error EditSessionExpired = Error.Conflict("Drive.EditSessionExpired", "The edit session expired; reopen the file to continue.");
+
+        // OnlyOffice editing
+        public static readonly Error OnlyOfficeNotConfigured = Error.Failure("Drive.OnlyOfficeNotConfigured", "OnlyOffice editing is not configured; set the server URL, callback base URL and JWT secret.");
+        public static readonly Error EditingNotSupported = Error.Validation("Drive.EditingNotSupported", "This file type cannot be edited in OnlyOffice.");
+        public static readonly Error CallbackTokenInvalid = Error.Unauthorized("Drive.CallbackTokenInvalid", "The OnlyOffice callback token is missing or invalid.");
+        public static readonly Error CallbackDownloadFailed = Error.Failure("Drive.CallbackDownloadFailed", "The saved document could not be downloaded from OnlyOffice.");
+    }
 }

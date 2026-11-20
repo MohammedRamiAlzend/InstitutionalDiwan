@@ -133,6 +133,15 @@ public sealed class DiwanDbContext : DbContext, IUnitOfWork
     public DbSet<NotificationChannel> NotificationChannels => Set<NotificationChannel>();
     public DbSet<NotificationOutboxStatus> NotificationOutboxStatuses => Set<NotificationOutboxStatus>();
 
+    // Module 11: Drive
+    public DbSet<InstitutionalDiwan.Domain.Entities.Drive.DriveSpace> DriveSpaces => Set<InstitutionalDiwan.Domain.Entities.Drive.DriveSpace>();
+    public DbSet<InstitutionalDiwan.Domain.Entities.Drive.DriveItem> DriveItems => Set<InstitutionalDiwan.Domain.Entities.Drive.DriveItem>();
+    public DbSet<InstitutionalDiwan.Domain.Entities.Drive.DriveFileVersion> DriveFileVersions => Set<InstitutionalDiwan.Domain.Entities.Drive.DriveFileVersion>();
+    public DbSet<InstitutionalDiwan.Domain.Entities.Drive.DrivePermission> DrivePermissions => Set<InstitutionalDiwan.Domain.Entities.Drive.DrivePermission>();
+    public DbSet<InstitutionalDiwan.Domain.Entities.Drive.DriveDeletionRequest> DriveDeletionRequests => Set<InstitutionalDiwan.Domain.Entities.Drive.DriveDeletionRequest>();
+    public DbSet<InstitutionalDiwan.Domain.Entities.Drive.DriveEditSession> DriveEditSessions => Set<InstitutionalDiwan.Domain.Entities.Drive.DriveEditSession>();
+    public DbSet<InstitutionalDiwan.Domain.Entities.Drive.DriveStar> DriveStars => Set<InstitutionalDiwan.Domain.Entities.Drive.DriveStar>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(DiwanDbContext).Assembly);

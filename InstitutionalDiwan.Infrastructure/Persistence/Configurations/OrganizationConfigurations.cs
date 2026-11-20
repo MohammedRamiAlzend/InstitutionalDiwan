@@ -85,6 +85,19 @@ public sealed class InstitutionSettingConfiguration : IEntityTypeConfiguration<I
             .HasDefaultValue(true)
             .IsRequired();
         builder.Property(x => x.ResponsibleEmployeeId).HasColumnName("ResponsibleEmployeeId");
+        builder.Property(x => x.DriveDefaultQuotaBytes)
+            .HasColumnName("DriveDefaultQuotaBytes")
+            .HasDefaultValue(InstitutionSetting.DefaultDriveQuotaBytes)
+            .IsRequired();
+        builder.Property(x => x.DriveMaxFileSizeBytes)
+            .HasColumnName("DriveMaxFileSizeBytes")
+            .HasDefaultValue(InstitutionSetting.DefaultDriveMaxFileSizeBytes)
+            .IsRequired();
+        builder.Property(x => x.DriveAllowedExtensionsCsv)
+            .HasColumnName("DriveAllowedExtensionsCsv")
+            .HasMaxLength(1000)
+            .HasDefaultValue(InstitutionSetting.DefaultDriveAllowedExtensionsCsv)
+            .IsRequired();
         builder.Property(x => x.UpdatedAt).HasColumnName("UpdatedAt").HasColumnType("datetime2(3)").IsRequired();
 
         builder.HasIndex(x => x.CentralDiwanDepartmentId).HasDatabaseName("IX_INSTITUTION_SETTINGS_CENTRAL_DIWAN");

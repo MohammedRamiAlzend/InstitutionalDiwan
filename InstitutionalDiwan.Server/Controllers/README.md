@@ -1,6 +1,6 @@
 # Presentation / Controllers
 
-> **Status:** Implemented — twenty-four thin controllers, one per module plus the generic lookups controller and the administrative picker reads.
+> **Status:** Implemented — forty thin controllers, one per module plus the generic lookups controller and the administrative picker reads.
 
 ## Purpose
 
@@ -46,6 +46,14 @@ access live here.
 | `LookupsController.cs` | `api/lookups/{lookup}` | `[Authorize]` reads; `LOOKUP_MANAGE` writes | Generic reference-catalog API over all 33 seeded lookups. |
 | `AuditLogsController.cs` | `api/audit-logs` | `AUDIT_VIEW` reads; `AUDIT_MANAGE` checkpoints/integrity checks | Module 09 audit trail: filtered self-auditing search, checkpoint creation, integrity verification, and integrity-report listing. |
 | `NotificationsController.cs` | `api/notifications` | `[Authorize]` (no permission code; every route is scoped to the caller) | Module 10 inbox: paged list (`unreadOnly`, `typeId`, `search`, `sortBy`, `sortDescending`), `unread-count` with per-type counts (not audited), `{recipientId}/read`, `read-all`, `{recipientId}/dismiss`. Another user's row answers 404 `Notifications.RecipientNotFound`. |
+| `DriveSpacesController.cs` | `api/drive/spaces` | `DRIVE_USE`; quota override `DRIVE_MANAGE` | Module 11 Drive spaces: overview (personal + shared), ensure-personal, create shared, get, rename, and set a per-space quota override. |
+| `DriveItemsController.cs` | `api/drive/items` | `DRIVE_USE` + per-item access in the handlers | Module 11 Drive tree: paged/searchable/filterable browse, get, breadcrumb, children, create folder, rename, move, star/unstar. |
+| `DriveFilesController.cs` | `api/drive/files` | `DRIVE_USE` + per-item access in the handlers | Module 11 Drive binaries: presigned direct upload (initiate/complete/abandon), streaming content with HTTP Range (206), presigned download URL, version list, per-version content, and copy-restore of an old version. |
+| `DrivePermissionsController.cs` | `api/drive/items/{id}/permissions` (+ `effective`, `inheritance`) | `DRIVE_USE`; Manager Drive role in the handlers | Module 11 Drive grants: list, grant/update a user or department role, revoke, the caller's effective role, and break/restore inheritance. |
+| `DriveDeletionController.cs` | `api/drive` (`items/{id}/deletion-requests`, `deletion-requests`, `items/{id}`) | `DRIVE_USE` + review authority in the handlers | Module 11 approval-gated deletion: request, list, approve/reject (owner's department head or ADMIN), cancel (requester), and direct delete where privileged. |
+| `DriveTrashController.cs` | `api/drive/trash` | `DRIVE_USE` + restore/purge authority in the handlers | Module 11 30-day trash: list reachable trashed items, restore, and permanent purge (releases quota, deletes objects). |
+| `DriveSettingsController.cs` | `api/drive/settings` | `DRIVE_MANAGE` | Module 11 institution-wide Drive defaults: read and update the default quota, max file size, and allowed-extension allow-list. |
+| `DriveOnlyOfficeController.cs` | `api/drive` (`files/{id}/edit-config`, `onlyoffice/callback`) | `DRIVE_USE` for edit-config; `[AllowAnonymous]` + JWT verification for the callback | Module 11 OnlyOffice editing: the signed editor config (edit/view by role) and the save callback (always HTTP 200 with `error=0/1`; save → new version, conflict rejection, dedup). |
 
 ## Lookups endpoints
 
@@ -117,6 +125,34 @@ The SignalR hub `/hubs/notifications` (see `Hubs/`) pushes `notificationReceived
 | `POST` | `/api/audit-logs/integrity-checks` | `AUDIT_MANAGE` | Verify a range (default whole chain) and persist the report; a broken chain returns 200 with `isValid = false`. |
 | `GET` | `/api/audit-logs/integrity-checks` | `AUDIT_VIEW` | Paged list of persisted reports, newest first. |
 
+## Drive endpoints (Module 11)
+
+Drive is independent of document archiving (Module 07). Every route is guarded by `DRIVE_USE`
+(settings and the per-space quota override by `DRIVE_MANAGE`); the Viewer/Editor/Manager Drive role
+and the approval/review authority are enforced inside the handlers via the recursive access evaluator.
+
+| Group | Routes |
+| --- | --- |
+| Spaces | `GET/POST /api/drive/spaces`, `POST /api/drive/spaces/personal`, `GET/PUT /api/drive/spaces/{id}`, `PUT /api/drive/spaces/{id}/quota` (`DRIVE_MANAGE`) |
+| Browse / items | `GET /api/drive/items?spaceId&parentId&search&kind&ownerUserId&trashed&starred&modifiedFrom&modifiedTo&sortBy&sortDescending&page&pageSize`, `GET /api/drive/items/{id}`, `GET .../breadcrumb`, `GET /api/drive/items/children?spaceId&parentId`, `POST /api/drive/items/folders`, `PUT .../rename`, `PUT .../move`, `POST/DELETE .../star` |
+| Upload | `POST /api/drive/files/initiate`, `POST /api/drive/files/{versionId}/complete`, `DELETE /api/drive/files/{versionId}/abandon` |
+| Download / preview | `GET /api/drive/files/{itemId}/content?versionId&disposition` (HTTP Range → 206 + `Content-Range`), `GET .../download-url` (short-lived presigned) |
+| Versions | `GET /api/drive/files/{itemId}/versions`, `GET .../versions/{versionId}/content`, `POST .../versions/{versionId}/restore` |
+| Permissions | `GET/POST /api/drive/items/{id}/permissions`, `DELETE .../permissions/{permissionId}`, `GET .../effective`, `PUT .../inheritance` |
+| Deletion | `POST /api/drive/items/{id}/deletion-requests`, `GET /api/drive/deletion-requests?statusId&mineOnly`, `POST /api/drive/deletion-requests/{reqId}/approve\|reject\|cancel`, `DELETE /api/drive/items/{id}` (direct where privileged) |
+| Trash | `GET /api/drive/trash`, `POST /api/drive/trash/{itemId}/restore`, `DELETE /api/drive/trash/{itemId}` (permanent) |
+| Settings | `GET/PUT /api/drive/settings` (`DRIVE_MANAGE`) |
+| Editing (OnlyOffice) | `GET /api/drive/files/{itemId}/edit-config` (signed editor config), `POST /api/drive/onlyoffice/callback` (`[AllowAnonymous]`, JWT-verified; always HTTP 200 `{error:0\|1}`) |
+
+The content endpoints handle the `Range` header manually (parse `bytes`, pass the bounds to the query,
+return 206 with `Content-Range` and `Accept-Ranges: bytes`) rather than relying on stream seekability;
+`disposition=attachment` forces a download. The OnlyOffice callback has no ambient user session — it is
+authenticated by the HS256 callback token in the handler, and per the OnlyOffice protocol it always
+answers HTTP 200 with `error=0` (acknowledged) or `error=1` (rejected). Editing needs `Drive:OnlyOffice`
+(server URL, callback base URL, JWT secret); without it edit-config answers 500
+`Drive.OnlyOfficeNotConfigured`. Upload/download/restore/editing need SeaweedFS (`Drive:Storage`);
+without keys they answer 500 `Drive.StorageNotConfigured`.
+
 ## Paged list endpoints
 
 `GET /api/documents`, `/api/users`, `/api/employees`, `/api/external-organizations`, and
@@ -153,6 +189,8 @@ plain JSON array.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-19 | Qoder | Added `DriveOnlyOfficeController` (plan `plans/module-11-drive-backend.md` Phase 4): `GET /api/drive/files/{itemId}/edit-config` (`DRIVE_USE`, signed editor config) and `POST /api/drive/onlyoffice/callback` (`[AllowAnonymous]`, HS256 JWT verified in the handler; always HTTP 200 with `error=0/1`). Added the `DriveOnlyOfficeCallbackRequest` contract. Controller count is now forty. |
+| 2026-11-19 | Qoder | Added the seven Module 11 Drive controllers (`DriveSpacesController`, `DriveItemsController`, `DriveFilesController`, `DrivePermissionsController`, `DriveDeletionController`, `DriveTrashController`, `DriveSettingsController`) for plan `plans/module-11-drive-backend.md` Phase 3, with the `Contracts/Drive` request records. `DRIVE_USE` guards the surface; `DRIVE_MANAGE` guards settings and the quota override; Drive roles and review authority stay in the handlers. The file content endpoints serve HTTP Range manually (206 + `Content-Range`). Live-verified on the dev API (port 5028): all metadata routes 200, auth gate 401, validation 400; file binaries await SeaweedFS keys. OnlyOffice routes deferred to Phase 4. |
 | 2026-11-17 | Qoder | Added `UiLabelsController` (`GET/PUT/DELETE /api/ui-labels`, plan `plans/ui-labels-edit-mode.md` Phase 0). Writes require the `UI_LABELS_MANAGE` policy — the `SUPER_ADMIN` role **and** the `superadmin` account name, so the right cannot be delegated through role management. |
 | 2026-11-12 | Claude | Added `BrandingController` (anonymous `GET /api/branding` and `GET /api/branding/logo`) and the `PUT`/`DELETE /api/institution-settings/logo` endpoints. |
 | 2026-11-11 | Claude | `DepartmentRegistersController`: added `GET .../register/entries` and `GET .../register/forms` (`NUMBERING_VIEW`). |

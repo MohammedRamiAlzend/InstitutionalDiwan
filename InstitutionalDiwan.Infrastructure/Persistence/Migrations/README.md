@@ -2,7 +2,7 @@
 
 > **Status:** Implemented — the consolidated `InitialCreate` migration holds the full SQL Server
 > schema for the .NET 11 target, followed by incremental migrations (currently
-> `AddUiLabelOverrides`). Startup applies them in Development through
+> `AddUiLabelOverrides` and `Add_Drive_Module`). Startup applies them in Development through
 > `Server/Extensions/DatabaseExtensions.cs` (`Database.MigrateAsync`).
 
 ## Purpose
@@ -17,6 +17,7 @@ fresh database is created by applying exactly one migration.
 | --- | --- |
 | `20261115073415_InitialCreate` | Creates the full schema: 84 tables, `UX_*`/`IX_*` indexes, foreign keys and constraints, as declared by the entity configurations in `Configurations/`. |
 | `20261117093850_AddUiLabelOverrides` | Creates `UI_LABEL_OVERRIDES` (LabelId PK, unique `UX_UI_LABEL_OVERRIDES_KEY` on `Key`, Value ≤ 200, UpdatedAt, UpdatedByUserId) for the editable UI terminology (plan `plans/ui-labels-edit-mode.md`). |
+| `20261119091628_Add_Drive_Module` | Creates the seven Module 11 Drive tables (`DRIVE_SPACES`, `DRIVE_ITEMS`, `DRIVE_FILE_VERSIONS`, `DRIVE_PERMISSIONS`, `DRIVE_DELETION_REQUESTS`, `DRIVE_EDIT_SESSIONS`, `DRIVE_STARS`) with row-version concurrency, filtered unique indexes, and FK cascade/restrict choices; adds `DriveDefaultQuotaBytes`/`DriveMaxFileSizeBytes`/`DriveAllowedExtensionsCsv` to `INSTITUTION_SETTINGS` (plan `plans/module-11-drive-backend.md`). |
 
 > Existing databases that predate the squash have an `__EFMigrationsHistory` that no longer
 > matches the code. Drop them (or the history) before the next startup, otherwise
@@ -55,5 +56,6 @@ empty migration when the model changed.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-19 | Qoder | Drive Phase 1 (`plans/module-11-drive-backend.md`): added `Add_Drive_Module` — the seven Drive tables (row-version concurrency, filtered unique indexes, cycle-safe FK cascade/restrict) plus the three Drive settings columns on `INSTITUTION_SETTINGS`. Generated with the local `dotnet-ef` 11.0.0 tool. |
 | 2026-11-17 | Qoder | Added `AddUiLabelOverrides` (the `UI_LABEL_OVERRIDES` table with a unique key index) — the first incremental migration after the squash. |
 | 2026-11-15 | Qoder | Squashed the incremental migration history into a single consolidated `InitialCreate` (84 tables) regenerated with the local `dotnet-ef` 11.0.0 tool; existing development databases must be dropped or recreated. |

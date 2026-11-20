@@ -25,7 +25,8 @@ All code uses the `InstitutionalDiwan.*` namespaces — the legacy `NewDiwan.*` 
 | [`Context/`](Context/README.md) | Ambient request metadata (`IRequestContext`) | ✅ `HttpRequestContext` implemented |
 | [`Authorization/`](Authorization/README.md) | Permission-based RBAC + organizational scope and document-access evaluators | ✅ `DepartmentScopeEvaluator` + `DocumentAccessEvaluator` implemented |
 | [`Exports/`](Exports/README.md) | Excel files of displayed tables | ✅ `TableExcelWriter` implemented |
-| [`Storage/`](Storage/README.md) | Local binary file storage, streamed SHA-256, and magic-byte validation | ✅ `LocalFileStorageService` + `FileSignatureValidator` (S3/MinIO still planned) |
+| [`Storage/`](Storage/README.md) | Local binary file storage, streamed SHA-256, magic-byte validation, and Module 11 S3 object storage | ✅ `LocalFileStorageService` + `FileSignatureValidator` + `S3DriveStorageService` (SeaweedFS) + `DrivePurgeService` |
+| [`OnlyOffice/`](OnlyOffice/README.md) | Module 11 in-site editing: HS256 editor-config/callback tokens + save-callback downloader | ✅ `OnlyOfficeTokenService` + `DriveCallbackDownloader` + `DriveOnlyOfficeOptions` (needs `Drive:OnlyOffice` config to run live) |
 | [`Outbox/`](Outbox/README.md) | Transactional outbox processor and domain-event dispatcher | ❌ Empty |
 | [`BackgroundJobs/`](BackgroundJobs/README.md) | Scheduled integrity checks, audit checkpoints, SLA escalations | 🟡 `AuditChainIntegrityVerificationJob` + `DailyAuditCheckpointJob` implemented; outbox/SLA jobs pending |
 | [`Time/`](Time/README.md) | System clock implementation | ✅ `DateTimeProvider` (UTC storage + `Asia/Damascus` conversion) |
@@ -94,6 +95,8 @@ Persistence/Configurations/
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-19 | Qoder | Drive Phase 4 (`plans/module-11-drive-backend.md`): added the `OnlyOffice/` folder — `DriveOnlyOfficeOptions` (`Drive:OnlyOffice`, implements `IDriveOnlyOfficeSettings`), `OnlyOfficeTokenService` (HS256 sign/verify), `DriveCallbackDownloader` — registered in DI; added `S3DriveStorageService.WriteAsync` for the server-side save. Deployment doc in [`OnlyOffice/README.md`](OnlyOffice/README.md). |
+| 2026-11-19 | Qoder | Drive Phase 1 (`plans/module-11-drive-backend.md`): registered `S3DriveStorageService` (singleton, `Drive:Storage`), the seven Drive repositories + `DriveAccessEvaluator` (scoped), and `DriveMaintenanceJob` (hosted, `Drive:Jobs`) in `DependencyInjection.cs`; added the `AWSSDK.S3` 4.1.2 package; added the seven Drive `DbSet`s and `DriveConfigurations.cs`. |
 | 2026-11-17 | Qoder | UI labels (plan `plans/ui-labels-edit-mode.md`, Phase 0): `UiLabelOverrideConfiguration` (`UI_LABEL_OVERRIDES`, unique key index), `UiLabelOverrideRepository` + DI registration, `UiLabelOverrides` DbSet, `AddUiLabelOverrides` migration, audit mapping (`ORGANIZATION` / entity type 19) and its `AuditEntityTypeSeeder` row. |
 | 2026-11-15 | Qoder | Squashed the entire migration history into a single consolidated `InitialCreate` (84 tables, SQL Server) regenerated with the local `dotnet-ef` 11.0.0 tool; existing development databases must be dropped or recreated. |
 | 2026-11-13 | Claude | Targets `net11.0` with EF Core 11.0.0. Dropped the `Microsoft.Extensions.Options.ConfigurationExtensions` and `System.Security.Cryptography.Pkcs` references, which .NET 11 already provides (NU1510). |

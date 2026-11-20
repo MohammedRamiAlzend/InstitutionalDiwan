@@ -84,6 +84,7 @@ scoped-interceptor lifetime issues with `AddDbContext`.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-19 | Qoder | Drive Phase 1 (`plans/module-11-drive-backend.md`): mapped the seven Drive domain events (space created, item trashed/restored, version committed, deletion requested/approved/rejected) to `DRIVE` audit rows with the right actor, and added the five Drive entity types (20–24) to the generic snapshot map. `DriveStar`/`DriveEditSession` are action-level audit only. |
 | 2026-11-17 | Qoder | Maps `UiLabelOverride` onto `ORGANIZATION` / audit entity type 19, so every UI label replacement/reset is chained like other entity writes. |
 | 2026-11-11 | Claude | Maps `DecisionAppeal` and `DecisionAppealed` onto audit entity type 18. Recording an appeal does not publish a notification. |
 | 2026-11-11 | Claude | Maps `DocumentDecision` and `DecisionType`, and the `DecisionIssued` / `DecisionRevoked` events, onto audit entity types 16 and 17. |

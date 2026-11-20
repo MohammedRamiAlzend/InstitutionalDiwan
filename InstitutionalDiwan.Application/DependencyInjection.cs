@@ -33,6 +33,8 @@ public static class DependencyInjection
         services.AddScoped<Features.Persons.DocumentPersonEditGuard>();
         services.AddScoped<Features.Correspondence.DocumentFields.IDocumentFieldOptionResolver, Features.Correspondence.DocumentFields.DocumentFieldOptionResolver>();
         services.AddScoped<Abstractions.Notifications.INotificationPublisher, Features.Notifications.NotificationPublisher>();
+        services.AddScoped<Abstractions.Notifications.IDriveNotificationPublisher, Features.Drive.DriveNotificationPublisher>();
+        services.AddScoped<Features.Drive.DriveUploadGuard>();
 
         // Action-level audit writes use an isolated scope, so this recorder is stateless.
         services.AddSingleton<Abstractions.Audit.IAuditActionRecorder, Features.Audit.AuditActionRecorder>();

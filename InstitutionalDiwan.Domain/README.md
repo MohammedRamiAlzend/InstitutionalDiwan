@@ -5,7 +5,7 @@
 ## Purpose
 
 The Domain layer is the heart of the InstitutionalDiwan system. It encapsulates all business
-invariants across the 10 modules using Domain-Driven Design (DDD) and the Result pattern, with
+invariants across the 11 modules using Domain-Driven Design (DDD) and the Result pattern, with
 **zero external NuGet package dependencies** (no EF Core, no DataAnnotations schema attributes).
 Everything here is plain C# so the domain can be unit-tested without a database or web host.
 
@@ -32,7 +32,7 @@ ValueObjects/  Immutable value objects (DepartmentCode, DocumentTitle, OfficialN
 Errors/        Strongly-typed DomainErrors catalog organized by module
 Events/        All immutable IDomainEvent records raised by aggregate roots
 Repositories/  Pure repository contracts consumed by the Application layer
-Entities/      All encapsulated domain entities grouped across the 10 module folders
+Entities/      All encapsulated domain entities grouped across the 11 module folders
 GlobalUsing.cs Global usings for entities, common, and errors
 ```
 
@@ -68,8 +68,10 @@ GlobalUsing.cs Global usings for entities, common, and errors
 
 A single static catalog nested by module (`DomainErrors.Department`, `.Identity`, `.Correspondence`,
 `.Numbering`, `.Movements`, `.Attachments`, `.Relations`, `.Archiving`, `.Audit`, `.Notifications`,
-`.InstitutionSetting`, `.Lookup`, `.DocumentFields`, `.Decisions`, `.UiLabel`). Each entry is a strongly-typed `Error` with a stable code such as
+`.InstitutionSetting`, `.Lookup`, `.DocumentFields`, `.Decisions`, `.UiLabel`, `.Drive`). Each entry is a strongly-typed `Error` with a stable code such as
 `Correspondence.OnlyDraftEditable` so the API can produce deterministic ProblemDetails.
+
+The `.Drive` group covers Module 11 (plan `plans/module-11-drive-backend.md`): space errors (`SpaceNotFound`, `SpaceNameEmpty`/`TooLong`, `SpaceTypeInvalid`, `PersonalSpaceAlreadyExists`, `QuotaInvalid`/`QuotaBelowUsage`/`QuotaExceeded`, `UsageInvalid`, `SpaceTrashed`/`AlreadyTrashed`/`NotTrashed`, `CannotTrashRoot`), item errors (`ItemNotFound`, `ItemNameEmpty`/`TooLong`/`Invalid`, `NameTaken`, `DepthLimitReached`, `CycleDetected`, `ItemTrashed`/`AlreadyTrashed`/`NotTrashed`, `NotAFile`/`NotAFolder`, `AccessDenied`, `DeletionPending`, `InheritanceBroken`), version/upload errors (`VersionNotFound`, `VersionNumberInvalid`, `ObjectKeyEmpty`, `ProviderInvalid`, `VersionSizeInvalid`, `ChecksumInvalid`, `VersionNotPending`, `VersionConflict`, `FileTooLarge`, `ExtensionNotAllowed`, `SignatureMismatch`, `DeclaredSizeMismatch`, `StorageObjectMissing`), permission errors (`PermissionNotFound`, `PrincipalTypeInvalid`, `PrincipalIdEmpty`, `RoleInvalid`, `PermissionExists`), deletion-request errors (`RequestNotFound`, `RequestReasonEmpty`/`TooLong`, `RequestAlreadyReviewed`, `OnlyRequesterCanCancel`, `ReviewNoteTooLong`), and edit-session errors (`SessionNotFound`, `DocumentKeyEmpty`/`TooLong`, `SessionNotOpen`, `EditSessionExpired`). Phase 1 added settings/storage errors (`MaxFileSizeInvalid`, `ExtensionsEmpty`, `StorageNotConfigured`).
 
 The `.Archiving` group covers Module 07: `SearchNotFound` (NotFound), `SearchNameTaken` / `SearchLimitReached` (Conflict), and the validation errors `EventTypeInvalid`, `LocationNotFound`, `UnarchiveReasonEmpty`, `ReasonTooLong`, `SearchNameEmpty`, `SearchNameTooLong`, `CriteriaJsonEmpty`, and `CriteriaInvalid`. `Correspondence.OnlyRegisteredArchivable` and `Correspondence.DocumentArchived` (both Conflict) guard the document itself: only a `REGISTERED` document can be archived, and an archived document rejects changes until it is unarchived.
 
@@ -113,7 +115,7 @@ deterministically.
 
 ### `Events/DomainEvents.cs`
 
-37 immutable `record` domain events (the older notes claimed 22, which is out of date). Grouped by module:
+44 immutable `record` domain events (the older notes claimed 22, which is out of date). Grouped by module:
 
 | Module | Events |
 | --- | --- |
@@ -125,6 +127,7 @@ deterministically.
 | Attachments (3) | `DocumentFileCreated`, `DocumentFileVersionUploaded`, `DocumentFileArchived` |
 | Relations (2) | `DocumentRelationCreated`, `DocumentRelationRemoved` |
 | Notifications (2) | `NotificationCreated`, `NotificationRead` |
+| Drive (7) | `DriveSpaceCreated`, `DriveItemTrashed`, `DriveItemRestored`, `DriveFileVersionCommitted`, `DriveDeletionRequested`, `DriveDeletionApproved`, `DriveDeletionRejected` |
 
 ### `Repositories/IDomainRepositories.cs`
 
@@ -143,6 +146,13 @@ list cannot be read without the `VIEW` rule.
 kebab-case slug (`IsSupported`, `ListAsync`, `GetByIdAsync`, `AddAsync`, `RelabelAsync`,
 `SetActiveStateAsync`, `IsInUseAsync`) so the lookups API needs no per-table repository.
 
+`Repositories/IDriveRepositories.cs` carries the seven Module 11 contracts (`IDriveSpaceRepository`,
+`IDriveItemRepository`, `IDriveFileVersionRepository`, `IDrivePermissionRepository`,
+`IDriveDeletionRequestRepository`, `IDriveEditSessionRepository`, `IDriveStarRepository`) plus the
+`DriveItemFilter` record. `IDriveItemRepository.ListPagedAsync` takes the caller's id and department
+ids so access filtering happens inside the query (like `DocumentViewAccess`), and exposes
+`GetAncestorIdsAsync`/`GetDepthAsync` for cycle/depth checks and the inheritance walk.
+
 `IDocumentMovementRepository` carries the routing reads: `GetByIdAsync` (with steps and events),
 `HasActiveMovementsAsync`, `GetActiveByDocumentIdAsync` (the document currently held by a
 non-terminal movement, used for movement participation), `ListByDocumentAsync` (a document's routing
@@ -158,7 +168,7 @@ provider for Module 06.
 and integrity checks, and `SearchAsync` applies the audit filters and paging. Checkpoints and
 integrity reports have their own add/list/latest methods; no update or delete is exposed.
 
-### `Entities/` — the 10 modules (45 entities)
+### `Entities/` — the 11 modules
 
 | # | Module | Entities | Notable aggregate roots |
 | --- | --- | --- | --- |
@@ -172,6 +182,7 @@ integrity reports have their own add/list/latest methods; no update or delete is
 | 08 | Relations | `DocumentRelation`, `DocumentRelationType`, `DocumentRelationEvent` | `DocumentRelation` |
 | 09 | Audit & Integrity | `AuditLog`, `AuditCheckpoint`, `AuditIntegrityCheck` | (`AuditLog` is an `Entity<long>`) |
 | 10 | Notifications & Outbox | `Notification`, `NotificationRecipient`, `NotificationOutbox`, `NotificationType` | `Notification` |
+| 11 | Drive (files) | `DriveSpace`, `DriveItem`, `DriveFileVersion`, `DrivePermission`, `DriveDeletionRequest`, `DriveEditSession`, `DriveStar` (`Entities/Drive/`) | `DriveSpace`, `DriveItem`, `DriveDeletionRequest` |
 | — | UI customization | `UiLabelOverride` (`Entities/Ui/`) — superadmin replacements for built-in UI labels; only overridden keys are stored | `UiLabelOverride` |
 
 #### Selected invariants already encoded
@@ -343,9 +354,9 @@ them, while listing, relabelling and (de)activation keep working.
 | `Common/` | ✅ Implemented (`Result`, `Error`, `Entity`, `AggregateRoot`, `ValueObject`, `IDomainEvent`, `DomainException`, `IClock`, `IUnitOfWork`, `PageRequest`, `PagedList<T>`) |
 | `ValueObjects/` | ✅ Implemented (4 value objects) |
 | `Errors/` | Implemented (`DomainErrors` catalog, including `Department.CentralDiwanProtected`, `Identity.RoleInactive`, and `Identity.PasswordChangeRequired`) |
-| `Events/` | ✅ Implemented (36 events) |
-| `Repositories/` | ✅ Implemented (21 interfaces) |
-| `Entities/` | ✅ Implemented (69 entities across the module folders, including reference/lookup tables, `Entities/Decisions/`, and `Entities/Ui/`) |
+| `Events/` | ✅ Implemented (44 events) |
+| `Repositories/` | ✅ Implemented (per-module contracts, including `IDriveRepositories.cs` with 7 Drive interfaces) |
+| `Entities/` | ✅ Implemented (76 entities across the module folders, including reference/lookup tables, `Entities/Decisions/`, `Entities/Ui/`, and `Entities/Drive/`) |
 
 ### Known issues / TODO
 
@@ -362,6 +373,8 @@ them, while listing, relabelling and (de)activation keep working.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-19 | Qoder | Drive Phase 1 (`plans/module-11-drive-backend.md`): `InstitutionSetting` gained `DriveDefaultQuotaBytes`/`DriveMaxFileSizeBytes`/`DriveAllowedExtensionsCsv` (5 GB / 200 MB defaults) + `UpdateDriveSettings`; `AuditEntityType` 20–24 (Drive space/item/version/permission/deletion-request), `NotificationType` 13–17 (Drive deletion + permission + edit-save), `FileStorageProvider.DriveSeaweedFsId = 2`, and `DomainErrors.Drive.MaxFileSizeInvalid`/`ExtensionsEmpty`/`StorageNotConfigured`. |
+| 2026-11-19 | Qoder | Drive Phase 0 (plan `plans/module-11-drive-backend.md`): added `Entities/Drive/` (7 entities + structural constants), `DomainErrors.Drive`, 7 Drive domain events, `Repositories/IDriveRepositories.cs`, the `Entities.Drive` global using, and permissions `DRIVE_USE`/`DRIVE_MANAGE` (25 codes). |
 | 2026-11-17 | Qoder | UI labels (plan `plans/ui-labels-edit-mode.md`, Phase 0): added `Entities/Ui/UiLabelOverride` (key/value replacement for a built-in UI label, key normalization + 150/200 length limits), `DomainErrors.UiLabel`, `IUiLabelOverrideRepository`, and `AuditEntityType.UiLabelOverrideId` (19). |
 | 2026-11-15 | Qoder | Security (M1): `User.Create` gained an `isActive` parameter (default `true`) so self-registration can create accounts that are inactive until an administrator activates them. |
 | 2026-11-15 | Qoder | Security: `User` gained `UpgradePasswordHash` — a silent work-factor upgrade after login that replaces only the hash (no `UpdatedAt`/`MustChangePassword` side effects, so other live sessions stay valid). |

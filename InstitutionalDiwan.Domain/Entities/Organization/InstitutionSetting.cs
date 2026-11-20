@@ -28,7 +28,22 @@ public sealed class InstitutionSetting : AggregateRoot<Guid>
     public bool OtherDiwansMayCreateDocuments { get; private set; } = true;
     // FK → Employee.EmployeeId (InstitutionalDiwan.Domain.Entities.Identity.Employee)
     public Guid? ResponsibleEmployeeId { get; private set; }
+
+    /// <summary>Default Drive quota per space when the space has no override (Module 11).</summary>
+    public long DriveDefaultQuotaBytes { get; private set; } = DefaultDriveQuotaBytes;
+
+    /// <summary>Largest single Drive file accepted at upload initiation (Module 11).</summary>
+    public long DriveMaxFileSizeBytes { get; private set; } = DefaultDriveMaxFileSizeBytes;
+
+    /// <summary>Comma-separated extensions Drive accepts; adjustable with DRIVE_MANAGE (Module 11).</summary>
+    public string DriveAllowedExtensionsCsv { get; private set; } = DefaultDriveAllowedExtensionsCsv;
+
     public DateTime UpdatedAt { get; private set; }
+
+    public const long DefaultDriveQuotaBytes = 5L * 1024 * 1024 * 1024;
+    public const long DefaultDriveMaxFileSizeBytes = 200L * 1024 * 1024;
+    public const string DefaultDriveAllowedExtensionsCsv =
+        ".doc,.docx,.xls,.xlsx,.ppt,.pptx,.pdf,.txt,.md,.csv,.jpg,.jpeg,.png,.gif,.webp,.svg,.mp4,.webm,.mkv,.mov,.mp3,.wav,.zip,.7z,.rar";
 
     private InstitutionSetting()
     {
@@ -175,6 +190,29 @@ public sealed class InstitutionSetting : AggregateRoot<Guid>
 
         NumberingModeId = numberingModeId;
         NumberingResetPolicyId = numberingResetPolicyId;
+        UpdatedAt = utcNow ?? DateTime.UtcNow;
+        return Result.Success();
+    }
+
+    /// <summary>Adjusts the institution-wide Drive defaults (Module 11); callers gate this with DRIVE_MANAGE.</summary>
+    public Result UpdateDriveSettings(
+        long defaultQuotaBytes,
+        long maxFileSizeBytes,
+        string? allowedExtensionsCsv,
+        DateTime? utcNow = null)
+    {
+        if (defaultQuotaBytes <= 0)
+            return Result.Failure(DomainErrors.Drive.QuotaInvalid);
+        if (maxFileSizeBytes <= 0 || maxFileSizeBytes > defaultQuotaBytes)
+            return Result.Failure(DomainErrors.Drive.MaxFileSizeInvalid);
+
+        var extensions = allowedExtensionsCsv?.Trim();
+        if (string.IsNullOrWhiteSpace(extensions))
+            return Result.Failure(DomainErrors.Drive.ExtensionsEmpty);
+
+        DriveDefaultQuotaBytes = defaultQuotaBytes;
+        DriveMaxFileSizeBytes = maxFileSizeBytes;
+        DriveAllowedExtensionsCsv = extensions;
         UpdatedAt = utcNow ?? DateTime.UtcNow;
         return Result.Success();
     }

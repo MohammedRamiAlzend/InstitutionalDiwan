@@ -35,8 +35,8 @@ public sealed class RoleSeederTests
             .Select(rp => rp.PermissionCode)
             .ToListAsync();
 
-        Assert.Equal(22, adminGrants.Count);
-        Assert.Equal(3, userGrants.Count);
+        Assert.Equal(24, adminGrants.Count);
+        Assert.Equal(4, userGrants.Count);
         Assert.Contains("USER_MANAGE", adminGrants);
         Assert.Contains("EMPLOYEE_MANAGE", adminGrants);
         Assert.Contains("ACCESS_GRANT_MANAGE", adminGrants);
@@ -44,8 +44,11 @@ public sealed class RoleSeederTests
         Assert.Contains("NUMBERING_VIEW", adminGrants);
         Assert.Contains("NUMBERING_MANAGE", adminGrants);
         Assert.Contains("LOOKUP_MANAGE", adminGrants);
+        Assert.Contains("DRIVE_USE", adminGrants);
+        Assert.Contains("DRIVE_MANAGE", adminGrants);
         Assert.DoesNotContain("USER_MANAGE", userGrants);
-        Assert.Equal(userGrants.OrderBy(c => c), new[] { "DOCUMENT_CREATE", "DOCUMENT_EDIT", "DOCUMENT_VIEW" }.OrderBy(c => c));
+        Assert.DoesNotContain("DRIVE_MANAGE", userGrants);
+        Assert.Equal(userGrants.OrderBy(c => c), new[] { "DOCUMENT_CREATE", "DOCUMENT_EDIT", "DOCUMENT_VIEW", "DRIVE_USE" }.OrderBy(c => c));
     }
 
     [Fact]
@@ -60,7 +63,7 @@ public sealed class RoleSeederTests
         await seeder.SeedAsync(Context(db));
 
         Assert.Equal(2, await db.Roles.CountAsync());
-        Assert.Equal(25, await db.RolePermissions.CountAsync());
+        Assert.Equal(28, await db.RolePermissions.CountAsync());
         Assert.Equal(adminIdAfterFirstRun, (await db.Roles.SingleAsync(r => r.Code == "ADMIN")).RoleId);
     }
 
@@ -76,7 +79,7 @@ public sealed class RoleSeederTests
         await new RoleSeeder().SeedAsync(Context(db));
 
         var admin = await db.Roles.SingleAsync(r => r.Code == "ADMIN");
-        Assert.Equal(22, await db.RolePermissions.CountAsync(rp => rp.RoleId == admin.RoleId));
+        Assert.Equal(24, await db.RolePermissions.CountAsync(rp => rp.RoleId == admin.RoleId));
         Assert.Equal(2, await db.Roles.CountAsync());
     }
 }

@@ -90,6 +90,7 @@ the exception, record the failure, and rethrow.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-19 | Qoder | Drive Phase 1 (`plans/module-11-drive-backend.md`): `AuditActionMiddleware` resolves the `DriveSpaces`/`DriveItems`/`DriveFiles`/`DriveTrash`/`DriveDeletionRequests`/`DriveSettings`/`DriveOnlyOffice` controllers to module `DRIVE`, and recognizes the Drive action prefixes (Initiate/Star/Request → Create, Unstar/Purge → Delete, Browse/Preview/Breadcrumb/Effective → View, Rename/Restore/Abandon/Break/Touch → Update). |
 | 2026-11-15 | Qoder | Security: added `SecurityHeadersMiddleware` — `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer` on every response, HSTS outside Development, and `Cache-Control: no-store` on the authentication endpoints; the Kestrel `Server` header is now suppressed. |
 | 2026-11-08 | Claude | Added `SystemErrorCapture`; `GlobalExceptionHandlingMiddleware` feeds it with exceptions and refused API requests. |
 | 2026-11-03 | Claude | `AuditActionMiddleware` skips actions marked `[SkipActionAudit]`; used by `GET /api/notifications/unread-count`, which the bell polls. |

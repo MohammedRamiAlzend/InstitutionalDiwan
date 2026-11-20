@@ -51,6 +51,9 @@ Concrete EF Core implementations of the repository interfaces declared in
 | `AuditLogRepository.cs` | **Append-only** audit access: `GetLatestAsync` for the next hash link, `GetByIdAsync` for range anchoring, `ListRangeAsync` for ordered chain walks, `SearchAsync` for filtered paging, and `AddCheckpoint`/`AddIntegrityCheck` plus their latest/listing queries. No update or delete path exists. |
 | `NotificationRepository.cs` | Module 10 inbox and outbox access: paged own-inbox with type and unread filters, unread count, an owner-only recipient lookup, a set-based mark-all-read, recipients and due outbox rows for the job, and the retention purges. |
 | `NotificationRecipientDirectory.cs` | Who may be notified: active users of a department (primary department or current assignment) and the SECRET/TOP_SECRET filter (creator or valid grant only). |
+| `DriveRepositories.cs` | Module 11: the seven Drive repositories in one file — spaces (personal/shared listing), items (access-filtered paged browse, children, name-uniqueness, ancestor/depth via CTE, trash expiry), file versions (next number, pending-expiry), permissions (principal grants), deletion requests (paged by status), edit sessions (open-by-item/key, idle), and stars. |
+| `DriveTreeQuery.cs` | Recursive-CTE helpers over `DRIVE_ITEMS`: `GetAncestorIdsAsync` (parent→root) and `GetMaxDepthAsync` (deepest level). Chooses the `RECURSIVE` keyword per provider (SQLite wants it, SQL Server does not); the domain's 30-level cap stays under SQL Server's default MAXRECURSION. |
+| `DriveItemAccessQuery.cs` | `WhereAccessibleBy`, the Drive effective-access rule as a composable SQL filter mirroring `DriveAccessEvaluator`: ADMIN/space-owner bypass, grant reachability up a bounded join chain (one level per actual tree depth) that stops counting grants above a broken-inheritance node, and trashed-subtree exclusion for live browse. Translates on SQL Server and SQLite; persistence tests hold it equal to the evaluator. |
 
 ## Planned repositories not yet implemented
 
@@ -100,6 +103,8 @@ Concrete EF Core implementations of the repository interfaces declared in
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-19 | Qoder | Drive Phase 2: `DriveDeletionRequestRepository.ListPagedAsync` gained an optional `reviewerUserId` filter — a SQL join chain (item → active owner → active department head) restricts a head's inbox to the requests they may review, mirroring `GetDeletionApproverAsync`; ADMIN passes null to see all. |
+| 2026-11-19 | Qoder | Drive Phase 1 (`plans/module-11-drive-backend.md`): added `DriveRepositories.cs` (7 repositories), `DriveTreeQuery.cs` (provider-aware recursive CTEs for ancestors/max-depth), and `DriveItemAccessQuery.cs` (`WhereAccessibleBy` — the SQL mirror of `DriveAccessEvaluator` using a bounded join chain). All registered in DI; covered by `DriveRepositoryTests` and `DriveAccessEvaluatorTests` (evaluator↔query parity). |
 | 2026-11-17 | Qoder | Added `UiLabelOverrideRepository` (list/by-key/add/remove over `UI_LABEL_OVERRIDES`) for the editable UI terminology, Phase 0. |
 | 2026-11-13 | Claude | `DocumentRelationRepository` takes its relation-type lock with `ExecuteSqlAsync`; EF Core 11 makes `ExecuteSqlInterpolatedAsync` obsolete. The SQL and its parameters are unchanged. |
 | 2026-11-12 | Claude | `InstitutionSettingRepository` gained `GetLogoAsync`, `AddLogo` and `RemoveLogo`. |

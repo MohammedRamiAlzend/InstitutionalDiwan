@@ -1,7 +1,8 @@
 # Infrastructure / BackgroundJobs
 
-> **Status:** Partially implemented — the two Module 09 audit jobs are live; the delegation
-> cleanup and movement escalation jobs remain target design.
+> **Status:** Partially implemented — the two Module 09 audit jobs, the two Module 10 notification
+> jobs, and the Module 11 Drive maintenance job are live; the delegation cleanup and movement
+> escalation jobs remain target design.
 
 ## Purpose
 
@@ -32,6 +33,14 @@ Polls `NOTIFICATION_OUTBOX` for pending or failed rows that are due, fans an IN_
 Daily: deletes read or dismissed inbox rows older than `RecipientRetentionDays` (90), the notifications left empty, and `SENT` outbox rows older than `SentOutboxRetentionDays` (30). Unread rows and dead letters are never touched.
 
 `NotificationJobsOptions` (section `NotificationJobs`) holds `Enabled`, `StartupDelaySeconds`, `OutboxPollSeconds`, `OutboxBatchSize`, `MaxRetries`, `RetryBaseSeconds`, `RetentionIntervalHours` and the two retention periods. The notification jobs run on one instance only (see the SignalR note in the Server README).
+
+### `DriveMaintenanceJob.cs` (Module 11)
+Hourly upkeep for the Drive file module, in its own DI scope per tick:
+1. **Abandon stale uploads** — `DriveFileVersion` rows still `PENDING` past `PendingUploadTimeoutMinutes` become `ABANDONED`, with a best-effort delete of the half-uploaded object (a storage failure is logged, not fatal).
+2. **Expire idle edit sessions** — open OnlyOffice sessions idle past `EditSessionIdleMinutes` become `EXPIRED`.
+3. **Purge expired trash** — only when `Drive:Storage` is configured: items trashed more than `TrashRetentionDays` ago (and expired trashed spaces) are purged through the shared `IDrivePurgeService` (`DrivePurgeService`) — edit sessions, then stored objects, then rows deepest-first — releasing each item's committed bytes back to the space quota. A storage delete failure aborts that tree and retries next run. Each purged tree appends an action-level `DRIVE` audit row (reason `TrashRetention`, item count, released bytes) with a null actor (system); purged spaces get their own system audit row.
+
+`DriveJobsOptions` (section `Drive:Jobs`) holds `Enabled`, `StartupDelaySeconds`, `IntervalMinutes`, `TrashRetentionDays`, `PendingUploadTimeoutMinutes`, `EditSessionIdleMinutes` and `BatchSize`.
 
 ## Configuration
 
@@ -79,8 +88,16 @@ then enqueues high-priority overdue `Notification` alerts (via the outbox).
 | `DailyAuditCheckpointJob` | ✅ Implemented |
 | `OutboxProcessorJob` | ✅ Implemented (verified live: hub push, outbox `SENT`) |
 | `NotificationRetentionJob` | ✅ Implemented (purge queries covered by tests) |
+| `DriveMaintenanceJob` | ✅ Implemented (Module 11: upload abandonment, session expiry, trash purge + quota release) |
 | `ExpiredDelegationAndAccessCleanupJob` | ❌ Not implemented |
 | `OverdueMovementEscalationJob` | ❌ Not implemented |
 
 The domain support the remaining jobs rely on **is** present:
 `UserDepartmentAssignment.EndAssignment` and `DocumentMovementStep.DueDate/StepStatus`.
+
+## Change Log
+
+| Date | Author | Change |
+| --- | --- | --- |
+| 2026-11-19 | Qoder | Drive Phase 2: `DriveMaintenanceJob` now purges expired trash through the shared `IDrivePurgeService` (`DrivePurgeService`) instead of a private routine, so manual purge and retention purge use one ordered, audited implementation. |
+| 2026-11-19 | Qoder | Drive Phase 1 (`plans/module-11-drive-backend.md`): added `DriveMaintenanceJob` + `DriveJobsOptions` (section `Drive:Jobs`) — hourly abandonment of stale pending uploads, expiry of idle OnlyOffice edit sessions, and retention purge of expired trash (deepest-first, storage objects then rows, quota release, system-attributed `DRIVE` audit row). Trash purge is gated on `Drive:Storage` being configured. |

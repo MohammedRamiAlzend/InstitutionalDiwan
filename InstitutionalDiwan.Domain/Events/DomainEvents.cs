@@ -62,3 +62,12 @@ public sealed record DecisionAppealedEvent(Guid DecisionId, Guid AppealId, Guid 
 // Module 10: Notifications
 public sealed record NotificationCreatedEvent(Guid NotificationId, int NotificationTypeId, Guid? RelatedDocumentId) : DomainEventBase;
 public sealed record NotificationReadEvent(Guid NotificationId, Guid UserId, DateTime ReadAtUtc) : DomainEventBase;
+
+// Module 11: Drive
+public sealed record DriveSpaceCreatedEvent(Guid SpaceId, int SpaceTypeId, Guid OwnerUserId) : DomainEventBase;
+public sealed record DriveItemTrashedEvent(Guid ItemId, Guid SpaceId, Guid ActorUserId) : DomainEventBase;
+public sealed record DriveItemRestoredEvent(Guid ItemId, Guid SpaceId) : DomainEventBase;
+public sealed record DriveFileVersionCommittedEvent(Guid FileItemId, Guid VersionId, int VersionNumber, string ChecksumSha256) : DomainEventBase;
+public sealed record DriveDeletionRequestedEvent(Guid RequestId, Guid ItemId, Guid RequestedByUserId) : DomainEventBase;
+public sealed record DriveDeletionApprovedEvent(Guid RequestId, Guid ItemId, Guid ReviewedByUserId) : DomainEventBase;
+public sealed record DriveDeletionRejectedEvent(Guid RequestId, Guid ItemId, Guid ReviewedByUserId) : DomainEventBase;

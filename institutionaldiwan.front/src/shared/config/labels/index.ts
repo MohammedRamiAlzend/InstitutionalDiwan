@@ -26,6 +26,7 @@ import { NOTIFICATIONS_LABELS } from './notifications'
 import { PRINT_LABELS } from './print'
 import { GUIDE_LABELS } from './guides'
 import { LABEL_EDITOR_LABELS } from './label-editor'
+import { DRIVE_LABELS } from './drive'
 
 /**
  * The built-in Arabic defaults for every editable UI label. The app renders fully
@@ -62,6 +63,7 @@ export const LABEL_DEFAULTS = Object.freeze({
   ...PRINT_LABELS,
   ...GUIDE_LABELS,
   ...LABEL_EDITOR_LABELS,
+  ...DRIVE_LABELS,
 })
 
 /** A catalog key; using a key that is not declared here is a build error. */

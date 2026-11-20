@@ -63,6 +63,7 @@ without knowing which provider is underneath.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-19 | Qoder | Drive Phase 1 (`plans/module-11-drive-backend.md`): added the seven Drive `DbSet`s to `DiwanDbContext` and `Configurations/DriveConfigurations.cs` (7 tables, row-version concurrency, filtered unique indexes for personal space / live sibling name / pending deletion / open session key / star, and FK cascade/restrict choices that avoid cycles); `InstitutionSettingConfiguration` maps the three Drive settings columns with defaults. |
 | 2026-11-17 | Qoder | UI labels, Phase 0: `UiConfigurations.cs` (`UI_LABEL_OVERRIDES` with unique `UX_UI_LABEL_OVERRIDES_KEY`), the `UiLabelOverrides` DbSet, `UiLabelOverrideRepository`, migration `AddUiLabelOverrides`, and the audit entity-type 19 mapping + seed row. |
 | 2026-11-15 | Qoder | Squashed the migration history into a single consolidated `InitialCreate` (84 tables, SQL Server) regenerated with the local `dotnet-ef` 11.0.0 tool; existing development databases must be dropped or recreated. |
 | 2026-11-11 | Claude | Relation type 5 is seed data only. `DocumentRelationRepository.ListOutgoingAsync` and `PersonRepository.ListJoinCandidatesAsync` need no migration. |

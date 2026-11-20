@@ -2,7 +2,7 @@
 
 > **Status:** Partially implemented — Correspondence, Organization (incl. institution settings),
 > Numbering, Identity (incl. employees and document access grants), Movements, Lookups, Attachments,
-> Archiving, Relations, and Audit requests exist; the remaining modules are target design.
+> Archiving, Relations, Audit, and Drive requests exist; the remaining modules are target design.
 
 ## Purpose
 
@@ -28,6 +28,7 @@ commands/queries map between them and the domain.
 | Audit | `CreateAuditCheckpointRequest` ✅ (optional `ToAuditLogId`), `RunAuditIntegrityCheckRequest` ✅ (optional start/end ids); read models (`AuditLogResponse`, `AuditCheckpointResponse`, `AuditIntegrityCheckResponse`) live in `Application/Features/Audit/` |
 | Notifications | `NotificationListResponse`, `UnreadCountResponse` |
 | Ui | `SetUiLabelOverrideRequest` ✅ (`Value`, ≤200 chars); the `{ version, overrides }` read model lives in `Application/Features/Ui/UiLabels/` |
+| Drive | `DriveRequests.cs` ✅: `CreateDriveSpaceRequest`, `RenameDriveSpaceRequest`, `SetDriveSpaceQuotaRequest`, `CreateDriveFolderRequest`, `RenameDriveItemRequest`, `MoveDriveItemRequest`, `InitiateDriveUploadRequest`, `CompleteDriveUploadRequest`, `GrantDrivePermissionRequest`, `SetDriveItemInheritanceRequest`, `RequestDriveItemDeletionRequest`, `ReviewDriveDeletionRequest`, `UpdateDriveSettingsRequest`, `DriveOnlyOfficeCallbackRequest`; the read models live in `Application/Features/Drive/DriveResponses.cs` and `DriveEditResponses.cs` |
 
 ## Conventions
 
@@ -56,12 +57,15 @@ commands/queries map between them and the domain.
 | Attachments `CreateDocumentFileRequest`, `UploadDocumentFileVersionRequest` | ✅ Implemented |
 | Audit `CreateAuditCheckpointRequest`, `RunAuditIntegrityCheckRequest` | ✅ Implemented |
 | Ui `SetUiLabelOverrideRequest` | ✅ Implemented |
+| Drive `DriveRequests.cs` (spaces, items, upload, permissions, deletion, settings) | ✅ Implemented |
 | Other request/response records | ❌ Not implemented |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-19 | Qoder | Added `DriveOnlyOfficeCallbackRequest` (key/status/url/users/forcesavetype/token) to `Drive/DriveRequests.cs` for the OnlyOffice save callback (plan `plans/module-11-drive-backend.md` Phase 4). The edit-config and callback read models live in `Application/Features/Drive/DriveEditResponses.cs`. |
+| 2026-11-19 | Qoder | Added `Drive/DriveRequests.cs` — the Module 11 Drive request bodies (spaces, folders/items, presigned upload initiate/complete, permission grants, inheritance, deletion requests/review, settings) for plan `plans/module-11-drive-backend.md` Phase 3. Read models stay in `Application/Features/Drive/DriveResponses.cs`. |
 | 2026-11-17 | Qoder | Added `Ui/SetUiLabelOverrideRequest` for `PUT /api/ui-labels/{key}` (editable UI terminology, Phase 0). |
 | 2026-11-11 | Claude |  |
 | 2026-11-11 | Claude | Added `RecordDecisionAppealRequest` and `RecordAppealOutcomeRequest`. |

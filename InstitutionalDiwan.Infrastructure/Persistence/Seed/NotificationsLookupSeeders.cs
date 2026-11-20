@@ -21,6 +21,11 @@ public sealed class NotificationTypeSeeder : LookupSeederBase<NotificationType>
         (NotificationType.MovementClosedId, "Movement closed", "إغلاق إحالة"),
         (NotificationType.MovementCancelledId, "Movement cancelled", "إلغاء إحالة"),
         (NotificationType.DecisionIssuedId, "Decision issued", "صدر قرار"),
+        (NotificationType.DriveDeletionRequestedId, "Drive deletion requested", "طلب حذف ملف"),
+        (NotificationType.DriveDeletionApprovedId, "Drive deletion approved", "الموافقة على حذف ملف"),
+        (NotificationType.DriveDeletionRejectedId, "Drive deletion rejected", "رفض حذف ملف"),
+        (NotificationType.DrivePermissionGrantedId, "Drive permission granted", "منح صلاحية ملفات"),
+        (NotificationType.DriveEditSaveFailedId, "Drive edit save failed", "فشل حفظ التحرير"),
     };
 
     protected override NotificationType BuildItem(int id, string desc, string descAr)
@@ -49,6 +54,16 @@ public sealed class NotificationTypeSeeder : LookupSeederBase<NotificationType>
                 ("تمت الأرشفة", "تمت أرشفة الوثيقة {Title}.", "IN_APP"),
             NotificationType.DecisionIssuedId =>
                 ("صدر قرار", "صدر قرار على الوثيقة {Title} بالرقم {Number}.", "IN_APP"),
+            NotificationType.DriveDeletionRequestedId =>
+                ("طلب حذف ملف", "طلب {Requester} حذف «{Title}» وينتظر موافقتك.", "IN_APP"),
+            NotificationType.DriveDeletionApprovedId =>
+                ("تمت الموافقة على الحذف", "تمت الموافقة على طلب حذف «{Title}».", "IN_APP"),
+            NotificationType.DriveDeletionRejectedId =>
+                ("رُفض طلب الحذف", "رُفض طلب حذف «{Title}».", "IN_APP"),
+            NotificationType.DrivePermissionGrantedId =>
+                ("صلاحية جديدة على الملفات", "مُنحت صلاحية على «{Title}».", "IN_APP"),
+            NotificationType.DriveEditSaveFailedId =>
+                ("فشل حفظ التحرير", "تعذر حفظ تعديلاتك على «{Title}»؛ أعد فتح الملف.", "IN_APP"),
             _ =>
                 ("وثيقة جديدة", "تم إنشاء الوثيقة {Title}.", "IN_APP"),
         };

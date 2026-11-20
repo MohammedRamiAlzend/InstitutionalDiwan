@@ -1,8 +1,9 @@
 # Infrastructure / Authorization
 
-> **Status:** Implemented — `DepartmentScopeEvaluator` and `DocumentAccessEvaluator` (the two
-> contracts declared in `Application/Abstractions/Authorization/`). RBAC enforcement itself lives in
-> `Server/Authorization/PermissionAuthorizationHandler` (one policy per permission code).
+> **Status:** Implemented — `DepartmentScopeEvaluator`, `DocumentAccessEvaluator`, and
+> `DriveAccessEvaluator` (the contracts declared in `Application/Abstractions/Authorization/`). RBAC
+> enforcement itself lives in `Server/Authorization/PermissionAuthorizationHandler` (one policy per
+> permission code).
 
 ## Purpose
 
@@ -17,6 +18,7 @@ second and third tiers; the first tier is enforced by ASP.NET Core policies gene
 | --- | --- |
 | `DepartmentScopeEvaluator.cs` | Loads the active persisted user before granting primary/global/tree scope or currently effective temporal assignments; ignores token scope and department fast paths. |
 | `DocumentAccessEvaluator.cs` | Combines document grants, authorship, confidentiality, department scope, and movement participation. |
+| `DriveAccessEvaluator.cs` | Module 11 effective Drive access: ADMIN/`DRIVE_MANAGE` manages everywhere; space owner manages their space; else the strongest user/department grant walking item→root, stopping after the first broken-inheritance node. Trashed items reach only owner/space-owner/ADMIN/owner's department head; live items under a trashed ancestor are hidden. Also derives the deletion approver (owner's department head). Mirrored in SQL by `DriveItemAccessQuery`. |
 
 ## Components
 
@@ -76,6 +78,7 @@ depend on `IUserContext` rather than on `HttpContext` directly.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-19 | Qoder | Drive Phase 1 (`plans/module-11-drive-backend.md`): added `DriveAccessEvaluator` (`IDriveAccessEvaluator`) — effective role via ADMIN/space-owner/grant walk with broken-inheritance stop, trash visibility rules, trashed-ancestor exclusion for live items, and deletion-approver derivation (owner's active department head). Registered in DI; held equal to the SQL browse predicate by `DriveAccessEvaluatorTests`. |
 | 2026-11-11 | Claude | `DocumentAccessEvaluator` lets the designated archive diwan view and download a document whose latest movement ended there and was received, also after that movement is closed; it takes an optional `IInstitutionSettingRepository`. |
 | 2026-11-04 | Claude | Fixed a returned or rejected movement showing in the sender's inbox as a locked «وثيقة مقيّدة» row: movement-based reading access (`DocumentAccessEvaluator` and the list predicate `DocumentViewAccessQuery`) now also covers the sending department of a step whose status is returned or rejected, matching what `ListInboxAsync` already shows; the receiving side loses access as before. Parity test and evaluator tests extended. |
 | 2026-11-04 | Claude | `DepartmentScopeEvaluator.IsPrimaryDepartmentAsync`: true only for the caller's live primary department, independent of scope (used to restrict department register entries to the caller's own department). |

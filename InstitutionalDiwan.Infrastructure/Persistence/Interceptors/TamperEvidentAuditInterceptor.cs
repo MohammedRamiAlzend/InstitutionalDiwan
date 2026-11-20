@@ -4,6 +4,7 @@ using InstitutionalDiwan.Domain.Entities.Attachments;
 using InstitutionalDiwan.Domain.Entities.Audit;
 using InstitutionalDiwan.Domain.Entities.Correspondence;
 using InstitutionalDiwan.Domain.Entities.Decisions;
+using InstitutionalDiwan.Domain.Entities.Drive;
 using InstitutionalDiwan.Domain.Entities.Identity;
 using InstitutionalDiwan.Domain.Entities.Movements;
 using InstitutionalDiwan.Domain.Entities.Numbering;
@@ -574,6 +575,28 @@ internal sealed class TamperEvidentAuditInterceptor : SaveChangesInterceptor
             OldValuesJson: OldJson(new { e.SourceDocumentId, e.TargetDocumentId, e.RelationTypeId }),
             RelatedDocumentId: e.SourceDocumentId, ActorUserId: e.ActorUserId),
 
+        DriveSpaceCreatedEvent e => new(
+            "DRIVE", AuditActionType.CreateId, AuditEntityType.DriveSpaceId, e.SpaceId,
+            NewJson(new { e.SpaceTypeId, e.OwnerUserId }), ActorUserId: e.OwnerUserId),
+        DriveItemTrashedEvent e => new(
+            "DRIVE", AuditActionType.DeleteId, AuditEntityType.DriveItemId, e.ItemId,
+            NewJson(new { e.SpaceId }), ActorUserId: e.ActorUserId),
+        DriveItemRestoredEvent e => new(
+            "DRIVE", AuditActionType.UpdateId, AuditEntityType.DriveItemId, e.ItemId,
+            NewJson(new { e.SpaceId })),
+        DriveFileVersionCommittedEvent e => new(
+            "DRIVE", AuditActionType.UpdateId, AuditEntityType.DriveItemId, e.FileItemId,
+            NewJson(new { e.VersionId, e.VersionNumber, e.ChecksumSha256 })),
+        DriveDeletionRequestedEvent e => new(
+            "DRIVE", AuditActionType.CreateId, AuditEntityType.DriveDeletionRequestId, e.RequestId,
+            NewJson(new { e.ItemId }), ActorUserId: e.RequestedByUserId),
+        DriveDeletionApprovedEvent e => new(
+            "DRIVE", AuditActionType.ApproveId, AuditEntityType.DriveDeletionRequestId, e.RequestId,
+            NewJson(new { e.ItemId }), ActorUserId: e.ReviewedByUserId),
+        DriveDeletionRejectedEvent e => new(
+            "DRIVE", AuditActionType.UpdateId, AuditEntityType.DriveDeletionRequestId, e.RequestId,
+            NewJson(new { e.ItemId }), ActorUserId: e.ReviewedByUserId),
+
         _ => null
     };
 
@@ -643,6 +666,12 @@ internal sealed class TamperEvidentAuditInterceptor : SaveChangesInterceptor
             _ when type == typeof(DecisionType) => ("DECISIONS", AuditEntityType.DecisionTypeId),
             _ when type == typeof(DecisionAppeal) => ("DECISIONS", AuditEntityType.DecisionAppealId),
             _ when type == typeof(UiLabelOverride) => ("ORGANIZATION", AuditEntityType.UiLabelOverrideId),
+            _ when type == typeof(DriveSpace) => ("DRIVE", AuditEntityType.DriveSpaceId),
+            _ when type == typeof(DriveItem) => ("DRIVE", AuditEntityType.DriveItemId),
+            _ when type == typeof(DriveFileVersion) => ("DRIVE", AuditEntityType.DriveFileVersionId),
+            _ when type == typeof(DrivePermission) => ("DRIVE", AuditEntityType.DrivePermissionId),
+            _ when type == typeof(DriveDeletionRequest) => ("DRIVE", AuditEntityType.DriveDeletionRequestId),
+            // DriveStar and DriveEditSession are preference/technical state: action-level audit only.
             _ => (string.Empty, 0)
         };
 

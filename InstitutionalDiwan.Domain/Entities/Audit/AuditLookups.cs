@@ -71,6 +71,21 @@ public sealed class AuditEntityType : LookupEntity
     /// <summary>A superadmin replacement for a built-in UI label.</summary>
     public const int UiLabelOverrideId = 19;
 
+    /// <summary>A Drive storage space (Module 11).</summary>
+    public const int DriveSpaceId = 20;
+
+    /// <summary>A Drive folder or file node (Module 11).</summary>
+    public const int DriveItemId = 21;
+
+    /// <summary>An immutable content version of a Drive file (Module 11).</summary>
+    public const int DriveFileVersionId = 22;
+
+    /// <summary>An explicit permission grant on a Drive item (Module 11).</summary>
+    public const int DrivePermissionId = 23;
+
+    /// <summary>An approval-gated request to delete a Drive item (Module 11).</summary>
+    public const int DriveDeletionRequestId = 24;
+
     private AuditEntityType()
     {
     }

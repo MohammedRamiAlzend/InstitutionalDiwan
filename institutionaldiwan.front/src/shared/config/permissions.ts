@@ -1,6 +1,6 @@
 /**
  * Canonical permission codes — must match the API's
- * `InstitutionalDiwan.Domain/Common/Permissions.cs` exactly (23 codes).
+ * `InstitutionalDiwan.Domain/Common/Permissions.cs` exactly (25 codes).
  */
 export const Permissions = {
   DocumentView: 'DOCUMENT_VIEW',
@@ -29,6 +29,10 @@ export const Permissions = {
   DepartmentRecordCorrect: 'DEPARTMENT_RECORD_CORRECT',
   /** Issue a decision, attach its copy, and cancel a mistaken entry. */
   DecisionManage: 'DECISION_MANAGE',
+  /** Use the Drive file module: spaces, folders, files, versions and sharing. */
+  DriveUse: 'DRIVE_USE',
+  /** Administer Drive: default quotas and limits, any space, permanent trash deletion. */
+  DriveManage: 'DRIVE_MANAGE',
 } as const
 
 export type PermissionCode = (typeof Permissions)[keyof typeof Permissions]

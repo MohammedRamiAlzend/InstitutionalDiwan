@@ -9,6 +9,9 @@ public sealed class FileStorageProvider : LookupEntity
 {
     public const int LocalDefaultId = 1;
 
+    /// <summary>The S3-compatible SeaweedFS gateway backing Drive (Module 11); never the attachments default.</summary>
+    public const int DriveSeaweedFsId = 2;
+
     /// <summary>FK → StorageProviderType.Id.</summary>
     public int ProviderTypeId { get; private set; } = StorageProviderType.LocalFileSystemId;
 

@@ -2,8 +2,8 @@
 
 > **Status:** Partially implemented — `Messaging/` (ICommand/IQuery/ICommandHandler/IQueryHandler),
 > `Authentication/` (`IJwtProvider`, `IPasswordHasher`, `IUserContext`), `Authorization/`
-> (`IDepartmentScopeEvaluator`, `IDocumentAccessEvaluator`), `Storage/` (`IFileStorageService`,
-> `IFileSignatureValidator`, `StoredFile`), `Time/` (`IDateTimeProvider`), `Context/`
+> (`IDepartmentScopeEvaluator`, `IDocumentAccessEvaluator`, `IDriveAccessEvaluator`), `Storage/`
+> (`IFileStorageService`, `IFileSignatureValidator`, `StoredFile`, `IDriveStorageService`), `Time/` (`IDateTimeProvider`), `Context/`
 > (`IRequestContext`), `Persistence/` (`ITransactionManager`), and `Audit/`
 > (`IAuditActionRecorder`, `AuditActionRecord`) and `Notifications/` (`INotificationPublisher`,
 > `INotificationRecipientDirectory`, `IRealtimeNotifier`, `NotificationPush`, `NotificationAudience`) are live; the data/caching contracts are still
@@ -50,6 +50,7 @@ technology choices swappable.
 | --- | --- | --- |
 | `IDepartmentScopeEvaluator` | `Task<bool> CanAccessDepartmentAsync(Guid departmentId, CancellationToken)`, `Task<IReadOnlySet<Guid>?> GetAccessibleDepartmentIdsAsync(CancellationToken)` (null = institution-wide) | Tier 2 of the access model: is the target department inside the caller's scope (primary department, active assignments incl. subtree, institution-wide)? ✅ Implemented. |
 | `IDocumentAccessEvaluator` | `Task<bool> CanAccessDocumentAsync(Guid documentId, int requiredAccessLevelId, CancellationToken)` | Tier 3: combines explicit grants, authorship, department scope, and confidentiality for VIEW/DOWNLOAD/FORWARD/MANAGE. ✅ Implemented. |
+| `IDriveAccessEvaluator` | `Task<int> GetEffectiveRoleAsync(Guid itemId, CancellationToken)` (0 = none), `Task<bool> CanAccessItemAsync(Guid itemId, int requiredRoleId, CancellationToken)`, `Task<Guid?> GetDeletionApproverAsync(Guid ownerUserId, CancellationToken)`, `Task<bool> IsDepartmentHeadOfAsync(Guid headUserId, Guid memberUserId, CancellationToken)` | Module 11 effective Drive access (Viewer/Editor/Manager) and deletion-approver derivation. ✅ Implemented (`Infrastructure/Authorization/DriveAccessEvaluator`). |
 
 ### `Data/`
 
@@ -63,6 +64,13 @@ technology choices swappable.
 | --- | --- | --- |
 | `IFileStorageService` | `Task<StoredFile> SaveAsync(Stream, …, int providerId, string basePath)`, `Task<Stream?> OpenReadAsync(string basePath, string relativePath)`, `Task<string> ComputeSha256Async(Stream)` | Abstracts document scans/attachments (Module 06) and returns the SHA-256 checksum recorded by `DocumentFile.AddVersion`. ✅ Implemented by `Infrastructure/Storage/LocalFileStorageService`. |
 | `IFileSignatureValidator` | `Result Validate(ReadOnlySpan<byte> header, string fileName, long size, DocumentFileType type)` | Enforces the file type's extension allow-list and size limit, then checks magic bytes so a renamed executable cannot masquerade as a PDF/image. ✅ Implemented by `Infrastructure/Storage/FileSignatureValidator`. |
+| `IDriveStorageService` | `CreateUploadUrlAsync`, `CreateDownloadUrlAsync`, `HeadAsync`, `OpenReadAsync(objectKey, rangeStart?, rangeEnd?)`, `ComputeSha256Async`, `CopyAsync(source, destination)`, `DeleteAsync` (+ `DrivePresignedUpload`, `DriveStoredObject` records) | Object storage for Drive (Module 11) against the S3-compatible SeaweedFS gateway: presigned direct browser uploads/downloads, range reads for video, metadata, server-side copy (version restore), and deletion. ✅ Implemented by `Infrastructure/Storage/S3DriveStorageService`. |
+
+### `Drive/`
+
+| Interface | Shape | Notes |
+| --- | --- | --- |
+| `IDrivePurgeService` | `Task PurgeTreeAsync(Guid rootItemId, Guid? actorUserId, string reason, CancellationToken)` | Module 11 permanent tree deletion: S3 objects first, then rows deepest-first, then quota release, one audit row per tree. ✅ Implemented by `Infrastructure/Storage/DrivePurgeService`; shared by the manual purge handler and `DriveMaintenanceJob`. |
 
 ### `Caching/`
 
@@ -110,9 +118,12 @@ technology choices swappable.
 | `Authentication/IUserContext.cs` | Ambient caller identity (authenticated flag, user id, username, role codes, primary department, scope type, permission set) so handlers never touch `HttpContext`; backs `GetUserProfileQuery`. |
 | `Authorization/IDepartmentScopeEvaluator.cs` | Answers “may the caller act on this department?”, implemented from the user's scope type, primary department, and active assignments. |
 | `Authorization/IDocumentAccessEvaluator.cs` | Answers “may the caller reach this document at this access level?”, implemented from grants, authorship, scope, and confidentiality. |
+| `Authorization/IDriveAccessEvaluator.cs` | Module 11: answers “what effective Drive role does the caller hold on this item?” (0/Viewer/Editor/Manager), “may they act at this role?”, and “who approves this owner's deletion request?” (their department head). |
 | `Storage/IFileStorageService.cs` | Persists and reads document bytes under a provider root, returning the streamed SHA-256 checksum of an upload. |
 | `Storage/IFileSignatureValidator.cs` | Validates an upload's extension, size, and magic bytes before any bytes are stored. |
 | `Storage/StoredFile.cs` | Value returned by storage after a save: relative path, original name, MIME type, size, checksum, and provider id. |
+| `Storage/IDriveStorageService.cs` | Drive (Module 11) object-storage contract over S3/SeaweedFS: presigned upload/download URLs, HEAD metadata, range reads, SHA-256, server-side copy, delete; plus `DrivePresignedUpload` and `DriveStoredObject` records. |
+| `Drive/IDrivePurgeService.cs` | Drive (Module 11) permanent tree-deletion contract (`PurgeTreeAsync`), implemented by `Infrastructure/Storage/DrivePurgeService` and shared by manual purge + the retention job. |
 | `Time/IDateTimeProvider.cs` | UTC now plus institution-local conversion and numbering-year helpers; implemented by Infrastructure `DateTimeProvider` over `IClock`. |
 | `Context/IRequestContext.cs` | Correlation id and client IP for the current request, kept host-agnostic; implemented by Infrastructure `HttpRequestContext`. |
 | `Persistence/ITransactionManager.cs` | `BeginTransactionAsync` returns an `ITransactionScope`; commit on success and roll back on a failed `Result` or exception. |
@@ -124,9 +135,10 @@ technology choices swappable.
 | --- | --- |
 | `Messaging/` | ✅ Implemented (ICommand, ICommandHandler, IQuery, IQueryHandler) |
 | `Authentication/` | ✅ Implemented (IJwtProvider, IPasswordHasher, IUserContext) |
-| `Authorization/` | ✅ Implemented (IDepartmentScopeEvaluator, IDocumentAccessEvaluator) |
+| `Authorization/` | ✅ Implemented (IDepartmentScopeEvaluator, IDocumentAccessEvaluator, IDriveAccessEvaluator) |
 | `Data/` | ❌ Not implemented |
-| `Storage/` | ✅ Implemented (`IFileStorageService`, `IFileSignatureValidator`, `StoredFile`) |
+| `Storage/` | ✅ Implemented (`IFileStorageService`, `IFileSignatureValidator`, `StoredFile`); `IDriveStorageService` (Module 11) implemented by `S3DriveStorageService` (incl. `CopyAsync`) |
+| `Drive/` | ✅ Implemented (`IDrivePurgeService`, Module 11) by `Infrastructure/Storage/DrivePurgeService` |
 | `Caching/` | ❌ Not implemented |
 | `Clock/` | ✅ Implemented (`IDateTimeProvider` + Infrastructure `DateTimeProvider`) |
 | `Context/` | ✅ Implemented (`IRequestContext` + Infrastructure `HttpRequestContext`) |
@@ -140,6 +152,9 @@ technology choices swappable.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-19 | Qoder | Drive Phase 2: added `Drive/IDrivePurgeService` (permanent tree deletion, implemented by `DrivePurgeService`) and `IDriveStorageService.CopyAsync` (server-side object copy for version restore). |
+| 2026-11-19 | Qoder | Drive Phase 1 (`plans/module-11-drive-backend.md`): added `Authorization/IDriveAccessEvaluator` (effective role, role-gated access, deletion-approver + department-head checks); marked `IDriveStorageService` implemented by `S3DriveStorageService`. |
+| 2026-11-19 | Qoder | Drive Phase 0 (`plans/module-11-drive-backend.md`): added `Storage/IDriveStorageService` with `DrivePresignedUpload`/`DriveStoredObject` — the S3/SeaweedFS contract for Module 11, kept separate from the Module 06 `IFileStorageService`. |
 | 2026-11-15 | Qoder | Security: added `Authentication/ILoginAttemptTracker` — per-username login throttling (five failures → 15-minute lockout), implemented by `Infrastructure/Authentication/LoginAttemptTracker.cs`. |
 | 2026-11-03 | Claude | Added `IDepartmentScopeEvaluator.GetAccessibleDepartmentIdsAsync` so list queries can apply organizational scope in the database (Module 07 archive search). |
 | 2026-10-26 | Qoder | Added the `Audit/` group (`IAuditActionRecorder`, `AuditActionRecord`) so the web host can append action-level audit rows without depending on persistence, and marked it implemented by `AuditActionRecorder`. |

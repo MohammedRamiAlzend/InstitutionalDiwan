@@ -49,6 +49,11 @@ public sealed class AuditEntityTypeSeeder : LookupSeederBase<AuditEntityType>
         (AuditEntityType.DecisionTypeId, "Decision type", "نوع قرار"),
         (AuditEntityType.DecisionAppealId, "Decision appeal", "اعتراض على قرار"),
         (AuditEntityType.UiLabelOverrideId, "UI label", "تسمية واجهة"),
+        (AuditEntityType.DriveSpaceId, "Drive space", "مساحة ملفات"),
+        (AuditEntityType.DriveItemId, "Drive item", "عنصر ملفات"),
+        (AuditEntityType.DriveFileVersionId, "Drive file version", "إصدار ملف"),
+        (AuditEntityType.DrivePermissionId, "Drive permission", "صلاحية ملفات"),
+        (AuditEntityType.DriveDeletionRequestId, "Drive deletion request", "طلب حذف ملف"),
     };
 
     protected override AuditEntityType BuildItem(int id, string desc, string descAr) =>

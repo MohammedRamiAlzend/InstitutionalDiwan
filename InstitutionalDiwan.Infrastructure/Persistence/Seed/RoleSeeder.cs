@@ -29,11 +29,13 @@ public sealed class RoleSeeder : ISeeder
         Permissions.PersonView, Permissions.PersonManage,
         Permissions.DepartmentRecordViewAll, Permissions.DepartmentRecordCorrect,
         Permissions.DecisionManage,
+        Permissions.DriveUse, Permissions.DriveManage,
     };
 
     private static readonly string[] UserPermissions =
     {
         Permissions.DocumentView, Permissions.DocumentCreate, Permissions.DocumentEdit,
+        Permissions.DriveUse,
     };
 
     public async Task SeedAsync(SeederContext context, CancellationToken cancellationToken = default)

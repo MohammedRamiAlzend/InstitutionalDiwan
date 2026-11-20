@@ -16,7 +16,7 @@ partial class DiwanDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261117093850_AddUiLabelOverrides";
+    public override string LastMigrationId => "20261119091628_Add_Drive_Module";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -1901,6 +1901,419 @@ partial class DiwanDbContextModelSnapshot : ModelSnapshot
                 b.ToTable("SYSTEM_ERRORS");
             });
 
+        modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Drive.DriveDeletionRequest", b =>
+            {
+                b.Property<Guid>("RequestId")
+                    .HasColumnType("uniqueidentifier")
+                    .HasColumnName("RequestId");
+
+                b.Property<DateTime>("CreatedAt")
+                    .HasColumnType("datetime2(3)")
+                    .HasColumnName("CreatedAt");
+
+                b.Property<Guid>("ItemId")
+                    .HasColumnType("uniqueidentifier")
+                    .HasColumnName("ItemId");
+
+                b.Property<string>("Reason")
+                    .IsRequired()
+                    .HasMaxLength(500)
+                    .HasColumnType("nvarchar(500)")
+                    .HasColumnName("Reason");
+
+                b.Property<Guid>("RequestedByUserId")
+                    .HasColumnType("uniqueidentifier")
+                    .HasColumnName("RequestedByUserId");
+
+                b.Property<string>("ReviewNote")
+                    .HasMaxLength(500)
+                    .HasColumnType("nvarchar(500)")
+                    .HasColumnName("ReviewNote");
+
+                b.Property<DateTime?>("ReviewedAt")
+                    .HasColumnType("datetime2(3)")
+                    .HasColumnName("ReviewedAt");
+
+                b.Property<Guid?>("ReviewedByUserId")
+                    .HasColumnType("uniqueidentifier")
+                    .HasColumnName("ReviewedByUserId");
+
+                b.Property<int>("StatusId")
+                    .HasColumnType("int")
+                    .HasColumnName("StatusId");
+
+                b.HasKey("RequestId");
+
+                b.HasIndex("ItemId")
+                    .IsUnique()
+                    .HasDatabaseName("UX_DRIVE_DELETION_PENDING")
+                    .HasFilter("[StatusId] = 1");
+
+                b.HasIndex("RequestedByUserId");
+
+                b.HasIndex("ReviewedByUserId");
+
+                b.HasIndex("StatusId", "CreatedAt")
+                    .HasDatabaseName("IX_DRIVE_DELETION_STATUS");
+
+                b.ToTable("DRIVE_DELETION_REQUESTS");
+            });
+
+        modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Drive.DriveEditSession", b =>
+            {
+                b.Property<Guid>("SessionId")
+                    .HasColumnType("uniqueidentifier")
+                    .HasColumnName("SessionId");
+
+                b.Property<Guid>("BaseVersionId")
+                    .HasColumnType("uniqueidentifier")
+                    .HasColumnName("BaseVersionId");
+
+                b.Property<string>("DocumentKey")
+                    .IsRequired()
+                    .HasMaxLength(200)
+                    .HasColumnType("nvarchar(200)")
+                    .HasColumnName("DocumentKey");
+
+                b.Property<Guid>("FileItemId")
+                    .HasColumnType("uniqueidentifier")
+                    .HasColumnName("FileItemId");
+
+                b.Property<DateTime>("LastActivityAt")
+                    .HasColumnType("datetime2(3)")
+                    .HasColumnName("LastActivityAt");
+
+                b.Property<DateTime>("OpenedAt")
+                    .HasColumnType("datetime2(3)")
+                    .HasColumnName("OpenedAt");
+
+                b.Property<int>("StatusId")
+                    .HasColumnType("int")
+                    .HasColumnName("StatusId");
+
+                b.Property<Guid>("UserId")
+                    .HasColumnType("uniqueidentifier")
+                    .HasColumnName("UserId");
+
+                b.HasKey("SessionId");
+
+                b.HasIndex("BaseVersionId");
+
+                b.HasIndex("DocumentKey")
+                    .IsUnique()
+                    .HasDatabaseName("UX_DRIVE_SESSIONS_KEY")
+                    .HasFilter("[StatusId] = 1");
+
+                b.HasIndex("FileItemId");
+
+                b.HasIndex("UserId");
+
+                b.HasIndex("StatusId", "LastActivityAt")
+                    .HasDatabaseName("IX_DRIVE_SESSIONS_IDLE");
+
+                b.ToTable("DRIVE_EDIT_SESSIONS");
+            });
+
+        modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Drive.DriveFileVersion", b =>
+            {
+                b.Property<Guid>("VersionId")
+                    .HasColumnType("uniqueidentifier")
+                    .HasColumnName("VersionId");
+
+                b.Property<string>("ChecksumSha256")
+                    .HasColumnType("char(64)")
+                    .HasColumnName("ChecksumSha256");
+
+                b.Property<DateTime?>("CommittedAt")
+                    .HasColumnType("datetime2(3)")
+                    .HasColumnName("CommittedAt");
+
+                b.Property<DateTime>("CreatedAt")
+                    .HasColumnType("datetime2(3)")
+                    .HasColumnName("CreatedAt");
+
+                b.Property<Guid>("CreatedByUserId")
+                    .HasColumnType("uniqueidentifier")
+                    .HasColumnName("CreatedByUserId");
+
+                b.Property<Guid>("FileItemId")
+                    .HasColumnType("uniqueidentifier")
+                    .HasColumnName("FileItemId");
+
+                b.Property<string>("MimeType")
+                    .IsRequired()
+                    .HasMaxLength(150)
+                    .HasColumnType("nvarchar(150)")
+                    .HasColumnName("MimeType");
+
+                b.Property<string>("ObjectKey")
+                    .IsRequired()
+                    .HasMaxLength(1000)
+                    .HasColumnType("nvarchar(1000)")
+                    .HasColumnName("ObjectKey");
+
+                b.Property<long>("SizeBytes")
+                    .HasColumnType("bigint")
+                    .HasColumnName("SizeBytes");
+
+                b.Property<int>("SourceId")
+                    .HasColumnType("int")
+                    .HasColumnName("SourceId");
+
+                b.Property<int>("StatusId")
+                    .HasColumnType("int")
+                    .HasColumnName("StatusId");
+
+                b.Property<int>("StorageProviderId")
+                    .HasColumnType("int")
+                    .HasColumnName("StorageProviderId");
+
+                b.Property<int>("VersionNumber")
+                    .HasColumnType("int")
+                    .HasColumnName("VersionNumber");
+
+                b.HasKey("VersionId");
+
+                b.HasIndex("CreatedByUserId");
+
+                b.HasIndex("StorageProviderId");
+
+                b.HasIndex("FileItemId", "VersionNumber")
+                    .IsUnique()
+                    .HasDatabaseName("UX_DRIVE_VERSIONS_NO");
+
+                b.HasIndex("StatusId", "CreatedAt")
+                    .HasDatabaseName("IX_DRIVE_VERSIONS_PENDING");
+
+                b.ToTable("DRIVE_FILE_VERSIONS");
+            });
+
+        modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Drive.DriveItem", b =>
+            {
+                b.Property<Guid>("ItemId")
+                    .HasColumnType("uniqueidentifier")
+                    .HasColumnName("ItemId");
+
+                b.Property<bool>("BreakInheritance")
+                    .HasColumnType("bit")
+                    .HasColumnName("BreakInheritance");
+
+                b.Property<DateTime>("CreatedAt")
+                    .HasColumnType("datetime2(3)")
+                    .HasColumnName("CreatedAt");
+
+                b.Property<Guid>("CreatedByUserId")
+                    .HasColumnType("uniqueidentifier")
+                    .HasColumnName("CreatedByUserId");
+
+                b.Property<Guid?>("CurrentVersionId")
+                    .HasColumnType("uniqueidentifier")
+                    .HasColumnName("CurrentVersionId");
+
+                b.Property<int>("ItemKindId")
+                    .HasColumnType("int")
+                    .HasColumnName("ItemKindId");
+
+                b.Property<string>("Name")
+                    .IsRequired()
+                    .HasMaxLength(255)
+                    .HasColumnType("nvarchar(255)")
+                    .HasColumnName("Name");
+
+                b.Property<Guid>("OwnerUserId")
+                    .HasColumnType("uniqueidentifier")
+                    .HasColumnName("OwnerUserId");
+
+                b.Property<Guid?>("ParentId")
+                    .HasColumnType("uniqueidentifier")
+                    .HasColumnName("ParentId");
+
+                b.Property<byte[]>("RowVersion")
+                    .IsConcurrencyToken()
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("rowversion")
+                    .HasColumnName("RowVersion");
+
+                b.Property<long>("SizeBytes")
+                    .HasColumnType("bigint")
+                    .HasColumnName("SizeBytes");
+
+                b.Property<Guid>("SpaceId")
+                    .HasColumnType("uniqueidentifier")
+                    .HasColumnName("SpaceId");
+
+                b.Property<DateTime?>("TrashedAt")
+                    .HasColumnType("datetime2(3)")
+                    .HasColumnName("TrashedAt");
+
+                b.Property<Guid?>("TrashedByUserId")
+                    .HasColumnType("uniqueidentifier")
+                    .HasColumnName("TrashedByUserId");
+
+                b.Property<DateTime?>("UpdatedAt")
+                    .HasColumnType("datetime2(3)")
+                    .HasColumnName("UpdatedAt");
+
+                b.HasKey("ItemId");
+
+                b.HasIndex("CurrentVersionId");
+
+                b.HasIndex("OwnerUserId")
+                    .HasDatabaseName("IX_DRIVE_ITEMS_OWNER");
+
+                b.HasIndex("ParentId");
+
+                b.HasIndex("TrashedAt")
+                    .HasDatabaseName("IX_DRIVE_ITEMS_TRASHED");
+
+                b.HasIndex("SpaceId", "ParentId")
+                    .HasDatabaseName("IX_DRIVE_ITEMS_PARENT");
+
+                b.HasIndex("SpaceId", "ParentId", "Name")
+                    .IsUnique()
+                    .HasDatabaseName("UX_DRIVE_ITEMS_NAME")
+                    .HasFilter("[TrashedAt] IS NULL");
+
+                b.ToTable("DRIVE_ITEMS");
+            });
+
+        modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Drive.DrivePermission", b =>
+            {
+                b.Property<Guid>("PermissionId")
+                    .HasColumnType("uniqueidentifier")
+                    .HasColumnName("PermissionId");
+
+                b.Property<DateTime>("GrantedAt")
+                    .HasColumnType("datetime2(3)")
+                    .HasColumnName("GrantedAt");
+
+                b.Property<Guid>("GrantedByUserId")
+                    .HasColumnType("uniqueidentifier")
+                    .HasColumnName("GrantedByUserId");
+
+                b.Property<Guid>("ItemId")
+                    .HasColumnType("uniqueidentifier")
+                    .HasColumnName("ItemId");
+
+                b.Property<Guid>("PrincipalId")
+                    .HasColumnType("uniqueidentifier")
+                    .HasColumnName("PrincipalId");
+
+                b.Property<int>("PrincipalTypeId")
+                    .HasColumnType("int")
+                    .HasColumnName("PrincipalTypeId");
+
+                b.Property<int>("RoleId")
+                    .HasColumnType("int")
+                    .HasColumnName("RoleId");
+
+                b.HasKey("PermissionId");
+
+                b.HasIndex("GrantedByUserId");
+
+                b.HasIndex("PrincipalTypeId", "PrincipalId")
+                    .HasDatabaseName("IX_DRIVE_PERMISSIONS_PRINCIPAL");
+
+                b.HasIndex("ItemId", "PrincipalTypeId", "PrincipalId")
+                    .IsUnique()
+                    .HasDatabaseName("UX_DRIVE_PERMISSIONS");
+
+                b.ToTable("DRIVE_PERMISSIONS");
+            });
+
+        modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Drive.DriveSpace", b =>
+            {
+                b.Property<Guid>("SpaceId")
+                    .HasColumnType("uniqueidentifier")
+                    .HasColumnName("SpaceId");
+
+                b.Property<DateTime>("CreatedAt")
+                    .HasColumnType("datetime2(3)")
+                    .HasColumnName("CreatedAt");
+
+                b.Property<Guid>("CreatedByUserId")
+                    .HasColumnType("uniqueidentifier")
+                    .HasColumnName("CreatedByUserId");
+
+                b.Property<string>("Name")
+                    .IsRequired()
+                    .HasMaxLength(150)
+                    .HasColumnType("nvarchar(150)")
+                    .HasColumnName("Name");
+
+                b.Property<Guid>("OwnerUserId")
+                    .HasColumnType("uniqueidentifier")
+                    .HasColumnName("OwnerUserId");
+
+                b.Property<long?>("QuotaBytes")
+                    .HasColumnType("bigint")
+                    .HasColumnName("QuotaBytes");
+
+                b.Property<byte[]>("RowVersion")
+                    .IsConcurrencyToken()
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("rowversion")
+                    .HasColumnName("RowVersion");
+
+                b.Property<int>("SpaceTypeId")
+                    .HasColumnType("int")
+                    .HasColumnName("SpaceTypeId");
+
+                b.Property<DateTime?>("TrashedAt")
+                    .HasColumnType("datetime2(3)")
+                    .HasColumnName("TrashedAt");
+
+                b.Property<Guid?>("TrashedByUserId")
+                    .HasColumnType("uniqueidentifier")
+                    .HasColumnName("TrashedByUserId");
+
+                b.Property<DateTime?>("UpdatedAt")
+                    .HasColumnType("datetime2(3)")
+                    .HasColumnName("UpdatedAt");
+
+                b.Property<long>("UsedBytes")
+                    .HasColumnType("bigint")
+                    .HasColumnName("UsedBytes");
+
+                b.HasKey("SpaceId");
+
+                b.HasIndex("OwnerUserId")
+                    .IsUnique()
+                    .HasDatabaseName("UX_DRIVE_SPACES_PERSONAL")
+                    .HasFilter("[SpaceTypeId] = 1");
+
+                b.ToTable("DRIVE_SPACES");
+            });
+
+        modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Drive.DriveStar", b =>
+            {
+                b.Property<Guid>("StarId")
+                    .HasColumnType("uniqueidentifier")
+                    .HasColumnName("StarId");
+
+                b.Property<DateTime>("CreatedAt")
+                    .HasColumnType("datetime2(3)")
+                    .HasColumnName("CreatedAt");
+
+                b.Property<Guid>("ItemId")
+                    .HasColumnType("uniqueidentifier")
+                    .HasColumnName("ItemId");
+
+                b.Property<Guid>("UserId")
+                    .HasColumnType("uniqueidentifier")
+                    .HasColumnName("UserId");
+
+                b.HasKey("StarId");
+
+                b.HasIndex("ItemId");
+
+                b.HasIndex("UserId", "ItemId")
+                    .IsUnique()
+                    .HasDatabaseName("UX_DRIVE_STARS");
+
+                b.ToTable("DRIVE_STARS");
+            });
+
         modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Identity.AccessLevel", b =>
             {
                 b.Property<int>("Id")
@@ -3681,6 +4094,26 @@ partial class DiwanDbContextModelSnapshot : ModelSnapshot
                     .HasColumnType("nvarchar(100)")
                     .HasColumnName("DefaultTimezone");
 
+                b.Property<string>("DriveAllowedExtensionsCsv")
+                    .IsRequired()
+                    .ValueGeneratedOnAdd()
+                    .HasMaxLength(1000)
+                    .HasColumnType("nvarchar(1000)")
+                    .HasDefaultValue(".doc,.docx,.xls,.xlsx,.ppt,.pptx,.pdf,.txt,.md,.csv,.jpg,.jpeg,.png,.gif,.webp,.svg,.mp4,.webm,.mkv,.mov,.mp3,.wav,.zip,.7z,.rar")
+                    .HasColumnName("DriveAllowedExtensionsCsv");
+
+                b.Property<long>("DriveDefaultQuotaBytes")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("bigint")
+                    .HasDefaultValue(5368709120L)
+                    .HasColumnName("DriveDefaultQuotaBytes");
+
+                b.Property<long>("DriveMaxFileSizeBytes")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("bigint")
+                    .HasDefaultValue(209715200L)
+                    .HasColumnName("DriveMaxFileSizeBytes");
+
                 b.Property<string>("InstitutionNameAr")
                     .IsRequired()
                     .HasMaxLength(250)
@@ -4558,6 +4991,132 @@ partial class DiwanDbContextModelSnapshot : ModelSnapshot
                     .WithMany()
                     .HasForeignKey("RegistryVisitId")
                     .OnDelete(DeleteBehavior.Restrict)
+                    .IsRequired();
+            });
+
+        modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Drive.DriveDeletionRequest", b =>
+            {
+                b.HasOne("InstitutionalDiwan.Domain.Entities.Drive.DriveItem", null)
+                    .WithMany()
+                    .HasForeignKey("ItemId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
+
+                b.HasOne("InstitutionalDiwan.Domain.Entities.Identity.User", null)
+                    .WithMany()
+                    .HasForeignKey("RequestedByUserId")
+                    .OnDelete(DeleteBehavior.Restrict)
+                    .IsRequired();
+
+                b.HasOne("InstitutionalDiwan.Domain.Entities.Identity.User", null)
+                    .WithMany()
+                    .HasForeignKey("ReviewedByUserId")
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+        modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Drive.DriveEditSession", b =>
+            {
+                b.HasOne("InstitutionalDiwan.Domain.Entities.Drive.DriveFileVersion", null)
+                    .WithMany()
+                    .HasForeignKey("BaseVersionId")
+                    .OnDelete(DeleteBehavior.Restrict)
+                    .IsRequired();
+
+                b.HasOne("InstitutionalDiwan.Domain.Entities.Drive.DriveItem", null)
+                    .WithMany()
+                    .HasForeignKey("FileItemId")
+                    .OnDelete(DeleteBehavior.Restrict)
+                    .IsRequired();
+
+                b.HasOne("InstitutionalDiwan.Domain.Entities.Identity.User", null)
+                    .WithMany()
+                    .HasForeignKey("UserId")
+                    .OnDelete(DeleteBehavior.Restrict)
+                    .IsRequired();
+            });
+
+        modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Drive.DriveFileVersion", b =>
+            {
+                b.HasOne("InstitutionalDiwan.Domain.Entities.Identity.User", null)
+                    .WithMany()
+                    .HasForeignKey("CreatedByUserId")
+                    .OnDelete(DeleteBehavior.Restrict)
+                    .IsRequired();
+
+                b.HasOne("InstitutionalDiwan.Domain.Entities.Drive.DriveItem", null)
+                    .WithMany()
+                    .HasForeignKey("FileItemId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
+
+                b.HasOne("InstitutionalDiwan.Domain.Entities.Attachments.FileStorageProvider", null)
+                    .WithMany()
+                    .HasForeignKey("StorageProviderId")
+                    .OnDelete(DeleteBehavior.Restrict)
+                    .IsRequired();
+            });
+
+        modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Drive.DriveItem", b =>
+            {
+                b.HasOne("InstitutionalDiwan.Domain.Entities.Drive.DriveFileVersion", null)
+                    .WithMany()
+                    .HasForeignKey("CurrentVersionId")
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                b.HasOne("InstitutionalDiwan.Domain.Entities.Identity.User", null)
+                    .WithMany()
+                    .HasForeignKey("OwnerUserId")
+                    .OnDelete(DeleteBehavior.Restrict)
+                    .IsRequired();
+
+                b.HasOne("InstitutionalDiwan.Domain.Entities.Drive.DriveItem", null)
+                    .WithMany()
+                    .HasForeignKey("ParentId")
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                b.HasOne("InstitutionalDiwan.Domain.Entities.Drive.DriveSpace", null)
+                    .WithMany()
+                    .HasForeignKey("SpaceId")
+                    .OnDelete(DeleteBehavior.Restrict)
+                    .IsRequired();
+            });
+
+        modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Drive.DrivePermission", b =>
+            {
+                b.HasOne("InstitutionalDiwan.Domain.Entities.Identity.User", null)
+                    .WithMany()
+                    .HasForeignKey("GrantedByUserId")
+                    .OnDelete(DeleteBehavior.Restrict)
+                    .IsRequired();
+
+                b.HasOne("InstitutionalDiwan.Domain.Entities.Drive.DriveItem", null)
+                    .WithMany()
+                    .HasForeignKey("ItemId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
+            });
+
+        modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Drive.DriveSpace", b =>
+            {
+                b.HasOne("InstitutionalDiwan.Domain.Entities.Identity.User", null)
+                    .WithMany()
+                    .HasForeignKey("OwnerUserId")
+                    .OnDelete(DeleteBehavior.Restrict)
+                    .IsRequired();
+            });
+
+        modelBuilder.Entity("InstitutionalDiwan.Domain.Entities.Drive.DriveStar", b =>
+            {
+                b.HasOne("InstitutionalDiwan.Domain.Entities.Drive.DriveItem", null)
+                    .WithMany()
+                    .HasForeignKey("ItemId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
+
+                b.HasOne("InstitutionalDiwan.Domain.Entities.Identity.User", null)
+                    .WithMany()
+                    .HasForeignKey("UserId")
+                    .OnDelete(DeleteBehavior.Cascade)
                     .IsRequired();
             });
 

@@ -54,14 +54,23 @@ public sealed class FileStorageProviderSeeder : LookupSeederBase<FileStorageProv
     protected override IReadOnlyList<(int Id, string Desc, string DescAr)> Catalog { get; } = new (int, string, string)[]
     {
         (FileStorageProvider.LocalDefaultId, "Default local storage", "التخزين المحلي الافتراضي"),
+        (FileStorageProvider.DriveSeaweedFsId, "SeaweedFS (Drive)", "SeaweedFS (نظام الملفات)"),
     };
 
     protected override FileStorageProvider BuildItem(int id, string desc, string descAr) =>
-        FileStorageProvider.Create(
-            id,
-            desc,
-            descAr,
-            "storage/documents",
-            StorageProviderType.LocalFileSystemId,
-            isDefault: true).Value;
+        id == FileStorageProvider.DriveSeaweedFsId
+            // The bucket name only; endpoint and credentials live in Drive:Storage configuration.
+            ? FileStorageProvider.Create(
+                id,
+                desc,
+                descAr,
+                "drive",
+                StorageProviderType.AwsS3Id).Value
+            : FileStorageProvider.Create(
+                id,
+                desc,
+                descAr,
+                "storage/documents",
+                StorageProviderType.LocalFileSystemId,
+                isDefault: true).Value;
 }

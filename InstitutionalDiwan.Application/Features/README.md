@@ -106,6 +106,11 @@ stamp against live identity/role/permission state and restricts forced-change se
 - **Queries:** `GetUserNotificationsQuery`, `GetUnreadNotificationCountQuery`
 - **Event handlers:** `SendNotificationOnMovementSentHandler`, `SendNotificationOnDocumentAccessGrantedHandler`
 
+### Drive (Module 11)
+- **Commands:** spaces (create/rename/quota/ensure-personal), items (folder/rename/move/star/unstar), uploads (initiate/complete/abandon), version restore, permissions (grant/revoke/inheritance), deletion (request/approve/reject/cancel/direct), trash (restore/purge), settings (update)
+- **Queries:** space get/list, item browse/get/breadcrumb/children, file content (Range)/download-url/versions, permission list/effective-role, deletion-request list, trash list, settings get — see [`Drive/README.md`](Drive/README.md)
+- **Status:** application core ✅ (Phase 2); HTTP controllers ⏳ (Phase 3), OnlyOffice editing ⏳ (Phase 4). Independent of archiving (Module 07).
+
 ## Mapping to the domain
 
 Each command/query maps to behavior that already exists on the aggregates — for example
@@ -162,11 +167,13 @@ registries, per-document grants/movements) still returns a plain collection on p
 | Relations (Module 08: create/remove link, list, graph, history) | ✅ Implemented |
 | Ui/`UiLabels` (get/set/reset superadmin UI label replacements, cache version) | ✅ Implemented ([Ui/UiLabels/README.md](Ui/UiLabels/README.md)) |
 | Notifications | ❌ Not implemented |
+| Drive (Module 11: spaces, items, uploads, versions, permissions, deletion, trash, settings) | 🟡 Application core implemented (Phase 2); controllers + OnlyOffice pending ([Drive/README.md](Drive/README.md)) |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-19 | Qoder | Added the `Drive/` slice (Module 11, Phase 2): the full application core for the Google-Drive-like file module — spaces, folders/files, stars, presigned uploads, download/Range, immutable versions + copy-restore, hierarchical permissions, approval-gated deletion, trash/restore/purge, name search, and Drive settings. |
 | 2026-11-17 | Qoder | Added the `Ui/UiLabels` slice (plan `plans/ui-labels-edit-mode.md`, Phase 0): get/set/reset UI label replacements with a cache version; writes are superadmin-only at the host. |
 | 2026-11-11 | Claude | Slice D: a join decision creates a `JoinedInto` link in the same save, and canceling it removes that link. `ListJoinCandidatesQuery` suggests other files; it does not join them. |
 | 2026-11-11 | Claude | Appeal commands on the `Decisions` slice. The document decision list returns appeals. Scope may cover the issuing department or the appellant department, including when the document is archived. |

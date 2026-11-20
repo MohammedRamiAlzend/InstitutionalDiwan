@@ -33,6 +33,10 @@ public static class Permissions
     public const string DepartmentRecordCorrect = "DEPARTMENT_RECORD_CORRECT";
     /// <summary>Issue a decision, attach its copy, and cancel a mistaken entry.</summary>
     public const string DecisionManage = "DECISION_MANAGE";
+    /// <summary>Use the Drive file module: spaces, folders, files, versions and sharing.</summary>
+    public const string DriveUse = "DRIVE_USE";
+    /// <summary>Administer Drive: default quotas and file-size limits, any space, permanent trash deletion.</summary>
+    public const string DriveManage = "DRIVE_MANAGE";
 
     /// <summary>Every known permission — used to register one authorization policy per permission.</summary>
     public static readonly IReadOnlyCollection<string> All = new[]
@@ -41,6 +45,6 @@ public static class Permissions
         NumberingView, NumberingManage, DepartmentManage, RoleManage, UserManage, EmployeeManage,
         AccessGrantManage, ReportView, LookupManage, AuditView, AuditManage, SystemErrorsView,
         PersonView, PersonManage, DepartmentRecordViewAll, DepartmentRecordCorrect,
-        DecisionManage,
+        DecisionManage, DriveUse, DriveManage,
     };
 }

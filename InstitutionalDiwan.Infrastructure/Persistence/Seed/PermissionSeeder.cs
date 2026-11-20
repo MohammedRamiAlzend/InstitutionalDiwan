@@ -42,6 +42,8 @@ public sealed class PermissionSeeder : ISeeder
         (Permissions.DepartmentRecordViewAll, "الاطلاع على سجلات الدواوين", "View all department records", "CORRESPONDENCE", "Read the records other departments keep on their visits of a document."),
         (Permissions.DepartmentRecordCorrect, "تصحيح سجلات الدواوين المقفلة", "Correct locked department records", "CORRESPONDENCE", "Correct a department record after the document left the department, with a reason."),
         (Permissions.DecisionManage, "إدارة القرارات", "Manage decisions", "DECISIONS", "Issue a decision on a document the caller's department holds, attach its copy, and cancel a mistaken entry."),
+        (Permissions.DriveUse, "استخدام نظام الملفات", "Use Drive", "DRIVE", "Use personal and shared file spaces: folders, files, versions, sharing and trash."),
+        (Permissions.DriveManage, "إدارة نظام الملفات", "Manage Drive", "DRIVE", "Set default quotas and file-size limits, administer any space, and permanently delete from trash."),
     };
 
     public async Task SeedAsync(SeederContext context, CancellationToken cancellationToken = default)
