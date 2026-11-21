@@ -1,7 +1,7 @@
 import axios, { type AxiosProgressEvent } from 'axios'
 import { ENV } from '@/shared/config'
 import { tokenStorage } from './tokenStorage'
-import { ApiError, toApiErrorAsync } from './problemDetails'
+import { ApiError, toApiError, toApiErrorAsync } from './problemDetails'
 import { CLIENT_ERROR_KIND, reportClientError } from './errorReporter'
 
 /**
@@ -92,6 +92,43 @@ export async function downloadBlob(
   return {
     blob: response.data,
     contentDisposition: typeof header === 'string' ? header : null,
+  }
+}
+
+export interface PresignedPutOptions {
+  /** 0–100 while the bytes are being sent to the storage gateway. */
+  onProgress?: (percent: number) => void
+  /**
+   * `Content-Type` to send. A presigned PUT signature may cover this header, so it must match what
+   * the server signed; omit it to let the browser set the file's own type.
+   */
+  contentType?: string
+}
+
+/**
+ * Direct-to-storage PUT for Module 11 Drive presigned uploads. Deliberately uses the bare `axios`
+ * import — NOT `httpClient` — so the JWT interceptor, the `/api` baseURL, and the ProblemDetails
+ * normalization never touch the external SeaweedFS gateway. The bytes go straight to the signed URL.
+ * A failure is normalized to an `ApiError` (the gateway answers S3 XML, not ProblemDetails); the
+ * upload feature owns the Arabic wording for a failed PUT.
+ */
+export async function putPresigned(
+  url: string,
+  file: Blob,
+  options: PresignedPutOptions = {},
+): Promise<void> {
+  try {
+    await axios.put(url, file, {
+      headers: options.contentType ? { 'Content-Type': options.contentType } : undefined,
+      maxBodyLength: Infinity,
+      maxContentLength: Infinity,
+      onUploadProgress: (event: AxiosProgressEvent) => {
+        if (!options.onProgress || !event.total) return
+        options.onProgress(Math.round((event.loaded / event.total) * 100))
+      },
+    })
+  } catch (error) {
+    throw toApiError(error)
   }
 }
 

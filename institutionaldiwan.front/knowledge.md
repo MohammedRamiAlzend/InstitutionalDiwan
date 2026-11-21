@@ -132,7 +132,7 @@ source of truth: `src/shared/config/permissions.ts`.
 | `DEPARTMENT_RECORD_VIEW_ALL` | Read other departments' records on a document (seeded for admin) |
 | `DEPARTMENT_RECORD_CORRECT` | Correct a locked department record with a reason (seeded for admin) |
 | `DECISION_MANAGE` | Issue a decision, attach its copy, and cancel a mistaken entry (seeded for admin and the standard diwan operator) |
-| `DRIVE_USE` | Drive file module (Module 11, API pending): personal/shared spaces, folders, files, versions, sharing, trash (seeded for admin and user) |
+| `DRIVE_USE` | Drive file module (Module 11 «الملفات», backend live; front-end reads landed in Phase 0): personal/shared spaces, folders, files, versions, sharing, trash (seeded for admin and user) |
 | `DRIVE_MANAGE` | Drive administration: default quotas and file-size limits, any space, permanent trash deletion (seeded for admin only) |
 
 ## Live Backend Endpoints (external `InstitutionalDiwan.Server`)

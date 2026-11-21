@@ -7,6 +7,7 @@ import { DepartmentsPage } from '@/pages/departments'
 import { DocumentsPage, DocumentDetailsPage } from '@/pages/documents'
 import { MovementsPage } from '@/pages/movements'
 import { ArchivePage } from '@/pages/archive'
+import { DrivePage } from '@/pages/drive'
 import { DecisionsPage } from '@/pages/decisions'
 import { MyRegistersPage } from '@/pages/my-registers'
 import { InstitutionSettingsPage } from '@/pages/institution-settings'
@@ -41,6 +42,7 @@ export function AppRouter() {
             <Route path={ROUTES.DECISIONS} element={<DecisionsPage />} />
             <Route path={ROUTES.MY_REGISTERS} element={<MyRegistersPage />} />
             <Route path={ROUTES.ARCHIVE} element={<ArchivePage />} />
+            <Route path={ROUTES.DRIVE} element={<DrivePage />} />
             <Route path={ROUTES.DEPARTMENTS} element={<DepartmentsPage />} />
             <Route path={ROUTES.INSTITUTION_SETTINGS} element={<InstitutionSettingsPage />} />
             <Route path={ROUTES.USERS} element={<UsersPage />} />

@@ -1,5 +1,5 @@
-export { httpClient, uploadForm, downloadBlob, ApiError } from './httpClient'
-export type { UploadOptions, BlobDownload } from './httpClient'
+export { httpClient, uploadForm, downloadBlob, putPresigned, ApiError } from './httpClient'
+export type { UploadOptions, BlobDownload, PresignedPutOptions } from './httpClient'
 export { toApiError, toApiErrorAsync, isConflictError } from './problemDetails'
 export { toArabicErrorMessage } from './errorMessages'
 export { tokenStorage } from './tokenStorage'

@@ -11,6 +11,7 @@ export const ROUTES = {
   DECISIONS: '/decisions',
   MY_REGISTERS: '/my-registers',
   ARCHIVE: '/archive',
+  DRIVE: '/drive',
   NOTIFICATIONS: '/notifications',
   LOOKUPS: '/lookups',
   DEPARTMENTS: '/departments',

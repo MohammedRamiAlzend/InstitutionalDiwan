@@ -3,7 +3,8 @@
 > **Status:** Module 01 Organization reads (`department`, `institution-setting`), Module 02
 > Identity reads (`user`, `role`, `employee`), lookup catalogs, the reusable employee picker,
 > Module 03 document, external-organization, numbering-registry, and movement reads, the
-> Module 06 `document-file` reads, and the Module 09 `audit-log` reads are implemented.
+> Module 06 `document-file` reads, the Module 09 `audit-log` reads, and the Module 11 `drive-space`
+> and `drive-item` reads (front-end Phase 0) are implemented.
 
 ## Purpose
 
@@ -45,6 +46,8 @@ read-only presentational UI. Entities never perform write mutations.
 | `document-relation/` | `DocumentRelationResponse`, `RelationGraphResponse`, `DocumentRelationEventResponse` (`GET /api/documents/{id}/relations`, `/graph`, `/events`) | `useDocumentRelations`, `useRelationGraph`, `useRelationEvents`, `relationGraphToMermaid`, `RelationTypeBadge` |
 | `document-schema/` | `DocumentFieldResponse`, `SchemaVersionResponse`, `DocumentFieldsResponse` (`/document-types/{id}/fields`, `/schema`, `/schema-versions`, `/schema-versions/{id}`, `/documents/{id}/fields`) | `useDocumentTypeFields`, `useSchemaVersions`, `useSchemaVersion`, `useDocumentTypeSchema`, `useDocumentFields`, `DynamicFieldInputs`, value validation helpers, badges |
 | `ui-label/` | `UiLabelOverridesResponse` (`GET /api/ui-labels`, any authenticated caller) | `useUiLabelsQuery`, `uiLabelKeys` | ✅ Read implemented (UI labels Phase 1); `app/providers/LabelsBootGate` applies it to the labels store. Writes land in `features/ui-label-manage` (Phase 2). |
+| `drive-space/` | Module 11 `DriveSpaceResponse`, `DriveSpacesOverviewResponse`, `DriveSettingsResponse` (`GET /api/drive/spaces`, `/drive/spaces/{id}`, `/drive/settings`) | `useDriveSpaces`, `useDriveSpace`, `useDriveSettings` (opt-in `DRIVE_MANAGE`), `driveSpaceKeys`, `QuotaMeter` | ✅ Reads implemented (Module 11 front-end Phase 0); the shell/sidebar + quota counter land in Phase 1, writes in `features/drive-space-manage`. |
+| `drive-item/` | Module 11 item/version/permission/deletion-request responses, breadcrumb, effective role, download URL (`GET /api/drive/items`, `/children`, `/breadcrumb`, `/effective`, `/permissions`, `/drive/files/{id}/versions`, `/download-url`, `/content`, `/drive/deletion-requests`, `/drive/trash`) | `useDriveItems`, `useDriveItem`, `useDriveBreadcrumb`, `useDriveChildren`, `useDriveVersions`, `useDrivePermissions` (opt-in), `useDriveEffectiveRole`, `useDriveDeletionRequests`, `useDriveTrash`, `driveItemKeys`, `driveItemApi.content`/`versionContent`/`downloadUrl`, `ItemKindIcon`, `RoleBadge`, `VersionStatusBadge`, `VersionSourceBadge`, `DeletionStatusBadge`, `StarIndicator` | ✅ Reads + six badges implemented (Module 11 front-end Phase 0); the browser lands in Phase 2, upload/preview in Phase 3, versions/permissions in Phase 4, deletion/trash in Phase 5; writes in the `drive-*` features. |
 
 ## Conventions
 
@@ -79,11 +82,14 @@ read-only presentational UI. Entities never perform write mutations.
 | `document-relation/` | ✅ Links, graph and history reads, query keys/hooks, direction phrases, Mermaid/tree builders, badges (Module 08). |
 | `document-file/` | ✅ File/version/checksum types, `documentFileApi` (document-scoped list, blob download, on-demand verify), query keys/hooks (verify disabled until an explicit action), `ChecksumBadge`, and `FileArchivedBadge`; mounted by `widgets/document-attachments-panel`. |
 | `ui-label/` | ✅ Overrides read (`UiLabelOverridesResponse`, `uiLabelApi.get`), `uiLabelKeys`, `useUiLabelsQuery` (UI labels Phase 1); consumed by `app/providers/LabelsBootGate`. |
+| `drive-space/` | ✅ Spaces overview/by-id/settings reads, `driveSpaceKeys`, `useDriveSpaces`/`useDriveSpace`/`useDriveSettings` (settings opt-in, `DRIVE_MANAGE`-only), `QuotaMeter` (Module 11 front-end Phase 0); no consumer yet — shell/sidebar + quota counter land in Phase 1. |
+| `drive-item/` | ✅ Browse/by-id/breadcrumb/children/versions/permissions/effective/deletion-requests/trash reads, presigned download URL + two Range-capable byte reads, `driveItemKeys` (ten keys) and nine hooks (`useDrivePermissions` opt-in, `useDriveEffectiveRole` for action gating), six badges (Module 11 front-end Phase 0); no consumer yet — browser lands in Phase 2. |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-20 | Qoder | Module 11 front-end Phase 0 (`plans/module-11-drive-frontend.md`): added the `drive-space` and `drive-item` read slices — spaces overview/by-id/opt-in settings + `QuotaMeter`, and item/version/permission/deletion-request/trash reads with the presigned download URL and two Range-capable byte reads, ten query keys, nine hooks (`useDrivePermissions` opt-in, `useDriveEffectiveRole` for accurate action gating), and six badges. No page consumes them yet; the shell/sidebar lands in Phase 1 and the browser in Phase 2. |
 | 2026-11-17 | Qoder | UI labels, Phase 1 (`plans/ui-labels-edit-mode.md`): added the `ui-label` read slice — `UiLabelOverridesResponse`, `uiLabelApi.get` (`GET /api/ui-labels`), `uiLabelKeys`, and `useUiLabelsQuery`; `app/providers/LabelsBootGate` owns applying the result to the labels store. |
 | 2026-11-12 | Claude | Added `branding/`: the institution name and logo read from the anonymous `GET /api/branding`, with `BrandMark`, `BrandName` and `BrandingEffects`. |
 | 2026-11-11 | Claude | A document decision's appeals are part of the read model. |

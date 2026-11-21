@@ -52,6 +52,23 @@ export {
   fileTypeLimits,
 } from './attachmentLimits'
 export type { FileTypeUploadLimits } from './attachmentLimits'
+export {
+  DRIVE_SPACE_TYPE,
+  DRIVE_ITEM_KIND,
+  DRIVE_ROLE,
+  DRIVE_PRINCIPAL_TYPE,
+  DRIVE_VERSION_STATUS,
+  DRIVE_VERSION_SOURCE,
+  DRIVE_DELETION_STATUS,
+  DRIVE_SESSION_STATUS,
+  DRIVE_STORAGE_PROVIDER_ID,
+} from './driveIds'
+export {
+  DEFAULT_DRIVE_QUOTA_BYTES,
+  DEFAULT_DRIVE_MAX_FILE_BYTES,
+  DEFAULT_DRIVE_ALLOWED_EXTENSIONS,
+  driveFileRejection,
+} from './driveLimits'
 export { getGuideEntry, getPageGuide } from './guides'
 export type { GuideEntry, PageGuide } from './guides'
 export { LABEL_DEFAULTS } from './labels'

@@ -18,6 +18,7 @@ export const NAV_LABELS = {
   'nav.my-registers': 'سجلاتي',
   'nav.persons': 'الأشخاص',
   'nav.archive': 'الأرشيف',
+  'nav.drive': 'الملفات',
   'nav.departments': 'الأقسام',
   'nav.institution-settings': 'إعدادات المؤسسة',
   'nav.users': 'المستخدمون',

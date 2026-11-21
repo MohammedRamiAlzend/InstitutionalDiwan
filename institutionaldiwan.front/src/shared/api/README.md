@@ -2,7 +2,8 @@
 
 > **Status:** Implemented for Module 01 Organization, Module 02 Identity, the Module 03
 > Correspondence error catalog (documents, numbering, movements), the Module 06 attachment error
-> catalog and transport (multipart upload + blob download), and the Module 09 audit catalog.
+> catalog and transport (multipart upload + blob download), the Module 09 audit catalog, and the
+> Module 11 Drive error catalog (64 codes) + presigned upload PUT transport.
 
 ## Purpose
 
@@ -17,12 +18,12 @@ need: `uploadForm` (multipart with progress) and `downloadBlob` (binary read plu
 
 | File | Purpose |
 | --- | --- |
-| `httpClient.ts` | Axios instance with base URL from `ENV.API_BASE_URL` (`/api`), JWT request interceptor, and an `async` error interceptor that clears the token and redirects to `/login` on `401`. Also exports `uploadForm<T>(url, form, { onProgress })` for multipart posts and `downloadBlob(url, params?)` for `responseType: 'blob'` reads. |
+| `httpClient.ts` | Axios instance with base URL from `ENV.API_BASE_URL` (`/api`), JWT request interceptor, and an `async` error interceptor that clears the token and redirects to `/login` on `401`. Also exports `uploadForm<T>(url, form, { onProgress })` for multipart posts, `downloadBlob(url, params?)` for `responseType: 'blob'` reads, and `putPresigned(url, file, { onProgress?, contentType? })` for the Module 11 direct-to-SeaweedFS upload PUT. |
 | `problemDetails.ts` | `ApiError` (`code`/`detail`/`status`), `toApiError` normalizer, `toApiErrorAsync` for the unread-`Blob` body a binary request leaves behind, and `isConflictError`. |
-| `errorMessages.ts` | `toArabicErrorMessage(error)` maps Identity, Department (including `CentralDiwanProtected`), InstitutionSetting, Lookup, Correspondence, Numbering, Movements, Attachments, Audit, and UiLabel codes to Arabic, with HTTP/network/generic fallbacks. |
+| `errorMessages.ts` | `toArabicErrorMessage(error)` maps Identity, Department (including `CentralDiwanProtected`), InstitutionSetting, Lookup, Correspondence, Numbering, Movements, Attachments, Audit, UiLabel, and the Module 11 `Drive.*` codes (64) to Arabic, with HTTP/network/generic fallbacks. |
 | `tokenStorage.ts` | Read/write/clear helpers for the JWT access token in `localStorage` (`diwan.token`). |
 | `signalrClient.ts` | HubConnection factory — **implement only after** the server exposes hubs (not implemented). |
-| `index.ts` | Barrel exporting `httpClient`, `uploadForm`, `downloadBlob`, `ApiError`, `toApiError`, `toApiErrorAsync`, `isConflictError`, `toArabicErrorMessage`, `tokenStorage`, and the `UploadOptions` / `BlobDownload` types. |
+| `index.ts` | Barrel exporting `httpClient`, `uploadForm`, `downloadBlob`, `putPresigned`, `ApiError`, `toApiError`, `toApiErrorAsync`, `isConflictError`, `toArabicErrorMessage`, `tokenStorage`, and the `UploadOptions` / `BlobDownload` / `PresignedPutOptions` types. |
 
 ## Shared list envelope
 
@@ -54,6 +55,12 @@ Used by documents, users, employees, external organizations, audit logs, and int
 - Blob-response failures: the interceptor awaits `toApiErrorAsync`, so callers still get an
   `ApiError` with the real domain code. Call it directly only when catching an axios error outside
   the interceptor.
+- Presigned upload PUT (Module 11 Drive): go through `putPresigned(url, file, { onProgress?, contentType? })`.
+  It deliberately uses **bare `axios`**, not `httpClient`, so the JWT, the `/api` base URL and the
+  ProblemDetails interceptor never touch the external SeaweedFS gateway; `maxBodyLength`/`maxContentLength`
+  are `Infinity` and progress reports whole percentages. A gateway failure (S3 XML, not ProblemDetails)
+  is normalized via `toApiError`; the upload feature owns the tailored Arabic wording rather than
+  inventing a backend code.
 - Audit integrity POST: treat HTTP 200 + `isValid: false` as a successful RPC.
 
 ## Implementation status
@@ -62,12 +69,14 @@ Used by documents, users, employees, external organizations, audit logs, and int
 | --- | --- |
 | `httpClient.ts`, `problemDetails.ts`, `tokenStorage.ts`, `errorMessages.ts` | Implemented; Organization errors cover central-hub protection, settings missing data, central-department validity/transfer reason, numbering lookups, and responsible employee. Identity adds inactive-role assignment and server-enforced forced-password-change (`403` `Identity.PasswordChangeRequired`) messages; `401` clears the session and redirects to login. Module 03 adds every Correspondence, Numbering, and Movements domain code the registry/details/numbering/routing screens can surface. Module 06 adds all 22 `Attachments.*` codes, including `ChangeNotesTooLong`, which exists only as a validator code and not in `DomainErrors.cs` but still reaches the client as a `ProblemDetails.title`. |
 | Multipart upload / blob download helpers | ✅ Implemented (Module 06 Phase 1): `uploadForm<T>` reports whole-percent progress and skips events with no known total; `downloadBlob` returns the raw blob alongside the `content-disposition` header; and the error interceptor now awaits `toApiErrorAsync`, so a `ProblemDetails` body that arrives as an unread `Blob` still yields the real domain code instead of `Unknown`. The `Content-Disposition` parsing itself lives in `shared/lib/download.ts`. |
+| Presigned PUT helper + `Drive.*` catalog | ✅ Implemented (Module 11 front-end Phase 0): `putPresigned` sends the bytes straight to SeaweedFS via bare `axios` (no JWT/base URL/interceptor), and `errorMessages.ts` maps all 64 `Drive.*` codes to `error.drive.*` keys. No consumer yet — the upload feature lands in Phase 3. |
 | `signalrClient.ts` | Deferred until hubs exist. |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-20 | Qoder | Module 11 front-end Phase 0 (`plans/module-11-drive-frontend.md`): added `putPresigned(url, file, { onProgress?, contentType? })` + `PresignedPutOptions` to `httpClient.ts` (bare `axios`, `Infinity` body/content limits, whole-percent progress — the JWT/base URL/ProblemDetails interceptor must never reach the external SeaweedFS gateway), exported it through the barrel, and mapped all 64 `Drive.*` codes to `error.drive.*` keys in `errorMessages.ts`. No consumer yet — the upload feature lands in Phase 3. |
 | 2026-11-18 | Qoder | UI labels Phase 4 (ب5-متبقٍ): `problemDetails.ts` network/unknown fallback messages resolve through `t()` (`common.api.network` / `common.api.unknown`); safe because `shared/lib` does not import `shared/api`. |
 | 2026-11-17 | Qoder | UI labels Phase 3 (`plans/ui-labels-edit-mode.md`): `errorMessages.ts` no longer holds Arabic text — `CODE_MESSAGES` maps each backend code to a catalog key (`error.<code>`, ~358 entries in `labels/errors.ts`) and `toArabicErrorMessage` resolves it through `t()`; status/generic/network fallbacks use `common.error.*`. Error messages are now renamable like any label. |
 | 2026-11-17 | Qoder | UI labels, Phase 2 (`plans/ui-labels-edit-mode.md`): added the Arabic `UiLabel.*` catalog (`KeyInvalid`, `ValueEmpty`, `ValueTooLong`) for the inline label editor's server failures. |

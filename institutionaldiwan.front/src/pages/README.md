@@ -54,6 +54,7 @@ complex business mutations, raw `axios`/`fetch` calls, or reusable domain models
 | `my-registers/` | `/my-registers` behind `NUMBERING_VIEW`; pick a register of your own department. | `GET /api/numbering/registries`, `GET /api/departments/{id}/register` | ✅ Implemented |
 | `audit/` | `/audit` | 09 — `GET /api/audit-logs`, checkpoints, integrity checks/reports (`?panel=logs\|integrity`) | ✅ Implemented (Module 09) |
 | `archive/` | `/archive` | 07 — `GET /api/archive/documents`, saved searches | ✅ Implemented (Module 07) |
+| `drive/` | `/drive` (`?view=&space=&folder=`) | 11 — `GET /api/drive/spaces`, `POST /api/drive/spaces/personal`, `GET /api/drive/items` browse + breadcrumb/effective, folder/rename/move/star writes, `POST /api/drive/files/initiate|complete|abandon` + presigned PUT, `content`/`download-url` | ✅ Shell + browse + upload/download/preview (front-end Phases 1–3); versions/permissions/deletion in Phases 4–5 |
 | `notifications/` | `/notifications` | 10 — `GET /api/notifications`, `/hubs/notifications` | ✅ Implemented (Module 10) |
 | `lookups/` | `/lookups` | 01 — `/api/lookups` | ✅ Implemented (Module 01, `LOOKUP_MANAGE`) |
 
@@ -81,6 +82,7 @@ the cross-module `widgets/visualization-panel` remains planned.
 | `movements/` | ✅ Implemented (Phase 6: inbox/outbox tabs behind `DOCUMENT_VIEW`, routing menus behind `DOCUMENT_EDIT`). |
 | `audit/` | ✅ Implemented (Module 09: log/integrity panels behind `AUDIT_VIEW`, checkpoint and integrity-check actions behind `AUDIT_MANAGE`; browser-verified for both roles). |
 | `archive/` | ✅ Implemented (Module 07: archive search grid with saved searches behind `DOCUMENT_VIEW`; build and lint pass, verified against the live API). |
+| `drive/` | ✅ Shell + browse + upload/download/preview implemented (Module 11 front-end Phases 1–3: `/drive` behind `DRIVE_USE`, sidebar «الملفات», URL navigation, lazy personal-space ensure, spaces + quota, the `drive-browser` server grid/list with breadcrumb/filters/effective-role menus/DnD moves, and the presigned upload queue + new-version + media preview + Arabic-named download); versions/permissions/deletion land in Phases 4–5; browser verification pending the Phase 6 round. |
 | `notifications/` | ✅ Implemented (Module 10: inbox grid with no permission gate, since every route is scoped to the caller; build and lint pass, exercised against the live API). |
 | `lookups/` | ✅ Implemented (Module 01: catalog picker and entries grid; build and lint pass, add/duplicate flows exercised against the live API). |
 | Final browser/build/test verification | ✅ Module 03 Phase 8 (2026-10-29): build, lint, backend build, and 487 tests pass; role-matrix browser pass (document / numbering / grants managers) plus draft, canceled, replaced-number, and movement states. |
@@ -90,6 +92,9 @@ the cross-module `widgets/visualization-panel` remains planned.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-20 | Qoder | Module 11 front-end Phase 3 (`plans/module-11-drive-frontend.md`): wired upload/download/preview into `drive/DriveWorkspace` — `UploadDriveDialog` (toolbar/drop/new-version), `DrivePreviewDialog` (open-file) and `downloadDriveFile` (download); the upload target follows the open folder/space. |
+| 2026-11-20 | Qoder | Module 11 front-end Phase 2 (`plans/module-11-drive-frontend.md`): wired `widgets/drive-browser` into `drive/DriveWorkspace` — the browse modes now render the real server grid/list (breadcrumb, filters, effective-role menus, DnD moves, create-folder/rename/move/star); trash/deletion stay placeholders until Phase 5. |
+| 2026-11-20 | Qoder | Module 11 front-end Phase 1 (`plans/module-11-drive-frontend.md`): added `drive/` — `/drive` behind `DRIVE_USE`, the «الملفات» sidebar entry, URL navigation (`view`/`space`/`folder`), lazy personal-space ensure, and the sidebar/quota shell. |
 | 2026-11-11 | Claude | Added `my-registers/` (`/my-registers`, the registers of the caller's own department). |
 | 2026-11-11 | Claude | Added `decisions/` (`/decisions`, register and decision-type tabs). |
 | 2026-11-09 | Claude | Added `persons/`. |

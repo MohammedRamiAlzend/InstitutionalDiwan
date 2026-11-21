@@ -5,6 +5,7 @@ import { AUDIT_GUIDE, AUDIT_GUIDE_ENTRIES } from './audit'
 import { SYSTEM_ERRORS_GUIDE, SYSTEM_ERRORS_GUIDE_ENTRIES } from './systemErrors'
 import { COMMON_GUIDE_ENTRIES } from './common'
 import { DASHBOARD_GUIDE, DASHBOARD_GUIDE_ENTRIES } from './dashboard'
+import { DRIVE_GUIDE, DRIVE_GUIDE_ENTRIES } from './drive'
 import { DEPARTMENTS_GUIDE, DEPARTMENTS_GUIDE_ENTRIES } from './departments'
 import {
   DOCUMENT_DETAILS_GUIDE,
@@ -51,6 +52,7 @@ const ALL_ENTRIES: readonly GuideEntry[] = [
   ...SYSTEM_ERRORS_GUIDE_ENTRIES,
   ...PERSONS_GUIDE_ENTRIES,
   ...DASHBOARD_GUIDE_ENTRIES,
+  ...DRIVE_GUIDE_ENTRIES,
 ]
 
 const ALL_PAGES: readonly PageGuide[] = [
@@ -74,6 +76,7 @@ const ALL_PAGES: readonly PageGuide[] = [
   PERSONS_GUIDE,
   PERSON_DETAILS_GUIDE,
   DASHBOARD_GUIDE,
+  DRIVE_GUIDE,
 ]
 
 const entriesById = new Map(ALL_ENTRIES.map((entry) => [entry.id, entry]))
