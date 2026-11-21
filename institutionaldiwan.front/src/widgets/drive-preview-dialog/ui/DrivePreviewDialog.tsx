@@ -1,11 +1,12 @@
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { Download, FileWarning, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useDriveDownloadUrl, type DriveItemResponse } from '@/entities/drive-item'
+import { DriveEditor } from '@/features/drive-editor'
 import { downloadDriveFile } from '@/features/drive-upload'
 import { toArabicErrorMessage } from '@/shared/api'
 import { t } from '@/shared/lib'
-import { Button, Dialog, Label } from '@/shared/ui'
+import { Button, Dialog, GuideRegion, Label } from '@/shared/ui'
 import { drivePreviewKind, isUrlPreviewable } from '../model/previewKind'
 
 interface DrivePreviewDialogProps {
@@ -21,6 +22,7 @@ interface DrivePreviewDialogProps {
  */
 export function DrivePreviewDialog({ item, open, onOpenChange }: DrivePreviewDialogProps) {
   const kind = drivePreviewKind(item.name)
+  const isOffice = kind === 'office'
   const previewable = isUrlPreviewable(kind)
   const [isDownloading, setIsDownloading] = useState(false)
 
@@ -38,6 +40,7 @@ export function DrivePreviewDialog({ item, open, onOpenChange }: DrivePreviewDia
   }
 
   const url = urlQuery.data?.url
+  const closeEditor = useCallback(() => onOpenChange(false), [onOpenChange])
 
   return (
     <Dialog
@@ -59,7 +62,11 @@ export function DrivePreviewDialog({ item, open, onOpenChange }: DrivePreviewDia
       }
     >
       <div className="flex min-h-48 flex-col items-center justify-center gap-3">
-        {!previewable ? (
+        {isOffice ? (
+          <GuideRegion id="drive.editor">
+            <DriveEditor item={item} open={open} onRequestClose={closeEditor} />
+          </GuideRegion>
+        ) : !previewable ? (
           <div className="flex flex-col items-center gap-3 py-8 text-center">
             <FileWarning className="size-10 text-muted" aria-hidden />
             <p className="max-w-md text-sm text-muted">

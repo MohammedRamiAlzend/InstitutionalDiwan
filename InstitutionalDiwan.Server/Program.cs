@@ -1,6 +1,7 @@
 using InstitutionalDiwan.Application;
 using InstitutionalDiwan.Infrastructure;
 using InstitutionalDiwan.Server.Extensions;
+using InstitutionalDiwan.Server.Infrastructure;
 using InstitutionalDiwan.Server.Middleware;
 using Scalar.AspNetCore;
 
@@ -20,6 +21,7 @@ builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddInstitutionalOpenApi();
 builder.Services.AddInstitutionalRateLimiting();
 builder.Services.AddInstitutionalAuthentication(builder.Configuration);
+builder.Services.AddSeaweedFs(builder.Configuration);
 
 builder.Services.AddOpenApi("v1", options =>
 {

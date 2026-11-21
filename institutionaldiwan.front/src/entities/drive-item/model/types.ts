@@ -82,6 +82,15 @@ export interface DriveDownloadUrlResponse {
   expiresAtUtc: string
 }
 
+export interface DriveEditConfigResponse {
+  serverUrl: string
+  documentType: 'word' | 'cell' | 'slide'
+  mode: 'edit' | 'view'
+  sessionId: string
+  versionNumber: number
+  config: Record<string, unknown>
+}
+
 /** `GET /api/drive/items` query — access-filtered, server-paged browse. */
 export interface DriveBrowseParams {
   page?: number

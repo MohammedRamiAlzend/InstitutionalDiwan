@@ -58,6 +58,7 @@ export const DRIVE_LABELS = {
   'drive.action.restore-version': 'استرجاع هذا الإصدار',
   'drive.action.permissions': 'الصلاحيات',
   'drive.action.request-deletion': 'طلب حذف',
+  'drive.action.move-to-trash': 'نقل إلى السلة',
   'drive.action.restore': 'استعادة',
   'drive.action.permanent-delete': 'حذف نهائي',
 
@@ -221,6 +222,8 @@ export const DRIVE_LABELS = {
 
   'drive.confirm.permanent-delete-title': 'حذف نهائي',
   'drive.confirm.permanent-delete-description': 'سيُحذف العنصر وكل إصداراته نهائيًا ولا يمكن استرجاعه. تُحرَّر الحصة المستهلكة.',
+  'drive.confirm.move-to-trash-title': 'نقل إلى السلة',
+  'drive.confirm.move-to-trash-description': 'سيُنقل العنصر وإصداراته إلى السلة، ويمكن استعادته لاحقًا.',
   'drive.confirm.request-deletion-title': 'طلب حذف',
   'drive.confirm.request-deletion-description': 'سيُرسل طلب إلى رئيس قسم المالك (أو ADMIN) للموافقة قبل النقل إلى السلة.',
   'drive.confirm.break-inheritance-title': 'كسر الوراثة',

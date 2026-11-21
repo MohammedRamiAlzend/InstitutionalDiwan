@@ -381,7 +381,7 @@ EditingNotSupported/CallbackTokenInvalid/CallbackDownloadFailed).
   lint exit 0 (91 orphan) + build أخضر؛ لا تغيير خلفي. البايتات الحيّة تحتاج مفاتيح SeaweedFS —
   التحقق البصري مؤجّل لجولة Phase 6 (فحص منطق headless كما في المرفقات).
 
-### Phase 4 — الإصدارات + الصلاحيات
+### Phase 4 — الإصدارات + الصلاحيات ✅ منفّذة (2026-11-21)
 
 - **المخرجات:**
   - `widgets/drive-versions-panel`: حوار/لوحة تسرد `versions` (الأحدث أولًا، شارة الحالي/المصدر/
@@ -394,7 +394,13 @@ EditingNotSupported/CallbackTokenInvalid/CallbackDownloadFailed).
   وراثة يغيّر الوصول، بوابة Manager تخفي لوحة الصلاحيات عن Editor/Viewer، إشعار المنح يصل.
 - **لمس الخلفية:** لا.
 
+- **النتيجة (2026-11-21):** أُضيفت لوحة سجل الإصدارات والتنزيل والاسترجاع كإصدار جديد، وشرائح
+  مشاركة Drive لمنح/سحب صلاحيات المستخدمين والأقسام وكسر/استعادة الوراثة، وربطت في `DriveWorkspace`
+  مع بوابة الدور الفعلي. `npm run build` أخضر؛ التحقق الحي مؤجل لجولة المتصفح في Phase 6؛ لا تغيير خلفي.
+
 ### Phase 5 — الحذف والسلة وصندوق المراجعة + الإعدادات (ADMIN)
+
+**الحالة: منفذة.** تم التحقق عبر `npm run build` و`npm run lint`؛ التحقق الحي مؤجل إلى Phase 6.
 
 - **المخرجات:**
   - `features/drive-deletion`: حوار طلب حذف (سبب إجباري ≤500) + إلغاء الطالب؛ موافقة/رفض (ملاحظة
@@ -411,6 +417,9 @@ EditingNotSupported/CallbackTokenInvalid/CallbackDownloadFailed).
 - **لمس الخلفية:** لا.
 
 ### Phase 6 — المحرر المضمّن OnlyOffice + الأدلة + التحقق الشامل والإغلاق
+
+**الحالة: منفذة برمجيًا.** build وlint أخضران؛ التحقق الحي للمحرر والبايتات مؤجل حتى توفير
+OnlyOffice وSeaweedFS، مع توثيق المسار البديل headless.
 
 - **المخرجات:**
   - `features/drive-editor`: محمّل DocsAPI كسول من `serverUrl`، مكوّن محرر يركّب `DocEditor` بـ`config`
@@ -492,6 +501,9 @@ Phase 0 → Phase 1 → Phase 2 → Phase 3 → Phase 4 → Phase 5 → Phase 6
 
 | التاريخ | الكاتب | التغيير |
 | --- | --- | --- |
+| 2026-11-21 | Copilot | تنفيذ Phase 6 برمجيًا: قراءة `edit-config`، محمّل DocsAPI كسول، محرر OnlyOffice مع تنظيف `destroy()` وأحداث الخطأ/الإغلاق، معاينة Office، دليل Drive، مزامنة الوثائق والصلاحيات. build وlint أخضران؛ التحقق الحي مؤجل لغياب إعدادات OnlyOffice/SeaweedFS؛ لا تغيير خلفي. |
+| 2026-11-21 | Copilot | تنفيذ Phase 5: طلبات الحذف والمراجعة، السلة والاستعادة/الحذف النهائي، الحذف المباشر، وإعدادات Drive؛ ربطها بـ`DriveWorkspace` وتحديث READMEs. build وlint أخضران؛ لا تغيير خلفي. |
+| 2026-11-21 | Copilot | تنفيذ Phase 4: سجل الإصدارات والتنزيل والاسترجاع، مشاركة المستخدم/القسم، سحب الصلاحية، وكسر/استعادة الوراثة؛ ربط workspace وتحديث READMEs. build أخضر؛ lint والتحقق الحي التاليان. |
 | 2026-11-20 | Qoder | تنفيذ Phase 3 (الرفع/التنزيل/المعاينة): `features/drive-upload` (`driveUploadApi` + `useUploadDriveFileMutation` initiate→`putPresigned`→complete/abandon + بصمة محلية + `DriveUploadPutError`، `UploadDriveDialog` طابور تسلسلي/إصدار جديد/تقدّم ثلاثي/رفض مسبق/حصة، `downloadDriveFile` بأسماء عربية)؛ تطابق Content-Type بين initiate وPUT؛ `widgets/drive-preview-dialog` (صور/PDF/فيديو/صوت عبر `download-url` presigned + `useDriveDownloadUrl` جديد، Office لـPhase 6، غير المدعوم ⇒ تنزيل)؛ ربط `DriveWorkspace` + `DriveItemActions.onUploadVersion`؛ الكتالوج 204→216. READMEs للشرائح + الأمهات. البوابات الأمامية: lint exit 0 (91 orphan) + build أخضر؛ لا تغيير خلفي. تنفيذ متواصل نحو Phase 4. |
 | 2026-11-20 | Qoder | تنفيذ Phase 2 (التصفح): `widgets/drive-browser` (`DataTable` server `drive-items` + شبكة بطاقات، breadcrumb، أدوات/مرشّحات نوع/مالك، بوابة الدور الفعلي `useItemRoles`، سحب-إفلات نقل + حوار نقل بشجرة كسولة، `DriveItemActions` للمراحل 3–5)؛ `features/drive-item-manage` (create-folder/rename/move/star متغيّرة + نجمة تفاؤلية + `itemNameSchema` + 3 حوارات + `FolderTreePicker`)؛ ربط `DriveWorkspace`؛ الكتالوج 188→204. READMEs للشرائح + الأمهات. البوابات الأمامية: lint exit 0 (100 orphan) + build أخضر؛ لا تغيير خلفي. تنفيذ متواصل نحو Phase 3. |
 | 2026-11-20 | Qoder | تنفيذ Phase 1 (الهيكل والتنقّل والمساحات والحصة): `routes.DRIVE` + مسار `DrivePage` + مدخل «الملفات» في مجموعة المراسلات؛ `pages/drive` (`RequirePermission`/`GuideProvider`/`PageHeader`/`DriveWorkspace`) مع `useDriveNavigation` (view/space/folder في الرابط) وضمان الشخصية الكسول؛ `widgets/drive-sidebar` (أوضاع خمسة + مبدّل مساحة بقائمة صف + `QuotaMeter`)؛ `features/drive-space-manage` (ensure/create/rename/quota + zod + `useDraftForm` + 3 حوارات)؛ `DriveBrowser` عنصر نائب؛ `guides/drive.ts` (4 مناطق)؛ الكتالوج 185→188. `DriveView`/`isDriveView` في `entities/drive-item`. READMEs للشرائح الأربع + الأمهات. البوابات الأمامية: lint exit 0 (135 orphan) + build أخضر؛ لا تغيير خلفي. تنفيذ متواصل نحو Phase 2 بطلب المستخدم. |

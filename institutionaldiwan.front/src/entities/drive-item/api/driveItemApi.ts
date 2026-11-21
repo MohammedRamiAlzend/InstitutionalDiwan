@@ -6,6 +6,7 @@ import type {
   DriveDeletionRequestParams,
   DriveDeletionRequestResponse,
   DriveDownloadUrlResponse,
+  DriveEditConfigResponse,
   DriveEffectiveRoleResponse,
   DriveItemResponse,
   DrivePermissionResponse,
@@ -83,6 +84,11 @@ export const driveItemApi = {
       `/drive/files/${itemId}/download-url`,
       { params: { versionId: versionId || undefined } },
     )
+    return data
+  },
+
+  editConfig: async (itemId: string): Promise<DriveEditConfigResponse> => {
+    const { data } = await httpClient.get<DriveEditConfigResponse>(`/drive/files/${itemId}/edit-config`)
     return data
   },
 

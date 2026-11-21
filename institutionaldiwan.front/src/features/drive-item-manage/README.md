@@ -1,6 +1,6 @@
 # `src/features/drive-item-manage` — Drive Folder / Rename / Move / Star Writes (Module 11)
 
-> **Status:** ✅ Implemented (2026-11-20, front-end Phase 2) — create-folder, rename, move (dialog +
+> **Status:** ✅ Implemented (2026-11-21, front-end Phase 4) — create-folder, rename, move (dialog +
 > drag-and-drop), and the optimistic personal star toggle, with Zod name validation mirroring the
 > domain rules and a lazy folder-tree destination picker. Consumed by `widgets/drive-browser`.
 
@@ -20,7 +20,7 @@ Allowed: `@/entities/{drive-item,drive-space}`, `@/shared/*`. Forbidden: `@/page
 
 | File | Purpose |
 | --- | --- |
-| `api/driveItemMutations.ts` | `useCreateFolderMutation` (POST `/drive/items/folders`), `useRenameItemMutation(itemId)` (PUT `…/rename`), `useMoveItemMutation()` (PUT `…/move`, variable `{itemId,newParentId}` shared by dialog + DnD), `useSetItemStarMutation()` (POST/DELETE `…/star`, variable `{itemId,starred}`, optimistic paint + rollback + invalidate). |
+| `api/driveItemMutations.ts` | Folder/rename/move/star mutations plus `useRestoreDriveVersionMutation(itemId)` (POST `…/versions/{versionId}/restore`), all invalidating `driveItemKeys`. |
 | `model/types.ts` | `CreateDriveFolderRequest`, `RenameDriveItemRequest`, `MoveDriveItemRequest`. |
 | `model/schemas.ts` | `itemNameSchema` (trim, 1–255, no `\ / : * ? " < > \|`, not `.`/`..` — mirrors `DriveItem`), `moveItemSchema`; `ItemNameFormValues`, `MoveItemFormValues`. |
 | `ui/CreateFolderDialog.tsx` | New folder in the active space/folder (`useDraftForm`, per-space draft id). |
@@ -47,6 +47,7 @@ Allowed: `@/entities/{drive-item,drive-space}`, `@/shared/*`. Forbidden: `@/page
 | Mutations + schemas + types | ✅ Phase 2 |
 | Create-folder / rename / move dialogs + folder tree | ✅ Phase 2 |
 | Optimistic star toggle | ✅ Phase 2 |
+| Version restore mutation | ✅ Phase 4 |
 | Browser verification | ⏳ Phase 6 round |
 
 ## Change Log
@@ -54,3 +55,4 @@ Allowed: `@/entities/{drive-item,drive-space}`, `@/shared/*`. Forbidden: `@/page
 | Date | Author | Change |
 | --- | --- | --- |
 | 2026-11-20 | Qoder | Front-end Phase 2 (`plans/module-11-drive-frontend.md`): implemented the item write slice — create-folder/rename/move/star mutations (variable-based move + star for DnD/rows), Zod name schema mirroring the domain, the three dialogs and the lazy `FolderTreePicker`. Front lint + build green; no backend change. |
+| 2026-11-21 | Copilot | Front-end Phase 4: added the immutable-version restore mutation. |

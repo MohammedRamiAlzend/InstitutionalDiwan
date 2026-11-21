@@ -26,6 +26,7 @@ Earlier design notes called the project `NewDiwan.Presentation`; the actual asse
 | [`Contracts/`](Contracts/README.md) | HTTP request/response DTO records grouped by module | ✅ Correspondence, Organization, Identity, Numbering, Movements, Attachments, Audit, Lookups, Drive |
 | [`Middleware/`](Middleware/README.md) | Global exception handling, correlation-id tracking, action-level audit, forced-password recovery gate, security headers | Implemented: request context, global exceptions, action auditing, `ForcedPasswordChangeMiddleware`, `SecurityHeadersMiddleware`. |
 | [`Extensions/`](Extensions/README.md) | `Result` → HTTP mapping, DI registration, OpenAPI/Scalar, auth setup, per-address rate limiting | ✅ `ResultExtensions`, `DatabaseExtensions`, `AuthenticationExtensions`, `OpenApiExtensions`, `RateLimitingExtensions` |
+| [`Infrastructure/`](Infrastructure/README.md) | Presentation-host infrastructure helpers | ✅ Local SeaweedFS startup is wired for Development |
 | [`Properties/`](Properties/README.md) | Launch profiles plus the `Http-4567` / `Https-5678` publish profiles (SPA build, `dist` → `wwwroot`, Kestrel binding) | ✅ Both publish profiles verified end to end |
 
 ## Current `Program.cs`

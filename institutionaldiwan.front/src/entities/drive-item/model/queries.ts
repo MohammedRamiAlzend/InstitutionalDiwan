@@ -7,6 +7,7 @@ import type {
   DriveDeletionRequestParams,
   DriveDeletionRequestResponse,
   DriveDownloadUrlResponse,
+  DriveEditConfigResponse,
   DriveEffectiveRoleResponse,
   DriveItemResponse,
   DrivePermissionResponse,
@@ -23,6 +24,7 @@ export const driveItemKeys = {
     [...driveItemKeys.all, 'children', spaceId, parentId ?? 'root'] as const,
   versions: (itemId: string) => [...driveItemKeys.all, 'versions', itemId] as const,
   downloadUrl: (itemId: string) => [...driveItemKeys.all, 'download-url', itemId] as const,
+  editConfig: (itemId: string) => [...driveItemKeys.all, 'edit-config', itemId] as const,
   permissions: (itemId: string) => [...driveItemKeys.all, 'permissions', itemId] as const,
   effective: (itemId: string) => [...driveItemKeys.all, 'effective', itemId] as const,
   deletionRequests: (params: DriveDeletionRequestParams) =>
@@ -110,6 +112,20 @@ export function useDriveDownloadUrl(
     gcTime: 0,
     ...options,
     enabled: Boolean(itemId) && (options?.enabled ?? true),
+  })
+}
+
+export function useDriveEditConfig(
+  itemId: string | null | undefined,
+  options?: EnabledOptions<DriveEditConfigResponse>,
+) {
+  return useQuery({
+    queryKey: driveItemKeys.editConfig(itemId ?? ''),
+    queryFn: () => driveItemApi.editConfig(itemId as string),
+    staleTime: 0,
+    gcTime: 0,
+    ...options,
+    enabled: Boolean(itemId) && (options?.enabled ?? false),
   })
 }
 

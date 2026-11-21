@@ -1,6 +1,6 @@
 # `src/features/drive-space-manage` — Drive Space Commands
 
-> **Status:** Implemented (front-end Phase 1) — ensure-personal, create, rename and quota-override writes.
+> **Status:** Implemented (front-end Phase 5) — space writes plus administrator Drive settings.
 
 ## Purpose
 
@@ -19,6 +19,7 @@ first entry, not by a dialog here.
 | `ui/CreateSpaceDialog.tsx` | Names a new shared space; the institution default quota applies. |
 | `ui/RenameSpaceDialog.tsx` | Renames a space (owner or ADMIN), prefilled from the current name. |
 | `ui/SpaceQuotaDialog.tsx` | ADMIN per-space quota override; amount + unit (بايت/ك.ب/م.ب/غ.ب), empty restores the default. |
+| `ui/DriveSettingsDialog.tsx` | ADMIN institution defaults for quota, maximum file size and allowed extensions. |
 | `index.ts` | Public barrel. |
 
 ## Permissions
@@ -38,4 +39,5 @@ first entry, not by a dialog here.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-21 | Copilot | Completed Phase 5 by adding the ADMIN Drive settings dialog and update mutation. |
 | 2026-11-20 | Qoder | Front-end Phase 1: created the space-write slice (ensure/create/rename/quota) with Zod schemas and three dialogs. |

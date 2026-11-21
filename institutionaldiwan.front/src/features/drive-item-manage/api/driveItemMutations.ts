@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { driveItemKeys, type DriveItemResponse } from '@/entities/drive-item'
 import { httpClient } from '@/shared/api'
 import type { PagedResult } from '@/shared/types'
+import type { DriveVersionResponse } from '@/entities/drive-item'
 import type { CreateDriveFolderRequest, RenameDriveItemRequest } from '../model/types'
 
 /** Structural writes (folder/rename/move) change browse, children and detail alike. */
@@ -101,6 +102,21 @@ export function useSetItemStarMutation() {
     onMutate: ({ itemId, starred }) => paintStarred(queryClient, itemId, starred),
     onError: (_error, { itemId, starred }) => paintStarred(queryClient, itemId, !starred),
     onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: driveItemKeys.all })
+    },
+  })
+}
+
+export function useRestoreDriveVersionMutation(itemId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (versionId: string): Promise<DriveVersionResponse> => {
+      const { data } = await httpClient.post<DriveVersionResponse>(
+        `/drive/files/${itemId}/versions/${versionId}/restore`,
+      )
+      return data
+    },
+    onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: driveItemKeys.all })
     },
   })

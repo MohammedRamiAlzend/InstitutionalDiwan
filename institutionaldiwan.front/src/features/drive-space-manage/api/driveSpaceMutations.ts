@@ -6,6 +6,7 @@ import type {
   RenameDriveSpaceRequest,
   SetDriveSpaceQuotaRequest,
 } from '../model/types'
+import type { DriveSettingsResponse } from '@/entities/drive-space'
 
 /** Every space write changes the overview and the touched space's detail, so refetch the whole slice. */
 function useSpaceInvalidation() {
@@ -66,5 +67,22 @@ export function useSetSpaceQuotaMutation(spaceId: string) {
       return data
     },
     onSuccess: invalidate,
+  })
+}
+
+export function useUpdateDriveSettingsMutation() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (request: {
+      defaultQuotaBytes: number
+      maxFileSizeBytes: number
+      allowedExtensionsCsv: string
+    }): Promise<DriveSettingsResponse> => {
+      const { data } = await httpClient.put<DriveSettingsResponse>('/drive/settings', request)
+      return data
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: driveSpaceKeys.all })
+    },
   })
 }

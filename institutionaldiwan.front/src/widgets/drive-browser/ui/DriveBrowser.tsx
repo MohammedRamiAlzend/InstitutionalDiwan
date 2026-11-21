@@ -47,6 +47,7 @@ import {
 import {
   Button,
   DataTable,
+  GuideRegion,
   Label,
   type DataTableColumn,
   type MenuEntry,
@@ -66,6 +67,7 @@ export interface DriveItemActions {
   onVersions?: (item: DriveItemResponse) => void
   onPermissions?: (item: DriveItemResponse) => void
   onRequestDeletion?: (item: DriveItemResponse) => void
+  onDirectDelete?: (item: DriveItemResponse) => void
 }
 
 interface DriveBrowserProps {
@@ -283,6 +285,15 @@ export function DriveBrowser({
         onSelect: () => actions.onRequestDeletion?.(item),
       })
     }
+    if (canManageItem && actions?.onDirectDelete) {
+      menu.push({
+        id: 'direct-delete',
+        label: t('drive.action.move-to-trash'),
+        icon: <Trash2 className="size-4" aria-hidden />,
+        danger: true,
+        onSelect: () => actions.onDirectDelete?.(item),
+      })
+    }
 
     menu.push(
       { type: 'separator' },
@@ -452,22 +463,24 @@ export function DriveBrowser({
   ) : undefined
 
   const controls = (
-    <DriveBrowserControls
-      search={table.search}
-      onSearchChange={table.setSearch}
-      layout={layout}
-      onLayoutChange={(next) => table.setFilter('layout', next === 'list' ? null : next)}
-      canCreateFolder={canCreateFolder}
-      onNewFolder={() => setCreateFolderOpen(true)}
-      onUpload={onUpload}
-      kind={table.filters.kind ?? ''}
-      onKindChange={(value) => table.setFilter('kind', value === 'all' ? null : value)}
-      owner={table.filters.owner ?? ''}
-      onOwnerChange={(value) => table.setFilter('owner', value === 'all' ? null : value)}
-      ownerOptions={ownerOptions}
-      onRefresh={() => void query.refetch()}
-      isFetching={query.isFetching}
-    />
+    <GuideRegion id="drive.upload">
+      <DriveBrowserControls
+        search={table.search}
+        onSearchChange={table.setSearch}
+        layout={layout}
+        onLayoutChange={(next) => table.setFilter('layout', next === 'list' ? null : next)}
+        canCreateFolder={canCreateFolder}
+        onNewFolder={() => setCreateFolderOpen(true)}
+        onUpload={onUpload}
+        kind={table.filters.kind ?? ''}
+        onKindChange={(value) => table.setFilter('kind', value === 'all' ? null : value)}
+        owner={table.filters.owner ?? ''}
+        onOwnerChange={(value) => table.setFilter('owner', value === 'all' ? null : value)}
+        ownerOptions={ownerOptions}
+        onRefresh={() => void query.refetch()}
+        isFetching={query.isFetching}
+      />
+    </GuideRegion>
   )
 
   if (view === 'shared' && !activeSpace) {
@@ -480,7 +493,6 @@ export function DriveBrowser({
       </div>
     )
   }
-
   if (view === 'my-files' && !personal) {
     return (
       <div className="flex min-h-64 items-center justify-center gap-2 rounded-xl border border-border bg-surface p-8 text-sm text-muted">
@@ -511,12 +523,14 @@ export function DriveBrowser({
       }}
     >
       {view !== 'starred' && (
-        <DriveBreadcrumb
-          folderId={folderId}
-          spaceName={activeSpace?.name ?? t('drive.my-files')}
-          onNavigateFolder={onNavigateFolder}
-          onDropItem={handleDropItem}
-        />
+        <GuideRegion id="drive.breadcrumb">
+          <DriveBreadcrumb
+            folderId={folderId}
+            spaceName={activeSpace?.name ?? t('drive.my-files')}
+            onNavigateFolder={onNavigateFolder}
+            onDropItem={handleDropItem}
+          />
+        </GuideRegion>
       )}
 
       {fileOver && (
@@ -527,64 +541,66 @@ export function DriveBrowser({
         </div>
       )}
 
-      {layout === 'list' ? (
-        <DataTable
-          tableId="drive-items"
-          mode="server"
-          caption={t('drive.browser.caption')}
-          columns={columns}
-          rows={items}
-          rowKey={(item) => item.itemId}
-          isLoading={query.isLoading}
-          error={query.error}
-          onRetry={() => void query.refetch()}
-          isFetching={query.isFetching}
-          page={table.page}
-          pageSize={table.pageSize}
-          totalCount={query.data?.totalCount ?? 0}
-          onPageChange={table.setPage}
-          onPageSizeChange={table.setPageSize}
-          sortKey={table.sortKey}
-          sortDirection={table.sortDirection}
-          onSortChange={table.setSort}
-          rowMenu={buildRowMenu}
-          headerMenu={headerMenu}
-          emptyMenu={headerMenu}
-          rowLabel={(item) => item.name}
-          toolbar={controls}
-          emptyTitle={emptyTitle}
-          emptyDescription={emptyDescription}
-          emptyAction={emptyAction}
-        />
-      ) : (
-        <>
-          {controls}
-          {query.error && (
-            <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-danger/40 bg-danger/10 px-3 py-2 text-sm text-danger">
-              <span>{toArabicErrorMessage(query.error)}</span>
-              <Button type="button" variant="outline" size="sm" onClick={() => void query.refetch()}>
-                <Label k="drive.retry" />
-              </Button>
-            </div>
-          )}
-          <DriveItemsGrid
-            items={items}
+      <GuideRegion id="drive.grid">
+        {layout === 'list' ? (
+          <DataTable
+            tableId="drive-items"
+            mode="server"
+            caption={t('drive.browser.caption')}
+            columns={columns}
+            rows={items}
+            rowKey={(item) => item.itemId}
             isLoading={query.isLoading}
-            roles={roles}
-            rowMenu={buildRowMenu}
-            onOpenFolder={openFolder}
-            onOpenFile={actions?.onOpenFile}
-            onDropItem={handleDropItem}
+            error={query.error}
+            onRetry={() => void query.refetch()}
+            isFetching={query.isFetching}
             page={table.page}
             pageSize={table.pageSize}
             totalCount={query.data?.totalCount ?? 0}
             onPageChange={table.setPage}
+            onPageSizeChange={table.setPageSize}
+            sortKey={table.sortKey}
+            sortDirection={table.sortDirection}
+            onSortChange={table.setSort}
+            rowMenu={buildRowMenu}
+            headerMenu={headerMenu}
+            emptyMenu={headerMenu}
+            rowLabel={(item) => item.name}
+            toolbar={controls}
             emptyTitle={emptyTitle}
             emptyDescription={emptyDescription}
             emptyAction={emptyAction}
           />
-        </>
-      )}
+        ) : (
+          <>
+            {controls}
+            {query.error && (
+              <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-danger/40 bg-danger/10 px-3 py-2 text-sm text-danger">
+                <span>{toArabicErrorMessage(query.error)}</span>
+                <Button type="button" variant="outline" size="sm" onClick={() => void query.refetch()}>
+                  <Label k="drive.retry" />
+                </Button>
+              </div>
+            )}
+            <DriveItemsGrid
+              items={items}
+              isLoading={query.isLoading}
+              roles={roles}
+              rowMenu={buildRowMenu}
+              onOpenFolder={openFolder}
+              onOpenFile={actions?.onOpenFile}
+              onDropItem={handleDropItem}
+              page={table.page}
+              pageSize={table.pageSize}
+              totalCount={query.data?.totalCount ?? 0}
+              onPageChange={table.setPage}
+              emptyTitle={emptyTitle}
+              emptyDescription={emptyDescription}
+              emptyAction={emptyAction}
+            />
+          </>
+        )}
+      </GuideRegion>
 
       {canCreateFolder && browseSpaceId && (
         <CreateFolderDialog

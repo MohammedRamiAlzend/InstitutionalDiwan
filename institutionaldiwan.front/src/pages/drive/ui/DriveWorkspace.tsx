@@ -1,36 +1,52 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { ClipboardList, Trash2 } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { Settings } from 'lucide-react'
 import { toast } from 'sonner'
 import type { DriveItemResponse } from '@/entities/drive-item'
 import { useDriveSpace, useDriveSpaces } from '@/entities/drive-space'
 import { useEnsurePersonalSpaceMutation } from '@/features/drive-space-manage'
+import { RequestDeletionDialog, useDirectDeleteDriveItemMutation } from '@/features/drive-deletion'
+import { DriveSettingsDialog } from '@/features/drive-space-manage'
+import { useSessionStore } from '@/entities/user'
+import { Permissions } from '@/shared/config'
 import {
   UploadDriveDialog,
   downloadDriveFile,
   type DriveUploadTarget,
 } from '@/features/drive-upload'
 import { toArabicErrorMessage } from '@/shared/api'
-import { Button, GuideRegion, Label, PageHeader } from '@/shared/ui'
+import { Button, ConfirmDialog, GuideRegion, Label, PageHeader } from '@/shared/ui'
+import { t } from '@/shared/lib'
 import { DriveSidebar } from '@/widgets/drive-sidebar'
 import { DriveBrowser } from '@/widgets/drive-browser'
 import { DrivePreviewDialog } from '@/widgets/drive-preview-dialog'
+import { DriveVersionsPanel } from '@/widgets/drive-versions-panel'
+import { DrivePermissionsPanel } from '@/widgets/drive-permissions-panel'
+import { DriveDeletionInbox } from '@/widgets/drive-deletion-inbox'
+import { DriveTrashPanel } from '@/widgets/drive-trash-panel'
 import { useDriveNavigation } from '../model/useDriveNavigation'
 
 /**
  * The Drive workspace body. Owns the URL navigation state and the spaces overview, ensures the
  * personal space exists on first entry, and composes the sidebar rail with the content region.
- * Browse modes mount `DriveBrowser` with the upload/preview/download actions wired; trash and
- * deletion-requests land in Phase 5.
+ * Browse modes mount `DriveBrowser` with upload/preview/download/editor actions; trash and
+ * deletion-requests are separate URL-driven views.
  */
 export function DriveWorkspace() {
   const nav = useDriveNavigation()
   const { data: overview, isLoading, error, refetch } = useDriveSpaces()
   const { mutate: ensurePersonal, isPending: isEnsuring } = useEnsurePersonalSpaceMutation()
+  const canManage = useSessionStore((state) => state.user?.permissions.includes(Permissions.DriveManage) ?? false)
+  const directDelete = useDirectDeleteDriveItemMutation()
   const ensuredRef = useRef(false)
 
   const [uploadTarget, setUploadTarget] = useState<DriveUploadTarget | null>(null)
   const [uploadFiles, setUploadFiles] = useState<File[]>([])
   const [previewTarget, setPreviewTarget] = useState<DriveItemResponse | null>(null)
+  const [versionsTarget, setVersionsTarget] = useState<DriveItemResponse | null>(null)
+  const [permissionsTarget, setPermissionsTarget] = useState<DriveItemResponse | null>(null)
+  const [deletionTarget, setDeletionTarget] = useState<DriveItemResponse | null>(null)
+  const [directDeleteTarget, setDirectDeleteTarget] = useState<DriveItemResponse | null>(null)
+  const [settingsOpen, setSettingsOpen] = useState(false)
 
   const personal = overview?.personal ?? null
   const shared = overview?.shared ?? []
@@ -100,6 +116,7 @@ export function DriveWorkspace() {
         titleKey="page.drive.title"
         descriptionKey="page.drive.description"
         pageGuide="drive"
+        actions={canManage ? <Button variant="outline" onClick={() => setSettingsOpen(true)}><Settings className="size-4" aria-hidden /><Label k="drive.dialog.settings-title" /></Button> : undefined}
       />
       {error ? (
         <div className="flex min-h-64 flex-col items-center justify-center gap-3 rounded-xl border border-border bg-surface p-8 text-center">
@@ -136,25 +153,31 @@ export function DriveWorkspace() {
                   onOpenFile: setPreviewTarget,
                   onDownload: handleDownload,
                   onUploadVersion: handleUploadVersion,
+                  onVersions: setVersionsTarget,
+                  onPermissions: setPermissionsTarget,
+                  onRequestDeletion: setDeletionTarget,
+                  onDirectDelete: canManage ? setDirectDeleteTarget : undefined,
                 }}
               />
             ) : nav.view === 'trash' ? (
-              <DriveViewPlaceholder icon={<Trash2 className="size-10 text-muted" aria-hidden />} labelKey="drive.trash" />
+            <DriveTrashPanel />
             ) : (
-              <DriveViewPlaceholder icon={<ClipboardList className="size-10 text-muted" aria-hidden />} labelKey="drive.view.deletion-requests" />
+            <DriveDeletionInbox />
             )}
           </GuideRegion>
         </div>
       )}
 
       {uploadTarget && (
-        <UploadDriveDialog
-          target={uploadTarget}
-          remainingQuotaBytes={remainingQuotaBytes}
-          initialFiles={uploadFiles}
-          open
-          onOpenChange={closeUpload}
-        />
+        <GuideRegion id="drive.upload">
+          <UploadDriveDialog
+            target={uploadTarget}
+            remainingQuotaBytes={remainingQuotaBytes}
+            initialFiles={uploadFiles}
+            open
+            onOpenChange={closeUpload}
+          />
+        </GuideRegion>
       )}
       {previewTarget && (
         <DrivePreviewDialog
@@ -165,17 +188,59 @@ export function DriveWorkspace() {
           }}
         />
       )}
-    </div>
-  )
-}
-
-function DriveViewPlaceholder({ icon, labelKey }: { icon: ReactNode; labelKey: 'drive.trash' | 'drive.view.deletion-requests' }) {
-  return (
-    <div className="flex min-h-64 flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border bg-surface p-8 text-center">
-      {icon}
-      <p className="text-sm font-medium text-foreground">
-        <Label k={labelKey} />
-      </p>
+      {versionsTarget && (
+        <GuideRegion id="drive.versions">
+          <DriveVersionsPanel
+            item={versionsTarget}
+            open
+            onOpenChange={(nextOpen) => {
+              if (!nextOpen) setVersionsTarget(null)
+            }}
+          />
+        </GuideRegion>
+      )}
+      {permissionsTarget && (
+        <GuideRegion id="drive.permissions">
+          <DrivePermissionsPanel
+            item={permissionsTarget}
+            open
+            onOpenChange={(nextOpen) => {
+              if (!nextOpen) setPermissionsTarget(null)
+            }}
+          />
+        </GuideRegion>
+      )}
+      {deletionTarget && (
+        <RequestDeletionDialog
+          itemId={deletionTarget.itemId}
+          open
+          onOpenChange={(nextOpen) => {
+            if (!nextOpen) setDeletionTarget(null)
+          }}
+        />
+      )}
+      <ConfirmDialog
+        open={Boolean(directDeleteTarget)}
+        onOpenChange={(nextOpen) => {
+          if (!nextOpen) setDirectDeleteTarget(null)
+        }}
+        title={t('drive.confirm.move-to-trash-title')}
+        description={t('drive.confirm.move-to-trash-description')}
+        confirmLabel={t('drive.action.move-to-trash')}
+        onConfirm={() => {
+          if (!directDeleteTarget) return
+          void directDelete
+            .mutateAsync(directDeleteTarget.itemId)
+            .then(() => {
+              toast.success(t('drive.toast.deleted'))
+              setDirectDeleteTarget(null)
+            })
+            .catch((error) => toast.error(toArabicErrorMessage(error)))
+        }}
+        loading={directDelete.isPending}
+        destructive
+      />
+      <DriveSettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
     </div>
   )
 }

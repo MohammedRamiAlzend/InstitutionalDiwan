@@ -23,11 +23,59 @@ export const DRIVE_GUIDE_ENTRIES: readonly GuideEntry[] = [
     title: 'منطقة التصفح',
     body: 'تعرض مجلدات وملفات المساحة أو العرض الحالي. تفتح المجلدات بالنقر، وترفع الملفات بالسحب والإفلات أو من زر الرفع، ولكل عنصر قائمة إجراءات حسب دورك الفعلي عليه.',
   },
+  {
+    id: 'drive.grid',
+    title: 'شبكة الملفات',
+    body: 'استخدم البحث والفرز والمرشحات ومبدّل الأعمدة والتنقل بين الصفحات. قائمة الصف متاحة بالنقر الأيمن وبزر الإجراءات لكل عنصر.',
+  },
+  {
+    id: 'drive.breadcrumb',
+    title: 'مسار المجلد',
+    body: 'يعرض المسار من جذر المساحة إلى المجلد الحالي؛ انقر أي جزء للعودة إليه دون فقدان حالة التصفح.',
+  },
+  {
+    id: 'drive.upload',
+    title: 'رفع الملفات',
+    body: 'ارفع ملفًا أو اسحبه إلى المنطقة. يُفحص الامتداد والحجم والحصة قبل الحجز، ثم يُرفع مباشرة إلى التخزين وتظهر مراحل التحقق والإتمام.',
+  },
+  {
+    id: 'drive.versions',
+    title: 'إصدارات الملف',
+    body: 'كل رفع لاحق إصدار غير قابل للتغيير. يمكنك تنزيل إصدار محدد أو استعادته كإصدار جديد، مع بقاء سجل النسخ محفوظًا.',
+  },
+  {
+    id: 'drive.permissions',
+    title: 'صلاحيات الملف',
+    body: 'يمنح المدير صلاحيات Viewer أو Editor أو Manager لمستخدم أو قسم، ويمكنه كسر الوراثة أو استعادتها.',
+  },
+  {
+    id: 'drive.editor',
+    title: 'المحرر المضمّن',
+    body: 'تفتح ملفات Word وExcel داخل OnlyOffice إن كان مضبوطًا. يحرر Editor وManager، بينما يفتح Viewer الملف للعرض فقط؛ الحفظ ينشئ إصدارًا جديدًا.',
+  },
 ]
 
 export const DRIVE_GUIDE: PageGuide = {
   pageId: 'drive',
   intro:
     'الملفات مساحة عمل مستقلة عن أرشيف الوثائق: مساحة شخصية ومساحات مشتركة، مجلدات وملفات بإصدارات غير قابلة للتغيير، صلاحيات هرمية، حذف بموافقة رئيس القسم، وسلة مؤقتة. تُرفع الملفات مباشرة إلى التخزين وتُحرَّر داخل الموقع.',
-  entryIds: ['drive.sidebar', 'drive.spaces', 'drive.quota', 'drive.browser'],
+  entryIds: [
+    'drive.sidebar',
+    'drive.spaces',
+    'drive.quota',
+    'drive.browser',
+    'drive.grid',
+    'drive.breadcrumb',
+    'drive.upload',
+    'drive.versions',
+    'drive.permissions',
+    'drive.editor',
+    'table.search',
+    'table.columns',
+    'table.export',
+    'table.pageSize',
+    'table.refresh',
+    'table.rowMenu',
+    'table.empty',
+  ],
 }

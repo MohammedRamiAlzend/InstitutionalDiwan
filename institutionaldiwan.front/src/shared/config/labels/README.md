@@ -1,6 +1,6 @@
 # institutionaldiwan.front / src/shared/config/labels — Editable UI Labels Catalog
 
-> **Status:** Phases 1 + 3 (`common.ts` + `nav.ts` + `pages.ts` + `errors.ts`) + Phase 4 units (`documents.ts`, `movements.ts`, `decisions.ts`, `my-registers.ts`, `persons.ts`, `archive.ts`, `departments.ts`, `institution-settings.ts`, `external-organizations.ts`, `access.ts`, `numbering.ts`, `document-schemas.ts`, `document-details.ts`, `attachments.ts`, `relations.ts`, `lookups.ts`, `audit.ts`, `system-errors.ts`); ب5 (dashboard/notifications/auth/print) lands in a later Phase 4 batch. Module 11 `drive.ts` carries the contract seed + front-end Phase 0 screen copy, and `errors.ts` the 64 `error.drive.*` codes.
+> **Status:** Phases 1 + 3 (`common.ts` + `nav.ts` + `pages.ts` + `errors.ts`) + Phase 4 units (`documents.ts`, `movements.ts`, `decisions.ts`, `my-registers.ts`, `persons.ts`, `archive.ts`, `departments.ts`, `institution-settings.ts`, `external-organizations.ts`, `access.ts`, `numbering.ts`, `document-schemas.ts`, `document-details.ts`, `attachments.ts`, `relations.ts`, `lookups.ts`, `audit.ts`, `system-errors.ts`); ب5 (dashboard/notifications/auth/print) lands in a later Phase 4 batch. Module 11 `drive.ts` carries the contract seed + front-end Phase 5 screen copy, and `errors.ts` the 64 `error.drive.*` codes.
 
 ## Purpose
 
@@ -78,6 +78,7 @@ defaults in code means a failed or absent labels fetch never breaks the interfac
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-21 | Copilot | Added explicit Arabic labels for Drive's direct move-to-trash action and confirmation. |
 | 2026-11-20 | Qoder | Module 11 front-end Phase 3: added 12 `drive.*` keys (204 → 216) for the upload/download/preview surfaces — `drive.action.upload-version`, `drive.upload.description`/`field-file`/`submit`/`another`/`limits-prefix`/`progress-aria`/`queue-empty`/`summary`/`status-queued`/`status-done`/`new-version-hint`; the upload dialog and preview dialog also mount the Phase 0 `drive.upload.preparing`/`uploading`/`verifying`/`put-failed`, `drive.dialog.upload-title`/`upload-new-version`/`preview-title` and `drive.preview.*` keys. Front lint + build green (orphan warnings 100 → 91; catalogue 3289 keys). |
 | 2026-11-20 | Qoder | Module 11 front-end Phase 2: added 16 `drive.*` keys (188 → 204) for the browse grid/list — `drive.dialog.item-name`/`move-expand`/`move-no-subfolders`/`move-hint`, `drive.action.open`, `drive.browser.caption`/`pick-space`/`search-empty-*`/`empty-clear`/`root-aria`/`drop-move`, `drive.copy.name`/`id`, `drive.toast.copied`/`copy-failed`. Front lint + build green (orphan warnings 135 → 100). |
 | 2026-11-20 | Qoder | Module 11 front-end Phase 1: added `drive.dialog.space-name`, `drive.dialog.space-name-placeholder` and `drive.sidebar.no-shared` (185 → 188 keys); the sidebar and space dialogs now mount the Phase 0 sidebar/dialog/quota copy. Front lint + build green (orphan warnings 159 → 135). |

@@ -169,6 +169,8 @@ public sealed class S3DriveStorageService : IDriveStorageService, IDisposable
         var config = new AmazonS3Config
         {
             ServiceURL = _options.Endpoint.Trim(),
+            UseHttp = Uri.TryCreate(_options.Endpoint.Trim(), UriKind.Absolute, out var endpointUri)
+                && endpointUri.Scheme.Equals(Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase),
             ForcePathStyle = _options.ForcePathStyle,
             AuthenticationRegion = string.IsNullOrWhiteSpace(_options.Region) ? "us-east-1" : _options.Region.Trim()
         };

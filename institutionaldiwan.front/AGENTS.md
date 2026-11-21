@@ -113,12 +113,14 @@ ships light and dark themes from one token file — see the non-negotiable secti
   `isValid: false` when the chain is broken — read the body, do not treat it as a transport error.
 - **Permissions are exact strings.** The codes in `src/shared/config/permissions.ts` must match
   the API's `InstitutionalDiwan.Domain/Common/Permissions.cs` exactly (the API is a separate
-  project). There are **17** of them:
+  project). There are **25** of them:
   `DOCUMENT_VIEW`, `DOCUMENT_CREATE`, `DOCUMENT_EDIT`, `DOCUMENT_DELETE`, `DOCUMENT_APPROVE`,
   `DOCUMENT_ARCHIVE`,
   `NUMBERING_VIEW`, `NUMBERING_MANAGE`, `DEPARTMENT_MANAGE`, `ROLE_MANAGE`, `USER_MANAGE`,
   `EMPLOYEE_MANAGE`, `ACCESS_GRANT_MANAGE`, `REPORT_VIEW`, `LOOKUP_MANAGE`,
-  `AUDIT_VIEW`, `AUDIT_MANAGE`.
+  `AUDIT_VIEW`, `AUDIT_MANAGE`, `SYSTEM_ERRORS_VIEW`, `PERSON_VIEW`, `PERSON_MANAGE`,
+  `DEPARTMENT_RECORD_VIEW_ALL`, `DEPARTMENT_RECORD_CORRECT`, `DECISION_MANAGE`, `DRIVE_USE`,
+  `DRIVE_MANAGE`.
 - **Do not invent backend routes.** Live vs pending modules are listed in `knowledge.md`. Never call
   Modules 08 / 10 until those APIs exist.
 - **No deep imports, no `any`.** `npm run build` runs `tsc -b` — it must pass with no errors,
@@ -206,7 +208,14 @@ export const Permissions = {
   LookupManage: 'LOOKUP_MANAGE',
   AuditView: 'AUDIT_VIEW',
   AuditManage: 'AUDIT_MANAGE',
+  SystemErrorsView: 'SYSTEM_ERRORS_VIEW',
+  PersonView: 'PERSON_VIEW',
+  PersonManage: 'PERSON_MANAGE',
+  DepartmentRecordViewAll: 'DEPARTMENT_RECORD_VIEW_ALL',
+  DepartmentRecordCorrect: 'DEPARTMENT_RECORD_CORRECT',
   DecisionManage: 'DECISION_MANAGE',
+  DriveUse: 'DRIVE_USE',
+  DriveManage: 'DRIVE_MANAGE',
 } as const;
 
 export type PermissionCode = (typeof Permissions)[keyof typeof Permissions];

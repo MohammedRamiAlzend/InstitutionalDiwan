@@ -1,6 +1,6 @@
 # `src/pages/drive` — Drive (`/drive`)
 
-> **Status:** Implemented (front-end Phases 1–3) — route, sidebar entry, workspace shell, spaces and quota, the browse grid/list, and upload/download/preview; versions/permissions/deletion land in Phases 4–5.
+> **Status:** Implemented (front-end Phases 1–6) — route, sidebar entry, workspace shell, spaces and quota, browse/upload, sharing/deletion, settings, and OnlyOffice preview/editor.
 
 ## Purpose
 
@@ -26,7 +26,7 @@ the server further limits every read to what the caller can reach.
 | File | Purpose |
 | --- | --- |
 | `ui/DrivePage.tsx` | `DRIVE_USE` guard + `drive` tutorial provider around the workspace. |
-| `ui/DriveWorkspace.tsx` | Owns `useDriveNavigation` + `useDriveSpaces`, ensures the personal space on first entry, renders the page header, the sidebar rail and the content region. Browse modes mount `widgets/drive-browser` with upload/new-version/preview/download actions wired (`UploadDriveDialog`, `DrivePreviewDialog`, `downloadDriveFile`); trash/deletion render a temporary placeholder until Phase 5. |
+| `ui/DriveWorkspace.tsx` | Owns navigation and spaces, and mounts the browser, upload/preview/editor, version history/restore, permissions, deletion inbox, trash and settings panels. |
 | `model/useDriveNavigation.ts` | URL-driven `view`/`space`/`folder` state and setters. |
 | `index.ts` | Public barrel. |
 
@@ -43,14 +43,17 @@ the server further limits every read to what the caller can reach.
 | Workspace shell, spaces, quota | ✅ (`npm run build` and `npm run lint` pass) |
 | Browse grid | ✅ Phase 2 (`widgets/drive-browser`: server grid/list, breadcrumb, filters, effective-role menus, DnD moves) |
 | Upload / download / preview | ✅ Phase 3 (`features/drive-upload` queue dialog + new-version, `widgets/drive-preview-dialog`, `downloadDriveFile`; file-drop → upload) |
-| Versions / permissions | ⏳ Phase 4 |
-| Deletion / trash / settings | ⏳ Phase 5 (replaces the trash/deletion placeholders) |
-| Live verification | ⏳ Pending the Phase 6 browser round (manual login). |
+| Versions / permissions | ✅ Phase 4 |
+| Deletion / trash / settings | ✅ Phase 5 |
+| OnlyOffice editor / Office preview | ✅ Phase 6 (live deployment verification pending) |
+| Live verification | ⏳ Pending OnlyOffice and SeaweedFS configuration. |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-21 | Copilot | Front-end Phase 6: mounted Office preview through the lazy OnlyOffice editor and completed Drive guides/documentation. |
 | 2026-11-20 | Qoder | Front-end Phase 3: wired upload/download/preview into the workspace — `UploadDriveDialog` (toolbar/drop/new-version), `DrivePreviewDialog` (open-file), and `downloadDriveFile` (download action); the upload target follows the open folder/space and reads remaining quota. |
+| 2026-11-21 | Copilot | Front-end Phase 4: mounted version history/download/restore and manager-gated permission/inheritance panels. |
 | 2026-11-20 | Qoder | Front-end Phase 2: mounted `widgets/drive-browser` for the browse modes (server grid/list, breadcrumb, filters, effective-role menus, DnD moves); trash/deletion stay placeholders until Phase 5. |
 | 2026-11-20 | Qoder | Front-end Phase 1: created the page, route, sidebar entry, URL navigation, lazy personal-space ensure, and the sidebar/quota shell. |

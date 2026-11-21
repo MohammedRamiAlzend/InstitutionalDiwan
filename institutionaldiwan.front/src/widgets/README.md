@@ -45,7 +45,9 @@ browser.
 | `archive-search-table/` | Access-filtered archive search grid with a saved-searches bar | `entities/archive` + `features/archive-manage` |
 | `drive-sidebar/` | Module 11 workspace rail: browse modes, personal + shared space switcher with per-row rename/quota menu, active-space quota meter | `entities/{drive-space,drive-item,user}` + `features/drive-space-manage` | ✅ Implemented (front-end Phase 1) |
 | `drive-browser/` | Module 11 content region: server-paged browse grid/list (breadcrumb, toolbar, kind/owner filters, effective-role menus, DnD move) | `entities/{drive-item,drive-space,user}` + `features/drive-item-manage` | ✅ Implemented (front-end Phase 2); upload/preview/download wired in Phase 3, versions/permissions/deletion in Phases 4–5 |
-| `drive-preview-dialog/` | Module 11 in-browser file preview: image/PDF/video/audio from a presigned GET, Office/unsupported → download | `entities/drive-item` + `features/drive-upload` | ✅ Implemented (front-end Phase 3); OnlyOffice Office viewer in Phase 6 |
+| `drive-preview-dialog/` | Module 11 in-browser file preview: image/PDF/video/audio from a presigned GET, Office through OnlyOffice | `entities/drive-item` + `features/{drive-upload,drive-editor}` | ✅ Implemented (front-end Phase 6) |
+| `drive-versions-panel/` | Module 11 immutable version history, per-version download, and Editor restore | `entities/drive-item` + `features/drive-item-manage` | ✅ Implemented (front-end Phase 4) |
+| `drive-permissions-panel/` | Module 11 explicit user/department grants, revoke, and inheritance toggle | `entities/drive-item` + `entities/user` + `entities/department` + `features/drive-sharing` | ✅ Implemented (front-end Phase 4) |
 | `notification-bell/` | Header bell: unread badge, live-connection line and the latest eight notifications | `entities/notification` + `features/notification-manage` + `features/notification-live` |
 | `notification-inbox/` | The `/notifications` grid with server search/sort/paging and unread/type filters | `entities/notification` + `features/notification-manage` + `features/notification-live` |
 | `lookup-admin/` | Catalog picker and entries grid for `/lookups` (Module 01). |
@@ -90,7 +92,8 @@ browser.
 | `archive-search-table/` | ✅ Implemented (Module 07; build and lint pass, verified against the live API) |
 | `drive-sidebar/` | ✅ Implemented (Module 11 front-end Phase 1: modes, space switcher + per-row menu, quota meter); browser verification pending the Phase 6 round. |
 | `drive-browser/` | ✅ Implemented (Module 11 front-end Phase 2: `DataTable` server grid + card grid sharing URL state/menus, breadcrumb, controls, batched effective-role gating, DnD moves + move dialog, `DriveItemActions` hooks); Phase 3 wired upload/new-version/preview/download; browser verification pending the Phase 6 round. |
-| `drive-preview-dialog/` | ✅ Implemented (Module 11 front-end Phase 3: presigned-GET media preview + unsupported/Office download fallback); OnlyOffice viewer in Phase 6; browser verification pending the Phase 6 round. |
+| `drive-preview-dialog/` | ✅ Implemented (Module 11 front-end Phase 6: media preview + OnlyOffice Office viewer + download fallback); browser verification pending the live configuration round. |
+| `drive-versions-panel/`, `drive-permissions-panel/` | ✅ Implemented (Module 11 front-end Phase 4); browser verification pending the Phase 6 round. |
 | `notification-bell/`, `notification-inbox/` | ✅ Implemented (Module 10; build and lint pass, exercised against the live API). |
 | `document-relations-panel/` | ✅ Implemented (Module 08; build and lint pass, accepted as verified by the project owner, 2026-11-03) |
 | `document-print-sheet/` | ✅ Implemented |
@@ -108,6 +111,8 @@ browser.
 | Date | Author | Change |
 | --- | --- | --- |
 | 2026-11-20 | Qoder | Module 11 front-end Phase 3 (`plans/module-11-drive-frontend.md`): added `drive-preview-dialog` (presigned-GET media preview + download fallback) and wired `drive-browser`'s `DriveItemActions` — open-file→preview, download, upload-version, and the toolbar/drop upload — into `pages/drive`. |
+| 2026-11-21 | Copilot | Module 11 front-end Phase 6: mounted the OnlyOffice viewer for Office previews. |
+| 2026-11-21 | Copilot | Module 11 front-end Phase 4: added version history/restore and manager-gated permissions/inheritance widgets, wired through the Drive workspace. |
 | 2026-11-20 | Qoder | Module 11 front-end Phase 2 (`plans/module-11-drive-frontend.md`): implemented `drive-browser` — replaced the placeholder with the real browse region (`DataTable` server grid + card grid sharing URL state/menus, breadcrumb, controls, batched effective-role gating, DnD moves + move dialog, `DriveItemActions` extension points). |
 | 2026-11-20 | Qoder | Module 11 front-end Phase 1 (`plans/module-11-drive-frontend.md`): added `drive-sidebar` (modes, space switcher, quota) and the `drive-browser` content-region placeholder. |
 | 2026-11-11 | Claude | Added `my-registers-table` (one register of the caller's department on the shared client grid). |

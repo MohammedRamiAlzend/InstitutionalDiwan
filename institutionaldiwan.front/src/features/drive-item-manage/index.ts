@@ -3,6 +3,7 @@ export {
   useRenameItemMutation,
   useMoveItemMutation,
   useSetItemStarMutation,
+  useRestoreDriveVersionMutation,
 } from './api/driveItemMutations'
 export type { MoveItemVariables, SetStarVariables } from './api/driveItemMutations'
 export { CreateFolderDialog } from './ui/CreateFolderDialog'
