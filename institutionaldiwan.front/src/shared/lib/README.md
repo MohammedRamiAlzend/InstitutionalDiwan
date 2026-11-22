@@ -1,11 +1,12 @@
 # institutionaldiwan.front / src/shared/lib — Pure Utilities, Date/Timezone & Table State Helpers
 > **Status:** Implemented for the Identity admin foundation — `cn`, theme store, tutorial-mode store, column preferences, URL table state, debounce, Damascus date/number formatting, and JWT claim hints — plus the Module 06 attachment helpers: `formatFileSize`, client-side SHA-256, and blob save/`Content-Disposition` parsing. Arabic search normalization still pending.
 ## Purpose
-Contains pure, framework-independent helper functions for class merging, `Asia/Damascus` timezone formatting, Arabic text normalization, client-side SHA-256 file checksum calculation (matching Module 06 `DocumentFileVersion` requirements), file download plumbing, per-table column-preference persistence, and the theme store.
+Contains pure, framework-independent helper functions for class merging, `Asia/Damascus` timezone formatting, Arabic text normalization, client-side SHA-256 file checksum calculation (matching Module 06 `DocumentFileVersion` requirements), file download plumbing, per-table column-preference persistence, and the theme and appearance stores.
 ## Contents
 | File | Purpose |
 | --- | --- |
 | `cn.ts` | Combines `clsx` and `tailwind-merge` for conditional Tailwind class composition. |
+| `appearance.ts` | Independent site-wide visual-style store: reads/writes `diwan.appearance` (`legacy` / `modern`), applies `data-appearance`, and exposes `useAppearanceChoice`; it does not affect the light/dark theme. |
 | `theme.ts` | Theme store: reads/writes `diwan.theme` (`light` / `dark` / `system`), applies `data-theme`, follows `prefers-color-scheme` while in `system`, and exposes `useTheme` / `useThemeChoice` to React. |
 | `tutorial.ts` | Tutorial-mode store: reads/writes `diwan.tutorial` (`on` / `off`), applies `html[data-tutorial]`, and exposes `useTutorial`. Only `on` is stored — an absent key is the off default, and unlike `motion` there is no system signal to follow. It lives here rather than in `widgets/app-shell` because `shared/ui/data-table` and `form-field` read it too, and a lower layer cannot import upward. |
 | `labels.ts` | UI-labels store (UI labels plan, Phase 1): a zustand store seeded from the `diwan.uiLabels.v1` cache at creation (so a returning browser paints stored labels with no loading flash), holding `overrides` + `version` + `ready` with `applySnapshot`/`markReady`. Exposes `t(key, params?)` (non-reactive, for props/toasts/aria), `useLabel(key, params?)` (reactive), and `resolveLabel(key, overrides, params?)` (pure). Resolution is server override → built-in `LABEL_DEFAULTS`, with `{name}` placeholder interpolation. `app/providers/LabelsBootGate` owns fetching/caching; `shared/ui/label` renders `<Label k>`. |
@@ -26,7 +27,7 @@ Contains pure, framework-independent helper functions for class merging, `Asia/D
 ## Implementation status
 | Item | State |
 | --- | --- |
-| `cn.ts`, `theme.ts` | ✅ Implemented |
+| `cn.ts`, `theme.ts`, `appearance.ts` | ✅ Implemented |
 | `date.ts`, `format.ts`, `formDraft.ts`, `columnPreferences.ts`, `useTableState.ts`, `useDebouncedValue.ts`, `jwt.ts`, `tutorial.ts`, `selectedRegistry.ts` | ✅ Implemented |
 | `crypto.ts`, `download.ts` | ✅ Implemented (Module 06 Phase 1) |
 | `labels.ts` | ✅ Implemented (UI labels Phase 1): store + `t`/`useLabel`/`resolveLabel` + `diwan.uiLabels.v1` cache; consumed by the sidebar proof and `LabelsBootGate`. |
@@ -35,6 +36,7 @@ Contains pure, framework-independent helper functions for class merging, `Asia/D
 ## Change Log
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-22 | Manus | Added `appearance.ts` for the independent `diwan.appearance` Legacy/Modern preference, `data-appearance` application, React hook, and public barrel exports. |
 | 2026-11-18 | Qoder | UI labels Phase 4 (ب5-متبقٍ): `format.ts` (byte-size units), `crypto.ts` (unsupported-checksum message) and `formDraft.ts` (restored-draft toast + discard action) resolve their Arabic text through `t()` imported relatively from `./labels` to avoid a barrel self-cycle. |
 | 2026-11-17 | Qoder | UI labels, Phase 2 (`plans/ui-labels-edit-mode.md`): added `labelEdit.ts` — `getLabelEditMode`/`applyLabelEditMode`/`setLabelEditMode`/`useLabelEdit` over `diwan.labelEdit` and `html[data-label-edit]` (mirroring `tutorial.ts`, only `on` stored), exported through the barrel and resolved early in `index.html`. |
 | 2026-11-17 | Qoder | UI labels, Phase 1 (`plans/ui-labels-edit-mode.md`): added `labels.ts` — the cache-seeded zustand labels store (`overrides`/`version`/`ready`, `applySnapshot`/`markReady`), `t`, `useLabel`, and pure `resolveLabel` with `{name}` interpolation, exported through the barrel. |

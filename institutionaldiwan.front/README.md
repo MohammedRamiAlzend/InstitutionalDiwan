@@ -137,6 +137,7 @@ Institutional, Arabic-first, calm — not a generic SaaS dashboard skin.
 | Typography | Prefer Arabic-capable faces (e.g. Cairo / Readex Pro / Noto Sans Arabic) via `app/styles`; avoid Inter/Roboto/Arial as the primary UI font |
 | Color | One token file, `src/app/styles/tokens.css`: Forest `#428177` / `#054239` / `#002623`, Golden Wheat `#edebe0` / `#b9a779` / `#988561`, Charcoal `#ffffff` / `#3d3a3b` / `#161616`. Components consume semantic variables (`--color-bg`, `--color-surface`, `--color-text`, `--color-accent`, …) and never hardcode hex |
 | Theme | Light + dark from the same tokens; default follows `prefers-color-scheme`, user picks light/dark/system, persisted as `diwan.theme` and applied via `data-theme` before first paint |
+| Appearance | Independent Legacy/Modern site-wide visual style; Modern composes with either color theme, persists as `diwan.appearance`, and is applied before first paint |
 | Spacing | 4-px base scale; content max-width for reading panes; full-bleed only for the app shell chrome |
 | Components | Prefer `shared/ui` primitives; cards only when they wrap an interactive unit |
 | Motion | Subtle (150–250 ms) for drawer/dialog; no decorative loop animations |
@@ -219,7 +220,7 @@ Full endpoint tables: [`knowledge.md`](knowledge.md).
 | `package-lock.json` | Locked dependency tree. |
 | `eslint.config.js` | Flat ESLint config. |
 | `scripts/` | Node consistency gates run by `npm run lint`: `check-guide-ids.mjs` (tutorial catalog ↔ JSX) and `check-label-keys.mjs` (editable-labels catalog — duplicate keys, unknown keys in label calls, malformed `{token}` placeholders, orphan warnings). |
-| `index.html` | Arabic RTL document root (`lang="ar" dir="rtl"`), Arabic fonts, and the pre-paint theme boot script. |
+| `index.html` | Arabic RTL document root (`lang="ar" dir="rtl"`), Arabic fonts, and the pre-paint theme, appearance, motion, and display-preference boot script. |
 | `tsconfig.json` / `tsconfig.app.json` / `tsconfig.node.json` | TypeScript project references (`@/*` → `./src/*`). |
 | `.gitignore` | Node/Vite ignores plus `.env` / `.env.*` (keeping `.env.example` tracked). |
 
@@ -249,6 +250,7 @@ Full endpoint tables: [`knowledge.md`](knowledge.md).
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-22 | Manus | Documented the independent Legacy/Modern site-wide appearance switch, separate from Light/Dark, and its pre-paint persistence. |
 | 2026-11-18 | Qoder | UI labels edit mode (plan `plans/ui-labels-edit-mode.md`, Phases 1–5): the whole SPA renders its static text from the frozen `shared/config/labels` catalog (~3006 keys) resolved via `t`/`useLabel`/`<Label>`, with superadmin-only inline renaming (`features/ui-label-manage`) persisted through `/api/ui-labels` (the server stores overrides only). Phase 5 added `scripts/check-label-keys.mjs` to `npm run lint` (duplicates / unknown keys / placeholder tokens / orphan warnings) and removed the unused `common.action.delete` default. `npm run lint` + `npm run build` pass; the browser round needs a manual login. |
 | 2026-11-11 | Claude | Appeals (plan `plans/case-decisions.md`, slice C): «تسجيل اعتراض» and «تسجيل النتيجة» on the document «القرار» tab, Arabic messages for the new appeal errors, and guide entries for the dialogs. Build and lint pass. In the browser, an appeal on «الظن» was recorded and accepted. |
 | 2026-11-11 | Claude | Archive diwan (plan `plans/case-decisions.md`, slice A): the «ديوان الحفظ» section in `/institution-settings`, a movement type select with the «للحفظ» hint in the redirect and open-movement dialogs, archive and unarchive offered to the archive diwan on `/documents/:id`, and the Arabic messages for the new errors. Build and lint pass; the settings field was saved and cleared against the live API, the rest was not exercised in the browser. |

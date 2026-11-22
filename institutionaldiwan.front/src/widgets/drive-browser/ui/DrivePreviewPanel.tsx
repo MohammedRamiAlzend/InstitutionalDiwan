@@ -18,16 +18,18 @@ export function DrivePreviewPanel({ item, ownerName, onClose, onOpen, onDownload
   const Icon = isFolder ? Folder : FileText
 
   return (
-    <aside className="flex w-full shrink-0 flex-col overflow-hidden rounded-xl border border-border bg-surface xl:sticky xl:top-4 xl:w-80" aria-label={t('drive.dialog.preview-title')}>
-      <header className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
+    <aside className="flex w-full shrink-0 flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-sm xl:sticky xl:top-4 xl:w-80" aria-label={t('drive.dialog.preview-title')}>
+      <header className="flex items-center justify-between gap-3 border-b border-border bg-surface-muted/30 px-4 py-3">
         <h2 className="truncate text-sm font-semibold text-foreground" title={item.name}>{t('drive.dialog.preview-title')}</h2>
         <Button type="button" variant="ghost" size="icon" className="size-8 shrink-0" onClick={onClose} aria-label={t('common.action.close')}>
           <X className="size-4" aria-hidden />
         </Button>
       </header>
       <div className="flex flex-col gap-4 p-4">
-        <div className="flex h-36 items-center justify-center rounded-lg border border-border bg-surface-muted text-accent">
-          <Icon className={isFolder ? 'size-14' : 'size-16'} aria-hidden />
+        <div className="flex h-36 items-center justify-center rounded-xl border border-border bg-surface-muted text-accent">
+          <span className="flex size-24 items-center justify-center rounded-2xl border border-border bg-surface shadow-sm">
+            <Icon className={isFolder ? 'size-14' : 'size-16'} aria-hidden />
+          </span>
         </div>
         <div className="min-w-0">
           <h3 className="break-words text-sm font-semibold text-foreground">{item.name}</h3>

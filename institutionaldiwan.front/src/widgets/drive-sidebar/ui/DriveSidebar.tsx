@@ -147,7 +147,7 @@ export function DriveSidebar({
     canManage || space.ownerUserId === userId
 
   return (
-    <aside className="flex flex-col gap-4 rounded-xl border border-border bg-surface p-4">
+    <aside className="flex flex-col gap-5 rounded-2xl border border-border bg-surface p-4 shadow-sm sm:p-5">
       <nav className="flex flex-col gap-1" aria-label={t('drive.sidebar.views')}>
         <p className="px-2 text-xs font-semibold text-muted">
           <Label k="drive.sidebar.views" />
@@ -159,9 +159,9 @@ export function DriveSidebar({
             onClick={() => onSelectView(id)}
             aria-current={view === id ? 'page' : undefined}
             className={cn(
-              'flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors',
+              'flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring',
               view === id
-                ? 'bg-accent/10 font-semibold text-accent'
+                ? 'bg-accent/10 font-semibold text-accent shadow-sm'
                 : 'text-foreground hover:bg-surface-muted',
             )}
           >
@@ -230,7 +230,7 @@ export function DriveSidebar({
       </GuideRegion>
 
       {activeSpace && (
-        <GuideRegion id="drive.quota" className="px-2 pt-1">
+        <GuideRegion id="drive.quota" className="rounded-xl border border-border bg-surface-muted/40 p-3">
           <QuotaMeter
             usedBytes={activeSpace.usedBytes}
             quotaBytes={activeSpace.effectiveQuotaBytes}

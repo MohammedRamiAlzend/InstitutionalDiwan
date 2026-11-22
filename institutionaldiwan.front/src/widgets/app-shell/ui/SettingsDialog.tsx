@@ -3,13 +3,22 @@ import {
   CircleHelp,
   GraduationCap,
   Monitor,
+  PanelsTopLeft,
+  LayoutTemplate,
   Moon,
   Pause,
   Play,
   Rows3,
   Sun,
 } from 'lucide-react'
-import { setTutorialChoice, useThemeChoice, useTutorial, cn, t } from '@/shared/lib'
+import {
+  setTutorialChoice,
+  useThemeChoice,
+  useTutorial,
+  useAppearanceChoice,
+  cn,
+  t,
+} from '@/shared/lib'
 import { Button, Dialog } from '@/shared/ui'
 import type { Density } from '../model/density'
 import type { Motion } from '../model/motion'
@@ -27,6 +36,11 @@ const themeOptions = [
   { value: 'light', labelKey: 'settings.theme-light', icon: Sun },
   { value: 'dark', labelKey: 'settings.theme-dark', icon: Moon },
   { value: 'system', labelKey: 'settings.theme-system', icon: Monitor },
+] as const
+
+const appearanceOptions = [
+  { value: 'legacy', labelKey: 'settings.appearance-legacy', icon: PanelsTopLeft },
+  { value: 'modern', labelKey: 'settings.appearance-modern', icon: LayoutTemplate },
 ] as const
 
 const densityOptions = [
@@ -54,6 +68,7 @@ export function SettingsDialog({
   onMotionChange,
 }: SettingsDialogProps) {
   const { choice, setChoice } = useThemeChoice()
+  const { appearance, setAppearance } = useAppearanceChoice()
   // Read here, not threaded from AppShell: every surface that renders help chips already
   // subscribes to this preference, so the shell has no state of its own to hold.
   const tutorial = useTutorial()
@@ -91,6 +106,30 @@ export function SettingsDialog({
             </button>
           ))}
         </div>
+      </fieldset>
+
+      <fieldset className="flex flex-col gap-2">
+        <legend className="mb-2 text-sm font-medium text-foreground">{t('settings.appearance')}</legend>
+        <div className="grid grid-cols-2 gap-2">
+          {appearanceOptions.map(({ value, labelKey, icon: Icon }) => (
+            <button
+              key={value}
+              type="button"
+              aria-pressed={appearance === value}
+              onClick={() => setAppearance(value)}
+              className={cn(
+                'flex cursor-pointer items-center justify-center gap-2 rounded-lg border p-3 text-xs font-medium transition-colors',
+                appearance === value
+                  ? 'border-accent bg-accent/10 text-foreground'
+                  : 'border-border text-muted hover:bg-surface-muted hover:text-foreground',
+              )}
+            >
+              <Icon className="size-4" aria-hidden />
+              {t(labelKey)}
+            </button>
+          ))}
+        </div>
+        <p className="mt-1 text-xs text-muted">{t('settings.appearance-note')}</p>
       </fieldset>
 
       <fieldset className="flex flex-col gap-2">

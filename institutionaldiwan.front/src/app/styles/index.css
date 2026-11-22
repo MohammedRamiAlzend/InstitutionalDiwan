@@ -225,3 +225,33 @@ html[data-label-edit='on'] .diwan-label-editable:focus-visible {
   outline-color: var(--color-focus-ring);
   background-color: var(--color-surface-muted);
 }
+
+
+/* Modern appearance is an optional, site-wide surface treatment. It deliberately
+   composes with data-theme instead of replacing the Light/Dark color preference. */
+html[data-appearance='modern'] body {
+  background-image: radial-gradient(ellipse at top, color-mix(in srgb, var(--color-accent) 7%, transparent), transparent 42rem);
+}
+
+/* A modestly tighter workspace scale makes more page content fit without making
+   the text feel small; the explicit compact-density preference remains tighter. */
+html[data-appearance='modern']:not([data-density='compact']) {
+  font-size: 15.5px;
+}
+
+html[data-appearance='modern'] :is(.rounded-lg, .rounded-xl, .rounded-2xl) {
+  border-radius: 1rem;
+}
+
+html[data-appearance='modern'] :is(article, [role='dialog'], [data-radix-popper-content-wrapper] > *, .bg-surface) {
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--color-text) 5%, transparent),
+    0 12px 32px color-mix(in srgb, var(--color-text) 5%, transparent);
+}
+
+html[data-appearance='modern'] :is(button, input, select, textarea) {
+  transition-property: color, background-color, border-color, box-shadow, transform;
+}
+
+html[data-appearance='modern'] button:not(:disabled):active {
+  transform: translateY(1px);
+}
