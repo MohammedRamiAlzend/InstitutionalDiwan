@@ -40,7 +40,7 @@ the server further limits every read to what the caller can reach.
 | Item | State |
 | --- | --- |
 | Route + sidebar entry | ✅ (`ROUTES.DRIVE`, `AppRouter`, `shell-nav` «الملفات» with `FolderOpen`) |
-| Workspace shell, spaces, quota | ✅ (`npm run build` and `npm run lint` pass) |
+| Workspace shell, spaces, quota, responsive two-column composition | ✅ |
 | Browse grid | ✅ Phase 2 (`widgets/drive-browser`: server grid/list, breadcrumb, filters, effective-role menus, DnD moves) |
 | Upload / download / preview | ✅ Phase 3 (`features/drive-upload` queue dialog + new-version, `widgets/drive-preview-dialog`, `downloadDriveFile`; file-drop → upload) |
 | Versions / permissions | ✅ Phase 4 |
@@ -52,6 +52,7 @@ the server further limits every read to what the caller can reach.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-22 | Manus | Applied the polished workspace composition: a stable desktop navigation rail with a stacked small-screen layout. |
 | 2026-11-21 | Copilot | Front-end Phase 6: mounted Office preview through the lazy OnlyOffice editor and completed Drive guides/documentation. |
 | 2026-11-20 | Qoder | Front-end Phase 3: wired upload/download/preview into the workspace — `UploadDriveDialog` (toolbar/drop/new-version), `DrivePreviewDialog` (open-file), and `downloadDriveFile` (download action); the upload target follows the open folder/space and reads remaining quota. |
 | 2026-11-21 | Copilot | Front-end Phase 4: mounted version history/download/restore and manager-gated permission/inheritance panels. |

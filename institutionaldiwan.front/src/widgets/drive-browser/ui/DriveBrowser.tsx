@@ -3,9 +3,12 @@ import {
   Copy,
   Download,
   Eye,
+  Files,
   FolderInput,
   FolderOpen,
   FolderPlus,
+  Gauge,
+  HardDrive,
   Hash,
   History,
   Loader2,
@@ -40,6 +43,7 @@ import { DRIVE_ITEM_KIND, DRIVE_ROLE, Permissions } from '@/shared/config'
 import {
   formatDateTime,
   formatFileSize,
+  formatNumber,
   formatShortId,
   t,
   useTableState,
@@ -539,6 +543,44 @@ export function DriveBrowser({
             onDropItem={handleDropItem}
           />
         </GuideRegion>
+      )}
+
+      {activeSpace && (
+        <section className="grid grid-cols-1 gap-3 sm:grid-cols-3" aria-label={t('drive.browser.caption')}>
+          <article className="flex min-w-0 items-center gap-3 rounded-xl border border-border bg-surface p-4 shadow-sm">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-accent/10 text-accent">
+              <Files className="size-5" aria-hidden />
+            </span>
+            <div className="min-w-0">
+              <p className="text-xs text-muted"><Label k="drive.browser.summary-items" /></p>
+              <p className="mt-1 text-lg font-semibold text-foreground" aria-live="polite">
+                {query.data ? formatNumber(query.data.totalCount) : '—'}
+              </p>
+            </div>
+          </article>
+          <article className="flex min-w-0 items-center gap-3 rounded-xl border border-border bg-surface p-4 shadow-sm">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-surface-muted text-gold">
+              <HardDrive className="size-5" aria-hidden />
+            </span>
+            <div className="min-w-0">
+              <p className="text-xs text-muted"><Label k="drive.quota.used" /></p>
+              <p className="mt-1 truncate text-lg font-semibold text-foreground" dir="ltr">
+                {formatFileSize(activeSpace.usedBytes)}
+              </p>
+            </div>
+          </article>
+          <article className="flex min-w-0 items-center gap-3 rounded-xl border border-border bg-surface p-4 shadow-sm">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-surface-muted text-muted">
+              <Gauge className="size-5" aria-hidden />
+            </span>
+            <div className="min-w-0">
+              <p className="text-xs text-muted"><Label k="drive.quota.available" /></p>
+              <p className="mt-1 truncate text-lg font-semibold text-foreground" dir="ltr">
+                {formatFileSize(Math.max(activeSpace.effectiveQuotaBytes - activeSpace.usedBytes, 0))}
+              </p>
+            </div>
+          </article>
+        </section>
       )}
 
       {fileOver && (

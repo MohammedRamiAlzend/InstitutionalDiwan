@@ -111,7 +111,7 @@ export function DriveWorkspace() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 lg:gap-7">
       <PageHeader
         titleKey="page.drive.title"
         descriptionKey="page.drive.description"
@@ -126,8 +126,8 @@ export function DriveWorkspace() {
           </Button>
         </div>
       ) : (
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
-          <GuideRegion id="drive.sidebar" className="lg:w-72 lg:shrink-0">
+        <div className="flex flex-col gap-5 lg:grid lg:grid-cols-[17rem_minmax(0,1fr)] lg:items-start lg:gap-6">
+          <GuideRegion id="drive.sidebar" className="lg:sticky lg:top-4">
             <DriveSidebar
               personal={personal}
               shared={shared}
