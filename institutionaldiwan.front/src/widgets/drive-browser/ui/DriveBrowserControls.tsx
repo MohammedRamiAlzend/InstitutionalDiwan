@@ -68,79 +68,83 @@ export function DriveBrowserControls({
   ]
 
   return (
-    <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-border bg-surface p-3 shadow-sm">
-      <Input
-        type="search"
-        value={draft}
-        onChange={(event) => setDraft(event.target.value)}
-        placeholder={t('drive.browser.search-placeholder')}
-        aria-label={t('drive.browser.search-placeholder')}
-        startIcon={<Search className="size-4" aria-hidden />}
-        className="h-10 w-full min-w-48 flex-1 rounded-xl sm:w-auto"
-      />
+    <div className="flex w-full min-w-0 flex-col gap-3 rounded-2xl border border-border bg-surface p-3 shadow-sm sm:p-3.5">
+      <div className="flex min-w-0 flex-wrap items-center gap-2">
+        <Input
+          type="search"
+          value={draft}
+          onChange={(event) => setDraft(event.target.value)}
+          placeholder={t('drive.browser.search-placeholder')}
+          aria-label={t('drive.browser.search-placeholder')}
+          startIcon={<Search className="size-4" aria-hidden />}
+          className="h-10 w-full min-w-48 flex-1 rounded-xl sm:w-auto"
+        />
 
-      <Select
-        aria-label={t('drive.browser.filter-kind')}
-        value={kind || 'all'}
-        onValueChange={onKindChange}
-        options={kindOptions}
-        className="h-10 w-32 rounded-xl"
-      />
-      <Select
-        aria-label={t('drive.browser.filter-owner')}
-        value={owner || 'all'}
-        onValueChange={onOwnerChange}
-        options={ownerSelectOptions}
-        className="h-10 w-40 rounded-xl"
-      />
+        <Select
+          aria-label={t('drive.browser.filter-kind')}
+          value={kind || 'all'}
+          onValueChange={onKindChange}
+          options={kindOptions}
+          className="h-10 w-32 rounded-xl"
+        />
+        <Select
+          aria-label={t('drive.browser.filter-owner')}
+          value={owner || 'all'}
+          onValueChange={onOwnerChange}
+          options={ownerSelectOptions}
+          className="h-10 w-40 rounded-xl"
+        />
 
-      {(canCreateFolder || onUpload) && (
-        <>
-          <span className="mx-0.5 hidden h-7 border-s border-border sm:block" aria-hidden />
-          <div className="flex flex-wrap items-center gap-2">
-            {canCreateFolder && (
-              <Button type="button" variant="outline" className="h-10 rounded-xl" onClick={onNewFolder}>
-                <FolderPlus className="size-4" aria-hidden />
-                <Label k="drive.action.new-folder" />
-              </Button>
-            )}
-            {onUpload && (
-              <Button type="button" className="h-10 rounded-xl" onClick={onUpload}>
-                <Upload className="size-4" aria-hidden />
-                <Label k="drive.action.upload" />
-              </Button>
-            )}
-          </div>
-        </>
-      )}
-
-      <div className="ms-auto flex items-center gap-1 rounded-xl border border-border bg-surface-muted/50 p-1" role="group" aria-label={t('drive.browser.view-mode')}>
-        {views.map(({ id, icon: Icon, label }) => (
-          <Button
-            key={id}
-            type="button"
-            variant="ghost"
-            size="icon"
-            className={cn('size-8 rounded-lg', layout === id && 'bg-surface text-accent shadow-sm')}
-            onClick={() => onLayoutChange(id)}
-            aria-label={label}
-            title={label}
-            aria-pressed={layout === id}
-          >
-            <Icon className="size-4" aria-hidden />
-          </Button>
-        ))}
+        {(canCreateFolder || onUpload) && (
+          <>
+            <span className="mx-0.5 hidden h-7 border-s border-border sm:block" aria-hidden />
+            <div className="flex flex-wrap items-center gap-2">
+              {canCreateFolder && (
+                <Button type="button" variant="outline" className="h-10 rounded-xl" onClick={onNewFolder}>
+                  <FolderPlus className="size-4" aria-hidden />
+                  <Label k="drive.action.new-folder" />
+                </Button>
+              )}
+              {onUpload && (
+                <Button type="button" className="h-10 rounded-xl" onClick={onUpload}>
+                  <Upload className="size-4" aria-hidden />
+                  <Label k="drive.action.upload" />
+                </Button>
+              )}
+            </div>
+          </>
+        )}
       </div>
-      <Button
-        type="button"
-        variant="outline"
-        size="icon"
-        className="size-10 rounded-xl"
-        onClick={onRefresh}
-        aria-label={t('table.refresh')}
-      >
-        <RefreshCw className={cn('size-4', isFetching && 'animate-spin')} aria-hidden />
-      </Button>
+
+      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3">
+        <div className="flex items-center gap-1 rounded-xl border border-border bg-surface-muted/50 p-1" role="group" aria-label={t('drive.browser.view-mode')}>
+          {views.map(({ id, icon: Icon, label }) => (
+            <Button
+              key={id}
+              type="button"
+              variant="ghost"
+              size="icon"
+              className={cn('size-8 rounded-lg', layout === id && 'bg-surface text-accent shadow-sm')}
+              onClick={() => onLayoutChange(id)}
+              aria-label={label}
+              title={label}
+              aria-pressed={layout === id}
+            >
+              <Icon className="size-4" aria-hidden />
+            </Button>
+          ))}
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          className="size-10 rounded-xl"
+          onClick={onRefresh}
+          aria-label={t('table.refresh')}
+        >
+          <RefreshCw className={cn('size-4', isFetching && 'animate-spin')} aria-hidden />
+        </Button>
+      </div>
     </div>
   )
 }

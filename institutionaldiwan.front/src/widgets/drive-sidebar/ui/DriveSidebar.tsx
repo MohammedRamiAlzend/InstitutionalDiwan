@@ -147,7 +147,7 @@ export function DriveSidebar({
     canManage || space.ownerUserId === userId
 
   return (
-    <aside className="flex flex-col gap-5 rounded-2xl border border-border bg-surface p-4 shadow-sm sm:p-5">
+    <aside className="flex flex-col gap-4 rounded-2xl border border-border bg-surface p-4 shadow-sm sm:p-5">
       <nav className="flex flex-col gap-1" aria-label={t('drive.sidebar.views')}>
         <p className="px-2 text-xs font-semibold text-muted">
           <Label k="drive.sidebar.views" />
@@ -161,7 +161,7 @@ export function DriveSidebar({
             className={cn(
               'flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring',
               view === id
-                ? 'bg-accent/10 font-semibold text-accent shadow-sm'
+                ? 'bg-surface-muted font-semibold text-accent shadow-sm'
                 : 'text-foreground hover:bg-surface-muted',
             )}
           >
@@ -171,7 +171,7 @@ export function DriveSidebar({
         ))}
       </nav>
 
-      <GuideRegion id="drive.spaces" className="flex flex-col gap-1">
+      <GuideRegion id="drive.spaces" className="flex flex-col gap-1 border-t border-border pt-3">
         <div className="flex items-center justify-between px-2">
           <p className="text-xs font-semibold text-muted">
             <Label k="drive.sidebar.spaces" />
