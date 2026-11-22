@@ -1,5 +1,14 @@
 import { useEffect, useState } from 'react'
-import { Columns3, LayoutGrid, List, RefreshCw, Search, TableProperties, FolderPlus, Upload } from 'lucide-react'
+import {
+  Columns3,
+  FolderPlus,
+  LayoutGrid,
+  List,
+  RefreshCw,
+  Search,
+  TableProperties,
+  Upload,
+} from 'lucide-react'
 import { cn, t, useDebouncedValue } from '@/shared/lib'
 import { Button, Input, Label, Select, type SelectOption } from '@/shared/ui'
 
@@ -22,7 +31,11 @@ interface DriveBrowserControlsProps {
   isFetching: boolean
 }
 
-/** Explorer-style toolbar shared by all Drive presentations; view and filter state stays in the URL. */
+/**
+ * The Drive command row: one flat line of search, kind/owner filters, create/upload actions and the
+ * presentation switch with refresh, so the file list starts right under the breadcrumb instead of
+ * beneath two stacked card bands. View and filter state stay in the URL.
+ */
 export function DriveBrowserControls({
   search,
   onSearchChange,
@@ -68,63 +81,61 @@ export function DriveBrowserControls({
   ]
 
   return (
-    <div className="flex w-full min-w-0 flex-col gap-3 rounded-2xl border border-border bg-surface p-3 shadow-sm sm:p-3.5">
-      <div className="flex min-w-0 flex-wrap items-center gap-2">
-        <Input
-          type="search"
-          value={draft}
-          onChange={(event) => setDraft(event.target.value)}
-          placeholder={t('drive.browser.search-placeholder')}
-          aria-label={t('drive.browser.search-placeholder')}
-          startIcon={<Search className="size-4" aria-hidden />}
-          className="h-10 w-full min-w-48 flex-1 rounded-xl sm:w-auto"
-        />
+    <div className="flex w-full min-w-0 flex-wrap items-center gap-2">
+      <Input
+        type="search"
+        value={draft}
+        onChange={(event) => setDraft(event.target.value)}
+        placeholder={t('drive.browser.search-placeholder')}
+        aria-label={t('drive.browser.search-placeholder')}
+        startIcon={<Search className="size-4" aria-hidden />}
+        className="h-9 w-full min-w-40 flex-1 rounded-lg sm:w-auto sm:max-w-80"
+      />
 
-        <Select
-          aria-label={t('drive.browser.filter-kind')}
-          value={kind || 'all'}
-          onValueChange={onKindChange}
-          options={kindOptions}
-          className="h-10 w-32 rounded-xl"
-        />
-        <Select
-          aria-label={t('drive.browser.filter-owner')}
-          value={owner || 'all'}
-          onValueChange={onOwnerChange}
-          options={ownerSelectOptions}
-          className="h-10 w-40 rounded-xl"
-        />
+      <Select
+        aria-label={t('drive.browser.filter-kind')}
+        value={kind || 'all'}
+        onValueChange={onKindChange}
+        options={kindOptions}
+        className="h-9 w-28 rounded-lg"
+      />
+      <Select
+        aria-label={t('drive.browser.filter-owner')}
+        value={owner || 'all'}
+        onValueChange={onOwnerChange}
+        options={ownerSelectOptions}
+        className="h-9 w-36 rounded-lg"
+      />
 
-        {(canCreateFolder || onUpload) && (
-          <>
-            <span className="mx-0.5 hidden h-7 border-s border-border sm:block" aria-hidden />
-            <div className="flex flex-wrap items-center gap-2">
-              {canCreateFolder && (
-                <Button type="button" variant="outline" className="h-10 rounded-xl" onClick={onNewFolder}>
-                  <FolderPlus className="size-4" aria-hidden />
-                  <Label k="drive.action.new-folder" />
-                </Button>
-              )}
-              {onUpload && (
-                <Button type="button" className="h-10 rounded-xl" onClick={onUpload}>
-                  <Upload className="size-4" aria-hidden />
-                  <Label k="drive.action.upload" />
-                </Button>
-              )}
-            </div>
-          </>
-        )}
-      </div>
+      {(canCreateFolder || onUpload) && (
+        <span className="mx-0.5 hidden h-6 border-s border-border sm:block" aria-hidden />
+      )}
+      {canCreateFolder && (
+        <Button type="button" variant="outline" className="h-9 rounded-lg" onClick={onNewFolder}>
+          <FolderPlus className="size-4" aria-hidden />
+          <Label k="drive.action.new-folder" />
+        </Button>
+      )}
+      {onUpload && (
+        <Button type="button" className="h-9 rounded-lg" onClick={onUpload}>
+          <Upload className="size-4" aria-hidden />
+          <Label k="drive.action.upload" />
+        </Button>
+      )}
 
-      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3">
-        <div className="flex items-center gap-1 rounded-xl border border-border bg-surface-muted/50 p-1" role="group" aria-label={t('drive.browser.view-mode')}>
+      <div className="ms-auto flex items-center gap-1">
+        <div
+          className="flex items-center gap-0.5 rounded-lg border border-border p-0.5"
+          role="group"
+          aria-label={t('drive.browser.view-mode')}
+        >
           {views.map(({ id, icon: Icon, label }) => (
             <Button
               key={id}
               type="button"
               variant="ghost"
               size="icon"
-              className={cn('size-8 rounded-lg', layout === id && 'bg-surface text-accent shadow-sm')}
+              className={cn('size-7 rounded-md text-muted', layout === id && 'bg-accent/10 text-accent')}
               onClick={() => onLayoutChange(id)}
               aria-label={label}
               title={label}
@@ -136,9 +147,9 @@ export function DriveBrowserControls({
         </div>
         <Button
           type="button"
-          variant="outline"
+          variant="ghost"
           size="icon"
-          className="size-10 rounded-xl"
+          className="size-9 text-muted hover:text-foreground"
           onClick={onRefresh}
           aria-label={t('table.refresh')}
         >

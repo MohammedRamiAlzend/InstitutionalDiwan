@@ -512,7 +512,7 @@ export function DriveBrowser({
 
   return (
     <div
-      className="relative flex flex-col gap-4"
+      className="relative flex min-w-0 flex-col gap-3"
       onDragOver={(event) => {
         if (onDropFiles && Array.from(event.dataTransfer.types).includes('Files')) {
           event.preventDefault()
@@ -549,10 +549,8 @@ export function DriveBrowser({
         </div>
       )}
 
-      <GuideRegion id="drive.grid">
-        <div className="flex min-w-0 flex-col gap-4 xl:flex-row xl:items-start">
-          <div className="min-w-0 flex-1">
-            {layout === 'details' ? (
+      <GuideRegion id="drive.grid" className="min-w-0">
+        {layout === 'details' ? (
               <DataTable
                 tableId="drive-items"
                 mode="server"
@@ -600,6 +598,7 @@ export function DriveBrowser({
                   onOpenFolder={openFolder}
                   onOpenFile={actions?.onOpenFile}
                   onSelectItem={setSelectedItem}
+                  onToggleStar={handleStar}
                   selectedItemId={selectedItem?.itemId ?? null}
                   layout={layout}
                   onDropItem={handleDropItem}
@@ -613,24 +612,23 @@ export function DriveBrowser({
                 />
               </div>
             )}
-          </div>
-          {selectedItem && (
-            <DrivePreviewPanel
-              item={selectedItem}
-              ownerName={ownerName[selectedItem.ownerUserId] ?? formatShortId(selectedItem.ownerUserId)}
-              onClose={() => setSelectedItem(null)}
-              onOpen={
-                selectedItem.itemKindId === DRIVE_ITEM_KIND.Folder
-                  ? () => openFolder(selectedItem.itemId)
-                  : actions?.onOpenFile
-                    ? () => actions.onOpenFile?.(selectedItem)
-                    : undefined
-              }
-              onDownload={actions?.onDownload ? () => actions.onDownload?.(selectedItem) : undefined}
-            />
-          )}
-        </div>
       </GuideRegion>
+
+      {selectedItem && (
+        <DrivePreviewPanel
+          item={selectedItem}
+          ownerName={ownerName[selectedItem.ownerUserId] ?? formatShortId(selectedItem.ownerUserId)}
+          onClose={() => setSelectedItem(null)}
+          onOpen={
+            selectedItem.itemKindId === DRIVE_ITEM_KIND.Folder
+              ? () => openFolder(selectedItem.itemId)
+              : actions?.onOpenFile
+                ? () => actions.onOpenFile?.(selectedItem)
+                : undefined
+          }
+          onDownload={actions?.onDownload ? () => actions.onDownload?.(selectedItem) : undefined}
+        />
+      )}
 
       {canCreateFolder && browseSpaceId && (
         <CreateFolderDialog

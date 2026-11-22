@@ -37,6 +37,12 @@ export interface ShellNavItem {
 export interface ShellNavGroup {
   id: string
   labelKey: LabelKey
+  /**
+   * A module of its own rather than a sub-area of another group: the rail renders its items
+   * without a collapsible header, uses `labelKey` only as the list's accessible name, and
+   * closes the section with a hairline.
+   */
+  standalone?: boolean
   items: readonly ShellNavItem[]
 }
 
@@ -57,6 +63,21 @@ export const SHELL_NAV_GROUPS: readonly ShellNavGroup[] = [
         labelKey: 'nav.notifications',
         to: ROUTES.NOTIFICATIONS,
         icon: Bell,
+        available: true,
+      },
+    ],
+  },
+  {
+    id: 'files',
+    labelKey: 'nav.group.files',
+    standalone: true,
+    items: [
+      {
+        id: 'drive',
+        labelKey: 'nav.drive',
+        to: ROUTES.DRIVE,
+        icon: FolderOpen,
+        permission: Permissions.DriveUse,
         available: true,
       },
     ],
@@ -111,14 +132,6 @@ export const SHELL_NAV_GROUPS: readonly ShellNavGroup[] = [
         to: ROUTES.ARCHIVE,
         icon: Archive,
         permission: Permissions.DocumentView,
-        available: true,
-      },
-      {
-        id: 'drive',
-        labelKey: 'nav.drive',
-        to: ROUTES.DRIVE,
-        icon: FolderOpen,
-        permission: Permissions.DriveUse,
         available: true,
       },
     ],

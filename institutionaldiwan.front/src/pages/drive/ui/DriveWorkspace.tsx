@@ -1,11 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
-import { Settings } from 'lucide-react'
 import { toast } from 'sonner'
 import type { DriveItemResponse } from '@/entities/drive-item'
 import { useDriveSpace, useDriveSpaces } from '@/entities/drive-space'
 import { useEnsurePersonalSpaceMutation } from '@/features/drive-space-manage'
 import { RequestDeletionDialog, useDirectDeleteDriveItemMutation } from '@/features/drive-deletion'
-import { DriveSettingsDialog } from '@/features/drive-space-manage'
 import { useSessionStore } from '@/entities/user'
 import { Permissions } from '@/shared/config'
 import {
@@ -46,7 +44,6 @@ export function DriveWorkspace() {
   const [permissionsTarget, setPermissionsTarget] = useState<DriveItemResponse | null>(null)
   const [deletionTarget, setDeletionTarget] = useState<DriveItemResponse | null>(null)
   const [directDeleteTarget, setDirectDeleteTarget] = useState<DriveItemResponse | null>(null)
-  const [settingsOpen, setSettingsOpen] = useState(false)
 
   const personal = overview?.personal ?? null
   const shared = overview?.shared ?? []
@@ -111,16 +108,8 @@ export function DriveWorkspace() {
   }
 
   return (
-    <div className="flex flex-col gap-4 lg:gap-5">
-      <div className="flex items-center justify-between gap-3">
-        <PageGuideTrigger pageId="drive" />
-        {canManage && (
-          <Button variant="outline" className="rounded-full px-4" onClick={() => setSettingsOpen(true)}>
-            <Settings className="size-4" aria-hidden />
-            <Label k="drive.dialog.settings-title" />
-          </Button>
-        )}
-      </div>
+    <div className="flex flex-col gap-3 lg:gap-4">
+      <PageGuideTrigger pageId="drive" />
       {error ? (
         <div className="flex min-h-64 flex-col items-center justify-center gap-3 rounded-xl border border-border bg-surface p-8 text-center">
           <p className="text-sm text-danger">{toArabicErrorMessage(error)}</p>
@@ -129,7 +118,7 @@ export function DriveWorkspace() {
           </Button>
         </div>
       ) : (
-        <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[18rem_minmax(0,1fr)] lg:items-start lg:gap-5">
+        <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[16rem_minmax(0,1fr)] lg:items-start lg:gap-4">
           <GuideRegion id="drive.sidebar" className="lg:sticky lg:top-4">
             <DriveSidebar
               personal={personal}
@@ -243,7 +232,6 @@ export function DriveWorkspace() {
         loading={directDelete.isPending}
         destructive
       />
-      <DriveSettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
     </div>
   )
 }

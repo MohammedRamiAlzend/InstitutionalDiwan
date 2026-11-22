@@ -26,7 +26,7 @@ the server further limits every read to what the caller can reach.
 | File | Purpose |
 | --- | --- |
 | `ui/DrivePage.tsx` | `DRIVE_USE` guard + `drive` tutorial provider around the workspace. |
-| `ui/DriveWorkspace.tsx` | Owns navigation and spaces, retains tutorial/settings actions without a redundant title/description header, and mounts the browser, upload/preview/editor, version history/restore, permissions, deletion inbox, trash and settings panels. |
+| `ui/DriveWorkspace.tsx` | Owns navigation and spaces, keeps only the tutorial trigger above a 16rem rail + content grid, and mounts the browser, upload/preview/editor, version history/restore, permissions, deletion inbox and trash panels. Workspace settings live in the rail (`widgets/drive-sidebar`), not in a floating page-header button. |
 | `model/useDriveNavigation.ts` | URL-driven `view`/`space`/`folder` state and setters. |
 | `index.ts` | Public barrel. |
 
@@ -41,6 +41,7 @@ the server further limits every read to what the caller can reach.
 | --- | --- |
 | Route + sidebar entry | ✅ (`ROUTES.DRIVE`, `AppRouter`, `shell-nav` «الملفات» with `FolderOpen`) |
 | Workspace shell, spaces, quota, responsive two-column composition with right-side RTL navigation and content-first browsing | ✅ |
+| Explorer layout refactor: 16rem rail + single content column, no floating settings row, no third preview column | ✅ |
 | Browse grid | ✅ Phase 2 (`widgets/drive-browser`: server grid/list, breadcrumb, filters, effective-role menus, DnD moves) |
 | Upload / download / preview | ✅ Phase 3 (`features/drive-upload` queue dialog + new-version, `widgets/drive-preview-dialog`, `downloadDriveFile`; file-drop → upload) |
 | Versions / permissions | ✅ Phase 4 |
@@ -52,6 +53,7 @@ the server further limits every read to what the caller can reach.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-22 | Codebuff | Simplified the workspace shell: the rail narrows to 16rem beside one content column, the floating settings pill (and its extra row) is gone because settings moved into the rail, and the preview is no longer a third column. |
 | 2026-11-22 | Manus | Rebalanced the Drive workspace around a full-width breadcrumb and layered browser toolbar, with a narrower right-side navigation and quota panel on desktop. |
 | 2026-11-22 | Manus | Removed the redundant Drive page heading/description; retained the tutorial and settings actions above the workspace. |
 | 2026-11-22 | Manus | Applied the polished workspace composition: a stable desktop navigation rail with a stacked small-screen layout. |

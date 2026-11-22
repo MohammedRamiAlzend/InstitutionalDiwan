@@ -14,7 +14,7 @@ defaults in code means a failed or absent labels fetch never breaks the interfac
 | File | Purpose |
 | --- | --- |
 | `common.ts` | `COMMON_LABELS`: shared chrome reused across surfaces — generic actions (save/cancel/delete/close/confirm/retry), the unified `data-table` tools (search, columns, sort, pagination, export), `confirm-dialog` defaults, the shell menu + label-edit banner, the account menu, the settings dialog (including independent Legacy/Modern appearance labels), and the generic error fallbacks (`common.error.*`). Editing one renames it everywhere — intentional term unification. |
-| `nav.ts` | `NAV_LABELS`: one key per sidebar group and item, plus the shell chrome around the nav (tagline, main-menu/expand-menu/collapse-menu aria-labels). Keys mirror `shell-nav.ts` ids. |
+| `nav.ts` | `NAV_LABELS`: one key per sidebar group and item, plus the shell chrome around the nav (tagline, main-menu/expand-menu/collapse-menu aria-labels). Keys mirror `shell-nav.ts` ids; a standalone group (e.g. `nav.group.files` for «الملفات») keeps its key as the list's accessible name even though no header is rendered. |
 | `pages.ts` | `PAGE_LABELS`: static page titles and descriptions (`page.<slug>.title` / `.description`) rendered through `PageHeader`'s `titleKey`/`descriptionKey`. Dynamic titles (a document's subject, a person's name) and feature-flag-composed descriptions stay in code. |
 | `errors.ts` | `ERROR_LABELS`: the full backend error catalog (~422 codes, incl. the 64 Module 11 `error.drive.*`) keyed `error.<code-lowercased>`. `shared/api/errorMessages.ts` maps each code to its key and resolves it through `t()`, so error messages are renamable like any other label. |
 | `documents.ts` | `DOCUMENT_LABELS`: the Module 03 correspondence list screen — `documents.*` keys for the page tabs, the registry table (columns, filters, row menus, copy toasts, empty states), `RegisterNumberFilter`, and the create-document dialog (sections, fields, choices, toasts, Zod validation messages). Data-driven text (document titles, type/department names, schema field labels) stays out. |
@@ -78,6 +78,7 @@ defaults in code means a failed or absent labels fetch never breaks the interfac
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-22 | Codebuff | Added `nav.group.files` for «الملفات» as a standalone sidebar section (no visible header; the key names the list for assistive tech) after promoting Drive out of the «المراسلات» group. |
 | 2026-11-22 | Manus | Added Arabic `settings.appearance*` labels for the independent Legacy/Modern display-style choice and its explanation. |
 | 2026-11-22 | Manus | Removed the unused `drive.browser.summary-items` label and the Drive page title/description defaults after simplifying the workspace entry and removing its top summary cards. |
 | 2026-11-22 | Manus | Added Arabic labels for the four Explorer-style Drive views, view-switcher accessibility label, and preview details heading. |

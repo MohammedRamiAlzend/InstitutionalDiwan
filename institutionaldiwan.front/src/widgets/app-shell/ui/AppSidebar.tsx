@@ -70,6 +70,7 @@ export function AppSidebar({
     item: ShellNavItem,
     groupId: string,
     groupOpen: boolean,
+    standalone: boolean,
   ): MenuEntry[] => {
     const entries: MenuEntry[] = [
       {
@@ -93,7 +94,8 @@ export function AppSidebar({
       },
     ]
 
-    if (!collapsed) {
+    // A standalone section has no header to collapse, so it has no group toggle either.
+    if (!collapsed && !standalone) {
       entries.push(
         { type: 'separator' },
         {
@@ -153,10 +155,14 @@ export function AppSidebar({
 
       <nav aria-label={label('nav.main-menu')} className="flex-1 overflow-y-auto px-2 py-3">
         {groups.map((group) => {
-          const open = isGroupOpen(group.id)
+          const standalone = group.standalone === true
+          const open = standalone || isGroupOpen(group.id)
           return (
-            <div key={group.id} className="mb-3">
-              {!collapsed && (
+            <div
+              key={group.id}
+              className={cn('mb-3', standalone && 'border-b border-border pb-3')}
+            >
+              {!collapsed && !standalone && (
                 <button
                   type="button"
                   onClick={() => toggleGroup(group.id)}
@@ -177,10 +183,13 @@ export function AppSidebar({
               )}
 
               {open && (
-                <ul className="mt-1 flex flex-col gap-0.5">
+                <ul
+                  className="mt-1 flex flex-col gap-0.5"
+                  aria-label={standalone ? label(group.labelKey) : undefined}
+                >
                   {group.items.map((item) => {
                     const Icon = item.icon
-                    const entries = itemEntries(item, group.id, open)
+                    const entries = itemEntries(item, group.id, open, standalone)
 
                     const content = item.available ? (
                       // NavLink keeps a static className because the ContextMenu trigger clones it
@@ -209,7 +218,12 @@ export function AppSidebar({
                             )}
                           >
                             <Icon className="size-4.5 shrink-0" aria-hidden />
-                            {!collapsed && <Label k={item.labelKey} className="truncate" />}
+                            {!collapsed && (
+                              <Label
+                                k={item.labelKey}
+                                className={cn('truncate', standalone && 'font-semibold')}
+                              />
+                            )}
                           </span>
                         )}
                       </NavLink>

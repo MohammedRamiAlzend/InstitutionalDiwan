@@ -5,6 +5,8 @@
  */
 export const NAV_LABELS = {
   'nav.group.overview': 'نظرة عامة',
+  /** Standalone section (no visible header): names the Drive list for assistive tech. */
+  'nav.group.files': 'الملفات',
   'nav.group.correspondence': 'المراسلات',
   'nav.group.organization': 'التنظيم',
   'nav.group.access': 'إدارة الوصول',
