@@ -43,6 +43,8 @@ type) is exported through `index.ts`.
 - **Effective-role gating:** row write actions (rename/move/deletion) need Editor+, permissions needs
   Manager; the toolbar new-folder needs Editor on the open folder (or space owner/`DRIVE_MANAGE` at
   the root, always in `my-files`). Star/open/copy are available to any reachable item.
+- **Explorer interaction:** a single click selects either a file or folder and shows its details in
+  the side panel; a double-click opens a folder or launches the existing full file preview.
 - **Drag-and-drop:** the name cell (list) and card (grid) are drag sources when the caller can edit;
   folder cells/cards and breadcrumb crumbs are drop targets → `move`. The move dialog is the
   keyboard/touch alternative. File drops are forwarded to `onDropFiles` (wired in Phase 3 to seed
@@ -69,7 +71,7 @@ type) is exported through `index.ts`.
 
 | Date | Author | Change |
 | --- | --- | --- |
-| 2026-11-22 | Manus | Added Explorer-style details/list/tiles/grid presentations and a selected-file side panel with metadata and contextual actions. |
+| 2026-11-22 | Manus | Added Explorer-style details/list/tiles/grid presentations, single-click selection, double-click open behavior for files/folders, and a contextual metadata panel. |
 | 2026-11-20 | Qoder | Front-end Phase 3: added `onUploadVersion` to `DriveItemActions` and a per-file «رفع إصدار جديد» row-menu entry (Editor+, files only); the page now wires `onOpenFile`/`onDownload`/`onUploadVersion` + `onUpload`/`onDropFiles`. No browse/read change. |
 | 2026-11-20 | Qoder | Front-end Phase 2: replaced the placeholder with the real browse region — `DataTable` (server, `drive-items`) + card grid sharing URL state/menus, breadcrumb, controls (search/layout/new-folder/kind/owner/refresh), batched effective-role gating, DnD moves + move dialog, and `DriveItemActions` extension points for Phases 3–5. Front lint + build green. |
 | 2026-11-20 | Qoder | Front-end Phase 1: created the content-region placeholder ahead of the Phase 2 grid. |

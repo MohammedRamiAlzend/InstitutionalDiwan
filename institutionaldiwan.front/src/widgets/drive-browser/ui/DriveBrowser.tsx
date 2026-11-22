@@ -377,8 +377,8 @@ export function DriveBrowser({
                 <ItemKindIcon kindId={item.itemKindId} />
                 <button
                   type="button"
-                  onClick={() => (isFolder ? openFolder(item.itemId) : setSelectedItem(item))}
-                  onDoubleClick={() => { if (!isFolder) openFile(item) }}
+                  onClick={() => setSelectedItem(item)}
+                  onDoubleClick={() => (isFolder ? openFolder(item.itemId) : openFile(item))}
                   className="truncate text-start text-sm font-medium text-foreground transition-colors hover:text-accent"
                   title={item.name}
                 >
@@ -599,7 +599,7 @@ export function DriveBrowser({
                   rowMenu={buildRowMenu}
                   onOpenFolder={openFolder}
                   onOpenFile={actions?.onOpenFile}
-                  onSelectFile={setSelectedItem}
+                  onSelectItem={setSelectedItem}
                   selectedItemId={selectedItem?.itemId ?? null}
                   layout={layout}
                   onDropItem={handleDropItem}
@@ -619,7 +619,13 @@ export function DriveBrowser({
               item={selectedItem}
               ownerName={ownerName[selectedItem.ownerUserId] ?? formatShortId(selectedItem.ownerUserId)}
               onClose={() => setSelectedItem(null)}
-              onOpen={actions?.onOpenFile ? () => actions.onOpenFile?.(selectedItem) : undefined}
+              onOpen={
+                selectedItem.itemKindId === DRIVE_ITEM_KIND.Folder
+                  ? () => openFolder(selectedItem.itemId)
+                  : actions?.onOpenFile
+                    ? () => actions.onOpenFile?.(selectedItem)
+                    : undefined
+              }
               onDownload={actions?.onDownload ? () => actions.onDownload?.(selectedItem) : undefined}
             />
           )}

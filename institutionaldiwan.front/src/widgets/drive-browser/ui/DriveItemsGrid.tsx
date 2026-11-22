@@ -22,7 +22,7 @@ interface DriveItemsGridProps {
   rowMenu: (item: DriveItemResponse) => readonly MenuEntry[]
   onOpenFolder: (itemId: string) => void
   onOpenFile?: (item: DriveItemResponse) => void
-  onSelectFile: (item: DriveItemResponse) => void
+  onSelectItem: (item: DriveItemResponse) => void
   selectedItemId: string | null
   layout: Exclude<DriveLayout, 'details'>
   onDropItem: (itemId: string, targetFolderId: string | null) => void
@@ -43,7 +43,7 @@ export function DriveItemsGrid({
   rowMenu,
   onOpenFolder,
   onOpenFile,
-  onSelectFile,
+  onSelectItem,
   selectedItemId,
   layout,
   onDropItem,
@@ -86,10 +86,10 @@ export function DriveItemsGrid({
           const canDrag = role !== undefined && role >= DRIVE_ROLE.Editor
           const entries = rowMenu(item)
           const openFolder = () => onOpenFolder(item.itemId)
-          const selectFile = () => onSelectFile(item)
-          const open = () => isFolder ? openFolder() : selectFile()
+          const selectItem = () => onSelectItem(item)
+          const open = () => isFolder ? openFolder() : onOpenFile?.(item)
           const details = <span className="flex shrink-0 items-center gap-3 text-xs text-muted"><span dir="ltr">{isFolder ? '—' : formatFileSize(item.sizeBytes)}</span><span dir="ltr">{formatDateTime(item.updatedAt ?? item.createdAt)}</span></span>
-          const itemName = <button type="button" onClick={open} onDoubleClick={() => { if (!isFolder) onOpenFile?.(item) }} className="min-w-0 flex-1 truncate text-start text-sm font-medium text-foreground hover:text-accent focus-visible:outline-none focus-visible:underline" title={item.name} aria-current={!isFolder && selectedItemId === item.itemId ? 'true' : undefined}>{item.name}</button>
+          const itemName = <button type="button" onClick={selectItem} onDoubleClick={open} className="min-w-0 flex-1 truncate text-start text-sm font-medium text-foreground hover:text-accent focus-visible:outline-none focus-visible:underline" title={item.name} aria-current={selectedItemId === item.itemId ? 'true' : undefined}>{item.name}</button>
           const menuButton = entries.length > 0 && <DropdownMenu trigger={<Button type="button" variant="ghost" size="icon" className="size-7 shrink-0" aria-label={t('table.row-actions-named', { name: item.name })}><MoreHorizontal className="size-4" aria-hidden /></Button>} entries={entries} />
           const content = layout === 'list' ? (
             <div className="flex min-h-11 items-center gap-3 px-3 py-1.5">
@@ -114,7 +114,7 @@ export function DriveItemsGrid({
               className={cn(
                 'group cursor-pointer transition-colors',
                 layout === 'list' ? 'hover:bg-surface-muted/60' : 'rounded-xl border border-border bg-surface hover:border-accent/50 hover:bg-surface-muted/50',
-                !isFolder && selectedItemId === item.itemId && 'border-accent bg-accent/5 ring-1 ring-accent/30',
+                selectedItemId === item.itemId && 'border-accent bg-accent/5 ring-1 ring-accent/30',
               )}
             >{content}</div>
           )

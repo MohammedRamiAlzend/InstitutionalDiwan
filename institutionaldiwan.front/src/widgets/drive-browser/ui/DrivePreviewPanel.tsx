@@ -1,4 +1,4 @@
-import { Download, ExternalLink, FileText, Folder, X } from 'lucide-react'
+import { Download, ExternalLink, FileText, Folder, FolderOpen, X } from 'lucide-react'
 import { DRIVE_ITEM_KIND } from '@/shared/config'
 import { formatDateTime, formatFileSize, t } from '@/shared/lib'
 import { Button, Label } from '@/shared/ui'
@@ -37,9 +37,9 @@ export function DrivePreviewPanel({ item, ownerName, onClose, onOpen, onDownload
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          {!isFolder && onOpen && (
+          {onOpen && (
             <Button type="button" className="h-9" onClick={onOpen}>
-              <ExternalLink className="size-4" aria-hidden />
+              {isFolder ? <FolderOpen className="size-4" aria-hidden /> : <ExternalLink className="size-4" aria-hidden />}
               <Label k="drive.action.open" />
             </Button>
           )}
