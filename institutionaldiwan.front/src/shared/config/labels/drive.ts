@@ -128,6 +128,9 @@ export const DRIVE_LABELS = {
   'drive.browser.search-placeholder': 'ابحث بالاسم…',
   'drive.browser.view-grid': 'شبكة',
   'drive.browser.view-list': 'قائمة',
+  'drive.browser.view-details': 'تفاصيل',
+  'drive.browser.view-tiles': 'بلاطات',
+  'drive.browser.view-mode': 'طريقة عرض الملفات',
   'drive.browser.root': 'الجذر',
   'drive.browser.drop-hint': 'أفلت الملفات هنا للرفع',
   'drive.browser.filter-kind': 'النوع',
@@ -231,6 +234,7 @@ export const DRIVE_LABELS = {
 
   'drive.preview.unsupported': 'لا تتوفر معاينة لهذا النوع؛ يمكنك تنزيل الملف.',
   'drive.preview.link-expired': 'انتهت صلاحية رابط المعاينة؛ أعد المحاولة.',
+  'drive.preview.details': 'تفاصيل الملف',
   'drive.editor.loading': 'جارٍ تحميل المحرر…',
   'drive.editor.not-configured': 'المحرر غير مضبوط على الخادم.',
   'drive.editor.save-failed': 'تعذّر حفظ التحرير. راجع الإشعارات للتفاصيل.',
