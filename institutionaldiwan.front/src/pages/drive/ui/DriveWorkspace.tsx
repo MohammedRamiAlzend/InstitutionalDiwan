@@ -14,7 +14,7 @@ import {
   type DriveUploadTarget,
 } from '@/features/drive-upload'
 import { toArabicErrorMessage } from '@/shared/api'
-import { Button, ConfirmDialog, GuideRegion, Label, PageHeader } from '@/shared/ui'
+import { Button, ConfirmDialog, GuideRegion, Label, PageGuideTrigger } from '@/shared/ui'
 import { t } from '@/shared/lib'
 import { DriveSidebar } from '@/widgets/drive-sidebar'
 import { DriveBrowser } from '@/widgets/drive-browser'
@@ -112,12 +112,15 @@ export function DriveWorkspace() {
 
   return (
     <div className="flex flex-col gap-6 lg:gap-7">
-      <PageHeader
-        titleKey="page.drive.title"
-        descriptionKey="page.drive.description"
-        pageGuide="drive"
-        actions={canManage ? <Button variant="outline" onClick={() => setSettingsOpen(true)}><Settings className="size-4" aria-hidden /><Label k="drive.dialog.settings-title" /></Button> : undefined}
-      />
+      <div className="flex items-center justify-end gap-2">
+        <PageGuideTrigger pageId="drive" />
+        {canManage && (
+          <Button variant="outline" onClick={() => setSettingsOpen(true)}>
+            <Settings className="size-4" aria-hidden />
+            <Label k="drive.dialog.settings-title" />
+          </Button>
+        )}
+      </div>
       {error ? (
         <div className="flex min-h-64 flex-col items-center justify-center gap-3 rounded-xl border border-border bg-surface p-8 text-center">
           <p className="text-sm text-danger">{toArabicErrorMessage(error)}</p>

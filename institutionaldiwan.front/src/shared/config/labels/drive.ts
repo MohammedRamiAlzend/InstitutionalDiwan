@@ -72,8 +72,6 @@ export const DRIVE_LABELS = {
   'drive.version.number': 'الإصدار {number}',
 
   'drive.quota': 'الحصة التخزينية',
-  'drive.quota.used': 'المستخدم',
-  'drive.quota.available': 'المتاح',
   'drive.quota.usage': '{used} من {quota}',
 
   'drive.trash.retention': 'تُحذف العناصر نهائيًا بعد {days} يومًا في السلة.',
@@ -141,7 +139,6 @@ export const DRIVE_LABELS = {
   'drive.browser.filter-modified-from': 'معدّل من',
   'drive.browser.filter-modified-to': 'معدّل إلى',
   'drive.browser.caption': 'عناصر الملفات',
-  'drive.browser.summary-items': 'العناصر في هذا العرض',
   'drive.browser.pick-space': 'اختر مساحة مشتركة من الشريط الجانبي لعرض محتواها.',
   'drive.browser.search-empty-title': 'لا نتائج مطابقة',
   'drive.browser.search-empty-description': 'جرّب تعديل البحث أو المرشحات.',
