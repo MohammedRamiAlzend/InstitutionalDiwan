@@ -214,7 +214,9 @@ Full endpoint tables: [`knowledge.md`](knowledge.md).
 | `CHANGELOG.md` | Creation notes for this project. |
 | `README.vite-template.md` | Stock Vite README kept for toolchain reference. |
 | `vite.config.ts` | `@` → `./src` alias and env-driven `/api` + `/hubs` dev proxy. |
-| `.env.example` | Documents `DEV_PROXY_TARGET` and `VITE_API_BASE_URL`; copy to `.env` locally (`.env` is git-ignored). |
+| `.env.example` | Documents `DEV_PROXY_TARGET`, `VITE_API_BASE_URL`, and the empty `BROWSERLESS_TOKEN` for the e2e workflow; copy to `.env` locally (`.env` is git-ignored). |
+| `playwright.config.ts` | Playwright Test config for the remote-browser workflow: `testDir: ./e2e`, one worker, 60 s timeout. |
+| `e2e/` | Browserless Playwright smoke workflow (`browserless.spec.ts`) — connects over CDP with `BROWSERLESS_TOKEN`, no local browser install needed; see [`e2e/README.md`](e2e/README.md). |
 | `package.json` | Scripts + installed Module 01 dependency stack. |
 | `package-lock.json` | Locked dependency tree. |
 | `eslint.config.js` | Flat ESLint config. |
@@ -244,11 +246,14 @@ Full endpoint tables: [`knowledge.md`](knowledge.md).
 | `src/pages/` | ✅ `login`, standalone `change-password`, shell-framed `dashboard`, `departments`, `users`, `roles`, `employees`, `documents` registry + external-organizations tab, `documents/:id` details (participants, access grants, numbers, movements, status history, timeline, lifecycle actions), `numbering`, `movements`, and `audit` (log + integrity panels); archive deferred |
 | `src/app/` (`providers`, `router`, `styles`) | ✅ Implemented (login-protected routes incl. `/change-password`, `/departments`, `/users`, `/roles`, `/employees`, `/documents`, `/documents/:documentId`, `/numbering`, `/movements`, `/audit`; forced reset redirect) |
 | Publishing & API wiring guide (`DEPLOYMENT.md`) | ✅ Documented (proxy section reflects the configured setup) |
+| Playwright e2e workflow (Browserless remote browsers) | ⚠️ Configured — `npm run test:e2e` needs `BROWSERLESS_TOKEN` |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-22 | agent | Added the project's first e2e workflow, a Playwright smoke test that connects to Browserless managed browsers over CDP (`chromium.connectOverCDP`) with `BROWSERLESS_TOKEN` read from `.env`/the shell, plus `npm run test:e2e`, `playwright.config.ts`, and the empty `BROWSERLESS_TOKEN` in `.env.example`. No local browser download is needed; lint passes and the missing-token path was exercised. |
+| 2026-11-22 | Manus | Documented the independent Legacy/Modern site-wide appearance switch, separate from Light/Dark, and its pre-paint persistence. |
 | 2026-11-18 | Qoder | UI labels edit mode (plan `plans/ui-labels-edit-mode.md`, Phases 1–5): the whole SPA renders its static text from the frozen `shared/config/labels` catalog (~3006 keys) resolved via `t`/`useLabel`/`<Label>`, with superadmin-only inline renaming (`features/ui-label-manage`) persisted through `/api/ui-labels` (the server stores overrides only). Phase 5 added `scripts/check-label-keys.mjs` to `npm run lint` (duplicates / unknown keys / placeholder tokens / orphan warnings) and removed the unused `common.action.delete` default. `npm run lint` + `npm run build` pass; the browser round needs a manual login. |
 | 2026-11-11 | Claude | Appeals (plan `plans/case-decisions.md`, slice C): «تسجيل اعتراض» and «تسجيل النتيجة» on the document «القرار» tab, Arabic messages for the new appeal errors, and guide entries for the dialogs. Build and lint pass. In the browser, an appeal on «الظن» was recorded and accepted. |
 | 2026-11-11 | Claude | Archive diwan (plan `plans/case-decisions.md`, slice A): the «ديوان الحفظ» section in `/institution-settings`, a movement type select with the «للحفظ» hint in the redirect and open-movement dialogs, archive and unarchive offered to the archive diwan on `/documents/:id`, and the Arabic messages for the new errors. Build and lint pass; the settings field was saved and cleared against the live API, the rest was not exercised in the browser. |
