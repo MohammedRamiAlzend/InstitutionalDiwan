@@ -1,5 +1,12 @@
 export { cn } from './cn'
 export {
+  getAppearanceChoice,
+  applyAppearance,
+  setAppearanceChoice,
+  useAppearanceChoice,
+} from './appearance'
+export type { AppearanceChoice } from './appearance'
+export {
   useTheme,
   useThemeChoice,
   setThemeChoice,

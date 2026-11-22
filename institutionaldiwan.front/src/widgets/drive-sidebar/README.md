@@ -31,7 +31,7 @@ rename/quota menu entries.
 
 | Item | State |
 | --- | --- |
-| Widget code | ✅ Implemented (`npm run build` and `npm run lint` pass) |
+| Widget code | ✅ Implemented; refreshed as a quieter elevated rail with stronger active states and a contained quota meter. |
 | UI labels | ✅ Renders from `drive.sidebar.*`, `drive.my-files`/`shared-spaces`/`starred`/`trash`, `drive.view.deletion-requests`, `drive.action.*`; no Arabic literals. |
 | Live verification | ⏳ Pending the Phase 6 browser round. |
 
@@ -39,4 +39,5 @@ rename/quota menu entries.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-22 | Manus | Refined the rail's spacing, active view state, and storage meter surface using semantic theme tokens. |
 | 2026-11-20 | Qoder | Front-end Phase 1: created the rail with mode switcher, space list + per-row menu, and quota meter. |

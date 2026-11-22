@@ -13,7 +13,7 @@ Arabic typography. This is the single source of visual tokens for the SPA.
 | --- | --- |
 | `tokens.css` | **The single source of truth for color**: the raw Forest / Golden Wheat / Charcoal palette, the semantic light and dark theme mappings, and the functional status colors. |
 | `guide-tour.css` | Dresses the Driver.js guide popover (`.diwan-tour`) in the semantic tokens: theme, RTL/LTR, logical close button, arrow colors. Imported by `index.css` after `driver.css`. |
-| `index.css` | `@import "tailwindcss";`, imports `tokens.css`, maps the semantic variables to Tailwind utilities via `@theme inline` (e.g. `bg-background`, `text-foreground`, `bg-accent`, `text-accent-contrast`, `bg-overlay`), Arabic font stack (`Readex Pro` / `Cairo`), base focus rings, `dir`-safe base rules, shared overlay/popover/page entrance animations, the `html[data-density='compact']` scale, the `html[data-motion='off']` switch, the `html[data-label-edit='on'] .diwan-label-editable` inline-edit hint (dashed focus-ring outline + muted surface on hover/focus, tokens only), and the print token override. |
+| `index.css` | `@import "tailwindcss";`, imports `tokens.css`, maps the semantic variables to Tailwind utilities via `@theme inline` (e.g. `bg-background`, `text-foreground`, `bg-accent`, `text-accent-contrast`, `bg-overlay`), Arabic font stack (`Readex Pro` / `Cairo`), base focus rings, `dir`-safe base rules, shared overlay/popover/page entrance animations, the `html[data-density='compact']` scale, the `html[data-motion='off']` switch, the `html[data-label-edit='on'] .diwan-label-editable` inline-edit hint (dashed focus-ring outline + muted surface on hover/focus, tokens only), the site-wide `html[data-appearance="modern"]` surface treatment (Legacy remains the default), and the print token override. |
 
 ## Design tokens (contract)
 
@@ -170,18 +170,23 @@ Rules:
 - Avoid purple-on-white gradients, glow stacks, and pill-heavy chrome (see repo UI rules).
 - `@media print`: hide shell chrome; force the light token set; keep numbers LTR.
 
+### Appearance selector
+
+`html[data-appearance="legacy"]` preserves the existing styling. `html[data-appearance="modern"]` layers shared rounded surfaces, subtle token-based elevation, an accent-tinted background wash, restrained control feedback, and a slightly tighter 15.5px root scale over the selected Light/Dark tokens. The existing compact-density setting remains tighter at 15px. This attribute is independent of `data-theme`, so all four combinations work. The appearance is set from `diwan.appearance` in the `index.html` pre-paint script; only Modern needs persistence, with Legacy as the default.
+
 ## Implementation status
 
 | Item | State |
 | --- | --- |
 | `tokens.css` (palette + light/dark semantic tokens) | ✅ Implemented |
 | `guide-tour.css` | ✅ Implemented |
-| `index.css` | ✅ Implemented (Tailwind v4 entry + `@theme inline` mapping + overlay/content/page entrance animations + compact density scale + `data-motion` switch + `data-label-edit` inline-edit hint) |
+| `index.css` | ✅ Implemented (Tailwind v4 entry + `@theme inline` mapping + overlay/content/page entrance animations + compact density scale + `data-motion` switch + `data-label-edit` inline-edit hint + Legacy/Modern global treatment) |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-22 | Manus | Added an opt-in, token-based `data-appearance="modern"` treatment, including a slightly tighter root scale while preserving the compact-density override; composes with both Light and Dark without altering the Legacy baseline. |
 | 2026-11-17 | Qoder | UI labels, Phase 2 (`plans/ui-labels-edit-mode.md`): added the unlayered `html[data-label-edit='on'] .diwan-label-editable` rules — a dashed `--color-focus-ring` outline (offset, no layout shift) and `--color-surface-muted` background on hover/focus, so editable labels are hinted in both themes and directions using tokens only. |
 | 2026-11-09 | Claude | `index.css` gained the `print-sheet` rules: while one is mounted, printing shows only that sheet. |
 | 2026-11-02 | agent | Added `guide-tour.css` and imported Driver.js styles; the `data-motion` switch no longer touches `.driver-popover`, so the guide tour keeps its animation. |

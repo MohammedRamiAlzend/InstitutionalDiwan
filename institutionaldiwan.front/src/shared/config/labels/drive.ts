@@ -72,8 +72,6 @@ export const DRIVE_LABELS = {
   'drive.version.number': 'الإصدار {number}',
 
   'drive.quota': 'الحصة التخزينية',
-  'drive.quota.used': 'المستخدم',
-  'drive.quota.available': 'المتاح',
   'drive.quota.usage': '{used} من {quota}',
 
   'drive.trash.retention': 'تُحذف العناصر نهائيًا بعد {days} يومًا في السلة.',

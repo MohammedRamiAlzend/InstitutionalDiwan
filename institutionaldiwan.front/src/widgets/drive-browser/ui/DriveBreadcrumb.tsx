@@ -25,7 +25,7 @@ export function DriveBreadcrumb({
   const nodes = breadcrumbQuery.data ?? []
 
   return (
-    <nav aria-label={t('drive.browser.root-aria')} className="flex flex-wrap items-center gap-1 text-sm">
+    <nav aria-label={t('drive.browser.root-aria')} className="flex flex-wrap items-center gap-1 rounded-xl border border-border bg-surface px-2 py-1.5 text-sm shadow-sm">
       <DriveDropTarget targetFolderId={null} onDropItem={onDropItem}>
         <button
           type="button"

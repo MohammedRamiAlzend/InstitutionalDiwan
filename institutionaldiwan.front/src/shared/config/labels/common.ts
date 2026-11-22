@@ -83,6 +83,11 @@ export const COMMON_LABELS = {
   'settings.theme-light': 'فاتح',
   'settings.theme-dark': 'داكن',
   'settings.theme-system': 'حسب النظام',
+  'settings.appearance': 'نمط الواجهة',
+  'settings.appearance-legacy': 'الكلاسيكي',
+  'settings.appearance-modern': 'الحديث',
+  'settings.appearance-note':
+    'يغيّر هذا الخيار أسلوب الواجهة في جميع الصفحات، ولا يغيّر اختيار الألوان الفاتحة أو الداكنة.',
   'settings.density': 'كثافة العرض',
   'settings.density-comfortable': 'مريح',
   'settings.density-compact': 'مضغوط',
