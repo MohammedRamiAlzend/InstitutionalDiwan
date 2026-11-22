@@ -13,7 +13,7 @@ defaults in code means a failed or absent labels fetch never breaks the interfac
 
 | File | Purpose |
 | --- | --- |
-| `common.ts` | `COMMON_LABELS`: shared chrome reused across surfaces — generic actions (save/cancel/delete/close/confirm/retry), the unified `data-table` tools (search, columns, sort, pagination, export), `confirm-dialog` defaults, the shell menu + label-edit banner, the account menu, the settings dialog, and the generic error fallbacks (`common.error.*`). Editing one renames it everywhere — intentional term unification. |
+| `common.ts` | `COMMON_LABELS`: shared chrome reused across surfaces — generic actions (save/cancel/delete/close/confirm/retry), the unified `data-table` tools (search, columns, sort, pagination, export), `confirm-dialog` defaults, the shell menu + label-edit banner, the account menu, the settings dialog (including independent Legacy/Modern appearance labels), and the generic error fallbacks (`common.error.*`). Editing one renames it everywhere — intentional term unification. |
 | `nav.ts` | `NAV_LABELS`: one key per sidebar group and item, plus the shell chrome around the nav (tagline, main-menu/expand-menu/collapse-menu aria-labels). Keys mirror `shell-nav.ts` ids. |
 | `pages.ts` | `PAGE_LABELS`: static page titles and descriptions (`page.<slug>.title` / `.description`) rendered through `PageHeader`'s `titleKey`/`descriptionKey`. Dynamic titles (a document's subject, a person's name) and feature-flag-composed descriptions stay in code. |
 | `errors.ts` | `ERROR_LABELS`: the full backend error catalog (~422 codes, incl. the 64 Module 11 `error.drive.*`) keyed `error.<code-lowercased>`. `shared/api/errorMessages.ts` maps each code to its key and resolves it through `t()`, so error messages are renamable like any other label. |
@@ -78,6 +78,7 @@ defaults in code means a failed or absent labels fetch never breaks the interfac
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-22 | Manus | Added Arabic `settings.appearance*` labels for the independent Legacy/Modern display-style choice and its explanation. |
 | 2026-11-22 | Manus | Added `drive.browser.summary-items` for the localized current-view item count in the polished Drive workspace. |
 | 2026-11-22 | Manus | Added Arabic labels for the four Explorer-style Drive views, view-switcher accessibility label, and preview details heading. |
 | 2026-11-21 | Copilot | Added explicit Arabic labels for Drive's direct move-to-trash action and confirmation. |

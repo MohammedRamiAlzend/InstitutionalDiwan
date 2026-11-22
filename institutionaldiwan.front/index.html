@@ -17,6 +17,10 @@
         }
         document.documentElement.dataset.theme = theme
 
+        // Visual appearance is independent from the light/dark color theme.
+        var appearance = localStorage.getItem('diwan.appearance')
+        document.documentElement.dataset.appearance = appearance === 'modern' ? 'modern' : 'legacy'
+
         // Same for motion, so a stored «motion off» does not miss the first page entrance.
         var motion = localStorage.getItem('diwan.motion')
         if (motion !== 'on' && motion !== 'off') {
