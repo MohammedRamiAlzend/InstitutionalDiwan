@@ -56,6 +56,7 @@ import { DriveBreadcrumb } from './DriveBreadcrumb'
 import { DriveBrowserControls, type DriveLayout } from './DriveBrowserControls'
 import { DriveDropTarget } from './DriveDropTarget'
 import { DriveItemsGrid } from './DriveItemsGrid'
+import { DrivePreviewPanel } from './DrivePreviewPanel'
 import { useItemRoles } from '../model/useItemRoles'
 import { startItemDrag } from '../model/dnd'
 
@@ -108,7 +109,9 @@ export function DriveBrowser({
     defaultSortKey: 'name',
     defaultSortDirection: 'asc',
   })
-  const layout: DriveLayout = table.filters.layout === 'grid' ? 'grid' : 'list'
+  const layout: DriveLayout = ['details', 'list', 'tiles', 'grid'].includes(table.filters.layout)
+    ? (table.filters.layout as DriveLayout)
+    : 'details'
 
   const activeSpace =
     view === 'my-files' ? personal : view === 'shared' ? (shared.find((s) => s.spaceId === spaceId) ?? null) : null
@@ -168,6 +171,7 @@ export function DriveBrowser({
   const [createFolderOpen, setCreateFolderOpen] = useState(false)
   const [renameTarget, setRenameTarget] = useState<DriveItemResponse | null>(null)
   const [moveTarget, setMoveTarget] = useState<DriveItemResponse | null>(null)
+  const [selectedItem, setSelectedItem] = useState<DriveItemResponse | null>(null)
   const [fileOver, setFileOver] = useState(false)
 
   const copyValue = async (value: string, label: string) => {
@@ -195,7 +199,10 @@ export function DriveBrowser({
       .catch((error) => toast.error(toArabicErrorMessage(error)))
   }
 
-  const openFolder = (itemId: string) => onNavigateFolder(itemId)
+  const openFolder = (itemId: string) => {
+    setSelectedItem(null)
+    onNavigateFolder(itemId)
+  }
   const openFile = (item: DriveItemResponse) => actions?.onOpenFile?.(item)
 
   const buildRowMenu = (item: DriveItemResponse): MenuEntry[] => {
@@ -370,7 +377,8 @@ export function DriveBrowser({
                 <ItemKindIcon kindId={item.itemKindId} />
                 <button
                   type="button"
-                  onClick={() => (isFolder ? openFolder(item.itemId) : openFile(item))}
+                  onClick={() => setSelectedItem(item)}
+                  onDoubleClick={() => (isFolder ? openFolder(item.itemId) : openFile(item))}
                   className="truncate text-start text-sm font-medium text-foreground transition-colors hover:text-accent"
                   title={item.name}
                 >
@@ -468,7 +476,7 @@ export function DriveBrowser({
         search={table.search}
         onSearchChange={table.setSearch}
         layout={layout}
-        onLayoutChange={(next) => table.setFilter('layout', next === 'list' ? null : next)}
+        onLayoutChange={(next) => table.setFilter('layout', next === 'details' ? null : next)}
         canCreateFolder={canCreateFolder}
         onNewFolder={() => setCreateFolderOpen(true)}
         onUpload={onUpload}
@@ -542,64 +550,86 @@ export function DriveBrowser({
       )}
 
       <GuideRegion id="drive.grid">
-        {layout === 'list' ? (
-          <DataTable
-            tableId="drive-items"
-            mode="server"
-            caption={t('drive.browser.caption')}
-            columns={columns}
-            rows={items}
-            rowKey={(item) => item.itemId}
-            isLoading={query.isLoading}
-            error={query.error}
-            onRetry={() => void query.refetch()}
-            isFetching={query.isFetching}
-            page={table.page}
-            pageSize={table.pageSize}
-            totalCount={query.data?.totalCount ?? 0}
-            onPageChange={table.setPage}
-            onPageSizeChange={table.setPageSize}
-            sortKey={table.sortKey}
-            sortDirection={table.sortDirection}
-            onSortChange={table.setSort}
-            rowMenu={buildRowMenu}
-            headerMenu={headerMenu}
-            emptyMenu={headerMenu}
-            rowLabel={(item) => item.name}
-            toolbar={controls}
-            emptyTitle={emptyTitle}
-            emptyDescription={emptyDescription}
-            emptyAction={emptyAction}
-          />
-        ) : (
-          <>
-            {controls}
-            {query.error && (
-              <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-danger/40 bg-danger/10 px-3 py-2 text-sm text-danger">
-                <span>{toArabicErrorMessage(query.error)}</span>
-                <Button type="button" variant="outline" size="sm" onClick={() => void query.refetch()}>
-                  <Label k="drive.retry" />
-                </Button>
+        <div className="flex min-w-0 flex-col gap-4 xl:flex-row xl:items-start">
+          <div className="min-w-0 flex-1">
+            {layout === 'details' ? (
+              <DataTable
+                tableId="drive-items"
+                mode="server"
+                caption={t('drive.browser.caption')}
+                columns={columns}
+                rows={items}
+                rowKey={(item) => item.itemId}
+                isLoading={query.isLoading}
+                error={query.error}
+                onRetry={() => void query.refetch()}
+                isFetching={query.isFetching}
+                page={table.page}
+                pageSize={table.pageSize}
+                totalCount={query.data?.totalCount ?? 0}
+                onPageChange={table.setPage}
+                onPageSizeChange={table.setPageSize}
+                sortKey={table.sortKey}
+                sortDirection={table.sortDirection}
+                onSortChange={table.setSort}
+                rowMenu={buildRowMenu}
+                headerMenu={headerMenu}
+                emptyMenu={headerMenu}
+                rowLabel={(item) => item.name}
+                toolbar={controls}
+                emptyTitle={emptyTitle}
+                emptyDescription={emptyDescription}
+                emptyAction={emptyAction}
+              />
+            ) : (
+              <div className="flex flex-col gap-3">
+                {controls}
+                {query.error && (
+                  <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-danger/40 bg-danger/10 px-3 py-2 text-sm text-danger">
+                    <span>{toArabicErrorMessage(query.error)}</span>
+                    <Button type="button" variant="outline" size="sm" onClick={() => void query.refetch()}>
+                      <Label k="drive.retry" />
+                    </Button>
+                  </div>
+                )}
+                <DriveItemsGrid
+                  items={items}
+                  isLoading={query.isLoading}
+                  roles={roles}
+                  rowMenu={buildRowMenu}
+                  onOpenFolder={openFolder}
+                  onOpenFile={actions?.onOpenFile}
+                  onSelectItem={setSelectedItem}
+                  selectedItemId={selectedItem?.itemId ?? null}
+                  layout={layout}
+                  onDropItem={handleDropItem}
+                  page={table.page}
+                  pageSize={table.pageSize}
+                  totalCount={query.data?.totalCount ?? 0}
+                  onPageChange={table.setPage}
+                  emptyTitle={emptyTitle}
+                  emptyDescription={emptyDescription}
+                  emptyAction={emptyAction}
+                />
               </div>
             )}
-            <DriveItemsGrid
-              items={items}
-              isLoading={query.isLoading}
-              roles={roles}
-              rowMenu={buildRowMenu}
-              onOpenFolder={openFolder}
-              onOpenFile={actions?.onOpenFile}
-              onDropItem={handleDropItem}
-              page={table.page}
-              pageSize={table.pageSize}
-              totalCount={query.data?.totalCount ?? 0}
-              onPageChange={table.setPage}
-              emptyTitle={emptyTitle}
-              emptyDescription={emptyDescription}
-              emptyAction={emptyAction}
+          </div>
+          {selectedItem && (
+            <DrivePreviewPanel
+              item={selectedItem}
+              ownerName={ownerName[selectedItem.ownerUserId] ?? formatShortId(selectedItem.ownerUserId)}
+              onClose={() => setSelectedItem(null)}
+              onOpen={
+                selectedItem.itemKindId === DRIVE_ITEM_KIND.Folder
+                  ? () => openFolder(selectedItem.itemId)
+                  : actions?.onOpenFile
+                    ? () => actions.onOpenFile?.(selectedItem)
+                    : undefined
+              }
+              onDownload={actions?.onDownload ? () => actions.onDownload?.(selectedItem) : undefined}
             />
-          </>
-        )}
+          )}
+        </div>
       </GuideRegion>
 
       {canCreateFolder && browseSpaceId && (

@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
-import { FolderPlus, LayoutGrid, List, RefreshCw, Search, Upload } from 'lucide-react'
+import { Columns3, LayoutGrid, List, RefreshCw, Search, TableProperties, FolderPlus, Upload } from 'lucide-react'
 import { cn, t, useDebouncedValue } from '@/shared/lib'
 import { Button, Input, Label, Select, type SelectOption } from '@/shared/ui'
 
-export type DriveLayout = 'grid' | 'list'
+export type DriveLayout = 'details' | 'list' | 'tiles' | 'grid'
 
 interface DriveBrowserControlsProps {
   search: string
@@ -22,11 +22,7 @@ interface DriveBrowserControlsProps {
   isFetching: boolean
 }
 
-/**
- * The browse toolbar shared by the grid and list presentations: debounced name search, the
- * grid/list switch, new-folder/upload entry points, kind/owner filters, and refresh. Keeping it in
- * one component means both views drive the same URL state.
- */
+/** Explorer-style toolbar shared by all Drive presentations; view and filter state stays in the URL. */
 export function DriveBrowserControls({
   search,
   onSearchChange,
@@ -64,9 +60,15 @@ export function DriveBrowserControls({
     { value: 'all', label: t('drive.browser.filter-all') },
     ...ownerOptions,
   ]
+  const views: { id: DriveLayout; icon: typeof TableProperties; label: string }[] = [
+    { id: 'details', icon: TableProperties, label: t('drive.browser.view-details') },
+    { id: 'list', icon: List, label: t('drive.browser.view-list') },
+    { id: 'tiles', icon: Columns3, label: t('drive.browser.view-tiles') },
+    { id: 'grid', icon: LayoutGrid, label: t('drive.browser.view-grid') },
+  ]
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-surface p-2">
       <Input
         type="search"
         value={draft}
@@ -74,34 +76,25 @@ export function DriveBrowserControls({
         placeholder={t('drive.browser.search-placeholder')}
         aria-label={t('drive.browser.search-placeholder')}
         startIcon={<Search className="size-4" aria-hidden />}
-        className="h-10 w-full ps-10 pe-4 sm:w-64"
+        className="h-10 w-full min-w-48 flex-1 sm:w-auto"
       />
 
-      <div className="flex items-center rounded-lg border border-border p-0.5">
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className={cn('size-8', layout === 'list' && 'bg-accent/10 text-accent')}
-          onClick={() => onLayoutChange('list')}
-          aria-label={t('drive.browser.view-list')}
-          aria-pressed={layout === 'list'}
-        >
-          <List className="size-4" aria-hidden />
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className={cn('size-8', layout === 'grid' && 'bg-accent/10 text-accent')}
-          onClick={() => onLayoutChange('grid')}
-          aria-label={t('drive.browser.view-grid')}
-          aria-pressed={layout === 'grid'}
-        >
-          <LayoutGrid className="size-4" aria-hidden />
-        </Button>
-      </div>
+      <Select
+        aria-label={t('drive.browser.filter-kind')}
+        value={kind || 'all'}
+        onValueChange={onKindChange}
+        options={kindOptions}
+        className="h-10 w-32"
+      />
+      <Select
+        aria-label={t('drive.browser.filter-owner')}
+        value={owner || 'all'}
+        onValueChange={onOwnerChange}
+        options={ownerSelectOptions}
+        className="h-10 w-40"
+      />
 
+      <span className="mx-0.5 hidden h-7 border-s border-border sm:block" aria-hidden />
       {canCreateFolder && (
         <Button type="button" variant="outline" className="h-10" onClick={onNewFolder}>
           <FolderPlus className="size-4" aria-hidden />
@@ -115,26 +108,28 @@ export function DriveBrowserControls({
         </Button>
       )}
 
-      <Select
-        aria-label={t('drive.browser.filter-kind')}
-        value={kind || 'all'}
-        onValueChange={onKindChange}
-        options={kindOptions}
-        className="h-10 w-36"
-      />
-      <Select
-        aria-label={t('drive.browser.filter-owner')}
-        value={owner || 'all'}
-        onValueChange={onOwnerChange}
-        options={ownerSelectOptions}
-        className="h-10 w-44"
-      />
-
+      <div className="ms-auto flex items-center gap-1 rounded-lg border border-border p-0.5" role="group" aria-label={t('drive.browser.view-mode')}>
+        {views.map(({ id, icon: Icon, label }) => (
+          <Button
+            key={id}
+            type="button"
+            variant="ghost"
+            size="icon"
+            className={cn('size-8', layout === id && 'bg-accent/10 text-accent')}
+            onClick={() => onLayoutChange(id)}
+            aria-label={label}
+            title={label}
+            aria-pressed={layout === id}
+          >
+            <Icon className="size-4" aria-hidden />
+          </Button>
+        ))}
+      </div>
       <Button
         type="button"
         variant="outline"
         size="icon"
-        className="ms-auto size-10"
+        className="size-10"
         onClick={onRefresh}
         aria-label={t('table.refresh')}
       >
