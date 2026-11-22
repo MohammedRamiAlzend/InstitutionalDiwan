@@ -233,6 +233,12 @@ html[data-appearance='modern'] body {
   background-image: radial-gradient(ellipse at top, color-mix(in srgb, var(--color-accent) 7%, transparent), transparent 42rem);
 }
 
+/* A modestly tighter workspace scale makes more page content fit without making
+   the text feel small; the explicit compact-density preference remains tighter. */
+html[data-appearance='modern']:not([data-density='compact']) {
+  font-size: 15.5px;
+}
+
 html[data-appearance='modern'] :is(.rounded-lg, .rounded-xl, .rounded-2xl) {
   border-radius: 1rem;
 }

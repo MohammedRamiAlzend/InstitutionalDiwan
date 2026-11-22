@@ -172,7 +172,7 @@ Rules:
 
 ### Appearance selector
 
-`html[data-appearance="legacy"]` preserves the existing styling. `html[data-appearance="modern"]` layers shared rounded surfaces, subtle token-based elevation, an accent-tinted background wash, and restrained control feedback over the selected Light/Dark tokens. This attribute is independent of `data-theme`, so all four combinations work. The appearance is set from `diwan.appearance` in the `index.html` pre-paint script; only Modern needs persistence, with Legacy as the default.
+`html[data-appearance="legacy"]` preserves the existing styling. `html[data-appearance="modern"]` layers shared rounded surfaces, subtle token-based elevation, an accent-tinted background wash, restrained control feedback, and a slightly tighter 15.5px root scale over the selected Light/Dark tokens. The existing compact-density setting remains tighter at 15px. This attribute is independent of `data-theme`, so all four combinations work. The appearance is set from `diwan.appearance` in the `index.html` pre-paint script; only Modern needs persistence, with Legacy as the default.
 
 ## Implementation status
 
@@ -186,7 +186,7 @@ Rules:
 
 | Date | Author | Change |
 | --- | --- | --- |
-| 2026-11-22 | Manus | Added an opt-in, token-based `data-appearance="modern"` treatment that composes with both Light and Dark without altering the Legacy baseline. |
+| 2026-11-22 | Manus | Added an opt-in, token-based `data-appearance="modern"` treatment, including a slightly tighter root scale while preserving the compact-density override; composes with both Light and Dark without altering the Legacy baseline. |
 | 2026-11-17 | Qoder | UI labels, Phase 2 (`plans/ui-labels-edit-mode.md`): added the unlayered `html[data-label-edit='on'] .diwan-label-editable` rules — a dashed `--color-focus-ring` outline (offset, no layout shift) and `--color-surface-muted` background on hover/focus, so editable labels are hinted in both themes and directions using tokens only. |
 | 2026-11-09 | Claude | `index.css` gained the `print-sheet` rules: while one is mounted, printing shows only that sheet. |
 | 2026-11-02 | agent | Added `guide-tour.css` and imported Driver.js styles; the `data-motion` switch no longer touches `.driver-popover`, so the guide tour keeps its animation. |
