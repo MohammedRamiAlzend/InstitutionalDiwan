@@ -111,11 +111,11 @@ export function DriveWorkspace() {
   }
 
   return (
-    <div className="flex flex-col gap-6 lg:gap-7">
-      <div className="flex items-center justify-end gap-2">
+    <div className="flex flex-col gap-4 lg:gap-5">
+      <div className="flex items-center justify-between gap-3">
         <PageGuideTrigger pageId="drive" />
         {canManage && (
-          <Button variant="outline" onClick={() => setSettingsOpen(true)}>
+          <Button variant="outline" className="rounded-full px-4" onClick={() => setSettingsOpen(true)}>
             <Settings className="size-4" aria-hidden />
             <Label k="drive.dialog.settings-title" />
           </Button>
@@ -129,7 +129,7 @@ export function DriveWorkspace() {
           </Button>
         </div>
       ) : (
-        <div className="flex flex-col gap-5 lg:grid lg:grid-cols-[17rem_minmax(0,1fr)] lg:items-start lg:gap-6">
+        <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[18rem_minmax(0,1fr)] lg:items-start lg:gap-5">
           <GuideRegion id="drive.sidebar" className="lg:sticky lg:top-4">
             <DriveSidebar
               personal={personal}

@@ -4,7 +4,7 @@
 
 ## Purpose
 
-The left rail of `/drive`. Lists the five browse modes, the caller's personal space plus reachable
+The navigation panel of `/drive` (right side in the Arabic RTL workspace). Lists the five browse modes, the caller's personal space plus reachable
 shared spaces, and the active space's quota meter. Space creation is open to every `DRIVE_USE`
 holder; rename and quota actions are permission-filtered per row. The active mode/space is owned by
 the page (URL state) and passed in — this widget only renders and emits selections.
@@ -31,7 +31,7 @@ rename/quota menu entries.
 
 | Item | State |
 | --- | --- |
-| Widget code | ✅ Implemented; refreshed as a quieter elevated rail with stronger active states and a contained quota meter. |
+| Widget code | ✅ Implemented as a compact elevated panel with a separated spaces section, clear active state, and contained quota meter; its placement mirrors naturally in LTR. |
 | UI labels | ✅ Renders from `drive.sidebar.*`, `drive.my-files`/`shared-spaces`/`starred`/`trash`, `drive.view.deletion-requests`, `drive.action.*`; no Arabic literals. |
 | Live verification | ⏳ Pending the Phase 6 browser round. |
 
@@ -39,5 +39,6 @@ rename/quota menu entries.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-22 | Manus | Refined the active view surface and separated the space list from primary navigation to match the reference layout. |
 | 2026-11-22 | Manus | Refined the rail's spacing, active view state, and storage meter surface using semantic theme tokens. |
 | 2026-11-20 | Qoder | Front-end Phase 1: created the rail with mode switcher, space list + per-row menu, and quota meter. |

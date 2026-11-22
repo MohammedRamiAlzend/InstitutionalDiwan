@@ -40,7 +40,7 @@ the server further limits every read to what the caller can reach.
 | Item | State |
 | --- | --- |
 | Route + sidebar entry | ✅ (`ROUTES.DRIVE`, `AppRouter`, `shell-nav` «الملفات» with `FolderOpen`) |
-| Workspace shell, spaces, quota, responsive two-column composition; concise title-free workspace entry | ✅ |
+| Workspace shell, spaces, quota, responsive two-column composition with right-side RTL navigation and content-first browsing | ✅ |
 | Browse grid | ✅ Phase 2 (`widgets/drive-browser`: server grid/list, breadcrumb, filters, effective-role menus, DnD moves) |
 | Upload / download / preview | ✅ Phase 3 (`features/drive-upload` queue dialog + new-version, `widgets/drive-preview-dialog`, `downloadDriveFile`; file-drop → upload) |
 | Versions / permissions | ✅ Phase 4 |
@@ -52,6 +52,7 @@ the server further limits every read to what the caller can reach.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-22 | Manus | Rebalanced the Drive workspace around a full-width breadcrumb and layered browser toolbar, with a narrower right-side navigation and quota panel on desktop. |
 | 2026-11-22 | Manus | Removed the redundant Drive page heading/description; retained the tutorial and settings actions above the workspace. |
 | 2026-11-22 | Manus | Applied the polished workspace composition: a stable desktop navigation rail with a stacked small-screen layout. |
 | 2026-11-21 | Copilot | Front-end Phase 6: mounted Office preview through the lazy OnlyOffice editor and completed Drive guides/documentation. |

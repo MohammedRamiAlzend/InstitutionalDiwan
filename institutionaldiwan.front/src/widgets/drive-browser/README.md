@@ -25,8 +25,8 @@ type) is exported through `index.ts`.
 | File | Purpose |
 | --- | --- |
 | `ui/DriveBrowser.tsx` | Orchestrator: browse params from view/space/folder + `useTableState`, `useDriveItems`, batched effective roles, toolbar/filters, row/header/empty menus, four URL-persisted presentations, file selection/preview, DnD move + file-drop hook, and the create-folder/rename/move dialogs. Exports `DriveItemActions` (`onOpenFile`/`onDownload`/`onUploadVersion` wired in Phase 3; versions/permissions/deletion in later phases). |
-| `ui/DriveBrowserControls.tsx` | Shared toolbar: debounced name search, grouped kind/owner filters, details/list/tiles/grid switch, new-folder/upload actions, refresh. |
-| `ui/DriveBreadcrumb.tsx` | Root crumb (the space) + `useDriveBreadcrumb(folderId)` ancestors; each crumb navigates and is a drop target, in a distinct hierarchy bar. |
+| `ui/DriveBrowserControls.tsx` | Shared two-tier toolbar: debounced name search, grouped kind/owner filters, new-folder/upload actions, then a secondary row for details/list/tiles/grid and refresh. |
+| `ui/DriveBreadcrumb.tsx` | Full-width root crumb (the space) + `useDriveBreadcrumb(folderId)` ancestors; each crumb navigates and is a drop target. |
 | `ui/DriveItemsGrid.tsx` | Icon grid, compact list, and tiles: kind glyph, name, star, size/modified metadata, per-item context menu, selection, draggable items, folder drop targets, and a paging footer. |
 | `ui/DrivePreviewPanel.tsx` | Selected-item side panel with metadata and available open/download actions; full media/Office preview continues through `DrivePreviewDialog`. |
 | `ui/DriveDropTarget.tsx` | Folder drop zone wrapper (highlight on item-drag hover; ignores self-drops). |
@@ -62,7 +62,7 @@ type) is exported through `index.ts`.
 | Docs | ✅ |
 | Browse details/list/tiles/grid + breadcrumb + toolbar + filters + URL state | ✅ |
 | File selection side panel with metadata and preview/download actions | ✅ |
-| Focused browse surface without redundant item/quota summary cards; refreshed toolbar/breadcrumb/table/preview surfaces | ✅ |
+| Focused browse surface without redundant item/quota summary cards; full-width hierarchy bar, grouped two-tier toolbar, export/column actions, and table/preview surfaces | ✅ |
 | Effective-role-gated menus + create-folder/rename/move/star | ✅ Phase 2 |
 | Drag-and-drop move + move-dialog alternative | ✅ Phase 2 |
 | Upload / download / preview actions | ✅ Phase 3 (`onOpenFile`/`onDownload`/`onUploadVersion` + `onDropFiles`/`onUpload` wired by the page) |
@@ -74,6 +74,7 @@ type) is exported through `index.ts`.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-22 | Manus | Split search/filters/actions from layout/refresh controls and expanded the breadcrumb to the full content width; shared DataTable export and column actions remain available. |
 | 2026-11-22 | Manus | Drive details uses the shared fixed 520px scrollable viewport; the shared default now applies consistently to other DataTable screens too. |
 | 2026-11-22 | Manus | Removed the item-count and used/available quota summary cards from above the toolbar so the browser opens directly into file controls and content. |
 | 2026-11-22 | Manus | Applied the professional workspace polish: live item/space-quota summary cards, clearer grouped controls and hierarchy bar, and consistent elevated table/preview surfaces. |
