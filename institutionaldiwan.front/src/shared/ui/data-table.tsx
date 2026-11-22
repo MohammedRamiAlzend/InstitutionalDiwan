@@ -106,7 +106,7 @@ export interface DataTableProps<T> {
   emptyDescription?: string
   emptyAction?: ReactNode
   className?: string
-  /** Fixed height in pixels for a vertically scrollable table viewport; unset keeps current behavior. */
+  /** Fixed height in pixels for the internally scrollable table viewport; defaults to 520px. */
   viewportHeight?: number
 }
 
@@ -163,7 +163,7 @@ export function DataTable<T>({
   emptyDescription,
   emptyAction,
   className,
-  viewportHeight,
+  viewportHeight = 520,
 }: DataTableProps<T>) {
   const tableRef = useRef<HTMLTableElement>(null)
   const [visibility, setVisibility] = useState<Record<string, boolean>>(() =>
@@ -448,10 +448,7 @@ export function DataTable<T>({
       <div className="overflow-hidden rounded-xl border border-border bg-surface">
         {/* `relative` keeps the absolutely placed sr-only cells inside this scroller; without it
             they escape the clip and widen the whole page on a phone. */}
-        <div
-          className={cn('relative', viewportHeight ? 'overflow-auto' : 'overflow-x-auto')}
-          style={viewportHeight ? { height: viewportHeight } : undefined}
-        >
+        <div className="relative overflow-auto" style={{ height: viewportHeight }}>
           <table ref={tableRef} className="w-full border-collapse text-sm">
             <caption className="sr-only">{caption ?? t('table.data-caption')}</caption>
             {headerMenu && headerMenu.length > 0 ? (

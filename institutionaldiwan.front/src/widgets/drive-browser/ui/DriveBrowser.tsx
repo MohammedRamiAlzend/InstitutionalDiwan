@@ -580,7 +580,6 @@ export function DriveBrowser({
                 emptyTitle={emptyTitle}
                 emptyDescription={emptyDescription}
                 emptyAction={emptyAction}
-                viewportHeight={520}
               />
             ) : (
               <div className="flex flex-col gap-3">
