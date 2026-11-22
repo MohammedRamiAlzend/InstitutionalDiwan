@@ -50,8 +50,10 @@ type) is exported through `index.ts`.
   keyboard/touch alternative. File drops are forwarded to `onDropFiles` (wired in Phase 3 to seed
   the upload queue); the toolbar upload button and the per-file «new version» action use the same
   feature.
-- **Table convention:** list mode is `shared/ui/data-table` (`tableId="drive-items"`, server mode,
-  column chooser persisted under `diwan.table.drive-items.columns.v1`); no bespoke `<table>`.
+- **Table convention:** details mode is `shared/ui/data-table` (`tableId="drive-items"`, server mode,
+  column chooser persisted under `diwan.table.drive-items.columns.v1`); no bespoke `<table>`. Its
+  table viewport has a fixed 520px height with internal scrolling, leaving the toolbar and pager
+  usable outside the scroller and showing at least ten standard-height rows.
 
 ## Implementation status
 
@@ -72,6 +74,7 @@ type) is exported through `index.ts`.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-22 | Manus | Set the Drive details table viewport to a fixed 520px height with internal scrolling; the shared DataTable remains unchanged by default on other pages. |
 | 2026-11-22 | Manus | Removed the item-count and used/available quota summary cards from above the toolbar so the browser opens directly into file controls and content. |
 | 2026-11-22 | Manus | Applied the professional workspace polish: live item/space-quota summary cards, clearer grouped controls and hierarchy bar, and consistent elevated table/preview surfaces. |
 | 2026-11-22 | Manus | Added Explorer-style details/list/tiles/grid presentations, single-click selection, double-click open behavior for files/folders, and a contextual metadata panel. |
