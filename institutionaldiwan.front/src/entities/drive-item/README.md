@@ -20,7 +20,7 @@ purge) live in the `drive-*` features; the browser, breadcrumb, grids and dialog
 | --- | --- |
 | `api/driveItemApi.ts` | `browse(params)` → `GET /api/drive/items` (paged); item hierarchy/versions/permissions/deletion/trash reads, `downloadUrl`, `editConfig`, and the two `BlobDownload` byte reads. |
 | `model/types.ts` | Drive item, version, permission, deletion, breadcrumb, effective-role, download-url, and `DriveEditConfigResponse` DTOs plus query shapes. |
-| `model/queries.ts` | `driveItemKeys` factory and all Drive item hooks, including `useDriveDownloadUrl` and `useDriveEditConfig` (both short-lived and not cached across opens). |
+| `model/queries.ts` | `driveItemKeys` factory and all Drive item hooks, including `useDriveDownloadUrl`, `useDriveEditConfig` and `useDriveTextContent` (all short-lived and not cached across opens). |
 | `model/navigation.ts` | `DriveView` (`my-files`/`shared`/`starred`/`trash`/`deletion`), `DRIVE_VIEWS`, `isDriveView` — the URL browse-mode contract shared by `pages/drive` and the `drive-*` widgets (Phase 1). |
 | `ui/ItemKindIcon.tsx` | lucide `Folder` / `FileText` from `itemKindId`; `aria-label` via `useLabel` (`drive.item-kind.*`). |
 | `ui/RoleBadge.tsx` | «بلا صلاحية» / «مشاهد» / «محرّر» / «مدير» from `roleId` (`DRIVE_ROLE`), unknown → None (`drive.role.*`). |
@@ -42,6 +42,7 @@ export const driveItemKeys = {
   versions: (itemId) => [...all, 'versions', itemId] as const,
   downloadUrl: (itemId) => [...all, 'download-url', itemId] as const,
   editConfig: (itemId) => [...all, 'edit-config', itemId] as const,
+  text: (itemId) => [...all, 'text', itemId] as const,
   permissions: (itemId) => [...all, 'permissions', itemId] as const,
   effective: (itemId) => [...all, 'effective', itemId] as const,
   deletionRequests: (params) => [...all, 'deletion-requests', params] as const,
@@ -73,6 +74,9 @@ caller access on every read.
   supports HTTP Range (206 + `Content-Range`); `disposition: 'attachment'` forces a download, the
   default is inline. Both go through `downloadBlob`, so a failure arrives as a blob-bodied
   ProblemDetails normalized to an `ApiError` with the real domain code (`toApiErrorAsync`).
+- `useDriveTextContent(itemId)` reads the current version's bytes through the authenticated route and
+  decodes them as text for the `.txt`/`.md` editor; `staleTime`/`gcTime` are 0 so every open sees the
+  latest version, and it is opt-in (`enabled: false` by default).
 - `DriveVersionResponse.checksumSha256` is nullable; `relativePath`-style internal storage paths are
   never exposed. Enum IDs resolve through `DRIVE_ITEM_KIND` / `DRIVE_VERSION_STATUS` /
   `DRIVE_VERSION_SOURCE` / `DRIVE_ROLE` / `DRIVE_PRINCIPAL_TYPE` / `DRIVE_DELETION_STATUS` in
@@ -93,11 +97,13 @@ caller access on every read.
 | Versions / permissions UI | ⏳ Phase 4 |
 | Deletion / trash / settings UI | ⏳ Phase 5 |
 | OnlyOffice edit-config read | ✅ Phase 6 |
+| Text/Markdown content read (`useDriveTextContent`) | ✅ |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-23 | Buffy | Added the `text` query key and `useDriveTextContent` hook (current version decoded as text, uncached) for the `.txt`/`.md` editor. |
 | 2026-11-21 | Copilot | Added the signed OnlyOffice `edit-config` response, API read, query key and hook for the Phase 6 editor. |
 | 2026-11-20 | Qoder | Front-end Phase 3: added the `downloadUrl` query key and `useDriveDownloadUrl` hook (presigned GET, `staleTime`/`gcTime` 0) for the preview dialog and the Phase 6 editor; exported from the barrel. No backend change. |
 | 2026-11-20 | Qoder | Front-end Phase 2: `widgets/drive-browser` now consumes `browse`/`breadcrumb`/`children`/`effective` (batched via `useItemRoles`); `features/drive-item-manage` writes invalidate these keys. No read-model change. |

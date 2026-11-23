@@ -50,10 +50,15 @@ public sealed class DocumentFileOnlyOfficeController : ControllerBase
     [HttpGet("{fileId:guid}/onlyoffice-content")]
     [AllowAnonymous]
     [Produces("application/octet-stream")]
+    [EndpointSummary("Streams an attachment version to the OnlyOffice document server under a signed token.")]
+    [EndpointDescription("Serves the exact bytes of one document-file version to OnlyOffice, authenticated by a short-lived token minted for that file and version instead of a JWT, so the browser never proxies the content. Responses: 200 (The version bytes, with Range support.), 401 (The token is missing, expired, or does not match the file and version.), 404 (The file, version, storage provider, or stored object does not exist.)")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Content(
         [Description("Document file unique identifier (GUID, route). Example: 2b7c1e94-5d38-4a6f-9c21-8e04b7d63f15.")] Guid fileId,
-        [FromQuery] Guid versionId,
-        [FromQuery] string token,
+        [Description("Attachment version unique identifier (GUID, query); must match the version the token was signed for. Example: 4f0d2b61-8c37-4e59-a1d6-73b8f2c05e94.")] [FromQuery] Guid versionId,
+        [Description("Short-lived signed token minted by the edit-config endpoint for this file and version. Example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.example.")] [FromQuery] string token,
         CancellationToken cancellationToken)
     {
         var claims = _tokens.Verify(token);

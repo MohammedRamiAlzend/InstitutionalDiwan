@@ -24,8 +24,8 @@ type) is exported through `index.ts`.
 
 | File | Purpose |
 | --- | --- |
-| `ui/DriveBrowser.tsx` | Orchestrator: browse params from view/space/folder + `useTableState`, `useDriveItems`, batched effective roles, toolbar/filters, row/header/empty menus, four URL-persisted presentations, file selection/preview, DnD move + file-drop hook, and the create-folder/rename/move dialogs. Exports `DriveItemActions` (`onOpenFile`/`onDownload`/`onUploadVersion` wired in Phase 3; versions/permissions/deletion in later phases). |
-| `ui/DriveBrowserControls.tsx` | One flat command row (no card chrome): debounced name search, kind/owner filters, new-folder/upload actions, and a trailing presentation switch (details/list/tiles/grid) with refresh. |
+| `ui/DriveBrowser.tsx` | Orchestrator: browse params from view/space/folder + `useTableState`, `useDriveItems`, batched effective roles, toolbar/filters, row/header/empty menus, four URL-persisted presentations, file selection/preview, DnD move + file-drop hook, and the create-folder/new-file/rename/move dialogs (a created file opens straight in its editor). Exports `DriveItemActions`. |
+| `ui/DriveBrowserControls.tsx` | One flat command row (no card chrome): debounced name search, kind/owner filters, new-file/new-folder/upload actions, and a trailing presentation switch (details/list/tiles/grid) with refresh. |
 | `ui/DriveBreadcrumb.tsx` | Slim inline trail (no card/border/shadow): root crumb (the space) + `useDriveBreadcrumb(folderId)` ancestors; each crumb navigates and is a drop target. |
 | `ui/DriveItemsGrid.tsx` | Icon grid, compact list, and tiles: the grid card keeps the glyph on its own plate, the name on up to two lines, and one quiet size/date line, with star and overflow hidden until hover/focus; every layout shares the per-item context menu, selection, drag sources, folder drop targets, and a single paging footer row. |
 | `ui/DrivePreviewPanel.tsx` | Selected-item details as an end-side drawer over the file bed (scrim + Esc close) so details never squeeze the grid; metadata and open/download actions; full media/Office preview continues through `DrivePreviewDialog`. |
@@ -65,6 +65,7 @@ type) is exported through `index.ts`.
 | Focused browse surface without redundant item/quota summary cards; full-width hierarchy bar, grouped two-tier toolbar, export/column actions, and table/preview surfaces | ✅ |
 | Explorer layout pass: single-row command bar, slim breadcrumb trail, redesigned grid card with hover actions, one-row paging footer, and preview as an overlay drawer | ✅ |
 | Effective-role-gated menus + create-folder/rename/move/star | ✅ Phase 2 |
+| New-file action (empty Word/Excel/text/Markdown, opens in its editor) | ✅ |
 | Drag-and-drop move + move-dialog alternative | ✅ Phase 2 |
 | Upload / download / preview actions | ✅ Phase 3 (`onOpenFile`/`onDownload`/`onUploadVersion` + `onDropFiles`/`onUpload` wired by the page) |
 | Versions / permissions actions | ⏳ Phase 4 |
@@ -75,6 +76,7 @@ type) is exported through `index.ts`.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-23 | Buffy | Added «ملف جديد» to the toolbar and the empty/header menus, gated like folder creation, mounting `NewFileDialog`; the created docx/xlsx/txt/md item is handed to `onOpenFile` so it opens in the OnlyOffice or text editor immediately. |
 | 2026-11-22 | Codebuff | Layout refactor: the toolbar collapsed from a two-band card into one flat command row, the breadcrumb lost its card, the grid card was rebuilt (glyph plate, two-line name, single metadata line, hover-revealed star/overflow), the paging footer merged into one row, and the preview panel became an end-side drawer instead of a third column. |
 | 2026-11-22 | Manus | Split search/filters/actions from layout/refresh controls and expanded the breadcrumb to the full content width; shared DataTable export and column actions remain available. |
 | 2026-11-22 | Manus | Drive details uses the shared fixed 520px scrollable viewport; the shared default now applies consistently to other DataTable screens too. |

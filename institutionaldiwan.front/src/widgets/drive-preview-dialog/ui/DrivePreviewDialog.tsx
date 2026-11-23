@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react'
 import { Download, FileWarning, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useDriveDownloadUrl, type DriveItemResponse } from '@/entities/drive-item'
-import { DriveEditor } from '@/features/drive-editor'
+import { DriveEditor, ImageEditor, TextFileEditor, isEditableImage } from '@/features/drive-editor'
 import { downloadDriveFile } from '@/features/drive-upload'
 import { toArabicErrorMessage } from '@/shared/api'
 import { t } from '@/shared/lib'
@@ -17,16 +17,22 @@ interface DrivePreviewDialogProps {
 
 /**
  * In-browser preview of a Drive file. Images/PDF/video/audio render from a short-lived presigned GET
- * (the gateway serves bytes directly, with Range for video); Office and other types fall back to an
- * Arabic «no preview» notice with a download. The OnlyOffice viewer for Office lands in Phase 6.
+ * (the gateway serves bytes directly, with Range for video); Office opens the OnlyOffice editor,
+ * .txt/.md open the in-app text editor (each save becomes a new version), and anything else falls
+ * back to an Arabic «no preview» notice with a download.
  */
 export function DrivePreviewDialog({ item, open, onOpenChange }: DrivePreviewDialogProps) {
   const kind = drivePreviewKind(item.name)
   const isOffice = kind === 'office'
+  const isText = kind === 'text'
+  const isEditablePicture = kind === 'image' && isEditableImage(item.name)
   const previewable = isUrlPreviewable(kind)
   const [isDownloading, setIsDownloading] = useState(false)
 
-  const urlQuery = useDriveDownloadUrl(item.itemId, { enabled: open && previewable })
+  // An editable image loads through the editor's authenticated content read, so no signed URL is needed.
+  const urlQuery = useDriveDownloadUrl(item.itemId, {
+    enabled: open && previewable && !isEditablePicture,
+  })
 
   const handleDownload = async () => {
     setIsDownloading(true)
@@ -67,6 +73,14 @@ export function DrivePreviewDialog({ item, open, onOpenChange }: DrivePreviewDia
         {isOffice ? (
           <GuideRegion id="drive.editor" className="h-full w-full">
             <DriveEditor item={item} open={open} onRequestClose={closeEditor} />
+          </GuideRegion>
+        ) : isText ? (
+          <GuideRegion id="drive.editor" className="h-full w-full">
+            <TextFileEditor item={item} open={open} />
+          </GuideRegion>
+        ) : isEditablePicture ? (
+          <GuideRegion id="drive.editor" className="h-full w-full">
+            <ImageEditor item={item} open={open} />
           </GuideRegion>
         ) : !previewable ? (
           <div className="flex flex-col items-center gap-3 py-8 text-center">

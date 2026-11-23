@@ -5,6 +5,13 @@ export interface CreateDriveFolderRequest {
   name: string
 }
 
+/** `POST /api/drive/files` — an empty Word/Excel/text/Markdown file with a committed version 1. */
+export interface CreateDriveFileRequest {
+  spaceId: string
+  parentId?: string | null
+  fileName: string
+}
+
 /** `PUT /api/drive/items/{itemId}/rename` — Editor access; sibling-unique name. */
 export interface RenameDriveItemRequest {
   name: string

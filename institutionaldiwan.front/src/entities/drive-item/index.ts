@@ -23,6 +23,7 @@ export {
   useDriveVersions,
   useDriveDownloadUrl,
   useDriveEditConfig,
+  useDriveTextContent,
   useDrivePermissions,
   useDriveEffectiveRole,
   useDriveDeletionRequests,

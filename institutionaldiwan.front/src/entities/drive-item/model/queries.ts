@@ -25,6 +25,7 @@ export const driveItemKeys = {
   versions: (itemId: string) => [...driveItemKeys.all, 'versions', itemId] as const,
   downloadUrl: (itemId: string) => [...driveItemKeys.all, 'download-url', itemId] as const,
   editConfig: (itemId: string) => [...driveItemKeys.all, 'edit-config', itemId] as const,
+  text: (itemId: string) => [...driveItemKeys.all, 'text', itemId] as const,
   permissions: (itemId: string) => [...driveItemKeys.all, 'permissions', itemId] as const,
   effective: (itemId: string) => [...driveItemKeys.all, 'effective', itemId] as const,
   deletionRequests: (params: DriveDeletionRequestParams) =>
@@ -122,6 +123,24 @@ export function useDriveEditConfig(
   return useQuery({
     queryKey: driveItemKeys.editConfig(itemId ?? ''),
     queryFn: () => driveItemApi.editConfig(itemId as string),
+    staleTime: 0,
+    gcTime: 0,
+    ...options,
+    enabled: Boolean(itemId) && (options?.enabled ?? false),
+  })
+}
+
+/** The current version of a .txt/.md file decoded as text; fetched fresh per open. */
+export function useDriveTextContent(
+  itemId: string | null | undefined,
+  options?: EnabledOptions<string>,
+) {
+  return useQuery({
+    queryKey: driveItemKeys.text(itemId ?? ''),
+    queryFn: async () => {
+      const { blob } = await driveItemApi.content(itemId as string)
+      return blob.text()
+    },
     staleTime: 0,
     gcTime: 0,
     ...options,

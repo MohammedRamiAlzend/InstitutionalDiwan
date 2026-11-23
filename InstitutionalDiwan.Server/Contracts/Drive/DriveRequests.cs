@@ -27,6 +27,12 @@ public sealed record InitiateDriveUploadRequest(
     string? MimeType = null,
     Guid? FileItemId = null);
 
+/// <summary>Payload for <c>POST /api/drive/files</c> — creates an empty Word/Excel/text/Markdown file.</summary>
+public sealed record CreateDriveFileRequest(Guid SpaceId, Guid? ParentId, string FileName);
+
+/// <summary>Payload for <c>PUT /api/drive/files/{itemId}/text</c> — the full new text content.</summary>
+public sealed record SaveDriveTextContentRequest(string Content);
+
 /// <summary>Payload for <c>POST /api/drive/files/{versionId}/complete</c> — optional client SHA-256 to verify against the stored object.</summary>
 public sealed record CompleteDriveUploadRequest(string? ChecksumSha256 = null);
 

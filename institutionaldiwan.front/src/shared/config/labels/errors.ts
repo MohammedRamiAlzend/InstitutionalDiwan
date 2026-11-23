@@ -401,6 +401,7 @@ export const ERROR_LABELS = {
   'error.drive.storageobjectmissing': 'الكائن المخزّن مفقود من مزوّد التخزين.',
   'error.drive.maxfilesizeinvalid': 'الحد الأقصى لحجم الملف يجب أن يكون موجبًا وضمن الحصة الافتراضية.',
   'error.drive.extensionsempty': 'قائمة الامتدادات المسموحة لا يمكن أن تكون فارغة.',
+  'error.drive.filetypenotcreatable': 'لا يمكن إنشاء هذا النوع؛ المدعوم: Word (docx) و Excel (xlsx) و txt و md.',
   'error.drive.storagenotconfigured': 'تخزين الملفات غير مضبوط؛ اضبط عنوان SeaweedFS ومفاتيحه.',
   'error.drive.permissionnotfound': 'منح الصلاحية غير موجود.',
   'error.drive.principaltypeinvalid': 'نوع الجهة يجب أن يكون مستخدمًا أو قسمًا.',

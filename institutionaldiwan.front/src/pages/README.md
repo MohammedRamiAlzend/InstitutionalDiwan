@@ -54,7 +54,7 @@ complex business mutations, raw `axios`/`fetch` calls, or reusable domain models
 | `my-registers/` | `/my-registers` behind `NUMBERING_VIEW`; pick a register of your own department. | `GET /api/numbering/registries`, `GET /api/departments/{id}/register` | ✅ Implemented |
 | `audit/` | `/audit` | 09 — `GET /api/audit-logs`, checkpoints, integrity checks/reports (`?panel=logs\|integrity`) | ✅ Implemented (Module 09) |
 | `archive/` | `/archive` | 07 — `GET /api/archive/documents`, saved searches | ✅ Implemented (Module 07) |
-| `drive/` | `/drive` (`?view=&space=&folder=`) | 11 — `GET /api/drive/spaces`, `POST /api/drive/spaces/personal`, `GET /api/drive/items` browse + breadcrumb/effective, folder/rename/move/star writes, `POST /api/drive/files/initiate|complete|abandon` + presigned PUT, `content`/`download-url` | ✅ Shell + browse + upload/download/preview (front-end Phases 1–3); versions/permissions/deletion in Phases 4–5 |
+| `drive/` | `/drive` (`?view=&space=&folder=`) | 11 — `GET /api/drive/spaces`, `POST /api/drive/spaces/personal`, `GET /api/drive/items` browse + breadcrumb/effective, folder/new-file/rename/move/star writes, `POST /api/drive/files/initiate|complete|abandon` + presigned PUT, `content`/`download-url`/`edit-config`, `PUT /api/drive/files/{id}/text` | ✅ Shell + browse + upload/download/preview (front-end Phases 1–3); versions/permissions/deletion in Phases 4–5 |
 | `notifications/` | `/notifications` | 10 — `GET /api/notifications`, `/hubs/notifications` | ✅ Implemented (Module 10) |
 | `lookups/` | `/lookups` | 01 — `/api/lookups` | ✅ Implemented (Module 01, `LOOKUP_MANAGE`) |
 

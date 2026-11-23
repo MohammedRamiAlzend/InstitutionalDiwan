@@ -3,7 +3,11 @@ import { driveItemKeys, type DriveItemResponse } from '@/entities/drive-item'
 import { httpClient } from '@/shared/api'
 import type { PagedResult } from '@/shared/types'
 import type { DriveVersionResponse } from '@/entities/drive-item'
-import type { CreateDriveFolderRequest, RenameDriveItemRequest } from '../model/types'
+import type {
+  CreateDriveFileRequest,
+  CreateDriveFolderRequest,
+  RenameDriveItemRequest,
+} from '../model/types'
 
 /** Structural writes (folder/rename/move) change browse, children and detail alike. */
 function useItemInvalidation() {
@@ -19,6 +23,21 @@ export function useCreateFolderMutation() {
   return useMutation({
     mutationFn: async (request: CreateDriveFolderRequest): Promise<DriveItemResponse> => {
       const { data } = await httpClient.post<DriveItemResponse>('/drive/items/folders', request)
+      return data
+    },
+    onSuccess: invalidate,
+  })
+}
+
+/**
+ * `POST /api/drive/files` — creates an empty docx/xlsx/txt/md file with version 1. The server builds
+ * the template, so the browser opens the created item straight in its editor.
+ */
+export function useCreateDriveFileMutation() {
+  const invalidate = useItemInvalidation()
+  return useMutation({
+    mutationFn: async (request: CreateDriveFileRequest): Promise<DriveItemResponse> => {
+      const { data } = await httpClient.post<DriveItemResponse>('/drive/files', request)
       return data
     },
     onSuccess: invalidate,

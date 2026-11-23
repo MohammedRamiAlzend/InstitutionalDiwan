@@ -6,6 +6,7 @@ import {
   FolderInput,
   FolderOpen,
   FolderPlus,
+  FilePlus2,
   Hash,
   History,
   Loader2,
@@ -31,6 +32,7 @@ import { useSessionStore, useUserOptions } from '@/entities/user'
 import {
   CreateFolderDialog,
   MoveItemDialog,
+  NewFileDialog,
   RenameItemDialog,
   useMoveItemMutation,
   useSetItemStarMutation,
@@ -169,6 +171,7 @@ export function DriveBrowser({
   const starMutation = useSetItemStarMutation()
   const moveMutation = useMoveItemMutation()
   const [createFolderOpen, setCreateFolderOpen] = useState(false)
+  const [newFileOpen, setNewFileOpen] = useState(false)
   const [renameTarget, setRenameTarget] = useState<DriveItemResponse | null>(null)
   const [moveTarget, setMoveTarget] = useState<DriveItemResponse | null>(null)
   const [selectedItem, setSelectedItem] = useState<DriveItemResponse | null>(null)
@@ -329,6 +332,12 @@ export function DriveBrowser({
             icon: <FolderPlus className="size-4" aria-hidden />,
             onSelect: () => setCreateFolderOpen(true),
           } satisfies MenuEntry,
+          {
+            id: 'new-file',
+            label: t('drive.action.new-file'),
+            icon: <FilePlus2 className="size-4" aria-hidden />,
+            onSelect: () => setNewFileOpen(true),
+          } satisfies MenuEntry,
           { type: 'separator' } satisfies MenuEntry,
         ]
       : []),
@@ -479,6 +488,8 @@ export function DriveBrowser({
         onLayoutChange={(next) => table.setFilter('layout', next === 'details' ? null : next)}
         canCreateFolder={canCreateFolder}
         onNewFolder={() => setCreateFolderOpen(true)}
+        canCreateFile={canCreateFolder}
+        onNewFile={() => setNewFileOpen(true)}
         onUpload={onUpload}
         kind={table.filters.kind ?? ''}
         onKindChange={(value) => table.setFilter('kind', value === 'all' ? null : value)}
@@ -630,6 +641,15 @@ export function DriveBrowser({
         />
       )}
 
+      {canCreateFolder && browseSpaceId && (
+        <NewFileDialog
+          spaceId={browseSpaceId}
+          parentId={view === 'starred' ? null : folderId}
+          open={newFileOpen}
+          onOpenChange={setNewFileOpen}
+          onCreated={(item) => actions?.onOpenFile?.(item)}
+        />
+      )}
       {canCreateFolder && browseSpaceId && (
         <CreateFolderDialog
           spaceId={browseSpaceId}

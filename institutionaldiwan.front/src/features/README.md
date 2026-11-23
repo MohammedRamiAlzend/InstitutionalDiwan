@@ -58,10 +58,10 @@ error handling, and form/dialog UI.
 | `document-field-values/` | `PUT /api/documents/{id}/fields` | `DOCUMENT_EDIT` + DOWNLOAD access; draft documents only |
 | `ui-label-manage/` | `PUT /api/ui-labels/{key}`, `DELETE /api/ui-labels/{key}` | Superadmin-account-only writes; optimistic apply + rollback; per-key Zod (length, placeholders, no HTML); in-place editor bridged to `<Label>` via `LabelEditContext` |
 | `drive-space-manage/` | Module 11 `POST /api/drive/spaces`, `POST /api/drive/spaces/personal`, `PUT /api/drive/spaces/{id}`, `PUT /api/drive/spaces/{id}/quota` | `DRIVE_USE` (rename: owner/ADMIN); quota override `DRIVE_MANAGE`; name ≤ 150; every write invalidates `driveSpaceKeys.all` | ✅ Implemented (front-end Phase 1) |
-| `drive-item-manage/` | Module 11 `POST /api/drive/items/folders`, `PUT /api/drive/items/{id}/rename`, `PUT /api/drive/items/{id}/move`, `POST/DELETE /api/drive/items/{id}/star` | Editor for rename/move; star per-caller; name ≤ 255 mirroring `DriveItem`; move variable-based (dialog + DnD); star optimistic; invalidates `driveItemKeys.all` | ✅ Implemented (front-end Phase 2) |
+| `drive-item-manage/` | Module 11 `POST /api/drive/items/folders`, `POST /api/drive/files` (empty docx/xlsx/txt/md), `PUT /api/drive/items/{id}/rename`, `PUT /api/drive/items/{id}/move`, `POST/DELETE /api/drive/items/{id}/star` | Editor for rename/move; star per-caller; name ≤ 255 mirroring `DriveItem`; move variable-based (dialog + DnD); star optimistic; invalidates `driveItemKeys.all` | ✅ Implemented (front-end Phase 2) |
 | `drive-upload/` | Module 11 `POST /api/drive/files/initiate`, `POST /api/drive/files/{versionId}/complete`, `DELETE /api/drive/files/{versionId}/abandon` + presigned PUT + `content`/`versionContent` download | Editor; initiate→PUT→complete (abandon on failure); Content-Type parity; local SHA-256; multi-file queue + new-version (`FileItemId`); invalidates `driveItemKeys.all` + `driveSpaceKeys.all` | ✅ Implemented (front-end Phase 3) |
 | `drive-sharing/` | Module 11 `POST/DELETE /api/drive/items/{id}/permissions`, `PUT /api/drive/items/{id}/inheritance` | Manager-only grant/revoke for users/departments and inheritance toggle; invalidates `driveItemKeys.all` | ✅ Implemented (front-end Phase 4) |
-| `drive-editor/` | Module 11 `GET /api/drive/files/{id}/edit-config` + lazy OnlyOffice DocsAPI | Mounts the signed config, preserves server-selected edit/view mode, destroys the editor on close, and surfaces Arabic load/save errors | ✅ Implemented (front-end Phase 6) |
+| `drive-editor/` | Module 11 `GET /api/drive/files/{id}/edit-config` + lazy OnlyOffice DocsAPI; `PUT /api/drive/files/{id}/text`; the presigned upload flow (via `features/drive-upload`) for edited images | Mounts the signed config, preserves server-selected edit/view mode, forces a save on close, destroys the editor, and surfaces Arabic load/save errors; the `.txt`/`.md` text editor saves a new version per save; the PNG/JPEG image editor rotates/flips/crops and saves a new version | ✅ Implemented (front-end Phase 6 + text and image editing) |
 
 ## Conventions
 
@@ -104,12 +104,13 @@ error handling, and form/dialog UI.
 | `drive-item-manage/` | ✅ Implemented (Module 11 front-end Phase 2: create-folder/rename/move/star mutations, Zod name schema, three dialogs + lazy folder-tree picker, optimistic star); browser verification pending the Phase 6 round. |
 | `drive-upload/` | ✅ Implemented (Module 11 front-end Phase 3: presigned initiate→PUT→complete/abandon mutation, sequential multi-file queue dialog with three-stage progress + pre-check, new-version uploads, Arabic-named download helper); live byte verification needs SeaweedFS keys (Phase 6 round). |
 | `drive-sharing/` | ✅ Implemented (Module 11 front-end Phase 4: Manager grant/revoke for users/departments and inheritance toggle); browser verification pending the Phase 6 round. |
-| `drive-editor/` | ✅ Implemented (Module 11 front-end Phase 6: lazy DocsAPI loader, signed edit-config mounting, cleanup, resizable-preview sizing, and Arabic errors). |
+| `drive-editor/` | ✅ Implemented (Module 11 front-end Phase 6: lazy DocsAPI loader, signed edit-config mounting, cleanup, resizable-preview sizing, and Arabic errors; plus the text and image editors). |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-23 | Buffy | Added `ImageEditor` and `model/imageEditing.ts` to `drive-editor`: rotate/flip/drag-crop a `.png`/`.jpg`/`.jpeg` and save it as a new version through `useUploadDriveFileMutation`. |
 | 2026-11-23 | Copilot | Updated `drive-editor` to fill the enlarged and resizable Drive preview modal. |
 | 2026-11-21 | Copilot | Module 11 front-end Phase 4: added `drive-sharing` permission and inheritance mutations with invalidation through `driveItemKeys`. |
 | 2026-11-21 | Copilot | Module 11 front-end Phase 6: added the lazy OnlyOffice editor feature and signed config integration. |

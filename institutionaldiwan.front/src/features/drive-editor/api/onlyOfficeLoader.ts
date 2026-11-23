@@ -1,5 +1,7 @@
 interface OnlyOfficeEditor {
   destroy?: () => void
+  /** `DocEditor.serviceCommand`, e.g. 'forcesave' to commit the pending edit to the server. */
+  serviceCommand?: (command: string) => void
 }
 
 interface OnlyOfficeApi {

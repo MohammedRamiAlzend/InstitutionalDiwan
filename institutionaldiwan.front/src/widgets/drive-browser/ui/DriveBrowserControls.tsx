@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import {
   Columns3,
+  FilePlus2,
   FolderPlus,
   LayoutGrid,
   List,
@@ -21,6 +22,8 @@ interface DriveBrowserControlsProps {
   onLayoutChange: (layout: DriveLayout) => void
   canCreateFolder: boolean
   onNewFolder: () => void
+  canCreateFile?: boolean
+  onNewFile?: () => void
   onUpload?: () => void
   kind: string
   onKindChange: (value: string) => void
@@ -43,6 +46,8 @@ export function DriveBrowserControls({
   onLayoutChange,
   canCreateFolder,
   onNewFolder,
+  canCreateFile,
+  onNewFile,
   onUpload,
   kind,
   onKindChange,
@@ -107,13 +112,19 @@ export function DriveBrowserControls({
         className="h-9 w-36 rounded-lg"
       />
 
-      {(canCreateFolder || onUpload) && (
+      {(canCreateFolder || canCreateFile || onUpload) && (
         <span className="mx-0.5 hidden h-6 border-s border-border sm:block" aria-hidden />
       )}
       {canCreateFolder && (
         <Button type="button" variant="outline" className="h-9 rounded-lg" onClick={onNewFolder}>
           <FolderPlus className="size-4" aria-hidden />
           <Label k="drive.action.new-folder" />
+        </Button>
+      )}
+      {canCreateFile && onNewFile && (
+        <Button type="button" variant="outline" className="h-9 rounded-lg" onClick={onNewFile}>
+          <FilePlus2 className="size-4" aria-hidden />
+          <Label k="drive.action.new-file" />
         </Button>
       )}
       {onUpload && (

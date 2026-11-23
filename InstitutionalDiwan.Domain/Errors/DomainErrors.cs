@@ -516,6 +516,7 @@ public static class DomainErrors
         public static readonly Error MaxFileSizeInvalid = Error.Validation("Drive.MaxFileSizeInvalid", "The maximum file size must be positive and within the default quota.");
         public static readonly Error ExtensionsEmpty = Error.Validation("Drive.ExtensionsEmpty", "The allowed-extensions list cannot be empty.");
         public static readonly Error StorageNotConfigured = Error.Failure("Drive.StorageNotConfigured", "Drive object storage is not configured; set the SeaweedFS endpoint and credentials.");
+        public static readonly Error FileTypeNotCreatable = Error.Validation("Drive.FileTypeNotCreatable", "A new file can be Word (docx), Excel (xlsx), text (txt) or Markdown (md).");
 
         // Permissions
         public static readonly Error PermissionNotFound = Error.NotFound("Drive.PermissionNotFound", "The permission grant was not found.");

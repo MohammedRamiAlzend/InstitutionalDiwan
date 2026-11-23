@@ -32,6 +32,27 @@ public sealed class CompleteDriveUploadCommandValidator : AbstractValidator<Comp
     }
 }
 
+public sealed class CreateDriveFileCommandValidator : AbstractValidator<CreateDriveFileCommand>
+{
+    public CreateDriveFileCommandValidator()
+    {
+        RuleFor(command => command.FileName)
+            .Must(name => !string.IsNullOrWhiteSpace(name)).WithErrorCode("Drive.ItemNameEmpty")
+            .MaximumLength(DriveItem.MaxNameLength).WithErrorCode("Drive.ItemNameTooLong");
+
+        RuleFor(command => command.SpaceId)
+            .NotEmpty().WithErrorCode("Drive.SpaceNotFound");
+    }
+}
+
+public sealed class SaveDriveTextContentCommandValidator : AbstractValidator<SaveDriveTextContentCommand>
+{
+    public SaveDriveTextContentCommandValidator()
+    {
+        RuleFor(command => command.ItemId).NotEmpty().WithErrorCode("Drive.ItemNotFound");
+    }
+}
+
 public sealed class AbandonDriveUploadCommandValidator : AbstractValidator<AbandonDriveUploadCommand>
 {
     public AbandonDriveUploadCommandValidator()

@@ -406,6 +406,7 @@ const CODE_MESSAGES: Record<string, LabelKey> = {
   'Drive.StorageObjectMissing': 'error.drive.storageobjectmissing',
   'Drive.MaxFileSizeInvalid': 'error.drive.maxfilesizeinvalid',
   'Drive.ExtensionsEmpty': 'error.drive.extensionsempty',
+  'Drive.FileTypeNotCreatable': 'error.drive.filetypenotcreatable',
   'Drive.StorageNotConfigured': 'error.drive.storagenotconfigured',
   'Drive.PermissionNotFound': 'error.drive.permissionnotfound',
   'Drive.PrincipalTypeInvalid': 'error.drive.principaltypeinvalid',

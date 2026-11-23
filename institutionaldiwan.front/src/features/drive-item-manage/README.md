@@ -20,10 +20,11 @@ Allowed: `@/entities/{drive-item,drive-space}`, `@/shared/*`. Forbidden: `@/page
 
 | File | Purpose |
 | --- | --- |
-| `api/driveItemMutations.ts` | Folder/rename/move/star mutations plus `useRestoreDriveVersionMutation(itemId)` (POST `…/versions/{versionId}/restore`), all invalidating `driveItemKeys`. |
-| `model/types.ts` | `CreateDriveFolderRequest`, `RenameDriveItemRequest`, `MoveDriveItemRequest`. |
+| `api/driveItemMutations.ts` | Folder/file-create/rename/move/star mutations plus `useRestoreDriveVersionMutation(itemId)` (POST `…/versions/{versionId}/restore`), all invalidating `driveItemKeys`. |
+| `model/types.ts` | `CreateDriveFolderRequest`, `CreateDriveFileRequest`, `RenameDriveItemRequest`, `MoveDriveItemRequest`. |
 | `model/schemas.ts` | `itemNameSchema` (trim, 1–255, no `\ / : * ? " < > \|`, not `.`/`..` — mirrors `DriveItem`), `moveItemSchema`; `ItemNameFormValues`, `MoveItemFormValues`. |
 | `ui/CreateFolderDialog.tsx` | New folder in the active space/folder (`useDraftForm`, per-space draft id). |
+| `ui/NewFileDialog.tsx` | Creates an empty Word/Excel/text/Markdown file: a type picker appends the extension to the typed name, and the created item is handed back so the browser opens its editor immediately. |
 | `ui/RenameItemDialog.tsx` | Rename a folder/file; current name prefills. |
 | `ui/MoveItemDialog.tsx` | Destination picker + move; disabled when the destination equals the current parent. |
 | `ui/FolderTreePicker.tsx` | Lazy folder tree of one space (root + expandable branches via `useDriveChildren`); the moving item's own node is disabled. |
@@ -31,7 +32,9 @@ Allowed: `@/entities/{drive-item,drive-space}`, `@/shared/*`. Forbidden: `@/page
 
 ## Backend contract notes
 
-- Routes: `POST /api/drive/items/folders` `{spaceId,parentId?,name}`; `PUT …/{id}/rename` `{name}`;
+- Routes: `POST /api/drive/items/folders` `{spaceId,parentId?,name}`; `POST /api/drive/files`
+  `{spaceId,parentId?,fileName}` (empty docx/xlsx/txt/md template, first version committed server-side);
+  `PUT …/{id}/rename` `{name}`;
   `PUT …/{id}/move` `{newParentId?}` (null = root); `POST …/{id}/star` / `DELETE …/{id}/star` (no body).
 - Name rules mirror `DriveItem.MaxNameLength=255` and `ForbiddenNameChars`; the server also enforces
   sibling-name uniqueness (409), Editor access (403), and cycle/depth safety on move (409). Cross-space
@@ -48,6 +51,7 @@ Allowed: `@/entities/{drive-item,drive-space}`, `@/shared/*`. Forbidden: `@/page
 | Create-folder / rename / move dialogs + folder tree | ✅ Phase 2 |
 | Optimistic star toggle | ✅ Phase 2 |
 | Version restore mutation | ✅ Phase 4 |
+| New-file dialog (docx/xlsx/txt/md templates) | ✅ |
 | Browser verification | ⏳ Phase 6 round |
 
 ## Change Log
@@ -55,4 +59,5 @@ Allowed: `@/entities/{drive-item,drive-space}`, `@/shared/*`. Forbidden: `@/page
 | Date | Author | Change |
 | --- | --- | --- |
 | 2026-11-20 | Qoder | Front-end Phase 2 (`plans/module-11-drive-frontend.md`): implemented the item write slice — create-folder/rename/move/star mutations (variable-based move + star for DnD/rows), Zod name schema mirroring the domain, the three dialogs and the lazy `FolderTreePicker`. Front lint + build green; no backend change. |
+| 2026-11-23 | Buffy | Added `NewFileDialog` and `useCreateDriveFileMutation` (`POST /api/drive/files`) to create empty Word/Excel/text/Markdown files that open straight in their editor. |
 | 2026-11-21 | Copilot | Front-end Phase 4: added the immutable-version restore mutation. |

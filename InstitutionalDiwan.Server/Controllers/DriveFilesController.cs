@@ -25,6 +25,59 @@ public sealed class DriveFilesController : ControllerBase
 
     public DriveFilesController(ISender sender) => _sender = sender;
 
+    /// <summary>Creates an empty Word, Excel, text or Markdown file with a committed first version.</summary>
+    /// <param name="request">The destination space/parent and the file name (its extension picks the template).</param>
+    /// <param name="cancellationToken">Request cancellation token (optional).</param>
+    /// <response code="200">The created file item, already pointing at version 1.</response>
+    /// <response code="400">The payload failed validation, or the extension is not docx/xlsx/txt/md.</response>
+    /// <response code="401">The token is missing, expired, or invalid.</response>
+    /// <response code="403">The caller lacks Editor access to the destination.</response>
+    /// <response code="404">The space or parent folder does not exist.</response>
+    /// <response code="409">A sibling already uses the name, or the space quota would be exceeded.</response>
+    /// <response code="500">Object storage is not configured.</response>
+    [HttpPost]
+    [EndpointSummary("Creates an empty Word, Excel, text or Markdown file with a committed first version.")]
+    [EndpointDescription("Creates a Drive file from a built-in empty template (docx, xlsx, txt, md), writes version 1 to object storage and returns the new item so the browser can open it in the editor. Requires the DRIVE_USE permission and Editor access to the destination. Responses: 200 (The created file item, already pointing at version 1.), 400 (The payload failed validation, or the extension is not docx/xlsx/txt/md.), 401 (The token is missing, expired, or invalid.), 403 (The caller lacks Editor access to the destination.), 404 (The space or parent folder does not exist.), 409 (A sibling already uses the name, or the space quota would be exceeded.), 500 (Object storage is not configured.)")]
+    [ProducesResponseType<DriveItemResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> Create(
+        [FromBody] CreateDriveFileRequest request,
+        CancellationToken cancellationToken)
+        => (await _sender.Send(new CreateDriveFileCommand(
+            request.SpaceId, request.ParentId, request.FileName), cancellationToken)).ToActionResult();
+
+    /// <summary>Saves a .txt/.md file's content as a new immutable version.</summary>
+    /// <param name="itemId">File item unique identifier (GUID, route). Example: <c>8c1d5e72-9a40-4f63-b217-5d84e6a7c902</c>.</param>
+    /// <param name="request">The complete new text content of the document.</param>
+    /// <param name="cancellationToken">Request cancellation token (optional).</param>
+    /// <response code="200">The new version (or the current one when the content did not change).</response>
+    /// <response code="400">The file is not text/Markdown, or the content exceeds the maximum file size.</response>
+    /// <response code="401">The token is missing, expired, or invalid.</response>
+    /// <response code="403">The caller lacks Editor access.</response>
+    /// <response code="404">The file does not exist.</response>
+    /// <response code="409">The file is in the trash, or the space quota would be exceeded.</response>
+    /// <response code="500">Object storage is not configured.</response>
+    [HttpPut("{itemId:guid}/text")]
+    [EndpointSummary("Saves a .txt/.md file's content as a new immutable version.")]
+    [EndpointDescription("Stores the posted text as a brand-new version (Source=EditorSave), makes it current and leaves the earlier versions intact; an unchanged save adds no version. Requires the DRIVE_USE permission and Editor access. Responses: 200 (The new version, or the current one when nothing changed.), 400 (The file is not text/Markdown, or the content exceeds the maximum file size.), 401 (The token is missing, expired, or invalid.), 403 (The caller lacks Editor access.), 404 (The file does not exist.), 409 (The file is in the trash, or the space quota would be exceeded.), 500 (Object storage is not configured.)")]
+    [ProducesResponseType<DriveVersionResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> SaveText(
+        [Description("File item unique identifier (GUID, route). Example: 8c1d5e72-9a40-4f63-b217-5d84e6a7c902.")] Guid itemId,
+        [FromBody] SaveDriveTextContentRequest request,
+        CancellationToken cancellationToken)
+        => (await _sender.Send(new SaveDriveTextContentCommand(itemId, request.Content), cancellationToken)).ToActionResult();
+
     /// <summary>Reserves a pending version and returns a presigned PUT URL for direct browser upload.</summary>
     /// <param name="request">The destination space/parent, file name, declared size, optional MIME type, and optional existing file id (to add a version).</param>
     /// <param name="cancellationToken">Request cancellation token (optional).</param>

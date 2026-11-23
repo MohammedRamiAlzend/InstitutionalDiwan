@@ -1,7 +1,8 @@
 # `src/widgets/drive-preview-dialog` — Drive File Preview (Module 11)
 
 > **Status:** ✅ Implemented (2026-11-21, front-end Phase 6) — in-browser preview of images/PDF/
-> video/audio from a short-lived presigned GET and Office viewing through the Drive editor.
+> video/audio from a short-lived presigned GET, Office viewing through the Drive editor, text
+> editing, and canvas image editing for PNG/JPEG that saves a new version.
 
 ## Purpose
 
@@ -19,8 +20,8 @@ Allowed: `@/features/{drive-upload,drive-editor}`, `@/entities/drive-item`, `@/s
 
 | File | Purpose |
 | --- | --- |
-| `model/previewKind.ts` | `drivePreviewKind(fileName)` → image/pdf/video/audio/office/unsupported; `isUrlPreviewable(kind)` (the four media kinds rendered from a URL). |
-| `ui/DrivePreviewDialog.tsx` | Media preview through `useDriveDownloadUrl`; Office mounts `DriveEditor`; loading/error states and Arabic download fallback for unsupported files. |
+| `model/previewKind.ts` | `drivePreviewKind(fileName)` → image/pdf/video/audio/office/text/unsupported; `isUrlPreviewable(kind)` (the four media kinds rendered from a URL). |
+| `ui/DrivePreviewDialog.tsx` | Media preview through `useDriveDownloadUrl`; Office mounts `DriveEditor`, `.txt`/`.md` mount `TextFileEditor`, `.png`/`.jpg`/`.jpeg` mount `ImageEditor` (editable images load through the authenticated content route instead of the presigned URL); loading/error states and Arabic download fallback for unsupported files. |
 | `index.ts` | Public barrel — `DrivePreviewDialog`, `drivePreviewKind`, `isUrlPreviewable`, `DrivePreviewKind`. |
 
 ## Behavior notes
@@ -29,6 +30,10 @@ Allowed: `@/features/{drive-upload,drive-editor}`, `@/entities/drive-item`, `@/s
   in 5 minutes; a stale/failed URL shows `drive.preview.link-expired` with a retry.
 - **Office:** classified separately and mounts OnlyOffice with the signed server config; the server
   decides edit/view mode from the caller's effective role.
+- **Text:** `.txt`/`.md` open the in-app text editor, whose every save becomes a new immutable version.
+- **Images:** `.png`/`.jpg`/`.jpeg` open the image editor (rotate/flip/crop); its save uploads the
+  re-encoded image as a new immutable version. Other image formats (GIF/WebP/SVG) keep the plain
+  read-only preview.
 - **Download:** always available in the footer, through the authenticated Range-capable route, saving
   under the RFC 5987 `Content-Disposition` name (Arabic-safe).
 - **Resizable modal:** the preview opens at 95% of the viewport width and 85% of the viewport height,
@@ -42,6 +47,8 @@ Allowed: `@/features/{drive-upload,drive-editor}`, `@/entities/drive-item`, `@/s
 | Image / PDF / video / audio preview | ✅ Phase 3 |
 | Unsupported fallback + download | ✅ Phase 3 |
 | OnlyOffice Office viewer | ✅ Phase 6 |
+| Text/Markdown editor | ✅ |
+| PNG/JPEG image editor (new version per save) | ✅ |
 | Large, manually resizable preview | ✅ |
 | Browser verification | ⏳ Phase 6 round (needs SeaweedFS keys for live bytes). |
 
@@ -50,5 +57,7 @@ Allowed: `@/features/{drive-upload,drive-editor}`, `@/entities/drive-item`, `@/s
 | Date | Author | Change |
 | --- | --- | --- |
 | 2026-11-23 | Copilot | Enlarged the preview to 95vw by 85dvh and added native two-direction resizing, including full-height PDF/Office/media surfaces. |
+| 2026-11-23 | Buffy | Mounted `ImageEditor` for editable `.png`/`.jpg`/`.jpeg` images (rotate/flip/crop, saved as a new version); GIF/WebP/SVG keep the plain preview. |
+| 2026-11-23 | Buffy | Classified `.txt`/`.md` as `text` and mounted `TextFileEditor` for them. |
 | 2026-11-21 | Copilot | Mounted the OnlyOffice viewer for Office files while preserving download fallback. |
 | 2026-11-20 | Qoder | Front-end Phase 3: created the widget — extension classifier + `DrivePreviewDialog` (presigned-GET media preview, loading/error/link-expired states, unsupported/Office download fallback). Front lint + build green. |
