@@ -40,3 +40,11 @@ export interface AttachmentChecksumResponse {
   computedChecksumSha256: string
   isMatch: boolean
 }
+
+export interface AttachmentEditConfigResponse {
+  serverUrl: string
+  documentType: string
+  mode: 'edit' | 'view'
+  versionNumber: number
+  config: Record<string, unknown>
+}

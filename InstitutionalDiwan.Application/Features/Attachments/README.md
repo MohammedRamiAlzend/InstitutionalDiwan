@@ -1,8 +1,8 @@
 # Application / Features / Attachments — versioned document files (Module 06)
 
 > **Status:** Implemented — atomic initial upload (file + version 1), later versioned uploads,
-> archiving, listing, download, and checksum verification are live, backed by the local file
-> storage service.
+> archiving, listing, download, checksum verification, and OnlyOffice editing are live, backed by
+> the local file storage service.
 
 ## Purpose
 
@@ -31,6 +31,9 @@ archive) require `MANAGE`, listing/verification require `VIEW`, and downloading 
 | `DocumentFileResponse.cs` | Wire model for a file plus its `DocumentFileVersionResponse` rows. |
 | `DocumentFileDownload.cs` | Success payload of the download query: stream, original name, MIME type, size. |
 | `AttachmentChecksumResponse.cs` | Recorded vs. recomputed checksum and the derived `IsMatch` flag. |
+| `AttachmentOnlyOfficeResponses.cs` | OnlyOffice editor configuration, callback response, and supported Word/Excel extension mapping. |
+| `AttachmentOnlyOfficeQueries.cs` | Builds a signed editor configuration and temporary authenticated content URL for an attachment. |
+| `AttachmentOnlyOfficeCallbackCommand.cs` | Validates OnlyOffice saves, rejects stale or duplicate callbacks, and appends edited bytes as a new immutable version. |
 
 ## Conventions / Notes
 
@@ -61,11 +64,13 @@ archive) require `MANAGE`, listing/verification require `VIEW`, and downloading 
 | `ArchiveDocumentFileCommand` (+ handler) | ✅ |
 | `ListDocumentFilesQuery`, `DownloadDocumentFileVersionQuery`, `VerifyAttachmentChecksumQuery` (+ handlers) | ✅ |
 | SHA-256 streaming + magic-byte validation | ✅ (`Infrastructure/Storage/`) |
+| OnlyOffice editing with immutable save versions | ✅ (signed config, callback, conflict guard) |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-23 | Copilot | Added signed OnlyOffice editing for Word/Excel attachments; every accepted save is validated and stored as a new immutable version, with stale-session rejection. |
 | 2026-11-03 | Claude | Every attachment write (create, create with version, upload version, archive file) now rejects an archived document with `Correspondence.DocumentArchived`, checked after the access check and before anything is stored. Reads, downloads and checksum verification are unchanged. `DocumentFile.IsArchived` stays a separate concept from an archived document. |
 | 2026-10-25 | opencode | Added the planned atomic initial upload (`CreateDocumentFileWithVersionCommand` + `AttachmentUploader`) and the document-scoped `POST/GET /api/documents/{documentId}/files` routes, while keeping the metadata-only create path. |
 | 2026-10-25 | opencode | Implemented the Module 06 slice: create/upload/archive commands, list/download/verify queries, document access checks, and the response models; depends on the new `Abstractions/Storage` contracts. |

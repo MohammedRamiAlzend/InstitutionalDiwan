@@ -246,6 +246,9 @@ Access is permission **plus** document access level: writes need **MANAGE**, lis
 | `GET` | `/api/document-files/by-document/{documentId}` | `DOCUMENT_VIEW` | Alias of document-scoped list. |
 | `GET` | `/api/document-files/{fileId}/download` | `DOCUMENT_VIEW` | Streams current (or selected) version bytes. |
 | `GET` | `/api/document-files/{fileId}/verify` | `DOCUMENT_VIEW` | Recomputes SHA-256; returns recorded vs actual + `isMatch`. |
+| `GET` | `/api/document-files/{fileId}/edit-config` | `DOCUMENT_VIEW` | Returns a signed OnlyOffice configuration; MANAGE access enables edit mode, other viewers receive read-only mode. |
+| `GET` | `/api/document-files/{fileId}/onlyoffice-content?versionId=&token=` | signed token | Streams the selected attachment version to OnlyOffice; the token is short-lived and scoped to the file/version. |
+| `POST` | `/api/document-files/onlyoffice-callback` | signed callback token | Validates and stores an OnlyOffice save as a new immutable version; stale or duplicate saves are rejected/ignored. |
 
 Upload validation: extension allow-list, size limit, and magic bytes (PDF/PNG/JPEG/TIFF/Office/SVG).
 Each version stores a **64-char hex SHA-256**. Max upload ~50 MB (+ multipart overhead).

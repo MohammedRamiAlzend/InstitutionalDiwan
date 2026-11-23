@@ -1,6 +1,10 @@
 import { useQuery, type UseQueryOptions } from '@tanstack/react-query'
 import { documentFileApi } from '../api/documentFileApi'
-import type { AttachmentChecksumResponse, DocumentFileResponse } from './types'
+import type {
+  AttachmentChecksumResponse,
+  AttachmentEditConfigResponse,
+  DocumentFileResponse,
+} from './types'
 
 export const documentFileKeys = {
   all: ['document-files'] as const,
@@ -8,6 +12,7 @@ export const documentFileKeys = {
     [...documentFileKeys.all, 'by-document', documentId] as const,
   verify: (fileId: string, versionId?: string | null) =>
     [...documentFileKeys.all, 'verify', fileId, versionId ?? 'current'] as const,
+  editConfig: (fileId: string) => [...documentFileKeys.all, 'edit-config', fileId] as const,
 }
 
 type EnabledOptions<T> = Partial<Pick<UseQueryOptions<T>, 'enabled'>>
@@ -44,5 +49,19 @@ export function useVerifyChecksum(
     queryFn: () => documentFileApi.verify(params.fileId as string, params.versionId),
     ...options,
     enabled: Boolean(params.fileId) && (options?.enabled ?? false),
+  })
+}
+
+export function useAttachmentEditConfig(
+  fileId: string | null | undefined,
+  options?: EnabledOptions<AttachmentEditConfigResponse>,
+) {
+  return useQuery({
+    queryKey: documentFileKeys.editConfig(fileId ?? ''),
+    queryFn: () => documentFileApi.editConfig(fileId as string),
+    staleTime: 0,
+    gcTime: 0,
+    ...options,
+    enabled: Boolean(fileId) && (options?.enabled ?? false),
   })
 }

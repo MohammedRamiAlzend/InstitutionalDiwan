@@ -21,7 +21,7 @@ commands/queries map between them and the domain.
 | Correspondence (dynamic fields) | `DocumentFieldContracts.cs` ✅: `DocumentFieldOptionRequest`, `DocumentFieldSettingsRequest`, `CreateDocumentFieldRequest`, `AddSchemaFieldRequest`, `DocumentFieldValueRequest`, `SetDocumentFieldValuesRequest`; `CreateDocumentRequest` and `CreateDraftDocumentRequest` gained optional `FieldValues`. |
 | Numbering | `CreateNumberingRegistryRequest` ✅, `UpdateNumberingRegistryRequest` ✅, `IssueOfficialNumberRequest` ✅, `CancelOfficialNumberRequest` ✅, `ReplaceOfficialNumberRequest` ✅, `RecordDepartmentRegistrationRequest` ✅ (department id, typed number, register date, notes), `OfficialNumberResponse` |
 | Movements | `CreateMovementRequest` ✅ (document id, destination department, movement type, optional assignee/instructions/due date — the source department is the caller's), `SendMovementRequest` ✅ (optional notes), `ReceiveDocumentRequest` ✅ (optional notes; the register entry must already exist), `CompleteMovementStepRequest` ✅ (optional notes), `RejectMovementStepRequest` ✅ (required reason), `ReturnMovementToSenderRequest` ✅ (required reason), `RedirectMovementRequest` ✅ (new destination, optional assignee/instructions/due date), `CloseMovementRequest` ✅ (optional notes), `CancelMovementRequest` ✅ (required reason); the read models live in `Application/Features/Movements/` |
-| Attachments | `CreateDocumentFileRequest` ✅ (document id, file type, title, primary-scan flag), `UploadDocumentFileVersionRequest` ✅ (multipart `File` + optional `ChangeNotes`); the read models live in `Application/Features/Attachments/` |
+| Attachments | `CreateDocumentFileRequest` ✅ (document id, file type, title, primary-scan flag), `UploadDocumentFileVersionRequest` ✅ (multipart `File` + optional `ChangeNotes`), `AttachmentOnlyOfficeCallbackRequest` ✅; the read models live in `Application/Features/Attachments/` |
 | Archiving | `ArchiveDocumentRequest` ✅, `UnarchiveDocumentRequest` ✅, `SaveSearchRequest` ✅; see [`Archiving/README.md`](Archiving/README.md). The search takes query parameters, and its read models live in `Application/Features/Archiving`. |
 | Decisions | `CreateDecisionTypeRequest` ✅, `UpdateDecisionTypeRequest` ✅, `IssueDocumentDecisionRequest` ✅, `AttachDecisionFileRequest` ✅, `CancelDecisionRequest` ✅, `RecordDecisionAppealRequest` ✅, `RecordAppealOutcomeRequest` ✅; see [`Decisions/README.md`](Decisions/README.md). |
 | Relations | `CreateDocumentRelationRequest` ✅, `RemoveDocumentRelationRequest` ✅; see [`Relations/README.md`](Relations/README.md). The read models live in `Application/Features/Relations`. |
@@ -55,6 +55,7 @@ commands/queries map between them and the domain.
 | Movements open/send/complete/reject/return/redirect/close/cancel requests | ✅ Implemented |
 | Identity `AssignUserDepartmentScopeRequest` | ✅ Implemented |
 | Attachments `CreateDocumentFileRequest`, `UploadDocumentFileVersionRequest` | ✅ Implemented |
+| Attachments `AttachmentOnlyOfficeCallbackRequest` | ✅ Implemented |
 | Audit `CreateAuditCheckpointRequest`, `RunAuditIntegrityCheckRequest` | ✅ Implemented |
 | Ui `SetUiLabelOverrideRequest` | ✅ Implemented |
 | Drive `DriveRequests.cs` (spaces, items, upload, permissions, deletion, settings) | ✅ Implemented |
@@ -64,6 +65,7 @@ commands/queries map between them and the domain.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-23 | Copilot | Added the signed OnlyOffice attachment callback request contract for immutable editor saves. |
 | 2026-11-19 | Qoder | Added `DriveOnlyOfficeCallbackRequest` (key/status/url/users/forcesavetype/token) to `Drive/DriveRequests.cs` for the OnlyOffice save callback (plan `plans/module-11-drive-backend.md` Phase 4). The edit-config and callback read models live in `Application/Features/Drive/DriveEditResponses.cs`. |
 | 2026-11-19 | Qoder | Added `Drive/DriveRequests.cs` — the Module 11 Drive request bodies (spaces, folders/items, presigned upload initiate/complete, permission grants, inheritance, deletion requests/review, settings) for plan `plans/module-11-drive-backend.md` Phase 3. Read models stay in `Application/Features/Drive/DriveResponses.cs`. |
 | 2026-11-17 | Qoder | Added `Ui/SetUiLabelOverrideRequest` for `PUT /api/ui-labels/{key}` (editable UI terminology, Phase 0). |
