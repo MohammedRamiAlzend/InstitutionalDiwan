@@ -1,10 +1,8 @@
 # `src/entities/document-file` — Document File Read Model (Module 06)
 
-> **Status:** ✅ Reads implemented (2026-11-01, Module 06 Phases 0, 2 and 4) — list, download
-> (including a named version), on-demand checksum verify, query keys/hooks, two badges, and the two
-> helpers the grid and the dialogs share (`downloadFileVersion`, `currentVersionOf`). Consumed by
-> `widgets/document-attachments-panel` and `features/attachment-upload` on the document-details
-> «الملفات» tab.
+> **Status:** ✅ Reads implemented — list, download, checksum verify, and signed OnlyOffice editor
+> configuration for document attachments. Consumed by `widgets/document-attachments-panel`,
+> `features/attachment-upload`, and `features/attachment-editor`.
 
 ## Purpose
 
@@ -17,10 +15,10 @@ stored checksum, and present the archive/integrity state. Writes live in
 
 | File | Purpose |
 | --- | --- |
-| `api/documentFileApi.ts` | `listByDocument(documentId)` → `GET /api/documents/{documentId}/files`; `download(fileId, versionId?)` → `GET /api/document-files/{fileId}/download` as `{ blob, contentDisposition }`; `verify(fileId, versionId?)` → `GET /api/document-files/{fileId}/verify`. |
+| `api/documentFileApi.ts` | Lists, downloads, verifies, and reads the signed OnlyOffice editor config for a document attachment. |
 | `api/downloadFileVersion.ts` | `downloadFileVersion(file, version?)` — streams one version (the current one when omitted) to disk and returns the saved name; the name precedence (header → `originalFileName` → title) lives here so the grid and the versions dialog cannot disagree. |
-| `model/types.ts` | `DocumentFileResponse`, `DocumentFileVersionResponse`, `AttachmentChecksumResponse` — camelCase mirrors of the Application contracts. |
-| `model/queries.ts` | `documentFileKeys` factory, `useDocumentFiles`, `useVerifyChecksum`. |
+| `model/types.ts` | Attachment list/version/checksum and OnlyOffice editor-config response types. |
+| `model/queries.ts` | `documentFileKeys` factory, list/verify hooks, and the opt-in editor-config hook. |
 | `model/versions.ts` | `currentVersionOf(file)` — `versions.find(isCurrent) ?? versions[0]`, `undefined` for an empty history. |
 | `ui/ChecksumBadge.tsx` | «بصمة مطابقة» / «بصمة غير مطابقة» / «لم يُتحقق منها» from a nullable `isMatch`; labels resolve via `useLabel` (`attachment.checksum.*`). |
 | `ui/FileArchivedBadge.tsx` | «نشط» / «مؤرشف» via `useLabel` (`attachment.state.*`). Archiving stops new versions but never hides the file or its downloads. |
@@ -35,6 +33,7 @@ export const documentFileKeys = {
     [...documentFileKeys.all, 'by-document', documentId] as const,
   verify: (fileId: string, versionId?: string | null) =>
     [...documentFileKeys.all, 'verify', fileId, versionId ?? 'current'] as const,
+  editConfig: (fileId: string) => [...documentFileKeys.all, 'edit-config', fileId] as const,
 };
 ```
 
@@ -71,11 +70,13 @@ Mutations in `features/attachment-upload` invalidate `documentFileKeys.byDocumen
 | `ChecksumBadge`, `FileArchivedBadge` | ✅ Module 06 Phase 0; `FileArchivedBadge` mounted in Phase 2, `ChecksumBadge` mounted by the Phase 4 verify and upload dialogs; labels catalog-driven (`attachment.*`) since UI labels Phase 4 |
 | Download read | ✅ Module 06 Phase 2; `downloadFileVersion` shared with the versions dialog in Phase 4 |
 | Version list UI / grid | ✅ Module 06 Phase 2 (`widgets/document-attachments-panel`); the per-file versions dialog landed in Phase 4 |
+| OnlyOffice editor config read | ✅ Signed config and token-protected content URL |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-23 | Copilot | Added the opt-in OnlyOffice editor-config read model and query key used by document attachment editing. |
 | 2026-11-18 | Qoder | UI labels Phase 4 (ب4 المرفقات): `FileArchivedBadge` (`attachment.state.*`) and `ChecksumBadge` (`attachment.checksum.*`) resolve their labels via `useLabel` off `LabelKey` maps. File titles/names/digests stay data. |
 | 2026-11-01 | agent | Module 06 Phase 5: all three reads exercised live in the browser against the permanent fixture document — list (with the archived file included), download of the current and of a replaced version under their original Arabic names, and verify returning a matching recomputed digest. A VIEW-only grant was confirmed to reach list and verify but not download (403, Arabic). No code change. |
 | 2026-11-01 | agent | Module 06 Phase 4: extracted `currentVersionOf` into `model/versions.ts` and added `api/downloadFileVersion.ts`, so the grid, the versions dialog, and the two upload dialogs resolve the current version and the saved file name through one pair of functions instead of three copies. |

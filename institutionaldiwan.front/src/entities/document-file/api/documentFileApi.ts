@@ -1,5 +1,9 @@
 import { downloadBlob, httpClient, type BlobDownload } from '@/shared/api'
-import type { AttachmentChecksumResponse, DocumentFileResponse } from '../model/types'
+import type {
+  AttachmentChecksumResponse,
+  AttachmentEditConfigResponse,
+  DocumentFileResponse,
+} from '../model/types'
 
 /**
  * Typed reads for Module 06 document files. Writes live in `features/attachment-upload`.
@@ -29,6 +33,13 @@ export const documentFileApi = {
     const { data } = await httpClient.get<AttachmentChecksumResponse>(
       `/document-files/${fileId}/verify`,
       { params: { versionId: versionId || undefined } },
+    )
+    return data
+  },
+
+  editConfig: async (fileId: string): Promise<AttachmentEditConfigResponse> => {
+    const { data } = await httpClient.get<AttachmentEditConfigResponse>(
+      `/document-files/${fileId}/edit-config`,
     )
     return data
   },

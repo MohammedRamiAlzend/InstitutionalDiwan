@@ -1,6 +1,6 @@
 # institutionaldiwan.front / src/widgets/document-attachments-panel — Document Files Panel
 
-> **Status:** ✅ Grid, filters, download, upload, versions, archiving, and verify are implemented
+> **Status:** ✅ Grid, filters, download, upload, versions, archiving, verify, and Office editing are implemented
 > (2026-11-01, Module 06 Phases 2–4) and verified in-browser in three roles (2026-11-01, Module 06
 > Phase 5), which had waived the per-phase passes.
 
@@ -24,7 +24,7 @@ a file's version history, archiving, and checksum verification.
 
 | File | Purpose |
 | --- | --- |
-| `ui/DocumentAttachmentsPanel.tsx` | Client-mode `DataTable` (`tableId="document-files"`) over `useDocumentFiles`; status and file-type filters through `useTableState({ filterKeys: ['status', 'fileType'] })`; ten columns (العنوان، النوع، الإصدار، الحجم، الاسم الأصلي، مسح ضوئي أساسي، الحالة، plus البصمة / تاريخ الإنشاء / آخر تحديث hidden by default); row menu (download the current version, الإصدارات, التحقق من البصمة, and — for a manager on a live, unarchived file — رفع إصدار وأرشفة; then copy file id / checksum / original name); refresh header and empty menus; `رفع ملف` in the toolbar and as the empty-state action when `canManage`. One `rowAction` state slot holds the open dialog as `{ type, fileId }`, and the row is looked up again from the live query so a mutation updates what the dialog shows. |
+| `ui/DocumentAttachmentsPanel.tsx` | Client-mode `DataTable` with filters, version/download/integrity actions, and a manager-only «تحرير الملف» action for supported Word/Excel extensions; OnlyOffice saves return through the backend as a new immutable version. |
 | `index.ts` | Public barrel exporting `DocumentAttachmentsPanel`. |
 
 ## Behaviour
@@ -71,6 +71,7 @@ a file's version history, archiving, and checksum verification.
 | Grid, filters, row menu, download | ✅ Implemented (Module 06 Phase 2) |
 | Upload action + dialog mount | ✅ Implemented (Module 06 Phase 3) |
 | Versions, upload-version, archive, verify actions | ✅ Implemented (Module 06 Phase 4) |
+| OnlyOffice edit action for Word/Excel | ✅ Implemented; accepted saves create a new version |
 | Browser verification | ✅ Verified in-browser (Module 06 Phase 5) in three roles: manager (populated grid, Arabic download names, URL-backed filters, search/sort, column chooser persisted, both empty states, all five dialogs), `USER` with `DOCUMENT_EDIT` (write UI visible but refused per access level with the Arabic 403), and read-only (no write buttons, download + verify only) |
 | Known issues | The no-match empty area offers «رفع ملف» because `DataTable` builds one empty view for both "no files" and "no match" — the only item left from the Phase 5 list: the two upload-dialog issues (stale server error on reopen, premature «اختر ملفًا للرفع») were fixed in `@/features/attachment-upload` the same day |
 
@@ -78,6 +79,7 @@ a file's version history, archiving, and checksum verification.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-23 | Copilot | Added manager-only Office editing; OnlyOffice callbacks append a new version instead of replacing history. |
 | 2026-11-18 | Qoder | UI labels Phase 4 (ب4 المرفقات): the grid resolves chrome via the `attachment.*` catalog — column headers via `headerKey`, the status/type filter options via `resolveLabel` + an overrides subscription, row/header menus, copy/download toasts (reusing `documents.toast.*`), caption/search/arias/empty states via `t()`, the upload/clear buttons and primary-scan badge via `<Label>`. File titles/names and type `descAr` stay data. |
 | 2026-11-01 | agent | Cleared two of the three known issues from `UploadAttachmentDialog` (fix in `@/features/attachment-upload`, no widget code): a server rejection no longer stays visible after close-and-reopen, and changing the file type no longer flags an untouched file field. Both re-verified in the browser against the scratch document — a real 400 `Attachments.SignatureMismatch` closed and reopened clean, and a picked `.pdf` still rejected against «توقيع». Header status updated to match the Phase 5 verification. |
 | 2026-11-01 | agent | Module 06 Phase 5: browser verification flipped to ✅ after the three-role pass on the permanent fixture document (`d6b111be-…`): grid, filters, search/sort, column chooser, both empty states, download of current and replaced versions with Arabic filenames, upload, new version, versions dialog, archive, and checksum verify all exercised; recorded the two open UX issues (stale dialog error, premature empty-file message) and the clipboard-denial harness limit. No code change. |

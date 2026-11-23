@@ -31,6 +31,7 @@ import {
   UploadVersionDialog,
   VerifyChecksumDialog,
 } from '@/features/attachment-upload'
+import { AttachmentEditorDialog } from '@/features/attachment-editor'
 import { toArabicErrorMessage } from '@/shared/api'
 import type { LabelKey } from '@/shared/config'
 import {
@@ -64,8 +65,19 @@ const STATUS_OPTION_KEYS: { value: string; key: LabelKey }[] = [
  * from the live query, so a mutation that refetches the list also updates what the dialog shows.
  */
 type RowAction = {
-  type: 'versions' | 'upload-version' | 'archive' | 'verify'
+  type: 'versions' | 'upload-version' | 'archive' | 'verify' | 'edit'
   fileId: string
+}
+
+const EDITABLE_EXTENSIONS = new Set([
+  'doc', 'docx', 'docm', 'dot', 'dotx', 'dotm', 'odt', 'ott', 'rtf', 'txt',
+  'xls', 'xlsx', 'xlsm', 'xlt', 'xltx', 'xltm', 'ods', 'ots', 'csv',
+])
+
+function isEditable(file: DocumentFileResponse): boolean {
+  const name = currentVersionOf(file)?.originalFileName ?? ''
+  const extension = name.split('.').pop()?.toLowerCase()
+  return extension ? EDITABLE_EXTENSIONS.has(extension) : false
 }
 
 interface DocumentAttachmentsPanelProps {
@@ -285,6 +297,14 @@ export function DocumentAttachmentsPanel({
       canManage && !file.isArchived
         ? [
             { type: 'separator' },
+            ...(isEditable(file)
+              ? [{
+                  id: 'edit',
+                  label: t('attachment.row.edit'),
+                  icon: <Upload className="size-4" aria-hidden />,
+                  onSelect: () => setRowAction({ type: 'edit', fileId: file.fileId }),
+                }]
+              : []),
             {
               id: 'upload-version',
               label: t('attachment.row.upload-version', { version: file.currentVersionNumber }),
@@ -454,6 +474,9 @@ export function DocumentAttachmentsPanel({
         <>
           {rowAction.type === 'versions' && (
             <DocumentVersionsDialog file={actionFile} open onOpenChange={closeRowAction} />
+          )}
+          {rowAction.type === 'edit' && (
+            <AttachmentEditorDialog file={actionFile} open onOpenChange={closeRowAction} />
           )}
           {rowAction.type === 'upload-version' && (
             <UploadVersionDialog file={actionFile} open onOpenChange={closeRowAction} />
