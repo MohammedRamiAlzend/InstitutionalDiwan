@@ -145,6 +145,9 @@ internal sealed class DriveHandlerWorld
     public GetDriveEditConfigQueryHandler EditConfig(User caller, bool isAdmin = false) =>
         new(World.Items, World.Versions, World.Sessions, Storage, AccessFor(caller, isAdmin), OnlyOfficeOptions, Tokens, ContextFor(caller, isAdmin), UnitOfWork);
 
+    public GetDriveReadinessQueryHandler Readiness() =>
+        new(OnlyOfficeOptions, Tokens, Storage);
+
     public ProcessDriveOnlyOfficeCallbackCommandHandler Callback() =>
         new(World.Items, World.Spaces, World.Versions, World.Sessions, Settings, Storage, Downloader, Tokens, Guard, Notifications, UnitOfWork,
             NullLogger<ProcessDriveOnlyOfficeCallbackCommandHandler>.Instance);
@@ -162,6 +165,8 @@ internal sealed class DriveHandlerWorld
     public sealed class InMemoryDriveStorage : IDriveStorageService
     {
         private readonly Dictionary<string, byte[]> _objects = new(StringComparer.Ordinal);
+
+        public bool IsConfigured { get; set; } = true;
 
         public void PutObject(string key, byte[] bytes) => _objects[key] = bytes;
         public bool Exists(string key) => _objects.ContainsKey(key);

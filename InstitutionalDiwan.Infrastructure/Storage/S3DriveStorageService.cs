@@ -18,12 +18,17 @@ public sealed class S3DriveStorageService : IDriveStorageService, IDisposable
 {
     private readonly DriveStorageOptions _options;
     private readonly Lazy<AmazonS3Client> _client;
+    private readonly bool _useHttp;
 
     public S3DriveStorageService(IOptions<DriveStorageOptions> options)
     {
         _options = options.Value;
+        _useHttp = Uri.TryCreate(_options.Endpoint?.Trim(), UriKind.Absolute, out var endpointUri)
+            && endpointUri.Scheme.Equals(Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase);
         _client = new Lazy<AmazonS3Client>(CreateClient);
     }
+
+    public bool IsConfigured => _options.IsConfigured;
 
     public Task<DrivePresignedUpload> CreateUploadUrlAsync(
         string objectKey,
@@ -45,7 +50,11 @@ public sealed class S3DriveStorageService : IDriveStorageService, IDisposable
             Key = objectKey,
             Verb = HttpVerb.PUT,
             Expires = expiresAt,
-            ContentType = string.IsNullOrWhiteSpace(mimeType) ? "application/octet-stream" : mimeType.Trim()
+            ContentType = string.IsNullOrWhiteSpace(mimeType) ? "application/octet-stream" : mimeType.Trim(),
+            // AWSSDK.S3 4.x ignores UseHttp when presigning and always returns https, which breaks a
+            // plain-http SeaweedFS gateway (the browser fails with ERR_SSL_PROTOCOL_ERROR). The
+            // request's Protocol is the only setting that decides the signed scheme.
+            Protocol = _useHttp ? Protocol.HTTP : Protocol.HTTPS
         });
 
         return Task.FromResult(new DrivePresignedUpload(new Uri(url), expiresAt));
@@ -65,7 +74,8 @@ public sealed class S3DriveStorageService : IDriveStorageService, IDisposable
             BucketName = _options.Bucket,
             Key = objectKey,
             Verb = HttpVerb.GET,
-            Expires = DateTime.UtcNow.Add(lifetime)
+            Expires = DateTime.UtcNow.Add(lifetime),
+            Protocol = _useHttp ? Protocol.HTTP : Protocol.HTTPS
         });
 
         return Task.FromResult(new Uri(url));
@@ -169,8 +179,7 @@ public sealed class S3DriveStorageService : IDriveStorageService, IDisposable
         var config = new AmazonS3Config
         {
             ServiceURL = _options.Endpoint.Trim(),
-            UseHttp = Uri.TryCreate(_options.Endpoint.Trim(), UriKind.Absolute, out var endpointUri)
-                && endpointUri.Scheme.Equals(Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase),
+            UseHttp = _useHttp,
             ForcePathStyle = _options.ForcePathStyle,
             AuthenticationRegion = string.IsNullOrWhiteSpace(_options.Region) ? "us-east-1" : _options.Region.Trim()
         };

@@ -15,6 +15,12 @@ public sealed record DriveStoredObject(long SizeBytes, string? ContentType);
 /// </summary>
 public interface IDriveStorageService
 {
+    /// <summary>
+    /// True when the provider endpoint, bucket and credentials are configured. Exposes readiness only;
+    /// the access key and secret are never returned.
+    /// </summary>
+    bool IsConfigured { get; }
+
     /// <summary>Signs a direct PUT upload for the object key, bounded by size and lifetime.</summary>
     Task<DrivePresignedUpload> CreateUploadUrlAsync(
         string objectKey,

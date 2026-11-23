@@ -38,6 +38,10 @@ Set an explicit executable path and data directory in Development or another env
 SeaweedFS must be launched by the API. If port 8333 is already occupied by an existing process, the
 API reuses it and does not terminate that process.
 
+To bring SeaweedFS up **without** the API (and start the OnlyOffice services at the same time), run
+`start-drive-services.ps1` from the repository root: it uses the same arguments as the hosted service,
+checks every port before starting, and never stops or re-binds an existing process.
+
 ## Change Log
 
 | Date | Author | Change |

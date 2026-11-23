@@ -53,7 +53,7 @@ access live here.
 | `DriveDeletionController.cs` | `api/drive` (`items/{id}/deletion-requests`, `deletion-requests`, `items/{id}`) | `DRIVE_USE` + review authority in the handlers | Module 11 approval-gated deletion: request, list, approve/reject (owner's department head or ADMIN), cancel (requester), and direct delete where privileged. |
 | `DriveTrashController.cs` | `api/drive/trash` | `DRIVE_USE` + restore/purge authority in the handlers | Module 11 30-day trash: list reachable trashed items, restore, and permanent purge (releases quota, deletes objects). |
 | `DriveSettingsController.cs` | `api/drive/settings` | `DRIVE_MANAGE` | Module 11 institution-wide Drive defaults: read and update the default quota, max file size, and allowed-extension allow-list. |
-| `DriveOnlyOfficeController.cs` | `api/drive` (`files/{id}/edit-config`, `onlyoffice/callback`) | `DRIVE_USE` for edit-config; `[AllowAnonymous]` + JWT verification for the callback | Module 11 OnlyOffice editing: the signed editor config (edit/view by role) and the save callback (always HTTP 200 with `error=0/1`; save → new version, conflict rejection, dedup). |
+| `DriveOnlyOfficeController.cs` | `api/drive` (`files/{id}/edit-config`, `onlyoffice/readiness`, `onlyoffice/callback`) | `DRIVE_USE` for edit-config and readiness; `[AllowAnonymous]` + JWT verification for the callback | Module 11 OnlyOffice editing: the signed editor config (edit/view by role), a secret-free readiness probe (presence flags + non-secret URLs for OnlyOffice and storage), and the save callback (always HTTP 200 with `error=0/1`; save → new version, conflict rejection, dedup). |
 
 ## Lookups endpoints
 
@@ -142,7 +142,7 @@ and the approval/review authority are enforced inside the handlers via the recur
 | Deletion | `POST /api/drive/items/{id}/deletion-requests`, `GET /api/drive/deletion-requests?statusId&mineOnly`, `POST /api/drive/deletion-requests/{reqId}/approve\|reject\|cancel`, `DELETE /api/drive/items/{id}` (direct where privileged) |
 | Trash | `GET /api/drive/trash`, `POST /api/drive/trash/{itemId}/restore`, `DELETE /api/drive/trash/{itemId}` (permanent) |
 | Settings | `GET/PUT /api/drive/settings` (`DRIVE_MANAGE`) |
-| Editing (OnlyOffice) | `GET /api/drive/files/{itemId}/edit-config` (signed editor config), `POST /api/drive/onlyoffice/callback` (`[AllowAnonymous]`, JWT-verified; always HTTP 200 `{error:0\|1}`) |
+| Editing (OnlyOffice) | `GET /api/drive/files/{itemId}/edit-config` (signed editor config), `GET /api/drive/onlyoffice/readiness` (configuration flags + non-secret URLs, never the secret), `POST /api/drive/onlyoffice/callback` (`[AllowAnonymous]`, JWT-verified; always HTTP 200 `{error:0\|1}`) |
 
 The content endpoints handle the `Range` header manually (parse `bytes`, pass the bounds to the query,
 return 206 with `Content-Range` and `Accept-Ranges: bytes`) rather than relying on stream seekability;
@@ -151,7 +151,9 @@ authenticated by the HS256 callback token in the handler, and per the OnlyOffice
 answers HTTP 200 with `error=0` (acknowledged) or `error=1` (rejected). Editing needs `Drive:OnlyOffice`
 (server URL, callback base URL, JWT secret); without it edit-config answers 500
 `Drive.OnlyOfficeNotConfigured`. Upload/download/restore/editing need SeaweedFS (`Drive:Storage`);
-without keys they answer 500 `Drive.StorageNotConfigured`.
+without keys they answer 500 `Drive.StorageNotConfigured`. `GET /api/drive/onlyoffice/readiness` is the
+diagnostic for both: it reports presence flags and the resolved callback URL (never the JWT secret or
+the storage credentials), with `isReady` true only when OnlyOffice and storage are both configured.
 
 ## Paged list endpoints
 
@@ -189,6 +191,7 @@ plain JSON array.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-22 | Buffy | `DriveOnlyOfficeController` gained `GET /api/drive/onlyoffice/readiness` (`DRIVE_USE`): a secret-free readiness probe returning OnlyOffice/storage presence flags and the non-secret URLs (`callbackUrl` included). |
 | 2026-11-19 | Qoder | Added `DriveOnlyOfficeController` (plan `plans/module-11-drive-backend.md` Phase 4): `GET /api/drive/files/{itemId}/edit-config` (`DRIVE_USE`, signed editor config) and `POST /api/drive/onlyoffice/callback` (`[AllowAnonymous]`, HS256 JWT verified in the handler; always HTTP 200 with `error=0/1`). Added the `DriveOnlyOfficeCallbackRequest` contract. Controller count is now forty. |
 | 2026-11-19 | Qoder | Added the seven Module 11 Drive controllers (`DriveSpacesController`, `DriveItemsController`, `DriveFilesController`, `DrivePermissionsController`, `DriveDeletionController`, `DriveTrashController`, `DriveSettingsController`) for plan `plans/module-11-drive-backend.md` Phase 3, with the `Contracts/Drive` request records. `DRIVE_USE` guards the surface; `DRIVE_MANAGE` guards settings and the quota override; Drive roles and review authority stay in the handlers. The file content endpoints serve HTTP Range manually (206 + `Content-Range`). Live-verified on the dev API (port 5028): all metadata routes 200, auth gate 401, validation 400; file binaries await SeaweedFS keys. OnlyOffice routes deferred to Phase 4. |
 | 2026-11-17 | Qoder | Added `UiLabelsController` (`GET/PUT/DELETE /api/ui-labels`, plan `plans/ui-labels-edit-mode.md` Phase 0). Writes require the `UI_LABELS_MANAGE` policy — the `SUPER_ADMIN` role **and** the `superadmin` account name, so the right cannot be delegated through role management. |

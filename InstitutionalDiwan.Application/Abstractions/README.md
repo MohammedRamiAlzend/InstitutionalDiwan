@@ -64,13 +64,16 @@ technology choices swappable.
 | --- | --- | --- |
 | `IFileStorageService` | `Task<StoredFile> SaveAsync(Stream, …, int providerId, string basePath)`, `Task<Stream?> OpenReadAsync(string basePath, string relativePath)`, `Task<string> ComputeSha256Async(Stream)` | Abstracts document scans/attachments (Module 06) and returns the SHA-256 checksum recorded by `DocumentFile.AddVersion`. ✅ Implemented by `Infrastructure/Storage/LocalFileStorageService`. |
 | `IFileSignatureValidator` | `Result Validate(ReadOnlySpan<byte> header, string fileName, long size, DocumentFileType type)` | Enforces the file type's extension allow-list and size limit, then checks magic bytes so a renamed executable cannot masquerade as a PDF/image. ✅ Implemented by `Infrastructure/Storage/FileSignatureValidator`. |
-| `IDriveStorageService` | `CreateUploadUrlAsync`, `CreateDownloadUrlAsync`, `HeadAsync`, `OpenReadAsync(objectKey, rangeStart?, rangeEnd?)`, `ComputeSha256Async`, `CopyAsync(source, destination)`, `DeleteAsync` (+ `DrivePresignedUpload`, `DriveStoredObject` records) | Object storage for Drive (Module 11) against the S3-compatible SeaweedFS gateway: presigned direct browser uploads/downloads, range reads for video, metadata, server-side copy (version restore), and deletion. ✅ Implemented by `Infrastructure/Storage/S3DriveStorageService`. |
+| `IDriveStorageService` | `bool IsConfigured`, `CreateUploadUrlAsync`, `CreateDownloadUrlAsync`, `HeadAsync`, `OpenReadAsync(objectKey, rangeStart?, rangeEnd?)`, `ComputeSha256Async`, `CopyAsync(source, destination)`, `DeleteAsync` (+ `DrivePresignedUpload`, `DriveStoredObject` records) | Object storage for Drive (Module 11) against the S3-compatible SeaweedFS gateway: presigned direct browser uploads/downloads, range reads for video, metadata, server-side copy (version restore), and deletion. `IsConfigured` is a readiness flag only (endpoint + bucket + keys present), never a credential value. ✅ Implemented by `Infrastructure/Storage/S3DriveStorageService`. |
 
 ### `Drive/`
 
 | Interface | Shape | Notes |
 | --- | --- | --- |
 | `IDrivePurgeService` | `Task PurgeTreeAsync(Guid rootItemId, Guid? actorUserId, string reason, CancellationToken)` | Module 11 permanent tree deletion: S3 objects first, then rows deepest-first, then quota release, one audit row per tree. ✅ Implemented by `Infrastructure/Storage/DrivePurgeService`; shared by the manual purge handler and `DriveMaintenanceJob`. |
+| `IDriveOnlyOfficeSettings` | `bool Enabled`, `bool IsConfigured`, `string ServerUrl`, `string CallbackBaseUrl`, `int DocumentUrlLifetimeMinutes`, `int TokenLifetimeMinutes` | Module 11 OnlyOffice connection settings, host-agnostic; the JWT secret is never exposed. ✅ Implemented by `Infrastructure/OnlyOffice/DriveOnlyOfficeOptions`. |
+| `IDriveOnlyOfficeTokenService` | `bool IsConfigured`, `Sign(payload)`, `Verify(token)` | HS256 signing/verification of the editor config and the save callback (body = payload JSON). ✅ Implemented by `Infrastructure/OnlyOffice/OnlyOfficeTokenService`. |
+| `IDriveCallbackDownloader` | `Task<Stream?> DownloadAsync(string url, CancellationToken)` | Fetches the edited bytes from the temporary URL OnlyOffice supplies; null on a network/IO failure. ✅ Implemented by `Infrastructure/OnlyOffice/DriveCallbackDownloader`. |
 
 ### `Caching/`
 
@@ -122,7 +125,10 @@ technology choices swappable.
 | `Storage/IFileStorageService.cs` | Persists and reads document bytes under a provider root, returning the streamed SHA-256 checksum of an upload. |
 | `Storage/IFileSignatureValidator.cs` | Validates an upload's extension, size, and magic bytes before any bytes are stored. |
 | `Storage/StoredFile.cs` | Value returned by storage after a save: relative path, original name, MIME type, size, checksum, and provider id. |
-| `Storage/IDriveStorageService.cs` | Drive (Module 11) object-storage contract over S3/SeaweedFS: presigned upload/download URLs, HEAD metadata, range reads, SHA-256, server-side copy, delete; plus `DrivePresignedUpload` and `DriveStoredObject` records. |
+| `Storage/IDriveStorageService.cs` | Drive (Module 11) object-storage contract over S3/SeaweedFS: a secret-free `IsConfigured` readiness flag, presigned upload/download URLs, HEAD metadata, range reads, SHA-256, server-side copy, delete; plus `DrivePresignedUpload` and `DriveStoredObject` records. |
+| `Drive/IDriveOnlyOfficeSettings.cs` | The non-secret OnlyOffice settings (`Enabled`, `IsConfigured`, server URL, callback base URL, URL/token lifetimes) consumed by the editing and readiness handlers. |
+| `Drive/IDriveOnlyOfficeTokenService.cs` | HS256 sign/verify contract for the editor config and the save-callback token, plus its `IsConfigured` secret-presence flag. |
+| `Drive/IDriveCallbackDownloader.cs` | Downloads the saved document from the temporary URL in the OnlyOffice callback. |
 | `Drive/IDrivePurgeService.cs` | Drive (Module 11) permanent tree-deletion contract (`PurgeTreeAsync`), implemented by `Infrastructure/Storage/DrivePurgeService` and shared by manual purge + the retention job. |
 | `Time/IDateTimeProvider.cs` | UTC now plus institution-local conversion and numbering-year helpers; implemented by Infrastructure `DateTimeProvider` over `IClock`. |
 | `Context/IRequestContext.cs` | Correlation id and client IP for the current request, kept host-agnostic; implemented by Infrastructure `HttpRequestContext`. |
@@ -152,6 +158,7 @@ technology choices swappable.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-22 | Buffy | Added `IDriveStorageService.IsConfigured` (endpoint + bucket + keys present) for the secret-free readiness probe, and documented the existing Module 11 OnlyOffice contracts (`IDriveOnlyOfficeSettings` incl. `Enabled`/`TokenLifetimeMinutes`, `IDriveOnlyOfficeTokenService`, `IDriveCallbackDownloader`) under `Drive/`. |
 | 2026-11-19 | Qoder | Drive Phase 2: added `Drive/IDrivePurgeService` (permanent tree deletion, implemented by `DrivePurgeService`) and `IDriveStorageService.CopyAsync` (server-side object copy for version restore). |
 | 2026-11-19 | Qoder | Drive Phase 1 (`plans/module-11-drive-backend.md`): added `Authorization/IDriveAccessEvaluator` (effective role, role-gated access, deletion-approver + department-head checks); marked `IDriveStorageService` implemented by `S3DriveStorageService`. |
 | 2026-11-19 | Qoder | Drive Phase 0 (`plans/module-11-drive-backend.md`): added `Storage/IDriveStorageService` with `DrivePresignedUpload`/`DriveStoredObject` — the S3/SeaweedFS contract for Module 11, kept separate from the Module 06 `IFileStorageService`. |

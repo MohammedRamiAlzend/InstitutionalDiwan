@@ -7,6 +7,9 @@ namespace InstitutionalDiwan.Application.Abstractions.Drive;
 /// </summary>
 public interface IDriveOnlyOfficeSettings
 {
+    /// <summary>True when the administrator has switched OnlyOffice editing on (<c>Drive:OnlyOffice:Enabled</c>).</summary>
+    bool Enabled { get; }
+
     /// <summary>True when editing is enabled and the server URL, callback base URL and secret are set.</summary>
     bool IsConfigured { get; }
 
@@ -18,4 +21,7 @@ public interface IDriveOnlyOfficeSettings
 
     /// <summary>Lifetime of the presigned document URL handed to OnlyOffice (minutes).</summary>
     int DocumentUrlLifetimeMinutes { get; }
+
+    /// <summary>Lifetime of the signed editor-config / callback token (minutes).</summary>
+    int TokenLifetimeMinutes { get; }
 }

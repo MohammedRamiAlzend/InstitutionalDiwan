@@ -46,6 +46,15 @@ public sealed class DriveOnlyOfficeController : ControllerBase
         CancellationToken cancellationToken)
         => (await _sender.Send(new GetDriveEditConfigQuery(itemId), cancellationToken)).ToActionResult();
 
+    /// <summary>Reports whether OnlyOffice editing and Drive storage are configured, without exposing secrets.</summary>
+    /// <response code="200">Presence flags for the OnlyOffice settings and storage, plus the non-secret URLs.</response>
+    [HttpGet("onlyoffice/readiness")]
+    [EndpointSummary("Reports whether OnlyOffice editing and Drive storage are configured (no secrets).")]
+    [EndpointDescription("Returns Module 11 editing readiness: whether OnlyOffice is enabled, whether the server URL, callback base URL and JWT secret are present, the resolved save-callback URL, and whether Drive object storage is configured. Only booleans and the non-secret URLs are returned; the JWT secret and the storage credentials are never exposed. Requires the DRIVE_USE permission.")]
+    [ProducesResponseType<DriveReadinessResponse>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> Readiness(CancellationToken cancellationToken)
+        => (await _sender.Send(new GetDriveReadinessQuery(), cancellationToken)).ToActionResult();
+
     /// <summary>Receives the OnlyOffice save callback; always answers HTTP 200 with an error code.</summary>
     /// <param name="request">The callback body (key, status, url, users, forcesavetype, token).</param>
     /// <param name="cancellationToken">Request cancellation token (optional).</param>

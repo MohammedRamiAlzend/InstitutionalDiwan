@@ -27,6 +27,9 @@ public sealed class S3DriveStorageServiceTests
         var upload = await service.CreateUploadUrlAsync("space/file/1", "text/plain", 1024, TimeSpan.FromMinutes(15));
 
         Assert.Equal("localhost", upload.Url.Host);
+        // AWSSDK.S3 4.x always presigns https unless the request asks for HTTP, which a plain-http
+        // SeaweedFS gateway cannot answer (the browser reports ERR_SSL_PROTOCOL_ERROR).
+        Assert.Equal(Uri.UriSchemeHttp, upload.Url.Scheme);
         Assert.Equal("/drive/space/file/1", upload.Url.AbsolutePath);
         Assert.Contains("X-Amz-Signature=", upload.Url.Query);
         Assert.Contains("X-Amz-Expires=900", upload.Url.Query);
@@ -40,6 +43,7 @@ public sealed class S3DriveStorageServiceTests
 
         var url = await service.CreateDownloadUrlAsync("space/file/1", TimeSpan.FromMinutes(5));
 
+        Assert.Equal(Uri.UriSchemeHttp, url.Scheme);
         Assert.Equal("/drive/space/file/1", url.AbsolutePath);
         Assert.Contains("X-Amz-Signature=", url.Query);
     }
