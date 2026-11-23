@@ -104,12 +104,13 @@ error handling, and form/dialog UI.
 | `drive-item-manage/` | ✅ Implemented (Module 11 front-end Phase 2: create-folder/rename/move/star mutations, Zod name schema, three dialogs + lazy folder-tree picker, optimistic star); browser verification pending the Phase 6 round. |
 | `drive-upload/` | ✅ Implemented (Module 11 front-end Phase 3: presigned initiate→PUT→complete/abandon mutation, sequential multi-file queue dialog with three-stage progress + pre-check, new-version uploads, Arabic-named download helper); live byte verification needs SeaweedFS keys (Phase 6 round). |
 | `drive-sharing/` | ✅ Implemented (Module 11 front-end Phase 4: Manager grant/revoke for users/departments and inheritance toggle); browser verification pending the Phase 6 round. |
-| `drive-editor/` | ✅ Implemented (Module 11 front-end Phase 6: lazy DocsAPI loader, signed edit-config mounting, cleanup, and Arabic errors). |
+| `drive-editor/` | ✅ Implemented (Module 11 front-end Phase 6: lazy DocsAPI loader, signed edit-config mounting, cleanup, resizable-preview sizing, and Arabic errors). |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-23 | Copilot | Updated `drive-editor` to fill the enlarged and resizable Drive preview modal. |
 | 2026-11-21 | Copilot | Module 11 front-end Phase 4: added `drive-sharing` permission and inheritance mutations with invalidation through `driveItemKeys`. |
 | 2026-11-21 | Copilot | Module 11 front-end Phase 6: added the lazy OnlyOffice editor feature and signed config integration. |
 | 2026-11-20 | Qoder | Module 11 front-end Phase 3 (`plans/module-11-drive-frontend.md`): added `drive-upload` — presigned upload API + `useUploadDriveFileMutation` (initiate→PUT→complete/abandon, Content-Type parity, local SHA-256), `UploadDriveDialog` (sequential multi-file queue, three-stage progress, `driveFileRejection` pre-check, new-version mode, dropped-file seed), and `downloadDriveFile`. |

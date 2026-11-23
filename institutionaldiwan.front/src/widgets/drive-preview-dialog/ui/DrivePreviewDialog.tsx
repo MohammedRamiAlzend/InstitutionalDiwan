@@ -48,7 +48,9 @@ export function DrivePreviewDialog({ item, open, onOpenChange }: DrivePreviewDia
       onOpenChange={onOpenChange}
       title={item.name}
       description={t('drive.dialog.preview-title')}
-      size="lg"
+      size="xl"
+      resizable
+      className="h-[85dvh] w-[95vw]"
       footer={
         <>
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
@@ -61,9 +63,9 @@ export function DrivePreviewDialog({ item, open, onOpenChange }: DrivePreviewDia
         </>
       }
     >
-      <div className="flex min-h-48 flex-col items-center justify-center gap-3">
+      <div className="flex h-full min-h-48 w-full flex-col items-center justify-center gap-3">
         {isOffice ? (
-          <GuideRegion id="drive.editor">
+          <GuideRegion id="drive.editor" className="h-full w-full">
             <DriveEditor item={item} open={open} onRequestClose={closeEditor} />
           </GuideRegion>
         ) : !previewable ? (
@@ -88,11 +90,11 @@ export function DrivePreviewDialog({ item, open, onOpenChange }: DrivePreviewDia
             </Button>
           </div>
         ) : kind === 'image' ? (
-          <img src={url} alt={item.name} className="max-h-[70vh] max-w-full rounded-lg object-contain" />
+          <img src={url} alt={item.name} className="max-h-full max-w-full rounded-lg object-contain" />
         ) : kind === 'pdf' ? (
-          <iframe src={url} title={item.name} className="h-[70vh] w-full rounded-lg border border-border" />
+          <iframe src={url} title={item.name} className="h-full w-full rounded-lg border border-border" />
         ) : kind === 'video' ? (
-          <video src={url} controls className="max-h-[70vh] w-full rounded-lg" />
+          <video src={url} controls className="max-h-full w-full rounded-lg" />
         ) : (
           <audio src={url} controls className="w-full" />
         )}

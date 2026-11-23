@@ -31,6 +31,8 @@ Allowed: `@/features/{drive-upload,drive-editor}`, `@/entities/drive-item`, `@/s
   decides edit/view mode from the caller's effective role.
 - **Download:** always available in the footer, through the authenticated Range-capable route, saving
   under the RFC 5987 `Content-Disposition` name (Arabic-safe).
+- **Resizable modal:** the preview opens at 95% of the viewport width and 85% of the viewport height,
+  and exposes the browser's native resize handle so the preview can be adjusted in both directions.
 
 ## Implementation status
 
@@ -40,11 +42,13 @@ Allowed: `@/features/{drive-upload,drive-editor}`, `@/entities/drive-item`, `@/s
 | Image / PDF / video / audio preview | ✅ Phase 3 |
 | Unsupported fallback + download | ✅ Phase 3 |
 | OnlyOffice Office viewer | ✅ Phase 6 |
+| Large, manually resizable preview | ✅ |
 | Browser verification | ⏳ Phase 6 round (needs SeaweedFS keys for live bytes). |
 
 ## Change Log
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-23 | Copilot | Enlarged the preview to 95vw by 85dvh and added native two-direction resizing, including full-height PDF/Office/media surfaces. |
 | 2026-11-21 | Copilot | Mounted the OnlyOffice viewer for Office files while preserving download fallback. |
 | 2026-11-20 | Qoder | Front-end Phase 3: created the widget — extension classifier + `DrivePreviewDialog` (presigned-GET media preview, loading/error/link-expired states, unsupported/Office download fallback). Front lint + build green. |

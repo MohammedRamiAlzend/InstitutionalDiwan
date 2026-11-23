@@ -55,14 +55,14 @@ export function DriveEditor({ item, open, onRequestClose }: DriveEditorProps) {
   }, [editConfig.data, onRequestClose, open])
 
   if (editConfig.isLoading) {
-    return <p className="flex min-h-[60vh] items-center justify-center text-sm text-muted"><Label k="drive.editor.loading" /></p>
+    return <p className="flex h-full min-h-[60vh] items-center justify-center text-sm text-muted"><Label k="drive.editor.loading" /></p>
   }
   if (editConfig.error) {
-    return <p className="flex min-h-[60vh] items-center justify-center text-sm text-danger">{toArabicErrorMessage(editConfig.error)}</p>
+    return <p className="flex h-full min-h-[60vh] items-center justify-center text-sm text-danger">{toArabicErrorMessage(editConfig.error)}</p>
   }
   if (loadError) {
-    return <p className="flex min-h-[60vh] items-center justify-center text-sm text-danger"><Label k="drive.editor.not-configured" /></p>
+    return <p className="flex h-full min-h-[60vh] items-center justify-center text-sm text-danger"><Label k="drive.editor.not-configured" /></p>
   }
 
-  return <div ref={containerRef} id={`drive-editor-${item.itemId}`} className="min-h-[60vh] w-full" />
+  return <div ref={containerRef} id={`drive-editor-${item.itemId}`} className="h-full min-h-[60vh] w-full" />
 }

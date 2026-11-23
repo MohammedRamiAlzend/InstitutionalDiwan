@@ -110,6 +110,7 @@ browser.
 
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-23 | Copilot | Enlarged and enabled native resizing for the Module 11 Drive file preview while preserving its footer actions. |
 | 2026-11-20 | Qoder | Module 11 front-end Phase 3 (`plans/module-11-drive-frontend.md`): added `drive-preview-dialog` (presigned-GET media preview + download fallback) and wired `drive-browser`'s `DriveItemActions` — open-file→preview, download, upload-version, and the toolbar/drop upload — into `pages/drive`. |
 | 2026-11-21 | Copilot | Module 11 front-end Phase 6: mounted the OnlyOffice viewer for Office previews. |
 | 2026-11-21 | Copilot | Module 11 front-end Phase 4: added version history/restore and manager-gated permissions/inheritance widgets, wired through the Drive workspace. |
