@@ -19,7 +19,7 @@ Holds reusable, domain-agnostic UI primitives (Tailwind CSS v4 + Radix UI where 
 | `textarea.tsx` | Multi-line input matching `input.tsx` spacing, border, focus ring, and invalid state. |
 | `select.tsx` | Radix Select with RTL-aware positioning, token-only styling, an Arabic placeholder, and the shared content entrance/exit animation. |
 | `checkbox.tsx` | Radix checkbox (checked / indeterminate) with an Arabic label and helper text. |
-| `dialog.tsx` | Accessible centered modal with title, description, footer, size variants, overlay token, and entrance/exit animation (`animate-overlay-in` + `data-[state=closed]:animate-overlay-out` on the overlay, `animate-content-in` + `data-[state=closed]:animate-content-out` on the content, so Radix Presence keeps the node until the exit finishes). Height is capped at the viewport (`max-h-[calc(100dvh-2rem)]`) with the title/footer pinned and a scrollable body, so long content never overflows the screen. |
+| `dialog.tsx` | Accessible centered modal with title, description, footer, size variants, optional native resize handle, overlay token, and entrance/exit animation (`animate-overlay-in` + `data-[state=closed]:animate-overlay-out` on the overlay, `animate-content-in` + `data-[state=closed]:animate-content-out` on the content, so Radix Presence keeps the node until the exit finishes). Height is capped at the viewport (`max-h-[calc(100dvh-2rem)]`) with the title/footer pinned and a scrollable body, so long content never overflows the screen. |
 | `confirm-dialog.tsx` | Confirmation gate for destructive commands built on `dialog` + `button`. |
 | `dropdown-menu.tsx` | Radix dropdown wrapper sharing permission-filtered `MenuEntry` items; used for row overflow and the column chooser. |
 | `context-menu.tsx` | The single right-click primitive: opens at the pointer, inherits direction, returns focus, and honors `Shift+F10` / `ContextMenu` dispatch from the grid. |
@@ -53,6 +53,7 @@ Holds reusable, domain-agnostic UI primitives (Tailwind CSS v4 + Radix UI where 
 ## Change Log
 | Date | Author | Change |
 | --- | --- | --- |
+| 2026-11-23 | Copilot | Added an `xl` dialog size and an optional native resize mode used by the large Drive file preview. |
 | 2026-11-22 | Manus | Standardized all shared DataTable usages on a 520px fixed-height internally scrollable table viewport; callers can choose a different viewportHeight while toolbar and pager remain outside the scroll region. |
 | 2026-11-18 | Qoder | UI labels Phase 4 (ب5-متبقٍ): the remaining shared primitives read their chrome from the catalog — `theme-toggle` (light/dark aria+title), `select` (placeholder default), `password-field` (show/hide aria), `dialog` (close default), `label` (edit tooltip), `mermaid-view` (empty/rendering/failed states), `guide` + `guide-tour` (about/explain/trigger and driver.js next/prev/done/progress), `error-boundary` (title/body/reload/dashboard) via `t()`/`<Label>`. |
 | 2026-11-18 | Qoder | UI labels Phase 4 (documents list unit): `DataTableColumn.header` became optional (`header?: string`) so a column can be declared with `headerKey` alone; `headerOf` falls back to `column.header ?? ''`. Data-driven columns (e.g. schema field labels) keep using `header`. |

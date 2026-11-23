@@ -3,7 +3,7 @@ import { X } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { cn, t } from '@/shared/lib'
 
-export type DialogSize = 'sm' | 'md' | 'lg'
+export type DialogSize = 'sm' | 'md' | 'lg' | 'xl'
 
 interface DialogProps {
   open: boolean
@@ -15,12 +15,14 @@ interface DialogProps {
   size?: DialogSize
   closeLabel?: string
   className?: string
+  resizable?: boolean
 }
 
 const sizeClasses: Record<DialogSize, string> = {
   sm: 'max-w-sm',
   md: 'max-w-lg',
   lg: 'max-w-2xl',
+  xl: 'max-w-[95vw]',
 }
 
 function keepWhileGuideOpen(event: Event) {
@@ -42,6 +44,7 @@ export function Dialog({
   size = 'md',
   closeLabel = t('common.action.close'),
   className,
+  resizable = false,
 }: DialogProps) {
   return (
     <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
@@ -56,6 +59,7 @@ export function Dialog({
             'fixed start-1/2 top-1/2 z-50 flex max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-xl border border-border bg-surface p-6 text-foreground shadow-xl animate-content-in data-[state=closed]:animate-content-out',
             'rtl:translate-x-1/2',
             sizeClasses[size],
+            resizable && 'min-h-[20rem] min-w-[min(20rem,calc(100vw-2rem))] [resize:both]',
             className,
           )}
         >
